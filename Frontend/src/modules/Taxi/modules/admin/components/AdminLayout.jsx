@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   FOOD_ADMIN_HOME,
   TAXI_ADMIN_HOME,
+  HOTEL_ADMIN_HOME,
+  TOURS_ADMIN_HOME,
   prefetchFoodAdmin,
   prefetchTaxiAdmin,
 } from '@/shared/utils/activeModule.js';
@@ -54,6 +56,8 @@ import {
   UserCog,
   Users,
   UtensilsCrossed,
+  Hotel,
+  Compass,
   Wallet,
   X,
   Zap,
@@ -1465,7 +1469,7 @@ const AdminLayout = () => {
 
           {/* Module Switcher Tabs */}
           {!isCollapsed && (showFoodTab || showTaxiTab) && (
-              <div className="flex p-1 bg-neutral-800/40 backdrop-blur-sm rounded-xl mb-4 border border-white/5 shadow-inner">
+              <div className="grid grid-cols-2 gap-1 p-1 bg-neutral-800/40 backdrop-blur-sm rounded-xl mb-4 border border-white/5 shadow-inner">
                 {showFoodTab && (
                   <button
                     type="button"
@@ -1494,6 +1498,28 @@ const AdminLayout = () => {
                     Taxi
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => switchAdminModule(HOTEL_ADMIN_HOME)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
+                    "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
+                  )}
+                >
+                  <Hotel className="w-3.5 h-3.5 text-neutral-500" />
+                  Hotel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchAdminModule(TOURS_ADMIN_HOME)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
+                    "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
+                  )}
+                >
+                  <Compass className="w-3.5 h-3.5 text-neutral-500" />
+                  Tours
+                </button>
               </div>
           )}
 

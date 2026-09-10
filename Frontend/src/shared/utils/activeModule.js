@@ -4,6 +4,8 @@ export const LOGIN_RETURN_TO_KEY = 'hello_parth_login_return_to'
 
 export const FOOD_ADMIN_HOME = '/admin/food'
 export const TAXI_ADMIN_HOME = '/taxi/admin/dashboard'
+export const HOTEL_ADMIN_HOME = '/hotel/admin/dashboard'
+export const TOURS_ADMIN_HOME = '/tours/admin'
 
 /** Logged-in consumer default — Taxi opens first on app/web launch. */
 export const CONSUMER_POST_LOGIN_HOME = '/taxi/user'

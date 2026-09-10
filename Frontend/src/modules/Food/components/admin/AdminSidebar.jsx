@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigationType, useNavigate } from "react-router-
 import {
   FOOD_ADMIN_HOME,
   TAXI_ADMIN_HOME,
+  HOTEL_ADMIN_HOME,
+  TOURS_ADMIN_HOME,
   prefetchFoodAdmin,
   prefetchTaxiAdmin,
 } from "@/shared/utils/activeModule.js"
@@ -17,6 +19,8 @@ import {
   MapPin,
   Link as LinkIcon,
   UtensilsCrossed,
+  Hotel,
+  Compass,
   Building2,
   FolderTree,
   Plus,
@@ -212,6 +216,14 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
   const showTaxiTab = adminProfile.adminLevel === "platform_superadmin" ||
                        adminProfile.adminLevel === "taxi_superadmin" ||
                        (adminProfile.adminLevel === "subadmin" && adminProfile.module === "taxi") ||
+                       !adminProfile.adminLevel
+  const showHotelTab = adminProfile.adminLevel === "platform_superadmin" ||
+                       adminProfile.adminLevel === "hotel_superadmin" ||
+                       (adminProfile.adminLevel === "subadmin" && adminProfile.module === "hotel") ||
+                       !adminProfile.adminLevel
+  const showToursTab = adminProfile.adminLevel === "platform_superadmin" ||
+                       adminProfile.adminLevel === "tours_superadmin" ||
+                       (adminProfile.adminLevel === "subadmin" && adminProfile.module === "tours") ||
                        !adminProfile.adminLevel
 
   useEffect(() => {
@@ -975,8 +987,8 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
             </div>
           )}
 
-          {!isCollapsed && (showFoodTab || showTaxiTab) && (
-            <div className="flex p-1 bg-neutral-800/40 backdrop-blur-sm rounded-xl mb-4 border border-white/5 shadow-inner animate-[slideIn_0.4s_ease-out_0.15s_both]">
+          {!isCollapsed && (showFoodTab || showTaxiTab || showHotelTab || showToursTab) && (
+            <div className="grid grid-cols-2 gap-1 p-1 bg-neutral-800/40 backdrop-blur-sm rounded-xl mb-4 border border-white/5 shadow-inner animate-[slideIn_0.4s_ease-out_0.15s_both]">
               {showFoodTab && (
                 <button
                   type="button"
@@ -1019,6 +1031,46 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                     )}
                   />
                   Taxi
+                </button>
+              )}
+              {showHotelTab && (
+                <button
+                  type="button"
+                  onClick={() => switchAdminModule(HOTEL_ADMIN_HOME)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
+                    location.pathname.startsWith("/hotel")
+                      ? "bg-white text-black shadow-[0_4px_12px_rgba(255,255,255,0.15)] scale-[1.02]"
+                      : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
+                  )}
+                >
+                  <Hotel
+                    className={cn(
+                      "w-3.5 h-3.5",
+                      location.pathname.startsWith("/hotel") ? "text-black" : "text-neutral-500"
+                    )}
+                  />
+                  Hotel
+                </button>
+              )}
+              {showToursTab && (
+                <button
+                  type="button"
+                  onClick={() => switchAdminModule(TOURS_ADMIN_HOME)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
+                    location.pathname.startsWith("/tours")
+                      ? "bg-white text-black shadow-[0_4px_12px_rgba(255,255,255,0.15)] scale-[1.02]"
+                      : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
+                  )}
+                >
+                  <Compass
+                    className={cn(
+                      "w-3.5 h-3.5",
+                      location.pathname.startsWith("/tours") ? "text-black" : "text-neutral-500"
+                    )}
+                  />
+                  Tours
                 </button>
               )}
             </div>
