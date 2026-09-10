@@ -1,0 +1,76 @@
+# ─── Dependencies ────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ─── Environment / secrets ───────────────────────────────────────────────────
+# Applies at every depth (Backend/.env, Frontend/.env, ...). Keep examples.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Credential material
+firebase-service-account.json
+*-service-account.json
+serviceAccountKey.json
+*.pem
+*.key
+*.p12
+*.p8
+*.keystore
+*.jks
+
+# ─── Build output ────────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+.vite/
+*.local
+
+# ─── Runtime data ────────────────────────────────────────────────────────────
+Backend/uploads/
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ─── Testing ─────────────────────────────────────────────────────────────────
+coverage/
+*.lcov
+.nyc_output
+
+# ─── Reference material, not part of the build ───────────────────────────────
+# v1-ui: the original client-approved prototype. Its screens already live in
+# Frontend/src/modules/DimaHasao — this is kept locally for visual reference.
+v1-ui/
+# _port-sources: modules rescued from quick-drop (Safety/SOS, dine-in) that are
+# staged for porting but not yet wired in.
+_port-sources/
+
+# ─── Editor / OS ─────────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.gemini/
+
+# ─── Scratch ─────────────────────────────────────────────────────────────────
+notes.txt
+*.tmp
