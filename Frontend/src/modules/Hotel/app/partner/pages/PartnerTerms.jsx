@@ -82,13 +82,13 @@ const PartnerTerms = () => {
                         </Section>
                     ) : (
                         <>
-                            <Section title="1. Relationship with Rokkooin">
-                                By listing your property on Rokkooin, you agree to act as an independent service provider.
-                                Rokkooin acts solely as an intermediary platform to connect you with potential guests.
+                            <Section title="1. Relationship with Dima Hasao">
+                                By listing your property on Dima Hasao, you agree to act as an independent service provider.
+                                Dima Hasao acts solely as an intermediary platform to connect you with potential guests.
                             </Section>
 
                             <Section title="2. Payouts & Commission">
-                                Rokkooin charges a flat commission of 15% on every completed booking. Payouts are processed
+                                Dima Hasao charges a flat commission of 15% on every completed booking. Payouts are processed
                                 weekly (every Wednesday) for the previous week's check-outs, subject to a minimum withdrawal limit of ₹1,000.
                             </Section>
 

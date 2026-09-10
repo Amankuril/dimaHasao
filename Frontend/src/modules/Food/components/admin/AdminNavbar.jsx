@@ -257,7 +257,7 @@ export default function AdminNavbar({ onMenuClick }) {
             {/* Logo */}
             <div className="flex items-center gap-2">
               <div className="w-28 h-12 rounded-lg bg-white flex items-center justify-center">
-                <img src={DEFAULT_BRAND_LOGO} alt="Hello Parth" className="h-10 w-auto max-w-[112px] object-contain" loading="lazy" />
+                <img src={DEFAULT_BRAND_LOGO} alt="Dima Hasao" className="h-10 w-auto max-w-[112px] object-contain" loading="lazy" />
               </div>
             </div>
           </div>

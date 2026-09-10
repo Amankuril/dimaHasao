@@ -5,35 +5,6 @@ export const THEME_CHANGE_EVENT = "helloparth:theme-change";
 
 const USER_THEME_STORAGE_KEYS = [FOOD_USER_THEME_KEY, APP_THEME_KEY, USER_THEME_KEY];
 
-const THEME_CSS_VARS = [
-  "--background",
-  "--foreground",
-  "--card",
-  "--card-foreground",
-  "--popover",
-  "--popover-foreground",
-  "--primary",
-  "--primary-foreground",
-  "--secondary",
-  "--secondary-foreground",
-  "--muted",
-  "--muted-foreground",
-  "--accent",
-  "--accent-foreground",
-  "--destructive",
-  "--border",
-  "--input",
-  "--ring",
-  "--sidebar",
-  "--sidebar-foreground",
-  "--sidebar-primary",
-  "--sidebar-primary-foreground",
-  "--sidebar-accent",
-  "--sidebar-accent-foreground",
-  "--sidebar-border",
-  "--sidebar-ring",
-];
-
 const LIGHT_THEME_VALUES = {
   "--background": "#ffffff",
   "--foreground": "oklch(0.2 0.05 50)",
@@ -68,8 +39,11 @@ let pendingRaf1 = null;
 let pendingRaf2 = null;
 let pendingTimeout = null;
 
-export function normalizeTheme(theme) {
-  return String(theme || "").trim().toLowerCase() === "dark" ? "dark" : "light";
+// The product is light-only. Every theme read/write funnels through here, so
+// forcing "light" disables dark mode app-wide and neutralises any "dark" value
+// already sitting in a user's localStorage.
+export function normalizeTheme() {
+  return "light";
 }
 
 export function getFoodUserTheme() {
@@ -90,33 +64,24 @@ function clearNestedThemeClasses() {
   document.getElementById("root")?.classList.remove("dark", "light");
 }
 
-function applyInlineThemeVars(root, useDarkTheme) {
-  if (useDarkTheme) {
-    for (const varName of THEME_CSS_VARS) {
-      root.style.removeProperty(varName);
-    }
-    return;
-  }
-
+function applyInlineThemeVars(root) {
   for (const [varName, value] of Object.entries(LIGHT_THEME_VALUES)) {
     root.style.setProperty(varName, value);
   }
 }
 
-export function applyTheme(theme) {
+export function applyTheme() {
   if (typeof document === "undefined") return;
 
-  const resolvedTheme = normalizeTheme(theme);
-  const useDarkTheme = resolvedTheme === "dark";
   const root = document.documentElement;
 
   clearNestedThemeClasses();
 
   root.classList.remove("dark", "light");
-  root.classList.add(resolvedTheme);
-  root.dataset.theme = resolvedTheme;
-  root.style.colorScheme = useDarkTheme ? "dark" : "light";
-  applyInlineThemeVars(root, useDarkTheme);
+  root.classList.add("light");
+  root.dataset.theme = "light";
+  root.style.colorScheme = "light";
+  applyInlineThemeVars(root);
 }
 
 export function applyFoodUserTheme() {

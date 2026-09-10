@@ -11,20 +11,20 @@ dotenv.config();
 const DEFAULTS = {
   admin: {
     email: "helloparthindia@gmail.com",
-    password: "Helloparth@2026",
-    name: "Hello Parth Admin",
+    password: "Dima Hasao@2026",
+    name: "Dima Hasao Admin",
     servicesAccess: ["food", "quickCommerce", "taxi"],
   },
   user: {
     phone: "9407046608",
     countryCode: "+91",
-    name: "Hello Parth User",
+    name: "Dima Hasao User",
   },
   restaurant: {
     phone: "9009925021",
     countryCode: "+91",
-    restaurantName: "Hello Parth Demo Restaurant",
-    ownerName: "Hello Parth Restaurant Owner",
+    restaurantName: "Dima Hasao Demo Restaurant",
+    ownerName: "Dima Hasao Restaurant Owner",
     ownerEmail: "restaurant@helloparth.com",
     city: "Bhopal",
     state: "Madhya Pradesh",
@@ -33,7 +33,7 @@ const DEFAULTS = {
   delivery: {
     phone: "7610416911",
     countryCode: "+91",
-    name: "Hello Parth Delivery Partner",
+    name: "Dima Hasao Delivery Partner",
     city: "Bhopal",
     state: "Madhya Pradesh",
     vehicleType: "bike",

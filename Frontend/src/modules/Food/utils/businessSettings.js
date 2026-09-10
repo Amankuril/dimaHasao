@@ -79,8 +79,8 @@ export const loadBusinessSettings = async () => {
 export const updateFavicon = (url) => {
   if (typeof document === 'undefined') return;
 
-  // Admin favicon when present; otherwise default Hello Parth favicon
-  const href = (url && String(url).trim()) || '/hello-parth-logo.png';
+  // Admin favicon when present; otherwise default Dima Hasao favicon
+  const href = (url && String(url).trim()) || '/logo.png';
 
   // Remove existing favicons
   const existingFavicons = document.querySelectorAll("link[rel*='icon']");
@@ -100,7 +100,7 @@ export const updateFavicon = (url) => {
  */
 export const updateTitle = (companyName) => {
   if (typeof document !== 'undefined') {
-    document.title = (companyName && companyName !== "Foodelo") ? companyName : "Hello Parth Food";
+    document.title = (companyName && companyName !== "Foodelo") ? companyName : "Dima Hasao Food";
   }
 };
 
@@ -138,23 +138,23 @@ export const getCachedSettings = () => {
 
 /**
  * Get company name from business settings with fallback
- * @returns {string} Company name or default "Hello Parth Food"
+ * @returns {string} Company name or default "Dima Hasao Food"
  */
 export const getCompanyName = () => {
   const settings = getCachedSettings();
-  const name = settings?.companyName || "Hello Parth Food";
-  return name === "Foodelo" ? "Hello Parth Food" : name;
+  const name = settings?.companyName || "Dima Hasao Food";
+  return name === "Foodelo" ? "Dima Hasao Food" : name;
 };
 
 /**
  * Get company name asynchronously (loads if not cached)
- * @returns {Promise<string>} Company name or default "Hello Parth Food"
+ * @returns {Promise<string>} Company name or default "Dima Hasao Food"
  */
 export const getCompanyNameAsync = async () => {
   try {
     const settings = await loadBusinessSettings();
-    return settings?.companyName || "Hello Parth Food";
+    return settings?.companyName || "Dima Hasao Food";
   } catch (error) {
-    return "Hello Parth Food";
+    return "Dima Hasao Food";
   }
 };

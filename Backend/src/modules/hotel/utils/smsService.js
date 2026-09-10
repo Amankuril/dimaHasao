@@ -2,8 +2,8 @@ import axios from 'axios';
 
 class SMSIndiaHubService {
   constructor() {
-    this.apiKey = process.env.SMSINDIAHUB_API_KEY;
-    this.senderId = process.env.SMSINDIAHUB_SENDER_ID || 'SMSHUB';
+    this.apiKey = process.env.SMS_INDIA_HUB_API_KEY;
+    this.senderId = process.env.SMS_INDIA_HUB_SENDER_ID || 'SMSHUB';
     this.baseUrl = 'https://cloud.smsindiahub.in/vendorsms/pushsms.aspx';
   }
 
@@ -16,15 +16,15 @@ class SMSIndiaHubService {
   }
 
   async sendOTP(phone, otp, purpose = 'registration') {
-    const message = `Welcome to the Homezoo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
+    const message = `Welcome to the Dima Hasao powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
     return this.sendSMS(phone, message);
   }
 
   async sendSMS(phone, message) {
     try {
       // Load credentials dynamically at runtime to ensure dotenv has loaded
-      const apiKey = this.apiKey || process.env.SMSINDIAHUB_API_KEY;
-      const senderId = this.senderId || process.env.SMSINDIAHUB_SENDER_ID;
+      const apiKey = this.apiKey || process.env.SMS_INDIA_HUB_API_KEY;
+      const senderId = this.senderId || process.env.SMS_INDIA_HUB_SENDER_ID;
 
       if (!apiKey) {
         console.warn('⚠️ [SMSIndiaHub] Missing API Key. SMS NOT SENT.');

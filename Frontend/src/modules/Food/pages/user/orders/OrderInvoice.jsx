@@ -44,9 +44,9 @@ export default function OrderInvoice() {
 
   if (loading) {
     return (
-      <AnimatedPage className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] p-4">
+      <AnimatedPage className="min-h-screen bg-[#faf6ed] dark:bg-[#0a0a0a] p-4">
         <div className="max-w-4xl mx-auto text-center py-20">
-          <div className="w-8 h-8 border-2 border-[#DC2626] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-2 border-[#0a4d2b] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Generating invoice...</p>
         </div>
       </AnimatedPage>
@@ -55,7 +55,7 @@ export default function OrderInvoice() {
 
   if (error || !order) {
     return (
-      <AnimatedPage className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] p-4">
+      <AnimatedPage className="min-h-screen bg-[#faf6ed] dark:bg-[#0a0a0a] p-4">
         <div className="max-w-4xl mx-auto text-center py-20">
           <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">{error || 'Order Not Found'}</h1>
           <Link to="/user/orders">
@@ -93,14 +93,14 @@ export default function OrderInvoice() {
               color: #333;
             }
             .invoice-header {
-              border-bottom: 2px solid #DC2626;
+              border-bottom: 2px solid #0a4d2b;
               padding-bottom: 20px;
               margin-bottom: 30px;
             }
             .invoice-title {
               font-size: 32px;
               font-weight: bold;
-              color: #DC2626;
+              color: #0a4d2b;
               margin-bottom: 10px;
             }
             .invoice-details {
@@ -137,8 +137,8 @@ export default function OrderInvoice() {
             .grand-total {
               font-size: 24px;
               font-weight: bold;
-              color: #DC2626;
-              border-top: 2px solid #DC2626;
+              color: #0a4d2b;
+              border-top: 2px solid #0a4d2b;
               padding-top: 10px;
             }
             @media print {
@@ -190,7 +190,7 @@ export default function OrderInvoice() {
               </Button>
               <Button
                 onClick={handleDownloadPDF}
-                className="bg-[#DC2626] hover:bg-[#991B1B] flex items-center gap-2 text-xs sm:text-sm h-9 sm:h-10"
+                className="bg-[#0a4d2b] hover:bg-[#06381e] flex items-center gap-2 text-xs sm:text-sm h-9 sm:h-10"
               >
                 <Download className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                 <span className="hidden sm:inline text-white">Download PDF</span>
@@ -206,15 +206,15 @@ export default function OrderInvoice() {
               {/* Invoice Header */}
               <div className="invoice-header">
                 <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-[#DC2626]" />
-                  <h2 className="invoice-title text-xl sm:text-2xl md:text-3xl text-[#DC2626] font-bold">INVOICE</h2>
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-[#0a4d2b]" />
+                  <h2 className="invoice-title text-xl sm:text-2xl md:text-3xl text-[#0a4d2b] font-bold">INVOICE</h2>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                   <div>
                     <p className="text-xs sm:text-sm text-muted-foreground">{companyName}</p>
                     <p className="text-xs sm:text-sm text-muted-foreground">Food Delivery Platform</p>
                   </div>
-                  <Badge className="bg-[#DC2626] text-white text-sm sm:text-base md:text-lg px-3 sm:px-4 py-1.5 sm:py-2 w-fit">
+                  <Badge className="bg-[#0a4d2b] text-white text-sm sm:text-base md:text-lg px-3 sm:px-4 py-1.5 sm:py-2 w-fit">
                     {order.status.toUpperCase()}
                   </Badge>
                 </div>
@@ -314,7 +314,7 @@ export default function OrderInvoice() {
                   <span>Discount:</span>
                   <span>{order.discount > 0 ? '' : ''}₹{Math.abs(order.discount).toFixed(2)}</span>
                 </div>
-                <div className="grand-total flex justify-between text-base sm:text-lg md:text-xl md:text-2xl pt-2 sm:pt-3 mt-2 sm:mt-3 border-t-2 border-[#DC2626] dark:text-gray-100">
+                <div className="grand-total flex justify-between text-base sm:text-lg md:text-xl md:text-2xl pt-2 sm:pt-3 mt-2 sm:mt-3 border-t-2 border-[#0a4d2b] dark:text-gray-100">
                   <span>Total:</span>
                   <span>₹{order.total.toFixed(2)}</span>
                 </div>

@@ -141,7 +141,7 @@ const SupportPage = () => {
         >
           <img
             src="https://ui.aceternity.com/_next/image?url=%2Flinear.webp&w=3840&q=75"
-            alt="Appzeto  client support dashboard"
+            alt="Dima Hasao  client support dashboard"
             className="mx-auto rounded-2xl object-cover h-full object-left-top w-full"
             draggable={false}
           />

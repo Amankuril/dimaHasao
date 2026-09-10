@@ -1,5 +1,5 @@
 export const SUPPORT_INFO = {
-  companyName: 'Appzeto 24 Trawler',
+  companyName: 'Dima Hasao Trawler',
   ownerName: 'Sandeep Kumar',
   phone: '91-93-911-911',
   phoneHref: '91-93-911-911',

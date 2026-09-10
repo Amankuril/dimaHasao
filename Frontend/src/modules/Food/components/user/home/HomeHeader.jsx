@@ -258,7 +258,7 @@ export default function HomeHeader({
                     alt="Profile" 
                     className="object-cover"
                   />
-                  <AvatarFallback className="bg-[#FFF5E6] text-[20px] font-black text-[#DC2626] leading-none tracking-tighter antialiased">
+                  <AvatarFallback className="bg-[#FFF5E6] text-[20px] font-black text-[#0a4d2b] leading-none tracking-tighter antialiased">
                     <img src="/assets/images/profile_avatar.webp" alt="Profile" className="object-cover w-full h-full" />
                   </AvatarFallback>
                 </Avatar>
@@ -267,7 +267,7 @@ export default function HomeHeader({
           </div>
         </div>
 
-        {/* Row 2: Hello Parth Food / Taxi tabs */}
+        {/* Row 2: Dima Hasao Food / Taxi tabs */}
         <SuperAppHomeHeader activeVertical="food" tabsOnly embedded location={location} />
 
         {/* Below tabs: fixed 255px — same as Taxi SuperAppHero */}
@@ -278,7 +278,7 @@ export default function HomeHeader({
             className="flex-1 relative bg-white rounded-2xl flex items-center px-4 py-3 shadow-xl border border-black/5 cursor-pointer active:scale-[0.98] transition-all duration-300"
             onClick={handleSearchFocus}
           >
-            <Search className="h-5 w-5 text-[#DC2626] mr-2 shrink-0" strokeWidth={3} />
+            <Search className="h-5 w-5 text-[#0a4d2b] mr-2 shrink-0" strokeWidth={3} />
 
             <div className="flex-1 overflow-hidden relative h-5">
               <AnimatePresence mode="wait">

@@ -25,7 +25,7 @@ const INITIAL_DATA = {
         country: 'India'
     },
 
-    // --- Property Onboarding (JoinRokkooin) ---
+    // --- Property Onboarding (JoinDima Hasao) ---
     hotelDraftId: null,
 
     // Step 1

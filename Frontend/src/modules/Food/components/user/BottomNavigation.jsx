@@ -250,13 +250,13 @@ export default function BottomNavigation() {
             type="button"
             onClick={(e) => handleTabClick(e, item)}
             className={`flex flex-col items-center justify-center gap-1 h-14 w-full relative transition-all duration-300 touch-manipulation ${
-              item.active ? "text-[#DC2626]" : "text-gray-600 dark:text-gray-400"
+              item.active ? "text-[#0a4d2b]" : "text-gray-600 dark:text-gray-400"
             }`}
           >
             {item.active && (
               <motion.div
                 layoutId="active-nav-bg"
-                className="absolute inset-x-1 inset-y-1 bg-[#FFF5F5] dark:bg-[#DC2626]/10 rounded-[1.5rem] z-0"
+                className="absolute inset-x-1 inset-y-1 bg-[#FFF5F5] dark:bg-[#0a4d2b]/10 rounded-[1.5rem] z-0"
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
               />
             )}

@@ -11,9 +11,20 @@ const unwrap = (res, key) => {
   return key ? body?.[key] : body;
 };
 
+// Image fields come back either as a plain URL or as { url }.
+const toImageUrl = (value) => {
+  const raw = typeof value === 'string' ? value : value?.url || '';
+  return raw ? normalizeImageUrl(raw) : '';
+};
+
 export const adaptRestaurant = (r = {}) => {
-  const cover = asArray(r.coverImages)[0] || r.profileImage || '';
+  const loc = r.location || {};
   const deliveryMinutes = r.estimatedDeliveryTimeMinutes;
+  const hero =
+    toImageUrl(asArray(r.coverImages)[0]) ||
+    toImageUrl(r.image) ||
+    toImageUrl(r.profileImage) ||
+    toImageUrl(asArray(r.images)[0]);
 
   return {
     id: String(r._id || r.id || ''),
@@ -27,10 +38,14 @@ export const adaptRestaurant = (r = {}) => {
       (Number.isFinite(Number(deliveryMinutes)) ? `${deliveryMinutes} min` : '—'),
     minOrder: Number(r.minOrderAmount) || 0,
     priceForTwo: Number(r.featuredPrice) || 0,
-    address: [r.area, r.city].filter(Boolean).join(', '),
+    address:
+      [loc.area || r.area, loc.city || r.city].filter(Boolean).join(', ') ||
+      loc.formattedAddress ||
+      loc.address ||
+      '',
     isOpen: r.isAcceptingOrders !== false,
     isVegOnly: r.pureVegRestaurant === true,
-    heroImage: cover ? normalizeImageUrl(cover) : '',
+    heroImage: hero,
     offer: r.offer || '',
     distanceInKm: r.distanceInKm ?? null,
     categories: [],
@@ -48,7 +63,7 @@ export const adaptMenuItem = (item = {}) => ({
   isBestseller: item.isRecommended === true,
   isAvailable: item.isAvailable !== false,
   description: item.description || '',
-  image: item.image ? normalizeImageUrl(item.image) : '',
+  image: toImageUrl(item.image),
   variants: asArray(item.variants),
 });
 

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Light-only product. This file imports Tailwind separately from global.css, so
+   it needs its own dark-variant override — without it Tailwind defaults to
+   `prefers-color-scheme: dark` and every `dark:` utility here switches on for
+   anyone whose OS is in dark mode. Nothing ever sets data-theme="dark". */
+@custom-variant dark (&:where(html[data-theme="dark"] *));
+
 @keyframes spin-slow {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }

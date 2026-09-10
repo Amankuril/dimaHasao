@@ -104,7 +104,7 @@ const taxiTheme = getVerticalTheme('taxi');
 const VERTICALS = [
   {
     id: 'taxi',
-    name: 'Hello Parth Taxi',
+    name: 'Dima Hasao Taxi',
     path: '/taxi/user',
     themeBg: taxiTheme.themeBg,
     activeTabBg: taxiTheme.activeTabBg,
@@ -112,7 +112,7 @@ const VERTICALS = [
   },
   {
     id: 'food',
-    name: 'Hello Parth Food',
+    name: 'Dima Hasao Food',
     path: '/food/user',
     themeBg: foodTheme.themeBg,
     activeTabBg: foodTheme.activeTabBg,

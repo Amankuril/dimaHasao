@@ -30,7 +30,7 @@ export default function TableModificationPolicy() {
             <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
                 {/* Hero Card */}
                 <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 text-center space-y-4">
-                    <div className="w-20 h-20 bg-[#DC2626]/10 text-[#DC2626] rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse">
+                    <div className="w-20 h-20 bg-[#0a4d2b]/10 text-[#0a4d2b] rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse">
                         <Clock className="w-10 h-10" />
                     </div>
                     <div>
@@ -40,7 +40,7 @@ export default function TableModificationPolicy() {
                 </div>
 
                 {/* Info Box */}
-                <div className="bg-[#DC2626] rounded-3xl p-6 text-white shadow-xl shadow-[#DC2626]/20">
+                <div className="bg-[#0a4d2b] rounded-3xl p-6 text-white shadow-xl shadow-[#0a4d2b]/20">
                     <div className="flex items-start gap-4">
                         <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0">
                             <Edit2 className="w-6 h-6" />
@@ -89,7 +89,7 @@ export default function TableModificationPolicy() {
                                 } 
                             });
                         }}
-                        className="w-full h-14 bg-[#DC2626] text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-[#DC2626]/20 active:scale-95 transition-all"
+                        className="w-full h-14 bg-[#0a4d2b] text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-[#0a4d2b]/20 active:scale-95 transition-all"
                     >
                         Modify Details Now
                     </button>

@@ -219,7 +219,7 @@ export default function AdminSignup() {
               <div className="flex h-14 w-28 shrink-0 items-center justify-center rounded-xl bg-gray-900/5 ring-1 ring-neutral-200">
                 <img
                   src={DEFAULT_BRAND_LOGO}
-                  alt="Hello Parth"
+                  alt="Dima Hasao"
                   className="h-10 w-24 object-contain"
                   loading="lazy"
                 />

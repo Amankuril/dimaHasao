@@ -43,7 +43,7 @@ const defaultSettings = {
     { id: '4', title: 'Bike', image: '', route: '/taxi/user/ride/select-location', order: 4, status: 'active' }
   ],
   promos: [
-    { id: '1', title: 'Experience A New Standard With Appzeto', subtitle: 'A premier private hire service where luxury and reliability converge.', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+    { id: '1', title: 'Experience A New Standard With Dima Hasao', subtitle: 'A premier private hire service where luxury and reliability converge.', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
     { id: '2', title: 'Need to Send Packages? Try Parcel!', subtitle: 'Fast and secure delivery across Indore at affordable prices.', image: '', route: '/taxi/user/parcel/type', order: 2, status: 'active' }
   ],
   goPlaces: [
@@ -89,7 +89,7 @@ const AdminUserAppManagement = ({ tab: initialTab }) => {
         const bannersData = bannersRes.data?.data?.results || bannersRes.data?.results || bannersRes.data || [];
         fetchedPromos = bannersData.map((b, idx) => ({
           id: b._id || b.id || String(idx + 1),
-          title: b.title || 'Experience A New Standard With Appzeto',
+          title: b.title || 'Experience A New Standard With Dima Hasao',
           subtitle: b.subtitle || 'A premier private hire service where luxury and reliability converge.',
           imageUrl: b.image || '',
           image: b.image || '',

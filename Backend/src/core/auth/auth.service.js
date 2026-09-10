@@ -32,7 +32,7 @@ const DEFAULT_CREDENTIALS = {
     .trim()
     .toLowerCase(),
   adminPassword: String(
-    process.env.DEFAULT_ADMIN_PASSWORD || "Helloparth@2026",
+    process.env.DEFAULT_ADMIN_PASSWORD || "Dima Hasao@2026",
   ),
   userPhone: String(process.env.DEFAULT_USER_PHONE || "7974161582"),
   restaurantPhone: String(process.env.DEFAULT_RESTAURANT_PHONE || "7974161582"),
@@ -306,7 +306,7 @@ export const adminLogin = async (email, password) => {
     admin = await FoodAdmin.create({
       email: DEFAULT_CREDENTIALS.adminEmail,
       password: DEFAULT_CREDENTIALS.adminPassword,
-      name: "Hello Parth Admin",
+      name: "Dima Hasao Admin",
       isActive: true,
       active: true,
       adminLevel: ADMIN_LEVELS.PLATFORM_SUPERADMIN,
@@ -388,8 +388,8 @@ export const verifyRestaurantOtpAndLogin = async (phone, otp, fcmToken, platform
   if (!restaurantDoc && isDefaultPhone(phone, DEFAULT_CREDENTIALS.restaurantPhone)) {
     // Auto-provision default restaurant account for configured default phone.
     restaurantDoc = await FoodRestaurant.create({
-      restaurantName: "Hello Parth Demo Restaurant",
-      ownerName: "Hello Parth Restaurant Owner",
+      restaurantName: "Dima Hasao Demo Restaurant",
+      ownerName: "Dima Hasao Restaurant Owner",
       ownerEmail: "restaurant@helloparth.com",
       ownerPhone: normalizePhone10(DEFAULT_CREDENTIALS.restaurantPhone),
       primaryContactNumber: normalizePhone10(DEFAULT_CREDENTIALS.restaurantPhone),
@@ -495,7 +495,7 @@ export const verifyDeliveryOtpAndLogin = async (phone, otp, fcmToken, platform) 
   if (!deliveryPartner && isDefaultPhone(phone, DEFAULT_CREDENTIALS.deliveryPhone)) {
     // Auto-provision default delivery account for configured default phone.
     deliveryPartner = await FoodDeliveryPartner.create({
-      name: "Hello Parth Delivery Partner",
+      name: "Dima Hasao Delivery Partner",
       phone: normalizePhone10(DEFAULT_CREDENTIALS.deliveryPhone),
       city: "Bhopal",
       state: "Madhya Pradesh",

@@ -63,9 +63,7 @@ import { authAPI, userAPI } from "@food/api";
 import { clearModuleAuth } from "@food/utils/auth";
 import { toast } from "sonner";
 import { showAccountDeletedToast } from "@/shared/utils/customToasts";
-import UserAppearanceDialog from "@/shared/components/UserAppearanceDialog.jsx";
 import UserLogoutConfirmDialog from "@/shared/components/UserLogoutConfirmDialog.jsx";
-import { getFoodUserTheme, THEME_CHANGE_EVENT } from "@/shared/utils/theme.js";
 import {
   formatSavedAddressSubtitle,
   performUserLogout,
@@ -119,7 +117,6 @@ export default function Profile() {
 
   // Popup states
   const [vegModeOpen, setVegModeOpen] = useState(false);
-  const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [referralReward, setReferralReward] = useState(0);
@@ -158,7 +155,7 @@ export default function Profile() {
 
   // Lock scroll when any popup is open
   useEffect(() => {
-    const isPopupOpen = logoutConfirmOpen || deleteAccountOpen || showBalanceWarning || vegModeOpen || appearanceOpen;
+    const isPopupOpen = logoutConfirmOpen || deleteAccountOpen || showBalanceWarning || vegModeOpen;
     if (isPopupOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -167,7 +164,7 @@ export default function Profile() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [logoutConfirmOpen, deleteAccountOpen, showBalanceWarning, vegModeOpen, appearanceOpen]);
+  }, [logoutConfirmOpen, deleteAccountOpen, showBalanceWarning, vegModeOpen]);
 
   const handleVegModeUpdate = (nextValue) => {
     setVegMode(nextValue);
@@ -182,17 +179,6 @@ export default function Profile() {
     }
   };
 
-  const [appearanceTheme, setAppearanceTheme] = useState(() => getFoodUserTheme());
-
-  useEffect(() => {
-    const syncTheme = () => setAppearanceTheme(getFoodUserTheme());
-    window.addEventListener(THEME_CHANGE_EVENT, syncTheme);
-    window.addEventListener("storage", syncTheme);
-    return () => {
-      window.removeEventListener(THEME_CHANGE_EVENT, syncTheme);
-      window.removeEventListener("storage", syncTheme);
-    };
-  }, []);
 
   // Get first letter of name for avatar
   const avatarInitial =
@@ -427,7 +413,7 @@ export default function Profile() {
   };
 
   return (
-    <AnimatedPage className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <AnimatedPage className="min-h-screen bg-[#faf6ed] dark:bg-[#0a0a0a]">
       <div className="max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-4 sm:py-6 md:py-8 lg:py-10 pb-20 sm:pb-24">
         {/* Header: Back Arrow */}
         <div className="flex items-center mb-5">
@@ -635,42 +621,12 @@ export default function Profile() {
               </CardContent>
             </Card>
           </motion.div>
-
-          <motion.div
-            whileHover={{ x: 4, scale: 1.01 }}
-            transition={{ duration: 0.2, type: "spring", stiffness: 300 }}>
-            <Card
-              className="bg-white dark:bg-[#1a1a1a] py-0 rounded-xl shadow-sm border-0 dark:border-gray-800 cursor-pointer"
-              onClick={() => setAppearanceOpen(true)}>
-              <CardContent className="p-4  flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <ProfileOptionIcon styleKey="appearance" icon={Palette} />
-                  <span className="text-base font-medium text-gray-900 dark:text-white">
-                    Appearance
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <motion.span
-                    className="text-base font-medium text-gray-900 dark:text-white capitalize"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.2 }}>
-                    {appearanceTheme}
-                  </motion.span>
-                  <motion.div
-                    whileHover={{ x: 4 }}
-                    transition={{ duration: 0.2 }}>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </motion.div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
         </div>
 
         {/* Collections Section */}
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#DC2626] rounded"></div>
+            <div className="w-1 h-4 bg-[#0a4d2b] rounded"></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Collections
             </h3>
@@ -701,7 +657,7 @@ export default function Profile() {
         {/* Dining Section */}
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#DC2626] rounded"></div>
+            <div className="w-1 h-4 bg-[#0a4d2b] rounded"></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Dining Bookings
             </h3>
@@ -735,7 +691,7 @@ export default function Profile() {
         {/* Food Orders Section */}
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#DC2626] rounded"></div>
+            <div className="w-1 h-4 bg-[#0a4d2b] rounded"></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Food Orders
             </h3>
@@ -768,7 +724,7 @@ export default function Profile() {
         {/* More Section */}
         <div className="mb-8 pb-8">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#DC2626] rounded"></div>
+            <div className="w-1 h-4 bg-[#0a4d2b] rounded"></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               More
             </h3>
@@ -965,12 +921,12 @@ export default function Profile() {
                 setVegModeOpen(false);
               }}
               className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between ${!vegMode
-                ? "border-[#991B1B] bg-[#fdfafc] dark:bg-[#7F1D1D]/10"
+                ? "border-[#06381e] bg-[#fdfafc] dark:bg-[#7F1D1D]/10"
                 : "border-gray-200 dark:border-gray-800 bg-white hover:border-gray-300"
                 }`}>
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!vegMode ? "border-[#991B1B] bg-[#991B1B]" : "border-gray-300"
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!vegMode ? "border-[#06381e] bg-[#06381e]" : "border-gray-300"
                     }`}>
                   {!vegMode && <Check className="h-3 w-3 text-white" />}
                 </div>
@@ -997,7 +953,6 @@ export default function Profile() {
         isLoggingOut={isLoggingOut}
       />
 
-      <UserAppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
 
       {/* Balance Warning Popup */}
       {showBalanceWarning && (

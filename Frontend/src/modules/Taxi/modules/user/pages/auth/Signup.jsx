@@ -32,7 +32,7 @@ const Signup = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const { theme, toggleTheme } = useUserTheme();
+  const { theme } = useUserTheme();
 
   const referralCodeFromQuery = new URLSearchParams(location.search).get('ref') || '';
   const employeeCodeFromQuery = new URLSearchParams(location.search).get('emp') || '';
@@ -62,7 +62,7 @@ const Signup = () => {
   const [otpSending, setOtpSending] = useState(false);
   const fileInputRef = useRef(null);
 
-  const appName = settings.general?.app_name || 'Appzeto 24';
+  const appName = settings.general?.app_name || 'Dima Hasao';
   const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || '';
 
   const isValidPhone = /^\d{10}$/.test(formData.phone);
@@ -415,7 +415,7 @@ const Signup = () => {
             <span className="login-accent-text">
               {step === 'profile' ? 'Complete Profile' : 'Start Journey'}
             </span> <br />
-            Standard with Appzeto
+            Standard with Dima Hasao
           </h1>
         </div>
       </div>

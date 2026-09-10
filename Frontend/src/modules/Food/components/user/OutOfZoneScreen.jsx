@@ -7,7 +7,7 @@ import outOfZoneBg from '@food/assets/Outofzone_bg.jpg';
 
 const OutOfZoneScreen = ({ location, handleLocationClick }) => {
   const { userProfile } = useProfile();
-  const BRAND_NAME = "Hello Parth Food";
+  const BRAND_NAME = "Dima Hasao Food";
 
   const routerLocation = useLocation();
   const initials = React.useMemo(() => {
@@ -63,7 +63,7 @@ const OutOfZoneScreen = ({ location, handleLocationClick }) => {
               state={{ from: routerLocation.pathname }}
               className="h-9 w-9 relative flex items-center justify-center rounded-full bg-[#FFF5E6] border border-white/60 shadow-2xl cursor-pointer active:scale-90 transition-all overflow-hidden"
             >
-              <span className="text-[22px] font-black text-[#DC2626] leading-none tracking-tighter">
+              <span className="text-[22px] font-black text-[#0a4d2b] leading-none tracking-tighter">
                 {initials || 'U'}
               </span>
             </Link>

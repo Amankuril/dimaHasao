@@ -110,7 +110,7 @@ export default function TableBookingSuccess() {
                 key={liveStatus}
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className={`w-20 h-20 ${isPending ? 'bg-amber-50 dark:bg-amber-950/20' : 'bg-[#F9F9FB] dark:bg-slate-900'} rounded-full flex items-center justify-center mb-6 transition-colors`}
+                className={`w-20 h-20 ${isPending ? 'bg-amber-50 dark:bg-amber-950/20' : 'bg-[#faf6ed] dark:bg-slate-900'} rounded-full flex items-center justify-center mb-6 transition-colors`}
             >
                 {isPending ? (
                     <Clock className="w-12 h-12 text-amber-500" />
@@ -132,7 +132,7 @@ export default function TableBookingSuccess() {
                     {isPending ? 'Waiting for restaurant approval' : 'Your table is ready for you'}
                 </p>
                 <div className="pt-2">
-                    <span className="bg-[#F9F9FB] dark:bg-slate-900 text-[#DC2626] dark:text-purple-400 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-[#DC2626]/20 dark:border-purple-400/20">
+                    <span className="bg-[#faf6ed] dark:bg-slate-900 text-[#0a4d2b] dark:text-purple-400 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-[#0a4d2b]/20 dark:border-purple-400/20">
                         BOOKING ID: {booking.bookingId}
                     </span>
                 </div>

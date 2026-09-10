@@ -118,7 +118,7 @@ export default function ReferEarn() {
   };
 
   return (
-    <AnimatedPage className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <AnimatedPage className="min-h-screen bg-[#faf6ed] dark:bg-[#0a0a0a]">
       <div className="max-w-md mx-auto px-4 py-4 pb-24">
         <div className="flex items-center gap-3 mb-5">
           <Link to="/user/profile">
@@ -137,7 +137,7 @@ export default function ReferEarn() {
             <div className="mt-3 grid grid-cols-2 gap-2">
               <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
                 <p className="text-[11px] text-gray-500 dark:text-gray-400">Reward per invite</p>
-                <p className="text-lg font-bold text-[#DC2626]">{"\u20B9"}{stats.rewardAmount}</p>
+                <p className="text-lg font-bold text-[#0a4d2b]">{"\u20B9"}{stats.rewardAmount}</p>
               </div>
               <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3">
                 <p className="text-[11px] text-gray-500 dark:text-gray-400">Referral earnings</p>
@@ -150,7 +150,7 @@ export default function ReferEarn() {
               type="button"
               onClick={handleShare}
               disabled={!referralLink}
-              className="w-full mt-3 h-11 rounded-xl bg-[#DC2626] hover:bg-[#d84f0a]"
+              className="w-full mt-3 h-11 rounded-xl bg-[#0a4d2b] hover:bg-[#d84f0a]"
             >
               <Share2 className="h-4 w-4 mr-2" />
               Share Invite

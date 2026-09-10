@@ -1561,7 +1561,7 @@ export async function updateOrderStatusRestaurant(
         {
           title: riderTitle,
           body: riderBody,
-          image: "/assets/images/Hello Parth Logo.png",
+          image: "/logo.png",
           data: {
             type: "order_status_update",
             orderId: displayOrderId,

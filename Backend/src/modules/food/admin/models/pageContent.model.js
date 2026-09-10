@@ -25,7 +25,7 @@ const legalPageSchema = new mongoose.Schema(
 
 const aboutPageSchema = new mongoose.Schema(
     {
-        appName: { type: String, default: 'Hello Parth Food' },
+        appName: { type: String, default: 'Dima Hasao Food' },
         version: { type: String, default: '1.0.0' },
         description: { type: String, default: '' },
         logo: { type: String, default: '' },

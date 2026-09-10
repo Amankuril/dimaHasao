@@ -9,8 +9,8 @@ import { getLocalUserToken } from '../../services/authService';
 const Onboarding = () => {
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const { theme, toggleTheme } = useUserTheme();
-  const appName = settings.general?.app_name || 'Appzeto 24';
+  const { theme } = useUserTheme();
+  const appName = settings.general?.app_name || 'Dima Hasao';
   const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || '';
 
   useEffect(() => {

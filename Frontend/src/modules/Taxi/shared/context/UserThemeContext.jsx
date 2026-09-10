@@ -1,40 +1,22 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 
+// The taxi user app used to default to a dark palette. The product is now
+// light-only, so this provider pins 'light' and the toggle is a no-op. The
+// context is kept so existing consumers keep working unchanged.
 const UserThemeContext = createContext({
-  theme: 'dark',
+  theme: 'light',
   toggleTheme: () => {},
 });
 
 export const UserThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('userAppTheme');
-      return saved === 'light' ? 'light' : 'dark';
-    }
-    return 'dark';
-  });
-
-  const toggleTheme = () => {
-    setTheme((prev) => {
-      const next = prev === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('userAppTheme', next);
-      return next;
-    });
-  };
-
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.body.style.backgroundColor = theme === 'dark' ? '#07111f' : '#f6f7fb';
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  }, [theme]);
+    if (typeof document === 'undefined') return;
+    document.body.style.backgroundColor = '#f6f7fb';
+    document.documentElement.classList.remove('dark');
+  }, []);
 
   return (
-    <UserThemeContext.Provider value={{ theme, toggleTheme }}>
+    <UserThemeContext.Provider value={{ theme: 'light', toggleTheme: () => {} }}>
       {children}
     </UserThemeContext.Provider>
   );

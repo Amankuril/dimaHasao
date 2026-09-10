@@ -1,10 +1,10 @@
 /**
- * Hello Parth super-app vertical colours
- * - Food active tab: bright red (pops on #D91F3A header)
+ * Dima Hasao super-app vertical colours
+ * - Food: v1 deep-emerald header with gold accent
  * - Inactive tabs: navy (same on Food & Taxi home)
  */
 export const HELLO_PARTH_LOGO_COLORS = {
-  food: '#D91F3A',
+  food: '#06381E',
   taxi: '#1E4A8C',
 };
 
@@ -12,15 +12,15 @@ const INACTIVE_TAB_BG = 'bg-[#050C16]/90';
 
 export const SUPER_APP_VERTICAL_THEME = {
   food: {
-    accent: '#FF6B7A',
-    activeTab: '#FF5C72',
-    theme: '#D91F3A',
+    accent: '#E5B33B',
+    activeTab: '#0A4D2B',
+    theme: '#06381E',
     inactiveTab: '#050C16',
-    stickyBackdrop: 'rgba(217, 31, 58, 0.92)',
-    accentSoft: '#FFF0F2',
-    accentSoftHover: '#FFE0E5',
-    themeBg: 'bg-[#D91F3A]',
-    activeTabBg: 'bg-[#FF5C72]',
+    stickyBackdrop: 'rgba(6, 56, 30, 0.92)',
+    accentSoft: '#FAF6ED',
+    accentSoftHover: '#F0E9D6',
+    themeBg: 'bg-[#06381E]',
+    activeTabBg: 'bg-[#0A4D2B]',
     inactiveTabBg: INACTIVE_TAB_BG,
   },
   taxi: {

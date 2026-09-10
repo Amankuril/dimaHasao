@@ -7,7 +7,7 @@ import { syncThemeForPath } from './shared/utils/theme.js'
 import { NATIVE_LAST_ROUTE_KEY, resolveAppColdStartRoute } from './shared/utils/activeModule.js'
 import './shared/styles/global.css'
 
-// ─── Quick-spicy Food Module Initialization ───────────────────────────────────
+// ─── Dima Hasao Food Module Initialization ───────────────────────────────────
 
 // Load food module business settings (favicon, title) — non-critical
 import('./modules/Food/utils/businessSettings.js')

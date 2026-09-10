@@ -233,7 +233,7 @@ export default function AdminLogin() {
           <div className="w-[160px] md:w-[220px] mb-4 select-none flex justify-center items-center md:items-start">
              <img
               src={DEFAULT_BRAND_LOGO}
-              alt="Hello Parth"
+              alt="Dima Hasao"
               className="w-full object-contain"
             />
           </div>

@@ -1,5 +1,5 @@
 ﻿export const APP_CONFIG = {
-  NAME: 'Hello Parth',
+  NAME: 'Dima Hasao',
   VERSION: '1.0.0',
 };
 

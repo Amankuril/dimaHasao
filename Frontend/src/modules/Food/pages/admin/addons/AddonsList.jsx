@@ -150,7 +150,7 @@ export default function AddonsList() {
       let imageUrl = editImagePreview || ""
       // If a new file selected, upload it
       if (editImageFile) {
-        const uploadRes = await uploadAPI.uploadMedia(editImageFile, { folder: "helloparth/admin/addons" })
+        const uploadRes = await uploadAPI.uploadMedia(editImageFile, { folder: "Dima Hasao/admin/addons" })
         imageUrl = uploadRes?.data?.data?.url || uploadRes?.data?.url || imageUrl
       }
 

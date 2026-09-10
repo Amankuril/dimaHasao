@@ -66,7 +66,7 @@ export const API_BASE_URL = trimTrailingSlash(
   rawApiBase.endsWith('/taxi') ? rawApiBase : `${rawApiBase}/taxi`
 );
 
-// Socket / API origin — never use VITE_ASSET_BASE_URL (CDN can differ from API, e.g. local → helloparth.in uploads).
+// Socket / API origin — never use VITE_ASSET_BASE_URL (CDN can differ from API, e.g. local → Dima Hasao.in uploads).
 const originFromApiBase = API_BASE_URL.startsWith('http')
   ? API_BASE_URL.replace(/\/api(?:\/v1)?(?:\/taxi)?$/, '')
   : '';

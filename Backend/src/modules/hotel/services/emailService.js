@@ -11,12 +11,12 @@ class EmailService {
   getTransporter() {
     if (!this.transporter) {
       this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: process.env.SMTP_SECURE === 'true',
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: process.env.EMAIL_SECURE === 'true',
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASSWORD,
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
         },
       });
     }
@@ -83,7 +83,7 @@ class EmailService {
   async sendEmail({ to, subject, html, text }) {
     try {
       const info = await this.getTransporter().sendMail({
-        from: `"${process.env.FROM_NAME || this.companyName}" <${process.env.SMTP_USER}>`,
+        from: `"${process.env.EMAIL_FROM_NAME || this.companyName}" <${process.env.EMAIL_USER}>`,
         to,
         subject,
         text,

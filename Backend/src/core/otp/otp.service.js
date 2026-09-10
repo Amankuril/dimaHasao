@@ -83,7 +83,7 @@ const sendViaIndiaHub = async ({ phone, otp, purpose = 'otp' }) => {
     const senderId = String(config.smsSenderId || 'SMSHUB').trim();
     const peId = String(config.smsPeId || '1001164203633432409').trim();
     const templateId = String(config.smsDltTemplateId || '').trim();
-    const message = `Welcome to the Hello Parth powered by Hello Parth.Your OTP for registration is ${otp}.BGADEC`;
+    const message = `Welcome to the Dima Hasao powered by Dima Hasao.Your OTP for registration is ${otp}.BGADEC`;
 
     if (!apiKey) {
         throw new ApiError(500, 'SMS India Hub API key is not configured');

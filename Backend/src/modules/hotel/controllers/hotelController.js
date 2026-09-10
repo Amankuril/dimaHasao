@@ -3,7 +3,7 @@ import { uploadToCloudinary, uploadBase64ToCloudinary, deleteFromCloudinary } fr
 
 /** Google Maps API key: prefer GOOGLE_MAP_API_KEY, fallback GOOGLE_MAPS_API_KEY, trimmed */
 function getMapsApiKey() {
-  const key = (process.env.GOOGLE_MAP_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '').trim();
+  const key = (process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '').trim();
   return key || null;
 }
 

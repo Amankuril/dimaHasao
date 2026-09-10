@@ -44,7 +44,7 @@ export const PickupActionModal = ({
 
     setIsUploadingBill(true);
     try {
-      const res = await uploadAPI.uploadMedia(file, { folder: 'helloparth/delivery/bills' });
+      const res = await uploadAPI.uploadMedia(file, { folder: 'Dima Hasao/delivery/bills' });
       if (res?.data?.success && res?.data?.data) {
         setBillImageUrl(res.data.data.url || res.data.data.secure_url);
         setBillImageUploaded(true);

@@ -2,12 +2,18 @@
 
 @import "tailwindcss";
 
+/* Light-only product. This file imports Tailwind separately from global.css, so
+   it needs its own dark-variant override — without it Tailwind defaults to
+   `prefers-color-scheme: dark` and every `dark:` utility here switches on for
+   anyone whose OS is in dark mode. Nothing ever sets data-theme="dark". */
+@custom-variant dark (&:where(html[data-theme="dark"] *));
+
 :root {
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: light;
   color: #1C2833;
   background-color: #F9F9F9;
 
@@ -312,18 +318,6 @@ body {
 .user-app-theme [class*="font-['Plus_Jakarta_Sans']"],
 .user-app-theme [class*="font-['Inter']"] {
   font-family: 'Outfit', system-ui, -apple-system, sans-serif !important;
-}
-
-/* 2. Color Schemes for Dark Mode (Default) */
-.user-app-theme.dark {
-  --user-bg: #07111f;
-  --user-card-bg: #0f1b2d;
-  --user-card-soft: #162238;
-  --user-text-primary: #ffffff;
-  --user-text-secondary: #b8c2d6;
-  --user-text-muted: #7d8aa5;
-  --user-border: rgba(255,255,255,0.12);
-  --user-accent: #ffc400;
 }
 
 /* 3. Color Schemes for Light Mode */
@@ -780,17 +774,19 @@ body {
   border: 1px solid rgba(63, 63, 70, 0.8) !important;
 }
 
-/* User Theme Custom Variables */
+/* User Theme Custom Variables — light-only product, so these defaults are the
+   light palette. Previously they were dark, which made any .user-app-theme
+   element render dark whenever it wasn't under an explicit .light ancestor. */
 :root {
-  --user-bg: #0F172A;
-  --user-card-bg: #111827;
-  --user-card-soft: #162238;
-  --user-text-primary: #FFFFFF;
-  --user-text-secondary: #CBD5E1;
-  --user-border: rgba(255,255,255,0.10);
+  --user-bg: #F8FAFC;
+  --user-card-bg: #FFFFFF;
+  --user-card-soft: #f1f3f8;
+  --user-text-primary: #0B1220;
+  --user-text-secondary: #64748B;
+  --user-border: rgba(15,23,42,0.10);
   --user-accent: #FFC400;
-  --user-profile-header-bg: #090d16;
-  --user-profile-header-gradient: linear-gradient(180deg, rgba(255, 196, 0, 0.06) 0%, rgba(15, 23, 42, 1) 100%);
+  --user-profile-header-bg: #FFFFFF;
+  --user-profile-header-gradient: linear-gradient(180deg, rgba(238, 242, 255, 0.5) 0%, rgba(248, 250, 252, 0) 100%);
 }
 
 .user-app-theme.light,
@@ -805,20 +801,6 @@ body {
   --user-accent: #FFC400;
   --user-profile-header-bg: #FFFFFF;
   --user-profile-header-gradient: linear-gradient(180deg, rgba(238, 242, 255, 0.5) 0%, rgba(248, 250, 252, 0) 100%);
-}
-
-.user-app-theme.dark,
-.user-app-theme .dark,
-.user-app-theme[class*="dark"] {
-  --user-bg: #05070D;
-  --user-card-bg: #101827;
-  --user-card-soft: #162238;
-  --user-text-primary: #FFFFFF;
-  --user-text-secondary: #CBD5E1;
-  --user-border: rgba(255,255,255,0.12);
-  --user-accent: #FFC400;
-  --user-profile-header-bg: #090d16;
-  --user-profile-header-gradient: linear-gradient(180deg, rgba(255, 196, 0, 0.06) 0%, rgba(5, 7, 13, 1) 100%);
 }
 
 /* Theme variable mapping utilities */

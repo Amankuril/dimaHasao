@@ -127,7 +127,7 @@ const PartnerSettings = () => {
                 </div>
 
                 <div className="mt-6 text-center">
-                    <p className="text-[10px] text-gray-400">Rokkooin Partner App v1.0.2</p>
+                    <p className="text-[10px] text-gray-400">Dima Hasao Partner App v1.0.2</p>
                 </div>
 
             </main>

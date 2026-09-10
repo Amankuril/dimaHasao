@@ -333,7 +333,7 @@ export default function AdminRouter() {
             <Route path="archived-accounts" element={<ArchivedAccounts />} />
           </Route>
 
-          {/* TAXI ADMIN - Hello Parth taxi admin */}
+          {/* TAXI ADMIN - Dima Hasao Taxi admin */}
           <Route path="taxi/*" element={<Navigate to="/taxi/admin/dashboard" replace />} />
 
           {/* QUICK COMMERCE ADMIN - Placeholder for future implementation */}

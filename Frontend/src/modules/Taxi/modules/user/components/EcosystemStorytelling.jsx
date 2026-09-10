@@ -67,7 +67,7 @@ const EcosystemStorytelling = () => {
           </span>
         </div>
         <h2 className="text-[20px] font-black text-slate-800 tracking-tight leading-tight">
-          Your City. Connected by <span className="text-[#FF6B00] drop-shadow-[0_4px_10px_rgba(255,107,0,0.15)]">Hello Parth</span>.
+          Your City. Connected by <span className="text-[#FF6B00] drop-shadow-[0_4px_10px_rgba(255,107,0,0.15)]">Dima Hasao</span>.
         </h2>
         <p className="mt-1 text-[10.5px] font-bold text-slate-500 leading-snug max-w-[280px] mx-auto">
           Ride, Food, and Parcel delivery — everything you need in one place.

@@ -56,7 +56,7 @@ const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const { theme, toggleTheme } = useUserTheme();
+  const { theme } = useUserTheme();
   const phoneInputRef = useRef(null);
   const locationError = extractLoginErrorMessage(location.state?.error);
 
@@ -67,7 +67,7 @@ const Login = () => {
   ));
   const [showInput, setShowInput] = useState(false);
 
-  const appName = settings.general?.app_name || 'Appzeto 24';
+  const appName = settings.general?.app_name || 'Dima Hasao';
   const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || '';
 
   const userHomeRoute = useMemo(
@@ -158,7 +158,7 @@ const Login = () => {
           </span>
           <h1 className="text-[28px] font-black leading-[1.15] tracking-tight uppercase text-white">
             <span className="login-accent-text">Experience a New</span> <br />
-            Standard with Appzeto  <br />
+            Standard with Dima Hasao  <br />
             <span className="login-accent-text">24</span>
           </h1>
         </div>

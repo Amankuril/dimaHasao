@@ -67,7 +67,7 @@ const menuSections = [
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useUserTheme();
+  const { theme } = useUserTheme();
   const isDark = theme === 'dark';
   const [profile, setProfile] = useState({
     name: '',
@@ -237,19 +237,6 @@ const Profile = () => {
           <div className="flex items-center justify-between mb-8">
             <h1 className="font-['Outfit'] text-2xl font-extrabold text-[var(--user-text-primary)] tracking-tight">Profile</h1>
             <div className="flex items-center gap-3">
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={toggleTheme}
-                className="h-10 w-10 rounded-xl flex items-center justify-center cursor-pointer transition-colors duration-300 border shadow-sm"
-                style={{
-                  backgroundColor: 'var(--user-card-bg)',
-                  borderColor: 'var(--user-border)',
-                  color: 'var(--user-text-primary)'
-                }}
-              >
-                {isDark ? <Sun size={20} className="text-yellow-400 fill-yellow-400" /> : <Moon size={20} />}
-              </MotionButton>
               <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

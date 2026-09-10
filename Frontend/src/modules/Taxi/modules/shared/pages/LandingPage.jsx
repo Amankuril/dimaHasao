@@ -44,7 +44,7 @@ const FacebookIcon = ({ size = 24, ...props }) => (
 function LandingPage() {
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const appName = settings.general?.app_name || 'Appzeto 24';
+  const appName = settings.general?.app_name || 'Dima Hasao';
   const [activeTab, setActiveTab] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -220,7 +220,7 @@ function LandingPage() {
           </h1>
 
           <p className="hero-desc">
-            Everything your taxi business needs is already here! Appzeto  made for premium taxi service companies seeking excellence.
+            Everything your taxi business needs is already here! Dima Hasao  made for premium taxi service companies seeking excellence.
           </p>
 
           <div className="hero-ctas">
@@ -244,7 +244,7 @@ function LandingPage() {
           <div className="viewport-car-track">
             <motion.img
               src={newHeroTaxiImg}
-              alt="Appzeto  Taxi Model"
+              alt="Dima Hasao  Taxi Model"
               className="hero-car-standalone-asset"
               loading="eager"
               initial={{ x: "120vw", scale: 0.95, opacity: 0 }}
@@ -257,7 +257,7 @@ function LandingPage() {
               onAnimationComplete={() => {
                 document.getElementById('Appzeto -car-engine')?.classList.add('animate-engine-idle');
               }}
-              id="Appzeto -car-engine"
+              id="Dima Hasao -car-engine"
             />
           </div>
         </div>
@@ -436,7 +436,7 @@ function LandingPage() {
         <div className="footer-container">
           <div className="footer-grid">
             <div className="footer-brand">
-              <h2 style={{ color: 'var(--primary-yellow)' }}>Appzeto <span style={{ color: '#fff' }}>24</span></h2>
+              <h2 style={{ color: 'var(--primary-yellow)' }}>Dima Hasao <span style={{ color: '#fff' }}>24</span></h2>
               <p>Redefining urban mobility with kinetic efficiency and premium service.</p>
             </div>
             <div className="footer-col">

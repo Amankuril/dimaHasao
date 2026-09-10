@@ -35,7 +35,7 @@ const LinksPage = () => {
   const links = [
     {
       id: 'user',
-      title: 'Appzeto 24 - User app',
+      title: 'Dima Hasao - User app',
       subtitle: 'Book rides, send parcels, and more.',
       description: 'Get where you need to go with ease. Request a ride or send packages across the city in minutes.',
       url: 'https://play.google.com/store/apps/details?id=com.Appzeto 24.user',
@@ -45,8 +45,8 @@ const LinksPage = () => {
     },
     {
       id: 'driver',
-      title: 'Appzeto 24 Driver',
-      subtitle: 'Drive and earn with Appzeto 24.',
+      title: 'Dima Hasao Driver',
+      subtitle: 'Drive and earn with Dima Hasao.',
       description: 'Join our fleet of professional drivers. Flexible hours, great earnings, and a supportive community.',
       url: 'https://play.google.com/store/apps/details?id=com.Appzeto 24.driver',
       type: 'Partner App',
@@ -191,7 +191,7 @@ const LinksPage = () => {
                 <h2 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight leading-none text-center">
                   Quick Access to All <br />
                   <span className="text-3xl md:text-5xl font-black text-[#FFB300] mt-2 block leading-none">
-                    Appzeto 24 Platforms
+                    Dima Hasao Platforms
                   </span>
                 </h2>
               </div>
@@ -199,7 +199,7 @@ const LinksPage = () => {
           >
             <img
               src="https://ui.aceternity.com/_next/image?url=%2Flinear.webp&w=3840&q=75"
-              alt="Appzeto  platforms overview"
+              alt="Dima Hasao  platforms overview"
               className="mx-auto rounded-2xl object-cover h-full object-left-top w-full"
               draggable={false}
             />
@@ -207,7 +207,7 @@ const LinksPage = () => {
         </div>
 
         <footer className="links-footer">
-          <p>© 2026 Appzeto 24. All rights reserved.</p>
+          <p>© 2026 Dima Hasao. All rights reserved.</p>
           <div className="footer-links">
             <a href="https://Appzeto 24.com" target="_blank" rel="noopener noreferrer">Visit Website</a>
             <span className="dot"></span>

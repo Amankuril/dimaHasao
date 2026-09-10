@@ -133,7 +133,7 @@ export async function approveFoodItem(id) {
                 {
                     title: 'Dish Approved! 🍲',
                     body: `Your dish "${updated.name}" has been approved and is now visible to customers.`,
-                    image: updated.image || '/assets/images/Hello Parth Logo.png',
+                    image: updated.image || '/logo.png',
                     sendToAllDevices: true,
                     data: {
                         type: 'food_approved',
@@ -174,7 +174,7 @@ export async function rejectFoodItem(id, reason) {
                 {
                     title: 'Dish Rejected ❌',
                     body: `Your dish "${updated.name}" was rejected. Reason: ${r}`,
-                    image: updated.image || '/assets/images/Hello Parth Logo.png',
+                    image: updated.image || '/logo.png',
                     sendToAllDevices: true,
                     data: {
                         type: 'food_rejected',

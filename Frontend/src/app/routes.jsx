@@ -13,12 +13,12 @@ import AdminModulesKeepAlive, { AdminKeepAliveSlot } from './AdminModulesKeepAli
 import { isModuleAuthenticated } from '../shared/utils/moduleAuth.js'
 import ModuleShell from '../modules/DimaHasao/components/layout/ModuleShell.jsx'
 
-// Lazy load the Food service module (Quick-spicy app)
+// Lazy load the Food service module (Dima Hasao app)
 const FoodApp = lazy(() => import('../modules/Food/routes'))
 const TaxiApp = lazy(() => import('../modules/Taxi/TaxiApp'))
 // Dima Hasao customer app (client-approved v1 UI)
 const DimaHasaoApp = lazy(() => import('../modules/DimaHasao'))
-// Hotel / property module (ported from HomeZoo): admin + partner panels
+// Hotel / property module (ported from the HomeZoo codebase): admin + partner panels
 const HotelApp = lazy(() => import('../modules/Hotel/routes'))
 const ToursApp = lazy(() => import('../modules/Tours/routes'))
 

@@ -479,9 +479,9 @@ export default function UnifiedOTPFastLogin() {
             className="flex items-center gap-4 mb-16"
           >
             <div className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-lg">
-              <img src={DEFAULT_BRAND_LOGO} alt="Hello Parth" className="w-8 h-8 object-contain" />
+              <img src={DEFAULT_BRAND_LOGO} alt="Dima Hasao" className="w-8 h-8 object-contain" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight">Hello Parth</h1>
+            <h1 className="text-3xl font-black tracking-tight">Dima Hasao</h1>
           </motion.div>
 
           <motion.div
@@ -555,7 +555,7 @@ export default function UnifiedOTPFastLogin() {
               {/* Circular Logo */}
               <img
                 src={DEFAULT_BRAND_LOGO}
-                alt="Hello Parth"
+                alt="Dima Hasao"
                 className="w-[84px] h-[84px] rounded-full object-cover shadow-lg mb-6"
               />
 
@@ -565,7 +565,7 @@ export default function UnifiedOTPFastLogin() {
                     ? "Complete your profile"
                     : step === 2
                       ? "Verify OTP"
-                      : "Welcome to Hello Parth"}
+                      : "Welcome to Dima Hasao"}
                 </h2>
                 <p className="text-[#1A1A1A] text-[15px] font-medium max-w-[28ch] mx-auto">
                   {step === 3 ? (

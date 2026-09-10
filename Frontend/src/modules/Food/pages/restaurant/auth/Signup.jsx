@@ -171,7 +171,7 @@ export default function RestaurantSignup() {
           >
             <img
               src={DEFAULT_BRAND_LOGO}
-              alt="Hello Parth"
+              alt="Dima Hasao"
               className="h-12 w-auto max-w-[160px] object-contain"
             />
             <div className="flex flex-col items-start">
