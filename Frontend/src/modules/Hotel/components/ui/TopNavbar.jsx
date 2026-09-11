@@ -76,7 +76,7 @@ const TopNavbar = () => {
                     <Link to="/reels" className="text-gray-500 font-bold text-sm hover:text-emerald-600 transition tracking-tight">
                         Reels
                     </Link>
-                    <Link to="/hotel/login" className="text-gray-500 font-bold text-sm hover:text-emerald-600 transition tracking-tight">
+                    <Link to="/hotel/partner/login" className="text-gray-500 font-bold text-sm hover:text-emerald-600 transition tracking-tight">
                         Add Property
                     </Link>
                     <Link to="/bookings" className="text-gray-500 font-bold text-sm hover:text-emerald-600 transition tracking-tight">

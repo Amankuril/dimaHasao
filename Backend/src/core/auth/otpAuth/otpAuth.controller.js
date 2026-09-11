@@ -1,5 +1,9 @@
 import { sendResponse } from '../../../utils/response.js';
-import { requestOtpForAudience, verifyOtpForAudience } from './otpAuth.service.js';
+import {
+    requestOtpForAudience,
+    verifyOtpForAudience,
+    completeSignupForAudience,
+} from './otpAuth.service.js';
 import { listAuthAudiences } from './audienceRegistry.js';
 
 /** POST /auth/otp/request  { audience, phone } */
@@ -21,6 +25,18 @@ export const verifyOtpController = async (req, res, next) => {
         const result = await verifyOtpForAudience(audience, phone, otp, payload);
 
         return sendResponse(res, 200, 'OTP verified successfully', result);
+    } catch (error) {
+        next(error);
+    }
+};
+
+/** POST /auth/otp/complete  { audience, signupToken, ...payload } */
+export const completeSignupController = async (req, res, next) => {
+    try {
+        const { audience, signupToken, ...payload } = req.body || {};
+        const result = await completeSignupForAudience(audience, signupToken, payload);
+
+        return sendResponse(res, 200, 'Signup completed successfully', result);
     } catch (error) {
         next(error);
     }

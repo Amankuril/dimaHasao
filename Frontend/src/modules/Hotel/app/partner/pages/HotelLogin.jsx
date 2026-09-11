@@ -1,36 +1,39 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, Mail, ArrowRight, Loader2, Shield, Building2 } from 'lucide-react';
+import { Phone, User, Mail, ArrowRight, Loader2, Shield, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../../services/apiService';
 import logo from '../../../assets/rokologin-removebg-preview.png';
 
 const HotelLogin = () => {
     const navigate = useNavigate();
+    // 1 = phone, 2 = OTP, 3 = details (only when the number has no account yet)
     const [step, setStep] = useState(1);
-    const [method, setMethod] = useState('phone');
     const [contact, setContact] = useState('');
     const [otp, setOtp] = useState(['', '', '', '']);
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    // Proof the phone passed its OTP, exchanged for a session in step 3.
+    const [signupToken, setSignupToken] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const goToPartnerArea = () => navigate('/hotel/partner/dashboard', { replace: true });
 
     const handleSendOTP = async (e) => {
         e.preventDefault();
         setError('');
 
-        if (method === 'phone' && contact.length !== 10) {
+        const digits = String(contact).replace(/\D/g, '');
+        if (digits.length !== 10) {
             setError('Please enter a valid 10-digit phone number');
-            return;
-        }
-        if (method === 'email' && !contact.includes('@')) {
-            setError('Please enter a valid email address');
             return;
         }
 
         setLoading(true);
         try {
-            // Use authService
-            await authService.sendOtp(contact, 'login', 'partner');
+            await authService.sendOtp(digits, 'login', 'partner');
+            setOtp(['', '', '', '']);
             setStep(2);
         } catch (err) {
             setError(err.message || 'Failed to send OTP');
@@ -45,7 +48,7 @@ const HotelLogin = () => {
         newOtp[index] = value;
         setOtp(newOtp);
 
-        if (value && index < 5) {
+        if (value && index < otp.length - 1) {
             document.getElementById(`otp-${index + 1}`)?.focus();
         }
     };
@@ -60,15 +63,47 @@ const HotelLogin = () => {
 
         setLoading(true);
         try {
-            await authService.verifyOtp({
-                phone: method === 'phone' ? contact : undefined, // Currently backend focuses on phone for OTP, email flow might need distinct check if supported
-                email: method === 'email' ? contact : undefined,
+            const result = await authService.verifyOtp({
+                phone: String(contact).replace(/\D/g, ''),
                 otp: otpString,
-                role: 'partner'
+                role: 'partner',
             });
-            navigate('/hotel/dashboard');
+
+            // An unknown number has no account to sign into yet — it carries a
+            // signup ticket into step 3 and registers on this same screen.
+            if (result?.nextStep === 'onboarding') {
+                setSignupToken(result.signupToken || '');
+                setError('');
+                setStep(3);
+                return;
+            }
+
+            goToPartnerArea();
         } catch (err) {
             setError(err.message || 'Invalid OTP');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (name.trim().length < 2) {
+            setError('Please enter your full name');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await authService.completePartnerSignup(signupToken, {
+                name: name.trim(),
+                email: email.trim(),
+            });
+            goToPartnerArea();
+        } catch (err) {
+            setError(err.message || 'Could not complete registration');
         } finally {
             setLoading(false);
         }
@@ -114,50 +149,25 @@ const HotelLogin = () => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                             >
-                                <h2 className="text-xl font-bold text-gray-900 mb-6">Login with OTP</h2>
-
-                                {/* Method Toggle */}
-                                <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl">
-                                    <button
-                                        type="button"
-                                        onClick={() => setMethod('phone')}
-                                        className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${method === 'phone'
-                                            ? 'bg-[#005CA8] text-white shadow-md'
-                                            : 'text-gray-500'
-                                            }`}
-                                    >
-                                        <Phone size={16} className="inline mr-2" />
-                                        Phone
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setMethod('email')}
-                                        className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${method === 'email'
-                                            ? 'bg-[#005CA8] text-white shadow-md'
-                                            : 'text-gray-500'
-                                            }`}
-                                    >
-                                        <Mail size={16} className="inline mr-2" />
-                                        Email
-                                    </button>
-                                </div>
+                                <h2 className="text-xl font-bold text-gray-900 mb-2">Login or Register</h2>
+                                <p className="text-sm text-gray-500 mb-6">
+                                    Enter your phone number — we'll sign you in, or set you up if you're new.
+                                </p>
 
                                 <form onSubmit={handleSendOTP} className="space-y-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                             {method === 'phone' ? 'Phone Number' : 'Email Address'}
+                                            Phone Number
                                         </label>
                                         <div className="relative">
-                                            {method === 'phone' ? (
-                                                <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                                            ) : (
-                                                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                                            )}
+                                            <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                             <input
-                                                type={method === 'phone' ? 'tel' : 'email'}
+                                                type="tel"
+                                                inputMode="numeric"
+                                                maxLength={10}
                                                 value={contact}
-                                                onChange={(e) => setContact(e.target.value)}
-                                                placeholder={method === 'phone' ? '9876543210' : 'partner@hotel.com'}
+                                                onChange={(e) => setContact(e.target.value.replace(/\D/g, ''))}
+                                                placeholder="9876543210"
                                                 className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#005CA8] focus:border-transparent outline-none transition-all"
                                                 required
                                             />
@@ -190,7 +200,7 @@ const HotelLogin = () => {
                                     </button>
                                 </form>
                             </motion.div>
-                        ) : (
+                        ) : step === 2 ? (
                             <motion.div
                                 key="step2"
                                 initial={{ opacity: 0, x: 20 }}
@@ -203,7 +213,7 @@ const HotelLogin = () => {
                                     </div>
                                     <h2 className="text-xl font-bold text-gray-900">Enter OTP</h2>
                                     <p className="text-sm text-gray-500 mt-2">
-                                        Code sent to {method === 'phone' ? `+91 ${contact}` : contact}
+                                        Code sent to +91 {contact}
                                     </p>
                                 </div>
 
@@ -249,23 +259,98 @@ const HotelLogin = () => {
                                         onClick={() => setStep(1)}
                                         className="w-full text-gray-500 text-sm hover:text-gray-700"
                                     >
-                                        Change {method === 'phone' ? 'number' : 'email'}
+                                        Change number
                                     </button>
+                                </form>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="step3"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                            >
+                                <div className="text-center mb-6">
+                                    <div className="w-16 h-16 bg-[#005CA8]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Building2 size={32} className="text-[#005CA8]" />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-gray-900">Create your partner account</h2>
+                                    <p className="text-sm text-gray-500 mt-2">
+                                        +91 {contact} verified. Tell us who you are to finish.
+                                    </p>
+                                </div>
+
+                                <form onSubmit={handleRegister} className="space-y-5">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Full Name
+                                        </label>
+                                        <div className="relative">
+                                            <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                autoFocus
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
+                                                placeholder="Your full name"
+                                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#005CA8] focus:border-transparent outline-none transition-all"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Email <span className="text-gray-400 font-normal">(optional)</span>
+                                        </label>
+                                        <div className="relative">
+                                            <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                placeholder="partner@hotel.com"
+                                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#005CA8] focus:border-transparent outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {error && (
+                                        <motion.p
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="text-red-500 text-sm"
+                                        >
+                                            {error}
+                                        </motion.p>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full bg-[#005CA8] hover:bg-[#004b8a] text-white py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {loading ? (
+                                            <Loader2 size={20} className="animate-spin" />
+                                        ) : (
+                                            <>
+                                                Create Account
+                                                <ArrowRight size={20} />
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <p className="text-xs text-gray-400 text-center">
+                                        You can add property and KYC details once you're in.
+                                    </p>
                                 </form>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </motion.div>
 
-                {/* Footer */}
                 <p className="text-center text-blue-100 text-sm mt-6">
-                    New partner?{' '}
-                    <button
-                        onClick={() => navigate('/hotel/join')}
-                        className="text-white font-bold hover:underline"
-                    >
-                        Register Your Property
-                    </button>
+                    New here? Just enter your number above — we'll register you.
                 </p>
             </motion.div>
         </div>

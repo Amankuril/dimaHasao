@@ -18,6 +18,7 @@ import { signAccessToken, signRefreshToken } from '../../../core/auth/token.util
 import { buildUnifiedUserSession } from '../../../core/auth/unifiedUserSession.js';
 import { registerAuthAudience, NEXT_STEP } from '../../../core/auth/otpAuth/audienceRegistry.js';
 import { AuthError } from '../../../core/auth/errors.js';
+import { creditSignupReferral } from '../../../core/referrals/signupReferral.service.js';
 import { config } from '../../../config/env.js';
 import { logger } from '../../../utils/logger.js';
 
@@ -92,19 +93,26 @@ export const registerFoodAuthAudiences = () => {
         },
 
         // The name arrives with the verify call, so signup completes in one step.
-        createAccount: async (phone, { name } = {}) => {
+        createAccount: async (phone, { name, ref } = {}) => {
             const trimmed = String(name || '').trim();
             if (!trimmed) return null;
 
             const existing = await FoodUser.findOne({ phone });
-            if (existing) {
-                existing.name = trimmed;
-                existing.isVerified = true;
-                await existing.save();
-                return existing;
+
+            // A nameless row from an abandoned signup is completed, not duplicated.
+            const isBrandNew = !existing;
+            const user = existing || new FoodUser({ phone });
+
+            user.name = trimmed;
+            user.isVerified = true;
+            await user.save();
+
+            // Only a genuinely new account earns its referrer a reward.
+            if (isBrandNew || !user.referredBy) {
+                await creditSignupReferral({ ref, newUser: user });
             }
 
-            return FoodUser.create({ phone, name: trimmed, isVerified: true });
+            return user;
         },
 
         issueSession: async (user, ctx) => {

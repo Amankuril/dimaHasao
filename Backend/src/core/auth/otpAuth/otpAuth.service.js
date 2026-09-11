@@ -15,6 +15,31 @@ import { ValidationError } from '../errors.js';
 import { getAuthAudience, NEXT_STEP } from './audienceRegistry.js';
 import { config } from '../../../config/env.js';
 import { logger } from '../../../utils/logger.js';
+import jwt from 'jsonwebtoken';
+
+/**
+ * Proof that this phone just passed an OTP for this audience.
+ *
+ * An audience whose new accounts need more input (a name, an onboarding form)
+ * has nothing to issue a session against yet — but the follow-up call still has
+ * to prove the phone was verified, or anyone could create an account for any
+ * number. A short-lived signed ticket does that without a new collection.
+ */
+const SIGNUP_TICKET_TTL = '10m';
+
+const issueSignupTicket = (phone, audienceKey) =>
+    jwt.sign({ phone, audience: audienceKey, purpose: 'signup' }, config.jwtAccessSecret, {
+        expiresIn: SIGNUP_TICKET_TTL,
+    });
+
+const readSignupTicket = (ticket) => {
+    try {
+        const decoded = jwt.verify(String(ticket || ''), config.jwtAccessSecret);
+        return decoded?.purpose === 'signup' ? decoded : null;
+    } catch {
+        return null;
+    }
+};
 
 const assertValidPhone = (phone) => {
     const normalized = normalizeOtpPhone(phone);
@@ -113,6 +138,8 @@ export const verifyOtpForAudience = async (audienceKey, phone, otp, payload = {}
             phone: normalizedPhone,
             isRegistered: false,
             nextStep: audience.onNewAccount,
+            // Present this to /auth/otp/complete once the extra details are in.
+            signupToken: issueSignupTicket(normalizedPhone, audience.key),
             pending: result.metadata ?? null,
         };
     }
@@ -132,6 +159,56 @@ export const verifyOtpForAudience = async (audienceKey, phone, otp, payload = {}
         verified: true,
         audience: audience.key,
         phone: normalizedPhone,
+        isRegistered: true,
+        nextStep: NEXT_STEP.AUTHENTICATED,
+        ...session,
+    };
+};
+
+
+/**
+ * Finish a signup that needed more than an OTP — the consumer app's name step,
+ * or any audience whose adapter can create an account from a payload.
+ *
+ * Requires the `signupToken` handed out by verify, so the phone cannot be
+ * claimed by anyone who did not pass the OTP.
+ *
+ * @param {string} audienceKey
+ * @param {string} signupToken
+ * @param {Object} payload - Forwarded to the adapter's createAccount.
+ */
+export const completeSignupForAudience = async (audienceKey, signupToken, payload = {}) => {
+    const audience = getAuthAudience(audienceKey);
+    const ticket = readSignupTicket(signupToken);
+
+    if (!ticket || ticket.audience !== audience.key) {
+        throw new ValidationError('Your verification has expired. Please request a new OTP.');
+    }
+
+    if (typeof audience.createAccount !== 'function') {
+        throw new ValidationError(`${audience.label} accounts are created through onboarding.`);
+    }
+
+    const phone = normalizeOtpPhone(ticket.phone);
+    const account =
+        (await audience.findAccount(phone)) || (await audience.createAccount(phone, payload));
+
+    if (!account) {
+        throw new ValidationError('Could not complete signup. Please check the details and retry.');
+    }
+
+    if (typeof audience.assertCanLogin === 'function') {
+        audience.assertCanLogin(account);
+    }
+
+    const session = await audience.issueSession(account, { ...payload, phone });
+
+    logger.info(`[OtpAuth] ${audience.key} signup completed ${phone}`);
+
+    return {
+        verified: true,
+        audience: audience.key,
+        phone,
         isRegistered: true,
         nextStep: NEXT_STEP.AUTHENTICATED,
         ...session,

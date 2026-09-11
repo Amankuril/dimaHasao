@@ -99,7 +99,32 @@ export default function HotelRoutes() {
           <Route path="settings" element={<PartnerSettings />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="admin" replace />} />
+        {/* This module was ported from a standalone app where the partner
+            pages sat at the root, so its own links still point at /hotel/<page>
+            while the routes now live under /hotel/partner/<page>. Aliasing is a
+            single place to absorb that instead of rewriting every navigate(). */}
+        {[
+          'dashboard',
+          'properties',
+          'inventory-properties',
+          'bookings',
+          'wallet',
+          'reviews',
+          'kyc',
+          'bank-details',
+          'notifications',
+          'profile',
+          'settings',
+          'join',
+        ].map((page) => (
+          <Route key={page} path={page} element={<Navigate to={`/hotel/partner/${page}`} replace />} />
+        ))}
+        <Route path="login" element={<Navigate to="/hotel/partner/login" replace />} />
+        <Route path="partner-dashboard" element={<Navigate to="/hotel/partner/dashboard" replace />} />
+
+        {/* Absolute, not "admin": a relative target re-resolves against the
+            unmatched URL, so every miss appended another /admin forever. */}
+        <Route path="*" element={<Navigate to="/hotel/admin" replace />} />
       </Routes>
     </Suspense>
   );

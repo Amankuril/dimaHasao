@@ -1,10 +1,13 @@
 /**
  * Auth audience for the hotel partner app.
  *
- * Hotel partners register first (documents, KYC) and are then approved by an
- * admin, so an unknown phone is sent to onboarding rather than signed in.
+ * One phone-and-OTP screen serves both sign-in and sign-up: a known number gets
+ * a session, an unknown one is answered with ONBOARDING and creates its account
+ * through `createAccount` on the follow-up /auth/otp/complete call. KYC and
+ * admin approval happen afterwards, inside the partner area.
  */
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import Partner from '../models/Partner.js';
 import { registerAuthAudience, NEXT_STEP } from '../../../core/auth/otpAuth/audienceRegistry.js';
 import { AuthError } from '../../../core/auth/errors.js';
@@ -24,6 +27,42 @@ export const registerHotelAuthAudiences = () => {
         onNewAccount: NEXT_STEP.ONBOARDING,
 
         findAccount: (phone) => Partner.findOne({ phone }),
+
+        /**
+         * Create a partner from the minimum the login page can ask for.
+         *
+         * Full KYC (Aadhaar, PAN, address, documents) is collected later in the
+         * partner area — it needs file uploads, and gating signup behind it left
+         * new partners with no way in at all. The account starts `pending`, so
+         * an admin still approves before it can transact.
+         */
+        createAccount: async (phone, { name, email } = {}) => {
+            const trimmedName = String(name || '').trim();
+            if (!trimmedName) return null;
+
+            const normalizedEmail = String(email || '').trim().toLowerCase();
+
+            if (normalizedEmail) {
+                const emailTaken = await Partner.findOne({ email: normalizedEmail, phone: { $ne: phone } });
+                if (emailTaken) {
+                    throw new AuthError('That email is already registered to another partner.');
+                }
+            }
+
+            // OTP is the credential here; the password column just has to be set.
+            const password = await bcrypt.hash(`${phone}:${Date.now()}:${Math.random()}`, 10);
+
+            return Partner.create({
+                name: trimmedName,
+                phone,
+                ...(normalizedEmail ? { email: normalizedEmail } : {}),
+                password,
+                role: 'partner',
+                isPartner: true,
+                isVerified: true,
+                partnerApprovalStatus: 'pending',
+            });
+        },
 
         assertCanLogin: (partner) => {
             if (partner.isBlocked) {

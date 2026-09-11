@@ -717,7 +717,7 @@ export const startDriverOnboarding = async ({ phone, role }) => {
   }
 
   return {
-    message: smsDispatch.mode === 'live' ? 'OTP sent successfully' : 'OTP generated successfully',
+    message: 'OTP sent successfully',
     session: publicSessionPayload(session, debugOtp),
   };
 };

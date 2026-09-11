@@ -130,6 +130,12 @@ const LanguageSelect = lazy(() => import('./modules/driver/pages/registration/La
 const DriverWelcome = lazy(() => import('./modules/driver/pages/registration/DriverWelcome'));
 const PhoneRegistration = lazy(() => import('./modules/driver/pages/registration/PhoneRegistration'));
 const OTPVerification = lazy(() => import('./modules/driver/pages/registration/OTPVerification'));
+const RoleSelection = lazy(() => import('./modules/driver/pages/registration/RoleSelection'));
+const RoleSpecificOnboarding = lazy(() => import('./modules/driver/pages/registration/RoleSpecificOnboarding'));
+const BusSignupBuilderPage = lazy(() => import('./modules/driver/pages/registration/BusSignupBuilderPage'));
+const BusDriverLiveRoute = lazy(() => import('./modules/driver/pages/BusDriverLiveRoute'));
+const PoolingDriverOnboarding = lazy(() => import('./modules/driver/pages/pooling/PoolingDriverOnboarding'));
+const PoolingDriverPendingStatus = lazy(() => import('./modules/driver/pages/pooling/PoolingDriverPendingStatus'));
 const RegistrationStatus = lazy(() => import('./modules/driver/pages/registration/RegistrationStatus'));
 const StepPersonal = lazy(() => import('./modules/driver/pages/registration/StepPersonal'));
 const StepReferral = lazy(() => import('./modules/driver/pages/registration/StepReferral'));
@@ -1004,6 +1010,22 @@ function TaxiApp() {
                 <Route path="login" element={<PhoneRegistration />} />
                 <Route path="reg-phone" element={<PhoneRegistration />} />
                 <Route path="otp-verify" element={<OTPVerification />} />
+                {/* Reached when one phone holds several portal roles; both
+                    OTPVerification and StepPersonal navigate here. */}
+                <Route path="select-role" element={<RoleSelection />} />
+                {/* These five are navigated to from DriverLayout, BusDriverHome
+                    and DriverRideRequestListener but had no route, so each one
+                    rendered a blank screen. */}
+                <Route path="role-signup" element={<RoleSpecificOnboarding />} />
+                <Route
+                  path="role-signup/bus-builder"
+                  element={<Navigate to="/taxi/driver/role-signup/bus-builder/create" replace />}
+                />
+                <Route path="role-signup/bus-builder/create" element={<BusSignupBuilderPage />} />
+                <Route path="role-signup/bus-builder/edit/:id" element={<BusSignupBuilderPage />} />
+                <Route path="bus-home/live-route" element={<BusDriverLiveRoute />} />
+                <Route path="pooling/onboarding" element={<PoolingDriverOnboarding />} />
+                <Route path="pooling/status" element={<PoolingDriverPendingStatus />} />
                 <Route path="step-personal" element={<StepPersonal />} />
                 <Route path="step-referral" element={<StepReferral />} />
                 <Route path="step-vehicle" element={<StepVehicle />} />
@@ -1068,6 +1090,7 @@ function TaxiApp() {
                 <Route path="login" element={<PhoneRegistration />} />
                 <Route path="reg-phone" element={<PhoneRegistration />} />
                 <Route path="otp-verify" element={<OTPVerification />} />
+                <Route path="select-role" element={<RoleSelection />} />
                 <Route path="lang-select" element={<LanguageSelect />} />
                 <Route path="step-personal" element={<StepPersonal />} />
                 <Route path="step-referral" element={<StepReferral />} />

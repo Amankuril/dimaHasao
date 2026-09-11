@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { requestUserOtp, verifyUserOtp } from '../../../services/api/auth';
-import { userAPI } from '../../../services/api';
-import { setUnifiedAuthData, patchStoredUser } from '../../../shared/utils/moduleAuth';
+import { requestUserOtp, verifyUserOtp, completeUserSignup } from '../../../services/api/auth';
+import { setUnifiedAuthData } from '../../../shared/utils/moduleAuth';
 
 const TEST_PHONE =
   String(import.meta.env?.VITE_USE_DEFAULT_TEST_PHONE) === 'true'
@@ -22,6 +21,8 @@ export const LoginScreen = () => {
   // 'phone' → 'otp' → 'name' (name step only for unregistered numbers).
   const [step, setStep] = useState('phone');
   const [needsName, setNeedsName] = useState(false);
+  // Proof the phone passed its OTP, exchanged for a session at the name step.
+  const [signupToken, setSignupToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, showToast } = useBooking();
   const navigate = useNavigate();
@@ -74,17 +75,17 @@ export const LoginScreen = () => {
       const res = await verifyUserOtp(digits, code);
       const data = res?.data?.data ?? res?.data ?? {};
 
-      // Establishes BOTH the food and taxi sessions from one login.
-      setUnifiedAuthData(data);
-
-      // A number with no account yet (or an account still missing a name)
-      // collects the name now, using the session we just established.
+      // A number with no account yet has no session to establish — it carries a
+      // signup ticket to the name step instead.
       if (data.nextStep === 'collect_name') {
+        setSignupToken(data.signupToken || '');
         setNeedsName(true);
         setStep('name');
         return;
       }
 
+      // Establishes BOTH the food and taxi sessions from one login.
+      setUnifiedAuthData(data);
       finishLogin(digits, data.user, '✨ Welcome back!');
     } catch (err) {
       showToast(readApiError(err, 'Invalid or expired OTP.'));
@@ -104,11 +105,12 @@ export const LoginScreen = () => {
 
     setIsLoading(true);
     try {
-      const res = await userAPI.updateProfile({ name });
-      const user = res?.data?.data?.user ?? res?.data?.data ?? res?.data ?? null;
-      // The session was cached at verify time, before the name existed.
-      patchStoredUser('user', { name });
-      finishLogin(digits, user, '✨ Account created! Welcome to Dima Hasao!');
+      const res = await completeUserSignup(signupToken, { name });
+      const data = res?.data?.data ?? res?.data ?? {};
+
+      // The account exists now, so this is the first real session.
+      setUnifiedAuthData(data);
+      finishLogin(digits, data.user, '✨ Account created! Welcome to Dima Hasao!');
     } catch (err) {
       showToast(readApiError(err, 'Could not save your name. Please try again.'));
     } finally {

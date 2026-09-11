@@ -77,4 +77,18 @@ export const verifyOtp = async (audience, phone, otp, payload = {}) => {
   );
 };
 
-export default { requestOtp, verifyOtp, AUDIENCE, NEXT_STEP, normalizePhone };
+/**
+ * Finish a signup that `verify` answered with `collect_name` / `onboarding`.
+ *
+ * `signupToken` comes from that verify response and is the proof the phone
+ * passed its OTP — the account cannot be created without it.
+ */
+export const completeSignup = async (audience, signupToken, payload = {}) => {
+  if (!signupToken) {
+    throw new Error('Your verification has expired. Please request a new OTP.');
+  }
+
+  return unwrap(await authClient.post('/auth/otp/complete', { audience, signupToken, ...payload }));
+};
+
+export default { requestOtp, verifyOtp, completeSignup, AUDIENCE, NEXT_STEP, normalizePhone };

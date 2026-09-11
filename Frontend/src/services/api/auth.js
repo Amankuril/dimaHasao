@@ -11,6 +11,7 @@ import { EMAIL_REGEX } from "@/shared/utils/emailValidation";
 // /api/v1/auth/otp/* .
 const OTP_REQUEST = "/auth/otp/request";
 const OTP_VERIFY = "/auth/otp/verify";
+const OTP_COMPLETE = "/auth/otp/complete";
 
 export const AUDIENCE = {
   USER: "user",
@@ -111,6 +112,22 @@ export function verifyUserOtp(
     ...(name ? { name } : {}),
     ...(fcmToken ? { fcmToken, platform } : {}),
     ...(confirmAction ? { confirmAction } : {}),
+  });
+}
+
+/**
+ * Finish a user signup that verify answered with `collect_name`.
+ * @param {string} signupToken - From the verify response.
+ * @param {{name: string, ref?: string}} payload
+ */
+export function completeUserSignup(signupToken, payload = {}) {
+  if (!signupToken) {
+    return Promise.reject(new Error("Your verification has expired. Please request a new OTP."));
+  }
+  return apiClient.post(OTP_COMPLETE, {
+    audience: AUDIENCE.USER,
+    signupToken,
+    ...payload,
   });
 }
 

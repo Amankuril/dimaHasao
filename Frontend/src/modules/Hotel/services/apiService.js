@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 import { API_BASE_URL } from '../config/apiConfig';
-import { requestOtp, verifyOtp, AUDIENCE } from '../../../services/auth/otpAuthClient';
+import { requestOtp, verifyOtp, completeSignup, AUDIENCE } from '../../../services/auth/otpAuthClient';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -89,6 +89,26 @@ export const authService = {
   },
 
   // Verify Partner OTP & Register
+  /**
+   * Finish a partner signup that verify answered with `onboarding`.
+   * `signupToken` is the proof the phone passed its OTP.
+   */
+  completePartnerSignup: async (signupToken, payload = {}) => {
+    try {
+      const result = await completeSignup(AUDIENCE.HOTEL_PARTNER, signupToken, payload);
+      const token = result.token || result.accessToken;
+
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+      }
+
+      return result;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   verifyPartnerOtp: async (data = {}) => {
     try {
       const { phone, otp, ...payload } = data;
