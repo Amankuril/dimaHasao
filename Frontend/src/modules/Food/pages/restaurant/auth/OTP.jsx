@@ -217,7 +217,7 @@ export default function RestaurantOTP() {
             message: data.message,
           },
         })
-      } else if (data.needsRegistration === true) {
+      } else if (data.nextStep === 'onboarding') {
         isSuccessRef.current = true
         setRestaurantPendingPhone(phone)
         sessionStorage.removeItem("restaurantAuthData")

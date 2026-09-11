@@ -1,6 +1,4 @@
-import crypto from 'node:crypto';
 import { ApiError } from '../../../../utils/ApiError.js';
-import { env } from '../../../../config/env.js';
 import { Owner } from '../../admin/models/Owner.js';
 import { ServiceStore } from '../../admin/models/ServiceStore.js';
 import { ServiceCenterStaff } from '../../admin/models/ServiceCenterStaff.js';
@@ -9,9 +7,18 @@ import { Driver } from '../models/Driver.js';
 import { BusDriver } from '../models/BusDriver.js';
 import { DriverLoginSession } from '../models/DriverLoginSession.js';
 import { signAccessToken } from './authService.js';
-import { sendOtpSms } from '../../services/smsService.js';
+import { createOrUpdateOtp, verifyOtp } from '../../../../core/otp/otp.service.js';
 
-const LOGIN_OTP_TTL_MS = 10 * 60 * 1000;
+/**
+ * OTP generation, storage, rate limiting and delivery live in core/otp under
+ * the 'taxi-driver' scope. DriverLoginSession is kept for what core does not
+ * model: which account/role this phone is logging in as, and the multi-role
+ * selection handshake after a successful verify.
+ */
+const OTP_SCOPE = 'taxi-driver';
+
+/** How long the post-OTP role-selection handshake stays usable. */
+const SESSION_TTL_MS = 10 * 60 * 1000;
 
 const normalizePhone = (phone) => {
   const digits = String(phone || '').replace(/\D/g, '').trim();
@@ -31,7 +38,6 @@ const buildPhoneCandidates = (phone) => {
   return [...candidates];
 };
 
-const generateOtp = () => String(Math.floor(1000 + Math.random() * 9000));
 const normalizeRole = (role) => {
   const normalized = String(role || 'driver').toLowerCase();
   if (normalized === 'owner') return 'owner';
@@ -59,42 +65,10 @@ const normalizeRole = (role) => {
   return 'driver';
 };
 
-const hashOtp = (otp) => crypto.createHash('sha256').update(String(otp)).digest('hex');
 const getVisibleOtp = (otp) => (process.env.NODE_ENV !== 'production' ? String(otp) : null);
-const isTruthy = (value) => ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
-const TEST_LOGIN_OTP_PHONE = '6268423925';
-const TEST_LOGIN_OTP_CODE = '0000';
-const getStaticDriverOtpConfig = () => ({
-  phone: normalizePhone(env.sms?.staticOtpPhone || TEST_LOGIN_OTP_PHONE),
-  otp: String(env.sms?.staticOtpCode || TEST_LOGIN_OTP_CODE).trim(),
-});
-const resolveDriverLoginOtpForPhone = (phone) => {
-  const normalizedPhone = normalizePhone(phone);
-  const staticOtpConfig = getStaticDriverOtpConfig();
-  const defaultOtpEnabled = isTruthy(env.sms?.useDefaultOtp);
-
-  if (defaultOtpEnabled && staticOtpConfig.otp) {
-    return {
-      otp: staticOtpConfig.otp,
-      isStatic: true,
-    };
-  }
-
-  if (staticOtpConfig.phone && staticOtpConfig.otp && normalizedPhone === staticOtpConfig.phone) {
-    return {
-      otp: staticOtpConfig.otp,
-      isStatic: true,
-    };
-  }
-
-  return {
-    otp: generateOtp(),
-    isStatic: false,
-  };
-};
 
 const getSession = async (phone) => {
-  const session = await DriverLoginSession.findOne({ phone: normalizePhone(phone) }).select('+otpHash');
+  const session = await DriverLoginSession.findOne({ phone: normalizePhone(phone) });
 
   if (!session) {
     throw new ApiError(404, 'Login session not found');
@@ -372,7 +346,8 @@ export const startDriverLoginOtp = async ({ phone, role = 'driver' }) => {
   //   );
   // }
 
-  const { otp, isStatic } = resolveDriverLoginOtpForPhone(normalizedPhone);
+  // core generates, stores, rate-limits and sends.
+  const otp = await createOrUpdateOtp(normalizedPhone, OTP_SCOPE);
   const now = Date.now();
 
   const session = await DriverLoginSession.findOneAndUpdate(
@@ -381,35 +356,23 @@ export const startDriverLoginOtp = async ({ phone, role = 'driver' }) => {
       phone: normalizedPhone,
       driverId: account._id,
       accountRole: normalizedRole,
-      otpHash: hashOtp(otp),
-      otpExpiresAt: new Date(now + LOGIN_OTP_TTL_MS),
       verifiedAt: null,
-      expiresAt: new Date(now + LOGIN_OTP_TTL_MS),
+      expiresAt: new Date(now + SESSION_TTL_MS),
     },
     { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true },
   );
 
-  const smsDispatch = isStatic
-    ? {
-        mode: 'static',
-        message: 'Static OTP enabled',
-      }
-    : await sendOtpSms({
-        phone: normalizedPhone,
-        otp,
-        purpose: 'driver login OTP',
-      });
   const debugOtp = getVisibleOtp(otp);
 
   if (debugOtp) {
-    console.log(`[loginOtpService] OTP for ${normalizedPhone} = ${debugOtp} (${smsDispatch.mode})`);
+    console.log(`[loginOtpService] OTP for ${normalizedPhone} = ${debugOtp}`);
   }
 
   const allRoles = await findAllDriverPortalAccountsByPhone(normalizedPhone);
   const rolesList = allRoles.map((item) => item.role);
 
   return {
-    message: smsDispatch.mode === 'live' ? 'OTP sent successfully' : 'OTP generated successfully',
+    message: 'OTP sent successfully',
     session: publicSessionPayload(session, debugOtp),
     availableRoles: rolesList,
   };
@@ -422,12 +385,13 @@ export const verifyDriverLoginOtp = async ({ phone, otp, role }) => {
     throw new ApiError(400, 'A valid 4-digit OTP is required');
   }
 
-  if (!session.otpExpiresAt || new Date(session.otpExpiresAt).getTime() < Date.now()) {
-    throw new ApiError(410, 'OTP has expired');
-  }
+  const otpResult = await verifyOtp(session.phone, String(otp).trim(), OTP_SCOPE);
 
-  if (session.otpHash !== hashOtp(otp)) {
-    throw new ApiError(401, 'Invalid OTP');
+  if (!otpResult.valid) {
+    if (otpResult.reason === 'OTP expired') {
+      throw new ApiError(410, 'OTP has expired');
+    }
+    throw new ApiError(401, otpResult.reason || 'Invalid OTP');
   }
 
   // If no role is requested, check if there are multiple roles

@@ -1,13 +1,7 @@
 import express from 'express';
 import {
-    requestUserOtpController,
-    verifyUserOtpController,
     adminLoginController,
     refreshTokenController,
-    requestRestaurantOtpController,
-    verifyRestaurantOtpController,
-    requestDeliveryOtpController,
-    verifyDeliveryOtpController,
     logoutController,
     getMeController,
     updateAdminProfileController,
@@ -15,10 +9,6 @@ import {
     requestAdminForgotPasswordOtpController,
     resetAdminPasswordWithOtpController
 } from './auth.controller.js';
-import {
-    requestUnifiedOtpController,
-    verifyUnifiedOtpController
-} from './unifiedAuth.controller.js';
 import { authMiddleware, requireAdmin } from './auth.middleware.js';
 import { authRateLimiter } from '../../middleware/rateLimit.js';
 
@@ -26,21 +16,8 @@ const router = express.Router();
 
 // router.use(authRateLimiter); // Removed global application to avoid rate-limiting /me or /refresh-token too strictly
 
-// Unified OTP login (Food + Taxi sync)
-router.post('/unified/request-otp', authRateLimiter, requestUnifiedOtpController);
-router.post('/unified/verify-otp', authRateLimiter, verifyUnifiedOtpController);
-
-// User OTP login
-router.post('/user/request-otp', authRateLimiter, requestUserOtpController);
-router.post('/user/verify-otp', authRateLimiter, verifyUserOtpController);
-
-// Restaurant OTP login
-router.post('/restaurant/request-otp', authRateLimiter, requestRestaurantOtpController);
-router.post('/restaurant/verify-otp', authRateLimiter, verifyRestaurantOtpController);
-
-// Delivery partner OTP login
-router.post('/delivery/request-otp', authRateLimiter, requestDeliveryOtpController);
-router.post('/delivery/verify-otp', authRateLimiter, verifyDeliveryOtpController);
+// Phone + OTP sign-in for every app now lives at /v1/auth/otp
+// (core/auth/otpAuth). Admin is password-based and stays here.
 
 // Admin login
 router.post('/admin/login', authRateLimiter, adminLoginController);

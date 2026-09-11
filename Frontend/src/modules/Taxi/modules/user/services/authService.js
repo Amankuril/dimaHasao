@@ -1,4 +1,5 @@
 import api from '../../../shared/api/axiosInstance';
+import { requestOtp, verifyOtp, AUDIENCE } from '../../../../../services/auth/otpAuthClient';
 
 const decodeBase64Url = (value) => {
   const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
@@ -93,8 +94,11 @@ export const withUserAuth = (config = {}) => {
 export const userAuthService = {
   signup: (payload) => api.post('/users/signup', payload),
   login: (payload) => api.post('/users/login', payload),
-  startOtp: (phone) => api.post('/users/auth/send-otp', { phone }),
-  verifyOtp: (phone, otp) => api.post('/users/auth/verify-otp', { phone, otp }),
+  // The consumer super-app has one account across food, taxi, hotel and tours,
+  // so taxi signs in through the shared auth surface rather than its own.
+  // `api` is scoped to /api/v1/taxi, hence the platform-rooted client.
+  startOtp: (phone) => requestOtp(AUDIENCE.USER, phone),
+  verifyOtp: (phone, otp) => verifyOtp(AUDIENCE.USER, phone, otp),
   verifyOtpLogin: (phone) => api.post('/users/otp-login', { phone }),
   uploadProfileImage: (dataUrl) => api.post('/users/profile-image', { dataUrl }),
   updateCurrentUser: (payload) => api.patch('/users/me', payload, withUserAuth()),

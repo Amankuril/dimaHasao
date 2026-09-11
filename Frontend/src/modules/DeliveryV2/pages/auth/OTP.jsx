@@ -242,7 +242,7 @@ export default function DeliveryOTP() {
         return
       }
 
-      const needsRegistration = data.needsRegistration === true
+      const needsRegistration = data.nextStep === 'onboarding'
 
       if (needsRegistration) {
         sessionStorage.removeItem("deliveryAuthData")

@@ -30,7 +30,7 @@ import {
   startDriverLoginOtp,
 } from './loginOtpService.js';
 import { findZoneByPickup } from './locationService.js';
-import { sendOtpSms } from '../../services/smsService.js';
+import { createOrUpdateOtp, verifyOtp } from '../../../../core/otp/otp.service.js';
 import {
   verifyDrivingLicenseWithRecharge,
   verifyRcWithRecharge,
@@ -39,7 +39,8 @@ import { WalletTransaction } from '../models/WalletTransaction.js';
 import { BusDriver } from '../models/BusDriver.js';
 import { applyDriverWalletAdjustment } from './walletService.js';
 
-const OTP_TTL_MS = 10 * 60 * 1000;
+/** Driver OTPs share the 'taxi-driver' namespace in the core OTP store. */
+const OTP_SCOPE = 'taxi-driver';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DRIVER_NAME_REGEX = /^[A-Za-z]+(?:[ .'-][A-Za-z]+)*$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -362,39 +363,6 @@ const getRequiredVehicleFieldMap = async (role) => {
     }, {});
 };
 
-const generateOtp = () => String(Math.floor(1000 + Math.random() * 9000));
-
-const hashOtp = (otp) => crypto.createHash('sha256').update(String(otp)).digest('hex');
-const isTruthy = (value) => ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
-const getStaticDriverOtpConfig = () => ({
-  phone: normalizePhone(env.sms?.staticOtpPhone || ''),
-  otp: String(env.sms?.staticOtpCode || '').trim(),
-});
-const resolveDriverOnboardingOtpForPhone = (phone) => {
-  const normalizedPhone = normalizePhone(phone);
-  const staticOtpConfig = getStaticDriverOtpConfig();
-  const defaultOtpEnabled = isTruthy(env.sms?.useDefaultOtp);
-
-  if (defaultOtpEnabled && staticOtpConfig.otp) {
-    return {
-      otp: staticOtpConfig.otp,
-      isStatic: true,
-    };
-  }
-
-  if (staticOtpConfig.phone && staticOtpConfig.otp && normalizedPhone === staticOtpConfig.phone) {
-    return {
-      otp: staticOtpConfig.otp,
-      isStatic: true,
-    };
-  }
-
-  return {
-    otp: generateOtp(),
-    isStatic: false,
-  };
-};
-
 const getVehicleType = (vehicleTypeId, registerFor = '') => {
   const type = VEHICLE_TYPE_MAP[String(vehicleTypeId || registerFor || '').trim().toLowerCase()];
   return type || 'car';
@@ -561,7 +529,7 @@ const getSession = async (registrationId, phone = '') => {
     ? { registrationId: String(registrationId) }
     : { phone: normalizePhone(phone) };
 
-  const session = await DriverRegistrationSession.findOne(query).select('+otpHash +personal.passwordHash');
+  const session = await DriverRegistrationSession.findOne(query).select('+personal.passwordHash');
 
   if (!session) {
     throw new ApiError(404, 'Registration session not found');
@@ -723,7 +691,8 @@ export const startDriverOnboarding = async ({ phone, role }) => {
     };
   }
 
-  const { otp, isStatic } = resolveDriverOnboardingOtpForPhone(normalizedPhone);
+  // core generates, stores, rate-limits and sends under the 'taxi-driver' scope.
+  const otp = await createOrUpdateOtp(normalizedPhone, OTP_SCOPE);
   const now = Date.now();
   const registrationId = crypto.randomUUID();
 
@@ -735,28 +704,16 @@ export const startDriverOnboarding = async ({ phone, role }) => {
       role: normalizedRole,
       roleConfirmed: roleProvided,
       status: 'otp_sent',
-      otpHash: hashOtp(otp),
-      otpExpiresAt: new Date(now + OTP_TTL_MS),
       otpVerifiedAt: null,
       expiresAt: new Date(now + SESSION_TTL_MS),
     },
     { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true },
   );
 
-  const smsDispatch = isStatic
-    ? {
-        mode: 'static',
-        message: 'Static OTP enabled',
-      }
-    : await sendOtpSms({
-        phone: normalizedPhone,
-        otp,
-        purpose: 'driver onboarding OTP',
-      });
   const debugOtp = process.env.NODE_ENV !== 'production' ? otp : null;
 
   if (debugOtp) {
-    console.log(`[onboardingService] OTP for ${normalizedPhone} = ${debugOtp} (${smsDispatch.mode})`);
+    console.log(`[onboardingService] OTP for ${normalizedPhone} = ${debugOtp}`);
   }
 
   return {
@@ -772,12 +729,13 @@ export const verifyDriverOtp = async ({ registrationId, phone, otp }) => {
     throw new ApiError(400, 'A valid 4-digit OTP is required');
   }
 
-  if (!session.otpExpiresAt || new Date(session.otpExpiresAt).getTime() < Date.now()) {
-    throw new ApiError(410, 'OTP has expired');
-  }
+  const otpResult = await verifyOtp(session.phone, String(otp).trim(), OTP_SCOPE);
 
-  if (session.otpHash !== hashOtp(otp)) {
-    throw new ApiError(401, 'Invalid OTP');
+  if (!otpResult.valid) {
+    if (otpResult.reason === 'OTP expired') {
+      throw new ApiError(410, 'OTP has expired');
+    }
+    throw new ApiError(401, otpResult.reason || 'Invalid OTP');
   }
 
   session.status = 'otp_verified';

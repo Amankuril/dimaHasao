@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Partner from '../models/Partner.js';
 import Admin from '../models/Admin.js';
 import { FoodAdmin } from '../../../core/admin/admin.model.js';
+import { FoodUser } from '../../../core/users/user.model.js';
 
 // This module arrived from a standalone service that signed tokens with
 // JWT_SECRET and put the subject in `id`. The platform signs with
@@ -51,6 +52,10 @@ const resolveAccount = async (decoded) => {
   if (!account) account = await Partner.findById(id);
   if (!account) account = await Admin.findById(id);
   if (!account) account = await FoodAdmin.findById(id);
+  // The consumer super-app (food + taxi + hotel + tours) is one account issued
+  // by the unified OTP auth service, so a platform user token must resolve here
+  // too — otherwise hotel would be the one app that session cannot reach.
+  if (!account) account = await FoodUser.findById(id);
 
   return withHotelRole(account);
 };

@@ -9,14 +9,14 @@ const userAuthSessionSchema = new mongoose.Schema(
       index: true,
       trim: true,
     },
+    // OTP codes now live in core/otp under the 'taxi-user' scope. These two
+    // fields remain only so old rows still load; nothing writes them.
     otpHash: {
       type: String,
-      required: true,
       select: false,
     },
     otpExpiresAt: {
       type: Date,
-      required: true,
       index: true,
     },
     otpVerifiedAt: {

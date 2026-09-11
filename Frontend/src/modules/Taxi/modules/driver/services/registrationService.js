@@ -1,4 +1,5 @@
 import api from "../../../shared/api/axiosInstance";
+import { requestOtp, verifyOtp, AUDIENCE } from "../../../../../services/auth/otpAuthClient";
 
 const STORAGE_KEY = "driverRegistrationSession";
 const DRIVER_AUTH_KEYS = ["token", "driverToken", "driverInfo", "role", "driverRole", "chatRole"];
@@ -154,11 +155,13 @@ export const sendDriverOtp = (payload) =>
 export const verifyDriverOtp = (payload) =>
   api.post("/drivers/onboarding/verify-otp", payload);
 
-export const sendDriverLoginOtp = (payload) =>
-  api.post("/drivers/auth/send-otp", payload);
+// Driver *login* goes through the shared auth surface. The onboarding OTPs
+// above stay on their own routes — those are registration steps, not sign-in.
+export const sendDriverLoginOtp = ({ phone, ...rest } = {}) =>
+  requestOtp(AUDIENCE.TAXI_DRIVER, phone, rest);
 
-export const verifyDriverLoginOtp = (payload) =>
-  api.post("/drivers/auth/verify-otp", payload);
+export const verifyDriverLoginOtp = ({ phone, otp, ...rest } = {}) =>
+  verifyOtp(AUDIENCE.TAXI_DRIVER, phone, otp, rest);
 
 export const startPoolingDriverOnboarding = (payload) =>
   api.post("/drivers/pooling/onboarding/send-otp", payload);

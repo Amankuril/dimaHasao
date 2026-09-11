@@ -19,14 +19,14 @@ const poolingDriverOnboardingSessionSchema = new mongoose.Schema(
       default: 'pooling_driver',
       trim: true,
     },
+    // OTP codes now live in core/otp under the 'taxi-driver' scope. Kept only
+    // so old rows still load; nothing writes this.
     otpHash: {
       type: String,
-      required: true,
       select: false,
     },
     otpExpiresAt: {
       type: Date,
-      required: true,
     },
     verifiedAt: {
       type: Date,

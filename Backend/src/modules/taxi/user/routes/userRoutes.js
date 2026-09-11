@@ -39,7 +39,6 @@ import {
   saveUserFcmToken,
   searchBuses,
   signupUser,
-  startUserOtpRequest,
   submitMyBusBookingReview,
   topupUserWallet,
   transferUserWalletToDriver,
@@ -52,7 +51,6 @@ import {
   verifyPhonePeRentalAdvancePayment,
   verifyRazorpayWalletTopup,
   verifyPhonePeWalletTopup,
-  verifyUserOtpRequest,
   verifyUserPhoneForOtpLogin,
   getAvailableSubscriptionPlans,
   getMySubscriptions,
@@ -94,8 +92,8 @@ userRouter.post('/register', asyncHandler(registerUser));
 userRouter.post('/signup', asyncHandler(signupUser));
 userRouter.post('/login', loginRateLimit, asyncHandler(loginUser));
 userRouter.post('/profile-image', asyncHandler(uploadUserProfileImage));
-userRouter.post('/auth/send-otp', otpSendRateLimit, asyncHandler(startUserOtpRequest));
-userRouter.post('/auth/verify-otp', otpVerifyRateLimit, asyncHandler(verifyUserOtpRequest));
+// Consumer sign-in now lives at /v1/auth/otp (audience 'user') — one account
+// across food, taxi, hotel and tours.
 userRouter.post('/otp-login', otpVerifyRateLimit, asyncHandler(verifyUserPhoneForOtpLogin));
 userRouter.post('/fcm-token', authenticate(['user']), asyncHandler(saveUserFcmToken));
 userRouter.get('/me', authenticate(['user']), asyncHandler(getCurrentUser));

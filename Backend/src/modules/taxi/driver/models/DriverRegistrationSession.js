@@ -29,14 +29,14 @@ const driverRegistrationSessionSchema = new mongoose.Schema(
       enum: ['otp_sent', 'otp_verified', 'personal_saved', 'role_details_saved', 'vehicle_saved', 'documents_saved', 'completed'],
       default: 'otp_sent',
     },
+    // OTP codes now live in core/otp under the 'taxi-driver' scope. Kept only
+    // so old rows still load; nothing writes this.
     otpHash: {
       type: String,
-      required: true,
       select: false,
     },
     otpExpiresAt: {
       type: Date,
-      required: true,
       index: true,
     },
     otpVerifiedAt: {

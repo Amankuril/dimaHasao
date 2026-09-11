@@ -2,6 +2,7 @@ import axios from 'axios';
 
 
 import { API_BASE_URL } from '../config/apiConfig';
+import { requestOtp, verifyOtp, AUDIENCE } from '../../../services/auth/otpAuthClient';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -48,37 +49,50 @@ api.interceptors.response.use(
   }
 );
 
+/** Hotel's two roles map onto two audiences of the shared auth service. */
+const PARTNER_ROLES = ['partner', 'broker', 'agent', 'seller'];
+const audienceForRole = (role) =>
+  PARTNER_ROLES.includes(String(role || '').toLowerCase())
+    ? AUDIENCE.HOTEL_PARTNER
+    : AUDIENCE.USER;
+
 // User Auth Services
 export const authService = {
   // Send OTP
+  // Hotel signs in through the shared auth surface. Guests are the consumer
+  // super-app account (`user`); partners are their own app (`hotel-partner`).
+  // `api` is scoped to /api/v1/hotel, hence the platform-rooted client.
   sendOtp: async (phone, type = 'login', role = 'user') => {
     try {
-      const response = await api.post('/auth/send-otp', { phone, type, role });
-      return response.data;
+      return await requestOtp(audienceForRole(role), phone, { type });
     } catch (error) {
       throw error.response?.data || error.message;
     }
   },
 
   // Verify OTP & Login/Register
-  verifyOtp: async (data) => {
+  verifyOtp: async (data = {}) => {
     try {
-      const response = await api.post('/auth/verify-otp', data);
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      const { phone, otp, role = 'user', ...payload } = data;
+      const result = await verifyOtp(audienceForRole(role), phone, otp, payload);
+      const token = result.token || result.accessToken;
+
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(result.user));
       }
-      return response.data;
+
+      return result;
     } catch (error) {
       throw error.response?.data || error.message;
     }
   },
 
   // Verify Partner OTP & Register
-  verifyPartnerOtp: async (data) => {
+  verifyPartnerOtp: async (data = {}) => {
     try {
-      const response = await api.post('/auth/partner/verify-otp', data);
-      return response.data;
+      const { phone, otp, ...payload } = data;
+      return await verifyOtp(AUDIENCE.HOTEL_PARTNER, phone, otp, payload);
     } catch (error) {
       throw error.response?.data || error.message;
     }

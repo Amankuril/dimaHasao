@@ -20,14 +20,14 @@ const driverLoginSessionSchema = new mongoose.Schema(
       default: 'driver',
       required: true,
     },
+    // OTP codes now live in core/otp under the 'taxi-driver' scope. These two
+    // fields remain only so old rows still load; nothing writes them.
     otpHash: {
       type: String,
-      required: true,
       select: false,
     },
     otpExpiresAt: {
       type: Date,
-      required: true,
       index: true,
     },
     verifiedAt: {

@@ -3,12 +3,19 @@ import notificationService from '../services/notificationService.js';
 import Admin from '../models/Admin.js';
 import User from '../models/User.js';
 import Partner from '../models/Partner.js';
-import Otp from '../models/Otp.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import smsService from '../utils/smsService.js';
+// Aliased: this module exports its own `verifyOtp` HTTP controller.
+import {
+  createOrUpdateOtp,
+  verifyOtp as verifyOtpCode,
+  peekOtpMetadata,
+} from '../../../core/otp/otp.service.js';
 import referralService from '../services/referralService.js';
 import { uploadToCloudinary, deleteFromCloudinary, uploadBase64ToCloudinary } from '../utils/cloudinary.js';
+
+/** Hotel's namespace in the shared OTP store (6-digit, 10-minute codes). */
+const OTP_SCOPE = 'hotel';
 
 // Signed with the platform's canonical secret (this module arrived using
 // JWT_SECRET, which this deployment does not define). The hotel auth middleware
@@ -57,36 +64,15 @@ export const sendOtp = async (req, res) => {
       }
     }
 
-    // TEST NUMBERS - Bypass OTP with default 123456 (includes seeded partner 7777777777)
-    const testNumbers = ['9685974247', '6261096283', '9752275626', '7777777777', '9000000001', '9000000002', '9000000001', '9000000002', '6268455485'];
-    const isTestNumber = testNumbers.includes(phone);
-
-    // Use 123456 for test numbers AND all normal users (role === 'user') for testing
-    const shouldUseDefaultOtp = isTestNumber || role === 'user';
-
-    // Generate OTP
-    const otp = shouldUseDefaultOtp ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-    if (user) {
-      user.otp = otp;
-      user.otpExpires = otpExpires;
-      await user.save();
-    } else {
-      // Store in Otp collection for new/unregistered users
-      await Otp.findOneAndUpdate(
-        { phone },
-        { phone, otp, expiresAt: otpExpires, tempData: { role, type } },
-        { upsert: true, new: true }
-      );
-    }
-
-    // Send SMS only if not using default OTP
-    if (!shouldUseDefaultOtp) {
-      await smsService.sendOTP(phone, otp);
-    } else {
-      console.log(`🧪 Using default OTP: 123456 for phone: ${phone} (Role: ${role})`);
-    }
+    // OTP generation, storage, rate limiting and SMS delivery all live in
+    // core/otp under the 'hotel' scope (6-digit, 10-minute codes). The pending
+    // role/type rides along as metadata until the code is verified.
+    //
+    // This replaces a hardcoded test-number list plus `role === 'user'`, which
+    // together meant every hotel customer received the fixed code 123456 — in
+    // production. Static codes are now governed by the same USE_DEFAULT_OTP /
+    // DEFAULT_TEST_PHONE settings the rest of the app uses.
+    await createOrUpdateOtp(phone, OTP_SCOPE, { metadata: { role, type } });
 
     res.status(200).json({
       message: 'OTP sent successfully',
@@ -233,44 +219,44 @@ export const verifyOtp = async (req, res) => {
     let Model = role === 'partner' ? Partner : User;
 
     // 1. Check if it's an existing user (Login Flow)
-    let user = await Model.findOne({ phone }).select('+otp +otpExpires');
+    let user = await Model.findOne({ phone });
     let isRegistration = false;
 
-    if (user) {
-      if (user.isBlocked) {
-        return res.status(403).json({
-          message: 'Your account has been blocked by admin. Please contact support.',
-          isBlocked: true
-        });
-      }
-      // ... (existing login logic)
-      if (user.otp !== otp && otp !== '123456') {
-        return res.status(400).json({ message: 'Invalid OTP' });
-      }
-      if (user.otpExpires < Date.now() && otp !== '123456') {
-        return res.status(400).json({ message: 'OTP has expired' });
-      }
-      user.otp = undefined;
-      user.otpExpires = undefined;
-    } else {
-      // ... (existing registration logic)
+    if (user && user.isBlocked) {
+      return res.status(403).json({
+        message: 'Your account has been blocked by admin. Please contact support.',
+        isBlocked: true
+      });
+    }
+
+    // Read the pending role/type before consuming the code, then verify once.
+    const pending = await peekOtpMetadata(phone, OTP_SCOPE);
+
+    if (pending?.role && pending.role !== role) {
+      return res.status(400).json({ message: 'Invalid role context.' });
+    }
+
+    const otpResult = await verifyOtpCode(phone, String(otp || '').trim(), OTP_SCOPE);
+
+    if (!otpResult.valid) {
+      const status = otpResult.reason === 'OTP expired' ? 400 : 400;
+      return res.status(status).json({
+        message:
+          otpResult.reason === 'OTP expired'
+            ? 'OTP has expired'
+            : otpResult.reason === 'OTP not found'
+              ? 'Invalid request or OTP expired. Please request OTP again.'
+              : 'Invalid OTP'
+      });
+    }
+
+    if (!user) {
       if (role === 'partner') {
         return res.status(404).json({ message: 'Partner not found. Please use partner registration.' });
       }
-      const otpRecord = await Otp.findOne({ phone });
-      if (!otpRecord && otp !== '123456') {
-        return res.status(400).json({ message: 'Invalid request or OTP expired. Please request OTP again.' });
-      }
-      if (otpRecord && otpRecord.otp !== otp && otp !== '123456') {
-        return res.status(400).json({ message: 'Invalid OTP' });
-      }
-      if (otpRecord && otpRecord.tempData && otpRecord.tempData.role && otpRecord.tempData.role !== role) {
-        return res.status(400).json({ message: 'Invalid role context.' });
-      }
 
-      // Check if this was a LOGIN attempt but user doesn't exist
-      if (otpRecord && otpRecord.tempData?.type === 'login') {
-        await Otp.deleteOne({ phone });
+      // A login attempt against a number with no account.
+      if (pending?.type === 'login') {
         return res.status(404).json({
           message: 'Account not found. Please create an account first.',
           requiresRegistration: true
@@ -295,7 +281,6 @@ export const verifyOtp = async (req, res) => {
         password: await bcrypt.hash(Math.random().toString(36), 10)
       });
       isRegistration = true;
-      await Otp.deleteOne({ phone });
     }
 
     // Save/Update User
@@ -373,19 +358,18 @@ export const verifyPartnerOtp = async (req, res) => {
       return res.status(400).json({ message: 'Phone and OTP are required' });
     }
 
-    // 1. Check OTP in Otp collection
-    const otpRecord = await Otp.findOne({ phone });
+    // 1. Verify against the shared OTP store (consumes the code on success).
+    const otpResult = await verifyOtpCode(phone, String(otp).trim(), OTP_SCOPE);
 
-    if (!otpRecord) {
-      return res.status(400).json({ message: 'Invalid request or OTP expired. Please register again.' });
-    }
-
-    if (otpRecord.otp !== otp) {
-      return res.status(400).json({ message: 'Invalid OTP' });
-    }
-
-    if (otpRecord.expiresAt < Date.now()) {
-      return res.status(400).json({ message: 'OTP has expired' });
+    if (!otpResult.valid) {
+      return res.status(400).json({
+        message:
+          otpResult.reason === 'OTP expired'
+            ? 'OTP has expired'
+            : otpResult.reason === 'OTP not found'
+              ? 'Invalid request or OTP expired. Please register again.'
+              : 'Invalid OTP'
+      });
     }
 
     // 2. Find existing Partner (they were saved during registration)
@@ -409,8 +393,7 @@ export const verifyPartnerOtp = async (req, res) => {
     partner.isVerified = true;
     await partner.save();
 
-    // 4. Cleanup OTP
-    await Otp.deleteOne({ phone });
+    // (the code was already consumed by verifyOtp above)
 
     // NOTIFICATION & EMAIL TRIGGERS (PARTNER REGISTRATION)
     if (partner.email) {

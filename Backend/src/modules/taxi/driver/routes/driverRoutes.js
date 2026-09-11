@@ -72,7 +72,6 @@ import {
   getOnboardingSignupOptions,
   getServiceLocations,
   loginDriver,
-  startDriverLoginOtpRequest,
   startPoolingOnboardingRequest,
   saveOnboardingDocuments,
   saveOnboardingRoleDetails,
@@ -105,7 +104,6 @@ import {
   updateServiceCenterBooking,
   verifyServiceCenterBookingFingerprint,
   verifyOnboardingOtp,
-  verifyDriverLoginOtpRequest,
   verifyPoolingOnboardingOtpRequest,
   addOwnerVehicle,
   deleteOwnerBusService,
@@ -123,12 +121,7 @@ export const driverRouter = Router();
 
 driverRouter.post("/register", asyncHandler(registerDriver));
 driverRouter.post("/login", loginRateLimit, asyncHandler(loginDriver));
-driverRouter.post("/auth/send-otp", otpSendRateLimit, asyncHandler(startDriverLoginOtpRequest));
-driverRouter.post(
-  "/auth/verify-otp",
-  otpVerifyRateLimit,
-  asyncHandler(verifyDriverLoginOtpRequest),
-);
+// Driver sign-in now lives at /v1/auth/otp (audience 'taxi-driver').
 driverRouter.post(
   "/pooling/onboarding/send-otp",
   otpSendRateLimit,

@@ -678,6 +678,13 @@ const DriverEntryRedirect = () => {
 };
 
 function TaxiApp() {
+  const location = useLocation();
+  // Mounted at both /taxi (public marketing site) and /taxi/user (already
+  // gated by RequireUserAuth in src/app/routes.jsx) — the bare index route
+  // must not show the public LandingPage to an already-authenticated
+  // customer, or their only way "in" bounces them back to /login.
+  const isAuthedUserMount = location.pathname.startsWith('/taxi/user');
+
   useEffect(() => {
     installNativeFcmBridge();
     installBrowserFcmRegistration();
@@ -697,7 +704,7 @@ function TaxiApp() {
             <Toaster position="top-right" closeButton />
             <Routes>
               {/* Static / Public routes */}
-              <Route index element={<LandingPage />} />
+              <Route index element={isAuthedUserMount ? <UserHomeRoute /> : <LandingPage />} />
               <Route path="about" element={<AboutPage />} />
               <Route path="contact" element={<ContactPage />} />
               <Route path="faq" element={<FaqPage />} />

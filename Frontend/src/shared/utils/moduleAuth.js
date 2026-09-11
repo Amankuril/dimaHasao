@@ -337,6 +337,31 @@ export function setAuthData(module, token, user, refreshToken = null) {
 }
 
 /**
+ * Merge fields into the cached user for a module (and the shared `userInfo`
+ * mirror) without touching tokens. Used when a profile edit lands right after
+ * login — e.g. a new user supplying their name — so the cached copy written at
+ * verify time doesn't stay stale.
+ * @param {string} module - Module name (admin, restaurant, delivery, user)
+ * @param {Object} patch - Fields to merge into the stored user
+ */
+export function patchStoredUser(module, patch) {
+  if (!module || !patch || typeof patch !== 'object') return;
+
+  try {
+    const key = `${module}_user`;
+    const current = JSON.parse(localStorage.getItem(key) || '{}');
+    localStorage.setItem(key, JSON.stringify({ ...current, ...patch }));
+
+    const info = JSON.parse(localStorage.getItem('userInfo') || 'null');
+    if (info && typeof info === 'object') {
+      localStorage.setItem('userInfo', JSON.stringify({ ...info, ...patch }));
+    }
+  } catch {
+    // The cached copy is only a convenience — never block login on it.
+  }
+}
+
+/**
  * Set unified authentication data for both Food and Taxi modules
  * @param {Object} data - Unified auth response data
  */

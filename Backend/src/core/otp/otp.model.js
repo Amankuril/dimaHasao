@@ -30,6 +30,12 @@ const otpSchema = new mongoose.Schema(
         lastRequestAt: {
             type: Date,
             default: Date.now
+        },
+        // Data carried alongside an unverified code — e.g. hotel's pending
+        // role/type for a signup that hasn't completed yet.
+        metadata: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
         }
     },
     {

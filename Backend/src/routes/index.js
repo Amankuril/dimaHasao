@@ -1,5 +1,7 @@
 import express from 'express';
 import authRoutes from '../core/auth/auth.routes.js';
+import otpAuthRoutes from '../core/auth/otpAuth/otpAuth.routes.js';
+import { registerAllAuthAudiences } from '../core/auth/otpAuth/registerAudiences.js';
 import deliveryRoutes from '../modules/food/delivery/routes/delivery.routes.js';
 import restaurantRoutes from '../modules/food/restaurant/routes/restaurant.routes.js';
 import landingRoutes from '../modules/food/landing/routes/landing.routes.js';
@@ -39,6 +41,11 @@ router.use(maintenanceModeMiddleware);
 
 router.use('/v1/food/auth', authRoutes);
 router.use('/v1/auth', authRoutes);
+
+// One OTP auth surface for all five apps (user, restaurant, delivery,
+// taxi-driver, hotel-partner). The per-app auth routes above still work.
+registerAllAuthAudiences();
+router.use('/v1/auth/otp', otpAuthRoutes);
 router.use('/v1/food/delivery', deliveryRoutes);
 router.use('/v1/food/restaurant', restaurantRoutes);
 router.use('/v1/food', landingRoutes);

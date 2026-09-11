@@ -3,7 +3,8 @@ import { useNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { requestUserOtp, verifyUserOtp } from '../../../services/api/auth';
-import { setUnifiedAuthData } from '../../../shared/utils/moduleAuth';
+import { userAPI } from '../../../services/api';
+import { setUnifiedAuthData, patchStoredUser } from '../../../shared/utils/moduleAuth';
 
 const TEST_PHONE =
   String(import.meta.env?.VITE_USE_DEFAULT_TEST_PHONE) === 'true'
@@ -16,19 +17,23 @@ const readApiError = (err, fallback) =>
 export const LoginScreen = () => {
   const [phone, setPhone] = useState(TEST_PHONE);
   const [fullName, setFullName] = useState('');
-  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [devOtp, setDevOtp] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [authMode, setAuthMode] = useState('otp'); // 'otp', 'password'
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  // 'phone' → 'otp' → 'name' (name step only for unregistered numbers).
+  const [step, setStep] = useState('phone');
+  const [needsName, setNeedsName] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login, showToast } = useBooking();
   const navigate = useNavigate();
 
+  const finishLogin = (digits, user, message) => {
+    login(digits, user);
+    showToast(message);
+    navigate('/');
+  };
+
   const handleSendOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const digits = String(phone).replace(/\D/g, '');
     if (digits.length < 10) {
       showToast('Enter a valid 10-digit phone number');
@@ -39,11 +44,14 @@ export const LoginScreen = () => {
     try {
       const res = await requestUserOtp(digits);
       const data = res?.data?.data ?? res?.data ?? {};
+      // Backend tells us up front whether this number already has an account,
+      // so the OTP step can present itself as sign-in vs. registration.
+      setNeedsName(data.nextStepIfVerified === 'collect_name');
       // Dev/staging backends return the OTP so it can be shown in-app.
       const exposed = String(data.otp || '');
       setDevOtp(exposed);
       if (exposed) setOtp(exposed);
-      setIsOtpSent(true);
+      setStep('otp');
       showToast(exposed ? `OTP sent! Code: ${exposed} 📱` : 'OTP sent to your phone 📱');
     } catch (err) {
       showToast(readApiError(err, 'Could not send OTP. Please try again.'));
@@ -53,7 +61,7 @@ export const LoginScreen = () => {
   };
 
   const handleVerifyOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const digits = String(phone).replace(/\D/g, '');
     const code = String(otp).replace(/\D/g, '');
     if (code.length !== 4) {
@@ -63,15 +71,21 @@ export const LoginScreen = () => {
 
     setIsLoading(true);
     try {
-      const res = await verifyUserOtp(digits, code, undefined, fullName || null);
+      const res = await verifyUserOtp(digits, code);
       const data = res?.data?.data ?? res?.data ?? {};
 
       // Establishes BOTH the food and taxi sessions from one login.
       setUnifiedAuthData(data);
-      login(digits, data.user);
 
-      showToast(isSignUp ? '✨ Account created! Welcome to Dima Hasao!' : '✨ Welcome back!');
-      navigate('/');
+      // A number with no account yet (or an account still missing a name)
+      // collects the name now, using the session we just established.
+      if (data.nextStep === 'collect_name') {
+        setNeedsName(true);
+        setStep('name');
+        return;
+      }
+
+      finishLogin(digits, data.user, '✨ Welcome back!');
     } catch (err) {
       showToast(readApiError(err, 'Invalid or expired OTP.'));
     } finally {
@@ -79,28 +93,34 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (authMode === 'otp') {
-      if (!isOtpSent) {
-        handleSendOtp(e);
-      } else {
-        handleVerifyOtp(e);
-      }
+  const handleCompleteRegistration = async (e) => {
+    if (e) e.preventDefault();
+    const digits = String(phone).replace(/\D/g, '');
+    const name = fullName.trim();
+    if (name.length < 2) {
+      showToast('Please enter your full name');
       return;
     }
 
-    // Accounts are phone + OTP only on this backend.
-    showToast('Please sign in using OTP.');
-    setAuthMode('otp');
+    setIsLoading(true);
+    try {
+      const res = await userAPI.updateProfile({ name });
+      const user = res?.data?.data?.user ?? res?.data?.data ?? res?.data ?? null;
+      // The session was cached at verify time, before the name existed.
+      patchStoredUser('user', { name });
+      finishLogin(digits, user, '✨ Account created! Welcome to Dima Hasao!');
+    } catch (err) {
+      showToast(readApiError(err, 'Could not save your name. Please try again.'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSocialLogin = (provider) => {
-    showToast(`${provider} sign-in is not enabled yet — please use OTP.`);
-  };
-
-  const handleForgotPassword = () => {
-    showToast('🔑 Password reset OTP sent to your registered number.');
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (step === 'phone') return handleSendOtp(e);
+    if (step === 'otp') return handleVerifyOtp(e);
+    return handleCompleteRegistration(e);
   };
 
   const handleGuestLogin = () => {
@@ -185,15 +205,21 @@ export const LoginScreen = () => {
           <div className="flex items-center justify-center space-x-2 mb-2.5 relative z-10">
             <i className="fa-solid fa-leaf text-[#caa83e] text-[11px] transform -scale-x-100"></i>
             <h3 className="text-[#caa83e] font-extrabold tracking-wider text-[11px] uppercase font-cinzel">
-              {isSignUp ? 'CREATE YOUR ACCOUNT' : 'LOGIN TO YOUR ACCOUNT'}
+              {step === 'name'
+                ? 'CREATE YOUR ACCOUNT'
+                : step === 'otp' && needsName
+                ? 'VERIFY YOUR NUMBER'
+                : 'LOGIN TO YOUR ACCOUNT'}
             </h3>
             <i className="fa-solid fa-leaf text-[#caa83e] text-[11px]"></i>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-2 relative z-10">
+          <form onSubmit={handleSubmit} className="space-y-2 relative z-10">
+            {/* Full Name — only for a number with no account yet, asked after
+                the OTP has already been verified. */}
             <AnimatePresence mode="wait">
-              {isSignUp && (
+              {step === 'name' && (
                 <motion.div
                   key="name-field"
                   initial={{ opacity: 0, height: 0 }}
@@ -202,6 +228,9 @@ export const LoginScreen = () => {
                   transition={{ duration: 0.2 }}
                   className="relative overflow-hidden"
                 >
+                  <p className="text-[10px] text-emerald-200/90 mb-1.5 text-center">
+                    Number verified — tell us your name to finish signing up.
+                  </p>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <i className="fa-solid fa-user text-[#caa83e] text-[11px]"></i>
@@ -210,6 +239,7 @@ export const LoginScreen = () => {
                       id="name"
                       name="name"
                       type="text"
+                      autoFocus
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Full Name"
@@ -221,33 +251,39 @@ export const LoginScreen = () => {
             </AnimatePresence>
 
             {/* Phone Number Input */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i className="fa-solid fa-phone text-[#caa83e] text-[11px]"></i>
+            {step !== 'name' && (
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i className="fa-solid fa-phone text-[#caa83e] text-[11px]"></i>
+                </div>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  disabled={step === 'otp'}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Phone Number"
+                  className="block w-full pl-8 pr-3 py-1.5 border border-[#caa83e]/50 rounded-xl bg-[#02130a] text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#caa83e] text-xs transition-all disabled:opacity-75"
+                />
+                {step === 'otp' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep('phone');
+                      setOtp('');
+                      setDevOtp('');
+                    }}
+                    className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[#caa83e] text-[10px] hover:underline cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                disabled={isOtpSent}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Phone Number"
-                className="block w-full pl-8 pr-3 py-1.5 border border-[#caa83e]/50 rounded-xl bg-[#02130a] text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#caa83e] text-xs transition-all disabled:opacity-75"
-              />
-              {isOtpSent && (
-                <button
-                  type="button"
-                  onClick={() => setIsOtpSent(false)}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[#caa83e] text-[10px] hover:underline cursor-pointer"
-                >
-                  Edit
-                </button>
-              )}
-            </div>
+            )}
 
-            {/* OTP Input (Shown when OTP sent in OTP mode) */}
-            {authMode === 'otp' && isOtpSent && (
+            {/* OTP Input */}
+            {step === 'otp' && (
               <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -283,57 +319,7 @@ export const LoginScreen = () => {
               </motion.div>
             )}
 
-            {/* Password Input (Shown in password mode) */}
-            {authMode === 'password' && (
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i className="fa-solid fa-lock text-[#caa83e] text-[11px]"></i>
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  className="block w-full pl-8 pr-8 py-1.5 border border-[#caa83e]/50 rounded-xl bg-[#02130a] text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#caa83e] text-xs transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-[#caa83e] transition-colors cursor-pointer"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  <i className={`fa-regular ${showPassword ? 'fa-eye-slash' : 'fa-eye'} text-xs`}></i>
-                </button>
-              </div>
-            )}
-
-            {/* Mode Switcher */}
-            <div className="flex justify-between items-center text-[10.5px]">
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode((prev) => (prev === 'otp' ? 'password' : 'otp'));
-                  setIsOtpSent(false);
-                }}
-                className="text-[#caa83e] font-medium hover:text-amber-200 transition-colors cursor-pointer"
-              >
-                {authMode === 'otp' ? 'Login with Password' : 'Login with OTP'}
-              </button>
-
-              {authMode === 'password' && !isSignUp && (
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-[#caa83e] font-medium hover:text-amber-200 transition-colors cursor-pointer"
-                >
-                  Forgot?
-                </button>
-              )}
-            </div>
-
-            {/* LOGIN / GET OTP Button */}
+            {/* GET OTP / VERIFY / REGISTER Button */}
             <motion.button
               whileHover={{ scale: 1.02, filter: 'brightness(1.06)' }}
               whileTap={{ scale: 0.97 }}
@@ -345,88 +331,17 @@ export const LoginScreen = () => {
                 <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
               ) : (
                 <span>
-                  {authMode === 'otp'
-                    ? !isOtpSent
-                      ? 'GET OTP'
-                      : 'VERIFY & EXPLORE'
-                    : isSignUp
-                    ? 'SIGN UP & EXPLORE'
-                    : 'LOGIN'}
+                  {step === 'phone'
+                    ? 'GET OTP'
+                    : step === 'otp'
+                    ? 'VERIFY & EXPLORE'
+                    : 'CREATE ACCOUNT & EXPLORE'}
                 </span>
               )}
             </motion.button>
           </form>
 
-          {/* Social Divider */}
           <div className="mt-2.5 relative z-10">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#caa83e]/40"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="px-2 bg-[#051f11] text-[#caa83e] font-semibold tracking-wide flex items-center space-x-1 text-[8.5px] uppercase">
-                  <span className="w-1 h-1 rounded-full bg-[#caa83e]"></span>
-                  <span>OR CONTINUE WITH</span>
-                  <span className="w-1 h-1 rounded-full bg-[#caa83e]"></span>
-                </span>
-              </div>
-            </div>
-
-            {/* Social Buttons */}
-            <div className="mt-2 flex justify-center space-x-3">
-              {/* Google */}
-              <motion.button
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                onClick={() => handleSocialLogin('Google')}
-                type="button"
-                className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md cursor-pointer border border-gray-200 p-1"
-                aria-label="Login with Google"
-              >
-                <img
-                  alt="Google"
-                  className="w-full h-full object-contain"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvLeqN13rlXv-44xRAQ-nGDsa9Tzl8-nZnA4mOmR6S_UXReRXl3VJPkszskBAfqg_VTL7msfRCXQX9LF1AuM6fvYQ9soNvATpm6Lv-40gMq4HLAey6hv0NHTdgHq6FWkTC0V7uEu03rWOHbcg0QdUyF5iF05n6dLDmYN25g8ZoFotl1lxprPrQqmCs1i_h5DlhvxV4tBZdS0k8VOgcXX6dTvH1U5CxjOyBtHjKUhLKOnV4RX9d0Clc"
-                />
-              </motion.button>
-
-              {/* Facebook */}
-              <motion.button
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                onClick={() => handleSocialLogin('Facebook')}
-                type="button"
-                className="w-7 h-7 bg-[#1877F2] rounded-full flex items-center justify-center shadow-md cursor-pointer text-white"
-                aria-label="Login with Facebook"
-              >
-                <i className="fa-brands fa-facebook-f text-xs"></i>
-              </motion.button>
-
-              {/* Apple */}
-              <motion.button
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                onClick={() => handleSocialLogin('Apple')}
-                type="button"
-                className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md cursor-pointer border border-gray-200 text-black"
-                aria-label="Login with Apple"
-              >
-                <i className="fa-brands fa-apple text-xs pb-0.5"></i>
-              </motion.button>
-            </div>
-
-            {/* Toggle Sign Up / Login */}
-            <div className="mt-2 text-center text-[10.5px] text-gray-200">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="font-bold text-[#caa83e] hover:text-amber-200 underline transition-colors cursor-pointer ml-0.5"
-              >
-                {isSignUp ? 'Login' : 'Sign Up'}
-              </button>
-            </div>
-
             {/* Quick Guest Bypass */}
             <div className="mt-0.5 text-center">
               <motion.button

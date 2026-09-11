@@ -1,71 +1,54 @@
-import axios from 'axios';
+/**
+ * Hotel SMS — adapter over the centralized transport in
+ * core/notifications/sms.service.js.
+ *
+ * This module used to be its own India Hub client pointed at a *different*
+ * endpoint (`vendorsms/pushsms.aspx` rather than `api/mt/SendSMS`) with its own
+ * message template and phone normalization, so hotel SMS could fail while food
+ * and taxi SMS on the same credentials succeeded.
+ *
+ * The positional API (`sendOTP(phone, otp)`, `sendSMS(phone, message)`) and the
+ * non-throwing `{ success, ... }` return contract are preserved, because
+ * callers here are fire-and-forget booking alerts and an awaited signup OTP
+ * that must not turn a provider outage into a failed registration.
+ */
+import { sendOtpSms, sendSms } from '../../../core/notifications/sms.service.js';
 
-class SMSIndiaHubService {
-  constructor() {
-    this.apiKey = process.env.SMS_INDIA_HUB_API_KEY;
-    this.senderId = process.env.SMS_INDIA_HUB_SENDER_ID || 'SMSHUB';
-    this.baseUrl = 'https://cloud.smsindiahub.in/vendorsms/pushsms.aspx';
-  }
+const toResult = (result) => ({
+    success: result?.mode !== 'skipped',
+    ...result,
+});
 
-  normalizePhoneNumber(phone) {
-    const digits = phone.replace(/[^0-9]/g, '');
-    if (digits.startsWith('91') && digits.length === 12) return digits;
-    if (digits.length === 10) return '91' + digits;
-    if (digits.length === 11 && digits.startsWith('0')) return '91' + digits.substring(1);
-    return '91' + digits.slice(-10);
-  }
+const toFailure = (error, context) => {
+    console.error(`⚠️ [SMS] ${context} failed:`, error?.message || error);
+    return { success: false, error: error?.message || String(error) };
+};
 
-  async sendOTP(phone, otp, purpose = 'registration') {
-    const message = `Welcome to the Dima Hasao powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
-    return this.sendSMS(phone, message);
-  }
-
-  async sendSMS(phone, message) {
-    try {
-      // Load credentials dynamically at runtime to ensure dotenv has loaded
-      const apiKey = this.apiKey || process.env.SMS_INDIA_HUB_API_KEY;
-      const senderId = this.senderId || process.env.SMS_INDIA_HUB_SENDER_ID;
-
-      if (!apiKey) {
-        console.warn('⚠️ [SMSIndiaHub] Missing API Key. SMS NOT SENT.');
-        return { success: false, error: 'Missing API Key' };
-      }
-
-      const normalizedPhone = this.normalizePhoneNumber(phone);
-
-      const params = new URLSearchParams({
-        APIKey: apiKey,
-        msisdn: normalizedPhone,
-        sid: senderId,
-        msg: message,
-        fl: '0',
-        dc: '0',
-        gwid: '2'
-      });
-
-      const apiUrl = `${this.baseUrl}?${params.toString()}`;
-      console.log(`📨 Sending SMS to ${normalizedPhone}...`);
-
-      const response = await axios.get(apiUrl, {
-        headers: { 'User-Agent': 'Rukkooin/1.0' },
-        timeout: 10000
-      });
-
-      const responseData = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
-
-      if (responseData.ErrorCode === '000') {
-        console.log('✅ SMS Sent Successfully');
-        return { success: true, response: responseData };
-      } else {
-        console.error('❌ SMS Failed:', responseData);
-        return { success: false, error: responseData.ErrorMessage };
-      }
-
-    } catch (error) {
-      console.error('❌ SMS Service Error:', error.message);
-      return { success: false, error: error.message };
+class HotelSmsService {
+    /**
+     * @param {string} phone
+     * @param {string} otp
+     * @param {string} [purpose]
+     */
+    async sendOTP(phone, otp, purpose = 'registration') {
+        try {
+            return toResult(await sendOtpSms({ phone, otp, purpose }));
+        } catch (error) {
+            return toFailure(error, `hotel ${purpose} OTP`);
+        }
     }
-  }
+
+    /**
+     * @param {string} phone
+     * @param {string} message
+     */
+    async sendSMS(phone, message) {
+        try {
+            return toResult(await sendSms({ phone, message, purpose: 'hotel notification' }));
+        } catch (error) {
+            return toFailure(error, 'hotel notification SMS');
+        }
+    }
 }
 
-export default new SMSIndiaHubService();
+export default new HotelSmsService();

@@ -10,7 +10,7 @@ const HotelLogin = () => {
     const [step, setStep] = useState(1);
     const [method, setMethod] = useState('phone');
     const [contact, setContact] = useState('');
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [otp, setOtp] = useState(['', '', '', '']);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -53,7 +53,7 @@ const HotelLogin = () => {
     const handleVerifyOTP = async (e) => {
         e.preventDefault();
         const otpString = otp.join('');
-        if (otpString.length !== 6) {
+        if (otpString.length !== 4) {
             setError('Please enter complete OTP');
             return;
         }

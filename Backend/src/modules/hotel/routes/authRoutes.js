@@ -1,14 +1,13 @@
 import express from 'express';
-import { sendOtp, verifyOtp, verifyPartnerOtp, adminLogin, getMe, updateProfile, updateAdminProfile, registerPartner, updateFcmToken, uploadDocs, deleteDoc, uploadDocsBase64 } from '../controllers/authController.js';
+import { adminLogin, getMe, updateProfile, updateAdminProfile, registerPartner, updateFcmToken, uploadDocs, deleteDoc, uploadDocsBase64 } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import { uploadDocuments } from '../utils/multer.js';
 
 const router = express.Router();
 
-router.post('/send-otp', sendOtp);
-router.post('/verify-otp', verifyOtp);
+// Phone + OTP sign-in for guests and partners now lives at /v1/auth/otp
+// (audiences 'user' and 'hotel-partner'). Partner registration stays here.
 router.post('/partner/register', registerPartner);
-router.post('/partner/verify-otp', verifyPartnerOtp);
 
 // Upload routes for partner registration
 router.post('/partner/upload-docs', uploadDocuments.array('files', 5), uploadDocs);
