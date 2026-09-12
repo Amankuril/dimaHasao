@@ -27,11 +27,40 @@ const verifyToken = (token) => {
 // collection, so a platform admin can surface through either lookup — but it
 // carries the platform's uppercase role ('ADMIN'). Hotel routes authorize on
 // lowercase roles, so normalize before handing the account on.
+const PLATFORM_ADMIN_ROLES = new Set(['ADMIN', 'SUB_ADMIN', 'SUBADMIN', 'SUPERADMIN', 'SUPER_ADMIN']);
+
+/** Platform role -> the hotel module's own vocabulary. */
+const HOTEL_ROLE_BY_PLATFORM_ROLE = {
+  USER: 'user',
+  RESTAURANT: 'restaurant',
+  DELIVERY_PARTNER: 'delivery_partner',
+  PARTNER: 'partner',
+};
+
 const withHotelRole = (account) => {
   if (!account) return null;
 
   const raw = String(account.role || '');
   if (raw && raw === raw.toLowerCase()) return account; // already hotel vocabulary
+
+  const upper = raw.toUpperCase();
+
+  // Only a genuine platform ADMIN becomes a hotel admin. Every platform role is
+  // uppercase — USER, RESTAURANT, DELIVERY_PARTNER included — so treating
+  // "not lowercase" as proof of adminhood handed the entire hotel admin panel
+  // to any signed-in consumer. `adminLevel` only exists on admin accounts.
+  const isPlatformAdmin =
+    Boolean(account.adminLevel) || PLATFORM_ADMIN_ROLES.has(upper);
+
+  if (!isPlatformAdmin) {
+    // Keep the Mongoose document — controllers rely on constructor.modelName
+    // and on being able to save it — and only override the role it reports.
+    // unmarkModified keeps the rename in memory: a later save() must not write
+    // 'user' over the platform's stored 'USER', which food's own guards match on.
+    account.role = HOTEL_ROLE_BY_PLATFORM_ROLE[upper] || upper.toLowerCase();
+    if (typeof account.unmarkModified === 'function') account.unmarkModified('role');
+    return account;
+  }
 
   const plain = typeof account.toObject === 'function' ? account.toObject() : { ...account };
   return {
