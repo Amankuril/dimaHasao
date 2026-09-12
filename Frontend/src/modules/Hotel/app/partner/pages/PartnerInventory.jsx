@@ -6,6 +6,7 @@ import {
     Globe, Briefcase, Lock, Check
 } from 'lucide-react';
 import { propertyService, availabilityService } from '../../../services/apiService';
+import SeasonalRatesPanel from '../components/SeasonalRatesPanel';
 
 const PartnerInventory = () => {
     const { id } = useParams();
@@ -340,6 +341,22 @@ const PartnerInventory = () => {
                     ))}
                 </div>
             </div>
+
+            <SeasonalRatesPanel
+                propertyId={id}
+                roomType={selectedRoom}
+                onNotify={(message, type) => {
+                    setToast({ message, type });
+                    setTimeout(() => setToast(null), 3000);
+                }}
+                onSaved={async () => {
+                    // Re-read so the panel shows exactly what was stored.
+                    const res = await propertyService.getDetails(id);
+                    const rooms = res.roomTypes || [];
+                    setRoomTypes(rooms);
+                    setSelectedRoom(rooms.find((room) => room._id === selectedRoom?._id) || rooms[0] || null);
+                }}
+            />
 
             {/* Calendar Controls */}
             <div className="px-4 pb-4 flex items-center justify-between">

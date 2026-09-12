@@ -11,6 +11,8 @@ import {
   markCheckIn,
   markCheckOut,
   getBookingDetail,
+  getBookingInvoice,
+  getPartnerRevenueReport,
 } from '../controllers/bookingController.js';
 
 const router = express.Router();
@@ -18,6 +20,9 @@ const router = express.Router();
 router.post('/', protect, createBooking);
 router.get('/my', protect, getMyBookings);
 router.get('/partner', protect, authorizedRoles('partner', 'admin'), getPartnerBookings);
+// Declared before '/:id' so "partner" is never read as a booking id.
+router.get('/partner/revenue-report', protect, authorizedRoles('partner', 'admin'), getPartnerRevenueReport);
+router.get('/:id/invoice', protect, getBookingInvoice);
 router.get('/:id/partner-detail', protect, authorizedRoles('partner', 'admin'), getPartnerBookingDetail); // Specific for partners
 router.get('/:id', protect, getBookingDetail); // General detail (User)
 router.put('/:id/mark-paid', protect, authorizedRoles('partner', 'admin'), markBookingAsPaid);

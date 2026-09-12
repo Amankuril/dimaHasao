@@ -223,6 +223,22 @@ export const bookingService = {
       throw error.response?.data || error.message;
     }
   },
+  getInvoice: async (id) => {
+    try {
+      const response = await api.get(`/bookings/${id}/invoice`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+  getPartnerRevenueReport: async (params = {}) => {
+    try {
+      const response = await api.get('/bookings/partner/revenue-report', { params });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
   markAsPaid: async (id) => {
     try {
       const response = await api.put(`/bookings/${id}/mark-paid`);

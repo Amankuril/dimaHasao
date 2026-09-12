@@ -34,6 +34,11 @@ import {
   markAllAdminNotificationsRead,
   deleteAdminNotifications,
   getFinanceStats,
+  getWithdrawals,
+  updateWithdrawalStatus,
+  getPropertyRoomTypes,
+  updateRoomTypeAsAdmin,
+  getPropertyAvailability,
 } from '../controllers/adminController.js';
 import { uploadImages } from '../controllers/hotelController.js';
 import upload from '../utils/multer.js';
@@ -84,5 +89,15 @@ router.get('/contact-messages', getContactMessages);
 router.put('/contact-messages/:id/status', updateContactStatus);
 router.get('/platform-settings', getPlatformSettings);
 router.put('/platform-settings', updatePlatformSettings);
+
+
+// Settlement
+router.get('/withdrawals', getWithdrawals);
+router.patch('/withdrawals/:id/status', updateWithdrawalStatus);
+
+// Room categories, pricing and availability
+router.get('/properties/:id/room-types', getPropertyRoomTypes);
+router.get('/properties/:id/availability', getPropertyAvailability);
+router.patch('/room-types/:id', updateRoomTypeAsAdmin);
 
 export default router;

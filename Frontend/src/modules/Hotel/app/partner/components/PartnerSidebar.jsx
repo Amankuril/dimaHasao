@@ -6,7 +6,7 @@ import {
     CreditCard, History, Shield,
     FileText, HelpCircle, LogOut,
     LayoutDashboard,
-    ChevronRight, Wallet, Bell, Settings, Edit3, Info, Phone, Calendar
+    ChevronRight, Wallet, Bell, Settings, Edit3, Info, Phone, Calendar, TrendingUp
 } from 'lucide-react';
 import usePartnerStore from '../store/partnerStore';
 import logo from '../../../assets/rokologin-removebg-preview.png';
@@ -72,6 +72,7 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
             title: 'Growth & Finance',
             items: [
                 { icon: Wallet, label: 'Wallet', path: '/hotel/wallet' },
+                { icon: TrendingUp, label: 'Revenue Report', path: '/hotel/revenue' },
                 { icon: History, label: 'Enquiry History', path: '/hotel/bookings' },
             ]
         },

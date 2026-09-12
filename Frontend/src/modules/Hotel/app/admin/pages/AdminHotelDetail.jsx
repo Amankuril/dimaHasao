@@ -8,6 +8,7 @@ import {
 import { Link, useParams } from 'react-router-dom';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
+import RoomRatesManager from '../components/RoomRatesManager';
 import toast from 'react-hot-toast';
 
 // --- Tab Components ---
@@ -631,6 +632,7 @@ const AdminHotelDetail = () => {
         { id: 'gallery', label: 'Full Gallery', icon: ImageIcon },
         { id: 'documents', label: 'KYC Documents', icon: ShieldCheck },
         { id: 'rooms', label: 'Rooms & Pricing', icon: Bed },
+        { id: 'rates', label: 'Rates & Availability', icon: Calendar },
         { id: 'bookings', label: 'Booking History', icon: Calendar },
     ];
 
@@ -732,6 +734,7 @@ const AdminHotelDetail = () => {
                         />
                     )}
                     {activeTab === 'rooms' && <RoomsTab rooms={hotel.rooms} />}
+                    {activeTab === 'rates' && <RoomRatesManager propertyId={id} />}
                     {activeTab === 'bookings' && <BookingsTab bookings={bookings} propertyType={hotel?.propertyType} />}
                 </motion.div>
             </AnimatePresence>

@@ -3,6 +3,8 @@ import RoomType from '../models/RoomType.js';
 import Booking from '../models/Booking.js';
 import Offer from '../models/Offer.js';
 import PlatformSettings from '../models/PlatformSettings.js';
+import { priceStay } from '../utils/nightlyPricing.js';
+import { buildInvoice } from '../services/invoiceService.js';
 import AvailabilityLedger from '../models/AvailabilityLedger.js';
 import Wallet from '../models/Wallet.js';
 import Transaction from '../models/Transaction.js';
@@ -140,10 +142,20 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ message: `Only ${Math.max(0, totalInventory - blockedUnits)} rooms available for selected dates` });
     }
 
-    // Calculate Base Amount
+    // Price the stay night by night so a booking that crosses a seasonal rate
+    // boundary is charged correctly on both sides.
     const units = requiredUnits; // Use validated units
-    const pricePerNight = roomType.pricePerNight || 0;
-    const baseAmount = pricePerNight * totalNights * units;
+    const stay = priceStay(roomType, checkIn, checkOut, units);
+    const baseAmount = stay.total;
+    const nightlyBreakdown = stay.nights.map((night) => ({
+      date: night.date,
+      rate: night.rate,
+      season: night.season,
+      units: night.units,
+      amount: night.amount,
+    }));
+    // Recorded for reference; the nightly breakdown is the real basis.
+    const pricePerNight = totalNights > 0 ? Math.round(baseAmount / totalNights / units) : 0;
 
     // Calculate Extra Charges
     const extraAdults = guests.extraAdults || 0;
@@ -241,6 +253,7 @@ export const createBooking = async (req, res) => {
       },
       pricePerNight,
       baseAmount,
+      nightlyBreakdown,
       extraAdultPrice,
       extraChildPrice,
       extraCharges,
@@ -956,5 +969,166 @@ export const markCheckOut = async (req, res) => {
     res.json({ success: true, message: 'Checked Out Successfully', booking });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc    Digital invoice for a booking
+ * @route   GET /api/hotel/bookings/:id/invoice
+ * @access  Private (the guest, the property's partner, or an admin)
+ *
+ * Settlement figures (commission, payout) are stripped from the guest's copy —
+ * what the platform takes is between the platform and the partner.
+ */
+export const getBookingInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    const booking = await Booking.findById(id)
+      .populate('propertyId')
+      .populate('roomTypeId')
+      .populate('userId', 'name phone email');
+
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+    const property = booking.propertyId;
+    const viewerId = String(req.user._id);
+    const isGuest = String(booking.userId?._id || booking.userId) === viewerId;
+    const isPartner = String(property?.partnerId || '') === viewerId;
+    const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
+
+    if (!isGuest && !isPartner && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to view this invoice' });
+    }
+
+    const Partner = (await import('../models/Partner.js')).default;
+    const [partner, settings] = await Promise.all([
+      property?.partnerId ? Partner.findById(property.partnerId).select('name phone email') : null,
+      PlatformSettings.getSettings(),
+    ]);
+
+    const invoice = buildInvoice({
+      booking,
+      property,
+      roomType: booking.roomTypeId,
+      guest: booking.userId,
+      partner,
+      settings,
+    });
+
+    if (!isPartner && !isAdmin) delete invoice.settlement;
+
+    res.json({ success: true, invoice });
+  } catch (error) {
+    console.error('Get Booking Invoice Error:', error);
+    res.status(500).json({ message: 'Failed to build invoice' });
+  }
+};
+
+/**
+ * @desc    Revenue and settlement report for the signed-in partner
+ * @route   GET /api/hotel/bookings/partner/revenue-report?from=&to=
+ * @access  Private (Partner)
+ *
+ * Only bookings that were actually paid count towards revenue; a confirmed
+ * pay-at-hotel booking that was never collected would otherwise inflate it.
+ */
+export const getPartnerRevenueReport = async (req, res) => {
+  try {
+    const properties = await Property.find({ partnerId: req.user._id }).select('_id propertyName');
+    const propertyIds = properties.map((p) => p._id);
+
+    if (propertyIds.length === 0) {
+      return res.json({
+        success: true,
+        range: { from: null, to: null },
+        totals: { bookings: 0, gross: 0, taxes: 0, discount: 0, commission: 0, payout: 0 },
+        byMonth: [],
+        byProperty: [],
+      });
+    }
+
+    // A date-only "to" parses as midnight, which would exclude everything that
+    // happened on that day — including today's bookings on the default range.
+    // Run it to the end of the day instead.
+    const endOfDay = (value) => {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return date;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(String(value).trim())) {
+        date.setUTCHours(23, 59, 59, 999);
+      }
+      return date;
+    };
+
+    const to = req.query.to ? endOfDay(req.query.to) : new Date();
+    const from = req.query.from
+      ? new Date(req.query.from)
+      : new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth() - 11, 1));
+
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+      return res.status(400).json({ message: 'Invalid from/to date' });
+    }
+
+    const match = {
+      propertyId: { $in: propertyIds },
+      paymentStatus: 'paid',
+      bookingStatus: { $nin: ['cancelled', 'rejected'] },
+      createdAt: { $gte: from, $lte: to },
+    };
+
+    const sums = {
+      bookings: { $sum: 1 },
+      gross: { $sum: '$totalAmount' },
+      taxes: { $sum: '$taxes' },
+      discount: { $sum: '$discount' },
+      commission: { $sum: '$adminCommission' },
+      payout: { $sum: '$partnerPayout' },
+    };
+
+    const [totalsRows, byMonth, byProperty] = await Promise.all([
+      Booking.aggregate([{ $match: match }, { $group: { _id: null, ...sums } }]),
+      Booking.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
+            ...sums,
+          },
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
+      ]),
+      Booking.aggregate([
+        { $match: match },
+        { $group: { _id: '$propertyId', ...sums } },
+        { $sort: { payout: -1 } },
+      ]),
+    ]);
+
+    const empty = { bookings: 0, gross: 0, taxes: 0, discount: 0, commission: 0, payout: 0 };
+    const strip = ({ _id, ...rest }) => rest;
+    const nameById = new Map(properties.map((p) => [String(p._id), p.propertyName]));
+
+    res.json({
+      success: true,
+      range: { from, to },
+      totals: totalsRows.length > 0 ? strip(totalsRows[0]) : empty,
+      byMonth: byMonth.map((row) => ({
+        year: row._id.year,
+        month: row._id.month,
+        label: `${String(row._id.month).padStart(2, '0')}/${row._id.year}`,
+        ...strip(row),
+      })),
+      byProperty: byProperty.map((row) => ({
+        propertyId: row._id,
+        propertyName: nameById.get(String(row._id)) || 'Property',
+        ...strip(row),
+      })),
+    });
+  } catch (error) {
+    console.error('Get Partner Revenue Report Error:', error);
+    res.status(500).json({ message: 'Failed to build revenue report' });
   }
 };

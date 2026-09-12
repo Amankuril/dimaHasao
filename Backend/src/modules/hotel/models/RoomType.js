@@ -42,6 +42,24 @@ const roomTypeSchema = new mongoose.Schema({
 
   // PRICING (PER NIGHT – SINGLE SOURCE OF TRUTH)
   pricePerNight: { type: Number, required: true },
+
+  /**
+   * Date-range overrides for `pricePerNight`.
+   *
+   * A stay is priced night by night: each night takes the rate of the first
+   * active season covering it, and `pricePerNight` where none does. Ranges are
+   * inclusive of `startDate` and `endDate`, and a night belongs to its
+   * check-in date — the check-out date is never charged.
+   */
+  seasonalRates: [
+    {
+      name: { type: String, required: true, trim: true },
+      startDate: { type: Date, required: true },
+      endDate: { type: Date, required: true },
+      pricePerNight: { type: Number, required: true, min: 0 },
+      isActive: { type: Boolean, default: true }
+    }
+  ],
   extraAdultPrice: { type: Number, default: 0 },
   extraChildPrice: { type: Number, default: 0 },
   securityDeposit: { type: Number, default: 0 },

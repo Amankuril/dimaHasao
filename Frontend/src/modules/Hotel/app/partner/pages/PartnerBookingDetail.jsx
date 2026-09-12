@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Calendar, User, Phone, Mail, MapPin,
   CreditCard, CheckCircle,
-  ChevronLeft, AlertTriangle, LogIn, LogOut
+  ChevronLeft, AlertTriangle, LogIn, LogOut, FileText
 } from 'lucide-react';
 import { bookingService } from '../../../services/apiService';
+import BookingInvoice from '../../../components/invoice/BookingInvoice';
 import toast from 'react-hot-toast';
 
 const PartnerBookingDetail = () => {
@@ -13,6 +14,8 @@ const PartnerBookingDetail = () => {
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [invoice, setInvoice] = useState(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
 
   const fetchBooking = async () => {
     try {
@@ -30,6 +33,18 @@ const PartnerBookingDetail = () => {
   useEffect(() => {
     fetchBooking();
   }, [id]);
+
+  const handleViewInvoice = async () => {
+    try {
+      setInvoiceLoading(true);
+      const data = await bookingService.getInvoice(id);
+      setInvoice(data.invoice);
+    } catch (error) {
+      toast.error(error?.message || 'Failed to load the invoice');
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
 
   const handleMarkPaid = async () => {
     if (!window.confirm("Confirm: Guest has paid the full amount at the hotel?")) return;
@@ -113,15 +128,34 @@ const PartnerBookingDetail = () => {
         <button onClick={() => navigate('/hotel/bookings')} className="p-2 hover:bg-gray-100 rounded-full">
           <ChevronLeft size={20} />
         </button>
-        <h1 className="font-bold text-lg">Enquiry Details</h1>
+        <h1 className="font-bold text-lg flex-1">Booking Details</h1>
+        <button
+          type="button"
+          onClick={handleViewInvoice}
+          disabled={invoiceLoading}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-950 text-white text-xs font-bold disabled:opacity-60"
+        >
+          <FileText size={14} /> {invoiceLoading ? 'Loading…' : 'Invoice'}
+        </button>
       </div>
+
+      {invoice && (
+        <div className="fixed inset-0 z-[200] bg-black/50 overflow-y-auto p-4" onClick={() => setInvoice(null)}>
+          <div
+            className="max-w-3xl mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <BookingInvoice invoice={invoice} onClose={() => setInvoice(null)} />
+          </div>
+        </div>
+      )}
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
 
         {/* Status Card - Compact */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Enquiry ID</span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Booking ID</span>
             <p className="text-sm font-black text-gray-900 break-all">#{booking.bookingId || booking._id}</p>
           </div>
           <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${booking.bookingStatus === 'confirmed' ? 'bg-green-50 text-green-700 border-green-100' :

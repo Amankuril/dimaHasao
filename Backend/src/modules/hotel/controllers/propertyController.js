@@ -9,6 +9,49 @@ import emailService from '../services/emailService.js';
 import User from '../models/User.js'; // Needed to find Admins? Or Admin model
 import Admin from '../models/Admin.js';
 
+/**
+ * Normalise and check a seasonal rate list.
+ *
+ * Overlaps are allowed on purpose — the first match wins at pricing time, so a
+ * partner can lay a short festival rate over a broad peak season — but a range
+ * that ends before it starts, or a negative rate, is always a mistake.
+ */
+const validateSeasonalRates = (input) => {
+  if (input === null || input === undefined) return { valid: true, rates: [] };
+  if (!Array.isArray(input)) return { valid: false, message: 'seasonalRates must be a list' };
+
+  const rates = [];
+  for (const [index, raw] of input.entries()) {
+    const label = `Season ${index + 1}`;
+    const name = String(raw?.name || '').trim();
+    if (!name) return { valid: false, message: `${label}: name is required` };
+
+    const startDate = new Date(raw?.startDate);
+    const endDate = new Date(raw?.endDate);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      return { valid: false, message: `${label} (${name}): start and end dates are required` };
+    }
+    if (endDate < startDate) {
+      return { valid: false, message: `${label} (${name}): the end date is before the start date` };
+    }
+
+    const pricePerNight = Number(raw?.pricePerNight);
+    if (!Number.isFinite(pricePerNight) || pricePerNight < 0) {
+      return { valid: false, message: `${label} (${name}): a price per night of 0 or more is required` };
+    }
+
+    rates.push({
+      name,
+      startDate,
+      endDate,
+      pricePerNight,
+      isActive: raw?.isActive !== false,
+    });
+  }
+
+  return { valid: true, rates };
+};
+
 const notifyAdminOfNewProperty = async (property) => {
   try {
     const admin = await Admin.findOne({ role: { $in: ['admin', 'superadmin'] } });
@@ -257,12 +300,20 @@ export const updateRoomType = async (req, res) => {
       'bedsPerRoom',
       'totalInventory',
       'pricePerNight',
+      'seasonalRates',
       'extraAdultPrice',
       'extraChildPrice',
+      'securityDeposit',
       'images',
       'amenities',
       'isActive'
     ];
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'seasonalRates')) {
+      const validation = validateSeasonalRates(payload.seasonalRates);
+      if (!validation.valid) return res.status(400).json({ message: validation.message });
+      payload.seasonalRates = validation.rates;
+    }
 
     updatableFields.forEach(field => {
       if (Object.prototype.hasOwnProperty.call(payload, field)) {

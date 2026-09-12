@@ -5,6 +5,7 @@ import {
     CreditCard, Calendar, CheckCircle, Clock, Loader2, Users
 } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
+import PayoutSettlements from '../components/PayoutSettlements';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
 
@@ -124,6 +125,8 @@ const AdminFinance = () => {
                     </div>
                 </div>
             </div>
+
+            <PayoutSettlements />
 
             {/* Pending Property Requests */}
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden min-h-[300px]">

@@ -59,8 +59,24 @@ const bookingSchema = new mongoose.Schema({
   guests: guestSchema,
 
   // PRICING (PER NIGHT LOGIC)
-  pricePerNight: { type: Number },
-  baseAmount: { type: Number }, // pricePerNight * nights
+  pricePerNight: { type: Number }, // average nightly rate actually charged
+  baseAmount: { type: Number }, // sum of the nightly breakdown
+
+  /**
+   * What each night of the stay cost, captured at booking time.
+   *
+   * Seasonal rates can be edited afterwards, so an invoice reprinted later has
+   * to read these rather than recompute from the room type.
+   */
+  nightlyBreakdown: [
+    {
+      date: { type: Date, required: true },
+      rate: { type: Number, required: true },
+      season: { type: String, default: null },
+      units: { type: Number, default: 1 },
+      amount: { type: Number, required: true }
+    }
+  ],
 
   extraAdultPrice: { type: Number, default: 0 },
   extraChildPrice: { type: Number, default: 0 },

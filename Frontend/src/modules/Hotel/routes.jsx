@@ -34,6 +34,7 @@ const PartnerInventoryProperties = L(() => import('./app/partner/pages/PartnerIn
 const PartnerBookings = L(() => import('./app/partner/pages/PartnerBookings'));
 const PartnerBookingDetail = L(() => import('./app/partner/pages/PartnerBookingDetail'));
 const PartnerWallet = L(() => import('./app/partner/pages/PartnerWallet'));
+const PartnerRevenueReport = L(() => import('./app/partner/pages/PartnerRevenueReport'));
 const PartnerReviews = L(() => import('./app/partner/pages/PartnerReviews'));
 const PartnerKYC = L(() => import('./app/partner/pages/PartnerKYC'));
 const PartnerBankDetails = L(() => import('./app/partner/pages/PartnerBankDetails'));
@@ -101,6 +102,7 @@ export default function HotelRoutes() {
           <Route path="bookings" element={<PartnerBookings />} />
           <Route path="bookings/:id" element={<PartnerBookingDetail />} />
           <Route path="wallet" element={<PartnerWallet />} />
+          <Route path="revenue" element={<PartnerRevenueReport />} />
           <Route path="reviews" element={<PartnerReviews />} />
           <Route path="kyc" element={<PartnerKYC />} />
           <Route path="bank-details" element={<PartnerBankDetails />} />
@@ -119,6 +121,7 @@ export default function HotelRoutes() {
           'inventory-properties',
           'bookings',
           'wallet',
+          'revenue',
           'reviews',
           'kyc',
           'bank-details',

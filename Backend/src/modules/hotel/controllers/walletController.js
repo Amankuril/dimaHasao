@@ -346,9 +346,13 @@ export const requestWithdrawal = async (req, res) => {
       payoutId = payout.id;
       payoutStatus = payout.status;
     } catch (errMessage) {
-      console.warn("⚠️ Razorpay Payout Step Failed (Proceeding for Test):", errMessage.message);
+      // RazorpayX is optional and often unconfigured. The request still stands —
+      // it just has to be settled by hand, which is what the admin payout screen
+      // is for. Marking it complete here would tell the partner they had been
+      // paid when no money had moved.
+      console.warn("⚠️ Razorpay payout step failed; queued for manual settlement:", errMessage.message);
       rzpError = errMessage.message;
-      payoutStatus = 'pending_payout'; // Indicate it hasn't reached Razorpay but wallet is deducted
+      payoutStatus = 'manual';
     }
 
     // 5. Deduct Wallet & Create Records
@@ -360,11 +364,13 @@ export const requestWithdrawal = async (req, res) => {
       walletId: wallet._id,
       amount,
       bankDetails: wallet.bankDetails,
-      status: (payoutStatus === 'processed' || payoutStatus === 'pending_payout') ? 'completed' : 'pending',
+      status: payoutStatus === 'processed' ? 'completed' : payoutStatus === 'manual' ? 'pending' : 'processing',
       razorpayPayoutId: payoutId,
       razorpayFundAccountId: wallet.razorpayFundAccountId,
       processingDetails: {
-        remarks: rzpError ? `RZP Error: ${rzpError}` : 'Initiated from partner app',
+        remarks: rzpError
+          ? `Awaiting manual settlement — Razorpay payout unavailable: ${rzpError}`
+          : 'Initiated from partner app',
         initiatedAt: new Date()
       }
     });
@@ -385,7 +391,7 @@ export const requestWithdrawal = async (req, res) => {
       balanceAfter: wallet.balance,
       description: `Withdrawal Request (${withdrawal.withdrawalId})`,
       reference: withdrawal.withdrawalId,
-      status: (payoutStatus === 'processed' || payoutStatus === 'pending_payout') ? 'completed' : 'pending',
+      status: payoutStatus === 'processed' ? 'completed' : 'pending',
       metadata: {
         withdrawalId: withdrawal.withdrawalId,
         razorpayPayoutId: payoutId
@@ -397,7 +403,10 @@ export const requestWithdrawal = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Withdrawal initiated successfully via Razorpay',
+      message:
+        payoutStatus === 'processed'
+          ? 'Withdrawal paid out successfully'
+          : 'Withdrawal requested. It will be settled shortly.',
       withdrawal: {
         id: withdrawal.withdrawalId,
         amount: withdrawal.amount,

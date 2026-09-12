@@ -7,6 +7,7 @@ import {
 import { Link, useParams } from 'react-router-dom';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
+import BookingInvoice from '../../../components/invoice/BookingInvoice';
 import toast from 'react-hot-toast';
 
 const AdminBookingDetail = () => {
@@ -14,6 +15,20 @@ const AdminBookingDetail = () => {
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
     const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'danger', onConfirm: () => { } });
+    const [invoice, setInvoice] = useState(null);
+    const [invoiceLoading, setInvoiceLoading] = useState(false);
+
+    const handleViewInvoice = async () => {
+        try {
+            setInvoiceLoading(true);
+            const data = await adminService.getBookingInvoice(id);
+            setInvoice(data.invoice);
+        } catch (error) {
+            toast.error(error?.response?.data?.message || 'Failed to load the invoice');
+        } finally {
+            setInvoiceLoading(false);
+        }
+    };
 
     const fetchBookingDetails = async () => {
         try {
@@ -93,6 +108,17 @@ const AdminBookingDetail = () => {
                 <span className="text-black">#{booking.bookingId || booking._id.slice(-6)}</span>
             </div>
 
+            {invoice && (
+                <div className="fixed inset-0 z-[200] bg-black/50 overflow-y-auto p-4" onClick={() => setInvoice(null)}>
+                    <div
+                        className="max-w-3xl mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <BookingInvoice invoice={invoice} onClose={() => setInvoice(null)} />
+                    </div>
+                </div>
+            )}
+
             {/* Header Card */}
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -106,8 +132,13 @@ const AdminBookingDetail = () => {
                     <p className="text-[10px] font-bold uppercase text-gray-400 tracking-tight">Booked on {new Date(booking.createdAt).toLocaleDateString()} • {new Date(booking.createdAt).toLocaleTimeString()}</p>
                 </div>
                 <div className="flex gap-2">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-700 hover:bg-gray-50 transition-colors">
-                        <Download size={14} /> Download Receipt
+                    <button
+                        type="button"
+                        onClick={handleViewInvoice}
+                        disabled={invoiceLoading}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+                    >
+                        <Download size={14} /> {invoiceLoading ? 'Loading…' : 'Invoice'}
                     </button>
                     {((booking.bookingStatus || booking.status) === 'confirmed' || (booking.bookingStatus || booking.status) === 'pending') && (
                         <button

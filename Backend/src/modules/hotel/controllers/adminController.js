@@ -3,6 +3,7 @@ import Partner from '../models/Partner.js';
 import InfoPage from '../models/InfoPage.js';
 import ContactMessage from '../models/ContactMessage.js';
 import PlatformSettings from '../models/PlatformSettings.js';
+import Withdrawal from '../models/Withdrawal.js';
 import Property from '../models/Property.js';
 import RoomType from '../models/RoomType.js';
 import Booking from '../models/Booking.js';
@@ -1154,3 +1155,314 @@ export const getFinanceStats = async (req, res) => {
   }
 };
 
+/* ------------------------------------------------------------------ *
+ * Settlement
+ *
+ * A partner's withdrawal request debits their wallet straight away and
+ * lands here as `pending`. Payouts are settled by hand (the automated
+ * RazorpayX path is optional and often unconfigured), so an admin has to
+ * be able to move a request through processing to completed — or fail it,
+ * which puts the money back in the partner's wallet.
+ * ------------------------------------------------------------------ */
+
+/** Terminal states must not be re-opened; a paid-out request cannot be un-paid. */
+const WITHDRAWAL_TRANSITIONS = {
+  pending: ['processing', 'completed', 'failed', 'cancelled'],
+  processing: ['completed', 'failed'],
+  completed: [],
+  failed: [],
+  cancelled: [],
+};
+
+/** Failing or cancelling a request returns the money the wallet already gave up. */
+const REFUNDING_STATUSES = ['failed', 'cancelled'];
+
+export const getWithdrawals = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const { status, search } = req.query;
+
+    const query = {};
+    if (status && status !== 'all') query.status = status;
+
+    if (search) {
+      const regex = new RegExp(String(search).trim(), 'i');
+      const partners = await Partner.find({
+        $or: [{ name: regex }, { phone: regex }, { email: regex }],
+      }).select('_id');
+      query.$or = [
+        { withdrawalId: regex },
+        { partnerId: { $in: partners.map((p) => p._id) } },
+      ];
+    }
+
+    const [items, total, totals] = await Promise.all([
+      Withdrawal.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Withdrawal.countDocuments(query),
+      Withdrawal.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 }, amount: { $sum: '$amount' } } },
+      ]),
+    ]);
+
+    // Withdrawal.partnerId is declared `ref: 'User'`, but a hotel partner is a
+    // Partner document in a different collection, so populate() silently
+    // returned nothing. Resolve across both rather than change a ref other code
+    // may depend on.
+    const requesterIds = items.map((w) => w.partnerId).filter(Boolean);
+    const [partnerDocs, userDocs] = await Promise.all([
+      Partner.find({ _id: { $in: requesterIds } }).select('name phone email').lean(),
+      User.find({ _id: { $in: requesterIds } }).select('name phone email').lean(),
+    ]);
+    const requesterById = new Map(
+      [...userDocs, ...partnerDocs].map((doc) => [String(doc._id), doc]),
+    );
+
+    res.json({
+      success: true,
+      withdrawals: items.map((w) => ({
+        ...w,
+        partner: requesterById.get(String(w.partnerId)) || null,
+      })),
+      page,
+      limit,
+      total,
+      hasMore: page * limit < total,
+      summary: totals.reduce((acc, row) => {
+        acc[row._id] = { count: row.count, amount: row.amount };
+        return acc;
+      }, {}),
+    });
+  } catch (error) {
+    console.error('Get Withdrawals Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load withdrawals' });
+  }
+};
+
+export const updateWithdrawalStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, utrNumber, remarks } = req.body;
+
+    const withdrawal = await Withdrawal.findById(id);
+    if (!withdrawal) return res.status(404).json({ success: false, message: 'Withdrawal not found' });
+
+    const allowed = WITHDRAWAL_TRANSITIONS[withdrawal.status] || [];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot move a ${withdrawal.status} withdrawal to ${status}.`,
+      });
+    }
+
+    if (status === 'completed' && !String(utrNumber || '').trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'A bank reference (UTR) is required to mark a payout completed.',
+      });
+    }
+
+    const now = new Date();
+    withdrawal.status = status;
+    withdrawal.processingDetails = withdrawal.processingDetails || {};
+    if (remarks) withdrawal.processingDetails.remarks = remarks;
+    if (utrNumber) withdrawal.processingDetails.utrNumber = String(utrNumber).trim();
+    if (status === 'processing') withdrawal.processingDetails.processedAt = now;
+    if (status === 'completed') withdrawal.processingDetails.completedAt = now;
+    if (REFUNDING_STATUSES.includes(status)) withdrawal.processingDetails.failedAt = now;
+
+    // The wallet was debited when the request was raised, so a payout that
+    // never happened has to be credited back before the request is closed.
+    if (REFUNDING_STATUSES.includes(status)) {
+      const wallet = await Wallet.findById(withdrawal.walletId);
+      if (wallet) {
+        wallet.balance += withdrawal.amount;
+        wallet.totalWithdrawals = Math.max(0, (wallet.totalWithdrawals || 0) - withdrawal.amount);
+        await wallet.save();
+
+        await Transaction.create({
+          walletId: wallet._id,
+          partnerId: withdrawal.partnerId,
+          modelType: 'Partner',
+          type: 'credit',
+          category: 'refund',
+          amount: withdrawal.amount,
+          balanceAfter: wallet.balance,
+          description: `Withdrawal ${withdrawal.withdrawalId} ${status} — amount returned`,
+          reference: withdrawal.withdrawalId,
+          status: 'completed',
+          metadata: { withdrawalId: withdrawal.withdrawalId, reason: remarks || status },
+        });
+      }
+    }
+
+    if (withdrawal.transactionId) {
+      await Transaction.findByIdAndUpdate(withdrawal.transactionId, {
+        status: status === 'completed' ? 'completed' : REFUNDING_STATUSES.includes(status) ? 'failed' : 'pending',
+      });
+    }
+
+    await withdrawal.save();
+
+    notificationService
+      .sendToUser(
+        withdrawal.partnerId,
+        {
+          title: 'Payout update',
+          body:
+            status === 'completed'
+              ? `₹${withdrawal.amount} has been paid out (ref ${withdrawal.processingDetails.utrNumber}).`
+              : `Your withdrawal ${withdrawal.withdrawalId} is now ${status}.`,
+        },
+        { type: 'withdrawal_update', withdrawalId: String(withdrawal._id) },
+        'partner',
+      )
+      .catch((err) => console.error('Withdrawal notification failed:', err));
+
+    res.json({ success: true, withdrawal });
+  } catch (error) {
+    console.error('Update Withdrawal Status Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update withdrawal' });
+  }
+};
+
+/* ------------------------------------------------------------------ *
+ * Room categories, pricing and availability
+ *
+ * The scope of work puts these under the admin panel as well as the
+ * partner panel, so support can correct a rate or free up inventory
+ * without asking the partner to log in.
+ * ------------------------------------------------------------------ */
+
+export const getPropertyRoomTypes = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const property = await Property.findById(id).select('propertyName propertyType partnerId');
+    if (!property) return res.status(404).json({ success: false, message: 'Property not found' });
+
+    const roomTypes = await RoomType.find({ propertyId: id }).sort({ createdAt: 1 }).lean();
+    res.json({ success: true, property, roomTypes });
+  } catch (error) {
+    console.error('Get Property Room Types Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load room types' });
+  }
+};
+
+export const updateRoomTypeAsAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const roomType = await RoomType.findById(id);
+    if (!roomType) return res.status(404).json({ success: false, message: 'Room type not found' });
+
+    const { pricePerNight, totalInventory, isActive, seasonalRates, extraAdultPrice, extraChildPrice } = req.body;
+
+    if (pricePerNight !== undefined) {
+      const value = Number(pricePerNight);
+      if (!Number.isFinite(value) || value < 0) {
+        return res.status(400).json({ success: false, message: 'pricePerNight must be 0 or more' });
+      }
+      roomType.pricePerNight = value;
+    }
+
+    if (totalInventory !== undefined) {
+      const value = Number(totalInventory);
+      if (!Number.isInteger(value) || value < 0) {
+        return res.status(400).json({ success: false, message: 'totalInventory must be a whole number' });
+      }
+      roomType.totalInventory = value;
+    }
+
+    if (extraAdultPrice !== undefined) roomType.extraAdultPrice = Number(extraAdultPrice) || 0;
+    if (extraChildPrice !== undefined) roomType.extraChildPrice = Number(extraChildPrice) || 0;
+    if (typeof isActive === 'boolean') roomType.isActive = isActive;
+
+    if (seasonalRates !== undefined) {
+      if (!Array.isArray(seasonalRates)) {
+        return res.status(400).json({ success: false, message: 'seasonalRates must be a list' });
+      }
+      for (const season of seasonalRates) {
+        const start = new Date(season?.startDate);
+        const end = new Date(season?.endDate);
+        if (!String(season?.name || '').trim() || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+          return res.status(400).json({ success: false, message: 'Each season needs a name, a start date and an end date' });
+        }
+        if (end < start) {
+          return res.status(400).json({ success: false, message: `Season "${season.name}" ends before it starts` });
+        }
+      }
+      roomType.seasonalRates = seasonalRates;
+    }
+
+    await roomType.save();
+    res.json({ success: true, roomType });
+  } catch (error) {
+    console.error('Update Room Type (admin) Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update room type' });
+  }
+};
+
+/**
+ * Occupancy for a property over a window, per room type and per day.
+ *
+ * The ledger stores date *ranges*, so a booking spanning a week is one row.
+ * Expanding to days here is what makes a calendar view possible without the
+ * client re-implementing the overlap arithmetic.
+ */
+export const getPropertyAvailability = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const property = await Property.findById(id).select('propertyName');
+    if (!property) return res.status(404).json({ success: false, message: 'Property not found' });
+
+    const from = req.query.from ? new Date(req.query.from) : new Date();
+    const to = req.query.to
+      ? new Date(req.query.to)
+      : new Date(from.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to <= from) {
+      return res.status(400).json({ success: false, message: 'Invalid from/to range' });
+    }
+
+    const [roomTypes, entries] = await Promise.all([
+      RoomType.find({ propertyId: id }).select('name totalInventory isActive').lean(),
+      AvailabilityLedger.find({
+        propertyId: id,
+        startDate: { $lt: to },
+        endDate: { $gt: from },
+      }).lean(),
+    ]);
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const utcDay = (d) => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    const windowStart = utcDay(from);
+    const windowEnd = utcDay(to);
+
+    const calendar = roomTypes.map((roomType) => {
+      const days = [];
+      for (let t = windowStart; t < windowEnd; t += dayMs) {
+        const blocked = entries
+          .filter((entry) => {
+            if (String(entry.roomTypeId || '') !== String(roomType._id)) return false;
+            return utcDay(new Date(entry.startDate)) <= t && utcDay(new Date(entry.endDate)) > t;
+          })
+          .reduce((sum, entry) => sum + (entry.units || 0), 0);
+
+        days.push({
+          date: new Date(t),
+          blocked,
+          available: Math.max(0, (roomType.totalInventory || 0) - blocked),
+        });
+      }
+      return { roomTypeId: roomType._id, name: roomType.name, totalInventory: roomType.totalInventory, isActive: roomType.isActive, days };
+    });
+
+    res.json({ success: true, property, range: { from, to }, calendar });
+  } catch (error) {
+    console.error('Get Property Availability Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load availability' });
+  }
+};

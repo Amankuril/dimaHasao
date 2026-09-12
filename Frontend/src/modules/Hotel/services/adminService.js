@@ -21,6 +21,38 @@ const adminService = {
     return response.data;
   },
 
+  // Settlement
+  getWithdrawals: async (params = {}) => {
+    const response = await axiosInstance.get('/admin/withdrawals', { params });
+    return response.data;
+  },
+
+  updateWithdrawalStatus: async (id, payload) => {
+    const response = await axiosInstance.patch(`/admin/withdrawals/${id}/status`, payload);
+    return response.data;
+  },
+
+  // Room categories, pricing and availability
+  getPropertyRoomTypes: async (propertyId) => {
+    const response = await axiosInstance.get(`/admin/properties/${propertyId}/room-types`);
+    return response.data;
+  },
+
+  updateRoomType: async (roomTypeId, payload) => {
+    const response = await axiosInstance.patch(`/admin/room-types/${roomTypeId}`, payload);
+    return response.data;
+  },
+
+  getPropertyAvailability: async (propertyId, params = {}) => {
+    const response = await axiosInstance.get(`/admin/properties/${propertyId}/availability`, { params });
+    return response.data;
+  },
+
+  getBookingInvoice: async (bookingId) => {
+    const response = await axiosInstance.get(`/bookings/${bookingId}/invoice`);
+    return response.data;
+  },
+
   getPropertyRequests: async () => {
     const response = await axiosInstance.get('/admin/property-requests');
     return response.data;
