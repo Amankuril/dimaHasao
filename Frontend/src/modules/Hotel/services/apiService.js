@@ -440,7 +440,7 @@ export const hotelService = {
       return response.data;
     } catch (error) {
       const err = error.response?.data || { message: error.message };
-      console.error('[getAddressFromCoordinates] Backend error:', err);
+      if (!err?.mapsUnavailable) console.error('[getAddressFromCoordinates] Backend error:', err);
       throw err;
     }
   },
@@ -464,7 +464,9 @@ export const hotelService = {
       return response.data;
     } catch (error) {
       const err = error.response?.data || { message: error.message };
-      console.error('[searchLocation] Backend error:', err);
+      // A deployment without a Maps key answers 503 with this flag. That is an
+      // expected state the caller handles, not something to log on every keystroke.
+      if (!err?.mapsUnavailable) console.error('[searchLocation] Backend error:', err);
       throw err;
     }
   },

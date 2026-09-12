@@ -1,16 +1,19 @@
-import axios from 'axios';
-import { getGoogleMapsApiKey } from '../../../core/maps/googleMaps.service.js';
+import { geocodeRequest, isMapsConfigured } from '../../../core/maps/googleMaps.service.js';
 import { uploadToCloudinary, uploadBase64ToCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
 
 /**
- * Google Maps API key via the shared resolver.
+ * One answer for "Maps isn't set up".
  *
- * The previous local version read GOOGLE_MAPS_API_KEY twice despite its comment
- * promising a GOOGLE_MAP_API_KEY preference, so that spelling never worked.
+ * This is a deployment gap, not a request the caller got wrong and not a crash,
+ * so it answers 503 with a flag the client can branch on. The wizards use it to
+ * fall back to typing the address by hand instead of showing a red error on a
+ * screen the partner can still complete.
  */
-function getMapsApiKey() {
-  return getGoogleMapsApiKey() || null;
-}
+const MAPS_UNAVAILABLE = {
+  success: false,
+  mapsUnavailable: true,
+  message: 'Address lookup is unavailable right now. Please enter the address manually.',
+};
 
 const mapAddressComponents = (components) => {
   const get = (type) => {
@@ -111,22 +114,11 @@ export const getAddressFromCoordinates = async (req, res) => {
     if (typeof lat !== 'number' || typeof lng !== 'number') {
       return res.status(400).json({ message: 'lat and lng must be numbers' });
     }
-    const key = getMapsApiKey();
-    if (!key) {
-      return res.status(500).json({
-        message: 'Maps API key not configured. Set GOOGLE_MAP_API_KEY in backend/.env and restart the server.',
-      });
-    }
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${key}`;
-    const { data } = await axios.get(url);
+    if (!isMapsConfigured()) return res.status(503).json(MAPS_UNAVAILABLE);
 
-    if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      const errMsg = data.error_message || data.status;
-      console.error('[getAddressFromCoordinates] Google API error:', data.status, errMsg);
-      return res.status(400).json({
-        message: errMsg || 'Location fetch failed. Enable Geocoding API in Google Cloud Console.',
-      });
-    }
+    // geocodeRequest never throws: null means unconfigured or the call failed.
+    const data = await geocodeRequest({ latlng: `${lat},${lng}` });
+    if (!data) return res.status(503).json(MAPS_UNAVAILABLE);
 
     const first = Array.isArray(data.results) ? data.results[0] : null;
     if (!first) return res.status(404).json({ message: 'Address not found for these coordinates' });
@@ -153,26 +145,12 @@ export const searchLocation = async (req, res) => {
     if (!query || !String(query).trim()) {
       return res.status(400).json({ message: 'query is required' });
     }
-    const key = getMapsApiKey();
-    if (!key) {
-      console.error('[searchLocation] GOOGLE_MAP_API_KEY is missing. Set it in backend/.env and restart.');
-      return res.status(500).json({
-        message: 'Maps API key not configured. Set GOOGLE_MAP_API_KEY in backend/.env and restart the server.',
-      });
-    }
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-      query
-    )}&key=${key}`;
-    const { data } = await axios.get(url);
+    if (!isMapsConfigured()) return res.status(503).json(MAPS_UNAVAILABLE);
 
-    if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      const errMsg = data.error_message || data.status;
-      console.error('[searchLocation] Google API error:', data.status, errMsg);
-      return res.status(400).json({
-        message: errMsg || 'Location search failed. Enable Geocoding API for this key in Google Cloud Console.',
-      });
-    }
+    const data = await geocodeRequest({ address: query });
+    if (!data) return res.status(503).json(MAPS_UNAVAILABLE);
 
+    // A query that matches nothing is a normal answer, not a failure.
     const results = (data.results || []).map((r) => ({
       name: r.formatted_address || query,
       lat: r.geometry?.location?.lat,
@@ -181,9 +159,8 @@ export const searchLocation = async (req, res) => {
     }));
     res.json({ success: true, results });
   } catch (e) {
-    const msg = e.response?.data?.error_message || e.response?.data?.message || e.message;
-    console.error('[searchLocation] Error:', msg);
-    res.status(500).json({ message: msg || 'Location search failed' });
+    console.error('[searchLocation] Error:', e.message);
+    res.status(500).json({ success: false, message: 'Location search failed' });
   }
 };
 

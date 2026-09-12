@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { propertyService, hotelService } from '../../../services/apiService';
 import toast from 'react-hot-toast';
 import '../wizard.css';
+import useLocationSearch from '../hooks/useLocationSearch';
 // Compression removed - Cloudinary handles optimization
 import {
   CheckCircle, FileText, Home, Image, Plus, Trash2, MapPin, Search,
-  BedDouble, Wifi, Coffee, Car, Users, CheckSquare, Snowflake, Tv, ShowerHead, ArrowLeft, ArrowRight, Clock, Loader2, Camera, X
-} from 'lucide-react';
+  BedDouble, Wifi, Coffee, Car, Users, CheckSquare, Snowflake, Tv, ShowerHead, ArrowLeft, ArrowRight, Clock, Loader2, Camera, X, AlertCircle} from 'lucide-react';
 import logo from '../../../assets/rokologin-removebg-preview.png';
 import { isFlutterApp, openFlutterCamera } from '../../../utils/flutterBridge';
 
@@ -53,6 +53,42 @@ const ROOM_AMENITIES = [
 
 const HOUSE_RULES_OPTIONS = ["No smoking", "No pets", "No loud music", "ID required at check-in"];
 
+/**
+ * Feedback under an address search box.
+ *
+ * A deployment with no Maps key is a normal state for this app, not an error
+ * the partner caused — the manual address fields below still work — so it reads
+ * as a note rather than a failure.
+ */
+const SearchStatus = ({ search }) => {
+  if (search.status === 'searching') {
+    return (
+      <p className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+        <Loader2 size={12} className="animate-spin" /> Searching…
+      </p>
+    );
+  }
+
+  if (search.mapsUnavailable) {
+    return (
+      <p className="mt-2 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+        <AlertCircle size={13} className="shrink-0 mt-0.5" />
+        Address lookup is unavailable right now — please fill in the address below by hand.
+      </p>
+    );
+  }
+
+  if (search.status === 'empty') {
+    return <p className="mt-2 text-xs text-gray-400">No matches. Try a different search, or enter the address below.</p>;
+  }
+
+  if (search.status === 'error') {
+    return <p className="mt-2 text-xs text-red-600">Could not search just now. Try again, or enter the address below.</p>;
+  }
+
+  return null;
+};
+
 const AddHomestayWizard = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -65,12 +101,10 @@ const AddHomestayWizard = () => {
   const [createdProperty, setCreatedProperty] = useState(null);
 
   // Maps / Location State
-  const [nearbySearchQuery, setNearbySearchQuery] = useState('');
-  const [nearbyResults, setNearbyResults] = useState([]);
+  const nearbySearch = useLocationSearch();
   const [editingNearbyIndex, setEditingNearbyIndex] = useState(null);
   const [tempNearbyPlace, setTempNearbyPlace] = useState({ name: '', type: 'tourist', distanceKm: '' });
-  const [locationSearchQuery, setLocationSearchQuery] = useState('');
-  const [locationResults, setLocationResults] = useState([]);
+  const locationSearch = useLocationSearch();
 
   // Image Upload State
   const [uploading, setUploading] = useState(null);
@@ -230,17 +264,6 @@ const AddHomestayWizard = () => {
     }
   };
 
-  const searchLocationForAddress = async () => {
-    try {
-      setError('');
-      if (!locationSearchQuery.trim()) return;
-      const res = await hotelService.searchLocation(locationSearchQuery.trim());
-      setLocationResults(Array.isArray(res?.results) ? res.results : []);
-    } catch {
-      setError('Failed to search location');
-    }
-  };
-
   const selectLocationResult = async (place) => {
     try {
       setError('');
@@ -257,20 +280,9 @@ const AddHomestayWizard = () => {
         fullAddress: res.fullAddress || '',
         pincode: res.pincode || ''
       });
-      setLocationResults([]);
+      locationSearch.clear();
     } catch {
       setError('Failed to use selected location');
-    }
-  };
-
-  const searchNearbyPlaces = async () => {
-    try {
-      setError('');
-      if (!nearbySearchQuery.trim()) return;
-      const res = await hotelService.searchLocation(nearbySearchQuery.trim());
-      setNearbyResults(Array.isArray(res?.results) ? res.results : []);
-    } catch {
-      setError('Failed to search places');
     }
   };
 
@@ -286,8 +298,7 @@ const AddHomestayWizard = () => {
         km = distRes?.distanceKm ? String(distRes.distanceKm) : '';
       }
       setTempNearbyPlace(prev => ({ ...prev, name: place.name || '', distanceKm: km }));
-      setNearbyResults([]);
-      setNearbySearchQuery('');
+      nearbySearch.clear();
     } catch {
       setTempNearbyPlace(prev => ({ ...prev, name: place.name || '' }));
     }
@@ -301,16 +312,14 @@ const AddHomestayWizard = () => {
     setError('');
     setEditingNearbyIndex(-1);
     setTempNearbyPlace({ name: '', type: 'tourist', distanceKm: '' });
-    setNearbySearchQuery('');
-    setNearbyResults([]);
+    nearbySearch.clear();
   };
 
   const startEditNearbyPlace = (index) => {
     setError('');
     setEditingNearbyIndex(index);
     setTempNearbyPlace({ ...propertyForm.nearbyPlaces[index] });
-    setNearbySearchQuery('');
-    setNearbyResults([]);
+    nearbySearch.clear();
   };
 
   const saveNearbyPlace = () => {
@@ -990,15 +999,12 @@ const AddHomestayWizard = () => {
                   <input
                     className="input pl-11"
                     placeholder="Search for your address..."
-                    value={locationSearchQuery}
-                    onChange={e => {
-                      setLocationSearchQuery(e.target.value);
-                      if (e.target.value.length > 2) searchLocationForAddress();
-                    }}
+                    value={locationSearch.query}
+                    onChange={e => locationSearch.setQuery(e.target.value)}
                   />
-                  {locationResults.length > 0 && (
+                  {locationSearch.results.length > 0 && (
                     <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto">
-                      {locationResults.map((r, i) => (
+                      {locationSearch.results.map((r, i) => (
                         <button key={i} type="button" onClick={() => selectLocationResult(r)} className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50 text-sm transition-colors last:border-0">
                           <div className="font-bold text-gray-800">{r.name}</div>
                           <div className="text-xs text-gray-500 truncate">{r.formatted_address}</div>
@@ -1007,6 +1013,8 @@ const AddHomestayWizard = () => {
                     </div>
                   )}
                 </div>
+
+                <SearchStatus search={locationSearch} />
 
                 <div className="flex items-center gap-4">
                   <div className="h-px bg-gray-200 flex-1"></div>
@@ -1151,20 +1159,21 @@ const AddHomestayWizard = () => {
                         <input
                           className="input w-full"
                           placeholder="Type to search..."
-                          value={nearbySearchQuery}
-                          onChange={e => setNearbySearchQuery(e.target.value)}
+                          value={nearbySearch.query}
+                          onChange={e => nearbySearch.setQuery(e.target.value)}
                         />
                         <button
                           type="button"
-                          onClick={searchNearbyPlaces}
+                          onClick={nearbySearch.searchNow}
                           className="px-4 py-2 bg-gray-900 text-white rounded-xl font-semibold text-sm"
                         >
                           Search
                         </button>
                       </div>
-                      {nearbyResults.length > 0 && (
+                      <SearchStatus search={nearbySearch} />
+                      {nearbySearch.results.length > 0 && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                          {nearbyResults.slice(0, 6).map((p, i) => (
+                          {nearbySearch.results.slice(0, 6).map((p, i) => (
                             <button
                               key={i}
                               type="button"
