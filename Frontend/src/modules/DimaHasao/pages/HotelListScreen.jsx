@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from '../router';
-import { HOTELS_DATA } from '../data/hotelData';
+import { fetchHotels } from '../services/hotelApi';
 import { HotelCard } from '../components/hotel/HotelCard';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
@@ -14,16 +14,47 @@ export const HotelListScreen = () => {
   const [guestCount, setGuestCount] = useState(2);
   const [nights, setNights] = useState(1);
 
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
   const propertyTypes = ['All', 'Resort', 'Homestay', 'Hotel', 'Lodge'];
+
+  // Live stays from the hotel backend. Filtering and sorting stay client-side
+  // so the existing chips and sort control keep working unchanged.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const results = await fetchHotels();
+        if (!cancelled) setHotels(results);
+      } catch (err) {
+        if (!cancelled) {
+          setHotels([]);
+          setLoadError(
+            err?.response?.data?.message || 'Could not load stays. Please try again.',
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []);
 
   // Filtered & Sorted Hotels
   const filteredHotels = useMemo(() => {
-    return HOTELS_DATA.filter((hotel) => {
+    return hotels.filter((hotel) => {
       const matchesType = selectedType === 'All' || hotel.type === selectedType;
+      const q = searchQuery.toLowerCase();
       const matchesSearch =
-        hotel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        hotel.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        hotel.description.toLowerCase().includes(searchQuery.toLowerCase());
+        (hotel.name || '').toLowerCase().includes(q) ||
+        (hotel.location || '').toLowerCase().includes(q) ||
+        (hotel.description || '').toLowerCase().includes(q);
       return matchesType && matchesSearch;
     }).sort((a, b) => {
       if (sortBy === 'price-low') return a.startingPrice - b.startingPrice;
@@ -31,7 +62,7 @@ export const HotelListScreen = () => {
       if (sortBy === 'rating') return b.rating - a.rating;
       return b.reviewCount - a.reviewCount; // popular
     });
-  }, [selectedType, searchQuery, sortBy]);
+  }, [hotels, selectedType, searchQuery, sortBy]);
 
   return (
     <div className="bg-[#FAF6ED] text-gray-800 antialiased min-h-screen pb-28 relative font-poppins">
@@ -157,7 +188,35 @@ export const HotelListScreen = () => {
         </div>
 
         {/* Hotels Grid */}
-        {filteredHotels.length > 0 ? (
+        {loading ? (
+          <div className="space-y-4">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-[#E5DDC3] overflow-hidden animate-pulse"
+              >
+                <div className="h-40 bg-gray-200" />
+                <div className="p-4 space-y-2">
+                  <div className="h-3 w-1/3 bg-gray-200 rounded" />
+                  <div className="h-4 w-2/3 bg-gray-200 rounded" />
+                  <div className="h-3 w-1/2 bg-gray-200 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-[#E5DDC3] p-6 space-y-3">
+            <i className="fa-solid fa-triangle-exclamation text-4xl text-amber-400"></i>
+            <h3 className="font-bold text-gray-800 text-sm">Couldn't load stays</h3>
+            <p className="text-xs text-gray-500">{loadError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-[#06381e] text-amber-300 text-xs font-bold px-4 py-2 rounded-xl shadow-xs hover:bg-emerald-900 transition-colors cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        ) : filteredHotels.length > 0 ? (
           <div className="space-y-4">
             {filteredHotels.map((hotel, index) => (
               <HotelCard key={hotel.id} hotel={hotel} index={index} />
@@ -168,7 +227,9 @@ export const HotelListScreen = () => {
             <i className="fa-solid fa-hotel text-4xl text-gray-300"></i>
             <h3 className="font-bold text-gray-800 text-sm">No Stays Found</h3>
             <p className="text-xs text-gray-500">
-              No hotels match "{searchQuery}" under {selectedType}. Try searching another area or reset filters.
+              {hotels.length === 0
+                ? 'No stays are listed yet. Please check back soon.'
+                : `No hotels match "${searchQuery}" under ${selectedType}. Try searching another area or reset filters.`}
             </p>
             <button
               onClick={() => {

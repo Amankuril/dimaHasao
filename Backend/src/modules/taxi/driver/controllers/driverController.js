@@ -103,6 +103,7 @@ import {
   summarizePhonePeRequestBody,
 } from "../../services/paymentDiagnostics.js";
 import { verifyBankAccountWithRecharge, verifyDrivingLicenseWithRecharge, verifyGstinWithRecharge, verifyPanWithRecharge, verifyRcWithRecharge, verifyUpiWithRecharge } from "../../services/rechargeVerificationService.js";
+import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
 
 const generateDriverReferralCode = (driver) => {
   const idPart = String(driver?._id || "")
@@ -6860,10 +6861,13 @@ const verifyAndApplyDriverRazorpayWalletTopup = async ({
       throw new ApiError(400, "Payment verification signature is required");
     }
 
-    const expectedSignature = crypto
-      .createHmac("sha256", keySecret)
-      .update(`${effectiveOrderId}|${normalizedPaymentId}`)
-      .digest("hex");
+    // Shared digest helper; the secret stays taxi's own admin-configured
+    // gateway credential rather than the platform env key.
+    const expectedSignature = computeExpectedSignature({
+      orderId: effectiveOrderId,
+      paymentId: normalizedPaymentId,
+      secret: keySecret,
+    });
 
     if (expectedSignature !== normalizedSignature) {
       throw new ApiError(400, "Invalid payment signature");

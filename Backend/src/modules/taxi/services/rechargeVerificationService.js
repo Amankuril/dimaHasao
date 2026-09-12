@@ -71,7 +71,78 @@ const buildAuthHeaders = (settings) => {
   };
 };
 
+/**
+ * Dev bypass for DL/RC/PAN/bank checks.
+ *
+ * These call a paid third-party (RechargeKit) against live government records.
+ * With no account configured every check fails, which blocks driver onboarding
+ * end-to-end and makes the flow untestable. When VERIFICATION_DEV_BYPASS=true
+ * and we are not in production, return a synthetic "verified" response shaped
+ * like the provider's so the rest of the pipeline behaves normally.
+ *
+ * Mirrors the USE_DEFAULT_OTP switch this codebase already uses for SMS.
+ */
+const isDevBypassEnabled = () =>
+  ['1', 'true', 'yes', 'on'].includes(String(process.env.VERIFICATION_DEV_BYPASS || '').trim().toLowerCase()) &&
+  process.env.NODE_ENV !== 'production';
+
+/** Synthetic provider payloads, keyed by the endpoint being stubbed. */
+const buildBypassResponse = (endpointPath, body = {}) => {
+  const path = String(endpointPath || '').toLowerCase();
+  const base = { status: 1, msg: 'Verified (dev bypass — no provider call made)', devBypass: true };
+
+  if (path.includes('rc')) {
+    const regNo = String(body?.rc_no || '').toUpperCase();
+    return {
+      ...base,
+      cardData: {
+        result: {
+          reg_no: regNo,
+          status: 'ACTIVE',
+          vehicle_manufacturer_name: 'TEST MOTORS',
+          model: 'TEST MODEL',
+          vehicle_manufacturing_month_year: '1/2022',
+          vehicle_colour: 'WHITE',
+          type: 'PETROL',
+          vehicle_seat_capacity: '4',
+          owner_name: 'TEST OWNER',
+          reg_date: '2022-01-01',
+          vehicle_insurance_upto: '2030-01-01',
+          fitness_upto: '2030-01-01',
+          permit_no: 'TESTPERMIT',
+          permit_valid_upto: '2030-01-01',
+        },
+      },
+    };
+  }
+
+  if (path.includes('dl')) {
+    const dlNo = String(body?.license_no || '').toUpperCase();
+    return {
+      ...base,
+      cardData: {
+        result: {
+          details_of_driving_licence: {
+            status: 'ACTIVE',
+            name: 'TEST DRIVER',
+            dl_number: dlNo,
+            date_of_issue: '2020-01-01',
+          },
+          dl_validity: { non_transport: { from: '2020-01-01', to: '2030-01-01' } },
+          badge_details: [],
+        },
+      },
+    };
+  }
+
+  return { ...base, cardData: { result: {} } };
+};
+
 const callRechargeVerificationEndpoint = async (settings, endpointPath, body) => {
+  if (isDevBypassEnabled()) {
+    return buildBypassResponse(endpointPath, body);
+  }
+
   if (!settings.enabled) {
     throw new ApiError(400, `${settings.providerName} integration is disabled in admin settings`);
   }

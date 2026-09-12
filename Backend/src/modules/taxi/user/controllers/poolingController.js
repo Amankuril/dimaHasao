@@ -6,6 +6,7 @@ import { PoolingSeatReservation } from '../../admin/models/PoolingSeatReservatio
 import { asyncHandler } from '../../../../utils/asyncHandler.js';
 import { ApiError } from '../../../../utils/ApiError.js';
 import { resolveConfiguredGatewayCredentials } from '../../services/paymentGatewayService.js';
+import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
 
 const ok = (res, data, message) => res.status(200).json({ success: true, data, message });
 const created = (res, data, message) => res.status(201).json({ success: true, data, message });
@@ -386,10 +387,13 @@ export const verifyPoolingBookingPayment = asyncHandler(async (req, res) => {
   }
 
   const { keySecret } = await resolveRazorpayCredentials();
-  const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${orderId}|${paymentId}`)
-    .digest('hex');
+  // Shared digest helper; the secret stays taxi's own admin-configured
+  // gateway credential rather than the platform env key.
+  const expectedSignature = computeExpectedSignature({
+    orderId: orderId,
+    paymentId: paymentId,
+    secret: keySecret,
+  });
 
   if (expectedSignature !== signature) {
     throw new ApiError(400, 'Invalid payment signature');

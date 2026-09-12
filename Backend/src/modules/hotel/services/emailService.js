@@ -1,26 +1,18 @@
-import nodemailer from 'nodemailer';
+/**
+ * Hotel email templates.
+ *
+ * The transport now lives in core/notifications/email.service.js — this module
+ * used to build its own nodemailer transport from raw process.env with a
+ * different `secure` rule than the rest of the app. Only the message content
+ * and the class API (which ten controllers call) stay here.
+ */
+import { sendEmail as sendPlatformEmail } from '../../../core/notifications/email.service.js';
 
 class EmailService {
   constructor() {
-    this.transporter = null;
-    this.brandColor = '#0F766E'; // Teal-700 based on standard UI
-    this.companyName = 'RukkooIn';
-    this.logoUrl = 'https://res.cloudinary.com/dqowbjoxb/image/upload/v1738411000/rukkooin-logo-placeholder.png'; // Placeholder or Text fallback
-  }
-
-  getTransporter() {
-    if (!this.transporter) {
-      this.transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: process.env.EMAIL_SECURE === 'true',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-    }
-    return this.transporter;
+    this.brandColor = '#0F766E';
+    this.companyName = String(process.env.EMAIL_FROM_NAME || process.env.APP_NAME || 'Dima Hasao').trim();
+    this.logoUrl = '';
   }
 
   /**
@@ -81,21 +73,8 @@ class EmailService {
    * Send an email
    */
   async sendEmail({ to, subject, html, text }) {
-    try {
-      const info = await this.getTransporter().sendMail({
-        from: `"${process.env.EMAIL_FROM_NAME || this.companyName}" <${process.env.EMAIL_USER}>`,
-        to,
-        subject,
-        text,
-        html,
-      });
-
-      console.log('Message sent: %s', info.messageId);
-      return { success: true, messageId: info.messageId };
-    } catch (error) {
-      console.error('Error sending email:', error);
-      return { success: false, error: error.message };
-    }
+    // Shared transport: never throws, returns { success, messageId? | error }.
+    return sendPlatformEmail({ to, subject, html, text });
   }
 
   // --- USER EMAILS ---

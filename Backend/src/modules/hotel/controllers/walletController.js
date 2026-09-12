@@ -20,10 +20,8 @@ try {
   });
 
   if (PaymentConfig.razorpayKeyId && PaymentConfig.razorpayKeySecret) {
-    razorpay = new Razorpay({
-      key_id: PaymentConfig.razorpayKeyId,
-      key_secret: PaymentConfig.razorpayKeySecret
-    });
+    // Shared client — see core/payments/razorpay.service.js
+    razorpay = getRazorpayClient();
   } else {
     // For Development without Keys
     console.warn("⚠️ Razorpay Keys missing. Payment features will fail if used.");
@@ -747,13 +745,12 @@ export const verifyAddMoneyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
     const role = getWalletRole(req.user.role);
 
-    const sign = razorpay_order_id + '|' + razorpay_payment_id;
-    const expectedSign = crypto
-      .createHmac('sha256', PaymentConfig.razorpayKeySecret)
-      .update(sign.toString())
-      .digest('hex');
-
-    if (razorpay_signature !== expectedSign) {
+    // Shared, constant-time verification.
+    if (!verifyPaymentSignature({
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      signature: razorpay_signature,
+    })) {
       return res.status(400).json({ message: 'Invalid payment signature' });
     }
 

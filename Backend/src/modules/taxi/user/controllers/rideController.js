@@ -35,6 +35,7 @@ import { getTipSettings } from '../../services/appSettingsService.js';
 import { matchDrivers } from '../../services/matchingService.js';
 import { Ride } from '../models/Ride.js';
 import { UserWallet } from '../models/UserWallet.js';
+import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
 
 const EARTH_RADIUS_METERS = 6371000;
 const AVERAGE_CITY_SPEED_KMPH = 24;
@@ -558,10 +559,13 @@ export const verifyRazorpayRideCompletion = async (req, res) => {
   }
 
   const { keyId, keySecret } = await resolveRazorpayCredentials();
-  const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${orderId}|${paymentId}`)
-    .digest('hex');
+  // Shared digest helper; the secret stays taxi's own admin-configured
+  // gateway credential rather than the platform env key.
+  const expectedSignature = computeExpectedSignature({
+    orderId: orderId,
+    paymentId: paymentId,
+    secret: keySecret,
+  });
 
   if (expectedSignature !== signature) {
     throw new ApiError(400, 'Invalid payment signature');
@@ -868,10 +872,13 @@ export const verifyRazorpayRideTip = async (req, res) => {
   }
 
   const { keyId, keySecret } = await resolveRazorpayCredentials();
-  const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${orderId}|${paymentId}`)
-    .digest('hex');
+  // Shared digest helper; the secret stays taxi's own admin-configured
+  // gateway credential rather than the platform env key.
+  const expectedSignature = computeExpectedSignature({
+    orderId: orderId,
+    paymentId: paymentId,
+    secret: keySecret,
+  });
 
   if (expectedSignature !== signature) {
     throw new ApiError(400, 'Invalid payment signature');

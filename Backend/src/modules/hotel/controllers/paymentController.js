@@ -12,15 +12,18 @@ import emailService from '../services/emailService.js';
 import notificationService from '../services/notificationService.js';
 import smsService from '../utils/smsService.js';
 import referralService from '../services/referralService.js';
+import {
+  getRazorpayClient,
+  verifyPaymentSignature,
+  verifyWebhookSignature,
+} from '../../../core/payments/razorpay.service.js';
 
 // Initialize Razorpay
 let razorpay;
 try {
   if (PaymentConfig.razorpayKeyId && PaymentConfig.razorpayKeySecret) {
-    razorpay = new Razorpay({
-      key_id: PaymentConfig.razorpayKeyId,
-      key_secret: PaymentConfig.razorpayKeySecret
-    });
+    // Shared client — see core/payments/razorpay.service.js
+    razorpay = getRazorpayClient();
   } else {
     // For Development without Keys
     console.warn("⚠️ Razorpay Keys missing. Payment features will fail if used.");
@@ -108,14 +111,12 @@ export const verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } = req.body;
 
-    // 1. Verify Signature
-    const sign = razorpay_order_id + '|' + razorpay_payment_id;
-    const expectedSign = crypto
-      .createHmac('sha256', PaymentConfig.razorpayKeySecret)
-      .update(sign.toString())
-      .digest('hex');
-
-    if (razorpay_signature !== expectedSign) {
+    // 1. Verify Signature (shared, constant-time)
+    if (!verifyPaymentSignature({
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      signature: razorpay_signature,
+    })) {
       return res.status(400).json({ message: 'Invalid payment signature' });
     }
 
@@ -335,16 +336,15 @@ export const verifyPayment = async (req, res) => {
  */
 export const handleWebhook = async (req, res) => {
   try {
-    const secret = PaymentConfig.razorpayKeySecret;
     const signature = req.headers['x-razorpay-signature'];
 
-    // Verify webhook signature
-    const expectedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(JSON.stringify(req.body))
-      .digest('hex');
-
-    if (signature !== expectedSignature) {
+    // Shared, constant-time. Keeps hashing the re-serialised body as before;
+    // a raw-body verifier would be stricter but changes request handling.
+    if (!verifyWebhookSignature({
+      body: JSON.stringify(req.body),
+      signature,
+      secret: process.env.RAZORPAY_WEBHOOK_SECRET || PaymentConfig.razorpayKeySecret,
+    })) {
       return res.status(400).json({ message: 'Invalid webhook signature' });
     }
 

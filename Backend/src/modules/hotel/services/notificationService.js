@@ -1,4 +1,11 @@
-import { getFirebaseAdmin } from '../config/firebase.js';
+import { sendPushNotification, listOwnerTokens } from '../../../core/notifications/firebase.service.js';
+
+/** Maps hotel's caller-facing userType onto the registered owner types. */
+const HOTEL_OWNER_TYPES = {
+  user: 'HOTEL_USER',
+  partner: 'HOTEL_PARTNER',
+  admin: 'HOTEL_ADMIN',
+};
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 
@@ -8,16 +15,15 @@ class NotificationService {
    * @param {Object} user - User document
    * @returns {Array<string>} - Array of FCM tokens
    */
+  /**
+   * @deprecated Token reading lives in core/notifications/firebase.service.js.
+   * Kept as a thin wrapper for any caller still using it directly.
+   */
   getUserFcmTokens(user) {
-    const tokens = [];
-
-    // Get platform-based tokens (app and web)
-    if (user.fcmTokens) {
-      if (user.fcmTokens.app) tokens.push(user.fcmTokens.app);
-      if (user.fcmTokens.web) tokens.push(user.fcmTokens.web);
-    }
-
-    return tokens.filter(Boolean); // Remove null/undefined
+    const tokens = user?.fcmTokens;
+    if (!tokens) return [];
+    if (Array.isArray(tokens)) return tokens.filter(Boolean);
+    return [tokens.app, tokens.web].filter(Boolean);
   }
 
   /**
@@ -28,77 +34,35 @@ class NotificationService {
    * @returns {Promise<Object>} - Result of sending notification
    */
   async sendToToken(fcmToken, notification, data = {}) {
-    try {
-      const admin = getFirebaseAdmin();
-
-      if (!admin) {
-        throw new Error('Firebase Admin not initialized');
+    // Delegates to the shared FCM sender in core/notifications/firebase.service.js.
+    // That path also detects dead tokens and SenderId mismatches, which the old
+    // local admin.messaging().send() call here did not.
+    const stringifiedData = {};
+    for (const [key, value] of Object.entries(data || {})) {
+      if (value !== null && value !== undefined) {
+        stringifiedData[key] = typeof value === 'string' ? value : JSON.stringify(value);
       }
-
-      // Convert all data values to strings (FCM requirement)
-      const stringifiedData = {};
-      for (const [key, value] of Object.entries(data)) {
-        if (value !== null && value !== undefined) {
-          stringifiedData[key] = typeof value === 'string' ? value : JSON.stringify(value);
-        }
-      }
-
-      const message = {
-        token: fcmToken,
-        notification: {
-          title: notification.title || 'Rukkoin',
-          body: notification.body || '',
-        },
-        data: {
-          ...stringifiedData,
-          click_action: 'FLUTTER_NOTIFICATION_CLICK',
-        },
-        android: {
-          priority: 'high',
-          notification: {
-            channelId: 'rukkoin_channel',
-          },
-        },
-        apns: {
-          payload: {
-            aps: {
-              sound: 'default',
-              badge: 1,
-            },
-          },
-        },
-        webpush: {
-          notification: {
-            icon: '/icon-192x192.png',
-            badge: '/badge-72x72.png',
-          },
-          fcmOptions: {
-            link: data.url || '/', // Ensure URL is passed for web clicks
-          },
-        },
-      };
-
-      const response = await admin.messaging().send(message);
-
-      return {
-        success: true,
-        messageId: response,
-      };
-    } catch (error) {
-      console.error('Error sending notification to token:', error);
-
-      // Handle invalid token
-      if (error.code === 'messaging/invalid-registration-token' ||
-        error.code === 'messaging/registration-token-not-registered') {
-        return {
-          success: false,
-          error: 'Invalid or unregistered token',
-          code: error.code,
-        };
-      }
-
-      throw error;
     }
+
+    const { results } = await sendPushNotification([fcmToken], {
+      title: notification?.title || process.env.APP_NAME || 'Dima Hasao',
+      body: notification?.body || '',
+      data: stringifiedData,
+      link: data?.url || '/',
+    });
+
+    const result = results?.[0];
+
+    if (result?.ok) {
+      return { success: true, messageId: result.response?.name || result.response };
+    }
+
+    return {
+      success: false,
+      error: result?.error || 'Push send failed',
+      // Preserved so callers that prune dead tokens keep working.
+      code: result?.remove ? 'messaging/registration-token-not-registered' : undefined,
+    };
   }
 
   /**
@@ -138,7 +102,7 @@ class NotificationService {
         savedNotification = await Notification.create({
           userId: user._id,
           userType: userType, // 'user' or 'admin'
-          title: notification.title || 'Rukkoin',
+          title: notification.title || process.env.APP_NAME || 'Dima Hasao',
           body: notification.body || '',
           data: data || {},
           type: data.type || 'general',
@@ -148,8 +112,11 @@ class NotificationService {
         console.error('[NotificationService] [ERROR] Failed to save notification to database:', dbError);
       }
 
-      // Get all FCM tokens (app + web)
-      const fcmTokens = this.getUserFcmTokens(user);
+      // Shared token store — same lookup path as food and taxi.
+      const fcmTokens = await listOwnerTokens({
+        ownerType: HOTEL_OWNER_TYPES[userType] || 'HOTEL_USER',
+        ownerId: user._id,
+      });
       console.log(`[NotificationService] Found ${fcmTokens.length} FCM tokens for user.`);
 
       if (fcmTokens.length === 0) {

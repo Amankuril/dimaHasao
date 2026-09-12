@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from '../router';
-import { HOTELS_DATA } from '../data/hotelData';
+import { fetchHotelById } from '../services/hotelApi';
 import { useBooking } from '../context/BookingContext';
 import { HotelGallery } from '../components/hotel/HotelGallery';
 import { RoomCard } from '../components/hotel/RoomCard';
@@ -13,12 +13,48 @@ export const HotelDetailScreen = () => {
   const navigate = useNavigate();
   const { favoriteHotels, toggleFavoriteHotel, showToast } = useBooking();
 
-  const hotel = HOTELS_DATA.find((h) => h.id === id) || HOTELS_DATA[0];
-  const [selectedRoom, setSelectedRoom] = useState(hotel.rooms[0]);
+  const [hotel, setHotel] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [nights, setNights] = useState(1);
   const [activeTab, setActiveTab] = useState('rooms'); // 'rooms', 'about', 'reviews'
 
-  const isFavorite = favoriteHotels?.includes(hotel.id);
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const result = await fetchHotelById(id);
+        if (cancelled) return;
+
+        if (!result) {
+          setLoadError('This stay is no longer available.');
+          setHotel(null);
+          return;
+        }
+
+        setHotel(result);
+        // Preselect the first bookable room, matching the previous behaviour.
+        setSelectedRoom(result.rooms?.[0] || null);
+      } catch (err) {
+        if (!cancelled) {
+          setHotel(null);
+          setLoadError(
+            err?.response?.data?.message || 'Could not load this stay. Please try again.',
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const isFavorite = hotel ? favoriteHotels?.includes(hotel.id) : false;
 
   const handleSelectRoom = (room) => {
     setSelectedRoom(room);
@@ -32,6 +68,46 @@ export const HotelDetailScreen = () => {
     }
     navigate(`/hotels/${hotel.id}/book?roomId=${selectedRoom.id}&nights=${nights}`);
   };
+
+  // The screen below dereferences `hotel` throughout, so it must not render
+  // until the fetch resolves.
+  if (loading) {
+    return (
+      <div className="bg-[#FAF6ED] min-h-screen font-poppins">
+        <Header title="Loading stay…" showBack={true} rightAction="none" />
+        <PatternDivider variant="green-gold" />
+        <div className="p-3.5 space-y-4 animate-pulse">
+          <div className="h-52 bg-gray-200 rounded-2xl" />
+          <div className="bg-white rounded-2xl p-4 border border-[#E5DDC3] space-y-3">
+            <div className="h-3 w-1/4 bg-gray-200 rounded" />
+            <div className="h-5 w-2/3 bg-gray-200 rounded" />
+            <div className="h-3 w-1/2 bg-gray-200 rounded" />
+          </div>
+          <div className="h-28 bg-white rounded-2xl border border-[#E5DDC3]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!hotel) {
+    return (
+      <div className="bg-[#FAF6ED] min-h-screen font-poppins">
+        <Header title="Stay unavailable" showBack={true} rightAction="none" />
+        <PatternDivider variant="green-gold" />
+        <div className="p-6 text-center space-y-3 mt-10">
+          <i className="fa-solid fa-hotel text-4xl text-gray-300"></i>
+          <h3 className="font-bold text-gray-800 text-sm">Couldn't load this stay</h3>
+          <p className="text-xs text-gray-500">{loadError || 'Please try again.'}</p>
+          <button
+            onClick={() => navigate('/hotels')}
+            className="bg-[#06381e] text-amber-300 text-xs font-bold px-4 py-2 rounded-xl hover:bg-emerald-900 transition-colors cursor-pointer"
+          >
+            Back to Stays
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAF6ED] text-gray-800 antialiased min-h-screen pb-32 relative font-poppins">
@@ -95,9 +171,15 @@ export const HotelDetailScreen = () => {
               <span className="text-[9.5px] text-gray-500 block mt-0.5">{hotel.reviewCount} Reviews</span>
             </div>
 
+            {/* Distance only exists when the backend ran a geo search, so show
+                check-out instead of an empty stat box. */}
             <div className="bg-[#FAF6ED] p-2 rounded-xl border border-[#E5DDC3]/60">
-              <span className="font-bold text-xs text-gray-900">{hotel.distanceFromStation}</span>
-              <span className="text-[9.5px] text-gray-500 block mt-0.5">From Station</span>
+              <span className="font-bold text-xs text-gray-900">
+                {hotel.distanceFromStation || hotel.checkOutTime}
+              </span>
+              <span className="text-[9.5px] text-gray-500 block mt-0.5">
+                {hotel.distanceFromStation ? 'From Station' : 'Check-out'}
+              </span>
             </div>
 
             <div className="bg-[#FAF6ED] p-2 rounded-xl border border-[#E5DDC3]/60">

@@ -2,6 +2,7 @@ import admin from 'firebase-admin';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { config } from './env.js';
+import { loadFirebaseServiceAccount } from './firebaseServiceAccount.js';
 import { logger } from '../utils/logger.js';
 
 let db = null;
@@ -11,32 +12,10 @@ let cachedServiceAccount = null;
 const sanitizeString = (value) => String(value ?? '').trim();
 
 const getServiceAccountFromEnv = () => {
+    // Shared loader — see config/firebaseServiceAccount.js
     if (cachedServiceAccount) return cachedServiceAccount;
-
-    const pathValue = sanitizeString(config.firebaseServiceAccountPath);
-    if (pathValue) {
-        const filePath = resolve(process.cwd(), pathValue);
-        if (existsSync(filePath)) {
-            try {
-                cachedServiceAccount = JSON.parse(readFileSync(filePath, 'utf8'));
-                return cachedServiceAccount;
-            } catch (err) {
-                logger.error(`Error reading or parsing firebase service account file at ${filePath}:`, err.message);
-            }
-        }
-    }
-
-    const rawJson = sanitizeString(config.firebaseServiceAccount);
-    if (rawJson) {
-        try {
-            cachedServiceAccount = JSON.parse(rawJson);
-            return cachedServiceAccount;
-        } catch (err) {
-            logger.error('Error parsing FIREBASE_SERVICE_ACCOUNT JSON:', err.message);
-        }
-    }
-
-    return null;
+    cachedServiceAccount = loadFirebaseServiceAccount();
+    return cachedServiceAccount;
 };
 
 /**

@@ -2,6 +2,7 @@ import express from 'express';
 import authRoutes from '../core/auth/auth.routes.js';
 import otpAuthRoutes from '../core/auth/otpAuth/otpAuth.routes.js';
 import { registerAllAuthAudiences } from '../core/auth/otpAuth/registerAudiences.js';
+import { registerHotelNotificationOwners } from '../modules/hotel/notifications/owners.js';
 import deliveryRoutes from '../modules/food/delivery/routes/delivery.routes.js';
 import restaurantRoutes from '../modules/food/restaurant/routes/restaurant.routes.js';
 import landingRoutes from '../modules/food/landing/routes/landing.routes.js';
@@ -45,6 +46,9 @@ router.use('/v1/auth', authRoutes);
 // One OTP auth surface for all five apps (user, restaurant, delivery,
 // taxi-driver, hotel-partner). The per-app auth routes above still work.
 registerAllAuthAudiences();
+// Hotel contributes its own notification owner types (core never imports
+// hotel models); food and taxi types are built into core/notifications.
+registerHotelNotificationOwners();
 router.use('/v1/auth/otp', otpAuthRoutes);
 router.use('/v1/food/delivery', deliveryRoutes);
 router.use('/v1/food/restaurant', restaurantRoutes);

@@ -1,10 +1,15 @@
 import axios from 'axios';
+import { getGoogleMapsApiKey } from '../../../core/maps/googleMaps.service.js';
 import { uploadToCloudinary, uploadBase64ToCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
 
-/** Google Maps API key: prefer GOOGLE_MAP_API_KEY, fallback GOOGLE_MAPS_API_KEY, trimmed */
+/**
+ * Google Maps API key via the shared resolver.
+ *
+ * The previous local version read GOOGLE_MAPS_API_KEY twice despite its comment
+ * promising a GOOGLE_MAP_API_KEY preference, so that spelling never worked.
+ */
 function getMapsApiKey() {
-  const key = (process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '').trim();
-  return key || null;
+  return getGoogleMapsApiKey() || null;
 }
 
 const mapAddressComponents = (components) => {

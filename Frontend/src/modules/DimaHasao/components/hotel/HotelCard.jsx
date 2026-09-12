@@ -60,9 +60,11 @@ export const HotelCard = ({ hotel, index = 0 }) => {
             <i className="fa-solid fa-location-dot text-amber-400 text-xs"></i>
             {hotel.location}
           </span>
-          <span className="bg-black/40 px-2 py-0.5 rounded text-[10px] backdrop-blur-xs">
-            {hotel.distanceFromStation} from station
-          </span>
+          {hotel.distanceFromStation && (
+            <span className="bg-black/40 px-2 py-0.5 rounded text-[10px] backdrop-blur-xs">
+              {hotel.distanceFromStation} from station
+            </span>
+          )}
         </div>
       </div>
 

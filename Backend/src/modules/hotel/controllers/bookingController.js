@@ -403,10 +403,8 @@ export const createBooking = async (req, res) => {
 
         if (amountToPay > 0) {
           try {
-            const instance = new Razorpay({
-              key_id: PaymentConfig.razorpayKeyId,
-              key_secret: PaymentConfig.razorpayKeySecret,
-            });
+            // Shared client — see core/payments/razorpay.service.js
+            const instance = getRazorpayClient();
 
             const options = {
               amount: Math.round(amountToPay * 100), // amount in paisa

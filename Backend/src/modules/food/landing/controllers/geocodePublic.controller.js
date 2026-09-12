@@ -1,8 +1,8 @@
-const sanitize = (value) => (value ? String(value).trim().replace(/^['"]|['"]$/g, '') : '');
+import { getGoogleMapsApiKey } from '../../../../core/maps/googleMaps.service.js';
 
-const getGoogleMapsServerKey = () =>
-    sanitize(process.env.GOOGLE_MAPS_API_KEY) ||
-    sanitize(process.env.VITE_GOOGLE_MAPS_API_KEY);
+// Shared resolver — accepts GOOGLE_MAPS_API_KEY, GOOGLE_MAP_API_KEY and the
+// VITE_ prefixed spelling.
+const getGoogleMapsServerKey = () => getGoogleMapsApiKey();
 
 const toFinite = (v) => {
     const n = typeof v === 'number' ? v : parseFloat(String(v));

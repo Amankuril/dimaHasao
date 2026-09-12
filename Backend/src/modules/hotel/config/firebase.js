@@ -1,51 +1,38 @@
+/**
+ * Hotel Firebase — delegates to the single app initialised in
+ * src/config/firebase.js.
+ *
+ * This module used to run its own `admin.initializeApp()` from a
+ * `serviceAccountKey.json` file beside it, while core initialises from the
+ * FIREBASE_SERVICE_ACCOUNT env var. firebase-admin apps are process-global, so
+ * two initialisers meant whichever ran first silently decided the credentials
+ * and config for everything — and core is the only one that sets `databaseURL`,
+ * so losing that race broke Realtime Database.
+ *
+ * Worse in practice: that key file does not exist in this deployment, and the
+ * old code threw on the missing file *before* checking whether an app was
+ * already initialised — so hotel push failed even when core had started up
+ * perfectly. Delegating removes both problems.
+ */
 import admin from 'firebase-admin';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+import { initializeFirebaseRealtime } from '../../../config/firebase.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-let firebaseAdmin = null;
-
+/**
+ * Ensure the shared Firebase app exists.
+ * @returns {import('firebase-admin').app.App|null} null when unconfigured.
+ */
 export const initializeFirebase = () => {
-  try {
-    // Path to service account key - assuming it's in the root backend folder
-    const serviceAccountPath = path.join(__dirname, '../serviceAccountKey.json');
-
-    // Check if service account file exists
-    if (!fs.existsSync(serviceAccountPath)) {
-      throw new Error(`serviceAccountKey.json file not found at ${serviceAccountPath}`);
-    }
-
-    // Read service account key
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-
-    // Initialize Firebase Admin
-    if (!admin.apps.length) {
-      firebaseAdmin = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: serviceAccount.project_id
-      });
-      console.log('✓ Firebase Admin initialized successfully');
-    } else {
-      firebaseAdmin = admin.app();
-    }
-
-    return firebaseAdmin;
-  } catch (error) {
-    console.error('Firebase Admin initialization error:', error.message);
-    // Don't throw error, allow server to continue without Firebase
-    return null;
+  if (admin.apps.length > 0) {
+    return admin.app();
   }
+
+  // Idempotent and non-throwing; returns null when credentials are missing.
+  initializeFirebaseRealtime();
+
+  return admin.apps.length > 0 ? admin.app() : null;
 };
 
-// Get Firebase Admin instance
-export const getFirebaseAdmin = () => {
-  if (!firebaseAdmin) {
-    initializeFirebase();
-  }
-  return firebaseAdmin;
-};
+/** The shared Firebase Admin app, or null when Firebase is not configured. */
+export const getFirebaseAdmin = () => initializeFirebase();
 
 export { admin };

@@ -11,6 +11,7 @@ import { Owner as TaxiOwner } from '../../modules/taxi/admin/models/Owner.js';
 import { ServiceStore as TaxiServiceStore } from '../../modules/taxi/admin/models/ServiceStore.js';
 import { ServiceCenterStaff as TaxiServiceCenterStaff } from '../../modules/taxi/admin/models/ServiceCenterStaff.js';
 import { config } from '../../config/env.js';
+import { loadFirebaseServiceAccount } from '../../config/firebaseServiceAccount.js';
 import { resolveRoomOwnerId } from '../../config/socket.js';
 import { logger } from '../../utils/logger.js';
 import { AuthError } from '../auth/errors.js';
@@ -82,24 +83,15 @@ const toBase64Url = (input) =>
 const normalizePrivateKey = (key) => String(key || '').replace(/\\n/g, '\n').trim();
 
 const getServiceAccountFromEnv = () => {
-    if (cachedServiceAccount) return cachedServiceAccount;
+    // Shared loader — tolerates a private_key pasted with literal newlines.
+    const account = loadFirebaseServiceAccount();
 
-    const pathValue = sanitizeString(config.firebaseServiceAccountPath || process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
-    if (pathValue) {
-        const filePath = resolve(process.cwd(), pathValue);
-        if (existsSync(filePath)) {
-            cachedServiceAccount = JSON.parse(readFileSync(filePath, 'utf8'));
-            return cachedServiceAccount;
-        }
+    if (!account) {
+        throw new Error('Firebase service account is not configured. Set FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT.');
     }
 
-    const rawJson = sanitizeString(config.firebaseServiceAccount || process.env.FIREBASE_SERVICE_ACCOUNT);
-    if (rawJson) {
-        cachedServiceAccount = JSON.parse(rawJson);
-        return cachedServiceAccount;
-    }
-
-    throw new Error('Firebase service account is not configured. Set FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT.');
+    cachedServiceAccount = account;
+    return cachedServiceAccount;
 };
 
 const getFirebaseProjectId = () => {
@@ -249,6 +241,67 @@ const normalizeOwnerType = (ownerType) => {
     return OWNER_ROLE_ALIASES[normalized] || null;
 };
 
+/**
+ * Owner types contributed by modules at boot.
+ *
+ * Food and taxi are declared statically above because core already imports
+ * their models. Hotel is registered from its own module instead, so core never
+ * has to import hotel models — the dependency points module → core, matching
+ * the auth audience registry.
+ *
+ * A registration may supply its own `readTokens(doc)` for stores that do not
+ * use the array-of-tokens shape: hotel keeps `fcmTokens: { app, web }` rather
+ * than an array, and absorbing that here avoids a data migration.
+ */
+const REGISTERED_OWNERS = new Map();
+
+/**
+ * @param {Object} params
+ * @param {string} params.ownerType              - Canonical type, e.g. 'HOTEL_PARTNER'.
+ * @param {import('mongoose').Model} params.model
+ * @param {string} [params.webField]             - Field holding web token(s).
+ * @param {string} [params.mobileField]          - Field holding mobile token(s).
+ * @param {string[]} [params.aliases]            - Extra spellings accepted for this type.
+ * @param {(doc: Object, platform?: string) => string[]} [params.readTokens]
+ * @param {string} [params.selectFields]         - Projection used when loading the doc.
+ */
+export const registerNotificationOwner = ({
+    ownerType,
+    model,
+    webField = 'fcmTokens',
+    mobileField = 'fcmTokenMobile',
+    aliases = [],
+    readTokens = null,
+    selectFields = 'fcmTokens fcmTokenMobile fcmTokenWeb',
+} = {}) => {
+    const type = String(ownerType || '').trim().toUpperCase();
+
+    if (!type || !model) {
+        throw new Error('registerNotificationOwner: ownerType and model are required');
+    }
+
+    REGISTERED_OWNERS.set(type, { ownerType: type, model, readTokens, selectFields });
+    OWNER_MODELS[type] = model;
+    OWNER_TOKEN_FIELD_CONFIG[type] = { web: webField, mobile: mobileField };
+    OWNER_ROLE_ALIASES[type] = type;
+
+    for (const alias of aliases) {
+        OWNER_ROLE_ALIASES[String(alias).trim().toUpperCase()] = type;
+    }
+
+    logger.info(`[FCM Service] owner type registered: ${type}`);
+    return type;
+};
+
+/** Projection for an owner type, honouring any custom registration. */
+const getOwnerSelectFields = (ownerType) =>
+    REGISTERED_OWNERS.get(normalizeOwnerType(ownerType))?.selectFields
+    || 'fcmTokens fcmTokenMobile fcmTokenWeb';
+
+/** Custom token reader for an owner type, when one was registered. */
+const getOwnerTokenReader = (ownerType) =>
+    REGISTERED_OWNERS.get(normalizeOwnerType(ownerType))?.readTokens || null;
+
 const getOwnerModel = (ownerType) => OWNER_MODELS[normalizeOwnerType(ownerType)] || null;
 
 const getTokenFieldForOwnerPlatform = (ownerType, platform) => {
@@ -296,8 +349,15 @@ export const listOwnerTokens = async ({ ownerType, ownerId, platform }) => {
     if (!normalizedOwnerId) return [];
     const model = getOwnerModel(ownerType);
     if (!model) return [];
-    const doc = await model.findById(normalizedOwnerId).select('fcmTokens fcmTokenMobile fcmTokenWeb').lean();
-    if (doc) doc.__ownerType = ownerType;
+    const doc = await model.findById(normalizedOwnerId).select(getOwnerSelectFields(ownerType)).lean();
+    if (!doc) return [];
+    doc.__ownerType = ownerType;
+
+    const customReader = getOwnerTokenReader(ownerType);
+    if (customReader) {
+        return normalizeTokenList(customReader(doc, platform));
+    }
+
     return readTokensFromDoc(doc, platform);
 };
 

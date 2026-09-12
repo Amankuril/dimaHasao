@@ -1,29 +1,31 @@
+/**
+ * Food payment helpers.
+ *
+ * The client and signature verification now live in
+ * core/payments/razorpay.service.js — this file keeps the food-specific
+ * operations (orders, payment links, QR codes, refunds) and re-exports the
+ * shared primitives so its existing callers need no changes.
+ */
 import crypto from 'crypto';
-
-let Razorpay;
-try {
-    const mod = await import('razorpay');
-    Razorpay = mod.default;
-} catch {
-    Razorpay = null;
-}
-
 import { config } from '../../../../config/env.js';
+import {
+    isRazorpayConfigured,
+    getRazorpayKeyId,
+    getRazorpayClient,
+    verifyPaymentSignature as verifySignature,
+} from '../../../../core/payments/razorpay.service.js';
 
-const KEY_ID = config.razorpayKeyId || process.env.RAZORPAY_KEY_ID || '';
-const KEY_SECRET = config.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET || '';
+export { isRazorpayConfigured, getRazorpayKeyId };
 
-export function isRazorpayConfigured() {
-    return Boolean(KEY_ID && KEY_SECRET && Razorpay);
-}
+/** @deprecated Prefer getRazorpayClient() from core/payments/razorpay.service.js */
+export const getRazorpayInstance = getRazorpayClient;
 
-export function getRazorpayKeyId() {
-    return KEY_ID;
-}
-
-export function getRazorpayInstance() {
-    if (!isRazorpayConfigured()) return null;
-    return new Razorpay({ key_id: KEY_ID, key_secret: KEY_SECRET });
+/**
+ * Verify a checkout signature. Positional args are kept for the existing
+ * callers; the shared implementation is constant-time.
+ */
+export function verifyPaymentSignature(orderId, paymentId, signature) {
+    return verifySignature({ orderId, paymentId, signature });
 }
 
 export function createRazorpayOrder(amountPaise, currency = 'INR', receipt = '') {
@@ -64,20 +66,6 @@ export function createPaymentLink({
             contact: customerPhone ? String(customerPhone).replace(/\D/g, '').slice(-10) : '9999999999'
         }
     });
-}
-
-export function verifyPaymentSignature(orderId, paymentId, signature) {
-    if (!KEY_SECRET || !orderId || !paymentId || !signature) return false;
-    const body = `${orderId}|${paymentId}`;
-    const expected = crypto.createHmac('sha256', KEY_SECRET).update(body).digest('hex');
-    try {
-        const a = Buffer.from(expected, 'utf8');
-        const b = Buffer.from(String(signature), 'utf8');
-        if (a.length !== b.length) return false;
-        return crypto.timingSafeEqual(a, b);
-    } catch {
-        return false;
-    }
 }
 
 /**

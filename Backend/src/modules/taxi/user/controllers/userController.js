@@ -43,6 +43,7 @@ import {
   listCustomerSubscriptionPlans,
   purchaseUserSubscription,
 } from '../services/subscriptionService.js';
+import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
 import {
   buildPaymentRequestContext,
   logPaymentDiagnostic,
@@ -2386,10 +2387,13 @@ const verifyAndApplyUserRazorpayWalletTopup = async ({
 
   const { keyId, keySecret } = await resolveRazorpayCredentials();
 
-  const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${normalizedOrderId}|${normalizedPaymentId}`)
-    .digest('hex');
+  // Shared digest helper; the secret stays taxi's own admin-configured
+  // gateway credential rather than the platform env key.
+  const expectedSignature = computeExpectedSignature({
+    orderId: normalizedOrderId,
+    paymentId: normalizedPaymentId,
+    secret: keySecret,
+  });
 
   if (expectedSignature !== normalizedSignature) {
     throw new ApiError(400, 'Invalid payment signature');
@@ -2987,10 +2991,13 @@ export const verifyRentalAdvancePayment = async (req, res) => {
 
   const { keyId, keySecret } = await resolveRazorpayCredentials();
 
-  const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${orderId}|${paymentId}`)
-    .digest('hex');
+  // Shared digest helper; the secret stays taxi's own admin-configured
+  // gateway credential rather than the platform env key.
+  const expectedSignature = computeExpectedSignature({
+    orderId: orderId,
+    paymentId: paymentId,
+    secret: keySecret,
+  });
 
   if (expectedSignature !== signature) {
     throw new ApiError(400, 'Invalid payment signature');
@@ -3521,10 +3528,13 @@ export const verifyBusBookingPayment = async (req, res) => {
   }
 
   const { keySecret } = await resolveRazorpayCredentials();
-  const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${orderId}|${paymentId}`)
-    .digest('hex');
+  // Shared digest helper; the secret stays taxi's own admin-configured
+  // gateway credential rather than the platform env key.
+  const expectedSignature = computeExpectedSignature({
+    orderId: orderId,
+    paymentId: paymentId,
+    secret: keySecret,
+  });
 
   if (expectedSignature !== signature) {
     throw new ApiError(400, 'Invalid payment signature');

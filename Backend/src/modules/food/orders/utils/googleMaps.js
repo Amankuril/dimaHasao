@@ -1,16 +1,9 @@
 import { logger } from '../../../../utils/logger.js';
 import { haversineKm } from '../services/order.helpers.js';
+import { getGoogleMapsApiKey } from '../../../../core/maps/googleMaps.service.js';
 
-const sanitize = (value) =>
-  value ? String(value).trim().replace(/^['"]|['"]$/g, '') : '';
-
-export function getGoogleMapsApiKey() {
-  return (
-    sanitize(process.env.GOOGLE_MAPS_API_KEY) ||
-    sanitize(process.env.VITE_GOOGLE_MAPS_API_KEY) ||
-    ''
-  );
-}
+// Key resolution is shared so every module accepts the same env spellings.
+export { getGoogleMapsApiKey } from '../../../../core/maps/googleMaps.service.js';
 
 /**
  * Fetches an encoded polyline from Google Directions API (driving mode).
