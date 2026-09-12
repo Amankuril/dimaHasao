@@ -101,16 +101,21 @@ const HIDDEN_FROM_ORDERS_TAB = new Set([
 ]);
 
 const transformOrderForList = (order) => {
-  const normalizedStatus = String(order?.status || "").toLowerCase();
+  // The restaurant-facing order carries `orderStatus`; `status` is not set on
+  // it, so this read was always undefined and every order fell through to the
+  // "pending" default below — which is why a freshly-created order displayed as
+  // pending and never matched the accept flow.
+  const rawStatus = order?.orderStatus ?? order?.status;
+  const normalizedStatus = String(rawStatus || "").toLowerCase();
   // Filter out cancelled, delivered, refunded, completed orders from front of Orders tab
   if (HIDDEN_FROM_ORDERS_TAB.has(normalizedStatus)) return null;
-  const isTerminal = TERMINAL_STATUSES.has(order.status);
+  const isTerminal = TERMINAL_STATUSES.has(normalizedStatus);
   // Dining orders are handled via Dining Booking tab, not the food order list
   if (String(order.orderType || "").toLowerCase() === "dining") return null;
   return {
     orderId: order.orderId || order._id,
     mongoId: order._id,
-    status: order.status || "pending",
+    status: rawStatus || "pending",
     customerName: order.userId?.name || order.customerName || "Customer",
     type: order.orderType === "takeaway"
       ? "Takeaway"
@@ -1193,6 +1198,9 @@ function SearchResults({ query, results, isLoading, onSelectOrder, onVerifyTakea
 const isTakeawayOrder = (order) =>
   String(order?.orderType || order?.type || "").toLowerCase() === "takeaway";
 
+/** Accept window used when the admin has not configured one. */
+const DEFAULT_ACCEPT_ORDER_TIMEOUT_SECONDS = 5 * 60;
+
 const resolveAcceptOrderTimeoutSeconds = (
   order,
   deliveryTimeoutSeconds,
@@ -1321,26 +1329,31 @@ function OrdersMainInner() {
 
     const loadRestaurantSettings = async () => {
       try {
-        const res = await restaurantAPI.getRestaurantSettings();
+        // Restaurant-scoped route; the admin one 403s with a restaurant token.
+        const res = await restaurantAPI.getRestaurantOrderSettings();
         const data = res?.data?.data || {};
         const deliveryMinutes = Number(data.deliveryAcceptOrderTimeMinutes);
         const takeawayMinutes = Number(data.takeawayAcceptOrderTimeMinutes);
 
-        if (!cancelled) {
-          if (Number.isFinite(deliveryMinutes) && deliveryMinutes >= 1 && deliveryMinutes <= 60) {
-            setDeliveryAcceptOrderTimeoutSeconds(Math.round(deliveryMinutes) * 60);
-          } else {
-            setDeliveryAcceptOrderTimeoutSeconds(null);
-          }
+        // A null timeout disables the accept popup entirely (see the guard in
+        // the queue effect). Nothing is configured on a fresh deployment, so
+        // fall back to a usable window rather than silently never alerting.
+        const toSeconds = (minutes) =>
+          Number.isFinite(minutes) && minutes >= 1 && minutes <= 60
+            ? Math.round(minutes) * 60
+            : DEFAULT_ACCEPT_ORDER_TIMEOUT_SECONDS;
 
-          if (Number.isFinite(takeawayMinutes) && takeawayMinutes >= 1 && takeawayMinutes <= 60) {
-            setTakeawayAcceptOrderTimeoutSeconds(Math.round(takeawayMinutes) * 60);
-          } else {
-            setTakeawayAcceptOrderTimeoutSeconds(null);
-          }
+        if (!cancelled) {
+          setDeliveryAcceptOrderTimeoutSeconds(toSeconds(deliveryMinutes));
+          setTakeawayAcceptOrderTimeoutSeconds(toSeconds(takeawayMinutes));
         }
       } catch (error) {
         debugError("Failed to load restaurant accept order time:", error);
+        // Keep the popup working even if settings cannot be read.
+        if (!cancelled) {
+          setDeliveryAcceptOrderTimeoutSeconds(DEFAULT_ACCEPT_ORDER_TIMEOUT_SECONDS);
+          setTakeawayAcceptOrderTimeoutSeconds(DEFAULT_ACCEPT_ORDER_TIMEOUT_SECONDS);
+        }
       }
     };
 
@@ -1477,10 +1490,11 @@ function OrdersMainInner() {
         const ordersRes = await restaurantAPI.getOrders({ page: 1, limit: 100 });
         if (ordersRes.data.success) {
           const orders = Array.isArray(ordersRes.data.data?.orders) ? ordersRes.data.data.orders : [];
+          // Restaurant-facing orders carry `orderStatus`; `status` is undefined
+          // on them, so the badge always counted zero.
+          const statusOf = (o) => String(o?.orderStatus ?? o?.status ?? '').toLowerCase();
           const pending = orders.filter(o =>
-            String(o.status).toLowerCase() === 'pending' ||
-            String(o.status).toLowerCase() === 'created' ||
-            String(o.status).toLowerCase() === 'confirmed'
+            ['pending', 'created', 'confirmed'].includes(statusOf(o))
           ).length;
           setPendingOrdersCount(pending);
 
@@ -1488,7 +1502,7 @@ function OrdersMainInner() {
           const activeStatuses = new Set(['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'created']);
           const takeawayActive = orders.filter(o =>
             (String(o.orderType || '').toLowerCase() === 'takeaway') &&
-            activeStatuses.has(String(o.status || o.orderStatus || '').toLowerCase())
+            activeStatuses.has(statusOf(o))
           ).length;
           setActiveTakeawayCount(takeawayActive);
         }

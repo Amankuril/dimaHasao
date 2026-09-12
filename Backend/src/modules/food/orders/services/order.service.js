@@ -59,6 +59,21 @@ import {
 } from './order.helpers.js';
 
 // ----- Settings -----
+/**
+ * Delivery address in the shape the pricing service expects.
+ *
+ * The delivery fee is distance-based and is only computed when
+ * `deliveryAddress.location.coordinates` is present. `initiate` (which creates
+ * the Razorpay order) and `createOrder` (which verifies the payment against a
+ * freshly-computed total) must resolve it identically — otherwise the two
+ * totals differ and verification fails with "Payment amount mismatch" *after*
+ * the customer has already paid.
+ */
+const resolvePricingDeliveryAddress = (dto) =>
+  dto?.address?.location?.coordinates
+    ? { location: { coordinates: dto.address.location.coordinates } }
+    : dto?.deliveryAddress;
+
 export async function getDispatchSettings() {
   return dispatchService.getDispatchSettings();
 }
@@ -100,6 +115,8 @@ export async function initiateOnlinePayment(userId, dto) {
     ...dto,
     useCart: dto?.useCart !== false,
     couponCode: dto?.couponCode || dto?.pricing?.couponCode || "",
+    // Must match createOrder exactly — see resolvePricingDeliveryAddress.
+    deliveryAddress: resolvePricingDeliveryAddress(dto),
   });
   const restaurantId = priced.restaurantId || dto.restaurantId;
 
@@ -181,9 +198,7 @@ export async function createOrder(userId, dto) {
     ...dto,
     useCart: dto?.useCart !== false,
     couponCode: dto?.couponCode || dto?.pricing?.couponCode || "",
-    deliveryAddress: dto.address?.location?.coordinates
-      ? { location: { coordinates: dto.address.location.coordinates } }
-      : dto.deliveryAddress,
+    deliveryAddress: resolvePricingDeliveryAddress(dto),
   });
   const verifiedItems = priced.items || [];
   const restaurantId = priced.restaurantId || dto.restaurantId;
@@ -818,12 +833,17 @@ export async function listOrdersUser(userId, query) {
       .lean(),
     FoodOrder.countDocuments(filter),
   ]);
-  return buildPaginatedResult({
+  const paginated = buildPaginatedResult({
     docs: docs.map((doc) => normalizeOrderForClient(doc)),
     total,
     page,
     limit,
   });
+
+  // `orders` mirrors `data`. listOrdersAdmin has always exposed this alias and
+  // every order screen was written against it; without it here the user's own
+  // order history read `data.data.orders` as undefined and rendered empty.
+  return { ...paginated, orders: paginated.data };
 }
 
 export async function getOrderById(
@@ -1372,7 +1392,16 @@ export async function listOrdersRestaurant(restaurantId, query) {
       .lean(),
     FoodOrder.countDocuments(filter),
   ]);
-  return buildPaginatedResult({ docs: docs.map(d => toRestaurantFacingOrder(d)), total, page, limit });
+  const paginated = buildPaginatedResult({
+    docs: docs.map((d) => toRestaurantFacingOrder(d)),
+    total,
+    page,
+    limit,
+  });
+
+  // Same `orders` alias as listOrdersAdmin — the restaurant panel reads
+  // `data.data.orders`, so omitting it hid every incoming order.
+  return { ...paginated, orders: paginated.data };
 }
 
 export async function updateOrderStatusRestaurant(

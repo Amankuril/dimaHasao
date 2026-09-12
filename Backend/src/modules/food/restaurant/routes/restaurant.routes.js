@@ -54,6 +54,7 @@ import {
     deleteAddonController
 } from '../controllers/restaurantAddon.controller.js';
 import * as orderController from '../../orders/controllers/order.controller.js';
+import * as systemConfigController from '../../admin/controllers/systemConfig.controller.js';
 import { authMiddleware } from '../../../../core/auth/auth.middleware.js';
 import { sendError } from '../../../../utils/response.js';
 import { getRestaurantFinanceController } from '../controllers/restaurantFinance.controller.js';
@@ -250,6 +251,19 @@ router.get('/addons', authMiddleware, requireApprovedRestaurant, listAddonsContr
 router.post('/addons', authMiddleware, requireApprovedRestaurant, createAddonController);
 router.patch('/addons/:id', authMiddleware, requireApprovedRestaurant, updateAddonController);
 router.delete('/addons/:id', authMiddleware, requireApprovedRestaurant, deleteAddonController);
+
+// Accept-order window, read-only.
+//
+// The restaurant dashboard needs this to open its accept popup, but the only
+// route exposing it was /food/admin/restaurant-settings, which is guarded by
+// requireRoles('ADMIN','SUB_ADMIN') — so a restaurant token got 403, the
+// timeout resolved to null, and the popup could never open.
+router.get(
+    '/order-settings',
+    authMiddleware,
+    requireApprovedRestaurant,
+    systemConfigController.getRestaurantSettings,
+);
 
 // Orders (restaurant dashboard)
 router.get('/orders', authMiddleware, requireApprovedRestaurant, orderController.listOrdersRestaurantController);

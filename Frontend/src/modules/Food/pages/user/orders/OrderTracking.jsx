@@ -1593,7 +1593,17 @@ export default function OrderTracking() {
     let isSubscribed = true;
     let requestInProgress = false;
 
+    // Clearing `loading` must survive every bail-out below. Under StrictMode the
+    // effect mounts twice: the first instance unsubscribes (so its `finally`
+    // skips setLoading) and the second trips the shared throttle refs and
+    // returns early — leaving the screen on "Loading order details..." forever.
+    const stopInitialLoading = () => {
+      if (isSubscribed) setLoading(false);
+    };
+
     const poll = async (isInitial = false) => {
+      // Do NOT clear loading here: a request is already in flight and will
+      // render the order when it lands. Clearing would flash "Order Not Found".
       if (!isSubscribed || requestInProgress) return;
       if (terminalPollStopRef.current && !isInitial) return;
 
@@ -1615,14 +1625,21 @@ export default function OrderTracking() {
       const globalLastFetch = getGlobalLastFetchTime(orderId);
       if (isInitial && hasOrderData && now - globalLastFetch < 2000) {
         debugLog("?? Throttling initial poll - too soon since last fetch");
-        setLoading(false);
+        stopInitialLoading();
         return;
       }
       if (isInitial) {
         setGlobalLastFetchTime(orderId, now);
       }
 
-      if (isInitial && now - lastPollExecutionRef.current < 1000) return;
+      // Throttle repeat initial polls, but never while we still have nothing to
+      // show. `lastPollExecutionRef` is shared across mounts, so under
+      // StrictMode this would throttle out the second (live) mount's only
+      // fetch — leaving the screen with no data to render.
+      if (isInitial && orderRef.current && now - lastPollExecutionRef.current < 1000) {
+        stopInitialLoading();
+        return;
+      }
       if (isInitial) lastPollExecutionRef.current = now;
 
       requestInProgress = true;
@@ -1682,6 +1699,14 @@ export default function OrderTracking() {
 
     if (isInitialPollRequestedRef.current !== orderId) {
       isInitialPollRequestedRef.current = orderId;
+      poll(true);
+    } else if (!orderRef.current) {
+      // A previous mount already claimed the initial poll, then unmounted before
+      // it could clear `loading` (its `finally` is gated on `isSubscribed`).
+      // Under StrictMode that is every dev page load, which left this screen
+      // stuck on "Loading order details..." forever. Only the interval poll runs
+      // after that, and it passes isInitial=false, so it never clears loading
+      // either. Re-run for this instance whenever we still have no order.
       poll(true);
     }
 

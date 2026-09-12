@@ -776,6 +776,11 @@ export const useRestaurantNotifications = () => {
     if (globalPollingIntervalId) return;
 
     const ALERT_POLL_MS = 8000;
+    // Longest age an order may have and still raise the accept popup. Must not
+    // exceed the window the popup counts down from, or it opens at zero and
+    // auto-rejects. Kept in step with DEFAULT_ACCEPT_ORDER_TIMEOUT_SECONDS
+    // in OrdersMain.jsx.
+    const ALERT_ACCEPT_WINDOW_SECONDS = 5 * 60;
 
     const pollOrders = async () => {
       try {
@@ -796,7 +801,10 @@ export const useRestaurantNotifications = () => {
 
         const confirmed = (rows || [])
           .filter((o) => {
-            const status = String(o?.status || "").toLowerCase();
+            // The restaurant-facing order carries `orderStatus`; `status` is
+            // never set on it, so reading only `status` matched nothing and the
+            // poll could never raise an alert for an already-placed order.
+            const status = String(o?.orderStatus ?? o?.status ?? "").toLowerCase();
             // Only show alert for orders that are still pending/created (not yet accepted by admin)
             if (status !== "created" && status !== "pending") return false;
             if (isProcessedOrder(o)) return false;
@@ -810,6 +818,15 @@ export const useRestaurantNotifications = () => {
             // Ignore stale test/bugged orders older than 30 minutes to prevent sound playing repeatedly on login
             const createdAt = new Date(o.createdAt || o.updatedAt || 0).getTime();
             if (!createdAt || Date.now() - createdAt > 30 * 60 * 1000) {
+              return false;
+            }
+
+            // Do not raise an alert for an order whose accept window has already
+            // elapsed. The popup starts its countdown at 0 for those and
+            // immediately AUTO-REJECTS — so surfacing a late order would
+            // silently cancel it on the restaurant's behalf. Leave it in the
+            // list for manual action instead.
+            if (Date.now() - createdAt >= ALERT_ACCEPT_WINDOW_SECONDS * 1000) {
               return false;
             }
             

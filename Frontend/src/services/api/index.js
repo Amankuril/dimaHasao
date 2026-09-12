@@ -384,6 +384,13 @@ export const adminAPI = {
     apiClient.get("/food/admin/customization-settings/takeaway-cod", { contextModule: "admin" }),
   getRestaurantSettings: () =>
     apiClient.get("/food/admin/restaurant-settings", { contextModule: "admin" }),
+  /**
+   * Accept-order window for the restaurant dashboard.
+   * Same payload as the admin route above, but readable with a restaurant
+   * token — the admin one 403s for restaurants.
+   */
+  getRestaurantOrderSettings: () =>
+    apiClient.get("/food/restaurant/order-settings", { contextModule: "restaurant" }),
   updateRestaurantSettings: (data) =>
     apiClient.patch("/food/admin/restaurant-settings", data, { contextModule: "admin" }),
   /** GET /food/admin/delivery/support-tickets/stats - counts by status. */
