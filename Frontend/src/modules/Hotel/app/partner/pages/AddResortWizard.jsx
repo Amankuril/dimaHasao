@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { propertyService, hotelService } from '../../../services/apiService';
 import toast from 'react-hot-toast';
+import '../wizard.css';
 // Compression removed - Cloudinary handles optimization
 import {
   CheckCircle, FileText, Home, Image, Plus, Trash2, MapPin, Search,
@@ -10,6 +11,18 @@ import {
 
 import logo from '../../../assets/rokologin-removebg-preview.png';
 import { isFlutterApp, openFlutterCamera } from '../../../utils/flutterBridge';
+
+const WIZARD_STEPS = [
+  { title: 'Basic Info', short: 'Basics', subtitle: "Name your resort and describe what makes it a destination." },
+  { title: 'Location', short: 'Location', subtitle: "Where guests will find you, and the pin on the map." },
+  { title: 'Amenities', short: 'Amenities', subtitle: "What the resort offers on site." },
+  { title: 'Nearby Places', short: 'Nearby', subtitle: "Landmarks and transport worth mentioning." },
+  { title: 'Resort Images', short: 'Photos', subtitle: "A cover photo and a gallery of the resort." },
+  { title: 'Cottages & Rooms', short: 'Rooms', subtitle: "Each cottage or room you sell, with its rate and count." },
+  { title: 'Resort Rules', short: 'Rules', subtitle: "Check-in times, cancellation terms and house rules." },
+  { title: 'Documents', short: 'Documents', subtitle: "Licences and certificates for verification." },
+  { title: 'Review & Submit', short: 'Review', subtitle: "Check everything over before sending it for approval." },
+];
 
 const REQUIRED_DOCS_RESORT = [
   { type: "trade_license", name: "Trade License" },
@@ -886,20 +899,8 @@ const AddResortWizard = () => {
     }
   };
 
-  const getStepTitle = () => {
-    switch (step) {
-      case 1: return 'Basic Info';
-      case 2: return 'Location';
-      case 3: return 'Amenities';
-      case 4: return 'Nearby Places';
-      case 5: return 'Resort Images';
-      case 6: return 'Cottages & Rooms';
-      case 7: return 'Resort Rules';
-      case 8: return 'Documents';
-      case 9: return 'Review & Submit';
-      default: return '';
-    }
-  };
+  const getStepTitle = () => WIZARD_STEPS[step - 1]?.title || '';
+  const getStepSubtitle = () => WIZARD_STEPS[step - 1]?.subtitle || '';
 
   const isEditingSubItem = (step === 4 && editingNearbyIndex !== null) || (step === 6 && editingRoomType !== null);
 
@@ -908,42 +909,92 @@ const AddResortWizard = () => {
     navigate(-1);
   };
 
+  const isComplete = step > 9;
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 sticky top-0 z-30 shadow-sm">
-        <button onClick={handleBack} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="text-sm font-bold text-gray-900">
-          {step <= 9 ? `Step ${step} of 9` : 'Registration Complete'}
+    <div className="hotel-wizard min-h-screen bg-slate-50 flex flex-col font-sans">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="h-16 max-w-3xl mx-auto flex items-center gap-3 px-4">
+          <button
+            onClick={handleBack}
+            className="p-2 -ml-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={20} />
+          </button>
+
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#005CA8]">
+              {isComplete ? 'Complete' : `Step ${step} of 9`}
+            </p>
+            <p className="text-sm font-bold text-gray-900 truncate">
+              {isComplete ? 'Registration submitted' : getStepTitle()}
+            </p>
+          </div>
+
+          <button
+            onClick={handleExit}
+            className="p-2 -mr-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Close and discard"
+          >
+            <X size={20} />
+          </button>
         </div>
-        <button onClick={handleExit} className="p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-          <X size={20} />
-        </button>
+
+        {/* Segmented rail: each step is its own bar, so progress reads as
+            "five of nine done" at a glance rather than a fraction of a line. */}
+        {!isComplete && (
+          <div className="max-w-3xl mx-auto px-4 pb-3">
+            <div className="flex items-center gap-1">
+              {WIZARD_STEPS.map((wizardStep, index) => {
+                const position = index + 1;
+                const done = position < step;
+                const current = position === step;
+                return (
+                  <div key={wizardStep.title} className="flex-1 flex flex-col items-center gap-1.5">
+                    <span
+                      className={`h-1.5 w-full rounded-full transition-colors duration-300 ${
+                        done || current ? 'bg-[#005CA8]' : 'bg-gray-200'
+                      }`}
+                    />
+                    <span
+                      className={`hidden sm:block text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                        current ? 'text-[#005CA8]' : done ? 'text-gray-400' : 'text-gray-300'
+                      }`}
+                    >
+                      {wizardStep.short}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </header>
 
-      <div className="w-full h-1 bg-gray-200 sticky top-16 z-20">
-        <div className="h-full bg-emerald-600 transition-all duration-500 ease-out" style={{ width: `${(step / 9) * 100}%` }} />
-      </div>
+      <main className="flex-1 w-full max-w-3xl mx-auto px-4 pt-6 md:pt-8 pb-44 md:pb-36">
+        {!isComplete && (
+          <div className="mb-5">
+            <h1 className="text-[26px] md:text-3xl font-extrabold text-gray-900 tracking-tight">
+              {getStepTitle()}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1.5">{getStepSubtitle()}</p>
+          </div>
+        )}
 
-      <main className="flex-1 w-full max-w-2xl mx-auto p-4 md:px-6 md:pt-6 pb-52 md:pb-80">
-        <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{getStepTitle()}</h1>
-        </div>
-
-        <div className="bg-white md:p-6 md:rounded-2xl md:shadow-sm md:border md:border-gray-100 space-y-6">
+        <div className="bg-white p-5 md:p-7 rounded-2xl shadow-sm border border-gray-200/80 space-y-6">
           {step === 1 && (
             <div className="space-y-6">
               {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
 
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500">Resort Name</label>
+                  <label className="wizard-label">Resort Name</label>
                   <input className="input w-full" placeholder="e.g. Blue Lagoon Resort" value={propertyForm.propertyName} onChange={e => updatePropertyForm('propertyName', e.target.value)} />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-gray-500">Resort Type</label>
+                  <label className="wizard-label">Resort Type</label>
                   <div className="grid grid-cols-2 gap-3">
                     {RESORT_TYPES.map(type => (
                       <button
@@ -951,11 +1002,11 @@ const AddResortWizard = () => {
                         type="button"
                         onClick={() => updatePropertyForm('resortType', type.value)}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${propertyForm.resortType === type.value
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-500'
-                          : 'border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/50 text-gray-600'
+                          ? 'border-[#005CA8] bg-[#005CA8]/5 text-[#003d70] ring-1 ring-[#005CA8]'
+                          : 'border-gray-200 hover:border-[#005CA8]/25 hover:bg-[#005CA8]/5 text-gray-600'
                           }`}
                       >
-                        <div className={`p-2 rounded-lg ${propertyForm.resortType === type.value ? 'bg-white text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+                        <div className={`p-2 rounded-lg ${propertyForm.resortType === type.value ? 'bg-white text-[#005CA8]' : 'bg-gray-100 text-gray-500'}`}>
                           <type.icon size={20} />
                         </div>
                         <span className="text-sm font-bold">{type.label}</span>
@@ -965,7 +1016,7 @@ const AddResortWizard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-gray-500">Activities</label>
+                  <label className="wizard-label">Activities</label>
                   <div className="flex flex-wrap gap-2">
                     {RESORT_ACTIVITIES.map(act => (
                       <button
@@ -975,7 +1026,7 @@ const AddResortWizard = () => {
                           updatePropertyForm('activities', has ? propertyForm.activities.filter(a => a !== act) : [...propertyForm.activities, act]);
                         }}
                         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${propertyForm.activities.includes(act)
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-[1.02]'
+                          ? 'bg-[#005CA8] text-white border-[#005CA8] shadow-md transform scale-[1.02]'
                           : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                           }`}
                       >
@@ -986,17 +1037,17 @@ const AddResortWizard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500">Short Description</label>
+                  <label className="wizard-label">Short Description</label>
                   <textarea className="input w-full" placeholder="Brief summary for listings..." value={propertyForm.shortDescription} onChange={e => updatePropertyForm('shortDescription', e.target.value)} />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500">Detailed Description</label>
+                  <label className="wizard-label">Detailed Description</label>
                   <textarea className="input w-full min-h-[100px]" placeholder="Tell guests what makes your resort unique..." value={propertyForm.description} onChange={e => updatePropertyForm('description', e.target.value)} />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500">Contact Number (For Guest Inquiries)</label>
+                  <label className="wizard-label">Contact Number (For Guest Inquiries)</label>
                   <input
                     className="input w-full"
                     placeholder="e.g. +91 9876543210"
@@ -1011,7 +1062,7 @@ const AddResortWizard = () => {
           {step === 2 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Search Address</label>
+                <label className="wizard-label">Search Address</label>
                 <div className="flex gap-2">
                   <input
                     className="input w-full"
@@ -1034,7 +1085,7 @@ const AddResortWizard = () => {
                         key={i}
                         type="button"
                         onClick={() => selectLocationResult(p)}
-                        className="w-full text-left px-4 py-3 hover:bg-emerald-50 border-b border-gray-50 text-sm transition-colors"
+                        className="w-full text-left px-4 py-3 hover:bg-[#005CA8]/5 border-b border-gray-50 text-sm transition-colors"
                       >
                         <div className="font-medium text-gray-900">{p.name}</div>
                         <div className="text-xs text-gray-500">{p.formatted_address}</div>
@@ -1095,8 +1146,8 @@ const AddResortWizard = () => {
                       className={`
                           relative p-4 rounded-2xl border text-left transition-all duration-200
                           ${isSelected
-                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md transform scale-[1.02]'
-                          : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-200 hover:bg-emerald-50/30'
+                          ? 'bg-[#005CA8] border-[#005CA8] text-white shadow-md transform scale-[1.02]'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-[#005CA8]/25 hover:bg-[#005CA8]/5'
                         }
                         `}
                     >
@@ -1117,15 +1168,15 @@ const AddResortWizard = () => {
               {!isEditingSubItem && (
                 <div className="space-y-3">
                   {propertyForm.nearbyPlaces.map((place, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-white hover:border-emerald-200 transition-colors shadow-sm">
+                    <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-white hover:border-[#005CA8]/25 transition-colors shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-[#005CA8]/5 text-[#005CA8] flex items-center justify-center">
                           <MapPin size={18} />
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">{place.name}</div>
                           <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                            {place.type} • <span className="text-emerald-600">{place.distanceKm} km</span>
+                            {place.type} • <span className="text-[#005CA8]">{place.distanceKm} km</span>
                           </div>
                         </div>
                       </div>
@@ -1133,7 +1184,7 @@ const AddResortWizard = () => {
                         <button
                           type="button"
                           onClick={() => startEditNearbyPlace(idx)}
-                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-[#005CA8] hover:bg-[#005CA8]/5 rounded-lg transition-colors"
                         >
                           <FileText size={18} />
                         </button>
@@ -1162,7 +1213,7 @@ const AddResortWizard = () => {
                     type="button"
                     onClick={startAddNearbyPlace}
                     disabled={propertyForm.nearbyPlaces.length >= 5}
-                    className="w-full py-4 border border-emerald-200 text-emerald-700 bg-emerald-50/50 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-4 border border-[#005CA8]/25 text-[#004b8a] bg-[#005CA8]/5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#005CA8]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus size={20} />
                     Add Nearby Place
@@ -1172,19 +1223,19 @@ const AddResortWizard = () => {
 
               {/* Editing Mode */}
               {isEditingSubItem && (
-                <div className="bg-white rounded-2xl border border-emerald-100 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
-                  <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
-                    <span className="font-bold text-emerald-800 text-sm">
+                <div className="bg-white rounded-2xl border border-[#005CA8]/15 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="px-4 py-3 bg-[#005CA8]/5 border-b border-[#005CA8]/15 flex items-center justify-between">
+                    <span className="font-bold text-[#003d70] text-sm">
                       {editingNearbyIndex === -1 ? 'Add New Place' : 'Edit Place'}
                     </span>
-                    <button onClick={cancelEditNearbyPlace} className="text-emerald-600 hover:bg-emerald-100 p-1 rounded-md">
+                    <button onClick={cancelEditNearbyPlace} className="text-[#005CA8] hover:bg-[#005CA8]/15 p-1 rounded-md">
                       <span className="text-xs font-bold">Close</span>
                     </button>
                   </div>
 
                   <div className="p-4 space-y-4">
                     <div className="relative">
-                      <label className="text-xs font-semibold text-gray-500 mb-1 block">Search Place</label>
+                      <label className="wizard-label">Search Place</label>
                       <div className="flex gap-2">
                         <input
                           className="input w-full"
@@ -1207,7 +1258,7 @@ const AddResortWizard = () => {
                               key={i}
                               type="button"
                               onClick={() => selectNearbyPlace(p)}
-                              className="w-full text-left px-4 py-3 hover:bg-emerald-50 border-b border-gray-50 last:border-0 text-sm"
+                              className="w-full text-left px-4 py-3 hover:bg-[#005CA8]/5 border-b border-gray-50 last:border-0 text-sm"
                             >
                               <div className="font-semibold text-gray-900">{p.name}</div>
                               <div className="text-xs text-gray-500 truncate">{p.address || p.formatted_address}</div>
@@ -1219,12 +1270,12 @@ const AddResortWizard = () => {
 
                     <div className="space-y-3 pt-2 border-t border-gray-100">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Name</label>
+                        <label className="wizard-label">Name</label>
                         <input className="input w-full" value={tempNearbyPlace.name} onChange={e => setTempNearbyPlace({ ...tempNearbyPlace, name: e.target.value })} />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-gray-500">Type</label>
+                          <label className="wizard-label">Type</label>
                           <select className="input w-full appearance-none" value={tempNearbyPlace.type} onChange={e => setTempNearbyPlace({ ...tempNearbyPlace, type: e.target.value })}>
                             <option value="tourist">Tourist Attraction</option>
                             <option value="airport">Airport</option>
@@ -1237,7 +1288,7 @@ const AddResortWizard = () => {
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-gray-500">Distance (km)</label>
+                          <label className="wizard-label">Distance (km)</label>
                           <input className="input w-full" type="number" value={tempNearbyPlace.distanceKm} onChange={e => setTempNearbyPlace({ ...tempNearbyPlace, distanceKm: e.target.value })} />
                         </div>
                       </div>
@@ -1245,7 +1296,7 @@ const AddResortWizard = () => {
 
                     <div className="flex gap-3 pt-2">
                       <button type="button" onClick={cancelEditNearbyPlace} className="flex-1 py-3 text-gray-600 font-semibold bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                      <button type="button" onClick={saveNearbyPlace} className="flex-1 py-3 text-white font-bold bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all transform active:scale-95">Save Place</button>
+                      <button type="button" onClick={saveNearbyPlace} className="flex-1 py-3 text-white font-bold bg-[#005CA8] rounded-xl hover:bg-[#004b8a] shadow-md shadow-[#005CA8]/25 transition-all transform active:scale-95">Save Place</button>
                     </div>
                   </div>
                 </div>
@@ -1260,17 +1311,17 @@ const AddResortWizard = () => {
                   <label className="text-sm font-bold text-gray-900">Cover Image</label>
                   <div
                     onClick={() => !uploading && (isFlutter ? handleCameraUpload('cover', url => updatePropertyForm('coverImage', url)) : coverImageFileInputRef.current?.click())}
-                    className="relative w-full h-48 sm:h-64 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center cursor-pointer overflow-hidden hover:border-emerald-400 hover:bg-emerald-50/30 transition-all group"
+                    className="relative w-full h-48 sm:h-64 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center cursor-pointer overflow-hidden hover:border-[#005CA8]/50 hover:bg-[#005CA8]/5 transition-all group"
                   >
                     {propertyForm.coverImage ? (
                       <img src={propertyForm.coverImage} alt="Cover" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="flex flex-col items-center text-gray-400 group-hover:text-emerald-600 transition-colors">
+                      <div className="flex flex-col items-center text-gray-400 group-hover:text-[#005CA8] transition-colors">
                         <Image size={40} className="mb-2 opacity-50" />
                         <span className="text-xs font-bold">{isFlutter ? 'Take/Upload Cover Photo' : 'Upload Cover Photo'}</span>
                       </div>
                     )}
-                    {uploading === 'cover' && <div className="absolute inset-0 bg-white/80 flex flex-col gap-2 items-center justify-center"><Loader2 className="animate-spin text-emerald-600" size={32} /><span className="text-sm font-bold text-emerald-700">Uploading...</span></div>}
+                    {uploading === 'cover' && <div className="absolute inset-0 bg-white/80 flex flex-col gap-2 items-center justify-center"><Loader2 className="animate-spin text-[#005CA8]" size={32} /><span className="text-sm font-bold text-[#004b8a]">Uploading...</span></div>}
                     {propertyForm.coverImage && (
                       <button
                         type="button"
@@ -1306,9 +1357,9 @@ const AddResortWizard = () => {
                       type="button"
                       onClick={() => isFlutter ? handleCameraUpload('gallery', urls => updatePropertyForm('propertyImages', [...propertyForm.propertyImages, ...urls])) : propertyImagesFileInputRef.current?.click()}
                       disabled={!!uploading}
-                      className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50/30 transition-all"
+                      className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-[#005CA8]/50 hover:text-[#005CA8] hover:bg-[#005CA8]/5 transition-all"
                     >
-                      {uploading === 'gallery' ? <Loader2 className="animate-spin text-emerald-600" size={24} /> : (isFlutter ? <Camera size={24} /> : <Plus size={24} />)}
+                      {uploading === 'gallery' ? <Loader2 className="animate-spin text-[#005CA8]" size={24} /> : (isFlutter ? <Camera size={24} /> : <Plus size={24} />)}
                     </button>
                   </div>
                   <input ref={propertyImagesFileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={e => handleImageUpload(e, 'gallery')} />
@@ -1342,7 +1393,7 @@ const AddResortWizard = () => {
                                 Inventory: <span className="text-gray-900">{rt.totalInventory}</span> · Capacity: <span className="text-gray-900">{rt.maxAdults}A, {rt.maxChildren}C</span>
                               </div>
                             </div>
-                            <div className="text-lg font-bold text-emerald-600">₹{rt.pricePerNight}</div>
+                            <div className="text-lg font-bold text-[#005CA8]">₹{rt.pricePerNight}</div>
                           </div>
 
                           {rt.amenities && rt.amenities.length > 0 && (
@@ -1355,7 +1406,7 @@ const AddResortWizard = () => {
                           )}
 
                           <div className="flex gap-2 mt-2 pt-3 border-t border-gray-100">
-                            <button onClick={() => startEditRoomType(index)} className="flex-1 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
+                            <button onClick={() => startEditRoomType(index)} className="flex-1 py-2 text-xs font-bold text-[#004b8a] bg-[#005CA8]/5 rounded-lg hover:bg-[#005CA8]/15 transition-colors">
                               Edit
                             </button>
                             <button onClick={() => deleteRoomType(index)} className="px-3 py-2 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
@@ -1370,7 +1421,7 @@ const AddResortWizard = () => {
                   <button
                     type="button"
                     onClick={startAddRoomType}
-                    className="w-full py-4 border border-emerald-200 text-emerald-700 bg-emerald-50/50 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors"
+                    className="w-full py-4 border border-[#005CA8]/25 text-[#004b8a] bg-[#005CA8]/5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#005CA8]/5 transition-colors"
                   >
                     <Plus size={20} />
                     Add Cottage / Room
@@ -1379,19 +1430,19 @@ const AddResortWizard = () => {
               )}
 
               {editingRoomType && (
-                <div className="bg-white rounded-2xl border border-emerald-100 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
-                  <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
-                    <span className="font-bold text-emerald-800 text-sm">
+                <div className="bg-white rounded-2xl border border-[#005CA8]/15 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="px-4 py-3 bg-[#005CA8]/5 border-b border-[#005CA8]/15 flex items-center justify-between">
+                    <span className="font-bold text-[#003d70] text-sm">
                       {editingRoomTypeIndex === -1 || editingRoomTypeIndex == null ? 'Add Cottage/Room' : 'Edit Cottage/Room'}
                     </span>
-                    <button onClick={cancelEditRoomType} className="text-emerald-600 hover:bg-emerald-100 p-1 rounded-md">
+                    <button onClick={cancelEditRoomType} className="text-[#005CA8] hover:bg-[#005CA8]/15 p-1 rounded-md">
                       <span className="text-xs font-bold">Close</span>
                     </button>
                   </div>
 
                   <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-500">Name</label>
+                      <label className="wizard-label">Name</label>
                       <input
                         className="input w-full"
                         placeholder="e.g. Deluxe Beach Cottage"
@@ -1402,40 +1453,40 @@ const AddResortWizard = () => {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Price / Night (₹)</label>
+                        <label className="wizard-label">Price / Night (₹)</label>
                         <input className="input w-full" type="number" value={editingRoomType.pricePerNight} onChange={e => setEditingRoomType({ ...editingRoomType, pricePerNight: e.target.value })} />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Total Units</label>
+                        <label className="wizard-label">Total Units</label>
                         <input className="input w-full" type="number" value={editingRoomType.totalInventory} onChange={e => setEditingRoomType({ ...editingRoomType, totalInventory: e.target.value })} />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Max Adults</label>
+                        <label className="wizard-label">Max Adults</label>
                         <input className="input w-full" type="number" value={editingRoomType.maxAdults} onChange={e => setEditingRoomType({ ...editingRoomType, maxAdults: e.target.value })} />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Max Children</label>
+                        <label className="wizard-label">Max Children</label>
                         <input className="input w-full" type="number" value={editingRoomType.maxChildren} onChange={e => setEditingRoomType({ ...editingRoomType, maxChildren: e.target.value })} />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Extra Adult Price (₹)</label>
+                        <label className="wizard-label">Extra Adult Price (₹)</label>
                         <input className="input w-full" type="number" value={editingRoomType.extraAdultPrice} onChange={e => setEditingRoomType({ ...editingRoomType, extraAdultPrice: e.target.value })} />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Extra Child Price (₹)</label>
+                        <label className="wizard-label">Extra Child Price (₹)</label>
                         <input className="input w-full" type="number" value={editingRoomType.extraChildPrice} onChange={e => setEditingRoomType({ ...editingRoomType, extraChildPrice: e.target.value })} />
                       </div>
                     </div>
 
                     <div className="space-y-2 pt-2 border-t border-gray-100">
                       <div className="flex justify-between items-center">
-                        <label className="text-xs font-semibold text-gray-500">Photos</label>
+                        <label className="wizard-label">Photos</label>
                         <span className="text-[10px] text-gray-400">{(editingRoomType.images || []).filter(Boolean).length} / 3 min</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -1447,8 +1498,8 @@ const AddResortWizard = () => {
                             </button>
                           </div>
                         ))}
-                        <button type="button" onClick={() => isFlutter ? handleCameraUpload('room', url => setEditingRoomType(prev => ({ ...prev, images: [...(prev.images || []), url] }))) : roomImagesFileInputRef.current?.click()} disabled={!!uploading} className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 transition-all">
-                          {uploading === 'room' ? <Loader2 size={20} className="animate-spin text-emerald-600" /> : <Plus size={20} />}
+                        <button type="button" onClick={() => isFlutter ? handleCameraUpload('room', url => setEditingRoomType(prev => ({ ...prev, images: [...(prev.images || []), url] }))) : roomImagesFileInputRef.current?.click()} disabled={!!uploading} className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-[#005CA8] hover:border-[#005CA8]/50 hover:bg-[#005CA8]/5 transition-all">
+                          {uploading === 'room' ? <Loader2 size={20} className="animate-spin text-[#005CA8]" /> : <Plus size={20} />}
                         </button>
                         <input ref={roomImagesFileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={e => {
                           if (e.target.files?.length) uploadImages(e.target.files, 'room', urls => urls.length && setEditingRoomType(prev => ({ ...prev, images: [...(prev.images || []), ...urls] })));
@@ -1457,14 +1508,14 @@ const AddResortWizard = () => {
                     </div>
 
                     <div className="space-y-2 pt-2 border-t border-gray-100">
-                      <label className="text-xs font-semibold text-gray-500">Amenities</label>
+                      <label className="wizard-label">Amenities</label>
                       <div className="flex flex-wrap gap-2">
                         {ROOM_AMENITIES_OPTIONS.map(opt => {
                           const selected = editingRoomType.amenities.includes(opt.label);
                           const Icon = opt.icon;
                           return (
                             <button key={opt.key} type="button" onClick={() => toggleRoomAmenity(opt.label)}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selected ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selected ? 'bg-[#005CA8]/5 border-[#005CA8]/25 text-[#004b8a]' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                             >
                               <Icon size={14} /> {opt.label}
                             </button>
@@ -1475,7 +1526,7 @@ const AddResortWizard = () => {
 
                     <div className="flex gap-3 pt-4">
                       <button type="button" onClick={cancelEditRoomType} className="flex-1 py-3 text-gray-600 font-semibold bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                      <button type="button" onClick={saveRoomType} className="flex-1 py-3 text-white font-bold bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all transform active:scale-95">Save</button>
+                      <button type="button" onClick={saveRoomType} className="flex-1 py-3 text-white font-bold bg-[#005CA8] rounded-xl hover:bg-[#004b8a] shadow-md shadow-[#005CA8]/25 transition-all transform active:scale-95">Save</button>
                     </div>
                   </div>
                 </div>
@@ -1490,14 +1541,14 @@ const AddResortWizard = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500">Check-in Time</label>
+                    <label className="wizard-label">Check-in Time</label>
                     <div className="relative">
                       <input className="input w-full pl-9" placeholder="3:00 PM" value={propertyForm.checkInTime} onChange={e => updatePropertyForm('checkInTime', e.target.value)} />
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span className="text-xs">🕒</span></div>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500">Check-out Time</label>
+                    <label className="wizard-label">Check-out Time</label>
                     <div className="relative">
                       <input className="input w-full pl-9" placeholder="11:00 AM" value={propertyForm.checkOutTime} onChange={e => updatePropertyForm('checkOutTime', e.target.value)} />
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span className="text-xs">🕒</span></div>
@@ -1506,7 +1557,7 @@ const AddResortWizard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500">Cancellation Policy</label>
+                  <label className="wizard-label">Cancellation Policy</label>
                   <textarea
                     className="input w-full min-h-[100px]"
                     placeholder="e.g., Free cancellation before 10 days..."
@@ -1516,7 +1567,7 @@ const AddResortWizard = () => {
                 </div>
 
                 <div className="space-y-2 pt-2 border-t border-gray-100">
-                  <label className="text-xs font-semibold text-gray-500">Resort Rules</label>
+                  <label className="wizard-label">Resort Rules</label>
                   <div className="flex flex-wrap gap-2">
                     {HOUSE_RULES_OPTIONS.map(r => {
                       const isSelected = propertyForm.houseRules.includes(r);
@@ -1528,7 +1579,7 @@ const AddResortWizard = () => {
                             const has = propertyForm.houseRules.includes(r);
                             updatePropertyForm('houseRules', has ? propertyForm.houseRules.filter(x => x !== r) : [...propertyForm.houseRules, r]);
                           }}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${isSelected ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-emerald-50'}`}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${isSelected ? 'bg-[#005CA8] border-[#005CA8] text-white shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-[#005CA8]/5'}`}
                         >
                           {r}
                         </button>
@@ -1547,7 +1598,7 @@ const AddResortWizard = () => {
                 <div className="text-sm font-semibold text-gray-700">Please provide the following documents</div>
                 <div className="grid gap-3">
                   {propertyForm.documents.map((doc, idx) => (
-                    <div key={idx} className="p-4 border border-gray-200 rounded-2xl bg-white hover:border-emerald-200 transition-colors shadow-sm">
+                    <div key={idx} className="p-4 border border-gray-200 rounded-2xl bg-white hover:border-[#005CA8]/25 transition-colors shadow-sm">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <div className="font-bold text-gray-900">{doc.name}</div>
@@ -1572,8 +1623,8 @@ const AddResortWizard = () => {
                             : documentInputRefs.current[idx]?.click()
                           }
                           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed text-sm font-bold transition-all ${doc.fileUrl
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                            : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-white hover:border-emerald-400 hover:text-emerald-600'
+                            ? 'border-[#005CA8]/25 bg-[#005CA8]/5 text-[#004b8a] hover:bg-[#005CA8]/15'
+                            : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-white hover:border-[#005CA8]/50 hover:text-[#005CA8]'
                             }`}
                         >
                           {uploading === `doc_${idx}` ? (
@@ -1585,7 +1636,7 @@ const AddResortWizard = () => {
                           )}
                         </button>
                         {doc.fileUrl && (
-                          <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="p-2.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors border border-gray-200 hover:border-emerald-200 bg-white">
+                          <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="p-2.5 text-gray-500 hover:text-[#005CA8] hover:bg-[#005CA8]/5 rounded-xl transition-colors border border-gray-200 hover:border-[#005CA8]/25 bg-white">
                             <Search size={18} />
                           </a>
                         )}
@@ -1617,7 +1668,7 @@ const AddResortWizard = () => {
 
           {step === 9 && (
             <div className="space-y-6">
-              <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex gap-3">
+              <div className="bg-[#005CA8]/5 rounded-2xl p-4 border border-[#005CA8]/15 flex gap-3">
                 <div className="bg-emerald-100 text-emerald-700 p-2 rounded-full h-fit"><CheckCircle size={20} /></div>
                 <div>
                   <h3 className="font-bold text-gray-900">Review Compliance</h3>
@@ -1637,8 +1688,8 @@ const AddResortWizard = () => {
                 <div className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
                   <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">Property Details</h3>
                   <div className="space-y-1">
-                    <div className="text-lg font-bold text-emerald-900">{propertyForm.propertyName || 'No Name'}</div>
-                    <div className="text-sm font-semibold text-emerald-600">{propertyForm.resortType} Resort</div>
+                    <div className="text-lg font-bold text-[#00365e]">{propertyForm.propertyName || 'No Name'}</div>
+                    <div className="text-sm font-semibold text-[#005CA8]">{propertyForm.resortType} Resort</div>
                     <div className="text-sm text-gray-600 flex items-start gap-1">
                       <MapPin size={14} className="mt-0.5 shrink-0" /> {propertyForm.address.fullAddress || 'No Address'}
                     </div>
@@ -1688,7 +1739,7 @@ const AddResortWizard = () => {
               </div>
               <button
                 onClick={() => navigate('/hotel/properties')}
-                className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95"
+                className="px-8 py-3 bg-[#005CA8] text-white font-bold rounded-xl shadow-lg shadow-[#005CA8]/25 hover:bg-[#004b8a] transition-all active:scale-95"
               >
                 Go to My Properties
               </button>
@@ -1697,8 +1748,8 @@ const AddResortWizard = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 md:px-6 z-40 bg-white/80 backdrop-blur-md">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 z-40">
+        <div className="max-w-3xl mx-auto flex items-center gap-3 px-4 py-3">
           <button
             onClick={handleBack}
             disabled={step === 1 || loading}
@@ -1710,15 +1761,15 @@ const AddResortWizard = () => {
             <button
               onClick={clearCurrentStep}
               disabled={loading}
-              className="px-4 py-3 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 disabled:opacity-50 transition-all text-sm"
+              className="hidden sm:block px-4 py-3 rounded-xl text-gray-400 font-semibold text-sm hover:text-red-600 hover:bg-red-50 disabled:opacity-40 transition-colors"
             >
-              Clear Step
+              Clear step
             </button>
           )}
           <button
             onClick={handleNext}
             disabled={loading || (step === 6 && roomTypes.length === 0)}
-            className="flex-1 px-6 py-3 rounded-xl bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 rounded-xl bg-[#005CA8] text-white font-bold shadow-lg shadow-[#005CA8]/25 hover:bg-[#004b8a] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
             {step === 9 ? (loading ? 'Submitting...' : 'Submit Property') : 'Continue'}

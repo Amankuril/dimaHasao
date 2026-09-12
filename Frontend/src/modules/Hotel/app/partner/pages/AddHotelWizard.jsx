@@ -2,10 +2,30 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { propertyService, hotelService } from '../../../services/apiService';
 import toast from 'react-hot-toast';
+import '../wizard.css';
 // Compression removed - Cloudinary handles optimization
-import { CheckCircle, FileText, Home, Image, Plus, Trash2, MapPin, Search, BedDouble, Wifi, Tv, Snowflake, Coffee, ShowerHead, ArrowLeft, ArrowRight, Clock, Loader2, Camera, X } from 'lucide-react';
+import { CheckCircle, FileText, Home, Image, Plus, Trash2, MapPin, Search, BedDouble, Wifi, Tv, Snowflake, Coffee, ShowerHead, ArrowLeft, ArrowRight, Clock, Loader2, Camera, X, AlertCircle } from 'lucide-react';
 import logo from '../../../assets/rokologin-removebg-preview.png';
 import { isFlutterApp, openFlutterCamera } from '../../../utils/flutterBridge';
+
+/**
+ * The nine steps, in order.
+ *
+ * The subtitle is what the step actually asks for — the old header showed only
+ * "Step 1 of 9" and then repeated the step name twice on the page, which told a
+ * partner nothing about what was coming or how much was left.
+ */
+const WIZARD_STEPS = [
+  { title: 'Basic Info', short: 'Basics', subtitle: 'Name your property and describe it for guests.' },
+  { title: 'Location', short: 'Location', subtitle: 'Where guests will find you, and the pin on the map.' },
+  { title: 'Amenities', short: 'Amenities', subtitle: 'What the property offers on site.' },
+  { title: 'Nearby Places', short: 'Nearby', subtitle: 'Landmarks and transport worth mentioning.' },
+  { title: 'Property Images', short: 'Photos', subtitle: 'A cover photo and a gallery of the property.' },
+  { title: 'Room Types', short: 'Rooms', subtitle: 'Each room you sell, with its rate and how many you have.' },
+  { title: 'Property Rules', short: 'Rules', subtitle: 'Check-in times, cancellation terms and house rules.' },
+  { title: 'Documents', short: 'Documents', subtitle: 'Licences and certificates for verification.' },
+  { title: 'Review & Submit', short: 'Review', subtitle: 'Check everything over before sending it for approval.' },
+];
 
 const REQUIRED_DOCS_HOTEL = [
   { type: "trade_license", name: "Trade License" },
@@ -23,6 +43,30 @@ const ROOM_AMENITIES = [
   { key: 'balcony', label: 'Balcony', icon: BedDouble },
   { key: 'coffee', label: 'Tea/Coffee', icon: Coffee }
 ];
+
+/** One consistent heading for every step's card. */
+const SectionHeading = ({ icon: Icon, title, description }) => (
+  <div className="flex items-start gap-3 pb-4 border-b border-gray-100">
+    <span className="w-9 h-9 shrink-0 rounded-lg bg-[#005CA8]/10 text-[#005CA8] flex items-center justify-center">
+      <Icon size={18} />
+    </span>
+    <div className="min-w-0">
+      <h2 className="text-base font-bold text-gray-900 leading-tight">{title}</h2>
+      {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+    </div>
+  </div>
+);
+
+/** Validation errors looked different on almost every step; this is the one look. */
+const ErrorBanner = ({ message }) => {
+  if (!message) return null;
+  return (
+    <div className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-100 rounded-xl">
+      <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+      <p className="text-sm text-red-700 font-medium">{message}</p>
+    </div>
+  );
+};
 
 const AddHotelWizard = () => {
   const navigate = useNavigate();
@@ -814,20 +858,8 @@ const AddHotelWizard = () => {
     }
   };
 
-  const getStepTitle = () => {
-    switch (step) {
-      case 1: return 'Basic Info';
-      case 2: return 'Location';
-      case 3: return 'Amenities';
-      case 4: return 'Nearby Places';
-      case 5: return 'Property Images';
-      case 6: return 'Room Types';
-      case 7: return 'Property Rules';
-      case 8: return 'Documents';
-      case 9: return 'Review & Submit';
-      default: return '';
-    }
-  };
+  const getStepTitle = () => WIZARD_STEPS[step - 1]?.title || '';
+  const getStepSubtitle = () => WIZARD_STEPS[step - 1]?.subtitle || '';
 
   const handleExit = () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -836,68 +868,156 @@ const AddHotelWizard = () => {
 
   const isEditingSubItem = (step === 4 && editingNearbyIndex !== null) || (step === 6 && editingRoomType !== null);
 
+  const isComplete = step > 9;
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 sticky top-0 z-30 shadow-sm">
-        <button onClick={handleBack} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="text-sm font-bold text-gray-900">
-          {step <= 9 ? `Step ${step} of 9` : 'Registration Complete'}
+    <div className="hotel-wizard min-h-screen bg-slate-50 flex flex-col font-sans">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="h-16 max-w-3xl mx-auto flex items-center gap-3 px-4">
+          <button
+            onClick={handleBack}
+            className="p-2 -ml-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={20} />
+          </button>
+
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#005CA8]">
+              {isComplete ? 'Complete' : `Step ${step} of 9`}
+            </p>
+            <p className="text-sm font-bold text-gray-900 truncate">
+              {isComplete ? 'Registration submitted' : getStepTitle()}
+            </p>
+          </div>
+
+          <button
+            onClick={handleExit}
+            className="p-2 -mr-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Close and discard"
+          >
+            <X size={20} />
+          </button>
         </div>
-        <button onClick={handleExit} className="p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-          <X size={20} />
-        </button>
+
+        {/* Segmented rail: each step is its own bar, so progress reads as
+            "five of nine done" at a glance rather than a fraction of a line. */}
+        {!isComplete && (
+          <div className="max-w-3xl mx-auto px-4 pb-3">
+            <div className="flex items-center gap-1">
+              {WIZARD_STEPS.map((wizardStep, index) => {
+                const position = index + 1;
+                const done = position < step;
+                const current = position === step;
+                return (
+                  <div key={wizardStep.title} className="flex-1 flex flex-col items-center gap-1.5">
+                    {/* Filled up to and including the current step, so the rail
+                        reads as "two of nine done" rather than leaving the step
+                        you are on looking unfinished. */}
+                    <span
+                      className={`h-1.5 w-full rounded-full transition-colors duration-300 ${
+                        done || current ? 'bg-[#005CA8]' : 'bg-gray-200'
+                      }`}
+                    />
+                    <span
+                      className={`hidden sm:block text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                        current ? 'text-[#005CA8]' : done ? 'text-gray-400' : 'text-gray-300'
+                      }`}
+                    >
+                      {wizardStep.short}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </header>
 
-      <div className="w-full h-1 bg-gray-200 sticky top-16 z-20">
-        <div className="h-full bg-emerald-600 transition-all duration-500 ease-out" style={{ width: `${(step / 9) * 100}%` }} />
-      </div>
+      <main className="flex-1 w-full max-w-3xl mx-auto px-4 pt-6 md:pt-8 pb-44 md:pb-36">
+        {!isComplete && (
+          <div className="mb-5">
+            <h1 className="text-[26px] md:text-3xl font-extrabold text-gray-900 tracking-tight">
+              {getStepTitle()}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1.5">{getStepSubtitle()}</p>
+          </div>
+        )}
 
-      <main className="flex-1 w-full max-w-2xl mx-auto p-4 md:px-6 md:pt-6 pb-52 md:pb-80">
-        <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{getStepTitle()}</h1>
-        </div>
-
-        <div className="bg-white md:p-6 md:rounded-2xl md:shadow-sm md:border md:border-gray-100 space-y-6">
+        <div className="bg-white p-5 md:p-7 rounded-2xl shadow-sm border border-gray-200/80 space-y-6">
           {step === 1 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-4">
-                <Home size={18} className="text-[#005CA8]" />
-                <h2 className="text-lg font-bold">Basic Info</h2>
-              </div>
-              {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
-              <div className="space-y-3">
+            <div className="space-y-5">
+              <SectionHeading
+                icon={Home}
+                title="About your property"
+                description="This is the first thing a guest sees in search results."
+              />
+
+              <ErrorBanner message={error} />
+
+              <div className="space-y-5">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Property Name</label>
+                  <label className="wizard-label" htmlFor="propertyName">
+                    Property name <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    className="input w-full"
+                    id="propertyName"
+                    className="input"
                     placeholder="e.g. Grand Royal Hotel"
                     value={propertyForm.propertyName}
                     onChange={e => updatePropertyForm('propertyName', e.target.value)}
                   />
+                  <p className="wizard-hint">The name guests will see on the listing.</p>
                 </div>
+
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Short Description</label>
+                  <label className="wizard-label" htmlFor="shortDescription">
+                    Short description
+                  </label>
                   <textarea
-                    className="input w-full"
-                    placeholder="Brief summary for listings..."
+                    id="shortDescription"
+                    className="input !min-h-[4.5rem]"
+                    maxLength={160}
+                    placeholder="A riverside stay a short walk from Maibang station."
                     value={propertyForm.shortDescription}
                     onChange={e => updatePropertyForm('shortDescription', e.target.value)}
                   />
+                  <p className="wizard-hint flex items-center justify-between gap-2">
+                    <span>One line, shown under the name in listings.</span>
+                    <span className="tabular-nums shrink-0">
+                      {(propertyForm.shortDescription || '').length}/160
+                    </span>
+                  </p>
                 </div>
+
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Detailed Description</label>
-                  <textarea className="input w-full h-24" placeholder={`Tell guests what makes your ${propertyForm.propertyType || 'hotel'} unique...`} value={propertyForm.description} onChange={e => updatePropertyForm('description', e.target.value)} />
+                  <label className="wizard-label" htmlFor="description">
+                    Detailed description
+                  </label>
+                  <textarea
+                    id="description"
+                    className="input !min-h-[8rem]"
+                    placeholder={`Tell guests what makes your ${propertyForm.propertyType || 'hotel'} unique — the rooms, the view, what is nearby...`}
+                    value={propertyForm.description}
+                    onChange={e => updatePropertyForm('description', e.target.value)}
+                  />
+                  <p className="wizard-hint">Appears on the property page. Take your time with this one.</p>
                 </div>
+
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Contact Number (For Guest Inquiries)</label>
+                  <label className="wizard-label" htmlFor="contactNumber">
+                    Contact number
+                  </label>
                   <input
-                    className="input w-full"
-                    placeholder="e.g. +91 9876543210"
+                    id="contactNumber"
+                    className="input"
+                    type="tel"
+                    inputMode="tel"
+                    placeholder="+91 98765 43210"
                     value={propertyForm.contactNumber}
                     onChange={e => updatePropertyForm('contactNumber', e.target.value)}
                   />
+                  <p className="wizard-hint">Used for guest enquiries about this property.</p>
                 </div>
               </div>
             </div>
@@ -905,14 +1025,15 @@ const AddHotelWizard = () => {
 
           {step === 2 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-4">
-                <MapPin size={18} className="text-[#005CA8]" />
-                <h2 className="text-lg font-bold">Location</h2>
-              </div>
-              {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
+              <SectionHeading
+                icon={MapPin}
+                title="Where is it?"
+                description="Search for the address, then drop the pin exactly on the property."
+              />
+              <ErrorBanner message={error} />
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Search Address</label>
+                <label className="wizard-label">Search Address</label>
                 <div className="flex gap-2">
                   <input
                     className="input w-full"
@@ -935,7 +1056,7 @@ const AddHotelWizard = () => {
                         key={i}
                         type="button"
                         onClick={() => selectLocationResult(p)}
-                        className="w-full text-left px-4 py-3 hover:bg-emerald-50 border-b border-gray-50 text-sm transition-colors"
+                        className="w-full text-left px-4 py-3 hover:bg-[#005CA8]/5 border-b border-gray-50 text-sm transition-colors"
                       >
                         <div className="font-medium text-gray-900">{p.name}</div>
                         <div className="text-xs text-gray-500">{p.formatted_address}</div>
@@ -981,7 +1102,13 @@ const AddHotelWizard = () => {
           )}
 
           {step === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-5">
+              <SectionHeading
+                icon={Wifi}
+                title="What do you offer?"
+                description="Tap everything available to guests on the property."
+              />
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {HOTEL_AMENITIES.map(am => {
                   const isSelected = propertyForm.amenities.includes(am);
@@ -996,8 +1123,8 @@ const AddHotelWizard = () => {
                       className={`
                           relative p-4 rounded-2xl border text-left transition-all duration-200
                           ${isSelected
-                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md transform scale-[1.02]'
-                          : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-200 hover:bg-emerald-50/30'
+                          ? 'bg-[#005CA8] border-[#005CA8] text-white shadow-md transform scale-[1.02]'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-[#005CA8]/25 hover:bg-[#005CA8]/5'
                         }
                         `}
                     >
@@ -1011,21 +1138,27 @@ const AddHotelWizard = () => {
           )}
 
           {step === 4 && (
-            <div className="space-y-4">
-              {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
+            <div className="space-y-5">
+              <SectionHeading
+                icon={MapPin}
+                title="What's nearby?"
+                description="Stations, airports and landmarks help guests judge the location."
+              />
+
+              <ErrorBanner message={error} />
 
               {!isEditingSubItem && (
                 <div className="space-y-3">
                   {propertyForm.nearbyPlaces.map((place, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-white hover:border-emerald-200 transition-colors shadow-sm">
+                    <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-white hover:border-[#005CA8]/25 transition-colors shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-[#005CA8]/5 text-[#005CA8] flex items-center justify-center">
                           <MapPin size={18} />
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">{place.name}</div>
                           <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                            {place.type} • <span className="text-emerald-600">{place.distanceKm} km</span>
+                            {place.type} • <span className="text-[#005CA8]">{place.distanceKm} km</span>
                           </div>
                         </div>
                       </div>
@@ -1033,7 +1166,7 @@ const AddHotelWizard = () => {
                         <button
                           type="button"
                           onClick={() => startEditNearbyPlace(idx)}
-                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-[#005CA8] hover:bg-[#005CA8]/5 rounded-lg transition-colors"
                         >
                           <FileText size={18} />
                         </button>
@@ -1062,7 +1195,7 @@ const AddHotelWizard = () => {
                     type="button"
                     onClick={startAddNearbyPlace}
                     disabled={propertyForm.nearbyPlaces.length >= 5}
-                    className="w-full py-4 border border-emerald-200 text-emerald-700 bg-emerald-50/50 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-4 border border-[#005CA8]/25 text-[#004b8a] bg-[#005CA8]/5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#005CA8]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus size={20} />
                     Add Nearby Place
@@ -1071,19 +1204,19 @@ const AddHotelWizard = () => {
               )}
 
               {isEditingSubItem && (
-                <div className="bg-white rounded-2xl border border-emerald-100 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
-                  <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
-                    <span className="font-bold text-emerald-800 text-sm">
+                <div className="bg-white rounded-2xl border border-[#005CA8]/15 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="px-4 py-3 bg-[#005CA8]/5 border-b border-[#005CA8]/15 flex items-center justify-between">
+                    <span className="font-bold text-[#003d70] text-sm">
                       {editingNearbyIndex === -1 ? 'Add New Place' : 'Edit Place'}
                     </span>
-                    <button onClick={cancelEditNearbyPlace} className="text-emerald-600 hover:bg-emerald-100 p-1 rounded-md">
+                    <button onClick={cancelEditNearbyPlace} className="text-[#005CA8] hover:bg-[#005CA8]/15 p-1 rounded-md">
                       <span className="text-xs font-bold">Close</span>
                     </button>
                   </div>
 
                   <div className="p-4 space-y-4">
                     <div className="relative">
-                      <label className="text-xs font-semibold text-gray-500 mb-1 block">Search Place</label>
+                      <label className="wizard-label">Search Place</label>
                       <div className="flex gap-2">
                         <input
                           className="input w-full"
@@ -1094,7 +1227,7 @@ const AddHotelWizard = () => {
                         <button
                           type="button"
                           onClick={searchNearbyPlaces}
-                          className="px-4 py-2 bg-gray-900 text-white rounded-xl font-semibold text-sm"
+                          className="shrink-0 px-4 py-2.5 bg-[#005CA8] text-white rounded-xl font-bold text-sm hover:bg-[#004b8a] transition-colors"
                         >
                           Search
                         </button>
@@ -1106,7 +1239,7 @@ const AddHotelWizard = () => {
                               key={i}
                               type="button"
                               onClick={() => selectNearbyPlace(p)}
-                              className="w-full text-left px-4 py-3 hover:bg-emerald-50 border-b border-gray-50 last:border-0 text-sm"
+                              className="w-full text-left px-4 py-3 hover:bg-[#005CA8]/5 border-b border-gray-50 last:border-0 text-sm"
                             >
                               <div className="font-semibold text-gray-900">{p.name}</div>
                               <div className="text-xs text-gray-500 truncate">{p.address || p.formatted_address}</div>
@@ -1118,12 +1251,12 @@ const AddHotelWizard = () => {
 
                     <div className="space-y-3 pt-2 border-t border-gray-100">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Name</label>
+                        <label className="wizard-label">Name</label>
                         <input className="input w-full" value={tempNearbyPlace.name} onChange={e => setTempNearbyPlace({ ...tempNearbyPlace, name: e.target.value })} />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-gray-500">Type</label>
+                          <label className="wizard-label">Type</label>
                           <select className="input w-full appearance-none" value={tempNearbyPlace.type} onChange={e => setTempNearbyPlace({ ...tempNearbyPlace, type: e.target.value })}>
                             <option value="tourist">Tourist Attraction</option>
                             <option value="airport">Airport</option>
@@ -1136,7 +1269,7 @@ const AddHotelWizard = () => {
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-gray-500">Distance (km)</label>
+                          <label className="wizard-label">Distance (km)</label>
                           <input className="input w-full" type="number" value={tempNearbyPlace.distanceKm} onChange={e => setTempNearbyPlace({ ...tempNearbyPlace, distanceKm: e.target.value })} />
                         </div>
                       </div>
@@ -1144,7 +1277,7 @@ const AddHotelWizard = () => {
 
                     <div className="flex gap-3 pt-2">
                       <button type="button" onClick={cancelEditNearbyPlace} className="flex-1 py-3 text-gray-600 font-semibold bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                      <button type="button" onClick={saveNearbyPlace} className="flex-1 py-3 text-white font-bold bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all transform active:scale-95">Save Place</button>
+                      <button type="button" onClick={saveNearbyPlace} className="flex-1 py-3 text-white font-bold bg-[#005CA8] rounded-xl hover:bg-[#004b8a] shadow-md shadow-[#005CA8]/25 transition-all transform active:scale-95">Save Place</button>
                     </div>
                   </div>
                 </div>
@@ -1154,20 +1287,26 @@ const AddHotelWizard = () => {
 
           {step === 5 && (
             <div className="space-y-6">
-              {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
+              <SectionHeading
+                icon={Image}
+                title="Show the property"
+                description="A strong cover photo is the single biggest driver of bookings."
+              />
+
+              <ErrorBanner message={error} />
 
               {/* Cover Image */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-bold text-gray-800">Cover Image</label>
-                  <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-1 rounded-md">Required</span>
+                  <label className="wizard-label">Cover Image</label>
+                  <span className="text-xs text-[#005CA8] font-medium bg-[#005CA8]/5 px-2 py-1 rounded-md">Required</span>
                 </div>
                 <div
                   onClick={() => isFlutter ? handleCameraUpload('cover', url => updatePropertyForm('coverImage', url)) : coverImageFileInputRef.current?.click()}
-                  className="w-full h-48 sm:h-64 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center bg-gray-50 hover:bg-white hover:border-emerald-400 transition-all overflow-hidden group relative cursor-pointer"
+                  className="w-full h-48 sm:h-64 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center bg-gray-50 hover:bg-white hover:border-[#005CA8]/50 transition-all overflow-hidden group relative cursor-pointer"
                 >
                   {uploading === 'cover' ? (
-                    <div className="flex flex-col items-center gap-2 text-emerald-600">
+                    <div className="flex flex-col items-center gap-2 text-[#005CA8]">
                       <Loader2 className="animate-spin" size={24} />
                       <span className="text-sm font-medium">Uploading...</span>
                     </div>
@@ -1191,7 +1330,7 @@ const AddHotelWizard = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-emerald-600 transition-colors">
+                    <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-[#005CA8] transition-colors">
                       <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center">
                         <Image size={24} />
                       </div>
@@ -1207,7 +1346,7 @@ const AddHotelWizard = () => {
               {/* Gallery */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-bold text-gray-800">Gallery</label>
+                  <label className="wizard-label">Gallery</label>
                   <span className="text-xs text-gray-500">{propertyForm.propertyImages.length} / 4 minimum</span>
                 </div>
 
@@ -1228,10 +1367,10 @@ const AddHotelWizard = () => {
                     type="button"
                     onClick={() => isFlutter ? handleCameraUpload('gallery', urls => updatePropertyForm('propertyImages', [...propertyForm.propertyImages, ...urls])) : propertyImagesFileInputRef.current?.click()}
                     disabled={!!uploading}
-                    className="aspect-square rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-white hover:border-emerald-400 flex items-center justify-center text-gray-400 hover:text-emerald-600 transition-all"
+                    className="aspect-square rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-white hover:border-[#005CA8]/50 flex items-center justify-center text-gray-400 hover:text-[#005CA8] transition-all"
                   >
                     {uploading === 'gallery' ? (
-                      <Loader2 size={24} className="animate-spin text-emerald-600" />
+                      <Loader2 size={24} className="animate-spin text-[#005CA8]" />
                     ) : (
                       isFlutter ? <Camera size={24} /> : <Plus size={24} />
                     )}
@@ -1245,8 +1384,14 @@ const AddHotelWizard = () => {
           )}
 
           {step === 6 && (
-            <div className="space-y-4">
-              {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
+            <div className="space-y-5">
+              <SectionHeading
+                icon={BedDouble}
+                title="Rooms and rates"
+                description="Add each room you sell, with its nightly rate and how many you have."
+              />
+
+              <ErrorBanner message={error} />
 
               {!editingRoomType && (
                 <div className="space-y-4">
@@ -1269,7 +1414,7 @@ const AddHotelWizard = () => {
                                 Inventory: <span className="text-gray-900">{rt.totalInventory}</span> · Capacity: <span className="text-gray-900">{rt.maxAdults}A, {rt.maxChildren}C</span>
                               </div>
                             </div>
-                            <div className="text-lg font-bold text-emerald-600">₹{rt.pricePerNight}</div>
+                            <div className="text-lg font-bold text-[#005CA8]">₹{rt.pricePerNight}</div>
                           </div>
 
                           {rt.amenities && rt.amenities.length > 0 && (
@@ -1282,7 +1427,7 @@ const AddHotelWizard = () => {
                           )}
 
                           <div className="flex gap-2 mt-2 pt-3 border-t border-gray-100">
-                            <button onClick={() => startEditRoomType(index)} className="flex-1 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
+                            <button onClick={() => startEditRoomType(index)} className="flex-1 py-2 text-xs font-bold text-[#004b8a] bg-[#005CA8]/5 rounded-lg hover:bg-[#005CA8]/15 transition-colors">
                               Edit
                             </button>
                             <button onClick={() => deleteRoomType(index)} className="px-3 py-2 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
@@ -1297,7 +1442,7 @@ const AddHotelWizard = () => {
                   <button
                     type="button"
                     onClick={startAddRoomType}
-                    className="w-full py-4 border border-emerald-200 text-emerald-700 bg-emerald-50/50 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors"
+                    className="w-full py-4 border border-[#005CA8]/25 text-[#004b8a] bg-[#005CA8]/5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#005CA8]/5 transition-colors"
                   >
                     <Plus size={20} />
                     Add {'Room'} Type
@@ -1306,19 +1451,19 @@ const AddHotelWizard = () => {
               )}
 
               {editingRoomType && (
-                <div className="bg-white rounded-2xl border border-emerald-100 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
-                  <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
-                    <span className="font-bold text-emerald-800 text-sm">
+                <div className="bg-white rounded-2xl border border-[#005CA8]/15 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="px-4 py-3 bg-[#005CA8]/5 border-b border-[#005CA8]/15 flex items-center justify-between">
+                    <span className="font-bold text-[#003d70] text-sm">
                       {editingRoomTypeIndex === -1 || editingRoomTypeIndex == null ? `Add ${'Room'} Type` : `Edit ${'Room'} Type`}
                     </span>
-                    <button onClick={cancelEditRoomType} className="text-emerald-600 hover:bg-emerald-100 p-1 rounded-md">
+                    <button onClick={cancelEditRoomType} className="text-[#005CA8] hover:bg-[#005CA8]/15 p-1 rounded-md">
                       <span className="text-xs font-bold">Close</span>
                     </button>
                   </div>
 
                   <div className="p-4 space-y-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-500">Name</label>
+                      <label className="wizard-label">Name</label>
                       <input
                         className="input w-full"
                         placeholder="e.g. Deluxe Suite"
@@ -1329,40 +1474,40 @@ const AddHotelWizard = () => {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Price / Night (₹)</label>
+                        <label className="wizard-label">Price / Night (₹)</label>
                         <input className="input w-full" type="number" value={editingRoomType.pricePerNight} onChange={e => setEditingRoomType(prev => ({ ...prev, pricePerNight: e.target.value }))} />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Total Rooms</label>
+                        <label className="wizard-label">Total Rooms</label>
                         <input className="input w-full" type="number" value={editingRoomType.totalInventory} onChange={e => setEditingRoomType(prev => ({ ...prev, totalInventory: e.target.value }))} />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Max Adults</label>
+                        <label className="wizard-label">Max Adults</label>
                         <input className="input w-full" type="number" value={editingRoomType.maxAdults} onChange={e => setEditingRoomType(prev => ({ ...prev, maxAdults: e.target.value }))} />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Max Children</label>
+                        <label className="wizard-label">Max Children</label>
                         <input className="input w-full" type="number" value={editingRoomType.maxChildren} onChange={e => setEditingRoomType(prev => ({ ...prev, maxChildren: e.target.value }))} />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Extra Adult Price (₹)</label>
+                        <label className="wizard-label">Extra Adult Price (₹)</label>
                         <input className="input w-full" type="number" value={editingRoomType.extraAdultPrice} onChange={e => setEditingRoomType(prev => ({ ...prev, extraAdultPrice: e.target.value }))} />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-500">Extra Child Price (₹)</label>
+                        <label className="wizard-label">Extra Child Price (₹)</label>
                         <input className="input w-full" type="number" value={editingRoomType.extraChildPrice} onChange={e => setEditingRoomType(prev => ({ ...prev, extraChildPrice: e.target.value }))} />
                       </div>
                     </div>
 
                     <div className="space-y-2 pt-2 border-t border-gray-100">
                       <div className="flex justify-between items-center">
-                        <label className="text-xs font-semibold text-gray-500">Room Photos</label>
+                        <label className="wizard-label">Room Photos</label>
                         <span className="text-[10px] text-gray-400">{(editingRoomType.images || []).filter(Boolean).length} / 3 min</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -1374,8 +1519,8 @@ const AddHotelWizard = () => {
                             </button>
                           </div>
                         ))}
-                        <button type="button" onClick={() => isFlutter ? handleCameraUpload('room', url => setEditingRoomType(prev => ({ ...prev, images: [...(prev.images || []), url] }))) : roomImagesFileInputRef.current?.click()} disabled={!!uploading} className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 transition-all">
-                          {uploading === 'room' ? <Loader2 size={20} className="animate-spin text-emerald-600" /> : <Plus size={20} />}
+                        <button type="button" onClick={() => isFlutter ? handleCameraUpload('room', url => setEditingRoomType(prev => ({ ...prev, images: [...(prev.images || []), url] }))) : roomImagesFileInputRef.current?.click()} disabled={!!uploading} className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-[#005CA8] hover:border-[#005CA8]/50 hover:bg-[#005CA8]/5 transition-all">
+                          {uploading === 'room' ? <Loader2 size={20} className="animate-spin text-[#005CA8]" /> : <Plus size={20} />}
                         </button>
                         <input ref={roomImagesFileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={e => {
                           if (e.target.files?.length) uploadImages(e.target.files, 'room', urls => urls.length && setEditingRoomType(prev => ({ ...prev, images: [...(prev.images || []), ...urls.filter(Boolean)] })));
@@ -1385,14 +1530,14 @@ const AddHotelWizard = () => {
                     </div>
 
                     <div className="space-y-2 pt-2 border-t border-gray-100">
-                      <label className="text-xs font-semibold text-gray-500">Amenities</label>
+                      <label className="wizard-label">Amenities</label>
                       <div className="flex flex-wrap gap-2">
                         {ROOM_AMENITIES.map(opt => {
                           const selected = editingRoomType.amenities.includes(opt.label);
                           const Icon = opt.icon;
                           return (
                             <button key={opt.key} type="button" onClick={() => toggleRoomAmenity(opt.label)}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selected ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selected ? 'bg-[#005CA8]/5 border-[#005CA8]/25 text-[#004b8a]' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                             >
                               <Icon size={14} /> {opt.label}
                             </button>
@@ -1403,7 +1548,7 @@ const AddHotelWizard = () => {
 
                     <div className="flex gap-3 pt-4">
                       <button type="button" onClick={cancelEditRoomType} className="flex-1 py-3 text-gray-600 font-semibold bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                      <button type="button" onClick={saveRoomType} className="flex-1 py-3 text-white font-bold bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all transform active:scale-95">Save Room</button>
+                      <button type="button" onClick={saveRoomType} className="flex-1 py-3 text-white font-bold bg-[#005CA8] rounded-xl hover:bg-[#004b8a] shadow-md shadow-[#005CA8]/25 transition-all transform active:scale-95">Save Room</button>
                     </div>
                   </div>
                 </div>
@@ -1413,19 +1558,25 @@ const AddHotelWizard = () => {
 
           {step === 7 && (
             <div className="space-y-6">
-              {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
+              <SectionHeading
+                icon={Clock}
+                title="Check-in and house rules"
+                description="Set expectations up front to avoid disputes later."
+              />
+
+              <ErrorBanner message={error} />
 
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500">Check-in Time</label>
+                    <label className="wizard-label">Check-in Time</label>
                     <div className="relative">
                       <input className="input w-full !pl-12" placeholder="12:00 PM" value={propertyForm.checkInTime} onChange={e => updatePropertyForm('checkInTime', e.target.value)} />
                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><Clock size={18} /></div>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500">Check-out Time</label>
+                    <label className="wizard-label">Check-out Time</label>
                     <div className="relative">
                       <input className="input w-full !pl-12" placeholder="11:00 AM" value={propertyForm.checkOutTime} onChange={e => updatePropertyForm('checkOutTime', e.target.value)} />
                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><Clock size={18} /></div>
@@ -1434,7 +1585,7 @@ const AddHotelWizard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500">Cancellation Policy</label>
+                  <label className="wizard-label">Cancellation Policy</label>
                   <textarea
                     className="input w-full min-h-[100px]"
                     placeholder="e.g., Free cancellation up to 24 hours before check-in..."
@@ -1444,7 +1595,7 @@ const AddHotelWizard = () => {
                 </div>
 
                 <div className="space-y-2 pt-2 border-t border-gray-100">
-                  <label className="text-xs font-semibold text-gray-500">House Rules</label>
+                  <label className="wizard-label">House Rules</label>
                   <div className="flex flex-wrap gap-2">
                     {HOUSE_RULES_OPTIONS.map(r => {
                       const isSelected = propertyForm.houseRules.includes(r);
@@ -1456,7 +1607,7 @@ const AddHotelWizard = () => {
                             const has = propertyForm.houseRules.includes(r);
                             updatePropertyForm('houseRules', has ? propertyForm.houseRules.filter(x => x !== r) : [...propertyForm.houseRules, r]);
                           }}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${isSelected ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-emerald-50'}`}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${isSelected ? 'bg-[#005CA8] border-[#005CA8] text-white shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-[#005CA8]/5'}`}
                         >
                           {r}
                         </button>
@@ -1470,13 +1621,19 @@ const AddHotelWizard = () => {
 
           {step === 8 && (
             <div className="space-y-6">
-              {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
+              <SectionHeading
+                icon={FileText}
+                title="Verification documents"
+                description="Our team checks these before your property goes live."
+              />
+
+              <ErrorBanner message={error} />
 
               <div className="space-y-4">
                 <div className="text-sm font-semibold text-gray-700">Please provide the following documents</div>
                 <div className="grid gap-3">
                   {propertyForm.documents.map((doc, idx) => (
-                    <div key={idx} className="p-4 border border-gray-200 rounded-2xl bg-white hover:border-emerald-200 transition-colors shadow-sm">
+                    <div key={idx} className="p-4 border border-gray-200 rounded-2xl bg-white hover:border-[#005CA8]/25 transition-colors shadow-sm">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <div className="font-bold text-gray-900">{doc.name}</div>
@@ -1501,8 +1658,8 @@ const AddHotelWizard = () => {
                             : documentInputRefs.current[idx]?.click()
                           }
                           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed text-sm font-bold transition-all ${doc.fileUrl
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                            : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-white hover:border-emerald-400 hover:text-emerald-600'
+                            ? 'border-[#005CA8]/25 bg-[#005CA8]/5 text-[#004b8a] hover:bg-[#005CA8]/15'
+                            : 'border-gray-300 bg-gray-50 text-gray-600 hover:bg-white hover:border-[#005CA8]/50 hover:text-[#005CA8]'
                             }`}
                         >
                           {uploading === `doc_${idx}` ? (
@@ -1514,7 +1671,7 @@ const AddHotelWizard = () => {
                           )}
                         </button>
                         {doc.fileUrl && (
-                          <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="p-2.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors border border-gray-200 hover:border-emerald-200 bg-white">
+                          <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="p-2.5 text-gray-500 hover:text-[#005CA8] hover:bg-[#005CA8]/5 rounded-xl transition-colors border border-gray-200 hover:border-[#005CA8]/25 bg-white">
                             <Search size={18} />
                           </a>
                         )}
@@ -1566,7 +1723,7 @@ const AddHotelWizard = () => {
                 <div className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
                   <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">Property Details</h3>
                   <div className="space-y-1">
-                    <div className="text-lg font-bold text-emerald-900">{propertyForm.propertyName || 'No Name'}</div>
+                    <div className="text-lg font-bold text-[#00365e]">{propertyForm.propertyName || 'No Name'}</div>
                     <div className="text-sm text-gray-600 flex items-start gap-1">
                       <MapPin size={14} className="mt-0.5 shrink-0" /> {propertyForm.address.fullAddress || 'No Address'}
                     </div>
@@ -1625,39 +1782,41 @@ const AddHotelWizard = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 md:px-6 z-40 bg-white/80 backdrop-blur-md">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
-          <button
-            onClick={handleBack}
-            disabled={step === 1 || loading}
-            className="px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            Back
-          </button>
-          {step < 9 && (
+      {!isComplete && (
+        <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 z-40">
+          <div className="max-w-3xl mx-auto flex items-center gap-3 px-4 py-3">
             <button
-              onClick={clearCurrentStep}
-              disabled={loading}
-              className="px-4 py-3 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 disabled:opacity-50 transition-all text-sm"
+              onClick={handleBack}
+              disabled={step === 1 || loading}
+              className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              Clear Step
+              Back
             </button>
-          )}
-          <button
-            onClick={handleNext}
-            disabled={loading || (step === 6 && roomTypes.length === 0)}
-            className="flex-1 px-6 py-3 rounded-xl bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-          >
-            {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-            {step === 9 ? (loading ? 'Submitting...' : 'Submit Property') : 'Continue'}
-          </button>
-        </div>
-      </footer>
 
-      <style>{`
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+            {/* Destructive and easy to hit by accident, so it stays quiet until hovered. */}
+            {step < 9 && (
+              <button
+                onClick={clearCurrentStep}
+                disabled={loading}
+                className="hidden sm:block px-4 py-3 rounded-xl text-gray-400 font-semibold text-sm hover:text-red-600 hover:bg-red-50 disabled:opacity-40 transition-colors"
+              >
+                Clear step
+              </button>
+            )}
+
+            <button
+              onClick={handleNext}
+              disabled={loading || (step === 6 && roomTypes.length === 0)}
+              className="flex-1 px-6 py-3 rounded-xl bg-[#005CA8] text-white font-bold text-sm shadow-lg shadow-[#005CA8]/20 hover:bg-[#004b8a] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all flex items-center justify-center gap-2"
+            >
+              {loading && <Loader2 size={16} className="animate-spin" />}
+              {step === 9 ? (loading ? 'Submitting…' : 'Submit property') : 'Continue'}
+              {!loading && step < 9 && <ArrowRight size={16} />}
+            </button>
+          </div>
+        </footer>
+      )}
+
     </div>
   );
 };
