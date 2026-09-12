@@ -88,7 +88,7 @@ const RecentBookingsTable = ({ bookings }) => {
         <table className="w-full text-left text-sm text-gray-500">
           <thead className="bg-[#005CA8]/5 text-gray-700">
             <tr>
-              <th className="px-6 py-3 font-semibold">Guest/Lead</th>
+              <th className="px-6 py-3 font-semibold">Guest</th>
               <th className="px-6 py-3 font-semibold">Property</th>
               <th className="px-6 py-3 font-semibold">Activity Info</th>
               <th className="px-6 py-3 font-semibold">Budget/Amount</th>

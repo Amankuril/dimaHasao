@@ -126,7 +126,7 @@ const PartnerRevenueReport = () => {
                                 ['Bookings', totals.bookings, 'text-gray-900'],
                                 ['Gross collected', currency(totals.gross), 'text-gray-900'],
                                 ['Platform commission', currency(totals.commission), 'text-amber-700'],
-                                ['Your payout', currency(totals.payout), 'text-emerald-700'],
+                                ['Your payout', currency(totals.payout), 'text-[#0a4d2b]'],
                             ].map(([label, value, tone]) => (
                                 <div key={label} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}</p>
@@ -137,7 +137,7 @@ const PartnerRevenueReport = () => {
 
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                             <h2 className="font-bold text-gray-900 text-sm flex items-center gap-2 mb-4">
-                                <TrendingUp size={16} className="text-emerald-600" /> Payout by month
+                                <TrendingUp size={16} className="text-[#0a4d2b]" /> Payout by month
                             </h2>
                             {byMonth.length === 0 ? (
                                 <p className="text-xs text-gray-400 py-6 text-center">
@@ -152,7 +152,7 @@ const PartnerRevenueReport = () => {
                                             </span>
                                             <div className="flex-1 h-6 bg-gray-50 rounded-md overflow-hidden">
                                                 <div
-                                                    className="h-full bg-emerald-500/80 rounded-md"
+                                                    className="h-full bg-[#0a4d2b] rounded-md"
                                                     style={{ width: `${Math.max(4, (month.payout / peak) * 100)}%` }}
                                                 />
                                             </div>
@@ -194,7 +194,7 @@ const PartnerRevenueReport = () => {
                                                     <td className="p-4 text-right">{row.bookings}</td>
                                                     <td className="p-4 text-right">{currency(row.gross)}</td>
                                                     <td className="p-4 text-right text-amber-700">{currency(row.commission)}</td>
-                                                    <td className="p-4 text-right font-bold text-emerald-700">
+                                                    <td className="p-4 text-right font-bold text-[#0a4d2b]">
                                                         {currency(row.payout)}
                                                     </td>
                                                 </tr>

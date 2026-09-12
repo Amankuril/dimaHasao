@@ -17,11 +17,13 @@
  */
 
 @layer components {
+    /* Inherits the partner palette when wrapped by .hotel-partner-theme; the
+       fallbacks keep the wizard styled if it is ever mounted on its own. */
     .hotel-wizard {
-        --wizard-accent: #005ca8;
-        --wizard-accent-strong: #004b8a;
+        --wizard-accent: var(--hp-primary, #0a4d2b);
+        --wizard-accent-strong: var(--hp-primary-strong, #06381e);
         --wizard-border: #e5e7eb;
-        --wizard-text: #111827;
+        --wizard-text: #1f1f24;
         --wizard-muted: #6b7280;
     }
 
@@ -51,7 +53,7 @@
 
     .hotel-wizard .input:focus {
         border-color: var(--wizard-accent);
-        box-shadow: 0 0 0 4px rgba(0, 92, 168, 0.12);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--wizard-accent) 18%, transparent);
     }
 
     .hotel-wizard .input:disabled {

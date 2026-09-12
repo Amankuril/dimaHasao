@@ -40,12 +40,12 @@ const PartnerAbout = () => {
 
   const content =
     page?.content ||
-    'HoomZo Partner is designed to help hotels, PGs and homestays manage inventory, bookings and payouts with a mobile-first dashboard.';
+    'Dima Hasao Partner is designed to help hotels, resorts, homestays and lodges manage inventory, bookings and payouts with a mobile-first dashboard.';
   const paragraphs = typeof content === 'string' ? content.split('\n').filter(Boolean) : [];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <PartnerHeader title="About HoomZo Partner" subtitle="Platform overview" />
+      <PartnerHeader title="About Dima Hasao Partner" subtitle="Platform overview" />
 
       <main ref={contentRef} className="max-w-3xl mx-auto px-4 pt-6">
         {error && (

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, User, Mail, ArrowRight, Loader2, Shield, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../../services/apiService';
-import logo from '../../../assets/rokologin-removebg-preview.png';
+import { DEFAULT_BRAND_LOGO } from '@/shared/constants/brandLogo';
 
 const HotelLogin = () => {
     const navigate = useNavigate();
@@ -110,7 +110,7 @@ const HotelLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#002240] via-[#003768] to-[#005CA8] flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-[#04301b] via-[#06381e] to-[#0a4d2b] flex items-center justify-center p-4 relative overflow-hidden">
             {/* Animated Background Elements */}
             <div className="absolute inset-0 opacity-10">
                 <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -130,7 +130,7 @@ const HotelLogin = () => {
                         transition={{ type: "spring", delay: 0.2 }}
                         className="inline-block mb-4"
                     >
-                        <img src={logo} alt="HoomZo Partner" className="w-32 h-auto" />
+                        <img src={DEFAULT_BRAND_LOGO} alt="Dima Hasao Partner" className="w-24 h-auto" />
                     </motion.div>
                     <h1 className="text-3xl font-bold text-white">Partner Login</h1>
                     <p className="text-blue-100 mt-2">Access your hotel dashboard</p>

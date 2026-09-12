@@ -63,7 +63,7 @@ const BookingCard = ({ booking }) => {
             {/* Header: ID & Status */}
             <div className="flex justify-between items-center mb-2">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                    ENQUIRY ID: {bookingId}
+                    BOOKING ID: {bookingId}
                 </span>
                 <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${status.color}`}>
                     {status.label}
@@ -152,7 +152,7 @@ const PartnerBookings = () => {
     const filteredBookings = bookings;
 
     const tabs = [
-        { id: 'upcoming', label: 'New Leads' },
+        { id: 'upcoming', label: 'Upcoming' },
         { id: 'in_house', label: 'Ongoing' },
         { id: 'completed', label: 'Completed' },
         { id: 'cancelled', label: 'Cancelled' },

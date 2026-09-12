@@ -42,7 +42,7 @@ const PartnerContact = () => {
         subject,
         message
       });
-      setSuccess('Your message has been sent to the HoomZo team.');
+      setSuccess('Your message has been sent to the Dima Hasao team.');
       setName('');
       setEmail('');
       setPhone('');
@@ -57,7 +57,7 @@ const PartnerContact = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <PartnerHeader title="Contact Partner Support" subtitle="Reach the HoomZo team" />
+      <PartnerHeader title="Contact Partner Support" subtitle="Reach the Dima Hasao team" />
 
       <main ref={contentRef} className="max-w-3xl mx-auto px-4 pt-6 space-y-4">
         <div className="grid grid-cols-2 gap-3">

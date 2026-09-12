@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { isModuleAuthenticated } from '../../shared/utils/moduleAuth';
+import './app/partner/partnerTheme.css';
 
 const L = (loader) => lazy(loader);
 
@@ -54,11 +55,28 @@ const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden=
 const RequireAdmin = () =>
   isModuleAuthenticated('admin') ? <Outlet /> : <Navigate to="/admin" replace />;
 
+/**
+ * Paints the whole partner panel in the Dima Hasao palette.
+ *
+ * The panel's brand colour is baked into the pages as Tailwind arbitrary
+ * classes, so partnerTheme.css recolours them from this one wrapper rather than
+ * every page being edited. Admin is deliberately not wrapped — it shares the
+ * dark shell with the Food and Taxi admin panels.
+ */
+const PartnerThemeLayout = () => (
+  <div className="hotel-partner-theme min-h-screen">
+    <Outlet />
+  </div>
+);
+
 export default function HotelRoutes() {
   return (
     <Suspense fallback={<Fallback />}>
       <Routes>
-        <Route path="partner/login" element={<HotelLogin />} />
+        {/* Outside the partner block below, so it needs the theme wrapper of its own. */}
+        <Route path="partner/login" element={<PartnerThemeLayout />}>
+          <Route index element={<HotelLogin />} />
+        </Route>
 
         <Route element={<RequireAdmin />}>
           <Route path="admin" element={<AdminLayout />}>
@@ -84,7 +102,7 @@ export default function HotelRoutes() {
           </Route>
         </Route>
 
-        <Route path="partner">
+        <Route path="partner" element={<PartnerThemeLayout />}>
           <Route index element={<PartnerDashboard />} />
           <Route path="dashboard" element={<PartnerDashboard />} />
           <Route path="join" element={<PartnerJoinPropertyType />} />

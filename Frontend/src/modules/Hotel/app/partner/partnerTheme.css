@@ -1,0 +1,449 @@
+/*
+ * Hotel partner theme — Dima Hasao green.
+ *
+ * This panel arrived from the acquired app painted in its blue (#005CA8), and
+ * like the restaurant panel it paints almost entirely with Tailwind *arbitrary*
+ * classes — 408 `#005ca8` references plus 51 of the darker `#004b8a` — so
+ * attribute selectors recolour the whole surface without editing 29 pages.
+ *
+ * Palette matches the restaurant and delivery panels (see restaurantTheme.css)
+ * so the three partner surfaces read as one product.
+ *
+ * Semantic colours are deliberately untouched: `red-*` for destructive actions
+ * and rejected status, `amber-*`/`orange-*` for pending and warnings. Amber is
+ * also the house accent, so those already sit right against the green.
+ */
+.hotel-partner-theme {
+  --hp-primary: #0a4d2b;
+  --hp-primary-strong: #06381e;
+  --hp-primary-soft: #e8f2ec;
+  --hp-accent: #f59e0b;
+  --hp-surface: #ffffff;
+  --hp-bg: #faf6ed;
+  --hp-border: #e5ddc3;
+  --hp-text: #1f1f24;
+  --hp-muted: #6b7280;
+  color: var(--hp-text);
+}
+
+/* ---- Brand hexes baked into the pages ------------------------------------ */
+
+.hotel-partner-theme [class*="bg-[#005CA8]"],
+.hotel-partner-theme [class*="bg-[#005ca8]"] {
+  background-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="bg-[#004B8A]"],
+.hotel-partner-theme [class*="bg-[#004b8a]"] {
+  background-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="bg-[#003D70]"],
+.hotel-partner-theme [class*="bg-[#003d70]"] {
+  background-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="bg-[#00365E]"],
+.hotel-partner-theme [class*="bg-[#00365e]"] {
+  background-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="bg-[#003768]"] {
+  background-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="text-[#005CA8]"],
+.hotel-partner-theme [class*="text-[#005ca8]"] {
+  color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="text-[#004B8A]"],
+.hotel-partner-theme [class*="text-[#004b8a]"] {
+  color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="text-[#003D70]"],
+.hotel-partner-theme [class*="text-[#003d70]"] {
+  color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="text-[#00365E]"],
+.hotel-partner-theme [class*="text-[#00365e]"] {
+  color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="text-[#003768]"] {
+  color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="border-[#005CA8]"],
+.hotel-partner-theme [class*="border-[#005ca8]"] {
+  border-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="border-[#004B8A]"],
+.hotel-partner-theme [class*="border-[#004b8a]"] {
+  border-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="border-[#003D70]"],
+.hotel-partner-theme [class*="border-[#003d70]"] {
+  border-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="border-[#00365E]"],
+.hotel-partner-theme [class*="border-[#00365e]"] {
+  border-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="border-[#003768]"] {
+  border-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="ring-[#005CA8]"],
+.hotel-partner-theme [class*="ring-[#005ca8]"] {
+  --tw-ring-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="ring-[#004B8A]"],
+.hotel-partner-theme [class*="ring-[#004b8a]"] {
+  --tw-ring-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="ring-[#003D70]"],
+.hotel-partner-theme [class*="ring-[#003d70]"] {
+  --tw-ring-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="ring-[#00365E]"],
+.hotel-partner-theme [class*="ring-[#00365e]"] {
+  --tw-ring-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="ring-[#003768]"] {
+  --tw-ring-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="shadow-[#005CA8]"],
+.hotel-partner-theme [class*="shadow-[#005ca8]"] {
+  --tw-shadow-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="shadow-[#004B8A]"],
+.hotel-partner-theme [class*="shadow-[#004b8a]"] {
+  --tw-shadow-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="shadow-[#003D70]"],
+.hotel-partner-theme [class*="shadow-[#003d70]"] {
+  --tw-shadow-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="shadow-[#00365E]"],
+.hotel-partner-theme [class*="shadow-[#00365e]"] {
+  --tw-shadow-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="shadow-[#003768]"] {
+  --tw-shadow-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="from-[#005CA8]"],
+.hotel-partner-theme [class*="from-[#005ca8]"] {
+  --tw-gradient-from: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="from-[#004B8A]"],
+.hotel-partner-theme [class*="from-[#004b8a]"] {
+  --tw-gradient-from: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="from-[#003D70]"],
+.hotel-partner-theme [class*="from-[#003d70]"] {
+  --tw-gradient-from: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="from-[#00365E]"],
+.hotel-partner-theme [class*="from-[#00365e]"] {
+  --tw-gradient-from: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="from-[#003768]"] {
+  --tw-gradient-from: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="to-[#005CA8]"],
+.hotel-partner-theme [class*="to-[#005ca8]"] {
+  --tw-gradient-to: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="to-[#004B8A]"],
+.hotel-partner-theme [class*="to-[#004b8a]"] {
+  --tw-gradient-to: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="to-[#003D70]"],
+.hotel-partner-theme [class*="to-[#003d70]"] {
+  --tw-gradient-to: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="to-[#00365E]"],
+.hotel-partner-theme [class*="to-[#00365e]"] {
+  --tw-gradient-to: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="to-[#003768]"] {
+  --tw-gradient-to: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="via-[#005CA8]"],
+.hotel-partner-theme [class*="via-[#005ca8]"] {
+  --tw-gradient-via: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="via-[#004B8A]"],
+.hotel-partner-theme [class*="via-[#004b8a]"] {
+  --tw-gradient-via: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="via-[#003D70]"],
+.hotel-partner-theme [class*="via-[#003d70]"] {
+  --tw-gradient-via: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="via-[#00365E]"],
+.hotel-partner-theme [class*="via-[#00365e]"] {
+  --tw-gradient-via: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="via-[#003768]"] {
+  --tw-gradient-via: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="fill-[#005CA8]"],
+.hotel-partner-theme [class*="fill-[#005ca8]"] {
+  fill: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="fill-[#004B8A]"],
+.hotel-partner-theme [class*="fill-[#004b8a]"] {
+  fill: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="fill-[#003D70]"],
+.hotel-partner-theme [class*="fill-[#003d70]"] {
+  fill: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="fill-[#00365E]"],
+.hotel-partner-theme [class*="fill-[#00365e]"] {
+  fill: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="fill-[#003768]"] {
+  fill: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="stroke-[#005CA8]"],
+.hotel-partner-theme [class*="stroke-[#005ca8]"] {
+  stroke: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="stroke-[#004B8A]"],
+.hotel-partner-theme [class*="stroke-[#004b8a]"] {
+  stroke: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="stroke-[#003D70]"],
+.hotel-partner-theme [class*="stroke-[#003d70]"] {
+  stroke: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="stroke-[#00365E]"],
+.hotel-partner-theme [class*="stroke-[#00365e]"] {
+  stroke: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="stroke-[#003768]"] {
+  stroke: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="decoration-[#005CA8]"],
+.hotel-partner-theme [class*="decoration-[#005ca8]"] {
+  text-decoration-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="decoration-[#004B8A]"],
+.hotel-partner-theme [class*="decoration-[#004b8a]"] {
+  text-decoration-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="decoration-[#003D70]"],
+.hotel-partner-theme [class*="decoration-[#003d70]"] {
+  text-decoration-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="decoration-[#00365E]"],
+.hotel-partner-theme [class*="decoration-[#00365e]"] {
+  text-decoration-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="decoration-[#003768]"] {
+  text-decoration-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="accent-[#005CA8]"],
+.hotel-partner-theme [class*="accent-[#005ca8]"] {
+  accent-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="accent-[#004B8A]"],
+.hotel-partner-theme [class*="accent-[#004b8a]"] {
+  accent-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="accent-[#003D70]"],
+.hotel-partner-theme [class*="accent-[#003d70]"] {
+  accent-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="accent-[#00365E]"],
+.hotel-partner-theme [class*="accent-[#00365e]"] {
+  accent-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="accent-[#003768]"] {
+  accent-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="caret-[#005CA8]"],
+.hotel-partner-theme [class*="caret-[#005ca8]"] {
+  caret-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="caret-[#004B8A]"],
+.hotel-partner-theme [class*="caret-[#004b8a]"] {
+  caret-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="caret-[#003D70]"],
+.hotel-partner-theme [class*="caret-[#003d70]"] {
+  caret-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="caret-[#00365E]"],
+.hotel-partner-theme [class*="caret-[#00365e]"] {
+  caret-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="caret-[#003768]"] {
+  caret-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="outline-[#005CA8]"],
+.hotel-partner-theme [class*="outline-[#005ca8]"] {
+  outline-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="outline-[#004B8A]"],
+.hotel-partner-theme [class*="outline-[#004b8a]"] {
+  outline-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="outline-[#003D70]"],
+.hotel-partner-theme [class*="outline-[#003d70]"] {
+  outline-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="outline-[#00365E]"],
+.hotel-partner-theme [class*="outline-[#00365e]"] {
+  outline-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="outline-[#003768]"] {
+  outline-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="divide-[#005CA8]"],
+.hotel-partner-theme [class*="divide-[#005ca8]"] {
+  border-color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="divide-[#004B8A]"],
+.hotel-partner-theme [class*="divide-[#004b8a]"] {
+  border-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="divide-[#003D70]"],
+.hotel-partner-theme [class*="divide-[#003d70]"] {
+  border-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="divide-[#00365E]"],
+.hotel-partner-theme [class*="divide-[#00365e]"] {
+  border-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="divide-[#003768]"] {
+  border-color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="placeholder-[#005CA8]"],
+.hotel-partner-theme [class*="placeholder-[#005ca8]"] {
+  color: var(--hp-primary) !important;
+}
+
+.hotel-partner-theme [class*="placeholder-[#004B8A]"],
+.hotel-partner-theme [class*="placeholder-[#004b8a]"] {
+  color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="placeholder-[#003D70]"],
+.hotel-partner-theme [class*="placeholder-[#003d70]"] {
+  color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="placeholder-[#00365E]"],
+.hotel-partner-theme [class*="placeholder-[#00365e]"] {
+  color: var(--hp-primary-strong) !important;
+}
+
+.hotel-partner-theme [class*="placeholder-[#003768]"] {
+  color: var(--hp-primary-strong) !important;
+}
+
+/* Opacity modifiers (`bg-[#005CA8]/10`) are caught by the substring match above,
+   but the alpha is lost, so soft fills are restored explicitly. */
+.hotel-partner-theme [class*="bg-[#005CA8]/5"],
+.hotel-partner-theme [class*="bg-[#005ca8]/5"] {
+  background-color: color-mix(in srgb, var(--hp-primary) 6%, transparent) !important;
+}
+
+.hotel-partner-theme [class*="bg-[#005CA8]/10"],
+.hotel-partner-theme [class*="bg-[#005ca8]/10"],
+.hotel-partner-theme [class*="bg-[#005CA8]/15"],
+.hotel-partner-theme [class*="bg-[#005ca8]/15"] {
+  background-color: var(--hp-primary-soft) !important;
+}
+
+.hotel-partner-theme [class*="border-[#005CA8]/15"],
+.hotel-partner-theme [class*="border-[#005ca8]/15"],
+.hotel-partner-theme [class*="border-[#005CA8]/25"],
+.hotel-partner-theme [class*="border-[#005ca8]/25"],
+.hotel-partner-theme [class*="border-[#005CA8]/50"],
+.hotel-partner-theme [class*="border-[#005ca8]/50"] {
+  border-color: color-mix(in srgb, var(--hp-primary) 30%, transparent) !important;
+}
+
+/* The page ground. Individual cards keep their own white. */
+.hotel-partner-theme {
+  background-color: var(--hp-bg);
+}
+
+/* Pages paint their own shell with `min-h-screen bg-gray-50`, which covers the
+   ground above. Recolour only that pairing — `bg-gray-50` is also used 100+
+   times for inner panels and rows, and those should stay neutral grey on white. */
+.hotel-partner-theme [class*="min-h-screen"][class*="bg-gray-50"],
+.hotel-partner-theme [class*="min-h-screen"][class*="bg-slate-50"] {
+  background-color: var(--hp-bg) !important;
+}

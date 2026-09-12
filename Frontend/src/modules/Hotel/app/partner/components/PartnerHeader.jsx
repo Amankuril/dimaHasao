@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Wallet, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../../assets/rokologin-removebg-preview.png';
 import PartnerSidebar from './PartnerSidebar';
 import { hotelService } from '../../../services/apiService';
 import walletService from '../../../services/walletService';
@@ -51,11 +50,13 @@ const PartnerHeader = ({ title, subtitle }) => {
                 </button>
 
                 <div className="flex flex-col items-start pt-1 ml-4">
-                    <div className="font-black tracking-tighter flex items-center text-xl">
-                        <span className="text-slate-900">HOOM</span>
-                        <span className="text-amber-600">ZO</span>
+                    <div className="font-black tracking-tight flex items-center text-lg leading-none">
+                        <span className="text-[#0a4d2b]">Dima</span>
+                        <span className="text-amber-600 ml-1">Hasao</span>
                     </div>
-                    <div className="w-6 h-1 bg-amber-600 rounded-full -mt-0.5 ml-0.5"></div>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400 mt-1">
+                        Partner
+                    </span>
                 </div>
 
                 <div className="flex-1" />

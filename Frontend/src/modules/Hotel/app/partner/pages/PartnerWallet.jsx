@@ -146,7 +146,7 @@ const PartnerWallet = () => {
                     key: order.key,
                     amount: order.amount,
                     currency: order.currency,
-                    name: "HoomZo Partner",
+                    name: "Dima Hasao Partner",
                     description: "Wallet Top-up",
                     order_id: order.id,
                     handler: async (response) => {

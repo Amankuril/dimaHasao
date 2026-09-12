@@ -48,7 +48,7 @@ const PartnerHome = () => {
             <section className="relative min-h-[60vh] md:min-h-[90vh] flex flex-col justify-center items-center text-center px-4 pt-12 pb-12 md:pt-20 md:pb-20">
                 <div className="max-w-4xl mx-auto z-10">
                     <h1 className="hero-title text-4xl md:text-7xl font-black text-partner-text-primary tracking-tight leading-[1.1] mb-4 md:mb-6">
-                        Grow Your Revenue <br /> with <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-600 to-[#005CA8]">HoomZo Hub</span>
+                        Grow Your Revenue <br /> with <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-600 to-[#005CA8]">Dima Hasao</span>
                     </h1>
                     <p className="hero-subtitle text-base md:text-xl text-partner-text-secondary max-w-xl mx-auto mb-8 font-medium px-2">
                         List your property. Reach verified guests. Earn up to 30% more.
@@ -79,7 +79,7 @@ const PartnerHome = () => {
             <section className="py-12 md:py-24 px-0 md:px-12 max-w-7xl mx-auto">
                 <div className="px-6 mb-8 md:mb-16 reveal">
                     <span className="text-xs md:text-sm font-bold tracking-widest uppercase text-gray-400 mb-2 block">Process</span>
-                    <h2 className="text-3xl md:text-4xl font-bold text-partner-text-primary">How HoomZo Hub Works</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold text-partner-text-primary">How Dima Hasao Partner Works</h2>
                 </div>
 
                 {/* Mobile: Horizontal Scroll | Desktop: Grid */}
@@ -162,7 +162,7 @@ const PartnerHome = () => {
                 <div className="bg-[#005CA8] text-white rounded-3xl md:rounded-[2.5rem] p-8 md:p-16 text-center shadow-xl relative overflow-hidden">
                     <div className="relative z-10">
                         <h2 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6">Ready to transform your business?</h2>
-                        <p className="text-white/80 mb-8 text-sm md:text-lg">Join 500+ hotel partners growing with HoomZo Hub today.</p>
+                        <p className="text-white/80 mb-8 text-sm md:text-lg">Join hotel partners growing with Dima Hasao Partnerb today.</p>
                         <Link to="/hotel/join">
                             <button className="bg-white text-[#005CA8] px-8 py-3.5 md:px-10 md:py-4 rounded-full font-bold text-sm md:text-base hover:bg-gray-100 hover:scale-105 transition-all">
                                 List Your Property

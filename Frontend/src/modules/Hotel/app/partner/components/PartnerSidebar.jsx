@@ -9,7 +9,6 @@ import {
     ChevronRight, Wallet, Bell, Settings, Edit3, Info, Phone, Calendar, TrendingUp
 } from 'lucide-react';
 import usePartnerStore from '../store/partnerStore';
-import logo from '../../../assets/rokologin-removebg-preview.png';
 
 const PartnerSidebar = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
@@ -73,7 +72,7 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
             items: [
                 { icon: Wallet, label: 'Wallet', path: '/hotel/wallet' },
                 { icon: TrendingUp, label: 'Revenue Report', path: '/hotel/revenue' },
-                { icon: History, label: 'Enquiry History', path: '/hotel/bookings' },
+                { icon: History, label: 'Bookings', path: '/hotel/bookings' },
             ]
         },
         {
@@ -91,8 +90,8 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
                 { icon: HelpCircle, label: 'Help & Support', path: '/hotel/support' },
                 { icon: FileText, label: 'Terms & Conditions', path: '/hotel/terms' },
                 { icon: Shield, label: 'Privacy Policy', path: '/hotel/privacy' },
-                { icon: Info, label: 'About HoomZo Partner', path: '/hotel/about' },
-                { icon: Phone, label: 'Contact HoomZo Team', path: '/hotel/contact' },
+                { icon: Info, label: 'About Dima Hasao Partner', path: '/hotel/about' },
+                { icon: Phone, label: 'Contact Support', path: '/hotel/contact' },
                 { icon: Settings, label: 'Settings', path: '/hotel/settings' },
             ]
         }
@@ -122,10 +121,11 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
                         <div className="flex-1 overflow-y-auto pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
                             <div className="flex items-center justify-between p-5 pb-2">
                                 <div className="flex flex-col items-start leading-none">
-                                    <span className="text-xl font-black tracking-tighter text-slate-900 flex items-center gap-0.5">
-                                        HOOM<span className="text-amber-600">ZO</span>
+                                    <span className="text-lg font-black tracking-tight flex items-center gap-1">
+                                        <span className="text-[#0a4d2b]">Dima</span>
+                                        <span className="text-amber-600">Hasao</span>
                                 </span>
-                                <div className="h-1 w-6 bg-amber-600 rounded-full mt-0.5"></div>
+                                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400 mt-1">Partner</span>
                             </div>
                             <button onClick={onClose} className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 transition border border-gray-100">
                                 <X size={20} className="text-gray-500" />

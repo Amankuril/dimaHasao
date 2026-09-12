@@ -8,7 +8,6 @@ import useLocationSearch from '../hooks/useLocationSearch';
 import {
   CheckCircle, FileText, Home, Image, Plus, Trash2, MapPin, Search,
   BedDouble, Wifi, Coffee, Car, Users, CheckSquare, Snowflake, Tv, ShowerHead, ArrowLeft, ArrowRight, Clock, Loader2, Camera, X, AlertCircle} from 'lucide-react';
-import logo from '../../../assets/rokologin-removebg-preview.png';
 import { isFlutterApp, openFlutterCamera } from '../../../utils/flutterBridge';
 
 const WIZARD_STEPS = [
@@ -865,7 +864,7 @@ const AddHomestayWizard = () => {
   const isComplete = step > 9;
 
   return (
-    <div className="hotel-wizard min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="hotel-wizard min-h-screen flex flex-col font-sans">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="h-16 max-w-3xl mx-auto flex items-center gap-3 px-4">
           <button

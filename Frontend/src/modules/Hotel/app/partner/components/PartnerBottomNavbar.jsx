@@ -10,14 +10,14 @@ const PartnerBottomNavbar = () => {
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.includes('dashboard') || path === '/hotel') return 'Dashboard';
-    if (path.includes('bookings')) return 'Enquiry';
+    if (path.includes('bookings')) return 'Bookings';
     if (path.includes('profile')) return 'Profile';
     return '';
   };
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, route: '/hotel/dashboard' },
-    { name: 'Enquiry', icon: Briefcase, route: '/hotel/bookings' },
+    { name: 'Bookings', icon: Briefcase, route: '/hotel/bookings' },
     { name: 'Profile', icon: UserCircle, route: '/hotel/profile' },
   ];
 
