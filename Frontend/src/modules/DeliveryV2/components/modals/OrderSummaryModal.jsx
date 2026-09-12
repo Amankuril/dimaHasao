@@ -10,7 +10,7 @@ export const OrderSummaryModal = ({ order, onDone }) => {
   const earnings = order?.earnings || order?.riderEarning || (order?.orderAmount * 0.1) || 0;
 
   return (
-    <div className="fixed inset-0 z-[160] overflow-y-auto bg-[#15498b]">
+    <div className="fixed inset-0 z-[160] overflow-y-auto bg-[#0A4D2B]">
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -19,7 +19,7 @@ export const OrderSummaryModal = ({ order, onDone }) => {
         >
           {/* Success Icon (White Style) */}
           <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-2xl animate-bounce">
-            <CheckCircle className="w-14 h-14 sm:w-16 sm:h-16 text-[#15498b]" />
+            <CheckCircle className="w-14 h-14 sm:w-16 sm:h-16 text-[#0A4D2B]" />
           </div>
           
           <h1 className="text-white text-4xl sm:text-5xl font-black mb-2 tracking-tight drop-shadow-lg" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.25)' }}>Well Done!</h1>

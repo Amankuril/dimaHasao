@@ -1050,7 +1050,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                         onClick={() => setShowVerification(true)} 
                         className="w-full text-white rounded-2xl py-4 sm:py-5 px-4 font-bold text-xs sm:text-sm tracking-[0.14em] transform transition-all active:scale-95 flex items-center justify-center gap-2.5 sm:gap-3 border border-white/20"
                         style={{
-                          background: 'linear-gradient(33deg, #15498b 0%, #000000 100%)',
+                          background: 'linear-gradient(33deg, #0A4D2B 0%, #000000 100%)',
                           boxShadow: '0 14px 34px rgba(21, 73, 139, 0.42)',
                         }}
                       >

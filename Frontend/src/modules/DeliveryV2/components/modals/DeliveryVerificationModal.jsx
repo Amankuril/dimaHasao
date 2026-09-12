@@ -282,7 +282,7 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
                 <button
                   onClick={handleCashSelection}
                   className={`w-full py-3.5 sm:py-4 border-2 rounded-2xl font-bold text-[11px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${isCashPayment
-                    ? 'bg-[#15498b] border-[#15498b] text-white shadow-lg shadow-[#15498b]/30'
+                    ? 'bg-[#0A4D2B] border-[#0A4D2B] text-white shadow-lg shadow-[#0A4D2B]/30'
                     : 'bg-white border-amber-200 text-amber-800'
                     }`}
                 >
@@ -345,7 +345,7 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
                 <button
                   onClick={handleManualCheck}
                   disabled={isSyncing}
-                  className="flex gap-2 items-center bg-[#15498b] hover:bg-[#0f3568] text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-[#15498b]/30 active:scale-95 transition-all disabled:opacity-60"
+                  className="flex gap-2 items-center bg-[#0A4D2B] hover:bg-[#0f3568] text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-[#0A4D2B]/30 active:scale-95 transition-all disabled:opacity-60"
                 >
                   {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                   Check Payment Status

@@ -1,12 +1,90 @@
+/*
+ * Restaurant partner theme — Dima Hasao green.
+ *
+ * Retheming happens here rather than in the pages, because this panel paints
+ * its brand with Tailwind arbitrary classes (456 of 473 `#B80B3D` references are
+ * `bg-[#B80B3D]` / `from-[#B80B3D]` / `text-[#B80B3D]`), which attribute
+ * selectors can capture wholesale.
+ *
+ * Crucially this leaves every Tailwind `red-*` / `rose-*` class untouched. In
+ * this module those are semantic, not brand: the FSSAI Non-Veg marker, rejected
+ * status, warnings and destructive actions. A blanket red swap would corrupt
+ * food-safety markers.
+ */
 .restaurant-theme {
-  --rt-primary: #DC2626;
-  --rt-primary-strong: #991B1B;
-  --rt-primary-soft: #f9f0f7;
+  --rt-primary: #0a4d2b;
+  --rt-primary-strong: #06381e;
+  --rt-primary-soft: #e8f2ec;
+  --rt-accent: #f59e0b;
   --rt-surface: #ffffff;
-  --rt-border: #ead6e3;
+  --rt-bg: #faf6ed;
+  --rt-border: #e5ddc3;
   --rt-text: #1f1f24;
-  --rt-muted: #6d6470;
+  --rt-muted: #6b7280;
   color: var(--rt-text);
+}
+
+/* ---- Brand hexes baked into the pages ------------------------------------ */
+
+.restaurant-theme [class*="bg-[#B80B3D]"],
+.restaurant-theme [class*="bg-[#b80b3d]"] {
+  background-color: var(--rt-primary) !important;
+}
+
+.restaurant-theme [class*="text-[#B80B3D]"],
+.restaurant-theme [class*="text-[#b80b3d]"] {
+  color: var(--rt-primary) !important;
+}
+
+.restaurant-theme [class*="border-[#B80B3D]"],
+.restaurant-theme [class*="border-[#b80b3d]"] {
+  border-color: var(--rt-primary) !important;
+}
+
+.restaurant-theme [class*="from-[#B80B3D]"],
+.restaurant-theme [class*="from-[#b80b3d]"] {
+  --tw-gradient-from: var(--rt-primary) !important;
+  --tw-gradient-to: rgb(10 77 43 / 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.restaurant-theme [class*="to-[#66001D]"],
+.restaurant-theme [class*="to-[#66001d]"],
+.restaurant-theme [class*="to-[#B80B3D]"],
+.restaurant-theme [class*="to-[#b80b3d]"] {
+  --tw-gradient-to: var(--rt-primary-strong) !important;
+}
+
+.restaurant-theme [class*="via-[#B80B3D]"],
+.restaurant-theme [class*="via-[#b80b3d]"] {
+  --tw-gradient-via: var(--rt-primary) !important;
+}
+
+.restaurant-theme [class*="bg-[#66001D]"],
+.restaurant-theme [class*="bg-[#66001d]"] {
+  background-color: var(--rt-primary-strong) !important;
+}
+
+.restaurant-theme [class*="text-[#66001D]"],
+.restaurant-theme [class*="text-[#66001d]"] {
+  color: var(--rt-primary-strong) !important;
+}
+
+.restaurant-theme [class*="from-[#66001D]"],
+.restaurant-theme [class*="from-[#66001d]"] {
+  --tw-gradient-from: var(--rt-primary-strong) !important;
+  --tw-gradient-to: rgb(6 56 30 / 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.restaurant-theme [class*="border-[#ead6e3]"],
+.restaurant-theme [class*="border-[#EAD6E3]"] {
+  border-color: var(--rt-border) !important;
+}
+
+.restaurant-theme [class*="text-[#6a2f56]"],
+.restaurant-theme [class*="text-[#6A2F56]"] {
+  color: var(--rt-muted) !important;
 }
 
 .restaurant-theme [class*="text-[#ff8100]"],
@@ -15,7 +93,9 @@
 .restaurant-theme .text-orange-600,
 .restaurant-theme .text-amber-500,
 .restaurant-theme .text-amber-600 {
-  color: var(--rt-primary) !important;
+  /* v1 pairs deep green with amber, so accents stay accents rather than
+     collapsing into the primary green. */
+  color: var(--rt-accent) !important;
 }
 
 .restaurant-theme [class*="bg-[#ff8100]"],
@@ -24,7 +104,7 @@
 .restaurant-theme .bg-orange-600,
 .restaurant-theme .bg-amber-500,
 .restaurant-theme .bg-amber-600 {
-  background-color: var(--rt-primary) !important;
+  background-color: var(--rt-accent) !important;
 }
 
 .restaurant-theme .hover\:bg-orange-600:hover,

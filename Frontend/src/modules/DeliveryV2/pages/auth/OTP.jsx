@@ -522,8 +522,8 @@ export default function DeliveryOTP() {
         <svg viewBox="0 0 1440 320" className="w-full h-full block" preserveAspectRatio="none" overflow="visible">
           <defs>
             <linearGradient id="topBlueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0E4B9C" />
-              <stop offset="100%" stopColor="#021024" />
+              <stop offset="0%" stopColor="#0A4D2B" />
+              <stop offset="100%" stopColor="#06381E" />
             </linearGradient>
           </defs>
           <path fill="url(#topBlueGrad)" d="M -50,-50 L -50,280 C 200,100 800,100 1490,100 L 1490,-50 Z" filter="drop-shadow(0px 5px 15px rgba(0,0,0,0.15))" />
@@ -540,8 +540,8 @@ export default function DeliveryOTP() {
         <svg viewBox="0 0 1440 320" className="w-full h-full block" preserveAspectRatio="none" overflow="visible">
           <defs>
             <linearGradient id="botBlueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0E4B9C" />
-              <stop offset="100%" stopColor="#021024" />
+              <stop offset="0%" stopColor="#0A4D2B" />
+              <stop offset="100%" stopColor="#06381E" />
             </linearGradient>
           </defs>
           <path fill="url(#botBlueGrad)" d="M -50,370 L -50,220 C 640,220 1240,220 1490,40 L 1490,370 Z" filter="drop-shadow(0px -5px 15px rgba(0,0,0,0.15))" />
@@ -563,7 +563,7 @@ export default function DeliveryOTP() {
               alt="Dima Hasao"
               className="h-28 -mb-3.5 object-contain drop-shadow-md"
             />
-            <h2 className="text-[25px] font-extrabold bg-gradient-to-r from-[#0E4B9C] to-[#06336B] dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent tracking-tight font-['Outfit'] pb-0.5">
+            <h2 className="text-[25px] font-extrabold bg-gradient-to-r from-[#0A4D2B] to-[#06336B] dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent tracking-tight font-['Outfit'] pb-0.5">
               Delivery Partner
             </h2>
             
@@ -573,7 +573,7 @@ export default function DeliveryOTP() {
                 <span>We've sent a code to {getPhoneNumber()}</span>
                 <button
                   onClick={() => navigate("/food/delivery/login")}
-                  className="p-1.5 ml-1 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] rounded-[10px] text-white shadow-md shadow-[#0E4B9C]/20 transition-all hover:scale-105 active:scale-95"
+                  className="p-1.5 ml-1 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] rounded-[10px] text-white shadow-md shadow-[#0A4D2B]/20 transition-all hover:scale-105 active:scale-95"
                   aria-label="Edit phone number"
                 >
                   <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -623,7 +623,7 @@ export default function DeliveryOTP() {
                         sessionStorage.setItem("deliverySignupDetails", JSON.stringify(details))
                         navigate("/food/delivery/signup/details", { replace: true })
                       }}
-                      className="w-full py-3.5 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] text-white rounded-full font-semibold text-base shadow-[0_8px_20px_rgba(14,75,156,0.2)] transition-all active:scale-[0.98]"
+                      className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] text-white rounded-full font-semibold text-base shadow-[0_8px_20px_rgba(14,75,156,0.2)] transition-all active:scale-[0.98]"
                     >
                       Re-apply Now
                     </button>
@@ -671,8 +671,8 @@ export default function DeliveryOTP() {
                     key={index}
                     className={`flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 text-center text-2xl font-bold bg-gray-50 dark:bg-gray-800 border-2 shadow-sm rounded-[20px] transition-all duration-300 text-gray-900 dark:text-white 
                       ${blockTimer > 0 ? "opacity-50 border-red-400 bg-red-50 text-red-800" : 
-                        (otp.join("").length === index && !(isLoading || blockTimer > 0)) ? "bg-white dark:bg-gray-900 border-[#0E4B9C] ring-4 ring-[#0E4B9C]/10" : 
-                        (otp[index] ? "border-[#0E4B9C]" : "border-gray-300 dark:border-gray-600")}
+                        (otp.join("").length === index && !(isLoading || blockTimer > 0)) ? "bg-white dark:bg-gray-900 border-[#0A4D2B] ring-4 ring-[#0A4D2B]/10" : 
+                        (otp[index] ? "border-[#0A4D2B]" : "border-gray-300 dark:border-gray-600")}
                     `}
                   >
                     {otp[index] ? otp[index] : <span className="text-gray-300 dark:text-gray-600 font-normal">•</span>}
@@ -701,7 +701,7 @@ export default function DeliveryOTP() {
                 <button
                   type="submit"
                   disabled={isLoading || !isOtpComplete || blockTimer > 0}
-                  className="w-full py-3.5 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
+                  className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
@@ -715,10 +715,10 @@ export default function DeliveryOTP() {
 
                 {blockTimer > 0 && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center w-fit mx-auto px-6 py-2.5 bg-blue-50 dark:bg-blue-950/20 rounded-xl border border-blue-100 dark:border-blue-900/50 mt-4">
-                    <p className="text-[11px] font-bold text-[#0E4B9C] uppercase tracking-wider">
+                    <p className="text-[11px] font-bold text-[#0A4D2B] uppercase tracking-wider">
                       Too many failed attempts
                     </p>
-                    <p className="text-sm font-bold text-[#0E4B9C]">
+                    <p className="text-sm font-bold text-[#0A4D2B]">
                       Try again after {Math.floor((blockTimer - 1) / 60)}:{String((blockTimer - 1) % 60).padStart(2, '0')}
                     </p>
                   </motion.div>
@@ -742,7 +742,7 @@ export default function DeliveryOTP() {
                     }}
                     disabled={isLoading}
                     placeholder="Enter your name"
-                    className={`block w-full px-6 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 shadow-sm text-gray-900 dark:text-white rounded-full outline-none transition-all duration-300 placeholder:text-gray-400 font-medium text-base focus:bg-white dark:focus:bg-gray-900 focus:border-[#0E4B9C] focus:ring-4 focus:ring-[#0E4B9C]/10 ${nameError ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+                    className={`block w-full px-6 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 shadow-sm text-gray-900 dark:text-white rounded-full outline-none transition-all duration-300 placeholder:text-gray-400 font-medium text-base focus:bg-white dark:focus:bg-gray-900 focus:border-[#0A4D2B] focus:ring-4 focus:ring-[#0A4D2B]/10 ${nameError ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
                   />
                   {nameError && (
                     <p className="text-xs text-red-500 text-left pl-3">
@@ -754,7 +754,7 @@ export default function DeliveryOTP() {
                 <button
                   onClick={handleSubmitName}
                   disabled={isLoading || !name.trim()}
-                  className="w-full py-3.5 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
+                  className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
@@ -805,8 +805,8 @@ export default function DeliveryOTP() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="w-20 h-20 bg-[#0E4B9C]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShieldCheck className="h-10 w-10 text-[#0E4B9C]" />
+              <div className="w-20 h-20 bg-[#0A4D2B]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck className="h-10 w-10 text-[#0A4D2B]" />
               </div>
 
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Account Found!</h3>
@@ -818,7 +818,7 @@ export default function DeliveryOTP() {
               <div className="space-y-4">
                 <button
                   onClick={() => handleRestoreAction("restore")}
-                  className="w-full h-14 bg-gradient-to-r from-[#0E4B9C] to-[#021024] text-white font-bold rounded-2xl shadow-xl shadow-[#0E4B9C]/20 transition-all active:scale-[0.98]"
+                  className="w-full h-14 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] text-white font-bold rounded-2xl shadow-xl shadow-[#0A4D2B]/20 transition-all active:scale-[0.98]"
                 >
                   Restore My Account
                 </button>

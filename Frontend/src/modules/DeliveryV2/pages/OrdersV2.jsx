@@ -176,7 +176,7 @@ export default function OrdersV2() {
               <span
                 className={`ml-1.5 inline-flex min-w-[20px] h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black leading-none ${
                   activeTab === 'new'
-                    ? '!bg-[#15498b] !text-white'
+                    ? '!bg-[#0A4D2B] !text-white'
                     : '!bg-orange-500 !text-white shadow-sm ring-1 ring-white/25'
                 }`}
               >
@@ -196,7 +196,7 @@ export default function OrdersV2() {
               <span
                 className={`ml-1.5 inline-flex min-w-[20px] h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black leading-none ${
                   activeTab === 'accepted'
-                    ? '!bg-[#15498b] !text-white'
+                    ? '!bg-[#0A4D2B] !text-white'
                     : '!bg-orange-500 !text-white shadow-sm ring-1 ring-white/25'
                 }`}
               >

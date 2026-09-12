@@ -1,15 +1,22 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@500;600;700;800&family=Sora:wght@600;700&display=swap");
 
+/*
+ * Delivery partner theme — Dima Hasao green.
+ *
+ * Same approach as the restaurant panel: the variables below plus the
+ * attribute-selector overrides retheme the whole surface without editing pages.
+ * `#10b981` (success) and the red error states are deliberately left alone.
+ */
 .delivery-v2-theme {
-  --dv-primary: #15498b;
-  --dv-primary-strong: #000000;
-  --dv-primary-soft: #e7effa;
-  --dv-accent: #000000;
+  --dv-primary: #0a4d2b;
+  --dv-primary-strong: #06381e;
+  --dv-primary-soft: #e8f2ec;
+  --dv-accent: #f59e0b;
   --dv-surface: #ffffff;
-  --dv-bg: #eef3fb;
-  --dv-text: #0f1724;
-  --dv-muted: #4f5f77;
-  --dv-border: #d1dceb;
+  --dv-bg: #faf6ed;
+  --dv-text: #1f1f24;
+  --dv-muted: #6b7280;
+  --dv-border: #e5ddc3;
   background:
     radial-gradient(900px 420px at 92% -5%, #d5e3f7 0%, transparent 52%),
     radial-gradient(760px 360px at -8% 0%, #e7edf8 0%, transparent 58%),
@@ -231,4 +238,63 @@
   .delivery-v2-theme [class*="p-6"] {
     padding: 1.1rem !important;
   }
+}
+
+/* ---- Brand hexes baked into the pages ------------------------------------ */
+
+.delivery-v2-theme [class*="bg-[#0E4B9C]"],
+.delivery-v2-theme [class*="bg-[#0e4b9c]"],
+.delivery-v2-theme [class*="bg-[#1157b5]"],
+.delivery-v2-theme [class*="bg-[#1157B5]"] {
+  background-color: var(--dv-primary) !important;
+}
+
+.delivery-v2-theme [class*="text-[#0E4B9C]"],
+.delivery-v2-theme [class*="text-[#0e4b9c]"],
+.delivery-v2-theme [class*="text-[#1157b5]"],
+.delivery-v2-theme [class*="text-[#1157B5]"] {
+  color: var(--dv-primary) !important;
+}
+
+.delivery-v2-theme [class*="border-[#0E4B9C]"],
+.delivery-v2-theme [class*="border-[#0e4b9c]"] {
+  border-color: var(--dv-primary) !important;
+}
+
+.delivery-v2-theme [class*="from-[#0E4B9C]"],
+.delivery-v2-theme [class*="from-[#0e4b9c]"] {
+  --tw-gradient-from: var(--dv-primary) !important;
+  --tw-gradient-to: rgb(10 77 43 / 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.delivery-v2-theme [class*="to-[#15498b]"],
+.delivery-v2-theme [class*="to-[#15498B]"],
+.delivery-v2-theme [class*="to-[#0E4B9C]"],
+.delivery-v2-theme [class*="to-[#0e4b9c]"] {
+  --tw-gradient-to: var(--dv-primary-strong) !important;
+}
+
+/* Deep navy panels → deep green. */
+.delivery-v2-theme [class*="bg-[#021024]"],
+.delivery-v2-theme [class*="bg-[#041630]"] {
+  background-color: var(--dv-primary-strong) !important;
+}
+
+.delivery-v2-theme [class*="from-[#021024]"],
+.delivery-v2-theme [class*="from-[#041630]"] {
+  --tw-gradient-from: var(--dv-primary-strong) !important;
+  --tw-gradient-to: rgb(6 56 30 / 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.delivery-v2-theme [class*="to-[#021024]"],
+.delivery-v2-theme [class*="to-[#041630]"] {
+  --tw-gradient-to: var(--dv-primary-strong) !important;
+}
+
+/* Warm cream surface already close to the theme background. */
+.delivery-v2-theme [class*="bg-[#f6e9dc]"],
+.delivery-v2-theme [class*="bg-[#F6E9DC]"] {
+  background-color: var(--dv-bg) !important;
 }

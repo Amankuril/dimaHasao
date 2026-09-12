@@ -40,13 +40,13 @@ export default function AcceptedOrderCard({ order, focused = false, onSelect }) 
       onClick={() => onSelect?.(order)}
       className={`w-full text-left rounded-2xl border p-4 transition-all active:scale-[0.98] ${
         focused
-          ? 'border-[#15498b]/35 bg-[#e7effa] shadow-md shadow-[#15498b]/10'
+          ? 'border-[#0A4D2B]/35 bg-[#e7effa] shadow-md shadow-[#0A4D2B]/10'
           : 'border-gray-100 bg-white hover:border-gray-200'
       }`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 !bg-[#15498b] !text-white shadow-sm">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 !bg-[#0A4D2B] !text-white shadow-sm">
             <Package className="w-5 h-5" strokeWidth={2.25} />
           </div>
           <div className="min-w-0">
@@ -54,13 +54,13 @@ export default function AcceptedOrderCard({ order, focused = false, onSelect }) 
               Order #{displayId}
             </p>
             <p className="text-sm font-bold text-gray-950 truncate">{restaurantName}</p>
-            <p className="text-[11px] font-semibold !text-[#15498b] mt-0.5">
+            <p className="text-[11px] font-semibold !text-[#0A4D2B] mt-0.5">
               {phaseLabel(order, session)}
             </p>
           </div>
         </div>
         <ChevronRight
-          className={`w-5 h-5 shrink-0 ${focused ? '!text-[#15498b]' : 'text-gray-300'}`}
+          className={`w-5 h-5 shrink-0 ${focused ? '!text-[#0A4D2B]' : 'text-gray-300'}`}
         />
       </div>
     </button>

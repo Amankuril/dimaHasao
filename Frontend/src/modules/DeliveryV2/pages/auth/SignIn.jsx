@@ -700,8 +700,8 @@ export default function DeliverySignIn() {
         <svg viewBox="0 0 1440 320" className="w-full h-full block" preserveAspectRatio="none" overflow="visible">
           <defs>
             <linearGradient id="topBlueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0E4B9C" />
-              <stop offset="100%" stopColor="#021024" />
+              <stop offset="0%" stopColor="#0A4D2B" />
+              <stop offset="100%" stopColor="#06381E" />
             </linearGradient>
           </defs>
           <path fill="url(#topBlueGrad)" d="M -50,-50 L -50,280 C 200,100 800,100 1490,100 L 1490,-50 Z" filter="drop-shadow(0px 5px 15px rgba(0,0,0,0.15))" />
@@ -718,8 +718,8 @@ export default function DeliverySignIn() {
         <svg viewBox="0 0 1440 320" className="w-full h-full block" preserveAspectRatio="none" overflow="visible">
           <defs>
             <linearGradient id="botBlueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0E4B9C" />
-              <stop offset="100%" stopColor="#021024" />
+              <stop offset="0%" stopColor="#0A4D2B" />
+              <stop offset="100%" stopColor="#06381E" />
             </linearGradient>
           </defs>
           <path fill="url(#botBlueGrad)" d="M -50,370 L -50,220 C 640,220 1240,220 1490,40 L 1490,370 Z" filter="drop-shadow(0px -5px 15px rgba(0,0,0,0.15))" />
@@ -754,7 +754,7 @@ export default function DeliverySignIn() {
               alt="Dima Hasao"
               className="h-28 -mb-3.5 object-contain drop-shadow-md"
             />
-            <h2 className="text-[25px] font-extrabold bg-gradient-to-r from-[#0E4B9C] to-[#06336B] dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent tracking-tight font-['Outfit'] pb-0.5">
+            <h2 className="text-[25px] font-extrabold bg-gradient-to-r from-[#0A4D2B] to-[#06336B] dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent tracking-tight font-['Outfit'] pb-0.5">
               Delivery Partner
             </h2>
             <div className="text-[13.5px] text-slate-600 dark:text-slate-350 font-['Outfit'] font-medium tracking-wide leading-relaxed max-w-[310px] text-center px-4 mt-3">
@@ -767,7 +767,7 @@ export default function DeliverySignIn() {
                   <span>We've sent a code to {getPhoneNumber()}</span>
                   <button
                     onClick={handleBackToLogin}
-                    className="p-1.5 ml-1 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] rounded-[10px] text-white shadow-md shadow-[#0E4B9C]/20 transition-all hover:scale-105 active:scale-95"
+                    className="p-1.5 ml-1 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] rounded-[10px] text-white shadow-md shadow-[#0A4D2B]/20 transition-all hover:scale-105 active:scale-95"
                     aria-label="Edit phone number"
                   >
                     <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -801,7 +801,7 @@ export default function DeliverySignIn() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                       maxLength={10}
-                      className="block w-full pl-20 pr-6 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-sm text-gray-900 dark:text-white rounded-full outline-none transition-all duration-300 placeholder:text-gray-400 font-medium text-base focus:bg-white dark:focus:bg-gray-900 focus:border-[#0E4B9C] focus:ring-4 focus:ring-[#0E4B9C]/10 hover:border-gray-400"
+                      className="block w-full pl-20 pr-6 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-sm text-gray-900 dark:text-white rounded-full outline-none transition-all duration-300 placeholder:text-gray-400 font-medium text-base focus:bg-white dark:focus:bg-gray-900 focus:border-[#0A4D2B] focus:ring-4 focus:ring-[#0A4D2B]/10 hover:border-gray-400"
                       placeholder="Mobile number"
                     />
                   </div>
@@ -809,7 +809,7 @@ export default function DeliverySignIn() {
                   <button
                     type="submit"
                     disabled={loading || phone.length < 10}
-                    className="w-full py-3.5 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -862,7 +862,7 @@ export default function DeliverySignIn() {
                                 sessionStorage.setItem("deliverySignupDetails", JSON.stringify(details))
                                 navigate("/food/delivery/signup/details", { replace: true })
                               }}
-                              className="w-full py-3.5 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] text-white rounded-full font-semibold text-base shadow-[0_8px_20px_rgba(14,75,156,0.2)] transition-all active:scale-[0.98]"
+                              className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] text-white rounded-full font-semibold text-base shadow-[0_8px_20px_rgba(14,75,156,0.2)] transition-all active:scale-[0.98]"
                             >
                               Re-apply Now
                             </button>
@@ -871,7 +871,7 @@ export default function DeliverySignIn() {
                           <button
                             type="button"
                             onClick={handleBackToLogin}
-                            className="w-full py-3.5 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] transition-all active:scale-[0.98] flex items-center justify-center"
+                            className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] transition-all active:scale-[0.98] flex items-center justify-center"
                           >
                             Back to login
                           </button>
@@ -906,7 +906,7 @@ export default function DeliverySignIn() {
                               onChange={(e) => handleChange(index, e.target.value)}
                               onKeyDown={(e) => handleKeyDown(index, e)}
                               onPaste={index === 0 ? handlePaste : undefined}
-                              className={`w-14 h-14 sm:w-16 sm:h-16 text-center text-2xl font-bold bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-sm rounded-[20px] outline-none transition-all duration-300 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-900 focus:border-[#0E4B9C] focus:ring-4 focus:ring-[#0E4B9C]/10 hover:border-gray-400 ${blockTimer > 0 ? "opacity-50 cursor-not-allowed border-red-400 bg-red-50 text-red-800" : ""}`}
+                              className={`w-14 h-14 sm:w-16 sm:h-16 text-center text-2xl font-bold bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-sm rounded-[20px] outline-none transition-all duration-300 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-900 focus:border-[#0A4D2B] focus:ring-4 focus:ring-[#0A4D2B]/10 hover:border-gray-400 ${blockTimer > 0 ? "opacity-50 cursor-not-allowed border-red-400 bg-red-50 text-red-800" : ""}`}
                               placeholder="•"
                             />
                           ))}
@@ -933,7 +933,7 @@ export default function DeliverySignIn() {
                         <button
                           type="submit"
                           disabled={loading || !isOtpComplete || blockTimer > 0}
-                          className="w-full py-3.5 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
+                          className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
                         >
                           {loading ? (
                             <span className="flex items-center gap-2">
@@ -947,10 +947,10 @@ export default function DeliverySignIn() {
 
                         {blockTimer > 0 && (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center w-fit mx-auto px-6 py-2.5 bg-blue-50 dark:bg-blue-950/20 rounded-xl border border-blue-100 dark:border-blue-900/50 mt-4">
-                            <p className="text-[11px] font-bold text-[#0E4B9C] uppercase tracking-wider">
+                            <p className="text-[11px] font-bold text-[#0A4D2B] uppercase tracking-wider">
                               Too many failed attempts
                             </p>
-                            <p className="text-sm font-bold text-[#0E4B9C]">
+                            <p className="text-sm font-bold text-[#0A4D2B]">
                               Try again after {Math.floor((blockTimer - 1) / 60)}:{String((blockTimer - 1) % 60).padStart(2, '0')}
                             </p>
                           </motion.div>
@@ -974,7 +974,7 @@ export default function DeliverySignIn() {
                             }}
                             disabled={loading}
                             placeholder="Enter your name"
-                            className={`block w-full px-6 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 shadow-sm text-gray-900 dark:text-white rounded-full outline-none transition-all duration-300 placeholder:text-gray-400 font-medium text-base focus:bg-white dark:focus:bg-gray-900 focus:border-[#0E4B9C] focus:ring-4 focus:ring-[#0E4B9C]/10 ${nameError ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+                            className={`block w-full px-6 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 shadow-sm text-gray-900 dark:text-white rounded-full outline-none transition-all duration-300 placeholder:text-gray-400 font-medium text-base focus:bg-white dark:focus:bg-gray-900 focus:border-[#0A4D2B] focus:ring-4 focus:ring-[#0A4D2B]/10 ${nameError ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
                           />
                           {nameError && (
                             <p className="text-xs text-red-500 text-left pl-3">
@@ -986,7 +986,7 @@ export default function DeliverySignIn() {
                         <button
                           onClick={handleSubmitName}
                           disabled={loading || !name.trim()}
-                          className="w-full py-3.5 bg-gradient-to-r from-[#0E4B9C] to-[#021024] hover:from-[#1157b5] hover:to-[#041630] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
+                          className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#0F6B3C] hover:to-[#06381E] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(14,75,156,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
                         >
                           {loading ? (
                             <span className="flex items-center gap-2">
@@ -1014,7 +1014,7 @@ export default function DeliverySignIn() {
                   to="/food/delivery/terms"
                   state={{ from: "/food/delivery/login" }}
                   onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0E4B9C] transition-colors uppercase tracking-wider font-semibold"
+                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
                 >
                   TERMS
                 </Link>
@@ -1023,7 +1023,7 @@ export default function DeliverySignIn() {
                   to="/food/delivery/privacy"
                   state={{ from: "/food/delivery/login" }}
                   onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0E4B9C] transition-colors uppercase tracking-wider font-semibold"
+                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
                 >
                   PRIVACY
                 </Link>
@@ -1032,7 +1032,7 @@ export default function DeliverySignIn() {
                   to="/food/delivery/help/content"
                   state={{ from: "/food/delivery/login" }}
                   onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0E4B9C] transition-colors uppercase tracking-wider font-semibold"
+                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
                 >
                   SUPPORT
                 </Link>
@@ -1076,8 +1076,8 @@ export default function DeliverySignIn() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="w-20 h-20 bg-[#0E4B9C]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShieldCheck className="h-10 w-10 text-[#0E4B9C]" />
+              <div className="w-20 h-20 bg-[#0A4D2B]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck className="h-10 w-10 text-[#0A4D2B]" />
               </div>
 
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Account Found!</h3>
@@ -1089,7 +1089,7 @@ export default function DeliverySignIn() {
               <div className="space-y-4">
                 <button
                   onClick={() => handleRestoreAction("restore")}
-                  className="w-full h-14 bg-gradient-to-r from-[#0E4B9C] to-[#021024] text-white font-bold rounded-2xl shadow-xl shadow-[#0E4B9C]/20 transition-all active:scale-[0.98]"
+                  className="w-full h-14 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] text-white font-bold rounded-2xl shadow-xl shadow-[#0A4D2B]/20 transition-all active:scale-[0.98]"
                 >
                   Restore My Account
                 </button>
