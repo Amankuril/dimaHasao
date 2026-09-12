@@ -137,49 +137,6 @@ export const uploadBase64ToCloudinary = async (base64String, folder = 'general',
 };
 
 /**
- * Upload video to Cloudinary (for reels)
- * @param {string} filePath - Path to the video file on local filesystem
- * @param {string} folder - Cloudinary folder name (default: 'reels')
- * @param {string} publicId - Custom public_id (optional)
- * @returns {Promise<Object>} - Upload result with url, publicId, duration
- */
-export const uploadVideoToCloudinary = async (filePath, folder = 'reels', publicId = null) => {
-  try {
-    const uploadOptions = {
-      folder: `rukkoin/${folder}`,
-      resource_type: 'video',
-      chunk_size: 6000000, // 6MB chunks for reliable video streaming
-    };
-    if (publicId) uploadOptions.public_id = publicId;
-
-    // Use upload_large wrapped in Promise callback (Cloudinary SDK v1 upload_large requires callback to return result)
-    const result = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_large(filePath, uploadOptions, (error, res) => {
-        if (error) reject(error);
-        else resolve(res);
-      });
-    });
-
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    const duration = result.duration != null ? Number(result.duration) : null;
-    return {
-      success: true,
-      url: result.secure_url,
-      publicId: result.public_id,
-      duration,
-      format: result.format,
-    };
-  } catch (error) {
-    console.error('Cloudinary video upload error:', error);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    throw new Error('Failed to upload video to Cloudinary: ' + (error.message || 'Unknown error'));
-  }
-};
-
-/**
  * Generate thumbnail URL from Cloudinary video (frame at 0s or 1s)
  * @param {string} publicId - Cloudinary public_id of the video
  * @returns {string} - URL for thumbnail image

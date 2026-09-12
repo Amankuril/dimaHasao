@@ -28,7 +28,7 @@ const offerSchema = new mongoose.Schema({
   },
   allowedPropertyType: {
     type: String,
-    enum: ['all', 'pg', 'hostel', 'hotel', 'resort', 'villa', 'homestay'], // comprehensive list
+    enum: ['all', 'hotel', 'resort', 'homestay', 'lodge'],
     default: 'all'
   },
   discountValue: {

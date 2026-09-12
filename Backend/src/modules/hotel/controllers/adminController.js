@@ -3,8 +3,6 @@ import Partner from '../models/Partner.js';
 import InfoPage from '../models/InfoPage.js';
 import ContactMessage from '../models/ContactMessage.js';
 import PlatformSettings from '../models/PlatformSettings.js';
-import { validateReelDurationTiers, validateRolePricingPayload } from '../utils/reelDurationPricing.js';
-import ReelDurationPayment from '../models/ReelDurationPayment.js';
 import Property from '../models/Property.js';
 import RoomType from '../models/RoomType.js';
 import Booking from '../models/Booking.js';
@@ -16,7 +14,6 @@ import emailService from '../services/emailService.js';
 import notificationService from '../services/notificationService.js';
 import Wallet from '../models/Wallet.js';
 import Transaction from '../models/Transaction.js';
-import Reel from '../models/Reel.js';
 
 
 
@@ -857,13 +854,6 @@ export const updatePlatformSettings = async (req, res) => {
       maintenanceMessage,
       defaultCommission,
       taxRate,
-      reelCouponTarget,
-      reelCouponDiscount,
-      reelFreeDurationSec,
-      reelMaxDurationSec,
-      reelPaidDurationEnabled,
-      reelDurationTiers,
-      reelPricing,
     } = req.body;
 
     const settings = await PlatformSettings.getSettings();
@@ -876,74 +866,6 @@ export const updatePlatformSettings = async (req, res) => {
 
     if (defaultCommission !== undefined) settings.defaultCommission = Number(defaultCommission);
     if (taxRate !== undefined) settings.taxRate = Number(taxRate);
-    if (reelCouponTarget !== undefined) settings.reelCouponTarget = Number(reelCouponTarget);
-    if (reelCouponDiscount !== undefined) settings.reelCouponDiscount = Number(reelCouponDiscount);
-
-    // Role-based Reel pricing (Users vs Vendors/Partners)
-    if (reelPricing && typeof reelPricing === 'object') {
-      if (!settings.reelPricing) settings.reelPricing = {};
-
-      if (reelPricing.user) {
-        const userVal = validateRolePricingPayload('user', reelPricing.user);
-        if (!userVal.valid) {
-          return res.status(400).json({ success: false, message: userVal.message });
-        }
-        settings.reelPricing.user = userVal.config;
-        // Keep legacy fields in sync with User config for older readers
-        settings.reelFreeDurationSec = userVal.config.freeDurationSec;
-        settings.reelMaxDurationSec = userVal.config.maxDurationSec;
-        settings.reelPaidDurationEnabled = userVal.config.paidDurationEnabled;
-        settings.reelDurationTiers = userVal.config.durationTiers;
-      }
-
-      if (reelPricing.vendor) {
-        const vendorVal = validateRolePricingPayload('vendor', reelPricing.vendor);
-        if (!vendorVal.valid) {
-          return res.status(400).json({ success: false, message: vendorVal.message });
-        }
-        settings.reelPricing.vendor = vendorVal.config;
-      }
-
-      settings.markModified('reelPricing');
-    } else {
-      // Legacy single-config payload still supported
-      const nextFree =
-        reelFreeDurationSec !== undefined
-          ? Number(reelFreeDurationSec)
-          : Number(settings.reelFreeDurationSec);
-      const nextMax =
-        reelMaxDurationSec !== undefined
-          ? Number(reelMaxDurationSec)
-          : Number(settings.reelMaxDurationSec);
-      const nextTiers =
-        reelDurationTiers !== undefined ? reelDurationTiers : settings.reelDurationTiers || [];
-
-      if (
-        reelFreeDurationSec !== undefined ||
-        reelMaxDurationSec !== undefined ||
-        reelDurationTiers !== undefined
-      ) {
-        const validation = validateReelDurationTiers(nextTiers, nextFree, nextMax);
-        if (!validation.valid) {
-          return res.status(400).json({ success: false, message: validation.message });
-        }
-        settings.reelFreeDurationSec = nextFree;
-        settings.reelMaxDurationSec = nextMax;
-        settings.reelDurationTiers = validation.tiers;
-        if (!settings.reelPricing) settings.reelPricing = {};
-        if (!settings.reelPricing.user) settings.reelPricing.user = {};
-        settings.reelPricing.user.freeDurationSec = nextFree;
-        settings.reelPricing.user.maxDurationSec = nextMax;
-        settings.reelPricing.user.durationTiers = validation.tiers;
-      }
-
-      if (typeof reelPaidDurationEnabled === 'boolean') {
-        settings.reelPaidDurationEnabled = reelPaidDurationEnabled;
-        if (!settings.reelPricing) settings.reelPricing = {};
-        if (!settings.reelPricing.user) settings.reelPricing.user = {};
-        settings.reelPricing.user.paidDurationEnabled = reelPaidDurationEnabled;
-      }
-    }
 
     await settings.save();
     res.status(200).json({ success: true, settings });
@@ -953,46 +875,6 @@ export const updatePlatformSettings = async (req, res) => {
   }
 };
 
-/**
- * GET /api/admin/reel-duration-payments
- * Admin history of Reel duration surcharge payments
- */
-export const getReelDurationPayments = async (req, res) => {
-  try {
-    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
-    const status = req.query.status;
-
-    const query = {};
-    if (status && status !== 'all') query.paymentStatus = status;
-    if (req.query.uploaderType === 'user' || req.query.uploaderType === 'vendor') {
-      query.uploaderType = req.query.uploaderType;
-    }
-
-    const [items, total] = await Promise.all([
-      ReelDurationPayment.find(query)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .populate('user', 'name phone email profileImage')
-        .populate('reel', 'caption thumbnailUrl videoUrl durationSec category')
-        .lean(),
-      ReelDurationPayment.countDocuments(query),
-    ]);
-
-    res.status(200).json({
-      success: true,
-      payments: items,
-      page,
-      limit,
-      total,
-      hasMore: page * limit < total,
-    });
-  } catch (error) {
-    console.error('Get reel duration payments error:', error);
-    res.status(500).json({ success: false, message: 'Failed to load reel duration payments' });
-  }
-};
 
 export const updateFcmToken = async (req, res) => {
   try {
@@ -1272,150 +1154,3 @@ export const getFinanceStats = async (req, res) => {
   }
 };
 
-export const getReelAnalysis = async (req, res) => {
-  try {
-    const totalReels = await Reel.countDocuments();
-
-    const userStats = await Reel.aggregate([
-      {
-        $group: {
-          _id: '$user',
-          reelCount: { $sum: 1 },
-          totalLikes: { $sum: '$likesCount' }
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'userDetails'
-        }
-      },
-      {
-        $unwind: '$userDetails'
-      },
-      {
-        $project: {
-          _id: 1,
-          userName: '$userDetails.name',
-          userPhone: '$userDetails.phone',
-          reelCount: 1,
-          totalLikes: 1
-        }
-      },
-      {
-        $sort: { reelCount: -1 }
-      }
-    ]);
-
-    const settings = await PlatformSettings.getSettings();
-
-    res.status(200).json({
-      success: true,
-      totalReels,
-      userStats,
-      settings: {
-        reelCouponTarget: settings.reelCouponTarget,
-        reelCouponDiscount: settings.reelCouponDiscount
-      }
-    });
-  } catch (error) {
-    console.error('Get Reel Analysis Error:', error);
-    res.status(500).json({ success: false, message: 'Server error fetching reel analysis' });
-  }
-};
-
-/**
- * GET /api/admin/reels
- * Admin fetch all reels with status/featured filter
- */
-export const getAdminReels = async (req, res) => {
-  try {
-    const { status, isFeatured, search, limit = 50, page = 1 } = req.query;
-    let query = {};
-
-    if (status && status !== 'all') query.status = status;
-    if (isFeatured !== undefined && isFeatured !== '') query.isFeatured = isFeatured === 'true';
-
-    if (search) {
-      query.caption = { $regex: search, $options: 'i' };
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const [reels, total] = await Promise.all([
-      Reel.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(parseInt(limit))
-        .populate('user', 'name phone email profileImage role')
-        .populate('property', 'propertyName propertyType address coverImage')
-        .lean(),
-      Reel.countDocuments(query),
-    ]);
-
-    res.json({
-      success: true,
-      reels,
-      total,
-      pages: Math.ceil(total / parseInt(limit)),
-    });
-  } catch (error) {
-    console.error('Get Admin Reels Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch admin reels' });
-  }
-};
-
-/**
- * PATCH /api/admin/reels/:id/status
- * Admin update status (pending, published, rejected, blocked)
- */
-export const updateReelStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const allowed = ['pending', 'published', 'rejected', 'blocked'];
-    if (!allowed.includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status' });
-    }
-
-    const reel = await Reel.findByIdAndUpdate(
-      id,
-      { status, publishedAt: status === 'published' ? new Date() : undefined },
-      { new: true }
-    );
-
-    if (!reel) return res.status(404).json({ success: false, message: 'Reel not found' });
-
-    res.json({ success: true, reel, message: `Reel status updated to ${status}` });
-  } catch (error) {
-    console.error('Update Reel Status Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update reel status' });
-  }
-};
-
-/**
- * PATCH /api/admin/reels/:id/feature
- * Admin toggle isFeatured boolean
- */
-export const toggleFeatureReel = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const reel = await Reel.findById(id);
-    if (!reel) return res.status(404).json({ success: false, message: 'Reel not found' });
-
-    reel.isFeatured = !reel.isFeatured;
-    await reel.save();
-
-    res.json({
-      success: true,
-      isFeatured: reel.isFeatured,
-      message: `Reel ${reel.isFeatured ? 'featured' : 'unfeatured'} successfully`,
-    });
-  } catch (error) {
-    console.error('Toggle Feature Reel Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to toggle reel featured status' });
-  }
-};

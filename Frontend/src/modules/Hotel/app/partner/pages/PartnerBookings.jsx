@@ -11,28 +11,13 @@ import PartnerHeader from '../components/PartnerHeader';
 const BookingCard = ({ booking }) => {
     const navigate = useNavigate();
 
-    // Property Type helpers
     const pType = (booking.propertyType || '').toLowerCase();
-    const isPG = ['pg', 'hostel'].includes(pType);
-    const isRent = pType === 'rent';
-    const isBuyPlot = ['buy', 'plot'].includes(pType);
-    const isInquiry = booking.isInquiry === true;
 
     // Status Logic
     const rawStatus = (booking.bookingStatus || booking.status || 'pending').toLowerCase().trim();
-    const inqStatus = (booking.inquiryMetadata?.status || 'new').toLowerCase();
-
     const getStatusStyle = (s) => {
-        if (isInquiry) {
-            if (inqStatus === 'new') return { color: 'text-blue-600 bg-blue-50 border-blue-100', label: 'New Inquiry' };
-            if (inqStatus === 'scheduled') return { color: 'text-purple-600 bg-purple-50 border-purple-100', label: 'Scheduled' };
-            if (inqStatus === 'negotiating') return { color: 'text-orange-600 bg-orange-50 border-orange-100', label: 'Negotiating' };
-            if (inqStatus === 'sold' || inqStatus === 'rented') return { color: 'text-emerald-600 bg-emerald-50 border-emerald-100', label: inqStatus.toUpperCase() };
-            return { color: 'text-gray-500 bg-gray-50 border-gray-200', label: inqStatus.toUpperCase() };
-        }
-
-        if (s === 'confirmed') return { color: 'text-blue-600 bg-blue-50 border-blue-100', label: isPG ? 'Booked' : 'Confirmed' };
-        if (s === 'checked_in') return { color: 'text-purple-600 bg-purple-50 border-purple-100', label: isPG || isRent ? 'Active Tenant' : 'Ongoing' };
+        if (s === 'confirmed') return { color: 'text-blue-600 bg-blue-50 border-blue-100', label: 'Confirmed' };
+        if (s === 'checked_in') return { color: 'text-purple-600 bg-purple-50 border-purple-100', label: 'Ongoing' };
         if (s === 'checked_out' || s === 'completed') return { color: 'text-emerald-600 bg-emerald-50 border-emerald-100', label: 'Completed' };
         if (s === 'cancelled') return { color: 'text-red-500 bg-red-50 border-red-100', label: 'Cancelled' };
         if (s === 'no_show') return { color: 'text-gray-500 bg-gray-100 border-gray-200', label: 'No Show' };
@@ -60,7 +45,7 @@ const BookingCard = ({ booking }) => {
     };
 
     const guestName = booking.userId?.name || 'Guest User';
-    const checkInDate = formatDate(booking.checkInDate || booking.checkIn || booking.inquiryMetadata?.preferredDate);
+    const checkInDate = formatDate(booking.checkInDate || booking.checkIn);
     const checkOutDate = formatDate(booking.checkOutDate || booking.checkOut);
     const nights = calculateNights(booking.checkInDate || booking.checkIn, booking.checkOutDate || booking.checkOut);
     const guestCount = (booking.guests?.adults || 1) + (booking.guests?.children || 0);
@@ -69,9 +54,9 @@ const BookingCard = ({ booking }) => {
     const bookingId = booking.bookingId || booking._id?.slice(-8).toUpperCase();
 
     // Labels
-    const secondaryLabel = isBuyPlot ? 'Interested' : (isPG || isRent ? 'Tenant' : 'Guest');
-    const durationLabel = isPG || isRent ? (nights >= 30 ? `${Math.round(nights / 30)} Months` : `${nights} Days`) : `${nights} Nights`;
-    const unitLabel = isPG ? 'Bed' : (isBuyPlot || isRent ? 'Unit' : 'Room');
+    const secondaryLabel = 'Guest';
+    const durationLabel = `${nights} Nights`;
+    const unitLabel = 'Room';
 
     return (
         <div className="bg-white rounded-[24px] p-4 pt-3.5 mb-4 shadow-[0_2px_15px_rgb(0,0,0,0.04)] border border-gray-50">
@@ -116,34 +101,26 @@ const BookingCard = ({ booking }) => {
             <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-[12px] font-semibold text-slate-700">
                 <div className="flex items-center gap-1.5">
                     <Calendar size={15} strokeWidth={2} />
-                    <span>{checkInDate} {!isBuyPlot && ` - ${checkOutDate}`}</span>
+                    <span>{checkInDate} - {checkOutDate}</span>
                 </div>
                 
-                {!isBuyPlot && (
-                    <>
-                        <span className="text-gray-300 hidden sm:inline">•</span>
-                        <div className="flex items-center gap-1.5">
-                            <Clock size={15} strokeWidth={2} />
-                            <span>{durationLabel}</span>
-                        </div>
-                    </>
-                )}
+                <span className="text-gray-300 hidden sm:inline">•</span>
+                <div className="flex items-center gap-1.5">
+                    <Clock size={15} strokeWidth={2} />
+                    <span>{durationLabel}</span>
+                </div>
                 
                 <span className="text-gray-300 hidden sm:inline">•</span>
                 <div className="flex items-center gap-1.5">
                     <User size={15} strokeWidth={2} />
-                    <span>{isBuyPlot ? '1 Person' : `${guestCount} ${secondaryLabel}s`}</span>
+                    <span>{guestCount} {secondaryLabel}s</span>
                 </div>
                 
-                {!isBuyPlot && (
-                    <>
-                        <span className="text-gray-300 hidden sm:inline">•</span>
-                        <div className="flex items-center gap-1.5">
-                            <BedDouble size={15} strokeWidth={2} />
-                            <span>{unitsCount} {unitLabel}</span>
-                        </div>
-                    </>
-                )}
+                <span className="text-gray-300 hidden sm:inline">•</span>
+                <div className="flex items-center gap-1.5">
+                    <BedDouble size={15} strokeWidth={2} />
+                    <span>{unitsCount} {unitLabel}</span>
+                </div>
             </div>
         </div>
     );

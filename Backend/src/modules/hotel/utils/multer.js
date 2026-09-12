@@ -76,23 +76,5 @@ export const uploadDocuments = multer({
   fileFilter: documentFilter
 });
 
-// File filter for reels: video only (mp4, webm)
-const reelVideoFilter = (req, file, cb) => {
-  const allowedMimes = ['video/mp4', 'video/webm'];
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only video files (mp4, webm) are allowed for reels'), false);
-  }
-};
-
-// Multer for reel video upload: max 20MB, video only
-export const uploadReelVideo = multer({
-  storage: storage,
-  limits: {
-    fileSize: 20 * 1024 * 1024, // 20MB
-  },
-  fileFilter: reelVideoFilter,
-});
 
 export default upload;

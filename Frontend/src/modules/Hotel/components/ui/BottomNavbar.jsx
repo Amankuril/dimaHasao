@@ -25,34 +25,6 @@ const HomeIcon = ({ isActive }) => (
     </div>
 );
 
-const ReelsIcon = ({ isActive }) => (
-    <div className="relative flex items-center justify-center">
-        {isActive ? (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[23px] h-[23px] drop-shadow-[0_2px_8px_rgba(26,86,219,0.35)]">
-                <defs>
-                    <linearGradient id="reelsGrad" x1="2" y1="3" x2="22" y2="21" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#2563eb" />
-                        <stop offset="1" stopColor="#1d4ed8" />
-                    </linearGradient>
-                </defs>
-                <rect x="2.5" y="3.5" width="19" height="17" rx="4.5" fill="url(#reelsGrad)" />
-                <path d="M2.5 8.5H21.5" stroke="white" strokeWidth="1.5" strokeOpacity="0.8" />
-                <path d="M6.5 3.5L9 8.5" stroke="white" strokeWidth="1.5" strokeOpacity="0.8" strokeLinecap="round" />
-                <path d="M15 3.5L17.5 8.5" stroke="white" strokeWidth="1.5" strokeOpacity="0.8" strokeLinecap="round" />
-                <polygon points="10.5,12 15.5,15 10.5,18" fill="white" />
-            </svg>
-        ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[23px] h-[23px]">
-                <rect x="2.5" y="3.5" width="19" height="17" rx="4.5" stroke="#788292" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M2.5 8.5H21.5" stroke="#788292" strokeWidth="1.7" />
-                <path d="M6.5 3.5L9 8.5" stroke="#788292" strokeWidth="1.7" strokeLinecap="round" />
-                <path d="M15 3.5L17.5 8.5" stroke="#788292" strokeWidth="1.7" strokeLinecap="round" />
-                <path d="M10.5 12L15 14.75L10.5 17.5V12Z" stroke="#788292" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-        )}
-    </div>
-);
-
 const BookingsIcon = ({ isActive }) => (
     <div className="relative flex items-center justify-center">
         {isActive ? (
@@ -114,14 +86,12 @@ const BottomNavbar = () => {
 
     const navItems = [
         { name: 'Home', icon: HomeIcon, route: '/' },
-        { name: 'Reels', icon: ReelsIcon, route: '/reels' },
         { name: 'Add Property', icon: Plus, route: '/hotel/login', isCenter: true },
         { name: 'Bookings', icon: BookingsIcon, route: '/bookings' },
         { name: 'Profile', icon: ProfileIcon, route: '/profile/edit' },
     ];
 
     const getActiveTab = (path) => {
-        if (path.includes('reels')) return 'Reels';
         if (path.includes('hotel') || path.includes('post') || path.includes('property')) return 'Add Property';
         if (path.includes('bookings') || path.includes('checkout')) return 'Bookings';
         if (path.includes('profile') || path.includes('account')) return 'Profile';
@@ -136,7 +106,7 @@ const BottomNavbar = () => {
 
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-[100] print:hidden pb-safe">
-            <div className="bg-white/95 backdrop-blur-xl rounded-t-[30px] shadow-[0_-8px_32px_rgba(0,0,0,0.09)] border-t border-gray-100/90 px-2 h-[70px] grid grid-cols-5 items-center relative">
+            <div className="bg-white/95 backdrop-blur-xl rounded-t-[30px] shadow-[0_-8px_32px_rgba(0,0,0,0.09)] border-t border-gray-100/90 px-2 h-[70px] grid grid-cols-4 items-center relative">
                 {navItems.map((item) => {
                     const IconComponent = item.icon;
                     const isActive = activeTab === item.name;

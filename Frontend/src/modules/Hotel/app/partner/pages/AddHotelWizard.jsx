@@ -53,7 +53,10 @@ const AddHotelWizard = () => {
   const documentInputRefs = useRef([]);
 
   const [propertyForm, setPropertyForm] = useState({
-    propertyType: existingProperty?.propertyType || (location.pathname.includes('join-hotel') ? 'hotel' : ''),
+    propertyType:
+        existingProperty?.propertyType ||
+        location.state?.propertyType ||
+        (location.pathname.includes('join-lodge') ? 'lodge' : 'hotel'),
     propertyName: '',
     description: '',
     shortDescription: '',
@@ -583,7 +586,7 @@ const AddHotelWizard = () => {
               id: rt._id,
               backendId: rt._id,
               name: rt.name || '',
-              inventoryType: rt.inventoryType || ((prop.propertyType || existingProperty?.propertyType) === 'tent' ? 'tent' : 'room'),
+              inventoryType: rt.inventoryType || 'room',
               roomCategory: rt.roomCategory || 'private',
               maxAdults: rt.maxAdults ?? '',
               maxChildren: rt.maxChildren ?? '',
@@ -634,16 +637,16 @@ const AddHotelWizard = () => {
   const nextFromRoomTypes = () => {
     setError('');
     if (!roomTypes.length) {
-      setError(`At least one ${propertyForm.propertyType === 'tent' ? 'Tent' : 'Room'} Type required`);
+      setError('At least one Room Type required');
       return;
     }
     for (const rt of roomTypes) {
       if (!rt.name || !rt.pricePerNight) {
-        setError(`${propertyForm.propertyType === 'tent' ? 'Tent' : 'Room'} type name and price required`);
+        setError('Room type name and price required');
         return;
       }
       if (!rt.images || rt.images.filter(Boolean).length < 3) {
-        setError(`Each ${propertyForm.propertyType === 'tent' ? 'tent' : 'room'} type must have at least 3 images`);
+        setError('Each room type must have at least 3 images');
         return;
       }
     }
@@ -692,7 +695,7 @@ const AddHotelWizard = () => {
         for (const rt of roomTypes) {
           const payload = {
             name: rt.name,
-            inventoryType: propertyForm.propertyType === 'tent' ? 'tent' : 'room',
+            inventoryType: 'room',
             roomCategory: rt.roomCategory,
             maxAdults: Number(rt.maxAdults),
             maxChildren: Number(rt.maxChildren || 0),
@@ -720,7 +723,7 @@ const AddHotelWizard = () => {
         // Atomic Create
         propertyPayload.roomTypes = roomTypes.map(rt => ({
           name: rt.name,
-          inventoryType: propertyForm.propertyType === 'tent' ? 'tent' : 'room',
+          inventoryType: 'room',
           roomCategory: rt.roomCategory,
           maxAdults: Number(rt.maxAdults),
           maxChildren: Number(rt.maxChildren || 0),
@@ -818,7 +821,7 @@ const AddHotelWizard = () => {
       case 3: return 'Amenities';
       case 4: return 'Nearby Places';
       case 5: return 'Property Images';
-      case 6: return propertyForm.propertyType === 'tent' ? 'Tent Types' : 'Room Types';
+      case 6: return 'Room Types';
       case 7: return 'Property Rules';
       case 8: return 'Documents';
       case 9: return 'Review & Submit';
@@ -869,7 +872,7 @@ const AddHotelWizard = () => {
                   <label className="text-xs font-semibold text-gray-500 mb-1 block">Property Name</label>
                   <input
                     className="input w-full"
-                    placeholder={`e.g. ${propertyForm.propertyType === 'tent' ? 'Grand Canyon Campsite' : 'Grand Royal Hotel'}`}
+                    placeholder="e.g. Grand Royal Hotel"
                     value={propertyForm.propertyName}
                     onChange={e => updatePropertyForm('propertyName', e.target.value)}
                   />
@@ -885,7 +888,7 @@ const AddHotelWizard = () => {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-500 mb-1 block">Detailed Description</label>
-                  <textarea className="input w-full h-24" placeholder={`Tell guests what makes your ${propertyForm.propertyType === 'tent' ? 'campsite' : 'hotel'} unique...`} value={propertyForm.description} onChange={e => updatePropertyForm('description', e.target.value)} />
+                  <textarea className="input w-full h-24" placeholder={`Tell guests what makes your ${propertyForm.propertyType || 'hotel'} unique...`} value={propertyForm.description} onChange={e => updatePropertyForm('description', e.target.value)} />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-500 mb-1 block">Contact Number (For Guest Inquiries)</label>
@@ -1252,8 +1255,8 @@ const AddHotelWizard = () => {
                       <div className="w-12 h-12 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-3">
                         <BedDouble size={24} />
                       </div>
-                      <p className="text-gray-500 font-medium">No {propertyForm.propertyType === 'tent' ? 'tent' : 'room'} types added yet</p>
-                      <p className="text-xs text-gray-400 mt-1">Add details for atleast one {propertyForm.propertyType === 'tent' ? 'tent' : 'room'} type.</p>
+                      <p className="text-gray-500 font-medium">No {'room'} types added yet</p>
+                      <p className="text-xs text-gray-400 mt-1">Add details for atleast one {'room'} type.</p>
                     </div>
                   ) : (
                     <div className="grid gap-4">
@@ -1261,7 +1264,7 @@ const AddHotelWizard = () => {
                         <div key={rt.id || index} className="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                           <div className="flex justify-between items-start mb-2">
                             <div>
-                              <h3 className="font-bold text-gray-900">{rt.name || `${propertyForm.propertyType === 'tent' ? 'Tent' : 'Room'} Type ${index + 1}`}</h3>
+                              <h3 className="font-bold text-gray-900">{rt.name || `${'Room'} Type ${index + 1}`}</h3>
                               <div className="text-xs text-gray-500 font-medium mt-0.5">
                                 Inventory: <span className="text-gray-900">{rt.totalInventory}</span> · Capacity: <span className="text-gray-900">{rt.maxAdults}A, {rt.maxChildren}C</span>
                               </div>
@@ -1297,7 +1300,7 @@ const AddHotelWizard = () => {
                     className="w-full py-4 border border-emerald-200 text-emerald-700 bg-emerald-50/50 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors"
                   >
                     <Plus size={20} />
-                    Add {propertyForm.propertyType === 'tent' ? 'Tent' : 'Room'} Type
+                    Add {'Room'} Type
                   </button>
                 </div>
               )}
@@ -1306,7 +1309,7 @@ const AddHotelWizard = () => {
                 <div className="bg-white rounded-2xl border border-emerald-100 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
                     <span className="font-bold text-emerald-800 text-sm">
-                      {editingRoomTypeIndex === -1 || editingRoomTypeIndex == null ? `Add ${propertyForm.propertyType === 'tent' ? 'Tent' : 'Room'} Type` : `Edit ${propertyForm.propertyType === 'tent' ? 'Tent' : 'Room'} Type`}
+                      {editingRoomTypeIndex === -1 || editingRoomTypeIndex == null ? `Add ${'Room'} Type` : `Edit ${'Room'} Type`}
                     </span>
                     <button onClick={cancelEditRoomType} className="text-emerald-600 hover:bg-emerald-100 p-1 rounded-md">
                       <span className="text-xs font-bold">Close</span>
@@ -1318,7 +1321,7 @@ const AddHotelWizard = () => {
                       <label className="text-xs font-semibold text-gray-500">Name</label>
                       <input
                         className="input w-full"
-                        placeholder={`e.g. ${propertyForm.propertyType === 'tent' ? 'Luxury Dome Tent' : 'Deluxe Suite'}`}
+                        placeholder="e.g. Deluxe Suite"
                         value={editingRoomType.name}
                         onChange={e => setEditingRoomType(prev => ({ ...prev, name: e.target.value }))}
                       />
@@ -1561,7 +1564,7 @@ const AddHotelWizard = () => {
 
               <div className="space-y-4">
                 <div className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
-                  <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">{propertyForm.propertyType === 'tent' ? 'Campsite Details' : 'Property Details'}</h3>
+                  <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">Property Details</h3>
                   <div className="space-y-1">
                     <div className="text-lg font-bold text-emerald-900">{propertyForm.propertyName || 'No Name'}</div>
                     <div className="text-sm text-gray-600 flex items-start gap-1">
@@ -1571,7 +1574,7 @@ const AddHotelWizard = () => {
                 </div>
 
                 <div className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
-                  <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">{propertyForm.propertyType === 'tent' ? 'Tent Types' : 'Room Types'} ({roomTypes.length})</h3>
+                  <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">Room Types ({roomTypes.length})</h3>
                   {roomTypes.length > 0 ? (
                     <div className="space-y-2">
                       {roomTypes.map((rt, i) => (
@@ -1581,7 +1584,7 @@ const AddHotelWizard = () => {
                         </div>
                       ))}
                     </div>
-                  ) : <div className="text-xs text-red-500 font-medium bg-red-50 p-2 rounded-lg">No {propertyForm.propertyType === 'tent' ? 'tent' : 'room'} types added!</div>}
+                  ) : <div className="text-xs text-red-500 font-medium bg-red-50 p-2 rounded-lg">No {'room'} types added!</div>}
                 </div>
 
                 <div className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">

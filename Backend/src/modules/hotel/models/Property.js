@@ -15,9 +15,14 @@ const propertySchema = new mongoose.Schema({
   // BASIC INFO
   propertyName: { type: String, required: true },
   contactNumber: { type: String },
+  /**
+   * The scope of work covers hotels, resorts, homestays and lodges. The module
+   * was ported from a real-estate marketplace that also listed PGs, hostels,
+   * villas, tents, rentals, resales and plots; those types were removed.
+   */
   propertyType: {
     type: String,
-    enum: ["villa", "resort", "hotel", "hostel", "pg", "homestay", "tent", "rent", "buy", "plot"],
+    enum: ["hotel", "resort", "homestay", "lodge"],
     required: true
   },
 
@@ -26,22 +31,6 @@ const propertySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "PropertyCategory",
     default: null
-  },
-
-  // Flexible Category-Specific Details (Added for Tent/Glamping support)
-  structureDetails: {
-    type: Object,
-    default: {} // Stores: tentType, bathroomType, electricityInfo, etc.
-  },
-
-  pgType: {
-    type: String,
-    enum: ["boys", "girls", "unisex"]
-  },
-
-  hostelType: {
-    type: String,
-    enum: ["boys", "girls", "mixed"]
   },
 
   hostLivesOnProperty: { type: Boolean, default: false },
@@ -107,93 +96,11 @@ const propertySchema = new mongoose.Schema({
   cancellationPolicy: String,
   houseRules: [String],
 
-  // --- NEW PROPERTY SPECIFIC FIELDS ---
-
-  // PG/Co-Living Details
-  pgDetails: {
-    occupancy: { type: String, enum: ['Single', 'Double', 'Triple', 'Other'] },
-    gender: { type: String, enum: ['Boys', 'Girls', 'Co-ed'] },
-    minStay: String,
-    noticePeriod: String,
-    securityDeposit: Number,
-    availableFrom: Date,
-    foodIncluded: {
-      breakfast: { type: Boolean, default: false },
-      lunch: { type: Boolean, default: false },
-      dinner: { type: Boolean, default: false }
-    },
-    rules: {
-      smoking: Boolean,
-      drinking: Boolean,
-      visitors: Boolean,
-      curfew: String,
-      ageRange: String
-    }
-  },
-
-  // Rent Details
-  rentDetails: {
-    type: { type: String }, // 1BHK, 2BHK etc.
-    monthlyRent: { type: Number }, // Added Price
-    furnishing: { type: String, enum: ['Fully', 'Semi', 'Unfurnished'] },
-    tenantPreference: { type: String }, // Family, Bachelors, etc.
-    builtYear: Number,
-    maintenanceCharges: Number,
-    electricityIncluded: Boolean,
-    waterSupply: String,
-    societyName: String,
-    lift: Boolean
-  },
-
-  // Buy Details
-  buyDetails: {
-    type: { type: String }, // Apartment, Villa
-    expectedPrice: { type: Number }, // Added Price
-    area: {
-      superBuiltUp: Number,
-      carpet: Number,
-      unit: { type: String, default: 'sqft' }
-    },
-    ownership: String,
-    propertyAge: String,
-    floor: {
-      current: Number,
-      total: Number
-    },
-    facing: String,
-    registrationIncluded: Boolean,
-    stampDutyIncluded: Boolean,
-    propertyTax: Number,
-    legalVerified: Boolean,
-    loanEligible: Boolean,
-    builderName: String
-  },
-
-  // Plot Details
-  plotDetails: {
-    expectedPrice: { type: Number }, // Added Price
-    plotArea: { type: Number },
-    unit: { type: String, default: 'sqyrd' },
-    dimensions: { length: Number, breadth: Number }, // ft
-    facing: String,
-    landType: { type: String }, // Residential, Commercial
-    roadWidth: String,
-    boundaryMarked: Boolean,
-    approvalAuthority: String,
-    soilType: String,
-    electricityAvailable: Boolean,
-    waterSource: String,
-    nearbyLandmark: String
-  },
-
   // Universal / Pro Fields
   videoUrl: String,
   isVerified: { type: Boolean, default: false },
   isFeatured: { type: Boolean, default: false },
-  isUrgent: { type: Boolean, default: false },
-  isNegotiable: { type: Boolean, default: false },
   virtualTourLink: String,
-  availabilityStatus: { type: String, enum: ['Available', 'Sold', 'Rented'], default: 'Available' },
 
   // STATUS
   status: {

@@ -25,7 +25,7 @@ export const createProperty = async (req, res) => {
     const partner = await Partner.findById(req.user._id);
     if (!partner) return res.status(404).json({ message: 'Partner not found' });
 
-    const { propertyName, contactNumber, propertyType, description, shortDescription, coverImage, propertyImages, amenities, address, location, nearbyPlaces, checkInTime, checkOutTime, cancellationPolicy, houseRules, documents, roomTypes, pgType, hostelType, hostLivesOnProperty, familyFriendly, resortType, activities, hotelCategory, starRating, dynamicCategory, pgDetails, rentDetails, plotDetails, buyDetails } = req.body;
+    const { propertyName, contactNumber, propertyType, description, shortDescription, coverImage, propertyImages, amenities, address, location, nearbyPlaces, checkInTime, checkOutTime, cancellationPolicy, houseRules, documents, roomTypes, hostLivesOnProperty, familyFriendly, resortType, activities, hotelCategory, starRating, dynamicCategory } = req.body;
     if (!propertyName || !propertyType || !coverImage) return res.status(400).json({ message: 'Missing required fields' });
     const lowerType = propertyType.toLowerCase();
     const requiredDocs = PROPERTY_DOCUMENTS[lowerType] || [];
@@ -51,18 +51,12 @@ export const createProperty = async (req, res) => {
       cancellationPolicy,
       houseRules,
       dynamicCategory: dynamicCategoryId,
-      pgType: lowerType === 'pg' ? pgType : undefined,
-      pgDetails: lowerType === 'pg' ? pgDetails : undefined,
-      hostelType: lowerType === 'hostel' ? hostelType : undefined,
       hostLivesOnProperty: lowerType === 'homestay' ? hostLivesOnProperty : undefined,
       familyFriendly: lowerType === 'homestay' ? familyFriendly : undefined,
       resortType: lowerType === 'resort' ? resortType : undefined,
       activities: lowerType === 'resort' ? activities : undefined,
-      hotelCategory: lowerType === 'hotel' ? hotelCategory : undefined,
-      starRating: lowerType === 'hotel' ? starRating : undefined,
-      rentDetails: lowerType === 'rent' ? rentDetails : undefined,
-      plotDetails: lowerType === 'plot' ? plotDetails : undefined,
-      buyDetails: lowerType === 'buy' ? buyDetails : undefined
+      hotelCategory: ['hotel', 'lodge'].includes(lowerType) ? hotelCategory : undefined,
+      starRating: ['hotel', 'lodge'].includes(lowerType) ? starRating : undefined
     });
     // Pricing is now handled in RoomType for ALL types
     await doc.save();
@@ -144,11 +138,6 @@ export const updateProperty = async (req, res) => {
       'cancellationPolicy',
       'houseRules',
       'dynamicCategory',
-      'pgType',
-      'pgDetails',
-      'rentDetails',
-      'plotDetails',
-      'buyDetails',
       'hostLivesOnProperty',
       'familyFriendly',
       'resortType',
@@ -206,34 +195,11 @@ export const addRoomType = async (req, res) => {
 
     if (!pricePerNight) return res.status(400).json({ message: 'pricePerNight required' });
 
-    // For Villa, inventoryType must be 'entire'
-    if (property.propertyType === 'villa' && inventoryType !== 'entire') {
-      return res.status(400).json({ message: 'Villa must have inventoryType="entire"' });
+    // Hotels, resorts and lodges sell rooms; a homestay may also be let whole.
+    if (['hotel', 'resort', 'lodge'].includes(property.propertyType) && inventoryType !== 'room') {
+      return res.status(400).json({ message: `${property.propertyType} must have inventoryType="room"` });
     }
 
-    if (property.propertyType === 'hotel' && inventoryType !== 'room') {
-      return res.status(400).json({ message: 'Hotel must have inventoryType="room"' });
-    }
-
-    if (property.propertyType === 'resort' && inventoryType !== 'room') {
-      return res.status(400).json({ message: 'Resort must have inventoryType="room"' });
-    }
-
-    // For Hostel, inventoryType must be 'bed'
-    if (property.propertyType === 'hostel' && inventoryType !== 'bed') {
-      return res.status(400).json({ message: 'Hostel must have inventoryType="bed"' });
-    }
-
-    // For PG, inventoryType must be 'bed'
-    if (property.propertyType === 'pg' && inventoryType !== 'bed') {
-      return res.status(400).json({ message: 'PG must have inventoryType="bed"' });
-    }
-
-    if (property.propertyType === 'tent' && inventoryType !== 'tent') {
-      return res.status(400).json({ message: 'Tent/Campsite must have inventoryType="tent"' });
-    }
-
-    // For Homestay, inventoryType can be 'room' or 'entire'
     if (property.propertyType === 'homestay' && !['room', 'entire'].includes(inventoryType)) {
       return res.status(400).json({ message: 'Homestay must have inventoryType="room" or "entire"' });
     }
@@ -315,23 +281,8 @@ export const updateRoomType = async (req, res) => {
     }
 
     if (payload.inventoryType) {
-      if (property.propertyType === 'villa' && roomType.inventoryType !== 'entire') {
-        return res.status(400).json({ message: 'Villa must have inventoryType="entire"' });
-      }
-      if (property.propertyType === 'hotel' && roomType.inventoryType !== 'room') {
-        return res.status(400).json({ message: 'Hotel must have inventoryType="room"' });
-      }
-      if (property.propertyType === 'resort' && roomType.inventoryType !== 'room') {
-        return res.status(400).json({ message: 'Resort must have inventoryType="room"' });
-      }
-      if (property.propertyType === 'hostel' && roomType.inventoryType !== 'bed') {
-        return res.status(400).json({ message: 'Hostel must have inventoryType="bed"' });
-      }
-      if (property.propertyType === 'pg' && roomType.inventoryType !== 'bed') {
-        return res.status(400).json({ message: 'PG must have inventoryType="bed"' });
-      }
-      if (property.propertyType === 'tent' && roomType.inventoryType !== 'tent') {
-        return res.status(400).json({ message: 'Tent/Campsite must have inventoryType="tent"' });
+      if (['hotel', 'resort', 'lodge'].includes(property.propertyType) && roomType.inventoryType !== 'room') {
+        return res.status(400).json({ message: `${property.propertyType} must have inventoryType="room"` });
       }
       if (property.propertyType === 'homestay' && !['room', 'entire'].includes(roomType.inventoryType)) {
         return res.status(400).json({ message: 'Homestay must have inventoryType="room" or "entire"' });
@@ -416,15 +367,7 @@ export const getPublicProperties = async (req, res) => {
       lng,
       radius = 50, // default 50km
       guests,
-      sort,
-      // Rent specific
-      bhkType,
-      furnishing,
-      // PG specific
-      gender,
-      occupancy,
-      // Plot specific
-      landType
+      sort
     } = req.query;
 
     const pipeline = [];
@@ -462,28 +405,16 @@ export const getPublicProperties = async (req, res) => {
       } else if (dynamicTypes.length > 0) {
         const categoryIds = dynamicTypes.map(id => new mongoose.Types.ObjectId(id));
         const categories = await PropertyCategory.find({ _id: { $in: categoryIds } }).select('displayName name').lean();
+        // A category whose name matches a built-in type also matches properties
+        // that carry that propertyType but no dynamicCategory.
+        const STATIC_TYPES = ['hotel', 'resort', 'homestay', 'lodge'];
         const fallbackPropertyTypes = new Set();
-        let hasPgCoLivingCategory = false;
         for (const cat of categories) {
           const dn = (cat.displayName || cat.name || '').toLowerCase();
-          if (dn === 'pg' || dn === 'hostel' || dn === 'pg/co-living' || dn === 'co-living' || dn === 'pg/co-livinig') {
-            fallbackPropertyTypes.add('pg').add('hostel');
-            hasPgCoLivingCategory = true;
-          }
-          else if (dn === 'villa') fallbackPropertyTypes.add('villa');
-          else if (dn === 'hotel') fallbackPropertyTypes.add('hotel');
-          else if (dn === 'resort') fallbackPropertyTypes.add('resort');
-          else if (dn === 'homestay') fallbackPropertyTypes.add('homestay');
-          else if (dn === 'tent' || dn === 'plot' || dn === 'plots') fallbackPropertyTypes.add('tent');
+          if (STATIC_TYPES.includes(dn)) fallbackPropertyTypes.add(dn);
         }
         const fallbackList = [...fallbackPropertyTypes];
-        // Always add fallback for PG/Co-living if we detected it, or if categories not found but IDs were sent
-        // This ensures properties with dynamicCategory null but propertyType pg/hostel still show
-        if (fallbackList.length > 0 || hasPgCoLivingCategory) {
-          // If we have PG/Co-living categories but fallbackList is empty (shouldn't happen), add pg/hostel anyway
-          if (hasPgCoLivingCategory && fallbackList.length === 0) {
-            fallbackList.push('pg', 'hostel');
-          }
+        if (fallbackList.length > 0) {
           matchConditions.$or = [
             { dynamicCategory: { $in: categoryIds } },
             { $and: [{ $or: [{ dynamicCategory: null }, { dynamicCategory: { $exists: false } }] }, { propertyType: { $in: fallbackList } }] }
@@ -522,55 +453,6 @@ export const getPublicProperties = async (req, res) => {
       if (amList.length > 0) {
         matchConditions.amenities = { $all: amList };
       }
-    }
-
-    // 2.1 Property Specific Filters
-    if (bhkType) {
-      const bhkList = bhkType.split(',').map(t => new RegExp(`^${t.trim()}$`, 'i'));
-      matchConditions['rentDetails.type'] = { $in: bhkList };
-    }
-    if (furnishing) {
-      const furnishList = furnishing.split(',').map(f => new RegExp(`^${f.trim()}$`, 'i'));
-      matchConditions['rentDetails.furnishing'] = { $in: furnishList };
-    }
-    if (gender) {
-      const genderList = gender.split(',').map(g => new RegExp(`^${g.trim()}$`, 'i'));
-      // Check both pgType (old) and pgDetails.gender (new)
-      const genderMatch = {
-        $or: [
-          { pgType: { $in: genderList } },
-          { 'pgDetails.gender': { $in: genderList } }
-        ]
-      };
-
-      if (matchConditions.$and) {
-        matchConditions.$and.push(genderMatch);
-      } else if (matchConditions.$or) {
-        // If we have a global $or (from search), we must move it to $and to keep boolean logic correct
-        const existingOr = matchConditions.$or;
-        delete matchConditions.$or;
-        matchConditions.$and = [{ $or: existingOr }, genderMatch];
-      } else {
-        // No search/other $or, just use genderMatch $or
-        matchConditions.$or = genderMatch.$or;
-      }
-    }
-    if (occupancy) {
-      const occList = occupancy.split(',').map(o => new RegExp(`^${o.trim()}$`, 'i'));
-      matchConditions['pgDetails.occupancy'] = { $in: occList };
-    }
-    if (landType) {
-      const landList = landType.split(',').map(l => new RegExp(`^${l.trim()}$`, 'i'));
-      matchConditions['plotDetails.landType'] = { $in: landList };
-    }
-
-    if (req.query.foodIncluded === 'true') {
-      matchConditions['$or'] = matchConditions['$or'] || [];
-      matchConditions['$or'].push(
-        { 'pgDetails.foodIncluded.breakfast': true },
-        { 'pgDetails.foodIncluded.lunch': true },
-        { 'pgDetails.foodIncluded.dinner': true }
-      );
     }
 
     if (Object.keys(matchConditions).length > 0) {
@@ -688,6 +570,11 @@ export const getMyProperties = async (req, res) => {
 export const getPropertyDetails = async (req, res) => {
   try {
     const { id } = req.params;
+    // /:id is the last route on this router, so a stale path (a removed
+    // endpoint, a typo) lands here. Answer 404 rather than a cast error 500.
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
     const property = await Property.findById(id);
     if (!property) return res.status(404).json({ message: 'Property not found' });
     const roomTypes = await RoomType.find({ propertyId: id, isActive: true });
@@ -723,93 +610,3 @@ export const deleteProperty = async (req, res) => {
     res.status(500).json({ message: 'Failed to delete property' });
   }
 };
-
-/**
- * @desc    Get Property Contact Details
- * @route   GET /api/properties/:id/reveal-contact
- * @access  Public (Optional Login)
- */
-export const revealContact = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const property = await Property.findById(id).populate('partnerId');
-
-    if (!property) return res.status(404).json({ message: 'Property not found' });
-    if (!property.partnerId) return res.status(404).json({ message: 'Partner details missing' });
-
-    res.json({
-      success: true,
-      contactNumber: property.contactNumber
-    });
-
-  } catch (error) {
-    console.error('Reveal Contact Error:', error);
-    res.status(500).json({ message: 'Failed to reveal contact' });
-  }
-};
-
-/**
- * @desc    Get Recommended Sellers (approved partners with the most live listings)
- * @route   GET /api/properties/recommended-sellers
- * @access  Public
- *
- * Ranking used to come from the partner's paid plan weight. With subscriptions
- * gone, activity is the ordering signal: most live listings first, then the
- * longest-standing partner.
- */
-export const getRecommendedSellers = async (req, res) => {
-  try {
-    const pipeline = [
-      {
-        $match: {
-          partnerApprovalStatus: 'approved'
-        }
-      },
-      {
-        $lookup: {
-          from: 'properties',
-          localField: '_id',
-          foreignField: 'partnerId',
-          pipeline: [{ $match: { status: 'approved', isLive: true } }],
-          as: 'activeProperties'
-        }
-      },
-      {
-        $addFields: {
-          totalListings: { $size: '$activeProperties' },
-          experienceYears: {
-            $floor: {
-              $divide: [
-                { $subtract: [new Date(), '$partnerSince'] },
-                1000 * 60 * 60 * 24 * 365
-              ]
-            }
-          }
-        }
-      },
-      { $sort: { totalListings: -1, partnerSince: 1 } },
-      { $limit: 10 },
-      {
-        $project: {
-          password: 0,
-          otp: 0,
-          otpExpires: 0,
-          fcmTokens: 0,
-          aadhaarNumber: 0,
-          aadhaarFront: 0,
-          aadhaarBack: 0,
-          panNumber: 0,
-          panCardImage: 0,
-          activeProperties: 0
-        }
-      }
-    ];
-
-    const partners = await Partner.aggregate(pipeline);
-    res.json(partners);
-  } catch (err) {
-    console.error('getRecommendedSellers error:', err);
-    res.status(500).json({ message: err.message });
-  }
-};
-

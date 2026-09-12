@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Wallet, Heart, Gift, HelpCircle, FileText, Shield, ChevronRight, LogOut, Settings, BookOpen, Building, Briefcase, Bell, Edit3, Video } from 'lucide-react';
+import { X, User, Wallet, Heart, Gift, HelpCircle, FileText, Shield, ChevronRight, LogOut, Settings, BookOpen, Building, Briefcase, Bell, Edit3 } from 'lucide-react';
 import logo from '../../assets/rokologin-removebg-preview.png';
 import { userService } from '../../services/apiService';
 
@@ -75,7 +75,6 @@ const MobileMenu = ({ isOpen, onClose }) => {
     // Grouped Menu Items
     const bookingItems = [
         { icon: BookOpen, label: 'My Bookings', path: '/bookings' },
-        { icon: Video, label: 'Reels', path: '/reels' },
         { icon: Heart, label: 'Saved Places', path: '/saved-places' },
         { icon: Wallet, label: 'View Wallet', path: '/wallet' },
     ];

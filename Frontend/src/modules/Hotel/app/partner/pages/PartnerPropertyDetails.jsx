@@ -109,11 +109,6 @@ const PartnerPropertyDetails = () => {
       desc: `${property?.documents?.length || 0} Files`
     },
   ].filter(section => {
-    // Hide 'Nearby' for PG/Hostel properties as requested
-    if (section.id === 'nearby') {
-      const pType = property?.propertyType?.toLowerCase();
-      return !['pg', 'hostel', 'pg/co-living', 'co-living'].includes(pType);
-    }
     return true;
   });
 
@@ -372,7 +367,7 @@ const PartnerPropertyDetails = () => {
                             <div className="text-right">
                               <div className="text-lg font-bold text-emerald-700">₹{room.pricePerNight}</div>
                               <div className="text-[10px] text-gray-400 font-medium">
-                                {['pg', 'hostel', 'rent'].includes(property.propertyType?.toLowerCase()) ? '/ month' : ['buy', 'plot'].includes(property.propertyType?.toLowerCase()) ? '' : '/ night'}
+                                / night
                               </div>
                             </div>
                           </div>
@@ -425,7 +420,7 @@ const PartnerPropertyDetails = () => {
 
               {activeSection === 'rules' && (
                 <div className="space-y-4">
-                  {!['pg', 'hostel', 'rent', 'buy', 'plot'].includes(property.propertyType?.toLowerCase()) && (
+                  {(
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
                         <p className="text-xs text-gray-500 uppercase font-bold mb-1">Check-in</p>
@@ -609,7 +604,7 @@ const PartnerPropertyDetails = () => {
                     <div className="text-right">
                       <div className="text-xl font-bold text-emerald-700">₹{selectedRoom.pricePerNight}</div>
                       <div className="text-xs text-gray-400 font-medium">
-                        {['pg', 'hostel', 'rent'].includes(property.propertyType?.toLowerCase()) ? '/ month' : ['buy', 'plot'].includes(property.propertyType?.toLowerCase()) ? '' : '/ night'}
+                        / night
                       </div>
                     </div>
                   </div>
@@ -653,7 +648,7 @@ const PartnerPropertyDetails = () => {
                     <div className="p-4 bg-white border-t border-gray-100 space-y-3 animate-in slide-in-from-top-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">
-                          {['pg', 'hostel', 'rent'].includes(property.propertyType?.toLowerCase()) ? 'Monthly Rent' : ['buy', 'plot'].includes(property.propertyType?.toLowerCase()) ? 'Total Price' : 'Base Price (Per Night)'}
+                          Base Price (Per Night)
                         </span>
                         <span className="font-medium text-gray-900">₹{selectedRoom.pricePerNight}</span>
                       </div>

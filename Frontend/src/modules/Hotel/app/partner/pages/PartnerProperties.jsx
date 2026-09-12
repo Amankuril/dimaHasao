@@ -40,25 +40,17 @@ const PartnerProperties = () => {
     navigate('/hotel/join');
   };
 
+  // A lodge is a roomed property, so it edits through the hotel wizard.
+  const EDIT_WIZARD_BY_TYPE = {
+    hotel: '/hotel/join-hotel',
+    lodge: '/hotel/join-lodge',
+    resort: '/hotel/join-resort',
+    homestay: '/hotel/join-homestay',
+  };
+
   const handleEditProperty = (property) => {
-    if (property.propertyType === 'hotel') {
-      navigate('/hotel/join-hotel', { state: { property } });
-    } else if (property.propertyType === 'villa') {
-      navigate('/hotel/join-villa', { state: { property } });
-    } else if (property.propertyType === 'hostel') {
-      navigate('/hotel/join-hostel', { state: { property } });
-    } else if (property.propertyType === 'pg') {
-      navigate('/hotel/join-pg', { state: { property } });
-    } else if (property.propertyType === 'resort') {
-      navigate('/hotel/join-resort', { state: { property } });
-    } else if (property.propertyType === 'homestay') {
-      navigate('/hotel/join-homestay', { state: { property } });
-    } else if (property.propertyType === 'tent') {
-      navigate('/hotel/join-hotel', { state: { property } });
-    } else if (property.dynamicCategory) {
-      const catId = typeof property.dynamicCategory === 'object' ? property.dynamicCategory._id : property.dynamicCategory;
-      navigate(`/hotel/join-dynamic/${catId}`, { state: { property, categoryName: property.dynamicCategory?.displayName } });
-    }
+    const route = EDIT_WIZARD_BY_TYPE[property.propertyType];
+    if (route) navigate(route, { state: { property } });
   };
 
   const handleViewDetails = (property) => {

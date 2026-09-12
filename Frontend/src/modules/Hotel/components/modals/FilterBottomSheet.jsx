@@ -40,15 +40,15 @@ const FilterBottomSheet = ({
     ];
 
     const trendingFilters = [
-        "HoomZos welcome couples", "Local IDs accepted", "Flagship"
+        "Couples welcome", "Local IDs accepted", "Flagship"
     ];
 
     const categories = [
-        "PG/Co-Living", "Rent", "Buy", "Plot"
+        "Hotel", "Resort", "Homestay", "Lodge"
     ];
 
     const collections = [
-        "Boys Only", "Girls Only", "Coliving", "Family Friendly", "Bachelor Friendly"
+        "Family Friendly", "Couple Friendly", "Pet Friendly", "Business Travel"
     ];
 
     // Price Range Constants

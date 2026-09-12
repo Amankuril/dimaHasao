@@ -11,7 +11,7 @@ const propertyDocumentSchema = new mongoose.Schema({
 
   propertyType: {
     type: String,
-    enum: ["villa", "resort", "hotel", "hostel", "pg", "homestay"],
+    enum: ["hotel", "resort", "homestay", "lodge"],
     required: true
   },
 

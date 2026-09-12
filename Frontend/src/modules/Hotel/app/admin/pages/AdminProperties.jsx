@@ -240,11 +240,9 @@ const AdminProperties = () => {
                     >
                         <option value="">All Types</option>
                         <option value="hotel">Hotel</option>
-                        <option value="villa">Villa</option>
-                        <option value="hostel">Hostel</option>
-                        <option value="pg">PG</option>
                         <option value="resort">Resort</option>
                         <option value="homestay">Homestay</option>
+                        <option value="lodge">Lodge</option>
                         {dynamicCategories.map(cat => (
                             <option key={cat._id} value={cat._id}>{cat.displayName}</option>
                         ))}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Calendar, User, Phone, Mail, MapPin,
-  CreditCard, CheckCircle, XCircle, Clock,
+  CreditCard, CheckCircle,
   ChevronLeft, AlertTriangle, LogIn, LogOut
 } from 'lucide-react';
 import { bookingService } from '../../../services/apiService';
@@ -87,17 +87,6 @@ const PartnerBookingDetail = () => {
     }
   };
 
-  const handleUpdateInquiry = async (status) => {
-    const msg = prompt(`Any message/note for the user about status "${status}"?`, "");
-    try {
-      await bookingService.updateInquiryStatus(id, status, msg);
-      toast.success(`Inquiry marked as ${status}`);
-      fetchBooking();
-    } catch (error) {
-      toast.error(error.message || "Update Failed");
-    }
-  };
-
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div></div>;
   if (!booking) return null;
 
@@ -105,32 +94,17 @@ const PartnerBookingDetail = () => {
   const property = booking.propertyId || {};
   const room = booking.roomTypeId || {};
 
-  const isInquiry = booking.isInquiry === true;
   const isPayAtHotel = booking.paymentStatus !== 'paid';
-  const canMarkPaid = !isInquiry && isPayAtHotel && ['confirmed', 'checked_in'].includes(booking.bookingStatus);
-  const canMarkNoShow = !isInquiry && ['confirmed'].includes(booking.bookingStatus);
-  const canCheckIn = !isInquiry && booking.bookingStatus === 'confirmed';
-  const canCheckOut = !isInquiry && booking.bookingStatus === 'checked_in';
+  const canMarkPaid = isPayAtHotel && ['confirmed', 'checked_in'].includes(booking.bookingStatus);
+  const canMarkNoShow = ['confirmed'].includes(booking.bookingStatus);
+  const canCheckIn = booking.bookingStatus === 'confirmed';
+  const canCheckOut = booking.bookingStatus === 'checked_in';
 
-  // Inquiry Specifics
   const pType = (property?.propertyType || '').toLowerCase();
-  const isPG = ['pg', 'hostel'].includes(pType);
-  const isRent = pType === 'rent';
-  const isBuyPlot = ['buy', 'plot'].includes(pType);
 
-  const checkInLabel = isPG || isRent ? 'Move-in' : (isBuyPlot ? 'Preferred Date' : 'Check-in');
-  const checkOutLabel = isPG || isRent ? 'Move-out' : 'Check-out';
-  const durationLabel = isPG || isRent ? (booking.totalNights >= 30 ? 'Months' : 'Days') : 'Nights';
-  // For PG, 'totalNights' usually represents 'totalMonths' if stored that way, 
-  // OR we need to convert. Assuming backend stores 'nights' for all, we might show 'Days' or 'Months' based on usage.
-  // If backend purely stores 'nights' (e.g. 30), for PG we might want to say '1 Month' if it's exactly 30?
-  // simpler for now: just use 'Month' if the logic implies it, but be careful.
-  // Let's stick to safe labels: 
-  // If isPG, show "Duration" instead of "Nights" to be generic if we can't be sure of the unit?
-  // Or better, per user request: "termology ko thik karo".
-  // Let's assume standard booking for PG is often 30 days = 1 Month. 
-  // We will use "Duration" and show "X Days/Months".
-
+  const checkInLabel = 'Check-in';
+  const checkOutLabel = 'Check-out';
+  const durationLabel = 'Nights';
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
@@ -155,7 +129,7 @@ const PartnerBookingDetail = () => {
               booking.bookingStatus === 'no_show' ? 'bg-gray-100 text-gray-600 border-gray-200' :
                 'bg-yellow-50 text-yellow-700 border-yellow-100'
             }`}>
-            {isInquiry ? booking.inquiryMetadata?.status?.replace('_', ' ') : booking.bookingStatus.replace('_', ' ')}
+            {booking.bookingStatus.replace('_', ' ')}
           </div>
         </div>
 
@@ -221,67 +195,52 @@ const PartnerBookingDetail = () => {
         {/* Stay Info - Compact */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <h3 className="font-bold text-gray-900 mb-3 text-sm flex items-center gap-2">
-            <Calendar size={16} className="text-gray-400" /> {isInquiry ? 'Inquiry Details' : (isPG || isRent ? 'Tenancy Details' : 'Stay Details')}
+            <Calendar size={16} className="text-gray-400" /> Stay Details
           </h3>
-          <div className={`grid gap-3 mb-3 ${(!isBuyPlot && (!isInquiry || booking.checkOutDate)) ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          <div className="grid gap-3 mb-3 grid-cols-2">
             <div className="p-2.5 bg-gray-50 rounded-xl">
               <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">{checkInLabel}</p>
-              <p className="font-bold text-gray-900 text-sm">{booking.checkInDate || booking.inquiryMetadata?.preferredDate ? new Date(booking.checkInDate || booking.inquiryMetadata?.preferredDate).toLocaleDateString() : 'N/A'}</p>
+              <p className="font-bold text-gray-900 text-sm">{booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : 'N/A'}</p>
             </div>
-            {!isBuyPlot && (!isInquiry || booking.checkOutDate) && (
-              <div className="p-2.5 bg-gray-50 rounded-xl">
-                <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">{checkOutLabel}</p>
-                <p className="font-bold text-gray-900 text-sm">{booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : 'N/A'}</p>
-              </div>
-            )}
+            <div className="p-2.5 bg-gray-50 rounded-xl">
+              <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">{checkOutLabel}</p>
+              <p className="font-bold text-gray-900 text-sm">{booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : 'N/A'}</p>
+            </div>
           </div>
-          {!isBuyPlot && (
-            <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl">
-              <div>
-                <p className="text-[9px] text-gray-400 font-bold uppercase">{isPG ? 'Selection' : 'Room Type'}</p>
-                <p className="font-bold text-gray-900 text-sm">{room.name || room.type || 'Standard'}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-900 font-bold">
-                  {booking.bookingUnit === 'entire' ? '1 Unit' : booking.bookingUnit === 'bed' ? '1 Bed' : '1 Room'}
-                </p>
-                {!isInquiry && (
-                  <p className="text-[10px] text-gray-500 font-medium">
-                    {booking.totalNights} {durationLabel}
-                  </p>
-                )}
-              </div>
+          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl">
+            <div>
+              <p className="text-[9px] text-gray-400 font-bold uppercase">Room Type</p>
+              <p className="font-bold text-gray-900 text-sm">{room.name || room.type || 'Standard'}</p>
             </div>
-          )}
-
-          {isInquiry && booking.inquiryMetadata?.message && (
-            <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
-              <p className="text-[9px] text-blue-400 font-bold uppercase mb-1">User Message</p>
-              <p className="text-sm text-blue-900 font-medium italic">"{booking.inquiryMetadata.message}"</p>
+            <div className="text-right">
+              <p className="text-xs text-gray-900 font-bold">
+                {booking.bookingUnit === 'entire' ? '1 Unit' : '1 Room'}
+              </p>
+              <p className="text-[10px] text-gray-500 font-medium">
+                {booking.totalNights} {durationLabel}
+              </p>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Payment/Price Info - Compact */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <h3 className="font-bold text-gray-900 mb-3 text-sm flex items-center gap-2">
-            <CreditCard size={16} className="text-gray-400" /> {isInquiry ? 'Financial Details' : 'Payment & Payout'}
+            <CreditCard size={16} className="text-gray-400" /> Payment & Payout
           </h3>
           <div className="space-y-2">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-600">{isInquiry ? 'Expected Price / Budget' : 'Total Amount (Collect)'}</span>
-              <span className="font-bold text-gray-900 text-base">₹{isInquiry ? booking.inquiryMetadata?.budget : booking.totalAmount}</span>
+              <span className="text-gray-600">Total Amount (Collect)</span>
+              <span className="font-bold text-gray-900 text-base">₹{booking.totalAmount}</span>
             </div>
-            {!isInquiry && (
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-600">Partner Payout (Earnings)</span>
-                <span className="font-bold text-green-700 text-sm">₹{booking.partnerPayout}</span>
-              </div>
-            )}
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-600">Partner Payout (Earnings)</span>
+              <span className="font-bold text-green-700 text-sm">₹{booking.partnerPayout}</span>
+            </div>
             <div className="flex justify-between items-center text-xs pt-1">
               <span className="text-gray-600">Status</span>
               <span className={`font-bold px-2 py-0.5 rounded text-[10px] uppercase ${booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                {isInquiry ? 'Lead' : (booking.paymentStatus === 'paid' ? 'PAID' : 'PAY AT HOTEL')}
+                {booking.paymentStatus === 'paid' ? 'PAID' : 'PAY AT HOTEL'}
               </span>
             </div>
           </div>
@@ -292,35 +251,6 @@ const PartnerBookingDetail = () => {
 
       {/* Actions Grid */}
       <div className="grid grid-cols-2 gap-3 pt-2">
-        {isInquiry && (
-          <>
-            <button
-              onClick={() => handleUpdateInquiry('scheduled')}
-              className="bg-purple-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 col-span-1"
-            >
-              <Calendar size={18} /> Schedule Visit
-            </button>
-            <button
-              onClick={() => handleUpdateInquiry('negotiating')}
-              className="bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 col-span-1"
-            >
-              <Clock size={18} /> Negotiating
-            </button>
-            <button
-              onClick={() => handleUpdateInquiry(isBuyPlot ? 'sold' : 'rented')}
-              className="bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 col-span-2"
-            >
-              <CheckCircle size={20} /> Mark as {isBuyPlot ? 'Sold' : 'Rented'}
-            </button>
-            <button
-              onClick={() => handleUpdateInquiry('dropped')}
-              className="bg-white border border-gray-200 text-red-600 font-bold py-4 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2 col-span-2"
-            >
-              <XCircle size={20} /> Drop Lead
-            </button>
-          </>
-        )}
-
         {canCheckIn && (
           <button
             onClick={handleCheckIn}

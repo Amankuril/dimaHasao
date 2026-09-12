@@ -18,7 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard, Users, Building2, Calendar, Wallet,
     Settings, Bell, Search, LogOut, X, DollarSign, Star, Tag, FileText,
-    MessageSquare, CircleHelp, Home, LayoutGrid, Video, Clock,
+    MessageSquare, CircleHelp, Home, LayoutGrid,
     ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -45,8 +45,6 @@ const MENU_ITEMS = [
     { icon: FileText, label: 'Legal & Content', path: `${HOTEL_ADMIN_BASE}/legal` },
     { icon: MessageSquare, label: 'Contact Messages', path: `${HOTEL_ADMIN_BASE}/contact-messages` },
     { icon: CircleHelp, label: 'FAQs', path: `${HOTEL_ADMIN_BASE}/faqs` },
-    { icon: Video, label: 'Reel Analysis', path: `${HOTEL_ADMIN_BASE}/reel-analysis` },
-    { icon: Clock, label: 'Reel Settings', path: `${HOTEL_ADMIN_BASE}/reel-settings` },
     { icon: Settings, label: 'Settings', path: `${HOTEL_ADMIN_BASE}/settings` },
 ];
 

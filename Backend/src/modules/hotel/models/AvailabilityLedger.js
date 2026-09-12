@@ -12,7 +12,7 @@ const availabilityLedgerSchema = new mongoose.Schema({
   },
   inventoryType: {
     type: String,
-    enum: ["room", "bed", "entire", "tent"],
+    enum: ["room", "entire"],
     required: true
   },
   source: {

@@ -87,56 +87,13 @@ export const createBooking = async (req, res) => {
     if (!property) return res.status(404).json({ message: 'Property not found' });
 
     const pType = property.propertyType.toLowerCase();
-    const isInquiry = ['buy', 'plot', 'rent'].includes(pType);
 
-    // Basic Validation - different for inquiries
-    if (!isInquiry) {
-      if (!roomTypeId || !checkInDate || !checkOutDate) {
-        return res.status(400).json({ message: 'Missing required booking details' });
-      }
+    if (!roomTypeId || !checkInDate || !checkOutDate) {
+      return res.status(400).json({ message: 'Missing required booking details' });
     }
 
     const roomType = roomTypeId ? await RoomType.findById(roomTypeId) : null;
-    if (!isInquiry && !roomType) return res.status(404).json({ message: 'Room type not found' });
-
-    // --- HANDLE INQUIRY FLOW (BUY/PLOT) ---
-    if (isInquiry) {
-      const bookingId = `INQ-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      const userModel = req.user.constructor.modelName;
-
-      const inquiry = new Booking({
-        bookingId,
-        userModel,
-        userId: req.user._id,
-        propertyId,
-        propertyType: pType,
-        roomTypeId: roomTypeId || null,
-        isInquiry: true,
-        bookingStatus: 'pending',
-        inquiryMetadata: {
-          preferredDate: checkInDate ? new Date(checkInDate) : new Date(),
-          message: req.body.message || 'I am interested in this property.',
-          budget: req.body.budget || (pType === 'buy' ? property.buyDetails?.expectedPrice : (pType === 'rent' ? property.rentDetails?.monthlyRent : property.plotDetails?.expectedPrice)),
-          status: 'new'
-        }
-      });
-
-      await inquiry.save();
-
-      // Notify Partner
-      if (property.partnerId) {
-        notificationService.sendToUser(property.partnerId, {
-          title: 'New Property Inquiry!',
-          body: `You have a new inquiry for ${property.propertyName}.`
-        }, { type: 'new_inquiry', bookingId: inquiry._id }, 'partner').catch(e => console.error(e));
-      }
-
-      return res.status(201).json({
-        success: true,
-        message: 'Inquiry submitted successfully',
-        booking: inquiry
-      });
-    }
+    if (!roomType) return res.status(404).json({ message: 'Room type not found' });
 
     // --- CONTINUE STANDARD BOOKING FLOW ---
     // Fetch Settings
@@ -580,29 +537,13 @@ export const getPartnerBookings = async (req, res) => {
 
     if (status) {
       if (status === 'upcoming') {
-        // Upcoming: Confirmed guests arriving or New Inquiries
-        query.$or = [
-          { bookingStatus: 'confirmed', isInquiry: false },
-          { bookingStatus: 'pending', isInquiry: true }, // New Inquiries
-          { 'inquiryMetadata.status': 'new' }
-        ];
+        query.bookingStatus = 'confirmed';
       } else if (status === 'in_house') {
-        // In-House: Active guests or Negotiating Inquiries
-        query.$or = [
-          { bookingStatus: 'checked_in' },
-          { 'inquiryMetadata.status': { $in: ['scheduled', 'negotiating'] } }
-        ];
+        query.bookingStatus = 'checked_in';
       } else if (status === 'completed') {
-        // Completed: Guests checked out or Sold Properties
-        query.$or = [
-          { bookingStatus: { $in: ['completed', 'checked_out'] } },
-          { 'inquiryMetadata.status': { $in: ['closed', 'sold', 'rented'] } }
-        ];
+        query.bookingStatus = { $in: ['completed', 'checked_out'] };
       } else if (status === 'cancelled') {
-        query.$or = [
-          { bookingStatus: { $in: ['cancelled', 'no_show', 'rejected'] } },
-          { 'inquiryMetadata.status': 'dropped' }
-        ];
+        query.bookingStatus = { $in: ['cancelled', 'no_show', 'rejected'] };
       } else {
         // Direct status match fallback
         query.bookingStatus = status;
@@ -1013,43 +954,6 @@ export const markCheckOut = async (req, res) => {
     }
 
     res.json({ success: true, message: 'Checked Out Successfully', booking });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Update Inquiry Status (Buy/Plot)
-export const updateInquiryStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, message } = req.body;
-
-    const inquiry = await Booking.findById(id).populate('propertyId');
-    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
-
-    // Auth Check
-    if (inquiry.propertyId.partnerId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-
-    if (!inquiry.isInquiry) {
-      return res.status(400).json({ message: 'This is not an inquiry' });
-    }
-
-    inquiry.inquiryMetadata.status = status;
-    if (message) inquiry.inquiryMetadata.message = message;
-
-    await inquiry.save();
-
-    // Notify User
-    if (inquiry.userId) {
-      notificationService.sendToUser(inquiry.userId, {
-        title: 'Inquiry Updated',
-        body: `Your inquiry for ${inquiry.propertyId.propertyName} has been updated to ${status}.`
-      }, { type: 'inquiry_update', bookingId: inquiry._id }, 'user').catch(console.error);
-    }
-
-    res.json({ success: true, message: 'Inquiry status updated', inquiry });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

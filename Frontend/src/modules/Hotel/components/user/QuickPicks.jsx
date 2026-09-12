@@ -59,7 +59,7 @@ const QuickPicks = () => {
           "Recently Viewed": [],
           Premium: [],
           Budget: [],
-          Villas: []
+          Homestays: []
         };
 
         // The new HotelCard expects the full property object (including _id, propertyType, details, etc.)
@@ -83,8 +83,8 @@ const QuickPicks = () => {
 
           // Categorize by type
           const type = (hotel.propertyType || "").toLowerCase();
-          if (type.includes("villa") || type.includes("cottage")) {
-            categorized.Villas.push(hotel);
+          if (type.includes("homestay")) {
+            categorized.Homestays.push(hotel);
           }
         });
 

@@ -36,7 +36,7 @@ const bookingSchema = new mongoose.Schema({
 
   propertyType: {
     type: String,
-    enum: ["villa", "resort", "hotel", "hostel", "pg", "homestay", "tent", "rent", "buy", "plot"],
+    enum: ["hotel", "resort", "homestay", "lodge"],
     required: true
   },
 
@@ -48,7 +48,7 @@ const bookingSchema = new mongoose.Schema({
 
   bookingUnit: {
     type: String,
-    enum: ["entire", "room", "bed", "tent"]
+    enum: ["entire", "room"]
   },
 
   // STAY DETAILS
@@ -96,26 +96,11 @@ const bookingSchema = new mongoose.Schema({
   cancellationReason: String,
   cancelledAt: Date,
 
-  // INQUIRY FLAG
-  isInquiry: { type: Boolean, default: false },
-
   // AUDIT
   createdBy: {
     type: String,
     enum: ["user", "admin"],
     default: "user"
-  },
-
-  // Metadata for different logic
-  inquiryMetadata: {
-    preferredDate: Date,
-    message: String,
-    budget: Number,
-    status: {
-      type: String,
-      enum: ["new", "scheduled", "negotiating", "closed", "sold", "rented", "dropped"],
-      default: "new"
-    }
   }
 
 }, { timestamps: true });

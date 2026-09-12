@@ -66,9 +66,7 @@ const PropertyCard = ({ property, data, className = "", isSaved: initialIsSaved 
 
   const typeRaw = (propertyType || item.propertyType || '').toString();
   const normalizedType = typeRaw
-    ? typeRaw.toLowerCase() === 'pg'
-      ? 'PG'
-      : typeRaw.charAt(0).toUpperCase() + typeRaw.slice(1).toLowerCase()
+    ? typeRaw.charAt(0).toUpperCase() + typeRaw.slice(1).toLowerCase()
     : '';
 
   const typeLabel = dynamicCatName ? dynamicCatName.toUpperCase() : (normalizedType || typeRaw).toString().toUpperCase();
@@ -89,10 +87,6 @@ const PropertyCard = ({ property, data, className = "", isSaved: initialIsSaved 
   const rawPrice =
     startingPrice ??
     item.startingPrice ??
-    item.rentDetails?.monthlyRent ??
-    item.pgDetails?.monthlyRent ??
-    item.buyDetails?.expectedPrice ??
-    item.plotDetails?.expectedPrice ??
     item.minPrice ??
     item.min_price ??
     item.price ??
@@ -117,11 +111,9 @@ const PropertyCard = ({ property, data, className = "", isSaved: initialIsSaved 
   const getTypeColor = (type) => {
     switch (type) {
       case 'Hotel': return 'bg-blue-600 text-white border-blue-600';
-      case 'Villa': return 'bg-purple-600 text-white border-purple-600';
       case 'Resort': return 'bg-orange-500 text-white border-orange-500';
       case 'Homestay': return 'bg-indigo-500 text-white border-indigo-500';
-      case 'Hostel': return 'bg-pink-500 text-white border-pink-500';
-      case 'PG': return 'bg-rose-500 text-white border-rose-500';
+      case 'Lodge': return 'bg-purple-600 text-white border-purple-600';
       default: return 'bg-emerald-600 text-white border-emerald-600';
     }
   };
@@ -130,11 +122,7 @@ const PropertyCard = ({ property, data, className = "", isSaved: initialIsSaved 
     ? displayPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })
     : 'Price on Request';
 
-  const priceSuffix = ['PG', 'Hostel', 'Rent'].includes(badgeTypeKey)
-    ? '/month'
-    : ['Buy', 'Plot'].includes(badgeTypeKey)
-      ? ''
-      : '/night';
+  const priceSuffix = '/night';
 
   return (
     <div
@@ -214,42 +202,6 @@ const PropertyCard = ({ property, data, className = "", isSaved: initialIsSaved 
             </span>
           </div>
 
-          {/* Quick Specs - Compact Badges */}
-          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-            {/* Rent/Sale Type */}
-            {(item.rentDetails?.type || item.rentDetails?.bhkType || item.bhkType || item.bhk || item.roomType) ? (
-              <span className="bg-emerald-50 text-emerald-700 px-1 py-0.5 rounded text-[9px] font-bold border border-emerald-100">
-                {item.rentDetails?.type || item.rentDetails?.bhkType || item.bhkType || item.bhk || item.roomType}
-              </span>
-            ) : badgeTypeKey === 'Rent' ? (
-              <span className="bg-emerald-50 text-emerald-700 px-1 py-0.5 rounded text-[9px] font-bold border border-emerald-100">
-                RENT PROPERTY
-              </span>
-            ) : null}
-
-            {/* Buy Type */}
-            {badgeTypeKey === 'Buy' && (item.buyDetails?.type || item.buyDetails?.area?.superBuiltUp) && (
-              <span className="bg-blue-50 text-blue-700 px-1 py-0.5 rounded text-[9px] font-bold border border-blue-100">
-                {item.buyDetails?.type || `${item.buyDetails?.area?.superBuiltUp} ${item.buyDetails?.area?.unit || 'sqft'}`}
-              </span>
-            )}
-
-            {/* PG/Gender */}
-            {(badgeTypeKey === 'PG' || badgeTypeKey === 'Hostel') && (item.pgDetails?.gender || item.pgType) && (
-              <span className="bg-rose-50 text-rose-700 px-1 py-0.5 rounded text-[9px] font-bold border border-rose-100 italic">
-                {item.pgDetails?.gender || item.pgType}
-              </span>
-            )}
-
-            {/* Furnishing */}
-            {(item.rentDetails?.furnishing || item.furnishing) && (
-              <span className="text-[9px] text-gray-500 font-medium">
-                • {item.rentDetails?.furnishing || item.furnishing}
-              </span>
-            )}
-          </div>
-        </div>
-
         {/* Price & Actions Row - Integrated */}
         <div className="mt-1.5 pt-2 border-t border-gray-50 flex items-center justify-between">
           <div className="flex flex-col">
@@ -264,12 +216,6 @@ const PropertyCard = ({ property, data, className = "", isSaved: initialIsSaved 
                 </span>
               )}
             </div>
-            {['PG', 'Hostel', 'Rent'].includes(badgeTypeKey) && displayPrice && (
-              <span className="text-[8px] text-emerald-600 font-bold uppercase tracking-tighter -mt-0.5">Monthly Rent</span>
-            )}
-            {badgeTypeKey === 'Buy' && displayPrice && (
-              <span className="text-[8px] text-blue-600 font-bold uppercase tracking-tighter -mt-0.5">Total Price</span>
-            )}
           </div>
 
           <div className="flex items-center gap-2">

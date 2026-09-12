@@ -185,13 +185,11 @@ const HeroSection = ({ theme, selectedType }) => {
     };
 
     const categoryContent = {
-        'All': { title: "", subtitle: "Your home, your way." },
-        'PG/Co-Living': { title: "Scholar & Professional Stays.", subtitle: "Premium PGs and Co-living spaces designed for comfort." },
-        'PG': { title: "Scholar & Professional Stays.", subtitle: "Premium PGs and Co-living spaces designed for comfort." },
-        'Rent': { title: "Premium Homes for Rent.", subtitle: "Find your ideal match from chic apartments to spacious villas." },
-        'Buy': { title: "Invest in your Future.", subtitle: "Discover exclusive properties and luxury estates for sale." },
-        'Plot': { title: "Premium Plots in Prime Locations.", subtitle: "Build your vision on the perfect foundation." },
-        'Plots': { title: "Premium Plots in Prime Locations.", subtitle: "Build your vision on the perfect foundation." }
+        'All': { title: "", subtitle: "Your stay, your way." },
+        'Hotel': { title: "Stay in Comfort.", subtitle: "Rooms and suites with everything taken care of." },
+        'Resort': { title: "Getaways Worth the Trip.", subtitle: "Destination stays with plenty to do on site." },
+        'Homestay': { title: "Live Like a Local.", subtitle: "Hosted rooms and whole homes across the district." },
+        'Lodge': { title: "Simple, Comfortable Stays.", subtitle: "Well-kept rooms for a short stop." }
     };
 
     const currentTagline = categoryContent[selectedType?.label] || categoryContent['All'];
@@ -199,7 +197,7 @@ const HeroSection = ({ theme, selectedType }) => {
     const placeholders = [
         "Search in Bucharest...",
         "Find luxury hotels...",
-        "Book villas in Bali...",
+        "Find a homestay in Haflong...",
         "Couple friendly stays...",
         "Search near Red Square..."
     ];
@@ -570,7 +568,7 @@ const HeroSection = ({ theme, selectedType }) => {
                                         transition={{ duration: 0.4, ease: "easeOut" }}
                                         className="text-gray-400 font-normal text-sm md:text-base w-full truncate"
                                     >
-                                        {selectedType?.label === 'Plot' ? "Search by locality, landmark, project or builder..." : placeholders[placeholderIndex]}
+                                        {placeholders[placeholderIndex]}
                                     </motion.span>
                                 </AnimatePresence>
                             </div>

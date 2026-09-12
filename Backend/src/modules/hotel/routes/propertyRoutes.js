@@ -10,17 +10,13 @@ import {
   getPublicProperties,
   getPropertyDetails,
   getMyProperties,
-  deleteProperty,
-  revealContact,
-  getRecommendedSellers
+  deleteProperty
 } from '../controllers/propertyController.js';
 
 const router = express.Router();
 
 router.get('/', getPublicProperties);
-router.get('/recommended-sellers', getRecommendedSellers);
 router.get('/my', protect, authorizedRoles('partner', 'admin'), getMyProperties);
-router.get('/:id/reveal-contact', revealContact);
 router.get('/:id', getPropertyDetails);
 
 router.post('/', protect, authorizedRoles('partner', 'admin'), createProperty);

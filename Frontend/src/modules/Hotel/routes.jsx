@@ -24,8 +24,6 @@ const AdminSettings = L(() => import('./app/admin/pages/AdminSettings'));
 const AdminFaqs = L(() => import('./app/admin/pages/AdminFaqs'));
 const AdminLegalPages = L(() => import('./app/admin/pages/AdminLegalPages'));
 const AdminContactMessages = L(() => import('./app/admin/pages/AdminContactMessages'));
-const AdminReelAnalysis = L(() => import('./app/admin/pages/AdminReelAnalysis'));
-const AdminReelSettings = L(() => import('./app/admin/pages/AdminReelSettings'));
 
 // Partner (hotel/property vendor panel)
 const PartnerDashboard = L(() => import('./app/partner/pages/PartnerDashboard'));
@@ -43,6 +41,9 @@ const PartnerProfile = L(() => import('./app/partner/pages/PartnerProfile'));
 const PartnerSettings = L(() => import('./app/partner/pages/PartnerSettings'));
 const PartnerNotifications = L(() => import('./app/partner/pages/PartnerNotifications'));
 const PartnerJoinPropertyType = L(() => import('./app/partner/pages/PartnerJoinPropertyType'));
+const AddHotelWizard = L(() => import('./app/partner/pages/AddHotelWizard'));
+const AddResortWizard = L(() => import('./app/partner/pages/AddResortWizard'));
+const AddHomestayWizard = L(() => import('./app/partner/pages/AddHomestayWizard'));
 const HotelLogin = L(() => import('./app/partner/pages/HotelLogin'));
 
 const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden="true" />;
@@ -78,11 +79,6 @@ export default function HotelRoutes() {
             <Route path="faqs" element={<AdminFaqs />} />
             <Route path="legal" element={<AdminLegalPages />} />
             <Route path="contact-messages" element={<AdminContactMessages />} />
-            {/* Both pages and their admin endpoints already existed; only the
-                routes were missing, so the sidebar links fell through to the
-                catch-all and bounced back to the dashboard. */}
-            <Route path="reel-analysis" element={<AdminReelAnalysis />} />
-            <Route path="reel-settings" element={<AdminReelSettings />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Route>
@@ -91,6 +87,13 @@ export default function HotelRoutes() {
           <Route index element={<PartnerDashboard />} />
           <Route path="dashboard" element={<PartnerDashboard />} />
           <Route path="join" element={<PartnerJoinPropertyType />} />
+          {/* The wizards existed but were never mounted, so every option on the
+              type picker fell through to the catch-all. A lodge is a roomed
+              property like a hotel, so it reuses that wizard. */}
+          <Route path="join-hotel" element={<AddHotelWizard />} />
+          <Route path="join-lodge" element={<AddHotelWizard />} />
+          <Route path="join-resort" element={<AddResortWizard />} />
+          <Route path="join-homestay" element={<AddHomestayWizard />} />
           <Route path="properties" element={<PartnerProperties />} />
           <Route path="properties/:id" element={<PartnerPropertyDetails />} />
           <Route path="inventory-properties" element={<PartnerInventoryProperties />} />
@@ -123,6 +126,10 @@ export default function HotelRoutes() {
           'profile',
           'settings',
           'join',
+          'join-hotel',
+          'join-lodge',
+          'join-resort',
+          'join-homestay',
         ].map((page) => (
           <Route key={page} path={page} element={<Navigate to={`/hotel/partner/${page}`} replace />} />
         ))}

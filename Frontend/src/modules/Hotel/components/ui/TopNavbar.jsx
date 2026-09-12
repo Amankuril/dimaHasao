@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Globe, Menu, X, Home, Search, Video, Calendar, Wallet, Share2, LogOut, FileText, HelpCircle, Shield, ChevronRight, Plus } from 'lucide-react';
+import { User, Globe, Menu, X, Home, Search, Calendar, Wallet, Share2, LogOut, FileText, HelpCircle, Shield, ChevronRight, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,7 +29,6 @@ const TopNavbar = () => {
     const navLinks = [
         { name: 'Home', path: '/', icon: Home },
         { name: 'Search', path: '/search', icon: Search },
-        { name: 'Reels', path: '/reels', icon: Video },
         { name: 'Add Property', path: '/hotel/login', icon: Plus }, // Maps to hotel login like mobile
         { name: 'Bookings', path: '/bookings', icon: Calendar },
         { name: 'Wallet', path: '/wallet', icon: Wallet },
@@ -72,9 +71,6 @@ const TopNavbar = () => {
                     </Link>
                     <Link to="/search" className="text-gray-500 font-bold text-sm hover:text-emerald-600 transition tracking-tight">
                         Search
-                    </Link>
-                    <Link to="/reels" className="text-gray-500 font-bold text-sm hover:text-emerald-600 transition tracking-tight">
-                        Reels
                     </Link>
                     <Link to="/hotel/partner/login" className="text-gray-500 font-bold text-sm hover:text-emerald-600 transition tracking-tight">
                         Add Property

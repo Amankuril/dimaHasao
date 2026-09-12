@@ -23,7 +23,6 @@ import {
   updateContactStatus,
   getPlatformSettings,
   updatePlatformSettings,
-  getReelDurationPayments,
   verifyPropertyDocuments,
   getHotelDetails,
   getBookingDetails,
@@ -35,10 +34,6 @@ import {
   markAllAdminNotificationsRead,
   deleteAdminNotifications,
   getFinanceStats,
-  getReelAnalysis,
-  getAdminReels,
-  updateReelStatus,
-  toggleFeatureReel
 } from '../controllers/adminController.js';
 import { uploadImages } from '../controllers/hotelController.js';
 import upload from '../utils/multer.js';
@@ -89,10 +84,5 @@ router.get('/contact-messages', getContactMessages);
 router.put('/contact-messages/:id/status', updateContactStatus);
 router.get('/platform-settings', getPlatformSettings);
 router.put('/platform-settings', updatePlatformSettings);
-router.get('/reel-duration-payments', getReelDurationPayments);
-router.get('/reel-analysis', getReelAnalysis);
-router.get('/reels', getAdminReels);
-router.patch('/reels/:id/status', updateReelStatus);
-router.patch('/reels/:id/feature', toggleFeatureReel);
 
 export default router;

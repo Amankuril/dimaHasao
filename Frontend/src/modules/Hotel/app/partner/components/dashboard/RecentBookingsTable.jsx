@@ -30,8 +30,6 @@ const RecentBookingsTable = ({ bookings }) => {
       <div className="md:hidden">
         {bookings.map((booking) => {
           const pType = (booking.propertyId?.propertyType || booking.propertyType || '').toLowerCase();
-          const isInquiry = ['buy', 'plot', 'rent'].includes(pType) || booking.isInquiry;
-
           return (
             <div
               key={booking._id}
@@ -68,22 +66,15 @@ const RecentBookingsTable = ({ bookings }) => {
                     {pType}
                   </p>
                   <div className="text-[10px] text-gray-400 font-medium">
-                    {isInquiry ? (
-                      <span>Inquiry: {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
-                    ) : (
-                      <span>
-                        {new Date(booking.checkInDate || booking.checkIn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                        {' - '}
-                        {new Date(booking.checkOutDate || booking.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </span>
-                    )}
+                    <span>
+                      {new Date(booking.checkInDate || booking.checkIn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      {' - '}
+                      {new Date(booking.checkOutDate || booking.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    </span>
                   </div>
                 </div>
                 <p className="text-sm font-black text-gray-900">
-                  ₹{isInquiry
-                    ? (booking.inquiryMetadata?.budget || 0).toLocaleString('en-IN')
-                    : (booking.totalAmount || 0).toLocaleString('en-IN')
-                  }
+                  ₹{(booking.totalAmount || 0).toLocaleString('en-IN')}
                 </p>
               </div>
             </div>
@@ -108,9 +99,7 @@ const RecentBookingsTable = ({ bookings }) => {
           <tbody className="divide-y divide-gray-100">
             {bookings.map((booking) => {
               const pType = (booking.propertyId?.propertyType || booking.propertyType || '').toLowerCase();
-              const isInquiry = ['buy', 'plot', 'rent'].includes(pType) || booking.isInquiry;
-
-              return (
+                  return (
                 <tr key={booking._id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 font-medium text-gray-900">
                     {booking.userId?.name || booking.guestName || "Guest"}
@@ -123,30 +112,17 @@ const RecentBookingsTable = ({ bookings }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">
-                    {isInquiry ? (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold">Inquiry Date</span>
-                        <span>{new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold">Stay Duration</span>
-                        <span>
-                          {new Date(booking.checkInDate || booking.checkIn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                          {' - '}
-                          {new Date(booking.checkOutDate || booking.checkOut).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold">Stay Duration</span>
+                      <span>
+                        {new Date(booking.checkInDate || booking.checkIn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                        {' - '}
+                        {new Date(booking.checkOutDate || booking.checkOut).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900">
-                    {isInquiry ? (
-                      <div className="flex flex-col">
-                        <span>₹{(booking.inquiryMetadata?.budget || 0).toLocaleString('en-IN')}</span>
-                      </div>
-                    ) : (
-                      <span>₹{(booking.totalAmount || 0).toLocaleString('en-IN')}</span>
-                    )}
+                    <span>₹{(booking.totalAmount || 0).toLocaleString('en-IN')}</span>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-md text-xs font-semibold
