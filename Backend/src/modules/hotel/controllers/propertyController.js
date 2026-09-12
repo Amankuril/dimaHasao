@@ -22,65 +22,8 @@ const notifyAdminOfNewProperty = async (property) => {
 
 export const createProperty = async (req, res) => {
   try {
-    // --- SUBSCRIPTION GUARD: Check if partner can add more properties ---
-    const partner = await Partner.findById(req.user._id).populate('subscription.planId');
+    const partner = await Partner.findById(req.user._id);
     if (!partner) return res.status(404).json({ message: 'Partner not found' });
-
-    const { subscription } = partner;
-
-    // Check if subscription is active and not expired
-    const isSubscriptionActive =
-      subscription?.status === 'active' &&
-      subscription?.expiryDate &&
-      new Date(subscription.expiryDate) > new Date();
-
-    // LOGIC UPDATE: Revenue Strategy & No Subscription Case
-    // If no active subscription, we allow property creation (Commission-based model).
-    // If active subscription, we enforce the plan's property limit.
-
-    let maxAllowed = 1; // Default limit for non-subscribed users (or could be unlimited based on business rule)
-    // The requirement says "Agar partner koi plan purchase nahi karta: Vo properties add kar sakta hai".
-    // We'll set a reasonable default or unlimited. Let's assume unlimited for commission-only, 
-    // BUT usually systems have a free tier limit. 
-    // If "No Subscription" means "Pay Per Booking", maybe they can add unlimited but pay higher commission.
-    // However, to avoid spam, let's keep it open or check if business requires a strict limit.
-    // Logic: If subscription active -> use plan limit. If not -> Unrestricted (or high limit).
-
-    if (isSubscriptionActive) {
-      maxAllowed = subscription.planId?.maxProperties || 1;
-    } else {
-      // No subscription / Expired
-      // "Vo properties add kar sakta hai" -> Allow.
-      // We set a high number or skip the check.
-      maxAllowed = 9999;
-    }
-
-    // REMOVED THE BLOCKING GUARD to support "No Subscription Case"
-    /* 
-    if (!isSubscriptionActive) {
-      return res.status(403).json({
-        message: 'No active subscription. Please purchase a subscription plan to add properties.',
-        requiresSubscription: true
-      });
-    } 
-    */
-
-    // Check if partner has reached property limit
-    const currentPropertyCount = await Property.countDocuments({
-      partnerId: req.user._id,
-      status: { $ne: 'deleted' } // Don't count deleted properties
-    });
-
-    // maxAllowed is already determined above based on subscription status
-
-    if (currentPropertyCount >= maxAllowed) {
-      return res.status(403).json({
-        message: `Property limit reached. Your plan allows ${maxAllowed} properties. Please upgrade your subscription.`,
-        limitReached: true,
-        currentCount: currentPropertyCount,
-        maxAllowed: maxAllowed
-      });
-    }
 
     const { propertyName, contactNumber, propertyType, description, shortDescription, coverImage, propertyImages, amenities, address, location, nearbyPlaces, checkInTime, checkOutTime, cancellationPolicy, houseRules, documents, roomTypes, pgType, hostelType, hostLivesOnProperty, familyFriendly, resortType, activities, hotelCategory, starRating, dynamicCategory, pgDetails, rentDetails, plotDetails, buyDetails } = req.body;
     if (!propertyName || !propertyType || !coverImage) return res.status(400).json({ message: 'Missing required fields' });
@@ -168,10 +111,6 @@ export const createProperty = async (req, res) => {
     if (doc.status === 'pending') {
       notifyAdminOfNewProperty(doc).catch(e => console.error(e));
     }
-
-    // INCREMENT SUBSCRIPTION COUNTER: Update propertiesAdded count
-    partner.subscription.propertiesAdded = (partner.subscription.propertiesAdded || 0) + 1;
-    await partner.save();
 
     res.status(201).json({ success: true, property: doc });
   } catch (e) {
@@ -638,34 +577,6 @@ export const getPublicProperties = async (req, res) => {
       pipeline.push({ $match: matchConditions });
     }
 
-    // --- SUBSCRIPTION RANKING BOOST ---
-    pipeline.push(
-      {
-        $lookup: {
-          from: 'partners',
-          localField: 'partnerId',
-          foreignField: '_id',
-          as: 'partner'
-        }
-      },
-      { $unwind: { path: '$partner', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: 'subscriptionplans',
-          localField: 'partner.subscription.planId',
-          foreignField: '_id',
-          as: 'plan'
-        }
-      },
-      { $unwind: { path: '$plan', preserveNullAndEmptyArrays: true } },
-      {
-        $addFields: {
-          rankingWeight: { $ifNull: ['$plan.rankingWeight', 0] },
-          hasVerifiedTag: { $ifNull: ['$plan.hasVerifiedTag', false] }
-        }
-      }
-    );
-
     // 3. Lookup Room Types (For Price & Guest Capacity)
     // Use dynamic collection name for robustness
     const roomTypeCollection = RoomType.collection.name;
@@ -740,13 +651,13 @@ export const getPublicProperties = async (req, res) => {
     }
 
     // 7. Sorting
-    let sortStage = { rankingWeight: -1, createdAt: -1 }; // Priority: Weight then Newest
+    let sortStage = { createdAt: -1 }; // Newest first
     if (sort) {
-      if (sort === 'newest') sortStage = { rankingWeight: -1, createdAt: -1 };
-      if (sort === 'price_low') sortStage = { startingPrice: 1, rankingWeight: -1 };
-      if (sort === 'price_high') sortStage = { startingPrice: -1, rankingWeight: -1 };
-      if (sort === 'rating') sortStage = { avgRating: -1, rankingWeight: -1 };
-      if (sort === 'distance' && lat && lng) sortStage = { distance: 1, rankingWeight: -1 };
+      if (sort === 'newest') sortStage = { createdAt: -1 };
+      if (sort === 'price_low') sortStage = { startingPrice: 1, createdAt: -1 };
+      if (sort === 'price_high') sortStage = { startingPrice: -1, createdAt: -1 };
+      if (sort === 'rating') sortStage = { avgRating: -1, createdAt: -1 };
+      if (sort === 'distance' && lat && lng) sortStage = { distance: 1, createdAt: -1 };
     }
 
     pipeline.push({ $sort: sortStage });
@@ -814,43 +725,17 @@ export const deleteProperty = async (req, res) => {
 };
 
 /**
- * @desc    Get Property Contact Details (Enforces Lead Capping)
+ * @desc    Get Property Contact Details
  * @route   GET /api/properties/:id/reveal-contact
  * @access  Public (Optional Login)
  */
 export const revealContact = async (req, res) => {
   try {
     const { id } = req.params;
-    const property = await Property.findById(id).populate({
-      path: 'partnerId',
-      populate: { path: 'subscription.planId' }
-    });
+    const property = await Property.findById(id).populate('partnerId');
 
     if (!property) return res.status(404).json({ message: 'Property not found' });
-
-    const partner = property.partnerId;
-    if (!partner) return res.status(404).json({ message: 'Partner details missing' });
-
-    const sub = partner.subscription;
-    const plan = sub?.planId;
-
-    // Check if partner is active and has a plan
-    if (sub?.status === 'active' && plan) {
-      // Logic for Silver Tier Lead Capping
-      if (plan.tier === 'silver' && plan.leadCap > 0) {
-        if ((sub.leadsUsedThisMonth || 0) >= plan.leadCap) {
-          return res.status(403).json({
-            success: false,
-            message: 'Partner lead limit reached. Try another property.',
-            limitReached: true
-          });
-        }
-      }
-
-      // Increment leads count
-      partner.subscription.leadsUsedThisMonth = (sub.leadsUsedThisMonth || 0) + 1;
-      await partner.save();
-    }
+    if (!property.partnerId) return res.status(404).json({ message: 'Partner details missing' });
 
     res.json({
       success: true,
@@ -864,31 +749,22 @@ export const revealContact = async (req, res) => {
 };
 
 /**
- * @desc    Get Recommended Sellers (Partners with Premium Plans & High Activity)
+ * @desc    Get Recommended Sellers (approved partners with the most live listings)
  * @route   GET /api/properties/recommended-sellers
  * @access  Public
+ *
+ * Ranking used to come from the partner's paid plan weight. With subscriptions
+ * gone, activity is the ordering signal: most live listings first, then the
+ * longest-standing partner.
  */
 export const getRecommendedSellers = async (req, res) => {
   try {
     const pipeline = [
       {
         $match: {
-          partnerApprovalStatus: 'approved',
-          'subscription.status': 'active'
+          partnerApprovalStatus: 'approved'
         }
       },
-      {
-        $lookup: {
-          from: 'subscriptionplans',
-          localField: 'subscription.planId',
-          foreignField: '_id',
-          as: 'plan'
-        }
-      },
-      { $unwind: '$plan' },
-      // Sort by rankingWeight (Diamond=5, etc.) then by creation date
-      { $sort: { 'plan.rankingWeight': -1, createdAt: -1 } },
-      { $limit: 10 },
       {
         $lookup: {
           from: 'properties',
@@ -911,6 +787,8 @@ export const getRecommendedSellers = async (req, res) => {
           }
         }
       },
+      { $sort: { totalListings: -1, partnerSince: 1 } },
+      { $limit: 10 },
       {
         $project: {
           password: 0,
@@ -922,8 +800,7 @@ export const getRecommendedSellers = async (req, res) => {
           aadhaarBack: 0,
           panNumber: 0,
           panCardImage: 0,
-          activeProperties: 0,
-          'subscription.transactionId': 0
+          activeProperties: 0
         }
       }
     ];

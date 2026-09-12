@@ -28,7 +28,7 @@ const PartnerPropertiesTab = ({ properties }) => (
                     properties.map((property, i) => (
                         <tr key={i} className="hover:bg-gray-50">
                             <td className="p-4 font-bold text-gray-900">
-                                <Link to={`/admin/hotels/${property._id}`} className="hover:text-blue-600 hover:underline">
+                                <Link to={`/hotel/admin/properties/${property._id}`} className="hover:text-blue-600 hover:underline">
                                     {property.propertyName}
                                 </Link>
                             </td>
@@ -308,7 +308,7 @@ const AdminPartnerDetail = () => {
                 <AlertTriangle size={48} className="mx-auto text-red-400 mb-4" />
                 <h2 className="text-2xl font-bold text-gray-900">Partner Not Found</h2>
                 <p className="text-gray-500 mt-2">The partner you're looking for doesn't exist or has been deleted.</p>
-                <Link to="/admin/partners" className="mt-6 inline-block text-black font-bold uppercase text-xs border-b-2 border-black pb-1">Back to Partners</Link>
+                <Link to="/hotel/admin/partners" className="mt-6 inline-block text-black font-bold uppercase text-xs border-b-2 border-black pb-1">Back to Partners</Link>
             </div>
         );
     }
@@ -328,7 +328,7 @@ const AdminPartnerDetail = () => {
             />
 
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-500 mb-2">
-                <Link to="/admin/partners" className="hover:text-black transition-colors">Partners</Link>
+                <Link to="/hotel/admin/partners" className="hover:text-black transition-colors">Partners</Link>
                 <span>/</span>
                 <span className="text-black">{partner.name}</span>
             </div>

@@ -30,7 +30,7 @@ const AdminLogin = () => {
         const checkExistingAuth = async () => {
             await checkAuth();
             if (useAdminStore.getState().isAuthenticated) {
-                navigate('/admin/dashboard');
+                navigate('/hotel/admin/dashboard');
             }
         };
         checkExistingAuth();
@@ -67,7 +67,7 @@ const AdminLogin = () => {
                 console.warn('FCM update failed', fcmError);
             }
 
-            navigate('/admin/dashboard');
+            navigate('/hotel/admin/dashboard');
         } else {
             setError(result.message);
             toast.error(result.message);

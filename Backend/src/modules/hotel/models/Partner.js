@@ -62,23 +62,6 @@ const partnerSchema = new mongoose.Schema({
     }
   },
 
-  // Subscription Details
-  subscription: {
-    planId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan' },
-    status: {
-      type: String,
-      enum: ['active', 'expired', 'inactive'],
-      default: 'inactive'
-    },
-    startDate: { type: Date },
-    expiryDate: { type: Date },
-    propertiesAdded: { type: Number, default: 0 },
-    transactionId: { type: String },
-    leadsUsedThisMonth: { type: Number, default: 0 },
-    isPaused: { type: Boolean, default: false },
-    pauseStartDate: { type: Date }
-  },
-
 
   termsAccepted: { type: Boolean, default: false },
 

@@ -24,6 +24,8 @@ const AdminSettings = L(() => import('./app/admin/pages/AdminSettings'));
 const AdminFaqs = L(() => import('./app/admin/pages/AdminFaqs'));
 const AdminLegalPages = L(() => import('./app/admin/pages/AdminLegalPages'));
 const AdminContactMessages = L(() => import('./app/admin/pages/AdminContactMessages'));
+const AdminReelAnalysis = L(() => import('./app/admin/pages/AdminReelAnalysis'));
+const AdminReelSettings = L(() => import('./app/admin/pages/AdminReelSettings'));
 
 // Partner (hotel/property vendor panel)
 const PartnerDashboard = L(() => import('./app/partner/pages/PartnerDashboard'));
@@ -76,6 +78,11 @@ export default function HotelRoutes() {
             <Route path="faqs" element={<AdminFaqs />} />
             <Route path="legal" element={<AdminLegalPages />} />
             <Route path="contact-messages" element={<AdminContactMessages />} />
+            {/* Both pages and their admin endpoints already existed; only the
+                routes were missing, so the sidebar links fell through to the
+                catch-all and bounced back to the dashboard. */}
+            <Route path="reel-analysis" element={<AdminReelAnalysis />} />
+            <Route path="reel-settings" element={<AdminReelSettings />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Route>

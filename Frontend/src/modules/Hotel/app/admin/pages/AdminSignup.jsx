@@ -13,7 +13,7 @@ const AdminSignup = () => {
         // Simulate API call for now
         console.log("Signup Data:", data);
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        navigate('/admin/dashboard');
+        navigate('/hotel/admin/dashboard');
     };
 
     return (

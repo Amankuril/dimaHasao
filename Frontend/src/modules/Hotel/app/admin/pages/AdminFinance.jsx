@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Wallet, TrendingUp, Download, ArrowUpRight, ArrowDownRight,
-    CreditCard, Calendar, CheckCircle, Clock, Loader2, Building2, Users
+    CreditCard, Calendar, CheckCircle, Clock, Loader2, Users
 } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
@@ -72,7 +72,7 @@ const AdminFinance = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Revenue Overview</h2>
-                    <p className="text-gray-500 text-sm">Track subscription income and booking commissions.</p>
+                    <p className="text-gray-500 text-sm">Track booking commissions.</p>
                 </div>
                 <button className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-lg">
                     <Download size={16} /> Export Report
@@ -80,26 +80,12 @@ const AdminFinance = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FinanceStatCard
                     title="Total Revenue"
                     value={currency(stats?.totalRevenue)}
                     subtext=""
                     color="text-green-600"
-                    icon={TrendingUp}
-                />
-                <FinanceStatCard
-                    title="Platform Subs"
-                    value={currency(0)}
-                    subtext=""
-                    color="text-blue-600"
-                    icon={Building2}
-                />
-                <FinanceStatCard
-                    title="Market Price Subs"
-                    value={currency(0)}
-                    subtext=""
-                    color="text-orange-600"
                     icon={TrendingUp}
                 />
                 <FinanceStatCard
@@ -112,57 +98,7 @@ const AdminFinance = () => {
             </div>
 
             {/* Revenue Breakdown */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Platform Access Revenue */}
-                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-blue-50">
-                        <div>
-                            <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                                <Building2 size={16} className="text-blue-600" />
-                                Platform Access
-                            </h3>
-                            <p className="text-[10px] text-gray-500 mt-0.5">Core subscription revenue</p>
-                        </div>
-                    </div>
-                    <div className="p-4">
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <p className="text-xs font-bold text-gray-900">Premium</p>
-                                <p className="text-xs font-bold text-blue-600">₹0</p>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <p className="text-xs font-bold text-gray-900">Basic</p>
-                                <p className="text-xs font-bold text-blue-600">₹0</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Market Intelligence Revenue */}
-                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-orange-50">
-                        <div>
-                            <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                                <TrendingUp size={16} className="text-orange-600" />
-                                Market Intelligence
-                            </h3>
-                            <p className="text-[10px] text-gray-500 mt-0.5">Plans to see market prices</p>
-                        </div>
-                    </div>
-                    <div className="p-4">
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <p className="text-xs font-bold text-gray-900">Market Pro</p>
-                                <p className="text-xs font-bold text-orange-600">₹0</p>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                <p className="text-xs font-bold text-gray-900">Market Lite</p>
-                                <p className="text-xs font-bold text-orange-600">₹0</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+            <div className="grid grid-cols-1 gap-6">
                 {/* Booking Commission Revenue */}
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100 bg-purple-50">
@@ -255,15 +191,9 @@ const AdminFinance = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
                 <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
                     <TrendingUp size={18} />
-                    Subscription Model Details
+                    Revenue Model
                 </h4>
                 <div className="text-sm text-blue-800 space-y-3">
-                    <div className="p-3 bg-white/50 rounded-lg border border-blue-100">
-                        <p><strong>1. Platform Access Plans:</strong> Core entry fee for hotels to list and take bookings. (Basic/Premium)</p>
-                    </div>
-                    <div className="p-3 bg-orange-50/50 rounded-lg border border-orange-100">
-                        <p className="text-orange-900"><strong>2. Market Intelligence Plans:</strong> <span className="font-black">REQUIRED TO VIEW MARKET PRICES.</span> Hotels can subscribe separately to see competitor rates.</p>
-                    </div>
                     <p><strong>Booking Commission:</strong> Platform earns 20% commission on every confirmed room booking.</p>
                 </div>
             </div>

@@ -164,15 +164,15 @@ const PropertyCard = ({ property, data, className = "", isSaved: initialIsSaved 
                 {typeLabel}
               </span>
             )}
-            {item.hasVerifiedTag && (
+            {item.isVerified && (
               <div className="bg-white/90 backdrop-blur-sm p-0.5 rounded-full shadow-sm">
                 <BadgeCheck size={14} className="fill-blue-500 text-white" />
               </div>
             )}
           </div>
 
-          {/* Subscription/Premium Tag */}
-          {(item.rankingWeight > 0 || item.isFeatured) && (
+          {/* Premium Tag — admin-set, was previously also driven by a paid plan's ranking weight */}
+          {item.isFeatured && (
             <span className="bg-[#FFD700] text-black px-2 py-0.5 rounded-[4px] text-[8px] font-black uppercase tracking-wider shadow-md border border-white/20 flex items-center gap-1 animate-pulse-slow">
               <Star size={10} className="fill-black" />
               PREMIUM Listing

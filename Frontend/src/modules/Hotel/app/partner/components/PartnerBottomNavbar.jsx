@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Briefcase, UserCircle, Crown, Clapperboard } from 'lucide-react';
+import { LayoutDashboard, Briefcase, UserCircle, Clapperboard } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -11,7 +11,6 @@ const PartnerBottomNavbar = () => {
     const path = location.pathname;
     if (path.includes('dashboard') || path === '/hotel') return 'Dashboard';
     if (path.includes('bookings')) return 'Enquiry';
-    if (path.includes('subscription')) return 'Subscription';
     if (path.includes('reels') || path.includes('reel')) return 'Reels';
     if (path.includes('profile')) return 'Profile';
     return '';
@@ -20,7 +19,6 @@ const PartnerBottomNavbar = () => {
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, route: '/hotel/dashboard' },
     { name: 'Enquiry', icon: Briefcase, route: '/hotel/bookings' },
-    { name: 'Subscription', icon: Crown, route: '/hotel/subscriptions' },
     { name: 'Reels', icon: Clapperboard, route: '/reels' },
     { name: 'Profile', icon: UserCircle, route: '/hotel/profile' },
   ];
@@ -37,7 +35,7 @@ const PartnerBottomNavbar = () => {
         shadow-[0_-8px_30px_rgba(0,0,0,0.08)] 
         border-t border-gray-100/80 
         px-2 h-[68px] 
-        grid grid-cols-5 items-center 
+        grid grid-cols-4 items-center 
         relative
       ">
         {navItems.map((item) => {

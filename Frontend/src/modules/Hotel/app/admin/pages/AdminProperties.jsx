@@ -284,7 +284,7 @@ const AdminProperties = () => {
                                                 className="hover:bg-gray-50/50 transition-colors group relative"
                                             >
                                                 <td className="p-4">
-                                                    <Link to={`/admin/properties/${property._id}`} className="flex items-center gap-3">
+                                                    <Link to={`/hotel/admin/properties/${property._id}`} className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0 border border-white shadow-sm">
                                                             <Building2 size={18} />
                                                         </div>
@@ -327,7 +327,7 @@ const AdminProperties = () => {
 
                                                     {activeDropdown === property._id && (
                                                         <div className="absolute right-8 top-8 w-40 bg-white border border-gray-200 rounded-lg shadow-xl z-20 py-1 text-left">
-                                                            <Link to={`/admin/properties/${property._id}`} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-gray-700">
+                                                            <Link to={`/hotel/admin/properties/${property._id}`} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-gray-700">
                                                                 <Eye size={14} /> View Details
                                                             </Link>
                                                             {property.status === 'pending' && (

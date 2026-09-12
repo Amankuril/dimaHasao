@@ -44,87 +44,24 @@ const HomeBottomSections = () => {
     }, []);
 
     // Dynamic Package-Based Theming Helper
-    const getPackageTheme = (planTier, planName) => {
-        const tier = (planTier || planName || '').toLowerCase();
-
-        if (tier.includes('diamond')) {
-            return {
-                badgeLabel: planName ? `💎 ${planName}` : '💎 ELITE DIAMOND PACK',
-                cardBg: 'bg-[radial-gradient(ellipse_at_top_left,#1C2F8F_0%,#060B2D_60%,#03051A_100%)]',
-                borderColor: 'border-2 border-[#7B3FFB]/80 hover:border-[#E94CFF]',
-                glowShadow: 'shadow-[0_15px_50px_-10px_rgba(123,63,251,0.45)] hover:shadow-[0_20px_60px_0px_rgba(233,76,255,0.6)]',
-                badgeStyle: 'bg-gradient-to-r from-[#1C2F8F] via-[#7B3FFB] to-[#E94CFF] text-white border-[#E94CFF]/50 shadow-[0_0_15px_rgba(233,76,255,0.4)] backdrop-blur-md font-extrabold',
-                accentColor: '#E94CFF',
-                profileRing: 'ring-4 ring-[#39D5FF]/40 border-2 border-[#E94CFF] shadow-[0_0_20px_rgba(233,76,255,0.6)]',
-                quoteBg: 'bg-[#0B1342]/70 border-[#39D5FF]/30 shadow-[inset_0_1px_15px_rgba(28,47,143,0.5)] backdrop-blur-md',
-                quoteIconColor: 'text-[#7B3FFB]',
-                buttonGradient: 'from-[#1C2F8F] via-[#7B3FFB] to-[#E94CFF] hover:from-[#253EC2] hover:via-[#8E54FF] hover:to-[#EF6CFF] shadow-[0_6px_30px_rgba(233,76,255,0.55)] border border-[#E94CFF]/40',
-                isDark: true,
-                subTextColor: 'text-[#C4B5FD]',
-                locationIconColor: 'text-[#39D5FF]',
-                statLabelColor: 'text-[#C4B5FD]',
-                ratingBg: 'bg-[#1C2F8F]/50 backdrop-blur-md border border-[#39D5FF]/40 text-white shadow-md',
-                ratingCountColor: 'text-[#39D5FF]',
-                dividerColor: 'bg-gradient-to-r from-transparent via-[#7B3FFB]/60 to-transparent',
-                hasDiamondPattern: true,
-                cardRadius: 'rounded-[28px]'
-            };
-        }
-
-        if (tier.includes('gold')) {
-            return {
-                badgeLabel: planName || 'ELITE GOLD PACK',
-                cardBg: 'bg-gradient-to-br from-[#EAB031] via-[#FCE38A] to-[#D59821]',
-                borderColor: 'border-[#FEEAA7] hover:border-white',
-                glowShadow: 'shadow-[0_15px_40px_-10px_rgba(213,152,33,0.55)] hover:shadow-[0_20px_50px_-10px_rgba(213,152,33,0.7)]',
-                badgeStyle: 'bg-gradient-to-r from-[#FFF0B3] to-[#FCE38A] text-[#7A5200] border-[#D59821]/40 shadow-sm font-extrabold',
-                accentColor: '#8F6100',
-                profileRing: 'ring-4 ring-[#FFF0B3]/70 border-2 border-[#D59821] shadow-[0_0_20px_rgba(213,152,33,0.5)]',
-                quoteBg: 'bg-gradient-to-br from-[#FFF0B3]/60 to-[#EAB031]/30 border-[#FFF0B3]/80 shadow-[inset_0_1px_10px_rgba(213,152,33,0.3)]',
-                quoteIconColor: 'text-[#8F6100]',
-                buttonGradient: 'from-[#A36F00] via-[#C98A00] to-[#8F6100] hover:from-[#8F6100] hover:to-[#6E4B00] shadow-[0_6px_20px_rgba(143,97,0,0.5)] border border-[#FCE38A]/50 !text-white',
-                isDark: false,
-                subTextColor: 'text-[#7A5200]',
-                locationIconColor: 'text-[#8F6100]',
-                statLabelColor: 'text-[#8F6100]',
-                ratingBg: 'bg-gradient-to-r from-[#FFF0B3] to-[#FCE38A] border border-[#D59821]/30 text-[#7A5200] shadow-md',
-                ratingCountColor: 'text-[#8F6100]',
-                dividerColor: 'bg-[#D59821]/40',
-                hasDiamondPattern: false,
-            };
-        }
-
-        if (tier.includes('platinum')) {
-            return {
-                badgeLabel: planName || 'PLATINUM PACK',
-                cardBg: 'bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/40',
-                borderColor: 'border-indigo-200/80 hover:border-indigo-300/90',
-                glowShadow: 'shadow-[0_10px_35px_-8px_rgba(99,102,241,0.12)] hover:shadow-[0_20px_50px_-10px_rgba(99,102,241,0.25)]',
-                badgeStyle: 'bg-indigo-500/10 text-indigo-900 border-indigo-200/90',
-                accentColor: '#E5E4E2',
-                profileRing: 'ring-indigo-200/90 group-hover:ring-indigo-400/80',
-                quoteBg: 'bg-white/90 border-indigo-100/90 shadow-xs',
-                quoteIconColor: 'text-indigo-500',
-                buttonGradient: 'from-indigo-600 via-indigo-700 to-slate-900 hover:from-indigo-500 hover:to-black shadow-indigo-500/25',
-                hasDiamondPattern: false,
-            };
-        }
-
-        // Default / Starter Silver Pack - Dark Glowing Blue Theme (Image 2)
-        return {
-            badgeLabel: planName || 'STARTER SILVER PACK',
-            cardBg: 'bg-gradient-to-br from-[#021035] via-[#041A52] to-[#010927]',
-            borderColor: 'border-2 border-blue-500/80 hover:border-blue-400',
-            glowShadow: 'shadow-[0_0_35px_rgba(27,85,226,0.45)] hover:shadow-[0_0_55px_rgba(37,99,235,0.7)]',
-            badgeStyle: 'bg-[#0B256B] text-blue-300 border-blue-600/80',
-            accentColor: '#1B55E2',
-            profileRing: 'ring-blue-500/50 border-blue-500',
-            quoteBg: 'bg-[#061847]/90 border-blue-600/60 shadow-inner',
-            quoteIconColor: 'text-blue-400',
-            buttonGradient: 'from-[#1B55E2] via-[#2563EB] to-[#1D4ED8] hover:from-[#2563EB] hover:to-[#1E40AF] shadow-[0_4px_25px_rgba(27,85,226,0.7)] border border-blue-400/40',
-            isDark: true,
-            hasDiamondPattern: false,
-        };
+    /**
+     * Card styling for a partner.
+     *
+     * This used to branch on the partner's paid plan tier and label each card
+     * with the plan name. Subscriptions were removed, so every partner now gets
+     * the one house style and no plan badge.
+     */
+    const PARTNER_CARD_THEME = {
+        cardBg: 'bg-gradient-to-br from-[#021035] via-[#041A52] to-[#010927]',
+        borderColor: 'border-2 border-blue-500/80 hover:border-blue-400',
+        glowShadow: 'shadow-[0_0_35px_rgba(27,85,226,0.45)] hover:shadow-[0_0_55px_rgba(37,99,235,0.7)]',
+        accentColor: '#1B55E2',
+        profileRing: 'ring-blue-500/50 border-blue-500',
+        quoteBg: 'bg-[#061847]/90 border-blue-600/60 shadow-inner',
+        quoteIconColor: 'text-blue-400',
+        buttonGradient: 'from-[#1B55E2] via-[#2563EB] to-[#1D4ED8] hover:from-[#2563EB] hover:to-[#1E40AF] shadow-[0_4px_25px_rgba(27,85,226,0.7)] border border-blue-400/40',
+        isDark: true,
+        hasDiamondPattern: false,
     };
 
     // Fallback/demo partners if backend API returns less items
@@ -133,7 +70,6 @@ const HomeBottomSections = () => {
             _id: 'p1',
             name: 'Seed Partner',
             profileImage: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&q=80&w=400',
-            plan: { name: 'ELITE GOLD PACK', tier: 'gold', hasVerifiedTag: true },
             experienceYears: 0.5,
             totalListings: 13,
             tagline: 'Trusted partner with complete knowledge about locality',
@@ -145,7 +81,6 @@ const HomeBottomSections = () => {
             _id: 'p3',
             name: 'Horizon BuildMart & Estates',
             profileImage: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80',
-            plan: { name: 'ELITE DIAMOND PACK', tier: 'diamond', hasVerifiedTag: true },
             experienceYears: 15,
             totalListings: 72,
             tagline: 'Trusted developers of gated plot communities & premium luxury villas.',
@@ -157,7 +92,6 @@ const HomeBottomSections = () => {
             _id: 'p4',
             name: 'Summit Real Estate Partners',
             profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80',
-            plan: { name: 'PLATINUM PACK', tier: 'platinum', hasVerifiedTag: true },
             experienceYears: 8,
             totalListings: 29,
             tagline: 'Verified land titles and fast legal clearing services for commercial plots.',
@@ -169,7 +103,6 @@ const HomeBottomSections = () => {
             _id: 'p2',
             name: 'Asif mansoori',
             profileImage: '',
-            plan: { name: 'STARTER SILVER PACK', tier: 'silver', hasVerifiedTag: true },
             experienceYears: 10,
             totalListings: 24,
             tagline: 'Professional guidance for verified plots & premium properties across prime city zones.',
@@ -241,91 +174,7 @@ const HomeBottomSections = () => {
 
                 <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 pb-4 md:pb-0 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {displayPartners.map((partner, idx) => {
-                        const theme = getPackageTheme(partner.plan?.tier, partner.plan?.name);
-
-                        if (partner.plan?.tier === 'gold') {
-                            return (
-                                <motion.div
-                                    key={partner._id || idx}
-                                    whileHover={{ y: -6 }}
-                                    transition={{ duration: 0.25, ease: "easeOut" }}
-                                    onClick={() => window.location.href = `#/partners/${partner._id}`}
-                                    className="group relative w-[85vw] max-w-[340px] sm:max-w-[420px] md:w-auto md:max-w-none shrink-0 md:shrink snap-start rounded-[16px] p-4 sm:p-5 border border-[#FFE173] bg-gradient-to-br from-[#E8AE2E] via-[#FCE38A] to-[#D59821] shadow-[0_15px_40px_-10px_rgba(213,152,33,0.55)] hover:shadow-[0_20px_50px_-10px_rgba(213,152,33,0.7)] transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden backdrop-blur-md"
-                                >
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-2xl rounded-full rounded-tr-none"></div>
-                                    <div className="absolute bottom-0 left-0 w-40 h-20 bg-white/20 blur-2xl rounded-t-full"></div>
-                                    
-                                    {/* Top Section */}
-                                    <div className="flex gap-4 items-center relative z-10">
-                                        {/* Golden Badge */}
-                                        <div className="w-[85px] h-[85px] shrink-0 relative flex flex-col items-center justify-center bg-gradient-to-b from-[#FFF0B3] via-[#FCE38A] to-[#D59821] rounded-full border-[3px] border-[#FFF0B3] shadow-[0_5px_15px_rgba(163,111,0,0.5)]">
-                                            <div className="absolute inset-1 rounded-full border border-dashed border-[#A36F00]/40"></div>
-                                            <div className="flex flex-col items-center z-10 text-[#7A5200] mt-1">
-                                                <svg className="w-6 h-6 mb-0.5 fill-[#A36F00]" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
-                                                <span className="font-black text-[12px] leading-none text-[#523600]">GOLD</span>
-                                                <span className="font-bold text-[7px] tracking-widest text-[#7A5200]">PARTNER</span>
-                                                <div className="flex gap-0.5 mt-0.5">
-                                                    <Star className="w-2.5 h-2.5 fill-[#523600] text-[#523600]" />
-                                                    <Star className="w-2.5 h-2.5 fill-[#523600] text-[#523600]" />
-                                                    <Star className="w-2.5 h-2.5 fill-[#523600] text-[#523600]" />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Right Details */}
-                                        <div className="flex-1">
-                                            <h3 className="font-extrabold text-[#523600] text-lg sm:text-xl flex items-center gap-1.5 tracking-tight">
-                                                <span>{partner.name}</span>
-                                                <BadgeCheck className="w-[18px] h-[18px] text-[#A36F00] fill-[#FFF0B3] shrink-0" />
-                                            </h3>
-                                            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-gradient-to-r from-[#FFF0B3] to-[#FCE38A] border border-[#D59821]/40 shadow-sm">
-                                                <Sparkles className="w-3 h-3 text-[#8F6100]" />
-                                                <span className="text-[9px] sm:text-[10px] font-black uppercase text-[#523600] tracking-wider">{partner.plan?.name || 'ELITE GOLD PACK'}</span>
-                                            </div>
-                                            <p className="text-[10px] sm:text-xs font-semibold text-[#6E4B00] leading-snug mt-2.5">
-                                                {partner.tagline}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Middle Stats Pill */}
-                                    <div className="mt-5 py-2.5 px-3 rounded-xl bg-gradient-to-br from-[#FDF2CB] to-[#F1D273] shadow-[0_2px_8px_rgba(163,111,0,0.15)] flex items-center justify-between border border-[#FFF0B3] relative z-10">
-                                        <div className="flex-1 flex items-center justify-center border-r border-[#C98A00]/30 gap-2.5 sm:gap-3">
-                                            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-[#734D00]" />
-                                            <div className="flex flex-col">
-                                                <span className="text-[#8F6100] font-extrabold uppercase text-[8px] sm:text-[9px] tracking-widest">Experience</span>
-                                                <span className="text-[#3A2600] font-black text-xs sm:text-sm">{partner.experienceYears}+ Yrs</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 flex items-center justify-center gap-2.5 sm:gap-3">
-                                            <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#734D00]" />
-                                            <div className="flex flex-col">
-                                                <span className="text-[#8F6100] font-extrabold uppercase text-[8px] sm:text-[9px] tracking-widest">Listings</span>
-                                                <span className="text-[#3A2600] font-black text-xs sm:text-sm">{partner.totalListings}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Top Rated & Button */}
-                                    <div className="mt-3.5 relative z-10">
-                                        <div className="inline-flex items-center gap-1.5 bg-[#FDF2CB] text-[#523600] text-[9px] font-extrabold px-2.5 py-1 rounded shadow-sm mb-2 border border-[#F1D273]/50">
-                                            <Star className="w-2.5 h-2.5 fill-[#C98A00] text-[#C98A00]" />
-                                            <span className="uppercase tracking-wide">Top Rated</span>
-                                        </div>
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                window.location.href = `#/partners/${partner._id}`;
-                                            }}
-                                            className="w-full py-2.5 sm:py-3 rounded-[8px] bg-gradient-to-b from-[#D4981C] via-[#A66F00] to-[#784E00] text-white font-extrabold text-xs sm:text-sm shadow-[0_5px_15px_rgba(80,50,0,0.4)] flex items-center justify-center gap-2 hover:from-[#B58217] hover:to-[#5C3B00] transition-colors border border-[#FEEAA7]/30 border-t-[#FFF0B3]/50"
-                                        >
-                                            <Phone className="w-4 h-4" />
-                                            <span>Show Contact</span>
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            );
-                        }
+                        const theme = PARTNER_CARD_THEME;
 
                         return (
                             <motion.div
@@ -365,9 +214,6 @@ const HomeBottomSections = () => {
                                                 </h3>
 
                                                 <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                                                    <span className={`text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${theme.badgeStyle} tracking-wider shadow-2xs`}>
-                                                        {theme.badgeLabel}
-                                                    </span>
                                                     {(partner.address?.city || partner.address?.locality) && (
                                                         <span className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold ${theme.subTextColor || 'text-slate-500'} truncate`}>
                                                             <MapPin className={`w-3 h-3 ${theme.locationIconColor || theme.subTextColor || 'text-slate-400'} shrink-0`} />

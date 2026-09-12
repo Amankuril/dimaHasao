@@ -143,32 +143,10 @@ export const createBooking = async (req, res) => {
     const settings = await PlatformSettings.getSettings();
     const gstRate = settings.taxRate || 12;
 
-    // Default commission from global settings
-    let commissionRate = settings.defaultCommission || 10;
-
-    // --- REVENUE STRATEGY: Dynamic Commission ---
-    // Check Partner's Subscription Plan
-    // We need to fetch the Partner to see their plan
-    if (property.partnerId) {
-      try {
-        // Dynamic import to avoid circular dependency if any, though Partner model is safe here
-        const Partner = (await import('../models/Partner.js')).default;
-        const partner = await Partner.findById(property.partnerId).populate('subscription.planId');
-
-        if (partner && partner.subscription && partner.subscription.status === 'active' && partner.subscription.planId) {
-          const plan = partner.subscription.planId;
-          const isExpired = partner.subscription.expiryDate && new Date(partner.subscription.expiryDate) < new Date();
-
-          if (!isExpired && plan.commissionPercentage !== undefined) {
-            // Use the Plan's confidential commission rate
-            commissionRate = plan.commissionPercentage;
-          }
-        }
-        // If no plan or expired, we stick to 'settings.defaultCommission' (Higher rate for non-subscribers)
-      } catch (err) {
-        console.error('Error fetching partner subscription for commission:', err);
-      }
-    }
+    // One platform commission for every partner. A paid plan used to be able to
+    // override this with its own rate; without plans, the global setting is the
+    // only rate there is.
+    const commissionRate = settings.defaultCommission || 10;
 
     // Calculate Nights
     const checkIn = new Date(checkInDate);

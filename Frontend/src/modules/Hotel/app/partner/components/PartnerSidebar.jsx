@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    X, User, Building, List, Crown,
+    X, User, Building, List,
     CreditCard, History, Shield,
     FileText, HelpCircle, LogOut,
     LayoutDashboard,
@@ -72,7 +72,6 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
             title: 'Growth & Finance',
             items: [
                 { icon: Wallet, label: 'Wallet', path: '/hotel/wallet' },
-                { icon: Crown, label: 'Subscription Plans', path: '/hotel/subscriptions' },
                 { icon: History, label: 'Enquiry History', path: '/hotel/bookings' },
             ]
         },

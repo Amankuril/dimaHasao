@@ -187,7 +187,7 @@ const AdminUserDetail = () => {
                 <AlertTriangle size={48} className="mx-auto text-red-400 mb-4" />
                 <h2 className="text-2xl font-bold text-gray-900">User Not Found</h2>
                 <p className="text-gray-500 mt-2">The user you're looking for doesn't exist or has been deleted.</p>
-                <Link to="/admin/users" className="mt-6 inline-block text-black font-bold uppercase text-xs border-b-2 border-black pb-1">Back to Users</Link>
+                <Link to="/hotel/admin/users" className="mt-6 inline-block text-black font-bold uppercase text-xs border-b-2 border-black pb-1">Back to Users</Link>
             </div>
         );
     }
@@ -206,7 +206,7 @@ const AdminUserDetail = () => {
             />
 
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-500 mb-2">
-                <Link to="/admin/users" className="hover:text-black transition-colors">Users</Link>
+                <Link to="/hotel/admin/users" className="hover:text-black transition-colors">Users</Link>
                 <span>/</span>
                 <span className="text-black">{user.name}</span>
             </div>

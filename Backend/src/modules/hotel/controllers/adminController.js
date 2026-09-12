@@ -12,7 +12,6 @@ import PropertyDocument from '../models/PropertyDocument.js';
 import Review from '../models/Review.js';
 import AvailabilityLedger from '../models/AvailabilityLedger.js';
 import Notification from '../models/Notification.js';
-import SubscriptionPlan from '../models/SubscriptionPlan.js';
 import emailService from '../services/emailService.js';
 import notificationService from '../services/notificationService.js';
 import Wallet from '../models/Wallet.js';
@@ -109,43 +108,6 @@ export const getDashboardStats = async (req, res) => {
       revenue: calculateGrowth(incomeThisMonth, incomeLastMonth)
     };
 
-    // --- SUBSCRIPTION REVENUE TRACKING ---
-    // Calculate total subscription revenue from all active subscriptions
-    const subscriptionStats = await Partner.aggregate([
-      {
-        $match: {
-          'subscription.status': 'active',
-          'subscription.planId': { $exists: true }
-        }
-      },
-      {
-        $lookup: {
-          from: 'subscriptionplans',
-          localField: 'subscription.planId',
-          foreignField: '_id',
-          as: 'planDetails'
-        }
-      },
-      {
-        $unwind: '$planDetails'
-      },
-      {
-        $group: {
-          _id: '$subscription.planId',
-          planName: { $first: '$planDetails.name' },
-          planPrice: { $first: '$planDetails.price' },
-          subscriberCount: { $sum: 1 },
-          totalRevenue: { $sum: '$planDetails.price' }
-        }
-      },
-      {
-        $sort: { totalRevenue: -1 }
-      }
-    ]);
-
-    const totalSubscriptionRevenue = subscriptionStats.reduce((sum, stat) => sum + stat.totalRevenue, 0);
-    const totalActiveSubscribers = subscriptionStats.reduce((sum, stat) => sum + stat.subscriberCount, 0);
-
     // 2. Charts Data
 
     // Revenue Chart (Last 6 Months)
@@ -211,18 +173,11 @@ export const getDashboardStats = async (req, res) => {
         pendingHotels,
         totalBookings,
         totalRevenue,
-        totalSubscriptionRevenue,
-        totalActiveSubscribers,
         trends
       },
       charts: {
         revenue: revenueChart,
         status: statusChart
-      },
-      subscriptionRevenue: {
-        total: totalSubscriptionRevenue,
-        activeSubscribers: totalActiveSubscribers,
-        planBreakdown: subscriptionStats
       },
       recentBookings,
       recentPropertyRequests

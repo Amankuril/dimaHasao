@@ -101,7 +101,7 @@ const LatestProjectsBanner = ({ categoryId, categoryName, theme }) => {
                                 <span className="bg-white/90 backdrop-blur-sm text-gray-900 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest shadow-sm">
                                     LATEST PROJECT
                                 </span>
-                                {current.rankingWeight > 0 && (
+                                {current.isFeatured && (
                                     <span className="bg-yellow-400 text-black text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest shadow-sm flex items-center gap-1">
                                         <Star size={10} className="fill-black" /> PREMIUM
                                     </span>

@@ -851,13 +851,6 @@ const AddPGWizard = () => {
     } catch (e) {
       const errMsg = e?.message || (typeof e === 'string' ? e : 'Failed to submit property');
       setError(errMsg);
-      const isSubLimit = e?.limitReached || e?.requiresSubscription || errMsg.toLowerCase().includes('limit') || errMsg.toLowerCase().includes('subscription') || errMsg.toLowerCase().includes('upgrade');
-      if (isSubLimit) {
-        toast.error(errMsg);
-        setTimeout(() => {
-          navigate('/hotel/subscriptions');
-        }, 1500);
-      }
     } finally {
       setLoading(false);
     }
@@ -1654,15 +1647,6 @@ const AddPGWizard = () => {
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{error}</span>
                   </div>
-                  {(error.toLowerCase().includes('limit') || error.toLowerCase().includes('subscription') || error.toLowerCase().includes('upgrade')) && (
-                    <button
-                      type="button"
-                      onClick={() => navigate('/hotel/subscriptions')}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all shrink-0 active:scale-95"
-                    >
-                      Upgrade Plan
-                    </button>
-                  )}
                 </div>
               )}
             </div>

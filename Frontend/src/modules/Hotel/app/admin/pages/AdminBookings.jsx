@@ -274,7 +274,7 @@ const AdminBookings = () => {
                                                 className="hover:bg-gray-50/50 transition-colors group relative font-bold"
                                             >
                                                 <td className="p-4">
-                                                    <Link to={`/admin/bookings/${booking._id}`} className="font-mono text-xs font-bold text-gray-900 hover:underline uppercase tracking-tight">
+                                                    <Link to={`/hotel/admin/bookings/${booking._id}`} className="font-mono text-xs font-bold text-gray-900 hover:underline uppercase tracking-tight">
                                                         #{booking.bookingId || booking._id.slice(-6)}
                                                     </Link>
                                                     <p className="text-[10px] text-gray-400 mt-0.5 font-bold">
@@ -330,7 +330,7 @@ const AdminBookings = () => {
 
                                                     {activeDropdown === booking._id && (
                                                         <div className="absolute right-8 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-20 py-1 text-left">
-                                                            <Link to={`/admin/bookings/${booking._id}`} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-gray-700">
+                                                            <Link to={`/hotel/admin/bookings/${booking._id}`} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-gray-700">
                                                                 <Eye size={14} /> View Details
                                                             </Link>
                                                             {(booking.bookingStatus === 'confirmed' || booking.bookingStatus === 'pending') && (

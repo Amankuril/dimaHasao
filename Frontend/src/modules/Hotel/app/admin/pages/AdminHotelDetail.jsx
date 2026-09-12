@@ -805,7 +805,7 @@ const AdminHotelDetail = () => {
         <div className="text-center py-20">
             <AlertCircle size={48} className="mx-auto text-red-400 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900">Property Not Found</h2>
-            <Link to="/admin/properties" className="mt-6 inline-block text-black font-bold uppercase text-xs border-b-2 border-black pb-1">Back to Properties</Link>
+            <Link to="/hotel/admin/properties" className="mt-6 inline-block text-black font-bold uppercase text-xs border-b-2 border-black pb-1">Back to Properties</Link>
         </div>
     );
 
@@ -828,7 +828,7 @@ const AdminHotelDetail = () => {
             />
 
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-500 mb-2">
-                <Link to="/admin/properties" className="hover:text-black transition-colors">Properties</Link>
+                <Link to="/hotel/admin/properties" className="hover:text-black transition-colors">Properties</Link>
                 <span>/</span>
                 <span className="text-black font-bold">{hotel.propertyName}</span>
             </div>
