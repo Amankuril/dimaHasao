@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import operatorRoutes from './operatorRoutes.js';
 import packageRoutes from './packageRoutes.js';
 import bookingRoutes from './bookingRoutes.js';
 import walletRoutes from './walletRoutes.js';
@@ -14,6 +15,7 @@ export const toursRouter = Router();
 
 toursRouter.get('/health', (_req, res) => res.json({ success: true, module: 'tours' }));
 
+toursRouter.use('/operators', operatorRoutes);
 toursRouter.use('/packages', packageRoutes);
 toursRouter.use('/bookings', bookingRoutes);
 toursRouter.use('/wallet', walletRoutes);

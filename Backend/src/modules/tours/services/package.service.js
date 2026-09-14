@@ -214,9 +214,28 @@ export const sellableOperatorIds = async () => {
   return operators.map((o) => o._id);
 };
 
-/** True when an edit touches something a traveller is paying for. */
-export const isMaterialEdit = (payload = {}) =>
-  MATERIAL_FIELDS.some((field) => Object.prototype.hasOwnProperty.call(payload, field));
+/**
+ * True when an edit actually *changes* something a traveller is paying for.
+ *
+ * Compares values rather than asking whether a key is present: the package form
+ * submits every field on every save, so a presence check would re-pend a live
+ * package for a typo fix — exactly what MATERIAL_FIELDS exists to prevent.
+ */
+export const isMaterialEdit = (current = {}, payload = {}) => {
+  const current_ = current.toObject ? current.toObject() : current;
+
+  // Both sides go through the document builder so the comparison is between
+  // normalised values — "4200" and 4200 are the same price, not an edit, and
+  // subdocument _ids are stripped from either side.
+  const was = buildPackageDocument(current_);
+  const now = buildPackageDocument({ ...current_, ...payload });
+
+  return MATERIAL_FIELDS.some(
+    (field) =>
+      Object.prototype.hasOwnProperty.call(payload, field) &&
+      JSON.stringify(now[field]) !== JSON.stringify(was[field]),
+  );
+};
 
 export default {
   createPackage,

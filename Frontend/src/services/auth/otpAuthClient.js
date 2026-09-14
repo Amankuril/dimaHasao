@@ -29,6 +29,7 @@ export const AUDIENCE = {
   DELIVERY: 'delivery',
   TAXI_DRIVER: 'taxi-driver',
   HOTEL_PARTNER: 'hotel-partner',
+  TOURS_OPERATOR: 'tours-operator',
 };
 
 /** What to do once a code is verified — the vocabulary shared by all apps. */

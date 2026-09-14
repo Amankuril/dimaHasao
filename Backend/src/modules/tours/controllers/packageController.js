@@ -142,14 +142,17 @@ export const updateOperatorPackage = async (req, res) => {
     const pkg = await TourPackage.findOne({ _id: req.params.id, operatorId: req.user._id });
     if (!pkg) return notFound(res);
 
-    const validationError = validatePackagePayload({ ...pkg.toObject(), ...req.body });
+    // Snapshot before Object.assign mutates the document underneath us.
+    const before = pkg.toObject();
+
+    const validationError = validatePackagePayload({ ...before, ...req.body });
     if (validationError) return res.status(400).json({ success: false, message: validationError });
 
-    Object.assign(pkg, buildPackageDocument({ ...pkg.toObject(), ...req.body }));
+    Object.assign(pkg, buildPackageDocument({ ...before, ...req.body }));
 
     // Only edits that change what is being sold go back for review. A typo fix
     // should not delist a live package for a day.
-    if (pkg.status === 'approved' && isMaterialEdit(req.body)) {
+    if (pkg.status === 'approved' && isMaterialEdit(before, req.body)) {
       pkg.status = 'pending';
       pkg.approvedAt = undefined;
       pkg.approvedBy = undefined;

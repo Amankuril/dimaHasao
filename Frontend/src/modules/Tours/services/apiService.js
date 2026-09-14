@@ -33,7 +33,13 @@ const request = async (promise) => {
     const response = await promise;
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: error.message || 'Request failed' };
+    const body = error.response?.data;
+    const thrown = typeof body === 'object' && body !== null
+      ? { ...body }
+      : { message: body || error.message || 'Request failed' };
+    // Callers branch on this (a 401 signs the operator out), and axios buries it.
+    thrown.status = error.response?.status ?? 0;
+    throw thrown;
   }
 };
 

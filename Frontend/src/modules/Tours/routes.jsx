@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { isModuleAuthenticated } from '../../shared/utils/moduleAuth';
+import { isOperatorSignedIn } from './services/operatorService';
 
 const L = (loader) => lazy(loader);
 
@@ -13,11 +14,27 @@ const Bookings = L(() => import('./app/admin/pages/Bookings'));
 const Payouts = L(() => import('./app/admin/pages/Payouts'));
 const Settings = L(() => import('./app/admin/pages/Settings'));
 
+const OperatorLogin = L(() => import('./app/operator/pages/OperatorLogin'));
+const OperatorLayout = L(() => import('./app/operator/layouts/OperatorLayout'));
+const OperatorDashboard = L(() => import('./app/operator/pages/OperatorDashboard'));
+const OperatorPackages = L(() => import('./app/operator/pages/OperatorPackages'));
+const OperatorPackageEditor = L(() => import('./app/operator/pages/OperatorPackageEditor'));
+const OperatorBookings = L(() => import('./app/operator/pages/OperatorBookings'));
+const OperatorWallet = L(() => import('./app/operator/pages/OperatorWallet'));
+const OperatorProfile = L(() => import('./app/operator/pages/OperatorProfile'));
+
 const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden="true" />;
 
 // Tours admin rides the platform admin session, same as the hotel panel.
 const RequireAdmin = () =>
   isModuleAuthenticated('admin') ? <Outlet /> : <Navigate to="/admin" replace />;
+
+// Operators carry their own token, issued by the `tours-operator` audience —
+// the platform admin session has nothing to do with this side of the module.
+// Approval is *not* checked here: the layout gates on the live status so a
+// pending operator can still reach their profile and KYC.
+const RequireOperator = () =>
+  isOperatorSignedIn() ? <Outlet /> : <Navigate to="/tours/operator/login" replace />;
 
 export default function ToursRoutes() {
   return (
@@ -36,6 +53,22 @@ export default function ToursRoutes() {
             <Route path="bookings" element={<Bookings />} />
             <Route path="payouts" element={<Payouts />} />
             <Route path="settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        <Route path="operator/login" element={<OperatorLogin />} />
+
+        <Route element={<RequireOperator />}>
+          <Route path="operator" element={<OperatorLayout />}>
+            <Route index element={<Navigate to="/tours/operator/dashboard" replace />} />
+            <Route path="dashboard" element={<OperatorDashboard />} />
+            {/* Before 'packages/:id' so "new" is never read as a package id. */}
+            <Route path="packages/new" element={<OperatorPackageEditor />} />
+            <Route path="packages/:id/edit" element={<OperatorPackageEditor />} />
+            <Route path="packages" element={<OperatorPackages />} />
+            <Route path="bookings" element={<OperatorBookings />} />
+            <Route path="wallet" element={<OperatorWallet />} />
+            <Route path="profile" element={<OperatorProfile />} />
           </Route>
         </Route>
 

@@ -1,0 +1,117 @@
+/*
+ * Tour operator panel theme.
+ *
+ * These pages are new, so the palette is declared once here and consumed
+ * directly. The hotel partner panel recolours itself with attribute-substring
+ * selectors instead, but only because it was ported with a different brand
+ * colour hard-coded into 459 class names — there is nothing to override here.
+ *
+ * In @layer components because unlayered CSS beats every Tailwind layer
+ * regardless of specificity, which silently kills utilities on the same element.
+ */
+
+@layer components {
+    .tours-operator {
+        --to-primary: #0a4d2b;
+        --to-primary-strong: #06381e;
+        --to-primary-soft: #e8f2ec;
+        --to-accent: #f59e0b;
+        --to-bg: #faf6ed;
+        --to-border: #e5ddc3;
+        --to-text: #1f1f24;
+        --to-muted: #6b7280;
+
+        min-height: 100vh;
+        background-color: var(--to-bg);
+        color: var(--to-text);
+    }
+
+    .tours-operator .to-input {
+        display: block;
+        width: 100%;
+        padding: 0.7rem 0.9rem;
+        font-size: 0.9375rem;
+        line-height: 1.4;
+        color: var(--to-text);
+        background-color: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .tours-operator .to-input::placeholder {
+        color: #9ca3af;
+    }
+
+    .tours-operator .to-input:focus {
+        border-color: var(--to-primary);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--to-primary) 18%, transparent);
+    }
+
+    .tours-operator textarea.to-input {
+        min-height: 6rem;
+        resize: vertical;
+    }
+
+    /* Money and counts here; the spinners only get in the way. */
+    .tours-operator .to-input[type='number']::-webkit-outer-spin-button,
+    .tours-operator .to-input[type='number']::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .tours-operator .to-input[type='number'] {
+        -moz-appearance: textfield;
+    }
+
+    .tours-operator .to-label {
+        display: block;
+        margin-bottom: 0.375rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .tours-operator .to-hint {
+        margin-top: 0.375rem;
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    .tours-operator .to-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #fff;
+        background-color: var(--to-primary);
+        border-radius: 0.75rem;
+        transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .tours-operator .to-btn:hover:not(:disabled) {
+        background-color: var(--to-primary-strong);
+    }
+
+    .tours-operator .to-btn:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    .tours-operator .to-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    .tours-operator .to-card {
+        background-color: #fff;
+        border: 1px solid rgb(229 231 235 / 0.8);
+        border-radius: 1rem;
+        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+}
