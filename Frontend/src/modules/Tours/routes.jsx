@@ -1,26 +1,48 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { isModuleAuthenticated } from '../../shared/utils/moduleAuth';
 
-// Tours & Travels has no backend module yet — this is the admin placeholder so
-// the section exists alongside Food / Taxi / Hotel. Replace with real screens
-// once Backend/src/modules/tours lands.
-const ToursComingSoon = () => (
-  <div className="min-h-screen bg-neutral-950 text-neutral-200 flex items-center justify-center p-6">
-    <div className="max-w-md text-center space-y-3">
-      <div className="text-4xl">🧭</div>
-      <h1 className="text-xl font-bold text-white">Tours &amp; Travels</h1>
-      <p className="text-sm text-neutral-400">
-        Tour packages, itineraries, guides and operator management will appear
-        here. The module is not built yet.
-      </p>
-    </div>
-  </div>
-);
+const L = (loader) => lazy(loader);
+
+const AdminLayout = L(() => import('./app/admin/layouts/AdminLayout'));
+const Dashboard = L(() => import('./app/admin/pages/Dashboard'));
+const Operators = L(() => import('./app/admin/pages/Operators'));
+const Packages = L(() => import('./app/admin/pages/Packages'));
+const PackageCreate = L(() => import('./app/admin/pages/PackageCreate'));
+const Bookings = L(() => import('./app/admin/pages/Bookings'));
+const Payouts = L(() => import('./app/admin/pages/Payouts'));
+const Settings = L(() => import('./app/admin/pages/Settings'));
+
+const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden="true" />;
+
+// Tours admin rides the platform admin session, same as the hotel panel.
+const RequireAdmin = () =>
+  isModuleAuthenticated('admin') ? <Outlet /> : <Navigate to="/admin" replace />;
 
 export default function ToursRoutes() {
   return (
-    <Routes>
-      <Route path="admin" element={<ToursComingSoon />} />
-      <Route path="*" element={<Navigate to="admin" replace />} />
-    </Routes>
+    <Suspense fallback={<Fallback />}>
+      <Routes>
+        <Route element={<RequireAdmin />}>
+          <Route path="admin" element={<AdminLayout />}>
+            {/* TOURS_ADMIN_HOME is '/tours/admin' with no suffix, so the index
+                route has to render the dashboard itself. */}
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="operators" element={<Operators />} />
+            {/* Before 'packages' so "new" is never read as a package id. */}
+            <Route path="packages/new" element={<PackageCreate />} />
+            <Route path="packages" element={<Packages />} />
+            <Route path="bookings" element={<Bookings />} />
+            <Route path="payouts" element={<Payouts />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        {/* Absolute, not relative: a relative target re-resolves against the
+            unmatched URL and appends /admin forever. */}
+        <Route path="*" element={<Navigate to="/tours/admin" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
