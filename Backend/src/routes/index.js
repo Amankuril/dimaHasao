@@ -26,6 +26,7 @@ import diningBookingRoutes from '../modules/food/dining/routes/diningBooking.rou
 import { maintenanceModeMiddleware } from '../modules/food/admin/middleware/maintenanceMode.middleware.js';
 import { taxiRouter } from '../modules/taxi/routes/index.js';
 import { hotelRouter } from '../modules/hotel/routes/index.js';
+import { toursRouter } from '../modules/tours/routes/index.js';
 import { promotionsRouter as taxiPromotionsRouter } from '../modules/taxi/admin/promotions/routes/index.js';
 
 const router = express.Router();
@@ -73,5 +74,6 @@ router.get('/v1/admin/queues', authMiddleware, requireRoles('ADMIN'), getQueuesC
 router.use('/v1', taxiPromotionsRouter);
 router.use('/v1/taxi', taxiRouter);
 router.use('/v1/hotel', hotelRouter);
+router.use('/v1/tours', toursRouter);
 
 export default router;
