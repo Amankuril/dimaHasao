@@ -98,6 +98,12 @@ app.use('/api', apiRateLimiter);
 if (config.serveUploadsFromNode || config.nodeEnv !== 'production') {
     app.use(
         '/uploads',
+        // Helmet defaults Cross-Origin-Resource-Policy to same-origin, which
+        // blocks the browser from rendering these images whenever the frontend
+        // is on another origin — that is every dev setup (5173 vs 5000) and any
+        // deployment with the API on its own subdomain. Uploaded assets are
+        // public by nature, so this route opts out.
+        helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }),
         express.static(config.uploadsRoot, {
             maxAge: '30d',
             index: false,

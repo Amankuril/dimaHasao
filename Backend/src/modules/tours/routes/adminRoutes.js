@@ -16,6 +16,13 @@ import {
   updateSettings,
 } from '../controllers/adminController.js';
 import { getAdminReviews, updateReviewStatus } from '../controllers/reviewController.js';
+import {
+  getAdminDestinations,
+  createDestination,
+  updateDestination,
+  toggleDestination,
+  deleteDestination,
+} from '../controllers/destinationController.js';
 
 const router = express.Router();
 
@@ -37,6 +44,12 @@ router.post('/packages', createPackageForOperator);
 router.patch('/packages/:id/status', updatePackageStatus);
 
 router.get('/bookings', getAdminBookings);
+
+router.get('/destinations', getAdminDestinations);
+router.post('/destinations', createDestination);
+router.put('/destinations/:id', updateDestination);
+router.patch('/destinations/:id/active', toggleDestination);
+router.delete('/destinations/:id', deleteDestination);
 
 router.get('/reviews', getAdminReviews);
 router.patch('/reviews/:id/status', updateReviewStatus);

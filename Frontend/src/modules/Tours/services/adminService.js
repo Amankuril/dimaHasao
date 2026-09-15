@@ -18,6 +18,13 @@ const adminService = {
   updatePackageStatus: (id, status, reason) =>
     toursApi.patch(`/admin/packages/${id}/status`, { status, reason }),
 
+  // Destinations (tourist places)
+  getDestinations: () => toursApi.get('/admin/destinations'),
+  createDestination: (payload) => toursApi.post('/admin/destinations', payload),
+  updateDestination: (id, payload) => toursApi.put(`/admin/destinations/${id}`, payload),
+  toggleDestination: (id, isActive) => toursApi.patch(`/admin/destinations/${id}/active`, { isActive }),
+  deleteDestination: (id) => toursApi.delete(`/admin/destinations/${id}`),
+
   // Reviews
   getReviews: (params = {}) => toursApi.get('/admin/reviews', { params }),
   updateReviewStatus: (id, status) => toursApi.patch(`/admin/reviews/${id}/status`, { status }),

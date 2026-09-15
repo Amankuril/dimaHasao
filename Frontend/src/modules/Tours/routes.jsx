@@ -13,6 +13,7 @@ const PackageCreate = L(() => import('./app/admin/pages/PackageCreate'));
 const Bookings = L(() => import('./app/admin/pages/Bookings'));
 const Payouts = L(() => import('./app/admin/pages/Payouts'));
 const Reviews = L(() => import('./app/admin/pages/Reviews'));
+const Destinations = L(() => import('./app/admin/pages/Destinations'));
 const Settings = L(() => import('./app/admin/pages/Settings'));
 
 const OperatorLogin = L(() => import('./app/operator/pages/OperatorLogin'));
@@ -55,6 +56,7 @@ export default function ToursRoutes() {
             <Route path="bookings" element={<Bookings />} />
             <Route path="payouts" element={<Payouts />} />
             <Route path="reviews" element={<Reviews />} />
+            <Route path="destinations" element={<Destinations />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Route>

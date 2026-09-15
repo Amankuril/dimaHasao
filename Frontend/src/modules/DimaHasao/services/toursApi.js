@@ -271,6 +271,71 @@ export const fetchMyBookings = async () => {
   return asArray(body.bookings).map(adaptBooking);
 };
 
+/* ------------------------------------------------------------------ *
+ * Tourist destinations (scope of work section 9)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Backend destination → the object the v1 places screens expect.
+ * `id` and `number` exist because the card renders both.
+ */
+export const adaptDestination = (d = {}, index = 0) => ({
+  id: String(d._id || d.id || ''),
+  slug: d.slug || '',
+  number: String(index + 1),
+  name: d.name || 'Destination',
+  subtitle: d.subtitle || '',
+  location: d.location || '',
+  fullAddress: d.fullAddress || '',
+  category: d.category || 'viewpoint',
+
+  distanceFromStation: d.distanceFromStation || '',
+  travelTime: d.travelTime || '',
+  bestTime: d.bestTime || '',
+  idealFor: d.idealFor || '',
+
+  description: d.description || '',
+  aboutDetails: asArray(d.aboutDetails),
+  guideTips: asArray(d.guideTips),
+
+  mainImage: d.mainImage || PLACEHOLDER_IMAGE,
+  heroImage: d.heroImage || d.mainImage || PLACEHOLDER_IMAGE,
+  insetImage: d.insetImage || d.mainImage || PLACEHOLDER_IMAGE,
+  guideSunsetImage: d.guideSunsetImage || '',
+  gallery: asArray(d.gallery),
+
+  tags: asArray(d.tags).map((t) => ({
+    icon: t.icon || 'fa-solid fa-location-dot',
+    text: t.text || '',
+    color: t.color || 'text-emerald-600',
+  })),
+
+  coordinates: d.coordinates || null,
+});
+
+/** The published destination directory. */
+export const fetchDestinations = async (params = {}) => {
+  const query = {};
+  if (params.category && params.category !== 'all') query.category = params.category;
+  if (params.search) query.search = params.search;
+
+  const body = unwrap(await apiClient.get('/tours/destinations', { params: query }));
+  return asArray(body.destinations).map(adaptDestination);
+};
+
+/** One destination, plus the live tour packages that visit it. */
+export const fetchDestinationById = async (id) => {
+  if (!id) return null;
+
+  const body = unwrap(await apiClient.get(`/tours/destinations/${encodeURIComponent(id)}`));
+  if (!body.destination) return null;
+
+  return {
+    ...adaptDestination(body.destination),
+    packages: asArray(body.packages).map(adaptPackage),
+  };
+};
+
 /** Review a completed trip. */
 export const createReview = async ({ bookingId, rating, comment }) =>
   unwrap(await apiClient.post('/tours/reviews', { bookingId, rating, comment }));
@@ -287,5 +352,8 @@ export default {
   createReview,
   adaptPackage,
   adaptBooking,
+  adaptDestination,
+  fetchDestinations,
+  fetchDestinationById,
   PACKAGE_TYPES,
 };

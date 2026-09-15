@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
-import { PLACES_DATA } from '../data/tourismData';
+import { fetchDestinationById } from '../services/toursApi';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
 import { GalleryViewer } from '../components/places/GalleryViewer';
@@ -13,14 +14,65 @@ export const TouristPlaceDetail = () => {
   const navigate = useNavigate();
   const { setSelectedPlaceId, setSelectedTransportId } = useBooking();
 
-  // Look up place by ID or default to first
-  const place = PLACES_DATA.find((p) => p.id === (id || '1')) || PLACES_DATA[0];
+  const [place, setPlace] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setLoading(true);
+    fetchDestinationById(id)
+      .then((found) => { if (!cancelled) setPlace(found); })
+      .catch(() => { if (!cancelled) setPlace(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [id]);
 
   const handleBookDirect = (transportType = 'auto') => {
     setSelectedPlaceId(place.id);
     setSelectedTransportId(transportType);
     navigate('/book-ride');
   };
+
+  if (loading) {
+    return (
+      <div className="bg-[#0b2e13] min-h-screen font-inter">
+        <Header title="TOURIST PLACES" subtitle="Loading destination" showBack rightAction="none" />
+        <PatternDivider variant="native" />
+        <div className="bg-[#fdfbf7] p-4 space-y-3">
+          <div className="h-52 bg-gray-200 rounded-2xl animate-pulse" />
+          {[0, 1].map((n) => (
+            <div key={n} className="bg-white rounded-2xl p-4 border border-gray-100 space-y-2 animate-pulse">
+              <div className="h-3.5 bg-gray-200 rounded w-1/2" />
+              <div className="h-3 bg-gray-100 rounded w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // An admin can unpublish a destination, so this has to say so rather than
+  // silently fall back to whichever place happened to be first.
+  if (!place) {
+    return (
+      <div className="bg-[#0b2e13] min-h-screen font-inter">
+        <Header title="TOURIST PLACES" showBack rightAction="none" />
+        <PatternDivider variant="native" />
+        <div className="bg-[#fdfbf7] p-6 text-center space-y-3 min-h-[60vh]">
+          <i className="fa-solid fa-mountain text-4xl text-gray-300 mt-10"></i>
+          <h3 className="font-bold text-gray-800 text-sm">This destination is not available</h3>
+          <button
+            onClick={() => navigate('/places')}
+            className="bg-[#0a3a2a] text-amber-200 text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
+          >
+            See All Places
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0b2e13] text-gray-800 antialiased min-h-screen pb-20 font-inter">
@@ -92,6 +144,41 @@ export const TouristPlaceDetail = () => {
 
           {/* How to Reach & Transports */}
           <TransportSelector place={place} />
+
+          {/* Tours that visit this place — matched server-side on the
+              package's destinations, so it fills in on its own as operators
+              publish. */}
+          {place.packages?.length > 0 && (
+            <section className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
+              <h3 className="font-bold text-sm text-gray-900 flex items-center gap-2">
+                <i className="fa-solid fa-suitcase-rolling text-emerald-700"></i>
+                <span>Guided tours that visit here</span>
+              </h3>
+
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-1 px-1 pb-1">
+                {place.packages.map((pkg) => (
+                  <button
+                    key={pkg.id}
+                    type="button"
+                    onClick={() => navigate(`/packages/${pkg.id}`)}
+                    className="w-44 shrink-0 text-left bg-[#fdf5e6] rounded-2xl border border-orange-200/70 overflow-hidden hover:border-emerald-600/50 transition-colors cursor-pointer"
+                  >
+                    <div className="h-24 bg-gray-200 overflow-hidden">
+                      <img src={pkg.heroImage} alt={pkg.title} className="w-full h-full object-cover" loading="lazy" />
+                    </div>
+                    <div className="p-2.5 space-y-1">
+                      <p className="text-xs font-bold text-gray-900 leading-snug line-clamp-2">{pkg.title}</p>
+                      <p className="text-[10px] text-gray-500">{pkg.duration}</p>
+                      <p className="text-sm font-black text-emerald-900">
+                        ₹{pkg.pricePerPerson.toLocaleString('en-IN')}
+                        <span className="text-[10px] font-medium text-gray-400"> /person</span>
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Recommended Hotels & Restaurants */}
           <RecommendationGrids />

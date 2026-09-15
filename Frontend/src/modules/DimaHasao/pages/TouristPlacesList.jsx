@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { PLACES_DATA } from '../data/tourismData';
+import { useState, useEffect } from 'react';
+import { fetchDestinations } from '../services/toursApi';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
 import { PlaceCard } from '../components/places/PlaceCard';
@@ -10,25 +10,47 @@ export const TouristPlacesList = () => {
   const [searchFilter, setSearchFilter] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
 
+  const [places, setPlaces] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
   const filterChips = [
     { id: 'all', label: 'All Places' },
     { id: 'viewpoint', label: 'Viewpoints' },
     { id: 'town', label: 'Town & Culture' },
-    { id: 'trek', label: 'Treks & Peaks' }
+    { id: 'trek', label: 'Treks & Peaks' },
+    { id: 'temple', label: 'Temples' },
+    { id: 'lake', label: 'Lakes' },
+    { id: 'wildlife', label: 'Wildlife' }
   ];
 
-  const filteredPlaces = PLACES_DATA.filter((place) => {
-    const matchesSearch =
-      place.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      place.location.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      place.description.toLowerCase().includes(searchFilter.toLowerCase());
+  useEffect(() => {
+    let cancelled = false;
 
-    if (!matchesSearch) return false;
-    if (activeFilter === 'viewpoint') return place.id === '1';
-    if (activeFilter === 'town') return place.id === '2';
-    if (activeFilter === 'trek') return place.id === '3';
-    return true;
+    fetchDestinations()
+      .then((list) => { if (!cancelled) { setPlaces(list); setLoadError(''); } })
+      .catch(() => { if (!cancelled) setLoadError('We could not load destinations just now.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Filtered in the browser — the directory is small, and the chips used to
+  // compare hard-coded ids, which silently broke as soon as a place was added.
+  const filteredPlaces = places.filter((place) => {
+    const needle = searchFilter.toLowerCase();
+    const matchesSearch =
+      place.name.toLowerCase().includes(needle) ||
+      place.location.toLowerCase().includes(needle) ||
+      place.description.toLowerCase().includes(needle);
+
+    return matchesSearch && (activeFilter === 'all' || place.category === activeFilter);
   });
+
+  // Chips with nothing behind them are noise once an admin curates the list.
+  const visibleChips = filterChips.filter(
+    (chip) => chip.id === 'all' || places.some((p) => p.category === chip.id),
+  );
 
   return (
     <div className="bg-[#fdf5e6] text-gray-800 font-inter min-h-screen flex flex-col relative pb-20">
@@ -73,7 +95,7 @@ export const TouristPlacesList = () => {
 
       {/* Filter Chips */}
       <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto hide-scrollbar">
-        {filterChips.map((chip) => (
+        {visibleChips.map((chip) => (
           <button
             key={chip.id}
             onClick={() => setActiveFilter(chip.id)}
@@ -90,14 +112,34 @@ export const TouristPlacesList = () => {
 
       {/* Main Content: Place Cards */}
       <main className="flex-1 p-4 flex flex-col gap-5">
-        {filteredPlaces.length > 0 ? (
+        {loading ? (
+          [0, 1, 2].map((n) => (
+            <div key={n} className="bg-white/70 rounded-2xl border border-orange-200 overflow-hidden animate-pulse">
+              <div className="h-40 bg-gray-200" />
+              <div className="p-4 space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-2/3" />
+                <div className="h-3 bg-gray-100 rounded w-1/2" />
+              </div>
+            </div>
+          ))
+        ) : loadError ? (
+          <div className="text-center py-12 bg-white/60 rounded-2xl border border-orange-200 p-6">
+            <i className="fa-solid fa-triangle-exclamation text-3xl text-amber-400 mb-2"></i>
+            <p className="text-sm font-bold text-gray-700">Couldn't load destinations</p>
+            <p className="text-xs text-gray-500 mt-1">{loadError}</p>
+          </div>
+        ) : filteredPlaces.length > 0 ? (
           filteredPlaces.map((place) => (
             <PlaceCard key={place.id} place={place} />
           ))
         ) : (
           <div className="text-center py-12 bg-white/60 rounded-2xl border border-orange-200 p-6">
             <i className="fa-solid fa-mountain text-3xl text-gray-400 mb-2"></i>
-            <p className="text-sm font-bold text-gray-700">No destinations match your search</p>
+            <p className="text-sm font-bold text-gray-700">
+              {searchFilter || activeFilter !== 'all'
+                ? 'No destinations match your search'
+                : 'No destinations published yet'}
+            </p>
             <button
               onClick={() => {
                 setSearchFilter('');
