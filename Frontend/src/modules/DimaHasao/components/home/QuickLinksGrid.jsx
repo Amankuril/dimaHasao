@@ -24,9 +24,10 @@ export const QuickLinksGrid = () => {
       bg: 'bg-[#F97316]'
     },
     {
-      id: 'packages',
-      label: 'Travel\nPackages',
-      icon: 'fa-solid fa-suitcase-rolling',
+      // Swapped with the big TOUR PACKAGES category card on 2026-09-15.
+      id: 'places',
+      label: 'Tourist\nPlaces',
+      icon: 'fa-solid fa-location-dot',
       color: 'text-white',
       bg: 'bg-[#3B82F6]'
     },
@@ -60,12 +61,6 @@ export const QuickLinksGrid = () => {
       items: ['Falcon Festival (Umrangso) - Nov/Dec', 'Busu Dima (Harvest Festival) - Jan', 'Judima Tribal Festival - Dec', 'Haflong Hills Music Fest - Spring'],
       actionText: 'Explore Festival Calendar'
     },
-    packages: {
-      title: 'Curated Travel Packages',
-      desc: 'Tailored 2-day, 3-day, and weekend itineraries for nature & adventure lovers.',
-      items: ['Haflong & Jatinga Weekend Escapade (2N/3D)', 'Silaikul Summit Trek & Camping (1N/2D)', 'Umrangso Lake & Golf View Tour (2N/3D)', 'Complete Dimasa Heritage Trail (4N/5D)'],
-      actionText: 'Inquire Packages'
-    },
     food: {
       title: 'Authentic Dimasa Cuisine',
       desc: 'Savor traditional ethnic delicacies prepared with organic local herbs.',
@@ -93,8 +88,8 @@ export const QuickLinksGrid = () => {
               onClick={() => {
                 if (item.id === 'events') {
                   navigate('/festivals');
-                } else if (item.id === 'packages') {
-                  navigate('/packages');
+                } else if (item.id === 'places') {
+                  navigate('/places');
                 } else if (item.id === 'food') {
                   navigate('/food');
                 } else {
@@ -175,8 +170,6 @@ export const QuickLinksGrid = () => {
                       navigate('/festivals');
                     } else if (modalId === 'food') {
                       navigate('/food');
-                    } else if (modalId === 'packages') {
-                      navigate('/packages');
                     } else {
                       showToast(`Opening ${modalDetails[modalId]?.title}`);
                     }
