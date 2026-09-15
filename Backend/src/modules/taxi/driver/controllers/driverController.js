@@ -5077,7 +5077,7 @@ export const updateServiceCenterBookingBiometrics = async (req, res) => {
       if (imageUrl.startsWith("data:image/")) {
         const uploaded = await uploadDataUrlToCloudinary({
           dataUrl: imageUrl,
-          folder: `${env.cloudinary.folder}/service-center/booking-${String(booking._id || "").trim()}/thumbs`,
+          folder: `${env.uploadFolder}/service-center/booking-${String(booking._id || "").trim()}/thumbs`,
           publicIdPrefix: `thumb-${String(item?.participantKey || "participant").replace(/[^a-z0-9_-]/gi, "-").toLowerCase()}-${String(item?.thumbCode || "thumb").toLowerCase()}`,
         });
         imageUrl = uploaded.secureUrl;

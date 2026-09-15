@@ -1,5 +1,11 @@
-import crypto from 'node:crypto';
-import { Blob } from 'node:buffer';
+/**
+ * Taxi document uploads — a shim over the platform's single upload service.
+ *
+ * The name and exports are unchanged so the six taxi call sites did not have
+ * to move, but nothing here reaches Cloudinary any more. Images become WebP
+ * via services/storage.service.js; a non-image data URL (a resume PDF, say)
+ * falls through to raw storage.
+ */
 import { env } from '../config/env.js';
 import { ApiError } from './ApiError.js';
 import {
@@ -8,9 +14,6 @@ import {
 } from '../services/storage.service.js';
 
 const DATA_URL_PATTERN = /^data:([^;]+);base64,(.+)$/;
-
-const hasCloudinaryCredentials = () =>
-  Boolean(env.cloudinary?.cloudName && env.cloudinary?.apiKey && env.cloudinary?.apiSecret);
 
 const parseDataUrl = (dataUrl) => {
   const match = String(dataUrl || '').match(DATA_URL_PATTERN);
@@ -30,16 +33,6 @@ const parseDataUrl = (dataUrl) => {
   };
 };
 
-const buildSignature = (params, apiSecret) => {
-  const payload = Object.entries(params)
-    .filter(([, value]) => value !== undefined && value !== null && value !== '')
-    .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
-    .map(([key, value]) => `${key}=${value}`)
-    .join('&');
-
-  return crypto.createHash('sha1').update(`${payload}${apiSecret}`).digest('hex');
-};
-
 const toLocalUploadResult = (stored) => {
   const url = stored.url || stored.secure_url || '';
   return {
@@ -57,7 +50,7 @@ const toLocalUploadResult = (stored) => {
 };
 
 const uploadViaLocalStorage = async ({ dataUrl, folder, publicIdPrefix = 'upload' }) => {
-  const scopedFolder = String(folder || env.cloudinary?.folder || 'hello-parth-taxi')
+  const scopedFolder = String(folder || env.uploadFolder || 'taxi')
     .replace(/^\/+|\/+$/g, '')
     .replace(/[^A-Za-z0-9/_-]/g, '_') || 'hello-parth-taxi';
 
@@ -87,120 +80,14 @@ const uploadViaLocalStorage = async ({ dataUrl, folder, publicIdPrefix = 'upload
 
 export const uploadDataUrlToCloudinary = async ({
   dataUrl,
-  folder = env.cloudinary?.folder || 'hello-parth-taxi',
+  folder = env.uploadFolder || 'taxi',
   publicIdPrefix = 'driver-document',
-  publicIdSuffix = '',
-}) => {
-  if (!hasCloudinaryCredentials()) {
-    return uploadViaLocalStorage({ dataUrl, folder, publicIdPrefix });
-  }
-
-  const { mimeType, base64, extension } = parseDataUrl(dataUrl);
-  const buffer = Buffer.from(base64, 'base64');
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const publicId = `${publicIdPrefix}-${Date.now()}${publicIdSuffix ? `-${publicIdSuffix}` : ''}`;
-
-  const signature = buildSignature(
-    {
-      folder,
-      format: 'webp',
-      public_id: publicId,
-      timestamp,
-    },
-    env.cloudinary.apiSecret,
-  );
-
-  const formData = new FormData();
-  formData.append('file', new Blob([buffer], { type: mimeType }), `upload.${extension}`);
-  formData.append('api_key', env.cloudinary.apiKey);
-  formData.append('timestamp', timestamp);
-  formData.append('folder', folder);
-  formData.append('public_id', publicId);
-  formData.append('format', 'webp');
-  formData.append('signature', signature);
-
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary.cloudName}/image/upload`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  const payload = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new ApiError(response.status || 502, payload?.error?.message || 'Cloudinary upload failed');
-  }
-
-  return {
-    secureUrl: payload.secure_url,
-    publicId: payload.public_id,
-    resourceType: payload.resource_type,
-    format: payload.format,
-    bytes: payload.bytes,
-    width: payload.width,
-    height: payload.height,
-    originalFilename: payload.original_filename,
-    createdAt: payload.created_at,
-    raw: payload,
-  };
-};
+}) => uploadViaLocalStorage({ dataUrl, folder, publicIdPrefix });
 
 export const uploadRawFileToCloudinary = async ({
   dataUrl,
-  folder = env.cloudinary?.folder || 'hello-parth-taxi',
+  folder = env.uploadFolder || 'taxi',
   publicIdPrefix = 'career-resume',
-  publicIdSuffix = '',
-}) => {
-  if (!hasCloudinaryCredentials()) {
-    return uploadViaLocalStorage({ dataUrl, folder, publicIdPrefix });
-  }
+}) => uploadViaLocalStorage({ dataUrl, folder, publicIdPrefix });
 
-  const { mimeType, base64, extension } = parseDataUrl(dataUrl);
-  const buffer = Buffer.from(base64, 'base64');
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const publicId = `${publicIdPrefix}-${Date.now()}${publicIdSuffix ? `-${publicIdSuffix}` : ''}`;
-
-  const isImage = mimeType.startsWith('image/');
-  const resourceType = isImage ? 'image' : 'raw';
-
-  const params = {
-    folder,
-    public_id: publicId,
-    timestamp,
-  };
-  if (isImage) {
-    params.format = 'webp';
-  }
-
-  const signature = buildSignature(params, env.cloudinary.apiSecret);
-
-  const formData = new FormData();
-  formData.append('file', new Blob([buffer], { type: mimeType }), `upload.${extension}`);
-  formData.append('api_key', env.cloudinary.apiKey);
-  formData.append('timestamp', timestamp);
-  formData.append('folder', folder);
-  formData.append('public_id', publicId);
-  if (isImage) {
-    formData.append('format', 'webp');
-  }
-  formData.append('signature', signature);
-
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary.cloudName}/${resourceType}/upload`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  const payload = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new ApiError(response.status || 502, payload?.error?.message || 'Cloudinary upload failed');
-  }
-
-  return {
-    secureUrl: payload.secure_url,
-    publicId: payload.public_id,
-    resourceType: payload.resource_type,
-    format: payload.format,
-    bytes: payload.bytes,
-    raw: payload,
-  };
-};
+export default { uploadDataUrlToCloudinary, uploadRawFileToCloudinary };

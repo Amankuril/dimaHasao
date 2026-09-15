@@ -6,7 +6,12 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const backendRoot = path.resolve(__dirname, '..', '..');
-const uploadPath = process.env.UPLOAD_PATH || 'uploads/';
+// Where uploaded files live. Development writes into Backend/uploads so a
+// checkout is self-contained; production writes to the server's web root.
+// UPLOAD_PATH overrides both when a deployment needs somewhere else.
+const uploadPath =
+    process.env.UPLOAD_PATH ||
+    (process.env.NODE_ENV === 'production' ? '/var/www/uploads' : 'uploads/');
 
 const parseOrigins = (value) =>
     String(value || '')
@@ -140,12 +145,10 @@ export const env = {
         process.env.PHONEPE_REDIRECT_BASE_URL ||
         process.env.PHONEPE_CALLBACK_BASE_URL ||
         '',
-    cloudinary: {
-        cloudName: (process.env.CLOUDINARY_CLOUD_NAME || '').trim(),
-        apiKey: (process.env.CLOUDINARY_API_KEY || '').trim(),
-        apiSecret: (process.env.CLOUDINARY_API_SECRET || '').trim(),
-        folder: (process.env.CLOUDINARY_FOLDER || 'hello-parth-taxi').trim(),
-    },
+    // Top-level folder every module's uploads are namespaced under. Replaces
+    // the old `cloudinary` block — there is no Cloudinary in this project any
+    // more, only services/storage.service.js.
+    uploadFolder: (process.env.UPLOAD_FOLDER || 'dima-hasao').trim(),
     redis: {
         enabled: config.redisEnabled,
         url: config.redisUrl,

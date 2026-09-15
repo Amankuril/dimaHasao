@@ -1,175 +1,65 @@
-import { v2 as cloudinary } from 'cloudinary';
+/**
+ * Hotel image storage — a shim over the platform's single upload service.
+ *
+ * The file keeps its old name and exports so the six call sites in
+ * hotelController and authController did not have to change, exactly as the
+ * SMS and email shims do. Nothing here talks to Cloudinary any more: every
+ * image in the project is converted to WebP by `services/storage.service.js`
+ * and written to `Backend/uploads` in development or `/var/www/uploads` in
+ * production.
+ *
+ * This also fixes a real outage — hotel's uploader had no fallback, so with
+ * the blank CLOUDINARY_* credentials in .env every hotel image upload failed.
+ */
 import fs from 'fs';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import {
+  storeImageBuffer,
+  storeImageFromDataUrl,
+  deleteStoredAsset,
+} from '../../../services/storage.service.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-// Ensure .env is loaded before config (needed when this module is loaded before server.js body runs)
-dotenv.config({ path: join(__dirname, '..', '.env') });
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+/** Storage result → the `{ url, publicId }` shape hotel's controllers read. */
+const present = (stored) => ({
+  url: stored.url || stored.secure_url,
+  secure_url: stored.url || stored.secure_url,
+  publicId: stored.public_id || stored.filename || null,
+  public_id: stored.public_id || stored.filename || null,
+  format: stored.format || 'webp',
+  bytes: stored.bytes,
+  width: stored.width,
+  height: stored.height,
 });
 
 /**
- * Upload image to Cloudinary
- * @param {string} filePath - Path to the file on local filesystem
- * @param {string} folder - Cloudinary folder name (default: 'rukkoin')
- * @param {string} publicId - Custom public_id (optional)
- * @returns {Promise<Object>} - Upload result
+ * Upload a file multer wrote to disk.
+ * @param {string} filePath
+ * @param {string} folder
+ * @param {string|null} _publicId  accepted for call-site compatibility; the
+ *   storage service names files itself so ids cannot collide across modules.
  */
-export const uploadToCloudinary = async (filePath, folder = 'general', publicId = null) => {
-  try {
-    const uploadOptions = {
-      folder: `rukkoin/${folder}`,
-      resource_type: 'auto',
-      transformation: [
-        { width: 1920, height: 1920, crop: 'limit' },
-        { quality: 'auto' },
-        { fetch_format: 'auto' }
-      ]
-    };
+export const uploadToCloudinary = async (filePath, folder = 'general', _publicId = null) => {
+  const buffer = await fs.promises.readFile(filePath);
+  const stored = await storeImageBuffer(buffer, `hotel/${folder}`, { originalName: filePath });
 
-    if (publicId) {
-      uploadOptions.public_id = publicId;
-    }
+  // multer's disk copy is redundant once the WebP is written.
+  await fs.promises.unlink(filePath).catch(() => {});
 
-    const result = await cloudinary.uploader.upload(filePath, uploadOptions);
-
-    // Delete local file after successful upload
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    return {
-      success: true,
-      url: result.secure_url,
-      publicId: result.public_id,
-      format: result.format,
-      width: result.width,
-      height: result.height,
-      bytes: result.bytes
-    };
-  } catch (error) {
-    console.error('Cloudinary upload error:', error);
-
-    // Clean up local file even on error
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    throw new Error('Failed to upload file to Cloudinary');
-  }
+  return present(stored);
 };
 
-/**
- * Delete image from Cloudinary
- * @param {string} publicId - Public ID of the image
- * @returns {Promise<Object>} - Deletion result
- */
-export const deleteFromCloudinary = async (publicId) => {
-  try {
-    const result = await cloudinary.uploader.destroy(publicId);
-    return {
-      success: result.result === 'ok',
-      message: result.result === 'ok' ? 'Image deleted successfully' : 'Image not found'
-    };
-  } catch (error) {
-    console.error('Cloudinary delete error:', error);
-    throw new Error('Failed to delete image from Cloudinary');
-  }
+/** Upload a base64 / data-URL image (the Flutter camera path). */
+export const uploadBase64ToCloudinary = async (base64String, folder = 'general', _publicId = null) => {
+  const dataUrl = String(base64String || '').startsWith('data:')
+    ? base64String
+    : `data:image/jpeg;base64,${base64String}`;
+
+  return present(await storeImageFromDataUrl(dataUrl, `hotel/${folder}`));
 };
 
-/**
- * Upload base64 image to Cloudinary (for Flutter camera/mobile)
- * @param {string} base64String - Base64 encoded image data
- * @param {string} folder - Cloudinary folder name
- * @param {string} publicId - Custom public_id (optional)
- * @returns {Promise<Object>} - Upload result
- */
-export const uploadBase64ToCloudinary = async (base64String, folder = 'general', publicId = null) => {
-  try {
-    // Ensure base64 string has proper data URI prefix
-    let dataUri = base64String;
-    if (!base64String.startsWith('data:')) {
-      // If no prefix, assume it's JPEG
-      dataUri = `data:image/jpeg;base64,${base64String}`;
-    }
-
-    const uploadOptions = {
-      folder: `rukkoin/${folder}`,
-      resource_type: 'auto',
-      transformation: [
-        { width: 1920, height: 1920, crop: 'limit' },
-        { quality: 'auto' },
-        { fetch_format: 'auto' }
-      ]
-    };
-
-    if (publicId) {
-      uploadOptions.public_id = publicId;
-    }
-
-    console.log(`[Cloudinary] Uploading base64 image to folder: ${folder}`);
-
-    const result = await cloudinary.uploader.upload(dataUri, uploadOptions);
-
-    console.log(`[Cloudinary] Upload success: ${result.secure_url}`);
-
-    return {
-      success: true,
-      url: result.secure_url,
-      publicId: result.public_id,
-      format: result.format,
-      width: result.width,
-      height: result.height,
-      bytes: result.bytes
-    };
-  } catch (error) {
-    console.error('Cloudinary base64 upload error:', error);
-    throw new Error('Failed to upload base64 image to Cloudinary');
-  }
+/** Remove a stored image. Accepts a URL or the stored filename. */
+export const deleteFromCloudinary = async (publicIdOrUrl) => {
+  const deleted = await deleteStoredAsset(publicIdOrUrl);
+  return { result: deleted ? 'ok' : 'not found', deleted };
 };
 
-/**
- * Generate thumbnail URL from Cloudinary video (frame at 0s or 1s)
- * @param {string} publicId - Cloudinary public_id of the video
- * @returns {string} - URL for thumbnail image
- */
-export const getVideoThumbnailUrl = (publicId) => {
-  if (!publicId) return null;
-  return cloudinary.url(publicId, {
-    resource_type: 'video',
-    format: 'jpg',
-    secure: true,
-    transformation: [
-      { start_offset: 0 },
-      { width: 720, crop: 'limit' },
-    ],
-  });
-};
-
-/**
- * Delete video from Cloudinary
- * @param {string} publicId - Public ID of the video
- * @returns {Promise<Object>}
- */
-export const deleteVideoFromCloudinary = async (publicId) => {
-  try {
-    const result = await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
-    return {
-      success: result.result === 'ok',
-      message: result.result === 'ok' ? 'Video deleted successfully' : 'Video not found',
-    };
-  } catch (error) {
-    console.error('Cloudinary video delete error:', error);
-    throw new Error('Failed to delete video from Cloudinary');
-  }
-};
-
-export default cloudinary;
+export default { uploadToCloudinary, uploadBase64ToCloudinary, deleteFromCloudinary };

@@ -1948,7 +1948,7 @@ export const uploadUserProfileImage = async (req, res) => {
 
   const uploadResult = await uploadDataUrlToCloudinary({
     dataUrl,
-    folder: `${env.cloudinary.folder}/user-profile`,
+    folder: `${env.uploadFolder}/user-profile`,
     publicIdPrefix: 'user-profile',
   });
 
