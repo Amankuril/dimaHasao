@@ -7,6 +7,9 @@
  * the approved UI is untouched — only its data source changes.
  */
 import axios from 'axios';
+// Reads go through the module-scoped client below; authenticated writes use the
+// shared client, which attaches the bearer token and handles refresh.
+import apiClient from '../../../services/api/axios';
 
 const baseURL =
   typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL
@@ -216,4 +219,93 @@ export const fetchHotelById = async (id) => {
   };
 };
 
-export default { fetchHotels, fetchHotelById, adaptProperty };
+/* ------------------------------------------------------------------ *
+ * Booking (authenticated)
+ * ------------------------------------------------------------------ */
+
+const unwrap = (res) => res?.data?.data ?? res?.data ?? {};
+
+/**
+ * What the stay costs. Server-computed, including seasonal nightly rates,
+ * coupons and availability — the screen displays this and never derives a
+ * total of its own.
+ */
+export const quoteStay = async ({ propertyId, roomTypeId, checkInDate, checkOutDate, guests, couponCode }) =>
+  unwrap(await apiClient.post('/hotel/bookings/quote', {
+    propertyId, roomTypeId, checkInDate, checkOutDate, guests, couponCode,
+  })).quote;
+
+/**
+ * Create the booking.
+ * @returns {Promise<{booking, paymentRequired, order, key}>} `order` is present
+ *   when the chosen method needs a gateway round-trip.
+ */
+export const createHotelBooking = async (payload) =>
+  unwrap(await apiClient.post('/hotel/bookings', payload));
+
+/** Confirm a Razorpay payment against a booking. */
+export const verifyHotelPayment = async (payload) =>
+  unwrap(await apiClient.post('/hotel/payments/verify', payload));
+
+const STAY_STATUS = {
+  pending: 'Awaiting Payment',
+  confirmed: 'Confirmed',
+  checked_in: 'Checked In',
+  checked_out: 'Checked Out',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  no_show: 'No Show',
+  rejected: 'Rejected',
+};
+
+const stayDate = (value) =>
+  value
+    ? new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+
+/** Backend booking → the card the v1 bookings screen renders. */
+export const adaptBooking = (booking = {}) => {
+  const property = booking.propertyId && typeof booking.propertyId === 'object' ? booking.propertyId : {};
+  const room = booking.roomTypeId && typeof booking.roomTypeId === 'object' ? booking.roomTypeId : {};
+  const address = property.address || {};
+
+  return {
+    id: booking.bookingId || String(booking._id || ''),
+    bookingRef: String(booking._id || ''),
+    hotelId: String(property._id || booking.propertyId || ''),
+    hotelName: property.propertyName || 'Stay',
+    roomName: room.name || 'Room',
+    location: [address.area, address.city].filter(Boolean).join(', ') || address.fullAddress || '',
+    checkIn: stayDate(booking.checkInDate),
+    checkOut: stayDate(booking.checkOutDate),
+    nights: Number(booking.totalNights) || 0,
+    roomCount: Number(booking.guests?.rooms) || 1,
+    guests: `${booking.guests?.adults || 1} Adults${booking.guests?.children ? `, ${booking.guests.children} Children` : ''}`,
+    totalAmount: Number(booking.totalAmount) || 0,
+    paymentMethod: booking.paymentMethod === 'pay_at_hotel' ? 'Pay at Property' : 'Online',
+    paymentStatus: booking.paymentStatus === 'paid' ? 'Paid' : 'Unpaid',
+    status: STAY_STATUS[booking.bookingStatus] || booking.bookingStatus || 'Confirmed',
+    bookingDate: stayDate(booking.createdAt),
+    image: property.coverImage || (property.propertyImages || [])[0] || PLACEHOLDER_IMAGE,
+    guestName: booking.guestContact?.name || '',
+    guestPhone: booking.guestContact?.phone || '',
+  };
+};
+
+/** The signed-in guest's stays. */
+export const fetchMyHotelBookings = async () => {
+  const body = unwrap(await apiClient.get('/hotel/bookings/my'));
+  const list = Array.isArray(body) ? body : body.bookings || [];
+  return list.map(adaptBooking);
+};
+
+export default {
+  fetchHotels,
+  fetchHotelById,
+  adaptProperty,
+  quoteStay,
+  adaptBooking,
+  createHotelBooking,
+  verifyHotelPayment,
+  fetchMyHotelBookings,
+};

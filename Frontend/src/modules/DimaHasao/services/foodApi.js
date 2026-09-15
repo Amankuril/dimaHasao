@@ -102,9 +102,59 @@ export const calculateOrder = async (payload) =>
 export const placeOrder = async (payload) =>
   unwrap(await apiClient.post('/food/orders', payload));
 
+const ORDER_STATUS = {
+  pending: 'Placed',
+  confirmed: 'Confirmed',
+  preparing: 'Preparing',
+  ready: 'Ready',
+  picked_up: 'On the way',
+  out_for_delivery: 'On the way',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+};
+
+const orderTime = (value) => {
+  if (!value) return '';
+  const then = new Date(value);
+  if (Number.isNaN(then.getTime())) return '';
+
+  const days = Math.floor((Date.now() - then.getTime()) / 86400000);
+  const time = then.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+  if (days <= 0) return `Today, ${time}`;
+  if (days === 1) return `Yesterday, ${time}`;
+  return `${then.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, ${time}`;
+};
+
+/** Backend order → the card the v1 bookings screen renders. */
+export const adaptOrder = (order = {}) => {
+  const restaurant =
+    order.restaurantId && typeof order.restaurantId === 'object' ? order.restaurantId : {};
+
+  return {
+    id: order.orderNumber || order.orderId || String(order._id || ''),
+    orderRef: String(order._id || ''),
+    restaurantId: String(restaurant._id || order.restaurantId || ''),
+    restaurantName: restaurant.restaurantName || restaurant.name || order.restaurantName || 'Restaurant',
+    items: asArray(order.items).map((item) => ({
+      id: String(item._id || item.itemId || ''),
+      name: item.name || item.itemName || 'Item',
+      price: Number(item.price) || 0,
+      quantity: Number(item.quantity) || 1,
+    })),
+    subtotal: Number(order.subtotal ?? order.itemsTotal) || 0,
+    deliveryFee: Number(order.deliveryFee) || 0,
+    gst: Number(order.taxAmount ?? order.gst) || 0,
+    totalAmount: Number(order.totalAmount ?? order.grandTotal) || 0,
+    deliveryAddress:
+      order.deliveryAddress?.fullAddress || order.deliveryAddress?.address || '',
+    status: ORDER_STATUS[order.orderStatus ?? order.status] || order.orderStatus || order.status || 'Placed',
+    orderTime: orderTime(order.createdAt),
+  };
+};
+
 export const fetchMyOrders = async () => {
   const body = unwrap(await apiClient.get('/food/orders'));
-  return asArray(body.orders ?? body.items ?? body);
+  return asArray(body.orders ?? body.items ?? body).map(adaptOrder);
 };
 
 export const fetchOrderById = async (orderId) =>

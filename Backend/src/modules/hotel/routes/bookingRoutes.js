@@ -1,6 +1,7 @@
 import express from 'express';
 import { protect, authorizedRoles } from '../middlewares/authMiddleware.js';
 import {
+  getBookingQuote,
   createBooking,
   getMyBookings,
   getPartnerBookings,
@@ -17,6 +18,8 @@ import {
 
 const router = express.Router();
 
+// Declared before '/:id' routes so 'quote' is never read as a booking id.
+router.post('/quote', protect, getBookingQuote);
 router.post('/', protect, createBooking);
 router.get('/my', protect, getMyBookings);
 router.get('/partner', protect, authorizedRoles('partner', 'admin'), getPartnerBookings);

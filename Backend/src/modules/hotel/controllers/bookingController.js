@@ -3,7 +3,7 @@ import RoomType from '../models/RoomType.js';
 import Booking from '../models/Booking.js';
 import Offer from '../models/Offer.js';
 import PlatformSettings from '../models/PlatformSettings.js';
-import { priceStay } from '../utils/nightlyPricing.js';
+import { quoteStay } from '../services/bookingPricing.service.js';
 import { buildInvoice } from '../services/invoiceService.js';
 import AvailabilityLedger from '../models/AvailabilityLedger.js';
 import Wallet from '../models/Wallet.js';
@@ -68,6 +68,65 @@ const triggerBookingNotifications = async (booking) => {
   }
 };
 
+/**
+ * @route POST /api/v1/hotel/bookings/quote
+ *
+ * What the stay costs, with no side effects. The booking screen displays this
+ * rather than deriving its own total — the previous screen invented a 12% GST
+ * and a flat ₹99 service fee the server never charged.
+ */
+export const getBookingQuote = async (req, res) => {
+  try {
+    const { propertyId, roomTypeId, checkInDate, checkOutDate, guests, couponCode } = req.body;
+
+    if (!propertyId || !roomTypeId || !checkInDate || !checkOutDate) {
+      return res.status(400).json({ message: 'Missing required booking details' });
+    }
+
+    const property = await Property.findById(propertyId);
+    if (!property) return res.status(404).json({ message: 'Property not found' });
+
+    const roomType = await RoomType.findById(roomTypeId);
+    if (!roomType) return res.status(404).json({ message: 'Room type not found' });
+
+    const settings = await PlatformSettings.getSettings();
+    const quote = await quoteStay({
+      property,
+      roomType,
+      checkInDate,
+      checkOutDate,
+      guests: guests || {},
+      couponCode,
+      userId: req.user._id,
+      settings,
+    });
+
+    res.json({
+      success: true,
+      quote: {
+        totalNights: quote.totalNights,
+        rooms: quote.units,
+        pricePerNight: quote.pricePerNight,
+        baseAmount: quote.baseAmount,
+        nightlyBreakdown: quote.nightlyBreakdown,
+        extraCharges: quote.extraCharges,
+        grossAmount: quote.grossAmount,
+        taxRate: quote.gstRate,
+        taxes: quote.taxes,
+        discount: quote.discount,
+        couponCode: quote.couponCode,
+        couponMessage: quote.couponMessage,
+        totalAmount: quote.totalAmount,
+        availableUnits: quote.availableUnits,
+      },
+    });
+  } catch (error) {
+    const status = error.statusCode || 500;
+    if (status === 500) console.error('Hotel quote error:', error);
+    res.status(status).json({ message: error.message || 'Failed to price this stay' });
+  }
+};
+
 export const createBooking = async (req, res) => {
   try {
     const {
@@ -84,11 +143,18 @@ export const createBooking = async (req, res) => {
       walletDeduction
     } = req.body;
 
+    // Whitelisted so an unrecognised method cannot slip past the settlement
+    // branches below and leave a booking in an undefined payment state.
+    const ALLOWED_PAYMENT_METHODS = ['razorpay', 'online', 'wallet', 'pay_at_hotel'];
+    if (!ALLOWED_PAYMENT_METHODS.includes(paymentMethod)) {
+      return res.status(400).json({
+        message: `Unsupported payment method. Use one of: ${ALLOWED_PAYMENT_METHODS.join(', ')}`,
+      });
+    }
+
     // Fetch Property
     const property = await Property.findById(propertyId);
     if (!property) return res.status(404).json({ message: 'Property not found' });
-
-    const pType = property.propertyType.toLowerCase();
 
     if (!roomTypeId || !checkInDate || !checkOutDate) {
       return res.status(400).json({ message: 'Missing required booking details' });
@@ -100,135 +166,27 @@ export const createBooking = async (req, res) => {
     // --- CONTINUE STANDARD BOOKING FLOW ---
     // Fetch Settings
     const settings = await PlatformSettings.getSettings();
-    const gstRate = settings.taxRate || 12;
 
-    // One platform commission for every partner. A paid plan used to be able to
-    // override this with its own rate; without plans, the global setting is the
-    // only rate there is.
-    const commissionRate = settings.defaultCommission || 10;
+    // Every figure below comes from one implementation, shared with the quote
+    // endpoint so the price shown and the price charged cannot drift apart.
+    const quote = await quoteStay({
+      property,
+      roomType,
+      checkInDate,
+      checkOutDate,
+      guests,
+      couponCode,
+      userId: req.user._id,
+      settings,
+    });
 
-    // Calculate Nights
-    const checkIn = new Date(checkInDate);
-    const checkOut = new Date(checkOutDate);
-    const totalNights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-
-    if (totalNights <= 0) {
-      return res.status(400).json({ message: 'Invalid check-in/check-out dates' });
-    }
-
-    // Check Availability
-    const requiredUnits = guests.rooms || 1;
-    const ledgerEntries = await AvailabilityLedger.aggregate([
-      {
-        $match: {
-          propertyId: new mongoose.Types.ObjectId(propertyId),
-          roomTypeId: new mongoose.Types.ObjectId(roomTypeId),
-          startDate: { $lt: checkOut },
-          endDate: { $gt: checkIn }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          blockedUnits: { $sum: '$units' }
-        }
-      }
-    ]);
-
-    const blockedUnits = ledgerEntries.length > 0 ? ledgerEntries[0].blockedUnits : 0;
-    const totalInventory = roomType.totalInventory || 0;
-
-    if (totalInventory - blockedUnits < requiredUnits) {
-      return res.status(400).json({ message: `Only ${Math.max(0, totalInventory - blockedUnits)} rooms available for selected dates` });
-    }
-
-    // Price the stay night by night so a booking that crosses a seasonal rate
-    // boundary is charged correctly on both sides.
-    const units = requiredUnits; // Use validated units
-    const stay = priceStay(roomType, checkIn, checkOut, units);
-    const baseAmount = stay.total;
-    const nightlyBreakdown = stay.nights.map((night) => ({
-      date: night.date,
-      rate: night.rate,
-      season: night.season,
-      units: night.units,
-      amount: night.amount,
-    }));
-    // Recorded for reference; the nightly breakdown is the real basis.
-    const pricePerNight = totalNights > 0 ? Math.round(baseAmount / totalNights / units) : 0;
-
-    // Calculate Extra Charges
-    const extraAdults = guests.extraAdults || 0;
-    const extraChildren = guests.extraChildren || 0;
-    const extraAdultPrice = (roomType.extraAdultPrice || 0) * extraAdults * totalNights;
-    const extraChildPrice = (roomType.extraChildPrice || 0) * extraChildren * totalNights;
-    const extraCharges = extraAdultPrice + extraChildPrice;
-
-    // Gross Amount
-    const grossAmount = baseAmount + extraCharges;
-
-    // Calculate Discount
-    let discountAmount = 0;
-    let appliedCoupon = null;
-
-    if (couponCode) {
-      const offer = await Offer.findOne({ code: couponCode, isActive: true });
-      if (offer) {
-        // Validate Offer Constraints
-        const isValidDate = (!offer.startDate || new Date() >= offer.startDate) &&
-          (!offer.endDate || new Date() <= offer.endDate);
-        const isValidAmount = grossAmount >= (offer.minBookingAmount || 0);
-
-        // User Usage Limit
-        const userUsageCount = await Booking.countDocuments({
-          userId: req.user._id,
-          couponCode: offer.code,
-          bookingStatus: { $nin: ['cancelled', 'rejected'] }
-        });
-        const isUnderUserLimit = userUsageCount < (offer.userLimit || 1);
-
-        // --- ENFORCE PROPERTY TYPE RESTRICTION ---
-        const isAllowedType = !offer.allowedPropertyType ||
-          offer.allowedPropertyType === 'all' ||
-          offer.allowedPropertyType === pType;
-
-        if (isValidDate && isValidAmount && isUnderUserLimit && isAllowedType) {
-          if (offer.discountType === 'percentage') {
-            discountAmount = (grossAmount * offer.discountValue) / 100;
-            if (offer.maxDiscount) {
-              discountAmount = Math.min(discountAmount, offer.maxDiscount);
-            }
-          } else {
-            discountAmount = offer.discountValue;
-          }
-          discountAmount = Math.floor(discountAmount);
-          discountAmount = Math.min(discountAmount, grossAmount); // Cannot exceed gross
-          appliedCoupon = offer.code;
-        } else if (!isAllowedType) {
-          console.log(`Coupon ${couponCode} not allowed for property type ${pType}`);
-        }
-      }
-    }
-
-    // Calculate Tax (On Gross Amount as per Frontend logic)
-    const commissionableAmount = grossAmount;
-    const taxes = Math.round((commissionableAmount * gstRate) / 100);
-
-    // Calculate Total Amount (User Pays)
-    // User Pays = (Gross - Discount) + Tax
-    const taxableAmount = grossAmount - discountAmount;
-    const totalAmount = taxableAmount + taxes;
-
-    // Calculate Commission (On Gross Amount)
-    let adminCommission = Math.round((grossAmount * commissionRate) / 100);
-    if (adminCommission < PaymentConfig.minCommission) {
-      adminCommission = PaymentConfig.minCommission;
-    }
-
-    // Calculate Partner Payout
-    // Partner Payout = (Gross - Discount) - Commission
-    // Verification: TotalAmount - Tax - Commission = ((Gross - Discount) + Tax) - Tax - Commission = Gross - Discount - Commission.
-    const partnerPayout = Math.floor(totalAmount - taxes - adminCommission);
+    const {
+      totalNights, units, pricePerNight, baseAmount, nightlyBreakdown,
+      extraAdultPrice, extraChildPrice, extraCharges, grossAmount,
+      taxes, totalAmount, adminCommission, partnerPayout,
+    } = quote;
+    const discountAmount = quote.discount;
+    const appliedCoupon = quote.couponCode;
 
     const bookingId = `BK-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -264,8 +222,12 @@ export const createBooking = async (req, res) => {
       couponCode: appliedCoupon,
       totalAmount,
       paymentMethod,
-      bookingStatus: 'confirmed', // Default confirmed for pay_at_hotel/wallet, pending for razorpay
-      paymentStatus: paymentMethod === 'pay_at_hotel' ? 'pending' : 'paid'
+      bookingStatus: 'confirmed', // Razorpay drops this to pending below
+      // Defaults to unpaid. Only an explicit settlement path — a wallet debit,
+      // or a verified gateway payment — may mark this paid. It used to default
+      // to 'paid' for every method except pay_at_hotel, so a booking sent with
+      // paymentMethod 'upi' was created fully paid with no money taken.
+      paymentStatus: 'pending'
     });
 
     // Handle Wallet Payment (Partial or Full)
@@ -480,8 +442,12 @@ export const createBooking = async (req, res) => {
       key: PaymentConfig.razorpayKeyId
     });
   } catch (error) {
-    console.error('Create Booking Error:', error);
-    res.status(500).json({ message: 'Server error creating booking' });
+    // quoteStay raises the "no rooms left" / "bad dates" cases with a
+    // statusCode. Those used to be inline 400s and must stay 400s, or the guest
+    // sees "Server error" when they simply asked for more rooms than exist.
+    const status = error.statusCode || 500;
+    if (status === 500) console.error('Create Booking Error:', error);
+    res.status(status).json({ message: error.message || 'Server error creating booking' });
   }
 };
 

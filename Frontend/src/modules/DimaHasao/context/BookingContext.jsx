@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { PLACES_DATA, TRANSPORTS_DATA } from '../data/tourismData';
-import { calculateOrder, placeOrder } from '../services/foodApi';
+import { calculateOrder, placeOrder, fetchMyOrders } from '../services/foodApi';
 import { fetchMyBookings as fetchMyTourBookings } from '../services/toursApi';
+import { fetchMyHotelBookings } from '../services/hotelApi';
+import { fetchMyRides } from '../services/taxiApi';
 import { isModuleAuthenticated, clearAuthData } from '../../../shared/utils/moduleAuth';
 
 // v1's display labels -> the API's paymentMethod enum
@@ -46,96 +48,27 @@ export const BookingProvider = ({ children }) => {
   const [favoriteHotels, setFavoriteHotels] = useState(['h1']);
 
   // Taxi Bookings list
-  const [bookings, setBookings] = useState([
-    {
-      id: 'DH-BK-8902',
-      placeId: '1',
-      placeName: 'I LOVE DIMA HASAO',
-      pickup: 'Haflong Station',
-      transport: 'Auto',
-      fare: 150,
-      date: 'Today, 4:30 PM',
-      status: 'Confirmed',
-      driverName: 'Ramen Dimasa',
-      driverPhone: '+91 94350 12345',
-      vehicleNo: 'AS-09-A-4821',
-      otp: '7412'
-    }
-  ]);
+  // Rides — the real ones, from the taxi module.
+  const [bookings, setBookings] = useState([]);
 
-  // Hotel Bookings list
-  const [hotelBookings, setHotelBookings] = useState([
-    {
-      id: 'DH-HTL-7741',
-      hotelId: 'h1',
-      hotelName: 'The Landmark Hills Resort & Spa',
-      roomName: 'Deluxe Valley View Room',
-      location: 'Upper Bagetar, Haflong',
-      checkIn: 'Tomorrow, 12:00 PM',
-      checkOut: 'Next Day, 11:00 AM',
-      nights: 1,
-      guests: '2 Adults',
-      roomCount: 1,
-      totalAmount: 4256,
-      paymentMethod: 'UPI (GPay)',
-      paymentStatus: 'Paid',
-      status: 'Confirmed',
-      bookingDate: 'Today, 2:15 PM',
-      image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
-      guestName: 'Dima Explorer',
-      guestPhone: '+91 98765 43210'
-    }
-  ]);
+  // Hotel stays — the real ones, from /v1/hotel/bookings/my.
+  const [hotelBookings, setHotelBookings] = useState([]);
 
   // Food Ordering Cart State
   const [cart, setCart] = useState([]);
   const [cartRestaurant, setCartRestaurant] = useState(null);
 
   // Food Orders History
-  const [foodOrders, setFoodOrders] = useState([
-    {
-      id: 'DH-FD-3109',
-      restaurantId: 'r1',
-      restaurantName: 'Dimasa Ethnic Kitchen & Judima Lounge',
-      items: [
-        { id: 'r1-m1', name: 'Muri Bamboo Smoked Pork', price: 320, quantity: 1 },
-        { id: 'r1-m2', name: 'Mai-ju Sticky Rice', price: 80, quantity: 2 }
-      ],
-      subtotal: 480,
-      deliveryFee: 40,
-      gst: 24,
-      totalAmount: 544,
-      deliveryAddress: 'Circuit House Road, Haflong',
-      status: 'Delivered',
-      orderTime: 'Yesterday, 8:15 PM',
-      deliveryPartner: 'Bijoy Dimasa',
-      partnerPhone: '+91 94352 77112',
-      estimatedTime: 'Delivered in 28 mins'
-    }
-  ]);
+  const [foodOrders, setFoodOrders] = useState([]);
 
   // Tour Package Bookings — the real ones, from /v1/tours/bookings/my.
   const [tourBookings, setTourBookings] = useState([]);
   const [tourBookingsLoading, setTourBookingsLoading] = useState(false);
 
   // Festival Ticket Bookings
-  const [festivalBookings, setFestivalBookings] = useState([
-    {
-      id: 'DH-FEST-9021',
-      festivalId: 'fest-1',
-      festivalName: 'Falcon Festival Umrangso 2026',
-      ticketCategory: '3-Day All-Access Season Pass',
-      ticketCount: 2,
-      totalAmount: 1300,
-      venue: 'Golf Field Grounds, Umrangso',
-      dates: 'Nov 14 - Nov 17, 2026',
-      status: 'Confirmed',
-      paymentStatus: 'Paid Online',
-      bookingDate: 'Yesterday, 6:30 PM',
-      qrCode: 'DH-FF-74129',
-      image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80'
-    }
-  ]);
+  // Festivals have no backend yet, so this stays empty rather than showing a
+  // pass nobody actually holds. See the festivals module when it lands.
+  const [festivalBookings, setFestivalBookings] = useState([]);
 
   // Cart Management Functions
   const addToCart = (restaurant, item) => {
@@ -348,37 +281,27 @@ export const BookingProvider = ({ children }) => {
       createdAt: new Date().toISOString()
     };
 
-    setBookings(prev => [newBooking, ...prev]);
+    // Deliberately NOT pushed into `bookings`. That list is the real ride
+    // history from the taxi module now, and RideBookingScreen is still a v1
+    // shortcut that persists nothing — prepending this would put an invented
+    // driver and OTP at the top of the rider's genuine history. The object is
+    // still returned so the screen's own confirmation still renders.
     return newBooking;
   };
 
-  const createHotelBooking = (bookingDetails) => {
-    const newId = `DH-HTL-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newHotelBooking = {
-      id: newId,
-      bookingDate: 'Just now',
-      status: 'Confirmed',
-      paymentStatus: bookingDetails.paymentMethod === 'cash' ? 'Pay at Property' : 'Paid Online',
-      createdAt: new Date().toISOString(),
-      ...bookingDetails
-    };
-
-    setHotelBookings(prev => [newHotelBooking, ...prev]);
-    return newHotelBooking;
-  };
 
   /**
-   * Pull the traveller's tour bookings from the server.
+   * Every booking list the app shows, straight from its own module.
    *
-   * Called on sign-in and again after a booking is paid for. A signed-out
-   * visitor has none, so the list is cleared rather than requested.
+   * These were all seeded fixtures before — a ride with an invented driver and
+   * OTP, a stay nobody had booked — sitting next to the traveller's real ones.
+   * Each list is refreshed independently so one module being down empties only
+   * its own tab.
    */
-  const refreshTourBookings = useCallback(async () => {
-    if (!user.isLoggedIn) {
-      setTourBookings([]);
-      return [];
-    }
+  const [bookingsLoading, setBookingsLoading] = useState(false);
 
+  const refreshTourBookings = useCallback(async () => {
+    if (!user.isLoggedIn) { setTourBookings([]); return []; }
     try {
       setTourBookingsLoading(true);
       const list = await fetchMyTourBookings();
@@ -392,7 +315,53 @@ export const BookingProvider = ({ children }) => {
     }
   }, [user.isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { refreshTourBookings(); }, [refreshTourBookings]);
+  const refreshHotelBookings = useCallback(async () => {
+    if (!user.isLoggedIn) { setHotelBookings([]); return []; }
+    try {
+      const list = await fetchMyHotelBookings();
+      setHotelBookings(list);
+      return list;
+    } catch {
+      return hotelBookings;
+    }
+  }, [user.isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const refreshRides = useCallback(async () => {
+    if (!user.isLoggedIn) { setBookings([]); return []; }
+    try {
+      const list = await fetchMyRides();
+      setBookings(list);
+      return list;
+    } catch {
+      return bookings;
+    }
+  }, [user.isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const refreshFoodOrders = useCallback(async () => {
+    if (!user.isLoggedIn) { setFoodOrders([]); return []; }
+    try {
+      const list = await fetchMyOrders();
+      setFoodOrders(list);
+      return list;
+    } catch {
+      return foodOrders;
+    }
+  }, [user.isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Everything at once — used on sign-in and when the bookings screen opens. */
+  const refreshAllBookings = useCallback(async () => {
+    setBookingsLoading(true);
+    // allSettled so one module's outage cannot stop the other three loading.
+    await Promise.allSettled([
+      refreshTourBookings(),
+      refreshHotelBookings(),
+      refreshRides(),
+      refreshFoodOrders(),
+    ]);
+    setBookingsLoading(false);
+  }, [refreshTourBookings, refreshHotelBookings, refreshRides, refreshFoodOrders]);
+
+  useEffect(() => { refreshAllBookings(); }, [refreshAllBookings]);
 
   const createFestivalBooking = (bookingDetails) => {
     const newId = `DH-FEST-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -433,7 +402,6 @@ export const BookingProvider = ({ children }) => {
         bookings,
         createBooking,
         hotelBookings,
-        createHotelBooking,
         cart,
         cartRestaurant,
         addToCart,
@@ -445,6 +413,11 @@ export const BookingProvider = ({ children }) => {
         tourBookings,
         tourBookingsLoading,
         refreshTourBookings,
+        refreshHotelBookings,
+        refreshRides,
+        refreshFoodOrders,
+        refreshAllBookings,
+        bookingsLoading,
         festivalBookings,
         createFestivalBooking,
         searchQuery,
