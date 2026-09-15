@@ -52,6 +52,10 @@ const operatorService = {
   collectBalance: (id) => toursApi.patch(`/bookings/${id}/collect-balance`, {}),
   updateBookingStatus: (id, status, reason) => toursApi.patch(`/bookings/${id}/status`, { status, reason }),
 
+  // Reviews
+  getReviews: () => toursApi.get('/reviews/operator'),
+  replyToReview: (id, reply) => toursApi.post(`/reviews/${id}/reply`, { reply }),
+
   // Wallet
   getWallet: () => toursApi.get('/wallet'),
   getTransactions: () => toursApi.get('/wallet/transactions'),

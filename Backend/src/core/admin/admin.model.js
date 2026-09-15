@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { config } from '../../config/env.js';
 import { ADMIN_LEVELS, ADMIN_MODULES } from './adminHierarchy.constants.js';
+import { ALL_ADMIN_MODULES } from './adminHierarchy.constants.js';
 
 const adminSchema = new mongoose.Schema(
     {
@@ -73,7 +74,9 @@ const adminSchema = new mongoose.Schema(
         },
         servicesAccess: {
             type: [String],
-            enum: ['food', 'quickCommerce', 'taxi'],
+            // Derived from ADMIN_MODULES so a new module cannot be added to the
+            // hierarchy and then fail to persist here.
+            enum: ALL_ADMIN_MODULES,
             default: ['food']
         },
         service_location_ids: {

@@ -18,6 +18,10 @@ const adminService = {
   updatePackageStatus: (id, status, reason) =>
     toursApi.patch(`/admin/packages/${id}/status`, { status, reason }),
 
+  // Reviews
+  getReviews: (params = {}) => toursApi.get('/admin/reviews', { params }),
+  updateReviewStatus: (id, status) => toursApi.patch(`/admin/reviews/${id}/status`, { status }),
+
   // Bookings
   getBookings: (params = {}) => toursApi.get('/admin/bookings', { params }),
 

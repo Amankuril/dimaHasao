@@ -57,6 +57,7 @@ export const preloadRazorpayScript = () => {
  * @param {String} options.prefill.name - Customer name
  * @param {String} options.prefill.email - Customer email
  * @param {String} options.prefill.contact - Customer phone
+ * @param {String} [options.themeColor] - Checkout accent; defaults to the food red
  * @param {Object} options.notes - Additional notes
  * @param {Function} options.handler - Success callback
  * @param {Function} options.onError - Error callback
@@ -125,7 +126,9 @@ export const initRazorpayPayment = async (options) => {
       },
       notes: options.notes || {},
       theme: {
-        color: '#E23744'
+        // Each module passes its own brand colour; food's red stays the default
+        // so existing callers are unaffected.
+        color: options.themeColor || '#E23744'
       },
       handler: function(response) {
         paymentCompleted = true;

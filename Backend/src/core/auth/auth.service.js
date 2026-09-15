@@ -19,6 +19,7 @@ import { logger } from "../../utils/logger.js";
 import { sendAdminResetOtpEmail } from "../../utils/email.js";
 import mongoose from "mongoose";
 import { creditReferralReward } from "../../modules/food/user/services/userWallet.service.js";
+import { ALL_ADMIN_MODULES } from "../admin/adminHierarchy.constants.js";
 
 const ROLES = {
   USER: "USER",
@@ -758,7 +759,10 @@ export const getProfile = async (userId, role) => {
   return { user: profile };
 };
 
-const ADMIN_SERVICES_ALLOWED = ["food", "taxi"];
+// The same list the schema enums on. It used to be a hand-maintained copy that
+// had fallen behind — it omitted 'quickCommerce', so a quick-commerce admin
+// silently lost that access the next time they saved their profile.
+const ADMIN_SERVICES_ALLOWED = ALL_ADMIN_MODULES;
 
 /** Update admin profile (name, email, phone, profileImage). Only for ADMIN role. */
 export const updateAdminProfile = async (userId, body) => {

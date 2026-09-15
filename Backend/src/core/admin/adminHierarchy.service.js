@@ -35,9 +35,18 @@ export const resolveAdminLevel = (admin = {}) => {
 
   const adminType = normalizeAdminType(admin.admin_type || admin.role);
   const servicesAccess = Array.isArray(admin.servicesAccess) ? admin.servicesAccess : [];
+  // Deliberately still FOOD && TAXI, not every module. Every existing platform
+  // superadmin carries servicesAccess ['food','taxi']; requiring 'tours' here
+  // would silently demote all of them the moment tours shipped.
   const hasAllServices =
     servicesAccess.includes(ADMIN_MODULES.FOOD) &&
     servicesAccess.includes(ADMIN_MODULES.TAXI);
+
+  // Exactly one service means that module's superadmin. Table-driven so a new
+  // module needs no branch here; a service with no superadmin level (quick
+  // commerce) falls through to the food default exactly as it did before.
+  const soleModuleLevel =
+    servicesAccess.length === 1 ? MODULE_SUPERADMIN_LEVELS[servicesAccess[0]] : null;
 
   const roleLower = String(admin.role || '').toLowerCase();
   const adminTypeLower = String(admin.admin_type || '').toLowerCase();
@@ -47,9 +56,7 @@ export const resolveAdminLevel = (admin = {}) => {
     if (hasAllServices || servicesAccess.length >= 2 || servicesAccess.length === 0) {
       return ADMIN_LEVELS.PLATFORM_SUPERADMIN;
     }
-    if (servicesAccess.includes(ADMIN_MODULES.TAXI) && !servicesAccess.includes(ADMIN_MODULES.FOOD)) {
-      return ADMIN_LEVELS.TAXI_SUPERADMIN;
-    }
+    if (soleModuleLevel) return soleModuleLevel;
     return ADMIN_LEVELS.FOOD_SUPERADMIN;
   }
 
@@ -57,9 +64,7 @@ export const resolveAdminLevel = (admin = {}) => {
     return ADMIN_LEVELS.PLATFORM_SUPERADMIN;
   }
 
-  if (servicesAccess.includes(ADMIN_MODULES.TAXI)) {
-    return ADMIN_LEVELS.TAXI_SUPERADMIN;
-  }
+  if (soleModuleLevel) return soleModuleLevel;
 
   return ADMIN_LEVELS.FOOD_SUPERADMIN;
 };
@@ -71,8 +76,9 @@ export const resolveAdminModule = (admin = {}) => {
   }
 
   const level = resolveAdminLevel(admin);
-  if (level === ADMIN_LEVELS.FOOD_SUPERADMIN) return ADMIN_MODULES.FOOD;
-  if (level === ADMIN_LEVELS.TAXI_SUPERADMIN) return ADMIN_MODULES.TAXI;
+  const moduleForLevel = Object.entries(MODULE_SUPERADMIN_LEVELS)
+    .find(([, superadminLevel]) => superadminLevel === level)?.[0];
+  if (moduleForLevel) return moduleForLevel;
 
   if (level === ADMIN_LEVELS.SUBADMIN) {
     if (Array.isArray(admin.service_location_ids) && admin.service_location_ids.length > 0) {
@@ -92,7 +98,7 @@ export const isPlatformSuperAdmin = (admin = {}) =>
 export const isModuleSuperAdmin = (admin = {}, module = null) => {
   const level = resolveAdminLevel(admin);
   if (!module) {
-    return level === ADMIN_LEVELS.FOOD_SUPERADMIN || level === ADMIN_LEVELS.TAXI_SUPERADMIN;
+    return Object.values(MODULE_SUPERADMIN_LEVELS).includes(level);
   }
   return level === MODULE_SUPERADMIN_LEVELS[module];
 };
@@ -101,8 +107,7 @@ export const isSuperAdminLike = (admin = {}) => {
   const level = resolveAdminLevel(admin);
   return (
     level === ADMIN_LEVELS.PLATFORM_SUPERADMIN ||
-    level === ADMIN_LEVELS.FOOD_SUPERADMIN ||
-    level === ADMIN_LEVELS.TAXI_SUPERADMIN ||
+    Object.values(MODULE_SUPERADMIN_LEVELS).includes(level) ||
     normalizeAdminType(admin.admin_type || admin.role) === 'superadmin'
   );
 };

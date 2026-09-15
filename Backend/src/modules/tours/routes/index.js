@@ -4,6 +4,8 @@ import operatorRoutes from './operatorRoutes.js';
 import packageRoutes from './packageRoutes.js';
 import bookingRoutes from './bookingRoutes.js';
 import walletRoutes from './walletRoutes.js';
+import reviewRoutes from './reviewRoutes.js';
+import paymentRoutes from './paymentRoutes.js';
 import adminRoutes from './adminRoutes.js';
 
 /**
@@ -19,6 +21,8 @@ toursRouter.use('/operators', operatorRoutes);
 toursRouter.use('/packages', packageRoutes);
 toursRouter.use('/bookings', bookingRoutes);
 toursRouter.use('/wallet', walletRoutes);
+toursRouter.use('/reviews', reviewRoutes);
+toursRouter.use('/payments', paymentRoutes);
 toursRouter.use('/admin', adminRoutes);
 
 export default toursRouter;

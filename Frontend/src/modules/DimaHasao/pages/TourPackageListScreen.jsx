@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { TOUR_PACKAGES_DATA } from '../data/tourPackageData';
+import { useState, useMemo, useEffect } from 'react';
+import { fetchPackages, PACKAGE_TYPES } from '../services/toursApi';
 import { PackageCard } from '../components/tour/PackageCard';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
@@ -10,15 +10,34 @@ export const TourPackageListScreen = () => {
   const [selectedType, setSelectedType] = useState('All');
   const [sortBy, setSortBy] = useState('popular');
 
-  const packageTypes = ['All', 'Weekend Escapade', 'Trekking & Adventure', 'Wildlife & Nature', 'Cultural Heritage'];
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  const packageTypes = ['All', ...PACKAGE_TYPES];
+
+  // Fetched once and filtered in the browser: the catalogue is small, and
+  // searching on every keystroke against the server would be a request per
+  // character for no benefit at this size.
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchPackages()
+      .then((list) => { if (!cancelled) { setPackages(list); setLoadError(''); } })
+      .catch(() => { if (!cancelled) setLoadError('We could not load tour packages just now.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredPackages = useMemo(() => {
-    return TOUR_PACKAGES_DATA.filter((pkg) => {
+    return packages.filter((pkg) => {
       const matchesType = selectedType === 'All' || pkg.type === selectedType;
+      const needle = searchQuery.toLowerCase();
       const matchesSearch =
-        pkg.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        pkg.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        pkg.destinations.some((d) => d.toLowerCase().includes(searchQuery.toLowerCase()));
+        pkg.title.toLowerCase().includes(needle) ||
+        pkg.subtitle.toLowerCase().includes(needle) ||
+        pkg.destinations.some((d) => d.toLowerCase().includes(needle));
       return matchesType && matchesSearch;
     }).sort((a, b) => {
       if (sortBy === 'price-low') return a.pricePerPerson - b.pricePerPerson;
@@ -26,7 +45,7 @@ export const TourPackageListScreen = () => {
       if (sortBy === 'rating') return b.rating - a.rating;
       return b.reviewCount - a.reviewCount;
     });
-  }, [searchQuery, selectedType, sortBy]);
+  }, [packages, searchQuery, selectedType, sortBy]);
 
   return (
     <div className="bg-[#FAF6ED] text-gray-800 antialiased min-h-screen pb-28 relative font-poppins">
@@ -101,7 +120,32 @@ export const TourPackageListScreen = () => {
         </div>
 
         {/* Package Cards List */}
-        {filteredPackages.length > 0 ? (
+        {loading ? (
+          <div className="space-y-4">
+            {[0, 1, 2].map((n) => (
+              <div key={n} className="bg-white rounded-2xl border border-[#E5DDC3] overflow-hidden animate-pulse">
+                <div className="h-44 bg-gray-200" />
+                <div className="p-3.5 space-y-2">
+                  <div className="h-3.5 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-[#E5DDC3] p-6 space-y-3">
+            <i className="fa-solid fa-triangle-exclamation text-4xl text-amber-400"></i>
+            <h3 className="font-bold text-gray-800 text-sm">Couldn't load packages</h3>
+            <p className="text-xs text-gray-500">{loadError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-[#06381e] text-amber-300 text-xs font-bold px-4 py-2 rounded-xl shadow-xs hover:bg-emerald-900 transition-colors cursor-pointer"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : filteredPackages.length > 0 ? (
           <div className="space-y-4">
             {filteredPackages.map((pkg, idx) => (
               <PackageCard key={pkg.id} pkg={pkg} index={idx} />
@@ -112,7 +156,9 @@ export const TourPackageListScreen = () => {
             <i className="fa-solid fa-suitcase-rolling text-4xl text-gray-300"></i>
             <h3 className="font-bold text-gray-800 text-sm">No Tour Packages Found</h3>
             <p className="text-xs text-gray-500">
-              No packages match "{searchQuery}". Try exploring another category or reset filters.
+              {searchQuery || selectedType !== 'All'
+                ? `No packages match ${searchQuery ? `"${searchQuery}"` : 'this category'}. Try another category or reset filters.`
+                : 'No tour packages are live yet. Please check back soon.'}
             </p>
             <button
               onClick={() => {

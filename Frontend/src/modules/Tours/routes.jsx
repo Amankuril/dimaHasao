@@ -12,6 +12,7 @@ const Packages = L(() => import('./app/admin/pages/Packages'));
 const PackageCreate = L(() => import('./app/admin/pages/PackageCreate'));
 const Bookings = L(() => import('./app/admin/pages/Bookings'));
 const Payouts = L(() => import('./app/admin/pages/Payouts'));
+const Reviews = L(() => import('./app/admin/pages/Reviews'));
 const Settings = L(() => import('./app/admin/pages/Settings'));
 
 const OperatorLogin = L(() => import('./app/operator/pages/OperatorLogin'));
@@ -21,6 +22,7 @@ const OperatorPackages = L(() => import('./app/operator/pages/OperatorPackages')
 const OperatorPackageEditor = L(() => import('./app/operator/pages/OperatorPackageEditor'));
 const OperatorBookings = L(() => import('./app/operator/pages/OperatorBookings'));
 const OperatorWallet = L(() => import('./app/operator/pages/OperatorWallet'));
+const OperatorReviews = L(() => import('./app/operator/pages/OperatorReviews'));
 const OperatorProfile = L(() => import('./app/operator/pages/OperatorProfile'));
 
 const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden="true" />;
@@ -52,6 +54,7 @@ export default function ToursRoutes() {
             <Route path="packages" element={<Packages />} />
             <Route path="bookings" element={<Bookings />} />
             <Route path="payouts" element={<Payouts />} />
+            <Route path="reviews" element={<Reviews />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Route>
@@ -68,6 +71,7 @@ export default function ToursRoutes() {
             <Route path="packages" element={<OperatorPackages />} />
             <Route path="bookings" element={<OperatorBookings />} />
             <Route path="wallet" element={<OperatorWallet />} />
+            <Route path="reviews" element={<OperatorReviews />} />
             <Route path="profile" element={<OperatorProfile />} />
           </Route>
         </Route>

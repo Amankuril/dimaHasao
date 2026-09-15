@@ -15,6 +15,7 @@ import {
   getSettings,
   updateSettings,
 } from '../controllers/adminController.js';
+import { getAdminReviews, updateReviewStatus } from '../controllers/reviewController.js';
 
 const router = express.Router();
 
@@ -36,6 +37,9 @@ router.post('/packages', createPackageForOperator);
 router.patch('/packages/:id/status', updatePackageStatus);
 
 router.get('/bookings', getAdminBookings);
+
+router.get('/reviews', getAdminReviews);
+router.patch('/reviews/:id/status', updateReviewStatus);
 
 router.get('/withdrawals', getWithdrawals);
 router.patch('/withdrawals/:id/status', updateWithdrawalStatus);

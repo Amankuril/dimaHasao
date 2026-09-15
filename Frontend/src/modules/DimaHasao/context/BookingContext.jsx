@@ -1,6 +1,7 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { PLACES_DATA, TRANSPORTS_DATA } from '../data/tourismData';
 import { calculateOrder, placeOrder } from '../services/foodApi';
+import { fetchMyBookings as fetchMyTourBookings } from '../services/toursApi';
 import { isModuleAuthenticated, clearAuthData } from '../../../shared/utils/moduleAuth';
 
 // v1's display labels -> the API's paymentMethod enum
@@ -113,26 +114,9 @@ export const BookingProvider = ({ children }) => {
     }
   ]);
 
-  // Tour Package Bookings
-  const [tourBookings, setTourBookings] = useState([
-    {
-      id: 'DH-TOUR-1044',
-      packageId: 'pkg-1',
-      packageTitle: 'Haflong & Jatinga Bird Phenomenon Tour',
-      duration: '2 Days / 1 Night',
-      travelDate: 'Coming Weekend (Saturday)',
-      travelers: '2 Adults',
-      totalAmount: 8400,
-      paymentMethod: 'UPI (GPay)',
-      paymentStatus: 'Paid',
-      status: 'Confirmed',
-      guideAssigned: 'Sonjit Daulagupu (Certified Guide)',
-      guidePhone: '+91 94353 11889',
-      pickupPoint: 'Haflong Railway Station (Pickup at 9:00 AM)',
-      bookingDate: 'Yesterday, 4:00 PM',
-      image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80'
-    }
-  ]);
+  // Tour Package Bookings — the real ones, from /v1/tours/bookings/my.
+  const [tourBookings, setTourBookings] = useState([]);
+  const [tourBookingsLoading, setTourBookingsLoading] = useState(false);
 
   // Festival Ticket Bookings
   const [festivalBookings, setFestivalBookings] = useState([
@@ -383,22 +367,32 @@ export const BookingProvider = ({ children }) => {
     return newHotelBooking;
   };
 
-  const createTourBooking = (bookingDetails) => {
-    const newId = `DH-TOUR-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newTourBooking = {
-      id: newId,
-      bookingDate: 'Just now',
-      status: 'Confirmed',
-      paymentStatus: 'Paid Online',
-      guideAssigned: 'Local Certified Dimasa Guide (Assigned)',
-      guidePhone: '+91 94350 88334',
-      createdAt: new Date().toISOString(),
-      ...bookingDetails
-    };
+  /**
+   * Pull the traveller's tour bookings from the server.
+   *
+   * Called on sign-in and again after a booking is paid for. A signed-out
+   * visitor has none, so the list is cleared rather than requested.
+   */
+  const refreshTourBookings = useCallback(async () => {
+    if (!user.isLoggedIn) {
+      setTourBookings([]);
+      return [];
+    }
 
-    setTourBookings((prev) => [newTourBooking, ...prev]);
-    return newTourBooking;
-  };
+    try {
+      setTourBookingsLoading(true);
+      const list = await fetchMyTourBookings();
+      setTourBookings(list);
+      return list;
+    } catch {
+      // A failed refresh must not blank a list the traveller is looking at.
+      return tourBookings;
+    } finally {
+      setTourBookingsLoading(false);
+    }
+  }, [user.isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { refreshTourBookings(); }, [refreshTourBookings]);
 
   const createFestivalBooking = (bookingDetails) => {
     const newId = `DH-FEST-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -449,7 +443,8 @@ export const BookingProvider = ({ children }) => {
         foodOrders,
         createFoodOrder,
         tourBookings,
-        createTourBooking,
+        tourBookingsLoading,
+        refreshTourBookings,
         festivalBookings,
         createFestivalBooking,
         searchQuery,

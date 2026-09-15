@@ -10,6 +10,7 @@ import ToursWithdrawal from '../models/Withdrawal.js';
 import ToursTransaction from '../models/ToursTransaction.js';
 import ToursSettings from '../models/ToursSettings.js';
 import { createPackage, assertOperatorSellable } from '../services/package.service.js';
+import { notifyOperatorApproval, notifyPackageDecision } from '../services/notify.service.js';
 
 /* ------------------------------------------------------------------ *
  * Operators
@@ -100,6 +101,11 @@ export const updateOperatorApproval = async (req, res) => {
       await TourPackage.updateMany({ operatorId: operator._id }, { isActive: false });
     }
     await operator.save();
+
+    // Best-effort and un-awaited: the decision is already saved, and a dead
+    // SMTP or a missing FCM token must not fail the admin's request.
+    notifyOperatorApproval(operator, status, operator.rejectionReason)
+      .catch((error) => console.warn('[tours] operator approval notice failed:', error.message));
 
     res.json({ success: true, message: `Operator ${status}`, operator });
   } catch (error) {
@@ -226,6 +232,14 @@ export const updatePackageStatus = async (req, res) => {
       pkg.approvedAt = undefined;
     }
     await pkg.save();
+
+    if (status !== 'pending') {
+      const operator = await TourOperator.findById(pkg.operatorId);
+      if (operator) {
+        notifyPackageDecision(operator, pkg, status, reason)
+          .catch((error) => console.warn('[tours] package decision notice failed:', error.message));
+      }
+    }
 
     res.json({ success: true, message: `Package ${status}`, package: pkg });
   } catch (error) {

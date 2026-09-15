@@ -10,10 +10,11 @@ import mongoose from 'mongoose';
 import TourPackage from '../models/TourPackage.js';
 import TourBooking from '../models/TourBooking.js';
 import TourOperator from '../models/TourOperator.js';
-import ToursWallet from '../models/Wallet.js';
 import ToursSettings from '../models/ToursSettings.js';
-import { quoteBooking, settlementSplit } from '../services/pricing.js';
+import { quoteBooking } from '../services/pricing.js';
 import { publicPackageMatch } from '../services/package.service.js';
+import { settleBookingAdvance } from '../services/settlement.service.js';
+import { isRazorpayConfigured } from '../../../core/payments/razorpay.service.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -191,63 +192,41 @@ export const createBooking = async (req, res) => {
 
 /**
  * @route POST /v1/tours/bookings/:id/settle
- * Marks the advance as received and moves the money.
  *
- * The platform always keeps commission + tax; the operator collects `balanceDue`
- * in cash. So the wallet only has to settle the difference — and when the
- * advance is too small to cover the platform's cut, that difference is a debit.
+ * The no-gateway path. Only reachable while Razorpay is unconfigured — with
+ * keys present, a booking can only be confirmed through /verify with a valid
+ * signature, so this can never become a way to confirm a trip without paying.
+ *
+ * Scoped to the caller's own booking. It moves money, so resolving it by id
+ * alone would let any signed-in user settle a stranger's booking.
  */
 export const settleAdvance = async (req, res) => {
   try {
-    const booking = await TourBooking.findById(req.params.id);
+    if (isRazorpayConfigured()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Complete the payment through the gateway to confirm this booking.',
+      });
+    }
+
+    const booking = await TourBooking.findOne({ _id: req.params.id, userId: req.user._id });
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
-    if (booking.paymentStatus !== 'pending') {
-      return res.status(400).json({ success: false, message: 'This booking has already been settled' });
-    }
 
-    const { paymentId } = req.body;
-
-    booking.paymentId = paymentId || booking.paymentId;
-    booking.amountPaid = booking.advanceAmount;
-    booking.paymentStatus = booking.balanceDue > 0 ? 'advance_paid' : 'paid';
-    booking.bookingStatus = 'confirmed';
-
-    const split = settlementSplit(booking);
-    const wallet = await ToursWallet.forOperator(booking.operatorId);
-    const reference = booking.bookingId;
-
-    if (split.direction === 'credit') {
-      await wallet.credit(
-        split.amount,
-        `Advance received for ${reference}`,
-        reference,
-        'booking_payment',
-        { bookingId: reference },
-      );
-    } else if (split.amount > 0) {
-      // The advance did not cover commission + tax, so the platform recovers the
-      // shortfall from the wallet. The operator still nets operatorPayout once
-      // they collect the balance in cash.
-      await wallet.debit(
-        split.amount,
-        `Platform commission and tax for ${reference}`,
-        reference,
-        'commission_deduction',
-        { bookingId: reference },
-      );
-    }
-
-    await booking.save();
+    const settled = await settleBookingAdvance(booking, {
+      paymentId: req.body.paymentId,
+      paymentMethod: 'dev_no_gateway',
+    });
 
     res.json({
       success: true,
       message: 'Advance settled',
-      booking,
-      settlement: { ...split, operatorPayout: booking.operatorPayout },
+      booking: settled.booking,
+      movement: settled.movement,
     });
   } catch (error) {
-    console.error('Settle advance error:', error);
-    res.status(500).json({ success: false, message: 'Failed to settle this booking' });
+    const status = error.statusCode || 500;
+    if (status === 500) console.error('Settle advance error:', error);
+    res.status(status).json({ success: false, message: error.message || 'Failed to settle this booking' });
   }
 };
 

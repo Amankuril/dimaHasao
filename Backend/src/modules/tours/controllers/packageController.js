@@ -85,6 +85,9 @@ export const getPackageDetail = async (req, res) => {
     const reviews = await TourReview.find({ packageId: pkg._id, status: 'approved' })
       .sort({ createdAt: -1 })
       .limit(20)
+      // Without this the author is unpopulated and every review renders under
+      // the anonymous fallback, which reads as a bug on the package page.
+      .populate('userId', 'name profileImage')
       .lean()
       .catch(() => []);
 

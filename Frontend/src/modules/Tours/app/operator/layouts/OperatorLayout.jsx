@@ -13,7 +13,7 @@
  */
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Calendar, LayoutDashboard, LogOut, Package, Wallet, Clock, ShieldOff, UserCog } from 'lucide-react';
+import { Calendar, LayoutDashboard, LogOut, Package, Wallet, Clock, ShieldOff, Star, UserCog } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import operatorService, {
@@ -29,6 +29,7 @@ const NAV = [
   { icon: Package, label: 'Packages', path: '/tours/operator/packages' },
   { icon: Calendar, label: 'Bookings', path: '/tours/operator/bookings' },
   { icon: Wallet, label: 'Wallet', path: '/tours/operator/wallet' },
+  { icon: Star, label: 'Reviews', path: '/tours/operator/reviews' },
   { icon: UserCog, label: 'Profile & KYC', path: '/tours/operator/profile' },
 ];
 

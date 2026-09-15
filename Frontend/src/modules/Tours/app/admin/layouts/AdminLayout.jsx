@@ -9,8 +9,7 @@ import React, { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Package, Calendar, Wallet, Settings,
-    Search, LogOut, X, ChevronLeft, ChevronRight, PlusCircle,
-} from 'lucide-react';
+    Search, LogOut, X, ChevronLeft, ChevronRight, PlusCircle, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import AdminModuleSwitcher from '@/shared/components/admin/AdminModuleSwitcher.jsx';
@@ -26,6 +25,7 @@ const MENU_ITEMS = [
     { icon: PlusCircle, label: 'Create Package', path: `${BASE}/packages/new` },
     { icon: Calendar, label: 'Bookings', path: `${BASE}/bookings` },
     { icon: Wallet, label: 'Payouts', path: `${BASE}/payouts` },
+    { icon: Star, label: 'Reviews', path: `${BASE}/reviews` },
     { icon: Settings, label: 'Settings', path: `${BASE}/settings` },
 ];
 

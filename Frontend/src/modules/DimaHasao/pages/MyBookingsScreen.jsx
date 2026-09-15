@@ -413,25 +413,46 @@ export const MyBookingsScreen = () => {
                         <span className="font-semibold">{tb.travelers}</span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-[10px] text-gray-400 block uppercase">Guide Assigned:</span>
-                        <span className="font-semibold text-emerald-900">{tb.guideAssigned}</span>
+                        <span className="text-[10px] text-gray-400 block uppercase">Your Operator:</span>
+                        <span className="font-semibold text-emerald-900">{tb.operatorName}</span>
                       </div>
+                      {tb.pickupPoint && (
+                        <div className="col-span-2">
+                          <span className="text-[10px] text-gray-400 block uppercase">Pickup:</span>
+                          <span className="font-semibold">{tb.pickupPoint}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex justify-between items-center pt-1 border-t border-gray-100">
                       <div>
-                        <span className="text-[10px] text-gray-500 uppercase">Paid:</span>
+                        <span className="text-[10px] text-gray-500 uppercase">Paid online:</span>
                         <span className="text-sm font-bold text-gray-900 ml-1.5 font-montserrat">
-                          ₹{tb.totalAmount.toLocaleString('en-IN')}
+                          ₹{tb.paidOnline.toLocaleString('en-IN')}
                         </span>
+                        {tb.collectedInPerson > 0 ? (
+                          <span className="block text-[10px] text-emerald-700 font-semibold">
+                            ₹{tb.collectedInPerson.toLocaleString('en-IN')} paid to the operator
+                          </span>
+                        ) : tb.balanceDue > 0 ? (
+                          <span className="block text-[10px] text-amber-700 font-semibold">
+                            ₹{tb.balanceDue.toLocaleString('en-IN')} due to the operator
+                          </span>
+                        ) : null}
                       </div>
-                      <button
-                        onClick={() => showToast(`Connecting to guide at ${tb.guidePhone}`)}
+                      <a
+                        href={tb.operatorPhone ? `tel:${tb.operatorPhone}` : undefined}
+                        onClick={(e) => {
+                          if (!tb.operatorPhone) {
+                            e.preventDefault();
+                            showToast('No contact number on file for this operator');
+                          }
+                        }}
                         className="bg-[#06381e] text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                       >
                         <i className="fa-solid fa-phone text-[10px]"></i>
-                        <span>Call Guide</span>
-                      </button>
+                        <span>Call Operator</span>
+                      </a>
                     </div>
                   </motion.div>
                 ))}

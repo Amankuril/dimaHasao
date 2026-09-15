@@ -9,6 +9,14 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import axios from 'axios';
 import Joi from 'joi';
+// Both of these were already being *called* below without ever being imported:
+// `getRazorpayClient()` threw a ReferenceError into the init try/catch, leaving
+// `razorpay` undefined for every payout call, and `verifyPaymentSignature()`
+// threw on every wallet top-up verification, so a partner's money never landed.
+import {
+  getRazorpayClient,
+  verifyPaymentSignature,
+} from '../../../core/payments/razorpay.service.js';
 
 // Initialize Razorpay
 let razorpay;

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from '../router';
-import { TOUR_PACKAGES_DATA } from '../data/tourPackageData';
+import { fetchPackageById } from '../services/toursApi';
 import { ItineraryTimeline } from '../components/tour/ItineraryTimeline';
 import { InclusionsGrid } from '../components/tour/InclusionsGrid';
 import { Header } from '../components/layout/Header';
@@ -11,8 +11,64 @@ export const TourPackageDetailScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const pkg = TOUR_PACKAGES_DATA.find((p) => p.id === id) || TOUR_PACKAGES_DATA[0];
+  const [pkg, setPkg] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('itinerary'); // 'itinerary', 'includes', 'destinations'
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setLoading(true);
+    fetchPackageById(id)
+      .then((found) => { if (!cancelled) setPkg(found); })
+      .catch(() => { if (!cancelled) setPkg(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="bg-[#FAF6ED] min-h-screen font-poppins">
+        <Header title="Loading package" subtitle="Fetching the latest details" showBack={true} rightAction="none" />
+        <PatternDivider variant="green-gold" />
+        <div className="h-52 bg-gray-200 animate-pulse" />
+        <main className="p-3.5 space-y-3">
+          {[0, 1, 2].map((n) => (
+            <div key={n} className="bg-white rounded-2xl border border-[#E5DDC3] p-4 space-y-2 animate-pulse">
+              <div className="h-3.5 bg-gray-200 rounded w-1/2" />
+              <div className="h-3 bg-gray-100 rounded w-full" />
+              <div className="h-3 bg-gray-100 rounded w-4/5" />
+            </div>
+          ))}
+        </main>
+      </div>
+    );
+  }
+
+  // A package pulled from sale (or one an admin sent back for review) stops
+  // resolving here, so the screen has to say so rather than render nothing.
+  if (!pkg) {
+    return (
+      <div className="bg-[#FAF6ED] min-h-screen font-poppins">
+        <Header title="Package unavailable" showBack={true} rightAction="none" />
+        <PatternDivider variant="green-gold" />
+        <div className="p-6 text-center space-y-3 mt-10">
+          <i className="fa-solid fa-suitcase-rolling text-4xl text-gray-300"></i>
+          <h3 className="font-bold text-gray-800 text-sm">This tour is no longer available</h3>
+          <p className="text-xs text-gray-500">
+            It may have been taken off sale. Browse the other expeditions on offer.
+          </p>
+          <button
+            onClick={() => navigate('/packages')}
+            className="bg-[#06381e] text-amber-300 text-xs font-bold px-4 py-2 rounded-xl shadow-xs hover:bg-emerald-900 transition-colors cursor-pointer"
+          >
+            See All Packages
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAF6ED] text-gray-800 antialiased min-h-screen pb-32 relative font-poppins">
@@ -165,6 +221,49 @@ export const TourPackageDetailScreen = () => {
             </div>
           </div>
         )}
+        {/* Traveller Reviews */}
+        {pkg.reviews.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-xs border border-[#E5DDC3] space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-montserrat font-bold text-sm text-gray-900 flex items-center gap-2">
+                <i className="fa-solid fa-star text-amber-500"></i>
+                <span>Traveller Reviews</span>
+              </h3>
+              <span className="text-xs font-bold text-gray-700">
+                {pkg.rating.toFixed(1)} · {pkg.reviewCount} review{pkg.reviewCount === 1 ? '' : 's'}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {pkg.reviews.slice(0, 5).map((review) => (
+                <div key={review.id} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900">{review.author}</span>
+                    <span className="text-[10px] text-gray-400">{review.date}</span>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <i
+                        key={star}
+                        className={`fa-solid fa-star text-[9px] ${
+                          star <= review.rating ? 'text-amber-400' : 'text-gray-200'
+                        }`}
+                      ></i>
+                    ))}
+                  </div>
+                  {review.comment && (
+                    <p className="text-xs text-gray-600 leading-relaxed">{review.comment}</p>
+                  )}
+                  {review.reply && (
+                    <p className="text-[11px] text-emerald-900 bg-[#FAF6ED] border border-[#E5DDC3] rounded-lg p-2 mt-1">
+                      <span className="font-bold">Operator replied: </span>{review.reply}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Sticky Bottom Booking Action Bar */}
@@ -178,6 +277,13 @@ export const TourPackageDetailScreen = () => {
               </span>
               <span className="text-[10px] text-gray-400">/ person</span>
             </div>
+            {/* Says so up front rather than at the payment step, where a smaller
+                number than the headline price reads as an error. */}
+            {pkg.advancePercent < 100 && (
+              <span className="text-[10px] text-emerald-800 font-semibold">
+                Pay {pkg.advancePercent}% now, rest to the operator
+              </span>
+            )}
           </div>
 
           <motion.button
