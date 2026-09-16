@@ -32,7 +32,8 @@ const getMediaUrl = (url) => {
   if (url.startsWith('http')) return url;
   
   // Use VITE_API_BASE_URL to derive the backend origin
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+  // Relative default, so a build with no env var still talks to its own origin.
+  const apiBase = import.meta.env.VITE_API_BASE_URL || "/api/v1";
   const origin = apiBase.split('/api/v1')[0];
   
   return `${origin}${url.startsWith('/') ? url : '/' + url}`;

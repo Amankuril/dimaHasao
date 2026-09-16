@@ -25,7 +25,9 @@ const sanitizeHost = (urlStr) => {
   }
 };
 
-const DEFAULT_BACKEND_ORIGIN = isBrowser ? window.location.origin : 'http://localhost:5000';
+// Server-side rendering has no origin to borrow; a browser always does, and
+// must never be told to call localhost.
+const DEFAULT_BACKEND_ORIGIN = isBrowser ? window.location.origin : '';
 
 /**
  * Resolve API base from VITE_API_BASE_URL while preserving pathname (/api/v1).

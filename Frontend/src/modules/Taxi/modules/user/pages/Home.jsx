@@ -39,7 +39,9 @@ const getDynamicImageSrc = (item = {}, fallbackImage) => {
 
   let imageUrl = rawImage;
   if (!rawImage.startsWith('http') && !rawImage.startsWith('data:')) {
-    const origin = (typeof BACKEND_ORIGIN !== 'undefined' ? BACKEND_ORIGIN : 'http://localhost:5000').replace('/api/v1', '');
+    // Falling back to localhost means a deployed page asks the visitor's own
+    // machine for the API. The page's origin is the only safe default.
+    const origin = (typeof BACKEND_ORIGIN !== 'undefined' && BACKEND_ORIGIN ? BACKEND_ORIGIN : (typeof window !== 'undefined' ? window.location.origin : '')).replace('/api/v1', '');
     const cleanPath = rawImage.startsWith('/') ? rawImage : `/${rawImage}`;
     imageUrl = `${origin}${cleanPath}`;
   }
