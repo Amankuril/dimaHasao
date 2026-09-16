@@ -18,7 +18,11 @@ const adminSchema = new mongoose.Schema(
             required: true
         },
         name: { type: String, trim: true, default: '' },
-        phone: { type: String, trim: true, default: '' },
+        // No default: the `admins` collection carries a unique+sparse index on
+        // phone, inherited from hotel's old Admin schema. Sparse skips a
+        // *missing* field but not an empty string, so defaulting to '' meant a
+        // second admin without a phone number could never be created.
+        phone: { type: String, trim: true },
         profileImage: { type: String, trim: true, default: '' },
         // Written by the hotel panel, which used to have its own Admin schema.
         profileImagePublicId: { type: String, trim: true, default: '' },

@@ -11,7 +11,7 @@
  */
 import { startTransition } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Compass, Hotel, Truck, UtensilsCrossed } from 'lucide-react'
+import { Compass, Globe, Hotel, Truck, UtensilsCrossed } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import {
@@ -19,6 +19,7 @@ import {
   TAXI_ADMIN_HOME,
   HOTEL_ADMIN_HOME,
   TOURS_ADMIN_HOME,
+  GLOBAL_ADMIN_HOME,
   prefetchFoodAdmin,
   prefetchTaxiAdmin,
 } from '../../utils/activeModule.js'
@@ -46,9 +47,12 @@ export default function AdminModuleSwitcher({ isCollapsed = false, className }) 
   const showTaxiTab = canSeeModule(adminProfile, 'taxi')
   const showHotelTab = canSeeModule(adminProfile, 'hotel')
   const showToursTab = canSeeModule(adminProfile, 'tours')
+  // Global is everyone's — it is where an admin edits their own profile. What
+  // it *shows* is gated inside: only a platform superadmin can manage others.
+  const showGlobalTab = true
 
   if (isCollapsed) return null
-  if (!showFoodTab && !showTaxiTab && !showHotelTab && !showToursTab) return null
+  if (!showFoodTab && !showTaxiTab && !showHotelTab && !showToursTab && !showGlobalTab) return null
 
   const switchAdminModule = (path) => {
     const go = () => startTransition(() => navigate(path))
@@ -72,6 +76,7 @@ export default function AdminModuleSwitcher({ isCollapsed = false, className }) 
   const isTaxiActive = location.pathname.startsWith('/taxi')
   const isHotelActive = location.pathname.startsWith('/hotel')
   const isToursActive = location.pathname.startsWith('/tours')
+  const isGlobalActive = location.pathname.startsWith('/global')
 
   const tabClass = (isActive) =>
     cn(
@@ -113,6 +118,12 @@ export default function AdminModuleSwitcher({ isCollapsed = false, className }) 
         <button type="button" onClick={() => switchAdminModule(TOURS_ADMIN_HOME)} className={tabClass(isToursActive)}>
           <Compass className={iconClass(isToursActive)} />
           Tours
+        </button>
+      )}
+      {showGlobalTab && (
+        <button type="button" onClick={() => switchAdminModule(GLOBAL_ADMIN_HOME)} className={cn(tabClass(isGlobalActive), 'col-span-2')}>
+          <Globe className={iconClass(isGlobalActive)} />
+          Global
         </button>
       )}
     </div>

@@ -21,6 +21,7 @@ const DimaHasaoApp = lazy(() => import('../modules/DimaHasao'))
 // Hotel / property module (ported from the HomeZoo codebase): admin + partner panels
 const HotelApp = lazy(() => import('../modules/Hotel/routes'))
 const ToursApp = lazy(() => import('../modules/Tours/routes'))
+const GlobalApp = lazy(() => import('../modules/Global/routes'))
 
 // Avoid full-screen white spinner flash on Food ↔ Taxi switches.
 const SoftFallback = () => <div className="min-h-screen bg-transparent" aria-hidden="true" />
@@ -182,6 +183,8 @@ const AppRoutes = () => {
         <Route path="/taxi/*" element={<TaxiAppWrapper />} />
         <Route path="/hotel/*" element={<Suspense fallback={<SoftFallback />}><HotelApp /></Suspense>} />
         <Route path="/tours/*" element={<Suspense fallback={<SoftFallback />}><ToursApp /></Suspense>} />
+        {/* Platform-wide admin: administrators and cross-module settings. */}
+        <Route path="/global/*" element={<Suspense fallback={<SoftFallback />}><GlobalApp /></Suspense>} />
         {/* UI comes from AdminModulesKeepAlive. */}
         <Route path="/admin/*" element={<AdminKeepAliveSlot />} />
         <Route path="/user/*" element={<RedirectToFood />} />

@@ -6,6 +6,7 @@ export const FOOD_ADMIN_HOME = '/admin/food'
 export const TAXI_ADMIN_HOME = '/taxi/admin/dashboard'
 export const HOTEL_ADMIN_HOME = '/hotel/admin/dashboard'
 export const TOURS_ADMIN_HOME = '/tours/admin'
+export const GLOBAL_ADMIN_HOME = '/global/admin'
 
 /** Logged-in consumer default — Taxi opens first on app/web launch. */
 export const CONSUMER_POST_LOGIN_HOME = '/taxi/user'

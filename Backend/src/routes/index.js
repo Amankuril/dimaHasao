@@ -8,6 +8,7 @@ import restaurantRoutes from '../modules/food/restaurant/routes/restaurant.route
 import landingRoutes from '../modules/food/landing/routes/landing.routes.js';
 import { getPublicDiningCategories, getPublicDiningRestaurants } from '../modules/food/dining/controllers/diningPublic.controller.js';
 import uploadRoutes from '../modules/uploads/routes/upload.routes.js';
+import platformAdminRoutes from '../core/admin/admin.routes.js';
 import restaurantAdminRoutes from '../modules/food/admin/routes/admin.routes.js';
 import userRoutes from '../modules/food/user/routes/user.routes.js';
 import foodCartRoutes from '../modules/food/user/routes/foodCart.routes.js';
@@ -59,6 +60,8 @@ router.get('/v1/food/dining/categories/public', getPublicDiningCategories);
 router.get('/v1/food/dining/restaurants/public', getPublicDiningRestaurants);
 router.use('/v1/food/dining/bookings', diningBookingRoutes);
 router.use('/v1/uploads', uploadRoutes);
+// Platform-level administrator management (profile, administrators, RBAC meta).
+router.use('/v1/admin', platformAdminRoutes);
 
 router.use('/v1/food/admin', authMiddleware, requireRoles('ADMIN', 'SUB_ADMIN'), restaurantAdminRoutes);
 router.use('/v1/food/user', authMiddleware, requireRoles('USER'), userRoutes);
