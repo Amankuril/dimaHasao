@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PatternDivider } from './PatternDivider';
+import AppBottomNav from '@/shared/components/app/AppBottomNav';
 import '../../dimahasao.css';
 
 // The v1 Dima Hasao header, for wrapping the Hello-Parth food/taxi/hotel
@@ -44,11 +45,26 @@ export const ModuleHeader = ({ title, subtitle, backTo = '/app' }) => {
   );
 };
 
-export const ModuleShell = ({ title, subtitle, children }) => (
+/**
+ * The wrapper every consumer module shell passes through, which makes it the
+ * one place the shared bottom nav belongs.
+ *
+ * Taxi's own BottomNavbar was unreachable in this mounting: TaxiApp is nested
+ * under /taxi/user/*, so its inner paths resolve relative to that, and the
+ * nav-bearing UserMainTabKeepAlive sits on the `user/...` routes meant for the
+ * other mount. Rendering here sidesteps each module's internal routing and
+ * gives food and taxi the identical nav.
+ *
+ * `navExtras` is what that module offers beyond the five shared anchors; it
+ * shows under More so nothing is lost.
+ */
+export const ModuleShell = ({ title, subtitle, children, navExtras = [], navExtrasTitle }) => (
   <div className="dh-app min-h-screen flex flex-col bg-[#FAF6ED]">
     <ModuleHeader title={title} subtitle={subtitle} />
     <PatternDivider variant="green-gold" />
-    <div className="flex-1 min-h-0">{children}</div>
+    {/* Room for the floating nav so it never covers a module's last row. */}
+    <div className="flex-1 min-h-0 pb-16">{children}</div>
+    <AppBottomNav extras={navExtras} extrasTitle={navExtrasTitle} />
   </div>
 );
 

@@ -61,17 +61,44 @@ const RequireUserAuth = ({ children }) => {
   return children
 }
 
+/** Food's own destinations, surfaced under the shared nav's More. */
+const FOOD_NAV_EXTRAS = [
+  { label: 'Delivery', icon: 'fa-solid fa-motorcycle', path: '/food/user' },
+  { label: 'Dining', icon: 'fa-solid fa-utensils', path: '/food/user/dining' },
+  { label: 'My Orders', icon: 'fa-solid fa-receipt', path: '/food/user/orders' },
+  { label: 'Cart', icon: 'fa-solid fa-cart-shopping', path: '/food/user/cart' },
+]
+
 const FoodUserShell = () => (
   <RequireUserAuth>
-    <ModuleShell title="DIMA FOOD & DINING" subtitle="Authentic tribal delicacies & local eateries">
+    <ModuleShell
+      title="DIMA FOOD & DINING"
+      subtitle="Authentic tribal delicacies & local eateries"
+      navExtras={FOOD_NAV_EXTRAS}
+      navExtrasTitle="Food & Dining"
+    >
       <FoodAppWrapper />
     </ModuleShell>
   </RequireUserAuth>
 )
 
+/** Taxi's own destinations. "My Rides" stays because /app/bookings shows
+    every module's bookings, while this is the ride-only view. */
+const TAXI_NAV_EXTRAS = [
+  { label: 'Book a Ride', icon: 'fa-solid fa-car-side', path: '/taxi/user' },
+  { label: 'My Rides', icon: 'fa-solid fa-route', path: '/taxi/user/activity' },
+  { label: 'Bus', icon: 'fa-solid fa-bus', path: '/taxi/user/bus' },
+  { label: 'Support', icon: 'fa-solid fa-headset', path: '/taxi/user/support' },
+]
+
 const TaxiUserShell = () => (
   <RequireUserAuth>
-    <ModuleShell title="TAXI / AUTO" subtitle="Book your ride, travel with ease">
+    <ModuleShell
+      title="TAXI / AUTO"
+      subtitle="Book your ride, travel with ease"
+      navExtras={TAXI_NAV_EXTRAS}
+      navExtrasTitle="Taxi & Auto"
+    >
       <TaxiAppWrapper />
     </ModuleShell>
   </RequireUserAuth>

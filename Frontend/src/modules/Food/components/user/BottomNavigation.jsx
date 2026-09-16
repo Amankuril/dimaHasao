@@ -238,7 +238,7 @@ export default function BottomNavigation() {
         ease: [0.22, 1, 0.36, 1],
         duration: 0.2,
       }}
-      className="md:hidden fixed bottom-6 left-0 right-0 z-[11000] px-6 pointer-events-none"
+      className="md:hidden fixed bottom-[68px] left-0 right-0 z-[11000] px-6 pointer-events-none"
       aria-hidden={!isVisible}
     >
       <div
