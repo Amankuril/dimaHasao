@@ -16,6 +16,7 @@ import {
   shouldSkipDuplicateOsNotification,
 } from '@food/utils/firebaseMessaging';
 import { toast } from 'sonner';
+import { getSocketOrigin } from '@/shared/utils/socketOrigin';
 
 const shouldLogDeliverySocket = () => {
   if (typeof window === 'undefined') return import.meta.env.DEV;
@@ -1010,7 +1011,8 @@ export const useDeliveryNotifications = () => {
     }
     
     // Backend uses default namespace; rooms handle role separation.
-    const socketUrl = `${backendUrl}`;
+    // Socket.IO has its own port; one resolver decides it for every module.
+    const socketUrl = getSocketOrigin() || `${backendUrl}`;
     
     debugLog('?? Attempting to connect to Delivery Socket.IO:', socketUrl);
     debugLog('?? Backend URL:', backendUrl);

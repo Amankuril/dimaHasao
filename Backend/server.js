@@ -17,6 +17,7 @@ import { initializeFirebaseRealtime } from './src/config/firebase.js';
 
 const SHUTDOWN_TIMEOUT_MS = 10000;
 let server = null;
+let socketServer = null;
 let expireOffersInterval = null;
 let fssaiExpiryInterval = null;
 
@@ -26,6 +27,9 @@ const gracefulShutdown = async (signal) => {
         process.exit(0);
         return;
     }
+    // Stop accepting new sockets alongside the API.
+    if (socketServer) socketServer.close();
+
     server.close(async () => {
         try {
             await disconnectDB();
@@ -57,8 +61,17 @@ const startServer = async () => {
         // 2. Create HTTP server from Express app
         const httpServer = http.createServer(app);
 
-        // 3. Initialize Socket.IO with the HTTP server (Redis adapter when Redis enabled)
-        await initSocket(httpServer);
+        // 3. Socket.IO gets its own HTTP server on its own port, so realtime
+        //    traffic can be proxied, scaled and rate-limited separately from
+        //    the REST API. Same process, so every emit from a controller still
+        //    reaches the same `io` instance with no cross-process adapter.
+        socketServer = http.createServer((req, res) => {
+            // Anything that is not a Socket.IO handshake gets a plain health
+            // response rather than a confusing 404 from a bare server.
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ service: 'socket.io', status: 'ok' }));
+        });
+        await initSocket(socketServer);
 
         if (config.redisEnabled) {
             await connectRedis();
@@ -113,6 +126,20 @@ const startServer = async () => {
         server = httpServer.listen(config.port, config.host, () => {
             logger.info(`Server running in ${config.nodeEnv} mode on ${config.host}:${config.port}`);
             console.log(`🌐 [URL] http://localhost:${config.port}`);
+        });
+
+        socketServer.listen(config.socketPort, config.host, () => {
+            logger.info(`Socket.IO listening on ${config.host}:${config.socketPort}`);
+            console.log(`🔌 [SOCKET] http://localhost:${config.socketPort}`);
+        });
+
+        socketServer.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                logger.error(`Socket port ${config.socketPort} is already in use. Set SOCKET_PORT to a free port.`);
+            } else {
+                logger.error(`Socket server error: ${err.message}`);
+            }
+            process.exit(1);
         });
 
         const runExpire = async () => {

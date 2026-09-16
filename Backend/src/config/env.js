@@ -29,6 +29,9 @@ const resolvedCorsOrigin = uniqueCorsOrigins.length > 0 ? uniqueCorsOrigins.join
 export const config = {
     // Basic server config
     port: process.env.PORT || 5000,
+    // Socket.IO listens on its own port so realtime traffic can be scaled,
+    // proxied and rate-limited independently of the REST API.
+    socketPort: Number(process.env.SOCKET_PORT || 5001),
     host: process.env.HOST || '0.0.0.0',
     nodeEnv: process.env.NODE_ENV || 'development',
 

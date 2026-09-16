@@ -9,6 +9,7 @@ import {
   shouldSkipDuplicateOsNotification,
 } from '@food/utils/firebaseMessaging';
 import { normalizeRestaurantOrderView } from '@food/utils/restaurantOrderPricing';
+import { getSocketOrigin } from '@/shared/utils/socketOrigin';
 
 const alertSound = '/assets/media/restaurant_alert.mp3';
 const debugLog = (...args) => {};
@@ -624,7 +625,8 @@ export const useRestaurantNotifications = () => {
       socketOrigin = String(backendUrl || "").replace(/\/api\/v\d+\/?$/i, "").replace(/\/api\/?$/i, "").replace(/\/+$/, "");
     }
 
-    const socketUrl = `${socketOrigin}`;
+    // Socket.IO has its own port; one resolver decides it for every module.
+    const socketUrl = getSocketOrigin() || `${socketOrigin}`;
 
     try {
       new URL(socketUrl);

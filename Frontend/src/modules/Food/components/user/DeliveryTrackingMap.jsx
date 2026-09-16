@@ -12,6 +12,7 @@ import bikeLogo from '@food/assets/bikelogo.png';
 import { subscribeOrderTracking } from '@food/realtimeTracking';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation } from 'lucide-react';
+import { getSocketOrigin } from '@/shared/utils/socketOrigin';
 
 const MAP_LIBRARIES = Object.freeze(['geometry', 'places']);
 
@@ -130,8 +131,10 @@ const DeliveryTrackingMap = ({
     return [...new Set(ids)];
   }, [orderId, orderTrackingIds]);
 
+  // Socket.IO has its own port; one resolver decides it for every module.
   const backendUrl = useMemo(() => {
-    return (API_BASE_URL || '').replace(/\/api\/v1\/?$/i, '').replace(/\/api\/?$/i, '');
+    return getSocketOrigin() ||
+      (API_BASE_URL || '').replace(/\/api\/v1\/?$/i, '').replace(/\/api\/?$/i, '');
   }, []);
 
   // 1. Initial State from Order Payload

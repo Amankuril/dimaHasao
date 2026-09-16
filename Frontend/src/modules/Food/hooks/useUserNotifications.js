@@ -5,6 +5,7 @@ import { API_BASE_URL } from '@food/api/config';
 import { userAPI } from '@food/api';
 import { dispatchNotificationInboxRefresh } from '@food/hooks/useNotificationInbox';
 import { isModuleAuthenticated } from '@food/utils/auth';
+import { getSocketOrigin } from '@/shared/utils/socketOrigin';
 
 const debugLog = (...args) => {
   if (import.meta.env.DEV) {
@@ -68,7 +69,8 @@ export const useUserNotifications = () => {
         .replace(/\/+$/, "");
     }
 
-    const socketUrl = `${backendUrl}`;
+    // Socket.IO has its own port; one resolver decides it for every module.
+    const socketUrl = getSocketOrigin() || `${backendUrl}`;
     
     // Auth token
     const token = localStorage.getItem('user_accessToken') || localStorage.getItem('accessToken');

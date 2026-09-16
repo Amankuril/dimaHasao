@@ -15,6 +15,7 @@ import { useOrdersManagement } from "@food/components/admin/orders/useOrdersMana
 import { Loader2 } from "lucide-react"
 import { OrdersDashboardSkeleton, TableSkeleton } from "@food/components/ui/loading-skeletons"
 import { refreshSidebarBadges } from "@food/components/admin/AdminSidebar"
+import { getSocketOrigin } from '@/shared/utils/socketOrigin';
 const alertSound = "/assets/media/alert.mp3"
 const originalSound = "/assets/media/original.mp3"
 const debugLog = (...args) => {}
@@ -752,7 +753,8 @@ export default function OrdersPage({ statusKey = "all" }) {
   useEffect(() => {
     if (statusKey !== "all") return undefined
 
-    const backendUrl = API_BASE_URL.replace(/\/api\/?$/, "")
+    // Socket.IO has its own port; one resolver decides it for every module.
+    const backendUrl = getSocketOrigin() || API_BASE_URL.replace(/\/api\/?$/, "")
     // Backend disconnected - do not open Socket.IO (new backend in progress)
     if (!API_BASE_URL || !backendUrl || !backendUrl.startsWith("http")) {
       return undefined

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { API_BASE_URL } from '@food/api/config';
 import { writeDeliveryLocation, writeOrderTracking } from '@food/realtimeTracking';
+import { getSocketOrigin } from '@/shared/utils/socketOrigin';
 
 function calculateDistance(lat1, lng1, lat2, lng2) {
   const R = 6371000;
@@ -26,7 +27,8 @@ export const useLocationSharing = (orderId, enabled = false) => {
       '',
   );
 
-  const backendUrl = API_BASE_URL ? API_BASE_URL.replace('/api', '') : '';
+  // Socket.IO has its own port; one resolver decides it for every module.
+  const backendUrl = getSocketOrigin() || (API_BASE_URL ? API_BASE_URL.replace('/api', '') : '');
 
   const startSharing = () => {
     if (!orderId || isSharingRef.current) return;
