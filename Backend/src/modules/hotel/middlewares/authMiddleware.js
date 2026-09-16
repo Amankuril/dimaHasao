@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Partner from '../models/Partner.js';
 import Admin from '../models/Admin.js';
-import { FoodAdmin } from '../../../core/admin/admin.model.js';
 import { FoodUser } from '../../../core/users/user.model.js';
 
 // This module arrived from a standalone service that signed tokens with
@@ -79,8 +78,8 @@ const resolveAccount = async (decoded) => {
 
   let account = await User.findById(id);
   if (!account) account = await Partner.findById(id);
+  // Admin is a shim over FoodAdmin, so this is the platform admin collection.
   if (!account) account = await Admin.findById(id);
-  if (!account) account = await FoodAdmin.findById(id);
   // The consumer super-app (food + taxi + hotel + tours) is one account issued
   // by the unified OTP auth service, so a platform user token must resolve here
   // too — otherwise hotel would be the one app that session cannot reach.

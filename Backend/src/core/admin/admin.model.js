@@ -20,6 +20,9 @@ const adminSchema = new mongoose.Schema(
         name: { type: String, trim: true, default: '' },
         phone: { type: String, trim: true, default: '' },
         profileImage: { type: String, trim: true, default: '' },
+        // Written by the hotel panel, which used to have its own Admin schema.
+        profileImagePublicId: { type: String, trim: true, default: '' },
+        lastLogin: { type: Date },
         fcmTokens: {
             type: [String],
             default: []

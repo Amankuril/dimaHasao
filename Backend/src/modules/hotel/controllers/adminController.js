@@ -897,12 +897,6 @@ export const updateFcmToken = async (req, res) => {
     // Checking where Admin is imported? Line 1: User.. 
     // Wait, Admin model is NOT imported in adminController based on view_file output. 
     // It seems admin controller uses User model a lot but where does it get Admin?
-    // Oh, adminController functions usually don't manipulate Admin self profile except maybe unrelated?
-    // I need to import Admin model if I want to update Admin's token.
-
-    // The previous view_file of adminController didn't show Admin import. I should add it.
-
-    // But first, let's write the function logic assuming I will fix imports.
     const Admin = (await import('../models/Admin.js')).default;
 
     const admin = await Admin.findById(req.user._id);
@@ -910,13 +904,12 @@ export const updateFcmToken = async (req, res) => {
       return res.status(404).json({ message: 'Admin not found' });
     }
 
-    // Initialize fcmTokens object if it doesn't exist
-    if (!admin.fcmTokens) {
-      admin.fcmTokens = { app: null, web: null };
-    }
-
-    // Update the specific platform token
-    admin.fcmTokens[targetPlatform] = fcmToken;
+    // The platform admin schema keeps tokens as arrays, split by surface:
+    // `fcmTokens` is web, `fcmTokenMobile` is the app. Hotel used to write a
+    // { app, web } object here, which does not survive an array field.
+    const field = targetPlatform === 'app' ? 'fcmTokenMobile' : 'fcmTokens';
+    const existing = Array.isArray(admin[field]) ? admin[field] : [];
+    admin[field] = [...new Set([...existing, fcmToken])].filter(Boolean);
 
     await admin.save();
 

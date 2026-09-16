@@ -7,7 +7,7 @@ import Partner from '../models/Partner.js';
 import { PROPERTY_DOCUMENTS } from '../config/propertyDocumentRules.js';
 import emailService from '../services/emailService.js';
 import User from '../models/User.js'; // Needed to find Admins? Or Admin model
-import Admin from '../models/Admin.js';
+import { findPlatformAdmin } from '../models/Admin.js';
 
 /**
  * Normalise and check a seasonal rate list.
@@ -54,7 +54,7 @@ const validateSeasonalRates = (input) => {
 
 const notifyAdminOfNewProperty = async (property) => {
   try {
-    const admin = await Admin.findOne({ role: { $in: ['admin', 'superadmin'] } });
+    const admin = await findPlatformAdmin();
     if (admin && admin.email) {
       await emailService.sendAdminNewPropertyEmail(admin.email, property);
     }

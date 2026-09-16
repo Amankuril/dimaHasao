@@ -125,7 +125,6 @@ export const AddVehicle = lazy(() => import('../modules/driver/pages/settings/Ad
 export const ManageDrivers = lazy(() => import('../modules/driver/pages/settings/ManageDrivers'));
 export const AddDriver = lazy(() => import('../modules/driver/pages/settings/AddDriver'));
 export const AdminLayout = lazy(() => import('../modules/admin/components/AdminLayout'));
-export const AdminLogin = lazy(() => import('../modules/admin/pages/auth/AdminLogin'));
 export const AdminDashboard = lazy(() => import('../modules/admin/pages/dashboard/MainDashboard'));
 export const AdminEarnings = lazy(() => import('../modules/admin/pages/dashboard/AdminEarnings'));
 export const AdminChat = lazy(() => import('../modules/admin/pages/operations/Chat'));

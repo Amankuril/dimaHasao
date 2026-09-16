@@ -17,6 +17,7 @@ import {
   verifyPaymentSignature,
   verifyWebhookSignature,
 } from '../../../core/payments/razorpay.service.js';
+import { findPlatformAdmin } from '../models/Admin.js';
 
 // Initialize Razorpay
 let razorpay;
@@ -241,10 +242,10 @@ export const verifyPayment = async (req, res) => {
       const totalAdminCredit = commission + taxes;
 
       if (totalAdminCredit > 0) {
-        const AdminUser = mongoose.model('User');
-        // Find *any* admin to associate the system wallet with (since Wallet requires a partnerId/userId)
-        // In a real system, you'd have a specific "System User" or "Super Admin".
-        const adminUser = await AdminUser.findOne({ role: { $in: ['admin', 'superadmin'] } }).sort({ createdAt: 1 });
+        // The wallet needs an owner id. This looked for an admin among hotel
+        // *users*, whose role is 'user', so it never matched — the admin wallet
+        // was never created and commission + tax went uncredited.
+        const adminUser = await findPlatformAdmin();
 
         if (adminUser) {
           let adminWallet = await Wallet.findOne({ role: 'admin' });

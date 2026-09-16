@@ -15,6 +15,7 @@ import emailService from '../services/emailService.js';
 import notificationService from '../services/notificationService.js';
 import referralService from '../services/referralService.js';
 import User from '../models/User.js';
+import { findPlatformAdmin } from '../models/Admin.js';
 
 // Helper: Trigger Notifications
 const triggerBookingNotifications = async (booking) => {
@@ -275,8 +276,11 @@ export const createBooking = async (req, res) => {
 
           // If no admin wallet exists, we might need to find an admin user to create one
           if (!adminWallet) {
-            const AdminUser = mongoose.model('User');
-            const adminUser = await AdminUser.findOne({ role: { $in: ['admin', 'superadmin'] } }).sort({ createdAt: 1 });
+            // Looked for an admin among hotel *users* before, whose role is
+            // 'user' — so it never matched, the admin wallet was never created,
+            // and commission + tax went uncredited. The admin lives in the
+            // platform admin collection.
+            const adminUser = await findPlatformAdmin();
             if (adminUser) {
               adminWallet = await Wallet.create({
                 partnerId: adminUser._id,
@@ -380,8 +384,11 @@ export const createBooking = async (req, res) => {
           // 2. Credit Admin
           let adminWallet = await Wallet.findOne({ role: 'admin' });
           if (!adminWallet) {
-            const AdminUser = mongoose.model('User');
-            const adminUser = await AdminUser.findOne({ role: { $in: ['admin', 'superadmin'] } }).sort({ createdAt: 1 });
+            // Looked for an admin among hotel *users* before, whose role is
+            // 'user' — so it never matched, the admin wallet was never created,
+            // and commission + tax went uncredited. The admin lives in the
+            // platform admin collection.
+            const adminUser = await findPlatformAdmin();
             if (adminUser) {
               adminWallet = await Wallet.create({
                 partnerId: adminUser._id,
@@ -808,8 +815,10 @@ export const markBookingNoShow = async (req, res) => {
         // Ensure Admin Wallet
         let adminWallet = await Wallet.findOne({ role: 'admin' });
         if (!adminWallet) {
-          const AdminUser = mongoose.model('User');
-          const adminUser = await AdminUser.findOne({ role: { $in: ['admin', 'superadmin'] } }).sort({ createdAt: 1 });
+          // Looked for an admin among hotel *users* before, whose role is
+          // 'user' — so it never matched, the admin wallet was never
+          // created, and commission + tax went uncredited.
+          const adminUser = await findPlatformAdmin();
           if (adminUser) {
             adminWallet = await Wallet.create({
               partnerId: adminUser._id,

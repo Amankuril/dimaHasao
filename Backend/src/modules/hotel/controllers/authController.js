@@ -1,6 +1,6 @@
 import emailService from '../services/emailService.js';
 import notificationService from '../services/notificationService.js';
-import Admin from '../models/Admin.js';
+import Admin, { findPlatformAdmins } from '../models/Admin.js';
 import User from '../models/User.js';
 import Partner from '../models/Partner.js';
 import bcrypt from 'bcryptjs';
@@ -168,7 +168,7 @@ export const registerPartner = async (req, res) => {
     await newPartner.save();
 
     // Send notification to admins
-    const admins = await Admin.find({ role: { $in: ['admin', 'superadmin'] } });
+    const admins = await findPlatformAdmins();
     for (const admin of admins) {
       notificationService.sendToUser(
         admin._id,
@@ -401,7 +401,7 @@ export const verifyPartnerOtp = async (req, res) => {
     }
 
     // Notify Admins
-    const admins = await Admin.find({ role: { $in: ['admin', 'superadmin'] } });
+    const admins = await findPlatformAdmins();
     for (const admin of admins) {
       notificationService.sendToUser(
         admin._id,
