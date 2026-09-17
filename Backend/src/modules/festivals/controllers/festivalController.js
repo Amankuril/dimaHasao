@@ -19,11 +19,17 @@ const asArray = (value) => (Array.isArray(value) ? value : []);
  * does not install — so a lean query drops them and the UI sees undefined.
  * Deriving here keeps the reads lean and the values honest.
  */
-const withTicketCounts = (festival) => {
-  const ticketCategories = asArray(festival.ticketCategories).map((c) => {
-    const remainingTickets = Math.max(0, (c.totalTickets || 0) - (c.soldTickets || 0));
-    return { ...c, remainingTickets, isSoldOut: remainingTickets <= 0 };
-  });
+const withTicketCounts = (festival, { publicView = false } = {}) => {
+  const ticketCategories = asArray(festival.ticketCategories)
+    // A category an organiser has closed is not for sale. It stayed in the
+    // public payload, so the booking screen drew a working stepper for it and
+    // the basket was refused at checkout with "That pass is not available".
+    // Admin screens still see it — that is where it gets reopened.
+    .filter((c) => (publicView ? c.isActive !== false : true))
+    .map((c) => {
+      const remainingTickets = Math.max(0, (c.totalTickets || 0) - (c.soldTickets || 0));
+      return { ...c, remainingTickets, isSoldOut: remainingTickets <= 0 };
+    });
 
   const window = bookingWindow(festival);
 
@@ -198,7 +204,7 @@ export const getPublicFestivals = async (req, res) => {
 
     const festivals = (await Festival.find(match)
       .sort({ sortOrder: 1, startDate: 1, createdAt: 1 })
-      .lean()).map(withTicketCounts);
+      .lean()).map((f) => withTicketCounts(f, { publicView: true }));
 
     res.json({ success: true, festivals, total: festivals.length });
   } catch (error) {
@@ -216,7 +222,7 @@ export const getFestivalDetail = async (req, res) => {
     const festival = await Festival.findOne({ ...by, isActive: true }).lean();
     if (!festival) return res.status(404).json({ success: false, message: 'Festival not found' });
 
-    res.json({ success: true, festival: withTicketCounts(festival) });
+    res.json({ success: true, festival: withTicketCounts(festival, { publicView: true }) });
   } catch (error) {
     console.error('Get festival detail error:', error);
     res.status(500).json({ success: false, message: 'Failed to load this festival' });

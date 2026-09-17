@@ -107,6 +107,64 @@ export const getBookingQuote = async (req, res) => {
 };
 
 /**
+ * Take `count` seats from one category, or return null if they are not there.
+ *
+ * The availability check and the decrement are a single conditional update, so
+ * a race for the last seat has exactly one winner. Extracted so the single
+ * booking and the basket checkout share one implementation — two copies of an
+ * inventory guard is how oversells happen.
+ */
+const claimSeats = async (festivalId, categoryId, count) =>
+  Festival.findOneAndUpdate(
+    {
+      _id: festivalId,
+      isActive: true,
+      ticketCategories: { $elemMatch: { _id: categoryId, isActive: true } },
+      // The availability guard has to be a TOP-LEVEL $expr: Mongo rejects
+      // $expr inside $elemMatch ("can only be applied to the top-level
+      // document"), so the category is picked out with $filter instead.
+      $expr: {
+        $gte: [
+          {
+            $let: {
+              vars: {
+                cat: {
+                  $first: {
+                    $filter: {
+                      input: '$ticketCategories',
+                      as: 'c',
+                      cond: { $eq: ['$$c._id', categoryId] },
+                    },
+                  },
+                },
+              },
+              in: { $subtract: ['$$cat.totalTickets', '$$cat.soldTickets'] },
+            },
+          },
+          count,
+        ],
+      },
+    },
+    { $inc: { 'ticketCategories.$[cat].soldTickets': count } },
+    { new: true, arrayFilters: [{ 'cat._id': categoryId }] },
+  );
+
+/** Hand seats back to a category. */
+const releaseSeats = (festivalId, categoryId, count) =>
+  Festival.updateOne(
+    { _id: festivalId },
+    { $inc: { 'ticketCategories.$[cat].soldTickets': -count } },
+    { arrayFilters: [{ 'cat._id': categoryId }] },
+  );
+
+/** What is left in a category right now, for a useful refusal message. */
+const remainingIn = async (festivalId, categoryId) => {
+  const fresh = await Festival.findById(festivalId).lean();
+  const current = fresh?.ticketCategories?.find((c) => String(c._id) === String(categoryId));
+  return current ? Math.max(0, current.totalTickets - current.soldTickets) : 0;
+};
+
+/**
  * @route POST /v1/festivals/bookings
  *
  * Takes the inventory up front with a conditional update, so a race for the
@@ -136,46 +194,10 @@ export const createBooking = async (req, res) => {
 
     const pricing = priceTickets(category, count);
 
-    // The seat take and the availability check are one operation: the update
-    // only matches while enough passes remain.
-    const claimed = await Festival.findOneAndUpdate(
-      {
-        _id: festival._id,
-        isActive: true,
-        ticketCategories: { $elemMatch: { _id: category._id, isActive: true } },
-        // The availability guard has to be a TOP-LEVEL $expr: Mongo rejects
-        // $expr inside $elemMatch ("can only be applied to the top-level
-        // document"), so the category is picked out with $filter instead.
-        $expr: {
-          $gte: [
-            {
-              $let: {
-                vars: {
-                  cat: {
-                    $first: {
-                      $filter: {
-                        input: '$ticketCategories',
-                        as: 'c',
-                        cond: { $eq: ['$$c._id', category._id] },
-                      },
-                    },
-                  },
-                },
-                in: { $subtract: ['$$cat.totalTickets', '$$cat.soldTickets'] },
-              },
-            },
-            count,
-          ],
-        },
-      },
-      { $inc: { 'ticketCategories.$[cat].soldTickets': count } },
-      { new: true, arrayFilters: [{ 'cat._id': category._id }] },
-    );
+    const claimed = await claimSeats(festival._id, category._id, count);
 
     if (!claimed) {
-      const fresh = await Festival.findById(festival._id).lean();
-      const current = fresh?.ticketCategories?.find((c) => String(c._id) === String(category._id));
-      const remaining = current ? Math.max(0, current.totalTickets - current.soldTickets) : 0;
+      const remaining = await remainingIn(festival._id, category._id);
       return res.status(409).json({
         success: false,
         message: remaining === 0 ? 'This pass just sold out' : `Only ${remaining} left`,
@@ -215,13 +237,170 @@ export const createBooking = async (req, res) => {
   }
 };
 
+/**
+ * @route POST /v1/festivals/bookings/checkout
+ *
+ * A whole basket in one call: several categories, one payment.
+ *
+ * Each category still becomes its own booking — they are different
+ * entitlements at the gate, each needs its own pass code, and each draws from
+ * its own allocation — but they share an `orderGroupId`, so the group is
+ * charged once and reads as one purchase in history.
+ *
+ * Seats are taken one category at a time. If a later one has sold out while
+ * the basket sat on screen, every seat already taken for this basket is handed
+ * straight back: a partial hold the buyer cannot pay for is worse than a clean
+ * refusal, because those seats would sit unavailable until the hold expired.
+ */
+export const checkoutBasket = async (req, res) => {
+  const taken = [];
+
+  try {
+    const { festivalId, items, attendee } = req.body;
+
+    const requested = (Array.isArray(items) ? items : [])
+      .map((i) => ({
+        ticketCategoryId: i?.ticketCategoryId,
+        count: Math.max(0, Number(i?.ticketCount) || 0),
+      }))
+      .filter((i) => i.ticketCategoryId && i.count > 0);
+
+    if (!requested.length) {
+      return res.status(400).json({ success: false, message: 'Select at least one pass' });
+    }
+    // The same category twice would take seats twice and bill twice.
+    const unique = new Set(requested.map((i) => String(i.ticketCategoryId)));
+    if (unique.size !== requested.length) {
+      return res.status(400).json({ success: false, message: 'Each pass category can only appear once' });
+    }
+
+    // Validate everything before taking a single seat, so an obviously bad
+    // basket never leaves a hold behind.
+    const festival = await Festival.findOne({ _id: festivalId, isActive: true });
+    if (!festival) return res.status(404).json({ success: false, message: 'Festival not found' });
+
+    const window = bookingWindow(festival);
+    if (!window.isOpen) {
+      return res.status(409).json({ success: false, message: window.reason });
+    }
+
+    const lines = [];
+    for (const item of requested) {
+      const category = festival.ticketCategories.id(item.ticketCategoryId);
+      if (!category || !category.isActive) {
+        return res.status(404).json({ success: false, message: 'That pass is not available' });
+      }
+      if (item.count > category.maxPerBooking) {
+        return res.status(400).json({
+          success: false,
+          message: `Up to ${category.maxPerBooking} ${category.name} passes per booking`,
+        });
+      }
+      lines.push({ category, count: item.count, pricing: priceTickets(category, item.count) });
+    }
+
+    const orderGroupId = `FG-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+
+    for (const line of lines) {
+      const claimed = await claimSeats(festival._id, line.category._id, line.count);
+      if (!claimed) {
+        const remaining = await remainingIn(festival._id, line.category._id);
+        // Hand back everything this basket has taken so far.
+        for (const held of taken) {
+          await releaseSeats(festival._id, held.categoryId, held.count);
+        }
+        return res.status(409).json({
+          success: false,
+          message: remaining === 0
+            ? `${line.category.name} just sold out`
+            : `Only ${remaining} ${line.category.name} passes left`,
+          ticketCategoryId: line.category._id,
+          remainingTickets: remaining,
+        });
+      }
+      taken.push({ categoryId: line.category._id, count: line.count });
+    }
+
+    const who = {
+      name: attendee?.name || req.user.name || '',
+      phone: attendee?.phone || req.user.phone || '',
+      email: attendee?.email || req.user.email || '',
+    };
+
+    const bookings = await FestivalBooking.insertMany(lines.map((line) => ({
+      bookingId: bookingRef(),
+      orderGroupId,
+      userId: req.user._id,
+      userModel: req.user.constructor.modelName === 'FoodUser' ? 'FoodUser' : 'User',
+      festivalId: festival._id,
+      ticketCategoryId: line.category._id,
+      ticketCategoryName: line.category.name,
+      festivalName: festival.name,
+      festivalDates: festival.dates,
+      ticketCount: line.count,
+      ...line.pricing,
+      attendee: who,
+      paymentMethod: 'razorpay',
+    })));
+
+    const payable = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
+
+    res.status(201).json({
+      success: true,
+      message: 'Passes held. Complete payment to confirm.',
+      orderGroupId,
+      bookings,
+      payable,
+      totalTickets: bookings.reduce((sum, b) => sum + b.ticketCount, 0),
+    });
+  } catch (error) {
+    // Anything unexpected after seats were taken must not keep them.
+    for (const held of taken) {
+      await releaseSeats(req.body?.festivalId, held.categoryId, held.count).catch(() => {});
+    }
+    console.error('Festival checkout error:', error);
+    res.status(500).json({ success: false, message: 'Failed to hold these passes' });
+  }
+};
+
+/**
+ * @route POST /v1/festivals/bookings/checkout/:groupId/release
+ *
+ * Give a whole basket's seats back when the buyer walks away from the payment
+ * window. Without this every abandoned checkout holds its seats indefinitely —
+ * the seats read as unavailable to everyone else while nobody has paid for
+ * them, and nothing expires them.
+ *
+ * Paid bookings in the group are left alone, so a partial failure cannot
+ * cancel passes somebody already owns.
+ */
+export const releaseCheckout = async (req, res) => {
+  try {
+    const bookings = await FestivalBooking.find({
+      orderGroupId: req.params.groupId,
+      userId: req.user._id,
+      paymentStatus: 'pending',
+      bookingStatus: { $ne: 'cancelled' },
+    });
+
+    for (const booking of bookings) {
+      await releaseSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount);
+      booking.bookingStatus = 'cancelled';
+      booking.cancelledAt = new Date();
+      booking.cancellationReason = 'Payment not completed';
+      await booking.save();
+    }
+
+    res.json({ success: true, released: bookings.length });
+  } catch (error) {
+    console.error('Festival release checkout error:', error);
+    res.status(500).json({ success: false, message: 'Could not release these passes' });
+  }
+};
+
 /** Give the held passes back. Used on cancel and on abandoned payment. */
 export const releaseHold = async (booking) => {
-  await Festival.updateOne(
-    { _id: booking.festivalId },
-    { $inc: { 'ticketCategories.$[cat].soldTickets': -booking.ticketCount } },
-    { arrayFilters: [{ 'cat._id': booking.ticketCategoryId }] },
-  );
+  await releaseSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount);
 };
 
 /** Mark a booking paid and issue its QR. Shared by both payment paths. */

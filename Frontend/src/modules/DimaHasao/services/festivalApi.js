@@ -79,6 +79,31 @@ export const quotePasses = async ({ festivalId, ticketCategoryId, ticketCount })
 export const createFestivalBooking = async (payload) =>
   unwrap(await apiClient.post('/festivals/bookings', payload));
 
+/**
+ * A whole basket in one call — several categories, one payment.
+ *
+ * Replaces looping createFestivalBooking per category, which opened a separate
+ * Razorpay window for each one.
+ */
+export const checkoutFestivalBasket = async ({ festivalId, items, attendee }) =>
+  unwrap(await apiClient.post('/festivals/bookings/checkout', { festivalId, items, attendee }));
+
+/** One gateway order covering every booking in a checkout. */
+export const createGroupPaymentOrder = async (orderGroupId) =>
+  unwrap(await apiClient.post(`/festivals/payments/orders/${orderGroupId}`));
+
+/** One signature, every booking in the basket confirmed. */
+export const verifyGroupPayment = async (orderGroupId, payload) =>
+  unwrap(await apiClient.post(`/festivals/payments/orders/${orderGroupId}/verify`, payload));
+
+/** Hand a basket's held seats back when the buyer abandons the payment. */
+export const releaseCheckout = async (orderGroupId) =>
+  unwrap(await apiClient.post(`/festivals/bookings/checkout/${orderGroupId}/release`, {}));
+
+/** Refused whenever Razorpay is configured, so it is a dev path only. */
+export const settleGroupWithoutGateway = async (orderGroupId) =>
+  unwrap(await apiClient.post(`/festivals/payments/orders/${orderGroupId}/settle`, {}));
+
 export const createPaymentOrder = async (bookingId) =>
   unwrap(await apiClient.post(`/festivals/payments/bookings/${bookingId}/order`));
 
@@ -116,7 +141,53 @@ export const adaptBooking = (b = {}) => {
     status: STATUS_LABELS[b.bookingStatus] || b.bookingStatus || 'Confirmed',
     // Only a paid booking carries one; the card must not print a fake code.
     qrCode: b.qrCode || '',
+    // Which checkout this came from. Older bookings have none, so they group
+    // as themselves.
+    orderGroupId: b.orderGroupId || '',
+    bookedAt: b.createdAt || null,
   };
+};
+
+/**
+ * One checkout, one card.
+ *
+ * A basket spanning three categories is three bookings — each needs its own
+ * pass code at the gate — but the buyer made one purchase and paid once, so
+ * history reads better as a single entry with the categories inside it.
+ */
+export const groupPasses = (passes = []) => {
+  const groups = new Map();
+
+  for (const pass of passes) {
+    // A booking with no group id is its own group, which is what pre-grouping
+    // bookings and any single-category purchase should look like anyway.
+    const key = pass.orderGroupId || `single:${pass.id}`;
+    const group = groups.get(key) || {
+      key,
+      festivalId: pass.festivalId,
+      festivalName: pass.festivalName,
+      dates: pass.dates,
+      venue: pass.venue,
+      image: pass.image,
+      status: pass.status,
+      bookedAt: pass.bookedAt,
+      passes: [],
+      ticketCount: 0,
+      totalAmount: 0,
+    };
+
+    group.passes.push(pass);
+    group.ticketCount += pass.ticketCount;
+    group.totalAmount += pass.totalAmount;
+    groups.set(key, group);
+  }
+
+  return [...groups.values()].map((group) => ({
+    ...group,
+    // The reference a buyer quotes for the whole purchase.
+    id: group.passes.length === 1 ? group.passes[0].id : group.key,
+    categoryLabel: group.passes.map((p) => `${p.ticketCount} × ${p.ticketCategory}`).join(', '),
+  }));
 };
 
 export const fetchMyPasses = async () => {
@@ -132,10 +203,16 @@ export default {
   fetchFestivalById,
   quotePasses,
   createFestivalBooking,
+  checkoutFestivalBasket,
+  createGroupPaymentOrder,
+  verifyGroupPayment,
+  settleGroupWithoutGateway,
+  releaseCheckout,
   createPaymentOrder,
   verifyPayment,
   settleWithoutGateway,
   fetchMyPasses,
+  groupPasses,
   cancelFestivalBooking,
   adaptFestival,
   adaptBooking,

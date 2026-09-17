@@ -16,10 +16,11 @@ import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
 import {
   fetchFestivalById,
-  createFestivalBooking as createFestivalBookingApi,
-  createPaymentOrder,
-  verifyPayment,
-  settleWithoutGateway,
+  checkoutFestivalBasket,
+  createGroupPaymentOrder,
+  verifyGroupPayment,
+  settleGroupWithoutGateway,
+  releaseCheckout,
 } from '../services/festivalApi';
 import { initRazorpayPayment } from '../../Food/utils/razorpay';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -83,9 +84,17 @@ export const FestivalDetailScreen = () => {
     .map((c) => ({ category: c, count: ticketQuantities[c.id] || 0 }))
     .filter((s) => s.count > 0);
 
-  const payForBooking = (booking) =>
+  /**
+   * Pay for the whole basket at once.
+   *
+   * Each category is still its own booking — different entitlement at the
+   * gate, own pass code, own allocation — but they share an order group, so
+   * this opens the gateway once for the full amount. Before this the screen
+   * looped per category and the buyer was asked to pay again for every one.
+   */
+  const payForGroup = (orderGroupId, passCount) =>
     new Promise((resolve, reject) => {
-      createPaymentOrder(booking._id)
+      createGroupPaymentOrder(orderGroupId)
         .then((order) =>
           initRazorpayPayment({
             key: order.razorpayKeyId,
@@ -93,24 +102,32 @@ export const FestivalDetailScreen = () => {
             currency: order.order.currency || 'INR',
             order_id: order.order.id,
             name: 'Dima Hasao Festivals',
-            description: `${festival.name} — ${booking.ticketCategoryName}`,
+            description: `${festival.name} — ${passCount} ${passCount === 1 ? 'pass' : 'passes'}`,
             themeColor: '#0a4d2b',
             prefill: { name: user?.name || '', contact: user?.phone || '' },
-            notes: { bookingId: booking.bookingId },
+            notes: { orderGroupId },
             handler: async (response) => {
               try {
-                const confirmed = await verifyPayment(booking._id, {
+                const confirmed = await verifyGroupPayment(orderGroupId, {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
                 });
-                resolve(confirmed.booking);
+                resolve(confirmed.bookings);
               } catch (error) {
                 reject(error);
               }
             },
-            onError: (error) => reject(new Error(error?.description || 'Payment failed')),
-            onClose: () => reject(new Error('Payment cancelled. Your passes are not confirmed.')),
+            // Either way the seats go straight back — an abandoned basket
+            // would otherwise hold them with nobody having paid.
+            onError: (error) => {
+              releaseCheckout(orderGroupId).catch(() => {});
+              reject(new Error(error?.description || 'Payment failed'));
+            },
+            onClose: () => {
+              releaseCheckout(orderGroupId).catch(() => {});
+              reject(new Error('Payment cancelled. Your passes are not confirmed.'));
+            },
           }),
         )
         .catch(async (error) => {
@@ -118,8 +135,8 @@ export const FestivalDetailScreen = () => {
           // this path whenever they are present.
           if (error?.response?.status === 503) {
             try {
-              const settled = await settleWithoutGateway(booking._id);
-              resolve(settled.booking);
+              const settled = await settleGroupWithoutGateway(orderGroupId);
+              resolve(settled.bookings);
             } catch (settleError) {
               reject(settleError);
             }
@@ -138,25 +155,36 @@ export const FestivalDetailScreen = () => {
 
     try {
       setSubmitting(true);
-      const confirmed = [];
 
-      for (const { category, count } of selections) {
-        const created = await createFestivalBookingApi({
-          festivalId: festival.id,
+      // One call holds every category's seats, or none of them: if a later
+      // category has sold out while the basket sat on screen, the server hands
+      // back what it had already taken rather than leaving a partial hold.
+      const held = await checkoutFestivalBasket({
+        festivalId: festival.id,
+        items: selections.map(({ category, count }) => ({
           ticketCategoryId: category.id,
           ticketCount: count,
-        });
-        confirmed.push(await payForBooking(created.booking));
-      }
+        })),
+      });
+
+      const confirmed = await payForGroup(held.orderGroupId, held.totalTickets);
 
       await refreshFestivalBookings();
 
       const first = confirmed[0];
       setCreatedPassData({
         id: first.bookingId,
+        orderGroupId: held.orderGroupId,
         festivalName: festival.name,
         dates: festival.dates,
         venue: festival.venue,
+        // Each category keeps its own pass code, so the modal lists them.
+        passes: confirmed.map((b) => ({
+          bookingId: b.bookingId,
+          category: b.ticketCategoryName,
+          count: b.ticketCount,
+          qrCode: b.qrCode,
+        })),
         ticketCategory: confirmed.map((b) => `${b.ticketCount} × ${b.ticketCategoryName}`).join(', '),
         ticketCount: confirmed.reduce((sum, b) => sum + b.ticketCount, 0),
         totalAmount: confirmed.reduce((sum, b) => sum + b.totalAmount, 0),
@@ -440,17 +468,24 @@ export const FestivalDetailScreen = () => {
 
               {/* Digital E-Pass with QR Simulation */}
               <div className="bg-[#FAF6ED] rounded-2xl p-4 border border-[#E5DDC3] space-y-3 text-xs">
-                {/* QR Code graphic */}
-                <div className="w-28 h-28 mx-auto bg-white p-2 rounded-xl shadow-xs border border-gray-200 flex flex-col items-center justify-center">
-                  <i className="fa-solid fa-qrcode text-5xl text-gray-900"></i>
-                  <span className="font-mono text-[9px] font-bold text-gray-500 mt-1">
-                    {createdPassData.qrCode}
-                  </span>
+                {/* One pass code per category — they are scanned separately at
+                    the gate because they grant different access. */}
+                <div className="space-y-2">
+                  {(createdPassData.passes || []).map((pass) => (
+                    <div key={pass.bookingId} className="bg-white p-2.5 rounded-xl border border-gray-200 flex items-center gap-3">
+                      <i className="fa-solid fa-qrcode text-3xl text-gray-900 shrink-0"></i>
+                      <div className="min-w-0 flex-1 text-left">
+                        <p className="font-bold text-[11px] text-gray-900 truncate">
+                          {pass.count} × {pass.category}
+                        </p>
+                        <p className="font-mono text-[9px] font-bold text-gray-500 mt-0.5">{pass.qrCode}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="border-t border-[#E5DDC3] pt-2 text-center">
                   <h4 className="font-bold text-sm text-gray-900">{createdPassData.festivalName}</h4>
-                  <p className="text-emerald-800 font-semibold">{createdPassData.ticketCategory}</p>
                   <p className="text-[11px] text-gray-500 mt-0.5">{createdPassData.dates}</p>
                 </div>
 

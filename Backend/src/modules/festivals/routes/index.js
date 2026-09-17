@@ -14,6 +14,8 @@ import {
 import {
   getBookingQuote,
   createBooking,
+  checkoutBasket,
+  releaseCheckout,
   getMyBookings,
   cancelBooking,
   getAdminBookings,
@@ -24,6 +26,9 @@ import {
   createPaymentOrder,
   verifyPayment,
   settleWithoutGateway,
+  createGroupPaymentOrder,
+  verifyGroupPayment,
+  settleGroupWithoutGateway,
 } from '../controllers/paymentController.js';
 
 export const festivalsRouter = Router();
@@ -48,6 +53,10 @@ festivalsRouter.use('/admin', admin);
 const bookings = Router();
 bookings.post('/quote', getBookingQuote); // public: the screen prices before sign-in
 bookings.get('/my', protect, getMyBookings);
+// A whole basket in one call — several categories, one payment.
+bookings.post('/checkout', protect, checkoutBasket);
+// Hand the seats back when the buyer abandons the payment window.
+bookings.post('/checkout/:groupId/release', protect, releaseCheckout);
 bookings.post('/', protect, createBooking);
 bookings.post('/:id/cancel', protect, cancelBooking);
 bookings.post('/:id/settle', protect, settleWithoutGateway);
@@ -57,6 +66,10 @@ festivalsRouter.use('/bookings', bookings);
 const payments = Router();
 payments.post('/bookings/:id/order', protect, createPaymentOrder);
 payments.post('/bookings/:id/verify', protect, verifyPayment);
+// One order, one signature, for every booking in a checkout.
+payments.post('/orders/:groupId', protect, createGroupPaymentOrder);
+payments.post('/orders/:groupId/verify', protect, verifyGroupPayment);
+payments.post('/orders/:groupId/settle', protect, settleGroupWithoutGateway);
 festivalsRouter.use('/payments', payments);
 
 /* Public catalogue, last so it cannot shadow the routers above. */

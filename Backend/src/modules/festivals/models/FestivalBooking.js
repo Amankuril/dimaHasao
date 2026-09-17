@@ -10,6 +10,17 @@ import mongoose from 'mongoose';
 const festivalBookingSchema = new mongoose.Schema({
   bookingId: { type: String, required: true, unique: true },
 
+  /**
+   * One checkout, one group.
+   *
+   * A basket spanning three categories is three bookings — each category is a
+   * different entitlement at the gate, needs its own pass code, and its seats
+   * are taken from its own allocation. This ties them back together so the
+   * whole basket is charged once and reads as a single purchase in history.
+   * Absent on bookings made before grouping existed.
+   */
+  orderGroupId: { type: String, index: true },
+
   userId: { type: mongoose.Schema.Types.ObjectId, refPath: 'userModel', required: true, index: true },
   userModel: { type: String, enum: ['FoodUser', 'User'], default: 'FoodUser' },
 
