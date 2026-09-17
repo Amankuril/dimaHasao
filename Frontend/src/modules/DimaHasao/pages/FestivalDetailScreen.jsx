@@ -1,70 +1,211 @@
-import { useState } from 'react';
+/**
+ * A festival, and the passes it sells.
+ *
+ * Amounts come from the server. The screen used to add its own 5% tax on top
+ * of a locally summed subtotal and then hand the result to a local
+ * createFestivalBooking() that wrote to React state — no pass was ever issued
+ * and no inventory ever moved.
+ *
+ * Each pass type has its own allocation and its own QR at the gate, so picking
+ * two types creates two bookings rather than one mixed order.
+ */
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from '../router';
-import { FESTIVALS_DATA } from '../data/festivalData';
 import { useBooking } from '../context/BookingContext';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
+import {
+  fetchFestivalById,
+  createFestivalBooking as createFestivalBookingApi,
+  createPaymentOrder,
+  verifyPayment,
+  settleWithoutGateway,
+} from '../services/festivalApi';
+import { initRazorpayPayment } from '../../Food/utils/razorpay';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const FestivalDetailScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { createFestivalBooking, showToast } = useBooking();
+  const { user, showToast, refreshFestivalBookings } = useBooking();
 
-  const festival = FESTIVALS_DATA.find((f) => f.id === id) || FESTIVALS_DATA[0];
-
-  // Ticket quantities state { [categoryId]: number }
-  const [ticketQuantities, setTicketQuantities] = useState({
-    [festival.ticketCategories[0]?.id]: 1
-  });
-
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+  const [festival, setFestival] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [ticketQuantities, setTicketQuantities] = useState({});
+  const [submitting, setSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdPassData, setCreatedPassData] = useState(null);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchFestivalById(id)
+      .then((found) => {
+        if (cancelled || !found) return setFestival(null);
+        setFestival(found);
+        const first = found.ticketCategories.find((c) => !c.isSoldOut);
+        if (first) setTicketQuantities({ [first.id]: 1 });
+      })
+      .catch(() => { if (!cancelled) setFestival(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const categories = festival?.ticketCategories || [];
+
   const handleUpdateQty = (catId, delta) => {
+    const category = categories.find((c) => c.id === catId);
+    if (!category) return;
+
     setTicketQuantities((prev) => {
       const current = prev[catId] || 0;
-      const updated = Math.max(0, current + delta);
-      return { ...prev, [catId]: updated };
+      // Never let the stepper exceed what is actually left, or the per-order
+      // cap — the server refuses either, and a stepper that climbs past them
+      // just sets up a failure at checkout.
+      const ceiling = Math.min(category.remainingTickets, category.maxPerBooking);
+      return { ...prev, [catId]: Math.max(0, Math.min(ceiling, current + delta)) };
     });
   };
 
   const totalTickets = Object.values(ticketQuantities).reduce((a, b) => a + b, 0);
 
-  const subtotal = festival.ticketCategories.reduce((sum, cat) => {
-    const qty = ticketQuantities[cat.id] || 0;
-    return sum + cat.price * qty;
-  }, 0);
+  // No tax on passes today — the server returns taxRate 0, and this screen used
+  // to add 5% the backend never charged.
+  const subtotal = categories.reduce(
+    (sum, cat) => sum + cat.price * (ticketQuantities[cat.id] || 0),
+    0,
+  );
+  const totalAmount = subtotal;
 
-  const taxes = Math.round(subtotal * 0.05);
-  const totalAmount = subtotal + taxes;
+  /** One selected category → one booking, paid in sequence. */
+  const selections = categories
+    .map((c) => ({ category: c, count: ticketQuantities[c.id] || 0 }))
+    .filter((s) => s.count > 0);
 
-  const handleBookTickets = () => {
-    if (totalTickets === 0) {
-      showToast('Please select at least 1 ticket');
-      return;
+  const payForBooking = (booking) =>
+    new Promise((resolve, reject) => {
+      createPaymentOrder(booking._id)
+        .then((order) =>
+          initRazorpayPayment({
+            key: order.razorpayKeyId,
+            amount: order.order.amount,
+            currency: order.order.currency || 'INR',
+            order_id: order.order.id,
+            name: 'Dima Hasao Festivals',
+            description: `${festival.name} — ${booking.ticketCategoryName}`,
+            themeColor: '#0a4d2b',
+            prefill: { name: user?.name || '', contact: user?.phone || '' },
+            notes: { bookingId: booking.bookingId },
+            handler: async (response) => {
+              try {
+                const confirmed = await verifyPayment(booking._id, {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                });
+                resolve(confirmed.booking);
+              } catch (error) {
+                reject(error);
+              }
+            },
+            onError: (error) => reject(new Error(error?.description || 'Payment failed')),
+            onClose: () => reject(new Error('Payment cancelled. Your passes are not confirmed.')),
+          }),
+        )
+        .catch(async (error) => {
+          // 503 means this server has no Razorpay keys; the backend refuses
+          // this path whenever they are present.
+          if (error?.response?.status === 503) {
+            try {
+              const settled = await settleWithoutGateway(booking._id);
+              resolve(settled.booking);
+            } catch (settleError) {
+              reject(settleError);
+            }
+            return;
+          }
+          reject(error);
+        });
+    });
+
+  const handleBookTickets = async () => {
+    if (!user?.isLoggedIn) {
+      showToast('Please sign in to book passes');
+      return navigate('/login');
     }
+    if (!selections.length) return showToast('Please select at least 1 pass');
 
-    const selectedCategory = festival.ticketCategories.find(
-      (c) => (ticketQuantities[c.id] || 0) > 0
-    );
+    try {
+      setSubmitting(true);
+      const confirmed = [];
 
-    const bookingPayload = {
-      festivalId: festival.id,
-      festivalName: festival.name,
-      ticketCategory: selectedCategory?.name || 'Festival Entry Pass',
-      ticketCount: totalTickets,
-      totalAmount,
-      venue: festival.venue,
-      dates: festival.dates,
-      image: festival.heroImage
-    };
+      for (const { category, count } of selections) {
+        const created = await createFestivalBookingApi({
+          festivalId: festival.id,
+          ticketCategoryId: category.id,
+          ticketCount: count,
+        });
+        confirmed.push(await payForBooking(created.booking));
+      }
 
-    const newBooking = createFestivalBooking(bookingPayload);
-    setCreatedPassData(newBooking);
-    setIsSuccessModalOpen(true);
+      await refreshFestivalBookings();
+
+      const first = confirmed[0];
+      setCreatedPassData({
+        id: first.bookingId,
+        festivalName: festival.name,
+        dates: festival.dates,
+        venue: festival.venue,
+        ticketCategory: confirmed.map((b) => `${b.ticketCount} × ${b.ticketCategoryName}`).join(', '),
+        ticketCount: confirmed.reduce((sum, b) => sum + b.ticketCount, 0),
+        totalAmount: confirmed.reduce((sum, b) => sum + b.totalAmount, 0),
+        qrCode: first.qrCode,
+      });
+      setIsSuccessModalOpen(true);
+    } catch (error) {
+      showToast(error?.response?.data?.message || error.message || 'Could not book these passes');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-[#FAF6ED] min-h-screen font-poppins">
+        <Header title="Loading festival" showBack rightAction="none" />
+        <PatternDivider variant="green-gold" />
+        <div className="h-52 bg-gray-200 animate-pulse" />
+        <main className="p-3.5 space-y-3">
+          {[0, 1].map((n) => (
+            <div key={n} className="bg-white rounded-2xl p-4 border border-[#E5DDC3] space-y-2 animate-pulse">
+              <div className="h-3.5 bg-gray-200 rounded w-1/2" />
+              <div className="h-3 bg-gray-100 rounded w-full" />
+            </div>
+          ))}
+        </main>
+      </div>
+    );
+  }
+
+  if (!festival) {
+    return (
+      <div className="bg-[#FAF6ED] min-h-screen font-poppins">
+        <Header title="Festival unavailable" showBack rightAction="none" />
+        <PatternDivider variant="green-gold" />
+        <div className="p-6 text-center space-y-3 mt-10">
+          <i className="fa-solid fa-ticket text-4xl text-gray-300"></i>
+          <h3 className="font-bold text-gray-800 text-sm">This festival is no longer on sale</h3>
+          <button
+            onClick={() => navigate('/festivals')}
+            className="bg-[#06381e] text-amber-300 text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
+          >
+            See All Festivals
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAF6ED] text-gray-800 antialiased min-h-screen pb-32 relative font-poppins">
@@ -136,7 +277,7 @@ export const FestivalDetailScreen = () => {
           </div>
 
           <div className="space-y-3">
-            {festival.ticketCategories.map((cat) => {
+            {categories.map((cat) => {
               const qty = ticketQuantities[cat.id] || 0;
 
               return (
@@ -228,18 +369,27 @@ export const FestivalDetailScreen = () => {
               <span className="text-lg font-extrabold text-emerald-950 font-montserrat">
                 ₹{totalAmount.toLocaleString('en-IN')}
               </span>
-              <span className="text-[10px] text-gray-400">(incl. GST)</span>
+              <span className="text-[10px] text-gray-400">total</span>
             </div>
           </div>
 
           <motion.button
             whileTap={{ scale: 0.94 }}
-            disabled={totalTickets === 0}
+            disabled={totalTickets === 0 || submitting}
             onClick={handleBookTickets}
-            className="bg-[#06381e] disabled:opacity-50 hover:bg-[#0a4d2b] text-amber-300 text-xs font-bold px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition-colors cursor-pointer"
+            className="bg-[#06381e] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0a4d2b] text-amber-300 text-xs font-bold px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition-colors cursor-pointer"
           >
-            <i className="fa-solid fa-ticket text-xs"></i>
-            <span>Book Passes Now</span>
+            {submitting ? (
+              <>
+                <i className="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                <span>Processing…</span>
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-ticket text-xs"></i>
+                <span>Book Passes Now</span>
+              </>
+            )}
           </motion.button>
         </div>
       </div>

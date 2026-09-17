@@ -4,6 +4,7 @@ import { calculateOrder, placeOrder, fetchMyOrders } from '../services/foodApi';
 import { fetchMyBookings as fetchMyTourBookings } from '../services/toursApi';
 import { fetchMyHotelBookings } from '../services/hotelApi';
 import { fetchMyRides } from '../services/taxiApi';
+import { fetchMyPasses } from '../services/festivalApi';
 import { isModuleAuthenticated, clearAuthData } from '../../../shared/utils/moduleAuth';
 
 // v1's display labels -> the API's paymentMethod enum
@@ -66,8 +67,7 @@ export const BookingProvider = ({ children }) => {
   const [tourBookingsLoading, setTourBookingsLoading] = useState(false);
 
   // Festival Ticket Bookings
-  // Festivals have no backend yet, so this stays empty rather than showing a
-  // pass nobody actually holds. See the festivals module when it lands.
+  // Festival passes — the real ones, from /v1/festivals/bookings/my.
   const [festivalBookings, setFestivalBookings] = useState([]);
 
   // Cart Management Functions
@@ -337,6 +337,17 @@ export const BookingProvider = ({ children }) => {
     }
   }, [user.isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const refreshFestivalBookings = useCallback(async () => {
+    if (!user.isLoggedIn) { setFestivalBookings([]); return []; }
+    try {
+      const list = await fetchMyPasses();
+      setFestivalBookings(list);
+      return list;
+    } catch {
+      return festivalBookings;
+    }
+  }, [user.isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const refreshFoodOrders = useCallback(async () => {
     if (!user.isLoggedIn) { setFoodOrders([]); return []; }
     try {
@@ -357,27 +368,12 @@ export const BookingProvider = ({ children }) => {
       refreshHotelBookings(),
       refreshRides(),
       refreshFoodOrders(),
+      refreshFestivalBookings(),
     ]);
     setBookingsLoading(false);
-  }, [refreshTourBookings, refreshHotelBookings, refreshRides, refreshFoodOrders]);
+  }, [refreshTourBookings, refreshHotelBookings, refreshRides, refreshFoodOrders, refreshFestivalBookings]);
 
   useEffect(() => { refreshAllBookings(); }, [refreshAllBookings]);
-
-  const createFestivalBooking = (bookingDetails) => {
-    const newId = `DH-FEST-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newFestBooking = {
-      id: newId,
-      bookingDate: 'Just now',
-      status: 'Confirmed',
-      paymentStatus: 'Paid Online',
-      qrCode: `DH-PASS-${Math.floor(10000 + Math.random() * 90000)}`,
-      createdAt: new Date().toISOString(),
-      ...bookingDetails
-    };
-
-    setFestivalBookings((prev) => [newFestBooking, ...prev]);
-    return newFestBooking;
-  };
 
   return (
     <BookingContext.Provider
@@ -416,10 +412,10 @@ export const BookingProvider = ({ children }) => {
         refreshHotelBookings,
         refreshRides,
         refreshFoodOrders,
+        refreshFestivalBookings,
         refreshAllBookings,
         bookingsLoading,
         festivalBookings,
-        createFestivalBooking,
         searchQuery,
         setSearchQuery,
         isNotificationsOpen,

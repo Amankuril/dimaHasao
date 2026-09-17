@@ -9,7 +9,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, UserCog, Search, LogOut, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Ticket, UserCog, Search, LogOut, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import AdminModuleSwitcher from '@/shared/components/admin/AdminModuleSwitcher.jsx';
@@ -21,6 +21,7 @@ const BASE = '/global/admin';
 const MENU_ITEMS = [
     { icon: UserCog, label: 'My Profile', path: `${BASE}/profile` },
     { icon: ShieldCheck, label: 'Administrators', path: `${BASE}/administrators` },
+    { icon: Ticket, label: 'Festivals', path: `${BASE}/festivals` },
 ];
 
 const AdminLayout = () => {
