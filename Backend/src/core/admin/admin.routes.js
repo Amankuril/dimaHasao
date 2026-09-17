@@ -17,6 +17,13 @@ import {
   updateTicketForAdmin,
   replyAsAdmin,
 } from '../support/support.controller.js';
+import {
+  getOverview,
+  getTimeseries,
+  getTopVendors,
+  getModuleReport,
+  exportReport,
+} from '../reports/reports.controller.js';
 
 const router = express.Router();
 
@@ -37,6 +44,14 @@ router.get('/support/stats', getTicketStats);
 router.get('/support/:id', getTicketForAdmin);
 router.patch('/support/:id', updateTicketForAdmin);
 router.post('/support/:id/messages', replyAsAdmin);
+
+// Platform reports: the cross-module view no single module's panel can build.
+// The fixed paths come before '/:module' so they are never read as one.
+router.get('/reports/overview', getOverview);
+router.get('/reports/timeseries', getTimeseries);
+router.get('/reports/top', getTopVendors);
+router.get('/reports/export/:report', exportReport);
+router.get('/reports/:module', getModuleReport);
 
 // Managing other administrators is platform-superadmin only.
 router.get('/administrators', requirePlatformSuperAdmin, listAdministrators);

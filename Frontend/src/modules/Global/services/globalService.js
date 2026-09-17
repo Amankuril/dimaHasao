@@ -71,6 +71,32 @@ const globalService = {
   getSupportTicket: (id) => request(api.get(`/support/${id}`)),
   updateSupportTicket: (id, payload) => request(api.patch(`/support/${id}`, payload)),
   replySupportTicket: (id, message) => request(api.post(`/support/${id}/messages`, { message })),
+
+  // Reports — the cross-module numbers no single module's panel can produce.
+  getReportOverview: (params = {}) => request(api.get('/reports/overview', { params })),
+  getReportTimeseries: (params = {}) => request(api.get('/reports/timeseries', { params })),
+  getReportTopVendors: (params = {}) => request(api.get('/reports/top', { params })),
+
+  /**
+   * Download a report as CSV.
+   *
+   * Fetched rather than linked: the endpoint needs the admin bearer token, and
+   * a plain <a href> cannot carry one. The object URL is revoked straight after
+   * the click so the blob is not held for the life of the page.
+   */
+  downloadReport: async (report, params = {}) => {
+    const response = await api.get(`/reports/export/${report}`, { params, responseType: 'blob' });
+    const disposition = response.headers['content-disposition'] || '';
+    const named = /filename="?([^";]+)"?/.exec(disposition);
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = named?.[1] || `${report}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
 };
 
 export default globalService;

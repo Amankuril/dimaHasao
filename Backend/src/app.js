@@ -66,7 +66,12 @@ app.use(helmet({
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 app.use(cors({
-    origin: getCorsOrigins()
+    origin: getCorsOrigins(),
+    // A browser cannot read a response header cross-origin unless it is
+    // exposed. Without this every CSV download — the admin reports here, and
+    // taxi's six — saves as the endpoint name instead of the dated filename
+    // the server chose.
+    exposedHeaders: ['Content-Disposition']
 }));
 app.use(morgan('dev'));
 app.use(express.json({
