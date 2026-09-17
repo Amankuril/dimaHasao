@@ -59,12 +59,61 @@ const festivalSchema = new mongoose.Schema({
 
   ticketCategories: { type: [ticketCategorySchema], default: [] },
 
+  /**
+   * When passes may be bought. Both ends are optional and mean different
+   * things when blank: no open date means sales are already open, and no close
+   * date falls back to the festival's own end — selling a pass to something
+   * that has finished is never right, and an admin should not have to remember
+   * to set a second date to prevent it.
+   */
+  bookingOpensAt: { type: Date },
+  bookingClosesAt: { type: Date },
+
   isActive: { type: Boolean, default: true, index: true },
   isFeatured: { type: Boolean, default: false },
   sortOrder: { type: Number, default: 0 },
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
 festivalSchema.index({ isActive: 1, sortOrder: 1, startDate: 1 });
+
+/**
+ * Whether passes can be bought right now, and why not.
+ *
+ * Exported as a plain function over a festival object so the quote, the booking
+ * and the payload the screen renders all reach the same verdict — a countdown
+ * that says "2 hours left" while the server refuses the sale is the class of
+ * disagreement this project keeps having to fix.
+ */
+export const bookingWindow = (festival, now = new Date()) => {
+  const opensAt = festival?.bookingOpensAt ? new Date(festival.bookingOpensAt) : null;
+  // The festival's own end is the backstop when no close date was set.
+  const closesAt = festival?.bookingClosesAt
+    ? new Date(festival.bookingClosesAt)
+    : (festival?.endDate ? new Date(festival.endDate) : null);
+
+  if (!festival?.isActive) {
+    return { isOpen: false, reason: 'This festival is not open for booking', opensAt, closesAt };
+  }
+  if (opensAt && now < opensAt) {
+    return { isOpen: false, reason: 'Bookings have not opened yet', opensAt, closesAt };
+  }
+  if (closesAt && now > closesAt) {
+    return { isOpen: false, reason: 'Bookings have closed for this festival', opensAt, closesAt };
+  }
+  return { isOpen: true, reason: null, opensAt, closesAt };
+};
+
+/** Where a festival sits in its own life, for the admin list. */
+export const festivalStatus = (festival, now = new Date()) => {
+  const start = festival?.startDate ? new Date(festival.startDate) : null;
+  const end = festival?.endDate ? new Date(festival.endDate) : null;
+
+  if (end && now > end) return 'ended';
+  if (start && end && now >= start && now <= end) return 'live';
+  if (start && now < start) return 'upcoming';
+  // No dates to judge by; `dates` is free text, so say nothing rather than guess.
+  return 'scheduled';
+};
 
 const Festival = mongoose.model('Festival', festivalSchema);
 export default Festival;

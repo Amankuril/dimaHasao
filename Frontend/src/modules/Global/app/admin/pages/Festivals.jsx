@@ -10,6 +10,7 @@ import { Loader2, Plus, QrCode, Save, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import globalService from '../../../services/globalService';
+import FestivalDetail from './FestivalDetail';
 
 const field =
   'w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] focus:ring-4 focus:ring-[#0a4d2b]/10 transition';
@@ -19,8 +20,27 @@ const toLines = (v) => String(v || '').split('\n').map((s) => s.trim()).filter(B
 
 const BLANK = {
   name: '', tagline: '', dates: '', startDate: '', endDate: '',
+  bookingOpensAt: '', bookingClosesAt: '',
   venue: '', location: '', organizer: '', description: '', highlights: '',
   heroImage: '', isActive: true, isFeatured: false, sortOrder: 0,
+};
+
+/** An ISO timestamp into the value a <input type="datetime-local"> wants. */
+const toLocalInput = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  // Shift by the local offset so the box shows the admin's own clock rather
+  // than UTC, which would read an hour or five out depending on where they are.
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+};
+
+const LIFECYCLE_TONE = {
+  live: 'bg-emerald-100 text-emerald-700',
+  upcoming: 'bg-sky-100 text-sky-700',
+  ended: 'bg-gray-200 text-gray-600',
+  scheduled: 'bg-gray-100 text-gray-500',
 };
 
 const BLANK_CATEGORY = { name: '', price: 0, originalPrice: '', totalTickets: 100, maxPerBooking: 10, perks: '', isActive: true };
@@ -32,6 +52,11 @@ const fromFestival = (f) => (!f ? BLANK : {
     .map((k) => [k, f[k]])),
   startDate: f.startDate ? String(f.startDate).slice(0, 10) : '',
   endDate: f.endDate ? String(f.endDate).slice(0, 10) : '',
+  // The stored values, never `bookingWindow.*` — those carry a fallback to the
+  // festival's end date, and saving that back would turn a derived value into
+  // a real deadline.
+  bookingOpensAt: toLocalInput(f.bookingOpensAt),
+  bookingClosesAt: toLocalInput(f.bookingClosesAt),
   highlights: (f.highlights || []).join('\n'),
 });
 
@@ -44,6 +69,9 @@ const Festivals = () => {
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [confirmingId, setConfirmingId] = useState(null);
+
+  // Which festival's seats and bookings are open, if any.
+  const [viewingId, setViewingId] = useState(null);
 
   const [scan, setScan] = useState('');
   const [scanResult, setScanResult] = useState(null);
@@ -92,6 +120,10 @@ const Festivals = () => {
       sortOrder: Number(form.sortOrder) || 0,
       startDate: form.startDate || undefined,
       endDate: form.endDate || undefined,
+      // '' is the clear signal, not null: app.js strips every null from every
+      // request body before a controller sees it.
+      bookingOpensAt: form.bookingOpensAt || '',
+      bookingClosesAt: form.bookingClosesAt || '',
       ticketCategories: categories
         .filter((c) => c.name.trim())
         .map((c) => ({
@@ -165,6 +197,18 @@ const Festivals = () => {
     }
   };
 
+  /* --------------------- one festival's seats ---------------------- */
+  // Reloads the list on the way out, so a booking taken while the detail was
+  // open is reflected in the card behind it.
+  if (viewingId) {
+    return (
+      <FestivalDetail
+        festivalId={viewingId}
+        onBack={() => { setViewingId(null); load(); }}
+      />
+    );
+  }
+
   /* ----------------------------- form ----------------------------- */
   if (editing) {
     return (
@@ -209,11 +253,41 @@ const Festivals = () => {
         </section>
 
         <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+          <div className="pb-3 border-b border-gray-100">
+            <h3 className="font-bold text-gray-900 text-sm">Booking window</h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              When people may buy passes. Both are optional and both can be changed later.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className={label}>Bookings open</label>
+              <input className={field} type="datetime-local" value={form.bookingOpensAt}
+                onChange={set('bookingOpensAt')} />
+              <p className="text-xs text-gray-400 mt-1.5">Blank opens as soon as the festival is visible.</p></div>
+            <div><label className={label}>Bookings close</label>
+              <input className={field} type="datetime-local" value={form.bookingClosesAt}
+                onChange={set('bookingClosesAt')} />
+              <p className="text-xs text-gray-400 mt-1.5">Blank closes when the festival ends.</p></div>
+          </div>
+
+          {editing?._id && editing?.bookingWindow && (
+            <p className={`text-xs font-semibold rounded-xl px-3 py-2.5 ${
+              editing.bookingWindow.isOpen ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'
+            }`}>
+              {editing.bookingWindow.isOpen
+                ? `Open for booking now${editing.bookingWindow.closesAt ? ` — closes ${new Date(editing.bookingWindow.closesAt).toLocaleString('en-IN')}` : ''}`
+                : editing.bookingWindow.reason}
+            </p>
+          )}
+        </section>
+
+        <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
-              <h3 className="font-bold text-gray-900 text-sm">Passes</h3>
+              <h3 className="font-bold text-gray-900 text-sm">Pass categories &amp; seats</h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                An allocation can be raised but never dropped below what has sold.
+                Seats can be raised but never dropped below what has been booked.
               </p>
             </div>
             <button type="button" onClick={() => setCategories((c) => [...c, { ...BLANK_CATEGORY }])}
@@ -240,11 +314,13 @@ const Festivals = () => {
                 <div><label className={label}>Was</label>
                   <input className={field} type="number" min="0" value={cat.originalPrice}
                     onChange={(e) => setCategory(index, 'originalPrice', e.target.value)} /></div>
-                <div><label className={label}>Allocation</label>
+                <div><label className={label}>Seats</label>
                   <input className={field} type="number" min={cat.soldTickets || 0} value={cat.totalTickets}
                     onChange={(e) => setCategory(index, 'totalTickets', e.target.value)} />
                   {cat.soldTickets > 0 && (
-                    <p className="text-xs text-amber-700 mt-1.5 font-semibold">{cat.soldTickets} already sold</p>
+                    <p className="text-xs text-amber-700 mt-1.5 font-semibold">
+                      {cat.soldTickets} booked · {Math.max(0, (Number(cat.totalTickets) || 0) - cat.soldTickets)} available
+                    </p>
                   )}</div>
                 <div><label className={label}>Max per order</label>
                   <input className={field} type="number" min="1" value={cat.maxPerBooking}
@@ -351,19 +427,30 @@ const Festivals = () => {
                 <img src={f.heroImage} alt="" className="w-24 h-20 rounded-xl object-cover bg-gray-100 shrink-0"
                   onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
 
-                <div className="flex-1 basis-56 min-w-0">
+                <button type="button" onClick={() => setViewingId(f._id)}
+                  className="flex-1 basis-56 min-w-0 text-left cursor-pointer">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-gray-900">{f.name}</p>
+                    {f.status && (
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        LIFECYCLE_TONE[f.status] || 'bg-gray-100 text-gray-500'
+                      }`}>{f.status}</span>
+                    )}
                     {!f.isActive && (
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700">hidden</span>
+                    )}
+                    {f.bookingOpen === false && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">booking shut</span>
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">{f.dates} · {f.venue}</p>
                   <p className="text-xs text-gray-700 mt-2 font-semibold">
-                    {sold} of {total} passes sold
+                    {sold} of {total} seats booked
+                    <span className="font-medium text-emerald-700"> · {Math.max(0, total - sold)} available</span>
                     <span className="font-medium text-gray-400"> · {currency(revenue)} taken</span>
                   </p>
-                </div>
+                  <p className="text-[11px] text-[#0a4d2b] mt-1.5 font-bold">View seats &amp; bookings →</p>
+                </button>
 
                 <div className="flex flex-row-reverse sm:flex-col items-center sm:items-end justify-end gap-3 sm:gap-2 w-full sm:w-auto shrink-0">
                   <label className="flex items-center gap-2 text-xs font-bold text-gray-600">

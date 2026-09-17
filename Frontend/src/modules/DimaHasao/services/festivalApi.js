@@ -46,6 +46,13 @@ export const adaptFestival = (f = {}) => {
       maxPerBooking: Number(c.maxPerBooking) || 10,
       perks: asArray(c.perks),
     })),
+    // Whether passes can be bought right now, and why not. The server decides
+    // this and enforces the same rule on the booking, so the screen never
+    // offers a sale that will be refused.
+    bookingOpen: f.bookingOpen !== false,
+    bookingClosedReason: f.bookingClosedReason || '',
+    bookingClosesAt: f.bookingWindow?.closesAt || null,
+    seats: f.seats || { total: 0, booked: 0, available: 0 },
   };
 };
 

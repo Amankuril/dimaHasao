@@ -17,6 +17,7 @@ import {
   getMyBookings,
   cancelBooking,
   getAdminBookings,
+  getFestivalBookingSummary,
   verifyPass,
 } from '../controllers/bookingController.js';
 import {
@@ -36,6 +37,8 @@ admin.get('/', getAdminFestivals);
 admin.post('/', createFestival);
 admin.get('/bookings', getAdminBookings);
 admin.post('/bookings/verify', verifyPass);
+// Before '/:id' so "bookings" is never read as part of a festival id path.
+admin.get('/:id/bookings', getFestivalBookingSummary);
 admin.put('/:id', updateFestival);
 admin.patch('/:id/active', toggleFestival);
 admin.delete('/:id', deleteFestival);

@@ -6,7 +6,7 @@
  * only gate a traveller sees.
  */
 import mongoose from 'mongoose';
-import Festival from '../models/Festival.js';
+import Festival, { bookingWindow, festivalStatus } from '../models/Festival.js';
 import { deleteStoredAssets, deleteReplacedAssets } from '../../../services/storage.service.js';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
@@ -19,14 +19,68 @@ const asArray = (value) => (Array.isArray(value) ? value : []);
  * does not install — so a lean query drops them and the UI sees undefined.
  * Deriving here keeps the reads lean and the values honest.
  */
-const withTicketCounts = (festival) => ({
-  ...festival,
-  ticketCategories: asArray(festival.ticketCategories).map((c) => {
+const withTicketCounts = (festival) => {
+  const ticketCategories = asArray(festival.ticketCategories).map((c) => {
     const remainingTickets = Math.max(0, (c.totalTickets || 0) - (c.soldTickets || 0));
     return { ...c, remainingTickets, isSoldOut: remainingTickets <= 0 };
-  }),
-});
+  });
+
+  const window = bookingWindow(festival);
+
+  return {
+    ...festival,
+    ticketCategories,
+    // Seat totals across every category, so a list card does not have to sum
+    // them itself and get a different answer than the detail page.
+    seats: ticketCategories.reduce(
+      (sum, c) => ({
+        total: sum.total + (c.totalTickets || 0),
+        booked: sum.booked + (c.soldTickets || 0),
+        available: sum.available + c.remainingTickets,
+      }),
+      { total: 0, booked: 0, available: 0 },
+    ),
+    status: festivalStatus(festival),
+    // The screen renders the same verdict the server will enforce.
+    bookingOpen: window.isOpen,
+    bookingClosedReason: window.reason,
+    /**
+     * The resolved window — `closesAt` here may be the festival's end date
+     * standing in for an unset close date. Kept separate from the stored
+     * `bookingOpensAt`/`bookingClosesAt` above, which are what the admin form
+     * edits: round-tripping a derived fallback back through the form would
+     * silently turn it into a real, stored deadline.
+     */
+    bookingWindow: {
+      isOpen: window.isOpen,
+      reason: window.reason,
+      opensAt: window.opensAt,
+      closesAt: window.closesAt,
+    },
+  };
+};
 const cleanLines = (value) => asArray(value).map((v) => String(v).trim()).filter(Boolean);
+
+/**
+ * A date field an admin is allowed to clear.
+ *
+ * A field the request never mentioned keeps its stored value; one sent as an
+ * empty string is the admin deliberately removing the date. Collapsing both to
+ * `undefined` — which is what the other fields here do — made a booking window
+ * impossible to unset once saved, because Object.assign ignores undefined and
+ * mongoose then keeps the old value.
+ *
+ * **The clear signal is "", not null.** app.js runs a global `stripNullsDeep`
+ * over every request body, so a JSON null never reaches any controller in this
+ * project. An emptied <input type="datetime-local"> sends "" anyway, so this
+ * costs nothing — but it is worth knowing before spending an afternoon on it.
+ */
+const readEditableDate = (value) => {
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
 const slugify = (value) =>
   String(value || '').toLowerCase().trim()
@@ -62,8 +116,8 @@ const buildDocument = (payload = {}, existing = null) => ({
   name: String(payload.name || '').trim(),
   tagline: String(payload.tagline || '').trim(),
   dates: String(payload.dates || '').trim(),
-  startDate: payload.startDate ? new Date(payload.startDate) : undefined,
-  endDate: payload.endDate ? new Date(payload.endDate) : undefined,
+  startDate: readEditableDate(payload.startDate),
+  endDate: readEditableDate(payload.endDate),
   venue: String(payload.venue || '').trim(),
   location: String(payload.location || '').trim(),
   coordinates: {
@@ -73,6 +127,8 @@ const buildDocument = (payload = {}, existing = null) => ({
   organizer: String(payload.organizer || '').trim(),
   description: String(payload.description || '').trim(),
   highlights: cleanLines(payload.highlights),
+  bookingOpensAt: readEditableDate(payload.bookingOpensAt),
+  bookingClosesAt: readEditableDate(payload.bookingClosesAt),
   heroImage: String(payload.heroImage || '').trim(),
   images: cleanLines(payload.images),
   ticketCategories: asArray(payload.ticketCategories)
@@ -104,7 +160,13 @@ const validate = (payload = {}) => {
   if (!categories.length) return 'Add at least one ticket category';
   for (const [index, c] of categories.entries()) {
     if (!(Number(c.price) >= 0)) return `Ticket ${index + 1} needs a price`;
-    if (!(Number(c.totalTickets) > 0)) return `Ticket ${index + 1} needs an allocation`;
+    if (!(Number(c.totalTickets) > 0)) return `Ticket ${index + 1} needs a seat count`;
+  }
+
+  const opens = readEditableDate(payload.bookingOpensAt) || null;
+  const closes = readEditableDate(payload.bookingClosesAt) || null;
+  if (opens && closes && closes <= opens) {
+    return 'Bookings cannot close before they open';
   }
   return null;
 };

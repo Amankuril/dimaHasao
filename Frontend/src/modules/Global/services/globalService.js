@@ -63,6 +63,8 @@ const globalService = {
   toggleFestival: (id, isActive) => request(festivalApi.patch(`/admin/${id}/active`, { isActive })),
   deleteFestival: (id) => request(festivalApi.delete(`/admin/${id}`)),
   getFestivalBookings: (params = {}) => request(festivalApi.get('/admin/bookings', { params })),
+  /** One festival: seat status per category, plus every booking behind it. */
+  getFestivalSummary: (id, params = {}) => request(festivalApi.get(`/admin/${id}/bookings`, { params })),
   verifyFestivalPass: (qrCode) => request(festivalApi.post('/admin/bookings/verify', { qrCode })),
 
   // Support — one desk for every module's tickets.

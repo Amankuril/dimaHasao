@@ -302,8 +302,12 @@ export const FestivalDetailScreen = () => {
                             Sold Out
                           </span>
                         ) : (
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2 rounded">
-                            {cat.remainingTickets} left
+                          <span className={`text-[10px] font-bold px-2 py-0.2 rounded ${
+                            cat.remainingTickets <= 10
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            {cat.remainingTickets} of {cat.totalTickets} seats left
                           </span>
                         )}
                       </div>
@@ -360,6 +364,16 @@ export const FestivalDetailScreen = () => {
 
       {/* Sticky Bottom Checkout Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E5DDC3] p-3 shadow-lg flex justify-center">
+        {!festival.bookingOpen ? (
+          // The server refuses a sale outside the window, so the bar says why
+          // rather than offering a button that cannot work.
+          <div className="w-full max-w-[430px] text-center py-1.5">
+            <p className="text-xs font-bold text-gray-700">
+              <i className="fa-solid fa-lock text-[10px] mr-1.5 text-gray-400"></i>
+              {festival.bookingClosedReason || 'Booking is closed for this festival'}
+            </p>
+          </div>
+        ) : (
         <div className="w-full max-w-[430px] flex items-center justify-between gap-3">
           <div>
             <span className="text-[10px] text-gray-500 uppercase font-semibold block">
@@ -375,7 +389,7 @@ export const FestivalDetailScreen = () => {
 
           <motion.button
             whileTap={{ scale: 0.94 }}
-            disabled={totalTickets === 0 || submitting}
+            disabled={totalTickets === 0 || submitting || !festival.bookingOpen}
             onClick={handleBookTickets}
             className="bg-[#06381e] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0a4d2b] text-amber-300 text-xs font-bold px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition-colors cursor-pointer"
           >
@@ -392,6 +406,7 @@ export const FestivalDetailScreen = () => {
             )}
           </motion.button>
         </div>
+        )}
       </div>
 
       {/* Confirmation Modal */}

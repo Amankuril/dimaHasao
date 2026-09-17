@@ -11,7 +11,7 @@
  */
 import mongoose from 'mongoose';
 import crypto from 'crypto';
-import Festival from '../models/Festival.js';
+import Festival, { bookingWindow, festivalStatus } from '../models/Festival.js';
 import FestivalBooking from '../models/FestivalBooking.js';
 
 const bookingRef = () => `FS-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -63,7 +63,12 @@ export const getBookingQuote = async (req, res) => {
     const { festivalId, ticketCategoryId, ticketCount } = req.body;
     const count = Math.max(1, Number(ticketCount) || 1);
 
-    const { category } = await loadCategory(festivalId, ticketCategoryId);
+    const { festival, category } = await loadCategory(festivalId, ticketCategoryId);
+
+    const window = bookingWindow(festival);
+    if (!window.isOpen) {
+      return res.status(409).json({ success: false, message: window.reason, bookingOpen: false });
+    }
 
     if (count > category.maxPerBooking) {
       return res.status(400).json({
@@ -88,7 +93,11 @@ export const getBookingQuote = async (req, res) => {
         ...priceTickets(category, count),
         remainingTickets: remaining,
         maxPerBooking: category.maxPerBooking,
+        totalSeats: category.totalTickets,
+        bookedSeats: category.soldTickets,
       },
+      bookingOpen: true,
+      bookingClosesAt: window.closesAt,
     });
   } catch (error) {
     const status = error.statusCode || 500;
@@ -110,6 +119,13 @@ export const createBooking = async (req, res) => {
     const count = Math.max(1, Number(ticketCount) || 1);
 
     const { festival, category } = await loadCategory(festivalId, ticketCategoryId);
+
+    // Checked again here, not only on the quote: a screen left open past the
+    // deadline would otherwise still be able to buy.
+    const window = bookingWindow(festival);
+    if (!window.isOpen) {
+      return res.status(409).json({ success: false, message: window.reason });
+    }
 
     if (count > category.maxPerBooking) {
       return res.status(400).json({
@@ -298,6 +314,118 @@ export const getAdminBookings = async (req, res) => {
   } catch (error) {
     console.error('Get admin festival bookings error:', error);
     res.status(500).json({ success: false, message: 'Failed to load bookings' });
+  }
+};
+
+/**
+ * @route GET /v1/festivals/admin/:id/bookings
+ *
+ * Everything an admin needs on one festival: what each category was configured
+ * with, where those seats have gone, and every booking behind the numbers.
+ *
+ * Seat counts are derived from the bookings rather than read off `soldTickets`
+ * alone. The counter is a single number that cannot say whether a seat is paid
+ * for or merely held by an unpaid booking, and those are very different things
+ * when an admin is deciding whether to release stock. `heldSeats` is the gap.
+ *
+ * Works for a festival that has already ended — that is exactly when someone
+ * needs the attendee list.
+ */
+export const getFestivalBookingSummary = async (req, res) => {
+  try {
+    const festival = await Festival.findById(req.params.id).lean();
+    if (!festival) return res.status(404).json({ success: false, message: 'Festival not found' });
+
+    const { status } = req.query;
+    const match = { festivalId: festival._id };
+    if (status && status !== 'all') match.bookingStatus = status;
+
+    const bookings = await FestivalBooking.find(match)
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name phone email')
+      .lean();
+
+    // Counted over every booking, not the filtered view, so switching the
+    // filter never changes the seat numbers.
+    const all = status && status !== 'all'
+      ? await FestivalBooking.find({ festivalId: festival._id }).select('ticketCategoryId ticketCount bookingStatus paymentStatus totalAmount').lean()
+      : bookings;
+
+    const byCategory = new Map();
+    let paidSeats = 0;
+    let heldSeats = 0;
+    let revenue = 0;
+
+    for (const booking of all) {
+      const key = String(booking.ticketCategoryId);
+      const row = byCategory.get(key) || { paid: 0, held: 0, cancelled: 0, revenue: 0 };
+
+      if (booking.bookingStatus === 'cancelled') {
+        row.cancelled += booking.ticketCount;
+      } else if (booking.paymentStatus === 'paid') {
+        row.paid += booking.ticketCount;
+        row.revenue += booking.totalAmount || 0;
+        paidSeats += booking.ticketCount;
+        revenue += booking.totalAmount || 0;
+      } else {
+        // Booked but not paid — the seat is out of stock without being sold.
+        row.held += booking.ticketCount;
+        heldSeats += booking.ticketCount;
+      }
+      byCategory.set(key, row);
+    }
+
+    const categories = (festival.ticketCategories || []).map((c) => {
+      const counts = byCategory.get(String(c._id)) || { paid: 0, held: 0, cancelled: 0, revenue: 0 };
+      return {
+        _id: c._id,
+        name: c.name,
+        price: c.price,
+        isActive: c.isActive,
+        maxPerBooking: c.maxPerBooking,
+        configuredSeats: c.totalTickets || 0,
+        // soldTickets is the counter the atomic take moves; the rest is what
+        // the bookings say. They should agree, and a mismatch is worth seeing.
+        bookedSeats: c.soldTickets || 0,
+        paidSeats: counts.paid,
+        heldSeats: counts.held,
+        cancelledSeats: counts.cancelled,
+        availableSeats: Math.max(0, (c.totalTickets || 0) - (c.soldTickets || 0)),
+        revenue: counts.revenue,
+      };
+    });
+
+    res.json({
+      success: true,
+      festival: {
+        _id: festival._id,
+        name: festival.name,
+        dates: festival.dates,
+        venue: festival.venue,
+        startDate: festival.startDate,
+        endDate: festival.endDate,
+        heroImage: festival.heroImage,
+        isActive: festival.isActive,
+        status: festivalStatus(festival),
+        bookingOpensAt: festival.bookingOpensAt,
+        bookingClosesAt: festival.bookingClosesAt,
+        bookingOpen: bookingWindow(festival).isOpen,
+        bookingClosedReason: bookingWindow(festival).reason,
+      },
+      categories,
+      totals: {
+        configuredSeats: categories.reduce((n, c) => n + c.configuredSeats, 0),
+        availableSeats: categories.reduce((n, c) => n + c.availableSeats, 0),
+        paidSeats,
+        heldSeats,
+        revenue,
+        bookings: all.length,
+      },
+      bookings,
+    });
+  } catch (error) {
+    console.error('Festival booking summary error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load this festival' });
   }
 };
 
