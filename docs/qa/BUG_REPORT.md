@@ -263,7 +263,7 @@ replies from either side.
 
 | Issue | Module | Severity | Note |
 | --- | --- | --- | --- |
-| Ride fares are dictated by the client | Taxi | **Critical** | `createRide` stores whatever `fare` arrives; ₹1 accepted for a 50 km trip. No server-side fare computation exists and no `SetPrice` rows are configured. Needs a pricing engine, not a patch. |
+| ~~Ride fares are dictated by the client~~ | Taxi | ~~Critical~~ | **Fixed** — `fareService` prices from the `SetPrice` tariff, `POST /v1/taxi/rides/fare-estimate` quotes it, and `createRide` refuses a fare that does not match. Inactive until a tariff exists; `scripts/seed-taxi-tariffs.js` creates them and `TAXI_ENFORCE_FARE=true` refuses unpriced vehicles outright. |
 | ~~Upload deletion is not ownership-scoped~~ | Uploads | ~~High~~ | **Fixed** — assets now record their uploader; deletion is the uploader or an admin. |
 | ~~Bank details self-verify~~ | Hotel | ~~Medium~~ | **Fixed** — details start unverified and withdrawals wait for an admin to confirm them. |
 | `USE_DEFAULT_OTP=true` in production | Platform | **Critical** | OTP `1234` signs in as anyone. Left in place at the owner's explicit direction. |

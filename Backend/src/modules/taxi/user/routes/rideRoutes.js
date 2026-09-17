@@ -12,6 +12,7 @@ import {
   cancelRide,
   createRazorpayRideTipOrder,
   createRide,
+  estimateRideFare,
   getRideBids,
   getRideAppTipSettings,
   getMyActiveRide,
@@ -28,6 +29,8 @@ import {
 
 export const rideRouter = Router();
 
+// Priced by the server, and the booking below is checked against this.
+rideRouter.post('/fare-estimate', authenticate(['user']), asyncHandler(estimateRideFare));
 rideRouter.post('/', authenticate(['user']), rideCreationRateLimit, asyncHandler(createRide));
 rideRouter.get('/', authenticate(['user', 'driver']), asyncHandler(listMyRides));
 rideRouter.get('/app-settings/tip', asyncHandler(getRideAppTipSettings));

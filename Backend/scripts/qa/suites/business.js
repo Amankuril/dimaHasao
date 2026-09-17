@@ -184,5 +184,49 @@ export const run = async ({ primary, secondary, admin }) => {
     }
   }
 
+  /* ---------- taxi fares are the server's, not the caller's ---------- */
+  const vehicles = await get('/taxi/users/vehicle-types').catch(() => null);
+  const vehicleTypeId = vehicles?.body?.data?.[0]?._id
+    || vehicles?.body?.data?.results?.[0]?._id
+    || null;
+
+  if (!vehicleTypeId) {
+    blocked('BIZ-150', 'taxi fare is priced by the server', 'no vehicle type available to quote');
+  } else {
+    const estimate = await post('/taxi/rides/fare-estimate', {
+      token: primary.token,
+      body: { vehicleTypeId, estimatedDistanceMeters: 50000, estimatedDurationMinutes: 90 },
+    });
+
+    check('BIZ-150', 'the server will quote a fare', estimate.status === 200, {
+      expected: '200', actual: estimate.status, severity: SEVERITY.HIGH,
+    });
+
+    if (!estimate.body?.data?.priced) {
+      // Enforcement needs a tariff; without one the platform says so plainly
+      // and the submitted fare stands, which is the documented fallback.
+      blocked('BIZ-151', 'a fare below the tariff is refused',
+        'no tariff configured for this vehicle — enforcement is inactive until one exists');
+    } else {
+      const quoted = estimate.body.data.total;
+      const underpriced = await post('/taxi/rides', {
+        token: primary.token,
+        body: {
+          pickup: [93.0167, 25.1667], drop: [93.5, 25.5],
+          pickupAddress: 'QA pickup', dropAddress: 'QA drop',
+          fare: 1, estimatedDistanceMeters: 50000, estimatedDurationMinutes: 90,
+          vehicleTypeId, paymentMethod: 'cash',
+        },
+      });
+      check('BIZ-151', 'a fare below the tariff is refused', underpriced.status >= 400, {
+        expected: `4xx (tariff says about ₹${quoted})`, actual: underpriced.status, severity: SEVERITY.CRITICAL,
+      });
+      const rideId = underpriced.body?.data?.ride?._id || underpriced.body?.data?._id;
+      if (rideId) {
+        await patch(`/taxi/rides/${rideId}/cancel`, { token: primary.token, body: { reason: 'QA cleanup' } });
+      }
+    }
+  }
+
   for (const undo of cleanup) { try { await undo(); } catch { /* best effort */ } }
 };

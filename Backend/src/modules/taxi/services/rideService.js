@@ -19,6 +19,9 @@ import { consumeUserSubscriptionRide, resolveApplicableUserSubscription } from '
 import { applyPromoToRideInTransaction } from './promoService.js';
 import { getTipSettings } from './appSettingsService.js';
 import { getBidRideSettings } from './transportSettingsService.js';
+// Pure helpers; fareService imports resolveSetPriceForRide from here, and this
+// direction of the cycle only needs functions that touch no module state.
+import { fareFromTariff, fareWithinTolerance } from './fareService.js';
 
 const clearUserActiveRideIfPresent = async (user) => {
   if (!user?.currentRideId) {
@@ -944,6 +947,42 @@ export const createRideRecord = async ({
     transportType: normalizedTransportType,
     vehicleTypeId: primaryVehicleTypeId,
   });
+  /*
+   * The fare is the server's, not the caller's.
+   *
+   * The submitted figure used to be stored as given, checked only for being a
+   * non-negative number — a 50 km trip could be booked for ₹1. The tariff was
+   * already resolved right above this, for payment methods; it is read here for
+   * the price it was written to hold.
+   *
+   * When no tariff covers this combination the submitted fare stands, because
+   * refusing every ride on a platform with no tariffs configured would take the
+   * module down rather than protect it. That case is logged as the
+   * configuration gap it is, and TAXI_ENFORCE_FARE=true turns it into a refusal
+   * once tariffs exist.
+   */
+  const computedFare = fareFromTariff(pricingRule, {
+    distanceMeters: safeEstimatedDistanceMeters,
+    durationMinutes: safeEstimatedDurationMinutes,
+    outstation: normalizeServiceType(serviceType) === 'intercity',
+  });
+
+  if (computedFare) {
+    if (!fareWithinTolerance(safeFare, computedFare.total)) {
+      throw new ApiError(
+        400,
+        `Fare does not match the tariff for this trip. Expected about ₹${computedFare.total}.`,
+      );
+    }
+  } else if (String(process.env.TAXI_ENFORCE_FARE || '').toLowerCase() === 'true') {
+    throw new ApiError(422, 'No fare is configured for this vehicle and route. Please contact support.');
+  } else {
+    console.warn(
+      '[taxi] no tariff resolved for this ride — the submitted fare was accepted unchecked.',
+      { vehicleTypeId: String(primaryVehicleTypeId || ''), transportType: normalizedTransportType },
+    );
+  }
+
   const normalizedPaymentMethod = normalizeRidePaymentMethod(paymentMethod);
   const resolvedRequestedPaymentMethod = allowedPaymentMethods.includes(normalizedPaymentMethod)
     ? normalizedPaymentMethod

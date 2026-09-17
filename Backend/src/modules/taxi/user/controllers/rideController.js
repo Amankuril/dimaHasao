@@ -36,6 +36,7 @@ import { matchDrivers } from '../../services/matchingService.js';
 import { Ride } from '../models/Ride.js';
 import { UserWallet } from '../models/UserWallet.js';
 import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
+import { quoteRideFare } from '../../services/fareService.js';
 
 const EARTH_RADIUS_METERS = 6371000;
 const AVERAGE_CITY_SPEED_KMPH = 24;
@@ -294,6 +295,48 @@ const razorpayRequest = async ({ method, path, body, keyId, keySecret }) => {
   }
 
   return payload;
+};
+
+/**
+ * @route POST /v1/taxi/rides/fare-estimate
+ *
+ * What this trip will cost, before anyone commits to it.
+ *
+ * The app needs a number to show, and until now it computed one itself and sent
+ * it back as the fare. This is the same calculation the booking then checks
+ * against, so what the rider is quoted is what they are charged — the shape
+ * hotel, tours and festivals already use.
+ */
+export const estimateRideFare = async (req, res) => {
+  const {
+    vehicleTypeId, vehicleTypeIds, estimatedDistanceMeters, estimatedDurationMinutes,
+    serviceType, transport_type, zone_id, service_location_id,
+  } = req.body;
+
+  const resolvedVehicleTypeId = vehicleTypeId || (Array.isArray(vehicleTypeIds) ? vehicleTypeIds[0] : null);
+  if (!resolvedVehicleTypeId) {
+    throw new ApiError(400, 'vehicleTypeId is required');
+  }
+
+  const quote = await quoteRideFare({
+    vehicleTypeId: resolvedVehicleTypeId,
+    zoneId: zone_id || null,
+    serviceLocationId: service_location_id || null,
+    transportType: transport_type || 'taxi',
+    distanceMeters: Number(estimatedDistanceMeters || 0),
+    durationMinutes: Number(estimatedDurationMinutes || 0),
+    serviceType,
+  });
+
+  if (!quote) {
+    // Saying so plainly beats returning a number nobody configured.
+    return res.status(200).json({
+      success: true,
+      data: { priced: false, message: 'No fare is configured for this vehicle and route yet.' },
+    });
+  }
+
+  return res.status(200).json({ success: true, data: { priced: true, ...quote } });
 };
 
 export const createRide = async (req, res) => {
