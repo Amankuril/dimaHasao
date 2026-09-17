@@ -137,7 +137,6 @@ const ArchivedAccounts = lazy(() => import("@food/pages/admin/system/ArchivedAcc
 const RestaurantSettings = lazy(() => import("@food/pages/admin/restaurant/RestaurantSettings"));
 const EditRestaurant = lazy(() => import("@food/pages/admin/restaurant/EditRestaurant"));
 const AdminLogin = lazy(() => import("@food/pages/admin/auth/AdminLogin"));
-const AdminSignup = lazy(() => import("@food/pages/admin/auth/AdminSignup"));
 const AdminForgotPassword = lazy(() => import("@food/pages/admin/auth/AdminForgotPassword"));
 
 export default function AdminRouter() {
@@ -149,7 +148,13 @@ export default function AdminRouter() {
         {/* Admin Auth Routes */}
         <Route path="login" element={<AuthRedirect module="admin"><AdminLogin /></AuthRedirect>} />
         <Route path="forgot-password" element={<AuthRedirect module="admin"><AdminForgotPassword /></AuthRedirect>} />
-        <Route path="signup" element={<AuthRedirect module="admin"><AdminSignup /></AuthRedirect>} />
+        {/* Self-serve admin signup is gone. It never worked — the screen called
+            adminAPI.signupWithOTP, which does not exist, and there was no
+            backend route behind it. An administrator is created by a platform
+            superadmin in Global > Administrators, which is also the right
+            security posture. The path redirects so an old bookmark still lands
+            somewhere sensible. */}
+        <Route path="signup" element={<Navigate to="/admin/login" replace />} />
 
         {/* Protected Routes - With Layout */}
         <Route

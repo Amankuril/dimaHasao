@@ -45,7 +45,6 @@ const RestaurantGlobalNotificationListenerInner = lazy(() =>
 // Admin Module
 const AdminRouter = lazy(() => import("@food/components/admin/AdminRouter"))
 const AdminLogin = lazy(() => import("@food/pages/admin/auth/AdminLogin"))
-const AdminSignup = lazy(() => import("@food/pages/admin/auth/AdminSignup"))
 const AdminForgotPassword = lazy(() => import("@food/pages/admin/auth/AdminForgotPassword"))
 
 // Delivery Module
