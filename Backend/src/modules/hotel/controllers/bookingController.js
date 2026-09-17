@@ -8,7 +8,11 @@ import { buildInvoice } from '../services/invoiceService.js';
 import AvailabilityLedger from '../models/AvailabilityLedger.js';
 import Wallet from '../models/Wallet.js';
 import Transaction from '../models/Transaction.js';
-import Razorpay from 'razorpay';
+// The shared client, not the razorpay package: this file called
+// getRazorpayClient() without importing it, so every online booking died with
+// a ReferenceError and returned "Failed to initiate payment gateway". The same
+// miss was already fixed in walletController and paymentController.
+import { getRazorpayClient, getRazorpayKeyId } from '../../../core/payments/razorpay.service.js';
 import PaymentConfig from '../config/payment.config.js';
 import mongoose from 'mongoose';
 import emailService from '../services/emailService.js';
@@ -191,8 +195,17 @@ export const createBooking = async (req, res) => {
 
     const bookingId = `BK-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    // Determine User Model based on mongoose document model name
-    const userModel = req.user.constructor.modelName;
+    /*
+     * Which model the booking's `userId` points at.
+     *
+     * Hotel's User is a shim over the platform's FoodUser, so a consumer now
+     * reports its model name as 'FoodUser' — a value this schema's enum does
+     * not allow, which failed every booking with a validation error. Both names
+     * are registered against the same `users` collection (see
+     * core/users/user.model.js), so a consumer is recorded as 'User', which is
+     * what the enum and every existing booking already use.
+     */
+    const userModel = req.user.constructor.modelName === 'Partner' ? 'Partner' : 'User';
 
     // Create Booking Object
     const booking = new Booking({
@@ -446,7 +459,7 @@ export const createBooking = async (req, res) => {
       booking: populatedBooking,
       paymentRequired: !!razorpayOrder,
       order: razorpayOrder,
-      key: PaymentConfig.razorpayKeyId
+      key: getRazorpayKeyId() || PaymentConfig.razorpayKeyId
     });
   } catch (error) {
     // quoteStay raises the "no rooms left" / "bad dates" cases with a
