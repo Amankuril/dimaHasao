@@ -64,6 +64,13 @@ const globalService = {
   deleteFestival: (id) => request(festivalApi.delete(`/admin/${id}`)),
   getFestivalBookings: (params = {}) => request(festivalApi.get('/admin/bookings', { params })),
   verifyFestivalPass: (qrCode) => request(festivalApi.post('/admin/bookings/verify', { qrCode })),
+
+  // Support — one desk for every module's tickets.
+  getSupportTickets: (params = {}) => request(api.get('/support', { params })),
+  getSupportStats: () => request(api.get('/support/stats')),
+  getSupportTicket: (id) => request(api.get(`/support/${id}`)),
+  updateSupportTicket: (id, payload) => request(api.patch(`/support/${id}`, payload)),
+  replySupportTicket: (id, message) => request(api.post(`/support/${id}/messages`, { message })),
 };
 
 export default globalService;

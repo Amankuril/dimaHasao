@@ -1,17 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
+import { raiseSupportTicket, fetchMySupportTickets } from '../services/supportApi';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const HelpSupportScreen = () => {
-  const { showToast } = useBooking();
+  const { user, showToast } = useBooking();
+  const navigate = useNavigate();
 
   const [activeFaq, setActiveFaq] = useState(null);
   const [ticketCategory, setTicketCategory] = useState('Taxi');
   const [complaintText, setComplaintText] = useState('');
   const [isTicketSubmitted, setIsTicketSubmitted] = useState(false);
   const [generatedTicketId, setGeneratedTicketId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [myTickets, setMyTickets] = useState([]);
+
+  // The customer's own history, across every service — the desk files each
+  // ticket under the module they picked, but they see one list.
+  useEffect(() => {
+    if (!user?.isLoggedIn) return;
+    fetchMySupportTickets().then(setMyTickets).catch(() => setMyTickets([]));
+  }, [user?.isLoggedIn, isTicketSubmitted]);
 
   const emergencyHelplines = [
     { title: 'Police Control Room', number: '112', icon: 'fa-solid fa-shield', bg: 'bg-red-600' },
@@ -39,15 +51,37 @@ export const HelpSupportScreen = () => {
     }
   ];
 
-  const handleCreateTicket = (e) => {
+  /**
+   * Raise the ticket on the server.
+   *
+   * This screen used to invent a ticket number in the browser and tell the
+   * customer support had been assigned — nothing was ever sent. The reference
+   * shown now is the one the admin desk sees.
+   */
+  const handleCreateTicket = async (e) => {
     e.preventDefault();
-    if (!complaintText.trim()) return;
+    if (!complaintText.trim() || submitting) return;
 
-    const tId = `DH-TKT-${Math.floor(10000 + Math.random() * 90000)}`;
-    setGeneratedTicketId(tId);
-    setIsTicketSubmitted(true);
-    setComplaintText('');
-    showToast(`Support Ticket ${tId} created. Support team will respond shortly.`);
+    if (!user?.isLoggedIn) {
+      showToast('Please sign in so we can follow up on your ticket');
+      return navigate('/login');
+    }
+
+    try {
+      setSubmitting(true);
+      const { ticket } = await raiseSupportTicket({
+        category: ticketCategory,
+        description: complaintText.trim(),
+      });
+      setGeneratedTicketId(ticket.ticketCode);
+      setIsTicketSubmitted(true);
+      setComplaintText('');
+      showToast(`Support ticket ${ticket.ticketCode} raised`);
+    } catch (error) {
+      showToast(error?.response?.data?.message || 'We could not raise that ticket. Try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -136,9 +170,10 @@ export const HelpSupportScreen = () => {
             <motion.button
               whileTap={{ scale: 0.95 }}
               type="submit"
-              className="w-full bg-[#06381e] hover:bg-[#0a4d2b] text-amber-300 font-bold text-xs py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              disabled={submitting}
+              className="w-full bg-[#06381e] hover:bg-[#0a4d2b] disabled:opacity-60 text-amber-300 font-bold text-xs py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
-              Submit Ticket
+              {submitting ? 'Sending…' : 'Submit Ticket'}
             </motion.button>
           </form>
 
@@ -149,11 +184,51 @@ export const HelpSupportScreen = () => {
                 <span>Ticket Generated: {generatedTicketId}</span>
               </span>
               <p className="text-[11px] text-gray-600">
-                A customer support executive has been assigned. You will receive an SMS update on your registered phone.
+                Our support team can see this now. Quote the reference above if you call us.
               </p>
             </div>
           )}
         </div>
+
+        {/* The customer's own tickets */}
+        {myTickets.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-xs border border-[#E5DDC3] space-y-3">
+            <h3 className="font-montserrat font-bold text-sm text-gray-900 flex items-center gap-2">
+              <i className="fa-solid fa-clock-rotate-left text-emerald-800"></i>
+              <span>Your Tickets</span>
+            </h3>
+
+            <div className="space-y-2">
+              {myTickets.map((ticket) => {
+                const done = ['resolved', 'closed'].includes(ticket.status);
+                const reply = [...(ticket.messages || [])].reverse()
+                  .find((m) => m.senderRole === 'admin');
+                return (
+                  <div key={ticket._id} className="rounded-xl border border-[#E5DDC3]/80 bg-[#FAF6ED]/40 p-3 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-black tracking-wide text-emerald-950">
+                        {ticket.ticketCode}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                        done ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {done ? 'Resolved' : 'In progress'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-600 leading-snug line-clamp-2">
+                      {ticket.description}
+                    </p>
+                    {reply && (
+                      <p className="text-[11px] text-emerald-900 bg-emerald-50 rounded-lg p-2 leading-snug">
+                        <span className="font-bold">Support: </span>{reply.message}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* FAQs */}
         <div className="bg-white rounded-2xl p-4 shadow-xs border border-[#E5DDC3] space-y-3">

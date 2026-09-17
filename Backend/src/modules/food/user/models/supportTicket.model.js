@@ -1,19 +1,25 @@
 import mongoose from 'mongoose';
+import { defineSupportTicketType } from '../../../../core/support/supportTicket.model.js';
 
-const supportTicketSchema = new mongoose.Schema(
-    {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodUser', required: true, index: true },
-        type: { type: String, enum: ['order', 'restaurant', 'other'], required: true },
-        orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodOrder', default: null },
-        restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodRestaurant', default: null },
-        issueType: { type: String, required: true, trim: true },
-        description: { type: String, default: '', trim: true },
-        status: { type: String, enum: ['open', 'in-progress', 'resolved'], default: 'open', index: true },
-        adminResponse: { type: String, default: '' }
-    },
-    { collection: 'food_support_tickets', timestamps: true }
+/**
+ * A customer's food ticket.
+ *
+ * Kept as a model of its own so every existing caller and query still works,
+ * but it is now a discriminator on the platform-wide `SupportTicket` — same
+ * filename, same export, same scoped results, one collection behind it.
+ * See core/support/supportTicket.model.js.
+ */
+export const FoodSupportTicket = defineSupportTicketType(
+  'FoodSupportTicket',
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodUser', required: true, index: true },
+    type: { type: String, enum: ['order', 'restaurant', 'other'], required: true },
+    issueType: { type: String, required: true, trim: true },
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodOrder', default: null },
+    restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodRestaurant', default: null },
+  },
+  { module: 'food', requesterRole: 'user' },
+  'userId',
 );
 
-supportTicketSchema.index({ userId: 1, createdAt: -1 });
-
-export const FoodSupportTicket = mongoose.model('FoodSupportTicket', supportTicketSchema);
+export default FoodSupportTicket;

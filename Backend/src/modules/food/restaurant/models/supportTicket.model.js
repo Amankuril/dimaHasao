@@ -1,33 +1,29 @@
 import mongoose from 'mongoose';
+import { defineSupportTicketType } from '../../../../core/support/supportTicket.model.js';
 
-const restaurantSupportTicketSchema = new mongoose.Schema(
-    {
-        restaurantId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'FoodRestaurant',
-            required: true,
-            index: true
-        },
-        category: {
-            type: String,
-            enum: ['orders', 'payments', 'menu', 'restaurant', 'technical', 'other'],
-            required: true
-        },
-        issueType: { type: String, required: true, trim: true },
-        subject: { type: String, default: '', trim: true },
-        description: { type: String, default: '', trim: true },
-        orderRef: { type: String, default: '', trim: true },
-        priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium', index: true },
-        status: { type: String, enum: ['open', 'in-progress', 'resolved'], default: 'open', index: true },
-        adminResponse: { type: String, default: '' }
+/**
+ * A restaurant's ticket. A discriminator on the platform-wide `SupportTicket`;
+ * see core/support/supportTicket.model.js.
+ */
+export const FoodRestaurantSupportTicket = defineSupportTicketType(
+  'FoodRestaurantSupportTicket',
+  {
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'FoodRestaurant',
+      required: true,
+      index: true,
     },
-    { collection: 'food_restaurant_support_tickets', timestamps: true }
+    category: {
+      type: String,
+      enum: ['orders', 'payments', 'menu', 'restaurant', 'technical', 'other'],
+      required: true,
+    },
+    issueType: { type: String, required: true, trim: true },
+    orderRef: { type: String, default: '', trim: true },
+  },
+  { module: 'food', requesterRole: 'restaurant' },
+  'restaurantId',
 );
 
-restaurantSupportTicketSchema.index({ restaurantId: 1, createdAt: -1 });
-restaurantSupportTicketSchema.index({ status: 1, createdAt: -1 });
-
-export const FoodRestaurantSupportTicket = mongoose.model(
-    'FoodRestaurantSupportTicket',
-    restaurantSupportTicketSchema
-);
+export default FoodRestaurantSupportTicket;

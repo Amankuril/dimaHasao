@@ -8,6 +8,7 @@ const AdminLayout = L(() => import('./app/admin/layouts/AdminLayout'));
 const Profile = L(() => import('./app/admin/pages/Profile'));
 const Administrators = L(() => import('./app/admin/pages/Administrators'));
 const Festivals = L(() => import('./app/admin/pages/Festivals'));
+const Support = L(() => import('./app/admin/pages/Support'));
 
 const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden="true" />;
 
@@ -25,6 +26,7 @@ export default function GlobalRoutes() {
             <Route path="profile" element={<Profile />} />
             <Route path="administrators" element={<Administrators />} />
             <Route path="festivals" element={<Festivals />} />
+            <Route path="support" element={<Support />} />
           </Route>
         </Route>
 

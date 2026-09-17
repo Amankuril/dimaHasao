@@ -10,6 +10,13 @@ import {
   updateAdministrator,
   requirePlatformSuperAdmin,
 } from './admin.controller.js';
+import {
+  listAllTickets,
+  getTicketStats,
+  getTicketForAdmin,
+  updateTicketForAdmin,
+  replyAsAdmin,
+} from '../support/support.controller.js';
 
 const router = express.Router();
 
@@ -21,6 +28,15 @@ router.use(authMiddleware, requireAdmin, loadAdmin);
 router.get('/me', getMyAdminProfile);
 router.patch('/me', updateMyAdminProfile);
 router.get('/meta', getAdminMeta);
+
+// The support desk every module's tickets land in. Any admin may work it —
+// narrowing it by module would recreate the four separate inboxes this replaced.
+// '/stats' before '/:id' so it is never read as a ticket id.
+router.get('/support', listAllTickets);
+router.get('/support/stats', getTicketStats);
+router.get('/support/:id', getTicketForAdmin);
+router.patch('/support/:id', updateTicketForAdmin);
+router.post('/support/:id/messages', replyAsAdmin);
 
 // Managing other administrators is platform-superadmin only.
 router.get('/administrators', requirePlatformSuperAdmin, listAdministrators);
