@@ -13,7 +13,7 @@ import TourOperator from '../models/TourOperator.js';
 import ToursSettings from '../models/ToursSettings.js';
 import { quoteBooking } from '../services/pricing.js';
 import { publicPackageMatch } from '../services/package.service.js';
-import { settleBookingAdvance } from '../services/settlement.service.js';
+import { settleBookingAdvance, reverseBookingSettlement } from '../services/settlement.service.js';
 import { resolveOffer, claimOffer } from '../services/offer.service.js';
 import { isRazorpayConfigured } from '../../../core/payments/razorpay.service.js';
 
@@ -291,6 +291,99 @@ export const collectBalance = async (req, res) => {
   } catch (error) {
     console.error('Collect balance error:', error);
     res.status(500).json({ success: false, message: 'Failed to update this booking' });
+  }
+};
+
+/** Trips that have run cannot be cancelled; the rest can, by the right person. */
+const CANCELLABLE = ['pending', 'confirmed'];
+
+/**
+ * Cancel a trip and put the money back where it came from.
+ *
+ * Shared by the traveller's own cancellation and the admin's, because the
+ * bookkeeping is identical whoever pressed the button — only the permission
+ * differs, and that is checked before this is called.
+ */
+const applyCancellation = async (booking, { reason, cancelledBy }) => {
+  const movement = await reverseBookingSettlement(booking);
+
+  booking.bookingStatus = 'cancelled';
+  booking.cancellationReason = reason || 'Cancelled';
+  booking.cancelledAt = new Date();
+  booking.cancelledBy = cancelledBy;
+  // 'refunded' records that money is owed back, not that it has been sent —
+  // the gateway refund is a separate, deliberate step.
+  if (['advance_paid', 'paid'].includes(booking.paymentStatus)) {
+    booking.paymentStatus = 'refunded';
+  }
+  await booking.save();
+
+  return { booking, movement };
+};
+
+/**
+ * @route POST /v1/tours/bookings/:id/cancel
+ *
+ * The traveller's own cancellation. Hotel and festivals both had one; tours
+ * did not, so a traveller who could no longer go had no way to say so and the
+ * operator kept a seat held against a trip nobody was coming to.
+ */
+export const cancelBooking = async (req, res) => {
+  try {
+    const booking = await TourBooking.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+
+    if (booking.bookingStatus === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'This booking is already cancelled' });
+    }
+    if (!CANCELLABLE.includes(booking.bookingStatus)) {
+      return res.status(409).json({
+        success: false,
+        message: `A booking that is ${booking.bookingStatus} cannot be cancelled`,
+      });
+    }
+
+    const { booking: cancelled, movement } = await applyCancellation(booking, {
+      reason: req.body?.reason,
+      cancelledBy: 'user',
+    });
+
+    res.json({
+      success: true,
+      message: cancelled.paymentStatus === 'refunded'
+        ? 'Trip cancelled. Any amount paid will be refunded to you.'
+        : 'Trip cancelled.',
+      booking: cancelled,
+      walletMovement: movement,
+    });
+  } catch (error) {
+    console.error('Cancel tour booking error:', error);
+    res.status(500).json({ success: false, message: 'Could not cancel this booking' });
+  }
+};
+
+/**
+ * @route POST /v1/tours/admin/bookings/:id/cancel
+ * The same thing, for any booking, when support has to do it for someone.
+ */
+export const cancelBookingAsAdmin = async (req, res) => {
+  try {
+    const booking = await TourBooking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+
+    if (booking.bookingStatus === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'This booking is already cancelled' });
+    }
+
+    const { booking: cancelled, movement } = await applyCancellation(booking, {
+      reason: req.body?.reason || 'Cancelled by support',
+      cancelledBy: 'admin',
+    });
+
+    res.json({ success: true, message: 'Booking cancelled', booking: cancelled, walletMovement: movement });
+  } catch (error) {
+    console.error('Admin cancel tour booking error:', error);
+    res.status(500).json({ success: false, message: 'Could not cancel this booking' });
   }
 };
 

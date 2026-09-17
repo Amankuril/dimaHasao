@@ -3,6 +3,7 @@ import { protect, optionalProtect, authorizedRoles } from '../middlewares/authMi
 import {
   getBookingQuote,
   createBooking,
+  cancelBooking,
   settleAdvance,
   collectBalance,
   getMyBookings,
@@ -23,6 +24,8 @@ router.get('/operator', protect, authorizedRoles('operator'), getOperatorBooking
 
 router.post('/', protect, createBooking);
 router.post('/:id/settle', protect, settleAdvance);
+// The traveller's own cancellation — hotel and festivals both had one.
+router.post('/:id/cancel', protect, cancelBooking);
 router.patch('/:id/collect-balance', protect, authorizedRoles('operator'), collectBalance);
 router.patch('/:id/status', protect, authorizedRoles('operator'), updateBookingStatus);
 

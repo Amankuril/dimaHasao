@@ -482,6 +482,47 @@ export const cancelBooking = async (req, res) => {
  * Admin
  * ------------------------------------------------------------------ */
 
+/**
+ * @route POST /v1/festivals/admin/bookings/:id/cancel
+ *
+ * Support cancelling a pass on someone's behalf. The guest could already do
+ * this for themselves; nobody could do it for them, so a pass bought in error
+ * held its seat until the festival was over.
+ *
+ * The seats go back the same way a guest cancellation returns them.
+ */
+export const cancelBookingAsAdmin = async (req, res) => {
+  try {
+    const booking = await FestivalBooking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+
+    if (booking.bookingStatus === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'This booking is already cancelled' });
+    }
+    if (booking.bookingStatus === 'used') {
+      return res.status(409).json({ success: false, message: 'This pass has already been used at the gate' });
+    }
+
+    await releaseHold(booking);
+
+    booking.bookingStatus = 'cancelled';
+    booking.cancelledAt = new Date();
+    booking.cancellationReason = req.body?.reason || 'Cancelled by support';
+    // Records that money is owed back, not that it has been sent.
+    if (booking.paymentStatus === 'paid') booking.paymentStatus = 'refunded';
+    await booking.save();
+
+    res.json({
+      success: true,
+      message: `Cancelled. ${booking.ticketCount} seat(s) returned to ${booking.ticketCategoryName}.`,
+      booking,
+    });
+  } catch (error) {
+    console.error('Admin cancel festival booking error:', error);
+    res.status(500).json({ success: false, message: 'Could not cancel this booking' });
+  }
+};
+
 /** @route GET /v1/festivals/admin/bookings */
 export const getAdminBookings = async (req, res) => {
   try {

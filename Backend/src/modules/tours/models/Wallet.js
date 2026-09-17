@@ -39,7 +39,7 @@ const ALLOW_OVERDRAFT = new Set(['commission_deduction', 'no_show_penalty', 'ref
 
 const writeTransaction = async (wallet, { type, category, amount, description, reference, metadata }) => {
   const ToursTransaction = mongoose.model('ToursTransaction');
-  await ToursTransaction.create({
+  return ToursTransaction.create({
     walletId: wallet._id,
     ownerId: wallet.ownerId,
     modelType: wallet.modelType,
@@ -54,13 +54,48 @@ const writeTransaction = async (wallet, { type, category, amount, description, r
   });
 };
 
+/*
+ * Balance and ledger move together, ledger first.
+ *
+ * These used to save the balance and *then* write the transaction, so a
+ * transaction that failed to write — a category outside the enum was enough —
+ * left the money moved with nothing recording it. Of the two ways this can
+ * half-fail, a ledger entry without a balance change is the recoverable one;
+ * a balance change without a ledger entry is money moving invisibly.
+ *
+ * Writing the ledger first and rolling it back if the balance will not save
+ * keeps the worse direction closed. A proper multi-document transaction would
+ * close both, and is the right answer if this ever runs somewhere the two can
+ * diverge under load.
+ */
+const applyMovement = async (wallet, mutate, entry) => {
+  const snapshot = {
+    balance: wallet.balance,
+    totalEarnings: wallet.totalEarnings,
+    totalWithdrawals: wallet.totalWithdrawals,
+    lastTransactionAt: wallet.lastTransactionAt,
+  };
+
+  mutate();
+  wallet.lastTransactionAt = new Date();
+
+  const transaction = await writeTransaction(wallet, entry);
+  try {
+    await wallet.save();
+  } catch (error) {
+    // The balance never landed, so the ledger entry describing it must not stand.
+    Object.assign(wallet, snapshot);
+    await transaction.deleteOne().catch(() => {});
+    throw error;
+  }
+  return wallet;
+};
+
 walletSchema.methods.credit = async function (amount, description, reference, category = 'booking_payment', metadata = {}) {
-  this.balance += amount;
-  if (!NON_EARNING.has(category)) this.totalEarnings += amount;
-  this.lastTransactionAt = new Date();
-  await this.save();
-  await writeTransaction(this, { type: 'credit', category, amount, description, reference, metadata });
-  return this;
+  return applyMovement(this, () => {
+    this.balance += amount;
+    if (!NON_EARNING.has(category)) this.totalEarnings += amount;
+  }, { type: 'credit', category, amount, description, reference, metadata });
 };
 
 walletSchema.methods.debit = async function (amount, description, reference, category = 'withdrawal', metadata = {}) {
@@ -68,13 +103,11 @@ walletSchema.methods.debit = async function (amount, description, reference, cat
     throw new Error('Insufficient balance');
   }
 
-  this.balance -= amount;
-  if (category === 'withdrawal') this.totalWithdrawals += amount;
-  if (category === 'refund_deduction' || category === 'no_show_penalty') this.totalEarnings -= amount;
-  this.lastTransactionAt = new Date();
-  await this.save();
-  await writeTransaction(this, { type: 'debit', category, amount, description, reference, metadata });
-  return this;
+  return applyMovement(this, () => {
+    this.balance -= amount;
+    if (category === 'withdrawal') this.totalWithdrawals += amount;
+    if (category === 'refund_deduction' || category === 'no_show_penalty') this.totalEarnings -= amount;
+  }, { type: 'debit', category, amount, description, reference, metadata });
 };
 
 /** The operator's wallet, created on first use so callers never have to check. */

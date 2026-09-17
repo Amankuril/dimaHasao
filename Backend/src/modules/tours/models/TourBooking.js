@@ -74,6 +74,8 @@ const tourBookingSchema = new mongoose.Schema({
   },
   cancellationReason: { type: String, trim: true },
   cancelledAt: { type: Date },
+  /** Who ended it — the traveller themselves, or support on their behalf. */
+  cancelledBy: { type: String, enum: ['user', 'admin', 'operator'], default: null },
 
   createdBy: { type: String, enum: ['user', 'admin'], default: 'user' },
 }, { timestamps: true });

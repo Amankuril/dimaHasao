@@ -15,6 +15,7 @@ import {
   getSettings,
   updateSettings,
 } from '../controllers/adminController.js';
+import { cancelBookingAsAdmin } from '../controllers/bookingController.js';
 import { getAdminReviews, updateReviewStatus } from '../controllers/reviewController.js';
 import {
   getAdminOffers,
@@ -51,6 +52,7 @@ router.post('/packages', createPackageForOperator);
 router.patch('/packages/:id/status', updatePackageStatus);
 
 router.get('/bookings', getAdminBookings);
+router.post('/bookings/:id/cancel', cancelBookingAsAdmin);
 
 router.get('/destinations', getAdminDestinations);
 router.post('/destinations', createDestination);

@@ -72,4 +72,58 @@ export const settleBookingAdvance = async (booking, { paymentId, paymentMethod }
   };
 };
 
-export default { settleBookingAdvance };
+/**
+ * Undo what `settleBookingAdvance` moved, when a booking is cancelled.
+ *
+ * Whatever direction the settlement went, the reversal goes the other way by
+ * the same amount: an operator credited their share gives it back, and one
+ * debited the platform's shortfall has it returned. Reading the movement from
+ * the same `settlementSplit` the settlement used keeps the two in step — a
+ * reversal that recomputed the split its own way is how wallets drift.
+ *
+ * Returning the customer's money through the gateway is deliberately not done
+ * here. That is a Razorpay refund against a captured payment, with its own
+ * failure modes and its own audit trail, and it should be an explicit step
+ * rather than a side effect of cancelling.
+ *
+ * @returns {Promise<{direction: string, amount: number, walletBalance: number}|null>}
+ */
+export const reverseBookingSettlement = async (booking) => {
+  // Nothing was ever settled, so there is nothing to give back.
+  if (!['advance_paid', 'paid'].includes(booking.paymentStatus)) return null;
+
+  const split = settlementSplit(booking);
+  if (!split.amount) return null;
+
+  const wallet = await ToursWallet.forOperator(booking.operatorId);
+  const reference = booking.bookingId;
+
+  if (split.direction === 'credit') {
+    // The operator was given their share; cancelling takes it back.
+    await wallet.debit(
+      split.amount,
+      `Cancelled — advance returned for ${reference}`,
+      reference,
+      'refund_deduction',
+      { bookingId: reference },
+    );
+  } else {
+    // The platform had recovered its cut from the wallet; cancelling returns it.
+    await wallet.credit(
+      split.amount,
+      `Cancelled — commission and tax returned for ${reference}`,
+      reference,
+      'cancellation_refund',
+      { bookingId: reference },
+    );
+  }
+
+  return {
+    // The opposite of whichever way the settlement went.
+    direction: split.direction === 'credit' ? 'debit' : 'credit',
+    amount: split.amount,
+    walletBalance: wallet.balance,
+  };
+};
+
+export default { settleBookingAdvance, reverseBookingSettlement };

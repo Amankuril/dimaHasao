@@ -71,31 +71,54 @@ walletSchema.pre('save', async function () {
 });
 
 // Methods
-walletSchema.methods.credit = async function (amount, description, reference, type = 'booking_payment') {
-  this.balance += amount;
-  // Only add to totalEarnings for actual earnings (bookings), not topups or refunds
-  if (type !== 'topup' && type !== 'refund' && type !== 'commission_refund') {
-    this.totalEarnings += amount;
-  }
-  this.lastTransactionAt = new Date();
-  await this.save();
 
-  // Create transaction record
+/*
+ * Balance and ledger move together, ledger first.
+ *
+ * Both methods below used to save the balance and *then* write the transaction,
+ * so a transaction that failed to write left the money moved with nothing
+ * recording it. Of the two ways this can half-fail, a ledger entry without a
+ * balance change is recoverable; a balance change without one is money moving
+ * invisibly. Tours' wallet carries the same guard for the same reason.
+ */
+const applyMovement = async (wallet, mutate, entry) => {
+  const snapshot = {
+    balance: wallet.balance,
+    totalEarnings: wallet.totalEarnings,
+    totalWithdrawals: wallet.totalWithdrawals,
+    lastTransactionAt: wallet.lastTransactionAt,
+  };
+
+  mutate();
+  wallet.lastTransactionAt = new Date();
+
   const Transaction = mongoose.model('HotelTransaction');
-  await Transaction.create({
-    walletId: this._id,
-    partnerId: this.partnerId,
-    modelType: this.modelType,
-    type: 'credit',
-    category: type,
-    amount,
-    balanceAfter: this.balance,
-    description,
-    reference,
-    status: 'completed'
+  const transaction = await Transaction.create({
+    walletId: wallet._id,
+    partnerId: wallet.partnerId,
+    modelType: wallet.modelType,
+    balanceAfter: wallet.balance,
+    status: 'completed',
+    ...entry,
   });
 
-  return this;
+  try {
+    await wallet.save();
+  } catch (error) {
+    Object.assign(wallet, snapshot);
+    await transaction.deleteOne().catch(() => {});
+    throw error;
+  }
+  return wallet;
+};
+walletSchema.methods.credit = async function (amount, description, reference, type = 'booking_payment') {
+  return applyMovement(this, () => {
+    this.balance += amount;
+    // Only add to totalEarnings for actual earnings (bookings), not topups or refunds
+    if (type !== 'topup' && type !== 'refund' && type !== 'commission_refund') {
+      this.totalEarnings += amount;
+    }
+  }, { type: 'credit', category: type, amount, description, reference });
 };
 
 walletSchema.methods.debit = async function (amount, description, reference, type = 'withdrawal') {
@@ -106,35 +129,12 @@ walletSchema.methods.debit = async function (amount, description, reference, typ
     throw new Error('Insufficient balance');
   }
 
-  this.balance -= amount;
-
-  if (type === 'withdrawal') {
-    this.totalWithdrawals += amount;
-  }
-
-  // If we are reversing a booking payment (refund_deduction), we should decrease totalEarnings
-  if (type === 'refund_deduction' || type === 'no_show_penalty') {
-    this.totalEarnings -= amount;
-  }
-
-  this.lastTransactionAt = new Date();
-  await this.save();
-
-  const Transaction = mongoose.model('HotelTransaction');
-  await Transaction.create({
-    walletId: this._id,
-    partnerId: this.partnerId,
-    modelType: this.modelType,
-    type: 'debit',
-    category: type,
-    amount,
-    balanceAfter: this.balance,
-    description,
-    reference,
-    status: 'completed'
-  });
-
-  return this;
+  return applyMovement(this, () => {
+    this.balance -= amount;
+    if (type === 'withdrawal') this.totalWithdrawals += amount;
+    // Reversing a booking payment should decrease totalEarnings too.
+    if (type === 'refund_deduction' || type === 'no_show_penalty') this.totalEarnings -= amount;
+  }, { type: 'debit', category: type, amount, description, reference });
 };
 
 // Indexes
