@@ -1460,3 +1460,60 @@ export const getPropertyAvailability = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to load availability' });
   }
 };
+
+/**
+ * @route PATCH /v1/hotel/admin/wallets/:walletId/bank-details/verify
+ *
+ * Confirm a partner's payout account, or withdraw that confirmation.
+ *
+ * Bank details used to be stored already marked verified, which made the flag
+ * meaningless — it recorded that nobody had checked. A partner's withdrawals
+ * now wait for this, and changing the account resets it, so the confirmation
+ * always applies to the account the money would actually reach.
+ */
+export const verifyWalletBankDetails = async (req, res) => {
+  try {
+    const wallet = await Wallet.findById(req.params.walletId);
+    if (!wallet) return res.status(404).json({ success: false, message: 'Wallet not found' });
+
+    if (!wallet.bankDetails?.accountNumber) {
+      return res.status(400).json({ success: false, message: 'This wallet has no bank details to verify' });
+    }
+
+    const verified = req.body.verified !== false;
+    wallet.bankDetails.verified = verified;
+    wallet.bankDetails.verifiedAt = verified ? new Date() : null;
+    wallet.bankDetails.verifiedBy = verified ? req.user._id : null;
+    await wallet.save();
+
+    res.json({
+      success: true,
+      message: verified ? 'Bank details verified' : 'Verification withdrawn',
+      bankDetails: wallet.bankDetails,
+    });
+  } catch (error) {
+    console.error('Verify Bank Details Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update verification' });
+  }
+};
+
+/**
+ * @route GET /v1/hotel/admin/wallets/pending-verification
+ * Partners waiting on someone to confirm their payout account.
+ */
+export const getWalletsPendingVerification = async (_req, res) => {
+  try {
+    const wallets = await Wallet.find({
+      'bankDetails.accountNumber': { $exists: true, $ne: '' },
+      'bankDetails.verified': { $ne: true },
+    })
+      .populate('partnerId', 'name phone email agencyName')
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    res.json({ success: true, wallets, total: wallets.length });
+  } catch (error) {
+    console.error('Pending Verification Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load pending verifications' });
+  }
+};

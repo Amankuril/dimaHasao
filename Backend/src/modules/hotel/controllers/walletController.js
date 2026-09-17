@@ -260,6 +260,13 @@ export const requestWithdrawal = async (req, res) => {
       });
     }
 
+    // Money only leaves towards an account somebody has confirmed.
+    if (!wallet.bankDetails.verified) {
+      return res.status(400).json({
+        message: 'Your bank details are awaiting verification. Support will confirm them shortly.'
+      });
+    }
+
     // --- RAZORPAY PAYOUT FLOW (Using Direct API Requests via Axios) ---
     // Why? The razorpay-node SDK instance often lacks Payouts resources ('contacts', 'fund_accounts')
     // depending on version/config, leading to "undefined" errors. Direct API is reliable.
@@ -516,12 +523,26 @@ export const updateBankDetails = async (req, res) => {
       });
     }
 
+    /*
+     * New or changed details start unverified.
+     *
+     * This used to set `verified: true` with the note "auto-verify for test
+     * flow" — so the flag said an account had been checked when nothing had
+     * checked it, and a partner could point their payouts at any account and
+     * have the record agree. Verification is an admin action now
+     * (PATCH /hotel/admin/wallets/:walletId/bank-details/verify), and
+     * withdrawals wait for it.
+     *
+     * Changing the account resets the flag, which is the point: the whole
+     * value of the check is that it applies to the account money will go to.
+     */
     wallet.bankDetails = {
       accountNumber,
       ifscCode: ifscCode.toUpperCase(),
       accountHolderName,
       bankName,
-      verified: true // Auto-verify for test flow, typically false
+      verified: false,
+      verifiedAt: null,
     };
 
     // Reset Fund Account ID so it gets recreated with new details on next withdrawal

@@ -50,7 +50,10 @@ const walletSchema = new mongoose.Schema({
     verified: {
       type: Boolean,
       default: false
-    }
+    },
+    /** When an admin confirmed the account, and who. */
+    verifiedAt: { type: Date, default: null },
+    verifiedBy: { type: mongoose.Schema.Types.ObjectId, default: null }
   },
   razorpayContactId: String,
   razorpayFundAccountId: String

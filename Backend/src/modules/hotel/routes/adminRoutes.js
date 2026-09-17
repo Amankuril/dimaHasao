@@ -35,6 +35,8 @@ import {
   deleteAdminNotifications,
   getFinanceStats,
   getWithdrawals,
+  verifyWalletBankDetails,
+  getWalletsPendingVerification,
   updateWithdrawalStatus,
   getPropertyRoomTypes,
   updateRoomTypeAsAdmin,
@@ -92,6 +94,10 @@ router.put('/platform-settings', updatePlatformSettings);
 
 
 // Settlement
+// Payout accounts wait on a person before money moves towards them.
+router.get('/wallets/pending-verification', getWalletsPendingVerification);
+router.patch('/wallets/:walletId/bank-details/verify', verifyWalletBankDetails);
+
 router.get('/withdrawals', getWithdrawals);
 router.patch('/withdrawals/:id/status', updateWithdrawalStatus);
 
