@@ -5,6 +5,19 @@ import App from './app/App.jsx'
 import { isModuleAuthenticated } from './shared/utils/moduleAuth.js'
 import { syncThemeForPath } from './shared/utils/theme.js'
 import { NATIVE_LAST_ROUTE_KEY, resolveAppColdStartRoute } from './shared/utils/activeModule.js'
+/*
+ * Font Awesome ships with the bundle rather than being fetched at runtime.
+ *
+ * It used to come from a CDN <link> in index.html. Every icon in the app is a
+ * Font Awesome <i> — 321 of them across 56 files, including the whole bottom
+ * nav and every back button — so when that request did not arrive, the icons
+ * did not simply degrade, they vanished, leaving unlabelled gaps where the
+ * navigation should be.
+ *
+ * Pinned to the 6.x line the icon names were written against; the v7 upgrade
+ * renames icons and is not a drop-in.
+ */
+import '@fortawesome/fontawesome-free/css/all.min.css'
 import './shared/styles/global.css'
 
 // ─── Dima Hasao Food Module Initialization ───────────────────────────────────
