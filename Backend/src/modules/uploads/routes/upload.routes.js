@@ -1,5 +1,6 @@
 import express from 'express';
 import { upload } from '../../../middleware/upload.js';
+import { authMiddleware } from '../../../core/auth/auth.middleware.js';
 import { config } from '../../../config/env.js';
 import {
     storeImageBuffer,
@@ -29,8 +30,26 @@ const isImageUpload = (file) => {
     return /\.(jpe?g|png|gif|webp|bmp|tiff?|heic|avif)$/i.test(name);
 };
 
-// POST /v1/uploads/image — public/app upload (auth may be added at caller)
-router.post('/image', upload.single('file'), async (req, res, next) => {
+/*
+ * Uploading and deleting both require a signed-in principal.
+ *
+ * Neither did. `POST /image` was annotated "auth may be added at caller" and
+ * never was, so anyone on the internet could write files into the platform's
+ * storage; `DELETE /` took a URL and removed it with no credentials at all,
+ * which is every restaurant photo, property image, festival banner and KYC
+ * document on the platform, deletable by a stranger who knows a URL.
+ *
+ * Any authenticated principal is allowed, because uploads come from consumers,
+ * vendors and admins alike. Deletion is not yet ownership-scoped — uploads do
+ * not record who made them — so an authenticated user who knows another's URL
+ * can still remove it. That needs an owner on the asset and is noted rather
+ * than half-built here.
+ *
+ * Attached per route rather than to the router: the /internal pair below
+ * authenticates with a shared secret instead of a bearer token.
+ */
+// POST /v1/uploads/image
+router.post('/image', authMiddleware, upload.single('file'), async (req, res, next) => {
     try {
         if (!req.file || !req.file.buffer) {
             return res.status(400).json({
@@ -131,7 +150,7 @@ router.delete('/internal', requireInternalSecret, async (req, res, next) => {
 });
 
 // DELETE /v1/uploads — app/web delete (food + taxi); removes file from /var/www/uploads
-router.delete('/', async (req, res, next) => {
+router.delete('/', authMiddleware, async (req, res, next) => {
     try {
         const url = extractAssetUrl(req.body?.url || req.body?.replaceUrl || req.query?.url);
         if (!url) {

@@ -1,8 +1,8 @@
 {
-  "total": 97,
-  "passed": 97,
+  "total": 120,
+  "passed": 119,
   "failed": 0,
-  "blocked": 0,
+  "blocked": 1,
   "critical": 0,
   "high": 0,
   "medium": 0,
@@ -974,6 +974,236 @@
       "title": "non-numeric page handled",
       "status": "PASS",
       "expected": "200 with sane defaults",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-100",
+      "title": "concurrent baskets take exactly what they claim",
+      "status": "PASS",
+      "expected": "5 seats taken",
+      "actual": "5",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-101",
+      "title": "releasing a basket returns every seat",
+      "status": "PASS",
+      "expected": "2998 left",
+      "actual": "2998",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-102",
+      "title": "per-order cap enforced",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-110",
+      "title": "closed categories absent from the public payload",
+      "status": "PASS",
+      "expected": "hidden",
+      "actual": "offered for sale",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-111",
+      "title": "a closed category cannot be bought",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-120",
+      "title": "a paid pass is refused on a second gate scan",
+      "status": "BLOCKED",
+      "expected": "",
+      "actual": "",
+      "severity": "Info",
+      "evidence": "needs a completed payment; covered manually against a signed Razorpay callback"
+    },
+    {
+      "module": "business",
+      "id": "BIZ-130",
+      "title": "a coupon below its minimum spend is refused",
+      "status": "PASS",
+      "expected": "no discount, with a reason",
+      "actual": "discount 0, reason This code needs a booking of at least ₹100000",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-131",
+      "title": "an unknown coupon still prices the trip",
+      "status": "PASS",
+      "expected": "200 with no discount",
+      "actual": "200, discount 0",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-140",
+      "title": "the booking charges what the quote showed",
+      "status": "PASS",
+      "expected": "total 4620, advance 1155",
+      "actual": "total 4620, advance 1155",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-141",
+      "title": "the settlement identity holds",
+      "status": "PASS",
+      "expected": "total = taxes + commission + payout",
+      "actual": "4620 vs 220 + 440 + 3960",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "business",
+      "id": "BIZ-142",
+      "title": "a new booking is unpaid until it is paid",
+      "status": "PASS",
+      "expected": "pending, nothing paid",
+      "actual": "pending, paid 0",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-100",
+      "title": "upload refuses an anonymous caller",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-101",
+      "title": "delete refuses an anonymous caller",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-110",
+      "title": "a signed-in caller can upload an image",
+      "status": "PASS",
+      "expected": "200 with a url",
+      "actual": "200 http://localhost:5000/uploads/qa_14e20cb2f0b70676fddd.webp",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-111",
+      "title": "the stored file is served",
+      "status": "PASS",
+      "expected": "200",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-112",
+      "title": "the image was converted to WebP",
+      "status": "PASS",
+      "expected": ".webp",
+      "actual": "webp",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-120",
+      "title": "a script renamed .png is refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-121",
+      "title": "an SVG does not survive as SVG",
+      "status": "PASS",
+      "expected": "refused or rasterised to webp",
+      "actual": "400 ",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-122",
+      "title": "an empty file is refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-123",
+      "title": "a request with no file is refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-130",
+      "title": "a traversing folder name cannot escape the storage root",
+      "status": "PASS",
+      "expected": "refused or flattened",
+      "actual": "http://localhost:5000/uploads/tmp_qa-escape_692ae1e436533e17ef4c.webp",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-140",
+      "title": "an oversized upload is refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 500,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-141",
+      "title": "server still alive after the oversized upload",
+      "status": "PASS",
+      "expected": "200",
       "actual": 200,
       "severity": "Info",
       "evidence": ""

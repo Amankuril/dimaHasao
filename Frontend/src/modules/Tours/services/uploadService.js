@@ -15,6 +15,22 @@ import { API_BASE_URL } from '../config/apiConfig';
 // API_BASE_URL is scoped to /tours; uploads live one level up at the API root.
 const UPLOAD_ROOT = API_BASE_URL.replace(/\/tours$/, '');
 
+/**
+ * The session this panel is running under.
+ *
+ * These calls used a bare axios instance with no Authorization header, which
+ * worked only because the upload endpoints took no credentials at all. They do
+ * now, so the token has to travel with the request. Tours panels run as either
+ * an admin or an operator, so whichever session is present is used.
+ */
+const authHeaders = () => {
+  const token =
+    localStorage.getItem('admin_accessToken') ||
+    localStorage.getItem('operator_accessToken') ||
+    localStorage.getItem('accessToken');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 /**
@@ -38,7 +54,7 @@ export const uploadImage = async (file, { folder = 'tours/destinations', replace
 
   try {
     const { data } = await axios.post(`${UPLOAD_ROOT}/uploads/image`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': 'multipart/form-data', ...authHeaders() },
       timeout: 60000,
     });
     const url = data?.data?.url;
@@ -53,7 +69,7 @@ export const uploadImage = async (file, { folder = 'tours/destinations', replace
 export const deleteImage = async (url) => {
   if (!url) return false;
   try {
-    await axios.delete(`${UPLOAD_ROOT}/uploads`, { data: { url } });
+    await axios.delete(`${UPLOAD_ROOT}/uploads`, { data: { url }, headers: authHeaders() });
     return true;
   } catch {
     return false;
