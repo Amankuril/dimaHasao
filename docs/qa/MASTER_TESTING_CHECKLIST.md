@@ -3,7 +3,7 @@
 Generated from `scripts/qa/last-run.json` on 2026-09-17. Do not edit by hand —
 run `node scripts/qa/run.js && node scripts/qa/report.js` instead.
 
-**125 cases — 123 passed, 0 failed, 2 blocked.**
+**125 cases — 124 passed, 0 failed, 1 blocked.**
 
 | ID | Suite | Case | Expected | Result | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -116,7 +116,7 @@ run `node scripts/qa/run.js && node scripts/qa/report.js` instead.
 | BIZ-141 | business | the settlement identity holds | total = taxes + commission + payout | — | ✅ PASS |
 | BIZ-142 | business | a new booking is unpaid until it is paid | pending, nothing paid | — | ✅ PASS |
 | BIZ-150 | business | the server will quote a fare | 200 | — | ✅ PASS |
-| BIZ-151 | business | a fare below the tariff is refused | — | no tariff configured for this vehicle — enforcement is inactive until one exists | ⏸ BLOCKED |
+| BIZ-151 | business | a fare below the tariff is refused | 4xx (tariff says about ₹847) | — | ✅ PASS |
 | UPL-100 | uploads | upload refuses an anonymous caller | 401/403 | — | ✅ PASS |
 | UPL-101 | uploads | delete refuses an anonymous caller | 401/403 | — | ✅ PASS |
 | UPL-110 | uploads | a signed-in caller can upload an image | 200 with a url | — | ✅ PASS |
@@ -139,5 +139,5 @@ run `node scripts/qa/run.js && node scripts/qa/report.js` instead.
 - **authz** — 22 cases: 22 passed, 0 failed, 0 blocked
 - **injection** — 17 cases: 17 passed, 0 failed, 0 blocked
 - **validation** — 30 cases: 30 passed, 0 failed, 0 blocked
-- **business** — 13 cases: 11 passed, 0 failed, 2 blocked
+- **business** — 13 cases: 12 passed, 0 failed, 1 blocked
 - **uploads** — 15 cases: 15 passed, 0 failed, 0 blocked

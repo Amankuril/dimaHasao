@@ -721,7 +721,7 @@ const SetPrices = ({ mode }) => {
                           </td>
                           <td className="px-4 py-2 text-right pr-6">
                               <div className="flex items-center justify-end gap-1.5">
-                                 <button title="Edit Price" onClick={() => navigate(`/admin/pricing/set-price/edit/${prize.id || prize._id}`)} className="w-7 h-7 flex items-center justify-center bg-[#FFF7ED] text-[#F97316] rounded transition-colors hover:bg-orange-100"><Edit2 size={12} /></button>
+                                 <button title="Edit Price" onClick={() => navigate(`/taxi/admin/pricing/set-price/edit/${prize.id || prize._id}`)} className="w-7 h-7 flex items-center justify-center bg-[#FFF7ED] text-[#F97316] rounded transition-colors hover:bg-orange-100"><Edit2 size={12} /></button>
                                  <button 
                                    title="Incentive"
                                    onClick={() => navigate('/taxi/admin/pricing/package-pricing')}
@@ -731,14 +731,14 @@ const SetPrices = ({ mode }) => {
                                  </button>
                                  <button 
                                    title="Surge Pricing"
-                                   onClick={() => navigate(`/admin/pricing/set-price/surge/${prize.id || prize._id}`)}
+                                   onClick={() => navigate(`/taxi/admin/pricing/set-price/surge/${prize.id || prize._id}`)}
                                    className="w-7 h-7 flex items-center justify-center bg-[#FEF2F2] text-[#EF4444] rounded transition-colors hover:bg-red-100"
                                  >
                                     <Zap size={12} />
                                  </button>
                                  <button 
                                    title="Airport/Outstation Setting"
-                                   onClick={() => navigate(`/admin/pricing/set-price/incentive/${prize.id || prize._id}`)}
+                                   onClick={() => navigate(`/taxi/admin/pricing/set-price/incentive/${prize.id || prize._id}`)}
                                    className="w-7 h-7 flex items-center justify-center bg-[#EEF2FF] text-[#6366F1] rounded transition-colors hover:bg-indigo-100"
                                  >
                                     <Cone size={12} />

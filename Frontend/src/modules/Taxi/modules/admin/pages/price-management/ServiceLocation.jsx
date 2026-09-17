@@ -399,7 +399,7 @@ const ServiceLocation = ({ mode }) => {
                           <button
                             key={location._id || location.id}
                             type="button"
-                            onClick={() => navigate(`/admin/pricing/service-location/edit/${location._id || location.id}`)}
+                            onClick={() => navigate(`/taxi/admin/pricing/service-location/edit/${location._id || location.id}`)}
                             className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/70 px-4 py-3 text-left transition-all hover:border-yellow- hover:bg-yellow-/40"
                           >
                             <div>
@@ -422,7 +422,7 @@ const ServiceLocation = ({ mode }) => {
                   <button
                     key={item.name}
                     type="button"
-                    onClick={() => navigate(`/admin/pricing/service-location/jurisdictions/${encodeURIComponent(item.name)}`)}
+                    onClick={() => navigate(`/taxi/admin/pricing/service-location/jurisdictions/${encodeURIComponent(item.name)}`)}
                     className={`rounded-lg border p-3 text-left shadow-sm transition-all ${
                       selectedJurisdiction?.name === item.name
                         ? 'border-yellow- bg-yellow-/70'
@@ -585,7 +585,7 @@ const ServiceLocation = ({ mode }) => {
                         <td className="px-4 py-3">
                            <button
                              type="button"
-                             onClick={() => navigate(`/admin/pricing/service-location/jurisdictions/${encodeURIComponent(getCountryName(l.country).trim())}`)}
+                             onClick={() => navigate(`/taxi/admin/pricing/service-location/jurisdictions/${encodeURIComponent(getCountryName(l.country).trim())}`)}
                              className="text-xs font-bold uppercase tracking-wider text-gray-900 transition-colors hover:text-black hover:underline"
                            >
                              {typeof l.country === 'object' ? l.country?.name : l.country || '-'}
@@ -605,7 +605,7 @@ const ServiceLocation = ({ mode }) => {
                         </td>
                         <td className="px-4 py-3">
                            <div className="flex items-center justify-end gap-2">
-                             <button onClick={() => navigate(`/admin/pricing/service-location/edit/${l._id || l.id}`)} className="p-2 text-gray-400 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-xl transition-all shadow-sm"><Edit2 size={16} /></button>
+                             <button onClick={() => navigate(`/taxi/admin/pricing/service-location/edit/${l._id || l.id}`)} className="p-2 text-gray-400 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-xl transition-all shadow-sm"><Edit2 size={16} /></button>
                              <button onClick={() => handleDelete(l._id || l.id)} className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all shadow-sm"><Trash2 size={16} /></button>
                            </div>
                         </td>

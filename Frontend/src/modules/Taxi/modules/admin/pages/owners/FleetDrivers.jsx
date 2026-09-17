@@ -293,7 +293,7 @@ const FleetDrivers = () => {
                         <td className="px-3 py-4">
                           <button
                             type="button"
-                            onClick={() => navigate(`/admin/drivers/${driver._id}`)}
+                            onClick={() => navigate(`/taxi/admin/drivers/${driver._id}`)}
                             className="inline-flex h-8 w-9 items-center justify-center rounded bg-yellow-50 text-yellow-600 transition-colors hover:bg-yellow-100"
                             title="View driver"
                           >

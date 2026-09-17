@@ -355,7 +355,7 @@ const AdminSectionPlaceholder = () => {
         </p>
         <button
           type="button"
-          onClick={() => navigate('/admin/dashboard')}
+          onClick={() => navigate('/taxi/admin/dashboard')}
           className="mt-8 inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#2563EB] text-white text-[12px] font-black uppercase tracking-widest shadow-lg shadow-blue-900/20"
         >
           Back to Dashboard

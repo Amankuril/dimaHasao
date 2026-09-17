@@ -270,14 +270,14 @@ const PoolingVehicles = () => {
                       <td className="px-3 py-2">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => navigate(`/admin/pooling/vehicles/view/${vehicle._id}`)}
+                            onClick={() => navigate(`/taxi/admin/pooling/vehicles/view/${vehicle._id}`)}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold text-slate-600 transition hover:bg-slate-100"
                           >
                             <Eye size={12} />
                             View
                           </button>
                           <button
-                            onClick={() => navigate(`/admin/pooling/vehicles/edit/${vehicle._id}`)}
+                            onClick={() => navigate(`/taxi/admin/pooling/vehicles/edit/${vehicle._id}`)}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-200"
                           >
                             <PencilLine size={12} />

@@ -160,7 +160,7 @@ const OwnerNeededDocuments = () => {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => navigate(`/admin/owners/documents/create?id=${doc._id}`)}
+                              onClick={() => navigate(`/taxi/admin/owners/documents/create?id=${doc._id}`)}
                               className="inline-flex h-8 w-9 items-center justify-center rounded bg-yellow-50 text-yellow-600 transition-colors hover:bg-yellow-100"
                               title="Edit"
                             >

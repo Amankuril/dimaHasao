@@ -670,7 +670,7 @@ const PromoCodes = () => {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => navigate(`/admin/promotions/promo-codes/edit/${promo._id}`)}
+                                onClick={() => navigate(`/taxi/admin/promotions/promo-codes/edit/${promo._id}`)}
                                 className="p-1.5 text-[#0B1220] bg-[#FFC400]/10 rounded hover:bg-[#FFC400]/20 transition-colors"
                                 title="Edit"
                               >

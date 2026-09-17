@@ -122,7 +122,7 @@ const DriverRatings = () => {
                         {activeMenu === driver.id && (
                           <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                             <button
-                              onClick={() => navigate(`/admin/drivers/ratings/${driver.id}`)}
+                              onClick={() => navigate(`/taxi/admin/drivers/ratings/${driver.id}`)}
                               className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                             >
                               <Eye size={14} className="text-gray-400" /> View

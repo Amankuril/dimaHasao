@@ -194,7 +194,7 @@ const GlobalDocuments = () => {
     <div className="flex items-center justify-end gap-2">
       <button
         type="button"
-        onClick={() => navigate(`/admin/drivers/documents/edit/${item.id || item._id}?type=${templateType}`)}
+        onClick={() => navigate(`/taxi/admin/drivers/documents/edit/${item.id || item._id}?type=${templateType}`)}
         className="rounded-lg border border-gray-200 p-2 text-yellow-600 transition-colors hover:bg-yellow-50"
       >
         <PencilLine size={16} />

@@ -113,13 +113,15 @@ export const quoteRideFare = async ({
 /**
  * How far a submitted fare may sit from the computed one before it is refused.
  *
- * A little slack absorbs rounding between the app's estimate and the server's,
- * and a promo the caller legitimately applied. Anything wider is the client
- * naming its own price.
+ * Only rounding needs absorbing. The rider app computes from the same tariff
+ * with the same arithmetic, so the two agree to the rupee; ₹2 or 1% is slack,
+ * not a discount window. Promo codes do not need room here — the app sends the
+ * undiscounted fare and the server applies the promo itself, and a bid ride's
+ * range is derived from this same figure rather than replacing it.
  */
 export const FARE_TOLERANCE = {
   absolute: Number(process.env.TAXI_FARE_TOLERANCE_RUPEES || 2),
-  fraction: Number(process.env.TAXI_FARE_TOLERANCE_FRACTION || 0.05),
+  fraction: Number(process.env.TAXI_FARE_TOLERANCE_FRACTION || 0.01),
 };
 
 export const fareWithinTolerance = (submitted, computed) => {

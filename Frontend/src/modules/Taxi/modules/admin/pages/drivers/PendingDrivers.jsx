@@ -80,11 +80,11 @@ const PendingDrivers = () => {
     if (action !== 'view' && action !== 'edit' && action !== 'password' && !window.confirm(confirmMsg)) return;
 
     if (action === 'view') {
-      navigate(`/admin/drivers/${driverId}`, { state: { from: '/admin/drivers/pending' } });
+      navigate(`/taxi/admin/drivers/${driverId}`, { state: { from: '/admin/drivers/pending' } });
       return;
     }
     if (action === 'edit') {
-      navigate(`/admin/drivers/edit/${driverId}`, { state: { from: '/admin/drivers/pending' } });
+      navigate(`/taxi/admin/drivers/edit/${driverId}`, { state: { from: '/admin/drivers/pending' } });
       return;
     }
 
@@ -342,7 +342,7 @@ const PendingDrivers = () => {
                     <td className="px-3 py-1.5 text-gray-600">{driver.transport}</td>
                     <td className="px-3 py-1.5 text-center">
                       <button
-                        onClick={() => navigate(`/admin/drivers/${driver.id}?tab=Documents`, { state: { from: '/admin/drivers/pending' } })}
+                        onClick={() => navigate(`/taxi/admin/drivers/${driver.id}?tab=Documents`, { state: { from: '/admin/drivers/pending' } })}
                         className="inline-flex items-center justify-center w-6 h-6 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-black transition-colors"
                         title="View Documents"
                       >

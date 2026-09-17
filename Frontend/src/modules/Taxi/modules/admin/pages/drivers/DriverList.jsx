@@ -360,7 +360,7 @@ const DriverList = ({ mode = 'approved' }) => {
                     </td>
                     <td className="px-3 py-1.5 text-center">
                       <button
-                        onClick={() => navigate(`/admin/drivers/${driver.id}?tab=Documents`)}
+                        onClick={() => navigate(`/taxi/admin/drivers/${driver.id}?tab=Documents`)}
                         className="inline-flex items-center justify-center w-6 h-6 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-black transition-colors"
                         title="View Documents"
                       >
@@ -445,7 +445,7 @@ const DriverList = ({ mode = 'approved' }) => {
             <button
               onClick={() => {
                 closeMenu();
-                navigate(`/admin/drivers/edit/${activeMenu}`);
+                navigate(`/taxi/admin/drivers/edit/${activeMenu}`);
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors text-sm font-medium"
             >
@@ -463,7 +463,7 @@ const DriverList = ({ mode = 'approved' }) => {
             <button
               onClick={() => {
                 closeMenu();
-                navigate(`/admin/drivers/${activeMenu}`);
+                navigate(`/taxi/admin/drivers/${activeMenu}`);
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors text-sm font-medium"
             >

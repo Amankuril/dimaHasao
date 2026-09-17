@@ -176,7 +176,7 @@ const EmployeeList = () => {
                     <td className="px-4 py-4">
                       <button
                         type="button"
-                        onClick={() => navigate(`/admin/employees/${employee._id}`)}
+                        onClick={() => navigate(`/taxi/admin/employees/${employee._id}`)}
                         className="text-left"
                       >
                         <p className="text-sm font-bold text-slate-900 hover:text-yellow-600 capitalize">{employee.name.toLowerCase()}</p>
@@ -207,14 +207,14 @@ const EmployeeList = () => {
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => navigate(`/admin/employees/${employee._id}`)}
+                          onClick={() => navigate(`/taxi/admin/employees/${employee._id}`)}
                           className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition-all hover:bg-slate-50"
                         >
                           View
                         </button>
                         <button
                           type="button"
-                          onClick={() => navigate(`/admin/employees/edit/${employee._id}`)}
+                          onClick={() => navigate(`/taxi/admin/employees/edit/${employee._id}`)}
                           className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition-all hover:bg-slate-50"
                         >
                           <Pencil size={12} />

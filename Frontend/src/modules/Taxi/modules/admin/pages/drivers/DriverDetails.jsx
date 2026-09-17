@@ -1020,7 +1020,7 @@ const DriverDetails = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => navigate(`/admin/drivers/edit/${id}`, { state: { from: location.pathname + location.search } })}
+                    onClick={() => navigate(`/taxi/admin/drivers/edit/${id}`, { state: { from: location.pathname + location.search } })}
                     className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
                   >
                     <PencilLine size={15} />

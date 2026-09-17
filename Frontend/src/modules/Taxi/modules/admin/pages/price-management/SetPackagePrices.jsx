@@ -158,7 +158,7 @@ const SetPackagePrices = () => {
                     <td className="px-4 py-3.5">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => navigate(`/admin/pricing/package-pricing/edit/${item.id}`)}
+                          onClick={() => navigate(`/taxi/admin/pricing/package-pricing/edit/${item.id}`)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-400 transition hover:bg-orange-100"
                         >
                           <Edit2 size={14} />

@@ -558,7 +558,7 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right">
                              <div className="flex items-center justify-end gap-2 relative z-50">
-                               <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/admin/pricing/zone/edit/${zone._id || zone.id}`); }} className="p-2 text-gray-400 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-lg transition-colors"><Edit2 size={14} /></button>
+                               <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/taxi/admin/pricing/zone/edit/${zone._id || zone.id}`); }} className="p-2 text-gray-400 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-lg transition-colors"><Edit2 size={14} /></button>
                                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(zone._id || zone.id); }} className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 size={14} /></button>
                                <button
                                  type="button"

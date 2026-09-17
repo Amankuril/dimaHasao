@@ -97,7 +97,7 @@ const EmployeeDetails = () => {
             </button>
             <button
               type="button"
-              onClick={() => navigate(`/admin/employees/edit/${employee._id}`)}
+              onClick={() => navigate(`/taxi/admin/employees/edit/${employee._id}`)}
               className="rounded-2xl bg-yellow-400 px-5 py-3 text-sm font-bold text-black shadow-lg shadow-yellow-200 transition-all hover:bg-yellow-500"
             >
               Edit Employee

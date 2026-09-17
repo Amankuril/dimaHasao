@@ -92,11 +92,11 @@ const EmployeeCreate = () => {
       if (isEdit) {
         await adminService.updateEmployee(id, payload);
         toast.success('Employee updated.');
-        navigate(`/admin/employees/${id}`);
+        navigate(`/taxi/admin/employees/${id}`);
       } else {
         const response = await adminService.createEmployee(payload);
         toast.success('Employee created.');
-        navigate(`/admin/employees/${response?.data?._id || ''}`);
+        navigate(`/taxi/admin/employees/${response?.data?._id || ''}`);
       }
     } catch (error) {
       toast.error(error?.message || 'Unable to save employee.');

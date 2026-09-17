@@ -200,7 +200,7 @@ const DeleteRequestUsers = () => {
                             <div>
                               <button
                                 type="button"
-                                onClick={() => navigate(`/admin/users/${user._id}`)}
+                                onClick={() => navigate(`/taxi/admin/users/${user._id}`)}
                                 className="text-left text-sm font-medium text-gray-900 hover:text-indigo-600 hover:underline transition-colors"
                               >
                                 {user.name || user.user_id?.name || 'Unknown'}
@@ -226,7 +226,7 @@ const DeleteRequestUsers = () => {
                             <button
                               type="button"
                               disabled={isSubmitting}
-                              onClick={() => navigate(`/admin/users/${user._id}`)}
+                              onClick={() => navigate(`/taxi/admin/users/${user._id}`)}
                               title="View Customer Profile"
                               className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50"
                             >

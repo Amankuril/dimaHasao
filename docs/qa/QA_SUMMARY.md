@@ -5,9 +5,9 @@ Last run 2026-09-17, against a development database.
 | | |
 | --- | --- |
 | Cases | 125 |
-| Passed | 123 |
+| Passed | 124 |
 | Failed | 0 |
-| Blocked | 2 |
+| Blocked | 1 |
 
 ## Coverage by suite
 
@@ -15,13 +15,12 @@ Last run 2026-09-17, against a development database.
 - **authz** — 22 cases (22 passing)
 - **injection** — 17 cases (17 passing)
 - **validation** — 30 cases (30 passing)
-- **business** — 13 cases (11 passing)
+- **business** — 13 cases (12 passing)
 - **uploads** — 15 cases (15 passing)
 
 ## Blocked
 
 - `BIZ-120` a paid pass is refused on a second gate scan — needs a completed payment; covered manually against a signed Razorpay callback
-- `BIZ-151` a fare below the tariff is refused — no tariff configured for this vehicle — enforcement is inactive until one exists
 
 ## Outstanding failures
 
