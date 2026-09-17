@@ -264,10 +264,11 @@ replies from either side.
 | Issue | Module | Severity | Note |
 | --- | --- | --- | --- |
 | Ride fares are dictated by the client | Taxi | **Critical** | `createRide` stores whatever `fare` arrives; ₹1 accepted for a 50 km trip. No server-side fare computation exists and no `SetPrice` rows are configured. Needs a pricing engine, not a patch. |
-| Upload deletion is not ownership-scoped | Uploads | High | Authentication is required now, but any signed-in user can delete any asset by URL. |
-| Bank details self-verify | Hotel | Medium | `verified: true // Auto-verify for test flow`. |
+| ~~Upload deletion is not ownership-scoped~~ | Uploads | ~~High~~ | **Fixed** — assets now record their uploader; deletion is the uploader or an admin. |
+| ~~Bank details self-verify~~ | Hotel | ~~Medium~~ | **Fixed** — details start unverified and withdrawals wait for an admin to confirm them. |
 | `USE_DEFAULT_OTP=true` in production | Platform | **Critical** | OTP `1234` signs in as anyone. Left in place at the owner's explicit direction. |
-| No admin cancellation for bookings | Hotel, Tours, Festivals | Medium | Customers can cancel their own; admins cannot cancel at all. |
-| Tours has no consumer cancellation | Tours | Medium | Hotel and festivals both have one. |
-| `legacyBackendShim.js` | Taxi | Low | Dead file, no importers, mints an `offline-admin-token` for any POST to `/admin/login`. |
-| Leftover debug log | Taxi | Low | `console.log('--- TEMPORARY DEBUG LOG ---')` in `rideController.js:307`. |
+| ~~No admin cancellation for bookings~~ | Hotel, Tours, Festivals | ~~Medium~~ | **Fixed** — admin cancel routes for tours and festivals; hotel's already admits admins. |
+| ~~Tours has no consumer cancellation~~ | Tours | ~~Medium~~ | **Fixed** — `POST /v1/tours/bookings/:id/cancel`, scoped to the traveller's own booking. |
+| ~~`legacyBackendShim.js`~~ | Taxi | ~~Low~~ | **Fixed** — deleted. |
+| ~~Leftover debug log~~ | Taxi | ~~Low~~ | **Fixed** — removed. |
+| Gateway refunds are not issued | Hotel, Tours, Festivals | Medium | Cancelling marks `refunded` and reverses the vendor wallet, but does not return the customer's money through Razorpay. That is a deliberate separate step. |

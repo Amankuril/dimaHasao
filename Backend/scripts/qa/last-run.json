@@ -1,6 +1,6 @@
 {
-  "total": 120,
-  "passed": 119,
+  "total": 123,
+  "passed": 122,
   "failed": 0,
   "blocked": 1,
   "critical": 0,
@@ -1114,7 +1114,7 @@
       "title": "a signed-in caller can upload an image",
       "status": "PASS",
       "expected": "200 with a url",
-      "actual": "200 http://localhost:5000/uploads/qa_acc78e7cfabd4dcdb5f8.webp",
+      "actual": "200 http://localhost:5000/uploads/qa_4e4fa43a2c5d6e04b3e4.webp",
       "severity": "Info",
       "evidence": ""
     },
@@ -1184,7 +1184,7 @@
       "title": "a traversing folder name cannot escape the storage root",
       "status": "PASS",
       "expected": "refused or flattened",
-      "actual": "http://localhost:5000/uploads/tmp_qa-escape_f9ea3ed21872166433bf.webp",
+      "actual": "http://localhost:5000/uploads/tmp_qa-escape_a4ee217843380677d52b.webp",
       "severity": "Info",
       "evidence": ""
     },
@@ -1202,6 +1202,36 @@
       "module": "uploads",
       "id": "UPL-141",
       "title": "server still alive after the oversized upload",
+      "status": "PASS",
+      "expected": "200",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-150",
+      "title": "another user cannot delete someone else's asset",
+      "status": "PASS",
+      "expected": "refused, file intact",
+      "actual": "delete 404, file 200",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-151",
+      "title": "the uploader can delete their own asset",
+      "status": "PASS",
+      "expected": "deleted",
+      "actual": "delete 200, file 404",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "uploads",
+      "id": "UPL-152",
+      "title": "an admin can delete any asset",
       "status": "PASS",
       "expected": "200",
       "actual": 200,

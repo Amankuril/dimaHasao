@@ -1,6 +1,7 @@
 import express from 'express';
 import { upload } from '../../../middleware/upload.js';
 import { authMiddleware } from '../../../core/auth/auth.middleware.js';
+import UploadedAsset from '../../../core/uploads/asset.model.js';
 import { config } from '../../../config/env.js';
 import {
     storeImageBuffer,
@@ -21,6 +22,57 @@ const requireInternalSecret = (req, res, next) => {
         });
     }
     return next();
+};
+
+/**
+ * Remember who uploaded this, so a later delete can be scoped to them.
+ *
+ * Best-effort: a file that stored correctly should not fail the request because
+ * the ownership row did not write. An asset with no row falls back to
+ * admin-only deletion, which is the safe direction.
+ */
+const recordAsset = async (req, stored, folder) => {
+    const publicId = stored.public_id || stored.filename;
+    if (!publicId) return;
+
+    try {
+        await UploadedAsset.findOneAndUpdate(
+            { publicId },
+            {
+                publicId,
+                url: stored.url || stored.secure_url,
+                folder,
+                uploadedBy: req.user?.userId || req.user?._id || null,
+                uploaderRole: req.user?.role || null,
+                mimeType: req.file?.mimetype,
+                bytes: stored.bytes || req.file?.size,
+                originalName: req.file?.originalname,
+            },
+            { upsert: true, new: true },
+        );
+    } catch (error) {
+        console.error('Could not record asset ownership:', error.message);
+    }
+};
+
+/**
+ * Who may delete a stored asset.
+ *
+ * The uploader, or an admin. An asset with no ownership row predates this
+ * record — those are admin-only, rather than open to anyone with a session.
+ */
+const canDeleteAsset = async (req, url) => {
+    const role = String(req.user?.role || '').toUpperCase();
+    if (['ADMIN', 'SUB_ADMIN', 'SUPERADMIN'].includes(role)) return true;
+
+    const filename = String(url).split('/').pop();
+    const asset = await UploadedAsset.findOne({
+        $or: [{ publicId: filename }, { publicId: filename.replace(/\.[^.]+$/, '') }, { url }],
+    }).lean();
+
+    if (!asset) return false;
+    const caller = String(req.user?.userId || req.user?._id || '');
+    return Boolean(caller) && String(asset.uploadedBy) === caller;
 };
 
 const isImageUpload = (file) => {
@@ -68,6 +120,8 @@ router.post('/image', authMiddleware, upload.single('file'), async (req, res, ne
             originalName: req.file.originalname,
             replaceUrl: extractAssetUrl(req.body?.replaceUrl),
         });
+
+        await recordAsset(req, stored, folder);
 
         return res.status(200).json({
             success: true,
@@ -159,7 +213,15 @@ router.delete('/', authMiddleware, async (req, res, next) => {
                 message: 'url is required',
             });
         }
+
+        if (!(await canDeleteAsset(req, url))) {
+            // 404 rather than 403: whether a file exists is not something to
+            // confirm to someone who may not touch it.
+            return res.status(404).json({ success: false, message: 'Asset not found' });
+        }
+
         const deleted = await deleteStoredAsset(url);
+        await UploadedAsset.deleteOne({ url }).catch(() => {});
         return res.status(200).json({
             success: true,
             data: { deleted },

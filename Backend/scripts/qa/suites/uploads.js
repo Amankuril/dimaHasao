@@ -64,7 +64,7 @@ const upload = (token, fields, file) => {
   });
 };
 
-export const run = async ({ primary, admin }) => {
+export const run = async ({ primary, secondary, admin }) => {
   module_('uploads');
 
   const png = tinyPng();
@@ -147,6 +147,46 @@ export const run = async ({ primary, admin }) => {
   check('UPL-141', 'server still alive after the oversized upload', alive.status === 200, {
     expected: '200', actual: alive.status, severity: SEVERITY.CRITICAL,
   });
+
+  /* ---------- an asset belongs to whoever uploaded it ---------- */
+  if (!secondary?.token) {
+    blocked('UPL-150', 'cross-user asset deletion', 'no second consumer session');
+  } else {
+    const mine = await upload(primary.token, { folder: 'qa' },
+      { name: 'owned.png', type: 'image/png', buffer: png });
+    const mineUrl = mine.body?.data?.url;
+
+    if (!mineUrl) {
+      blocked('UPL-150', 'cross-user asset deletion', `upload failed (${mine.status})`);
+    } else {
+      const byOther = await del('/uploads', { token: secondary.token, body: { url: mineUrl } });
+      const survived = await get(mineUrl);
+      check('UPL-150', "another user cannot delete someone else's asset",
+        byOther.status >= 400 && survived.status === 200, {
+          expected: 'refused, file intact',
+          actual: `delete ${byOther.status}, file ${survived.status}`, severity: SEVERITY.HIGH,
+        });
+
+      const byOwner = await del('/uploads', { token: primary.token, body: { url: mineUrl } });
+      const gone = await get(mineUrl);
+      check('UPL-151', 'the uploader can delete their own asset',
+        byOwner.status === 200 && gone.status === 404, {
+          expected: 'deleted', actual: `delete ${byOwner.status}, file ${gone.status}`, severity: SEVERITY.MEDIUM,
+        });
+    }
+  }
+
+  if (admin?.token) {
+    const stray = await upload(primary.token, { folder: 'qa' },
+      { name: 'stray.png', type: 'image/png', buffer: png });
+    const strayUrl = stray.body?.data?.url;
+    if (strayUrl) {
+      const byAdmin = await del('/uploads', { token: admin.token, body: { url: strayUrl } });
+      check('UPL-152', 'an admin can delete any asset', byAdmin.status === 200, {
+        expected: '200', actual: byAdmin.status, severity: SEVERITY.LOW,
+      });
+    }
+  }
 
   /* ---------- clean up what this suite wrote ---------- */
   for (const url of [storedUrl, svgUrl, escapedUrl].filter(Boolean)) {

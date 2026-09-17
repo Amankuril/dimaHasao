@@ -4,8 +4,8 @@ Last run 2026-09-17, against a development database.
 
 | | |
 | --- | --- |
-| Cases | 120 |
-| Passed | 119 |
+| Cases | 123 |
+| Passed | 122 |
 | Failed | 0 |
 | Blocked | 1 |
 
@@ -16,7 +16,7 @@ Last run 2026-09-17, against a development database.
 - **injection** — 17 cases (17 passing)
 - **validation** — 30 cases (30 passing)
 - **business** — 11 cases (10 passing)
-- **uploads** — 12 cases (12 passing)
+- **uploads** — 15 cases (15 passing)
 
 ## Blocked
 

@@ -3,7 +3,7 @@
 Generated from `scripts/qa/last-run.json` on 2026-09-17. Do not edit by hand —
 run `node scripts/qa/run.js && node scripts/qa/report.js` instead.
 
-**120 cases — 119 passed, 0 failed, 1 blocked.**
+**123 cases — 122 passed, 0 failed, 1 blocked.**
 
 | ID | Suite | Case | Expected | Result | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -127,6 +127,9 @@ run `node scripts/qa/run.js && node scripts/qa/report.js` instead.
 | UPL-130 | uploads | a traversing folder name cannot escape the storage root | refused or flattened | — | ✅ PASS |
 | UPL-140 | uploads | an oversized upload is refused as 413 | 413 | — | ✅ PASS |
 | UPL-141 | uploads | server still alive after the oversized upload | 200 | — | ✅ PASS |
+| UPL-150 | uploads | another user cannot delete someone else's asset | refused, file intact | — | ✅ PASS |
+| UPL-151 | uploads | the uploader can delete their own asset | deleted | — | ✅ PASS |
+| UPL-152 | uploads | an admin can delete any asset | 200 | — | ✅ PASS |
 
 ## By suite
 
@@ -135,4 +138,4 @@ run `node scripts/qa/run.js && node scripts/qa/report.js` instead.
 - **injection** — 17 cases: 17 passed, 0 failed, 0 blocked
 - **validation** — 30 cases: 30 passed, 0 failed, 0 blocked
 - **business** — 11 cases: 10 passed, 0 failed, 1 blocked
-- **uploads** — 12 cases: 12 passed, 0 failed, 0 blocked
+- **uploads** — 15 cases: 15 passed, 0 failed, 0 blocked
