@@ -25,6 +25,13 @@ const adminService = {
   toggleDestination: (id, isActive) => toursApi.patch(`/admin/destinations/${id}/active`, { isActive }),
   deleteDestination: (id) => toursApi.delete(`/admin/destinations/${id}`),
 
+  // Offers (promo codes)
+  getOffers: () => toursApi.get('/admin/offers'),
+  createOffer: (payload) => toursApi.post('/admin/offers', payload),
+  updateOffer: (id, payload) => toursApi.put(`/admin/offers/${id}`, payload),
+  toggleOffer: (id, isActive) => toursApi.patch(`/admin/offers/${id}/active`, { isActive }),
+  deleteOffer: (id) => toursApi.delete(`/admin/offers/${id}`),
+
   // Reviews
   getReviews: (params = {}) => toursApi.get('/admin/reviews', { params }),
   updateReviewStatus: (id, status) => toursApi.patch(`/admin/reviews/${id}/status`, { status }),

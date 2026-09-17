@@ -17,6 +17,13 @@ import {
 } from '../controllers/adminController.js';
 import { getAdminReviews, updateReviewStatus } from '../controllers/reviewController.js';
 import {
+  getAdminOffers,
+  createOffer,
+  updateOffer,
+  toggleOffer,
+  deleteOffer,
+} from '../controllers/offerController.js';
+import {
   getAdminDestinations,
   createDestination,
   updateDestination,
@@ -50,6 +57,12 @@ router.post('/destinations', createDestination);
 router.put('/destinations/:id', updateDestination);
 router.patch('/destinations/:id/active', toggleDestination);
 router.delete('/destinations/:id', deleteDestination);
+
+router.get('/offers', getAdminOffers);
+router.post('/offers', createOffer);
+router.put('/offers/:id', updateOffer);
+router.patch('/offers/:id/active', toggleOffer);
+router.delete('/offers/:id', deleteOffer);
 
 router.get('/reviews', getAdminReviews);
 router.patch('/reviews/:id/status', updateReviewStatus);

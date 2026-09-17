@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, authorizedRoles } from '../middlewares/authMiddleware.js';
+import { protect, optionalProtect, authorizedRoles } from '../middlewares/authMiddleware.js';
 import {
   getBookingQuote,
   createBooking,
@@ -13,7 +13,9 @@ import {
 const router = express.Router();
 
 // A quote is public: the booking screen prices a trip before anyone signs in.
-router.post('/quote', getBookingQuote);
+// optionalProtect so a signed-in traveller's per-user coupon limit is checked
+// on the screen rather than only at checkout.
+router.post('/quote', optionalProtect, getBookingQuote);
 
 // Static paths before '/:id/...' so they are never read as ids.
 router.get('/my', protect, getMyBookings);

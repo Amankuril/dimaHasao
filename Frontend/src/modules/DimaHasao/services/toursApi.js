@@ -176,9 +176,19 @@ export const fetchPackageById = async (id) => {
  * What the trip costs. Server-computed — the screen displays this and never
  * derives a total of its own.
  */
-export const quoteBooking = async ({ packageId, travelDate, adults, children }) =>
-  unwrap(await apiClient.post('/tours/bookings/quote', { packageId, travelDate, adults, children }))
-    .quote;
+export const quoteBooking = async ({ packageId, travelDate, adults, children, couponCode }) => {
+  const data = unwrap(
+    await apiClient.post('/tours/bookings/quote', { packageId, travelDate, adults, children, couponCode }),
+  );
+  // The coupon verdict rides along with the price: the server decides what a
+  // code is worth, and an unusable one comes back with a reason rather than an
+  // error, so the screen can still show a total.
+  return { ...data.quote, coupon: data.coupon || { code: null, discount: 0, reason: null } };
+};
+
+/** Promo codes a traveller can use on this package right now. */
+export const fetchTourOffers = async (packageId) =>
+  unwrap(await apiClient.get('/tours/offers', { params: { packageId } })).offers || [];
 
 /** Create the booking. Returns the booking plus the amount payable now. */
 export const createBooking = async (payload) =>
@@ -344,6 +354,7 @@ export default {
   fetchPackages,
   fetchPackageById,
   quoteBooking,
+  fetchTourOffers,
   createBooking,
   createPaymentOrder,
   verifyPayment,

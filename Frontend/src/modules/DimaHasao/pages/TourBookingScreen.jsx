@@ -18,6 +18,7 @@ import { PatternDivider } from '../components/layout/PatternDivider';
 import {
   fetchPackageById,
   quoteBooking,
+  fetchTourOffers,
   createBooking,
   createPaymentOrder,
   verifyPayment,
@@ -57,6 +58,13 @@ export const TourBookingScreen = () => {
   const [quoteError, setQuoteError] = useState('');
   const [quoting, setQuoting] = useState(false);
 
+  // `promoInput` is what the traveller is typing; `couponCode` is what has been
+  // applied and therefore what the quote is priced with. Keeping them separate
+  // stops every keystroke from re-quoting.
+  const [promoInput, setPromoInput] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [offers, setOffers] = useState([]);
+
   const [submitting, setSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [createdTourData, setCreatedTourData] = useState(null);
@@ -80,6 +88,10 @@ export const TourBookingScreen = () => {
       })
       .catch(() => { if (!cancelled) setPkg(null); })
       .finally(() => { if (!cancelled) setLoading(false); });
+
+    fetchTourOffers(id)
+      .then((list) => { if (!cancelled) setOffers(list); })
+      .catch(() => { if (!cancelled) setOffers([]); });
 
     return () => { cancelled = true; };
   }, [id]);
@@ -105,7 +117,7 @@ export const TourBookingScreen = () => {
     setQuoting(true);
 
     const timer = setTimeout(() => {
-      quoteBooking({ packageId: pkg.id, travelDate, adults, children })
+      quoteBooking({ packageId: pkg.id, travelDate, adults, children, couponCode })
         .then((result) => {
           if (sequence !== quoteSequence.current) return;
           setQuote(result);
@@ -126,7 +138,7 @@ export const TourBookingScreen = () => {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [pkg, travelDate, adults, children]);
+  }, [pkg, travelDate, adults, children, couponCode]);
 
   /* ---------------------------------------------------------------- *
    * Book and pay
@@ -172,6 +184,7 @@ export const TourBookingScreen = () => {
         pickupPoint,
         travellerContact: { name: travelerName, phone: travelerPhone, email: travelerEmail },
         specialRequest,
+        couponCode,
       });
       booking = created.booking;
     } catch (error) {
@@ -276,6 +289,23 @@ export const TourBookingScreen = () => {
       </div>
     );
   }
+
+  // The server is the only judge of a code: applying one simply re-quotes, and
+  // the verdict comes back on the quote. Nothing is discounted client-side.
+  const appliedCoupon = quote?.coupon?.code || '';
+  const couponProblem = quote?.coupon?.reason || '';
+
+  const applyPromo = () => {
+    const next = promoInput.trim().toUpperCase();
+    if (!next) return;
+    setPromoInput(next);
+    setCouponCode(next);
+  };
+
+  const clearPromo = () => {
+    setPromoInput('');
+    setCouponCode('');
+  };
 
   const payableNow = quote ? quote.advanceAmount : 0;
   const canSubmit = Boolean(quote) && !quoting && !submitting;
@@ -471,6 +501,79 @@ export const TourBookingScreen = () => {
             <i className="fa-solid fa-credit-card text-sm"></i>
             <i className="fa-solid fa-building-columns text-sm"></i>
           </div>
+        </div>
+
+        {/* Promo code — the discount shown below is the server's verdict */}
+        <div className="bg-white rounded-2xl p-4 shadow-xs border border-[#E5DDC3] space-y-2.5">
+          <h3 className="font-montserrat font-bold text-sm text-gray-900 flex items-center gap-2">
+            <i className="fa-solid fa-tag text-emerald-800"></i>
+            <span>Promo Code</span>
+          </h3>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={promoInput}
+              onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+              onKeyDown={(e) => {
+                // The screen is one <form>; Enter here must apply the code,
+                // not submit the booking.
+                // keyCode as well as key: if the guard ever missed, Enter would
+                // submit the booking with a typed-but-unapplied code and charge
+                // the full fare — the mismatch this screen exists to avoid.
+                if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); applyPromo(); }
+              }}
+              placeholder="Enter code"
+              className="flex-1 border border-[#E5DDC3] rounded-xl px-3 py-2.5 text-xs font-semibold tracking-wide uppercase focus:outline-hidden focus:ring-2 focus:ring-emerald-800/30"
+            />
+            {appliedCoupon ? (
+              <button
+                type="button"
+                onClick={clearPromo}
+                className="px-4 rounded-xl text-xs font-bold text-gray-600 border border-[#E5DDC3] cursor-pointer"
+              >
+                Remove
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={applyPromo}
+                disabled={!promoInput.trim() || quoting}
+                className="px-4 rounded-xl text-xs font-bold text-amber-300 bg-[#06381e] disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+              >
+                Apply
+              </button>
+            )}
+          </div>
+
+          {appliedCoupon && quote?.discount > 0 && (
+            <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+              <i className="fa-solid fa-circle-check"></i>
+              <span>{appliedCoupon} applied — you saved {rupees(quote.discount)}</span>
+            </p>
+          )}
+          {couponProblem && (
+            <p className="text-xs text-red-600 flex items-center gap-1.5">
+              <i className="fa-solid fa-circle-exclamation"></i>
+              <span>{couponProblem}</span>
+            </p>
+          )}
+
+          {offers.length > 0 && !appliedCoupon && (
+            <div className="space-y-1.5 pt-1">
+              {offers.map((offer) => (
+                <button
+                  key={offer._id}
+                  type="button"
+                  onClick={() => { setPromoInput(offer.code); setCouponCode(offer.code); }}
+                  className="w-full text-left bg-[#FAF6ED] border border-dashed border-[#C9B98A] rounded-xl px-3 py-2 cursor-pointer"
+                >
+                  <p className="text-xs font-black text-emerald-950 tracking-wide">{offer.code}</p>
+                  <p className="text-[11px] text-gray-600 leading-snug">{offer.title}</p>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Fare Summary — every figure here is the server's */}

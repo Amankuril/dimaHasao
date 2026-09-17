@@ -14,6 +14,7 @@ import ToursSettings from '../models/ToursSettings.js';
 import { quoteBooking } from '../services/pricing.js';
 import { publicPackageMatch } from '../services/package.service.js';
 import { settleBookingAdvance } from '../services/settlement.service.js';
+import { resolveOffer, claimOffer } from '../services/offer.service.js';
 import { isRazorpayConfigured } from '../../../core/payments/razorpay.service.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -80,7 +81,7 @@ const loadSellablePackage = async (packageId) => {
  */
 export const getBookingQuote = async (req, res) => {
   try {
-    const { packageId, travelDate, adults, children } = req.body;
+    const { packageId, travelDate, adults, children, couponCode } = req.body;
     const { pkg } = await loadSellablePackage(packageId);
 
     const party = { adults: Number(adults) || 1, children: Number(children) || 0 };
@@ -92,10 +93,24 @@ export const getBookingQuote = async (req, res) => {
     }
 
     const settings = await ToursSettings.getSettings();
-    const quote = quoteBooking({ pkg, party, settings });
+
+    // Price once without the coupon to learn the fare the discount applies to,
+    // then again with it. A coupon that cannot be used is reported, not thrown:
+    // a bad code should fail to discount, never block the screen from pricing.
+    const undiscounted = quoteBooking({ pkg, party, settings });
+    const offer = await resolveOffer({
+      code: couponCode,
+      baseAmount: undiscounted.baseAmount,
+      pkg,
+      userId: req.user?._id,
+    });
+    const quote = offer.discount
+      ? quoteBooking({ pkg, party, settings, discount: offer.discount })
+      : undiscounted;
 
     res.json({
       success: true,
+      coupon: { code: offer.code, discount: offer.discount, reason: offer.reason },
       quote: {
         pricePerPerson: quote.pricePerPerson,
         childPricePerPerson: quote.childPricePerPerson,
@@ -132,7 +147,7 @@ export const createBooking = async (req, res) => {
 
     const {
       packageId, travelDate, adults, children,
-      pickupPoint, travellerContact, specialRequest, paymentMethod,
+      pickupPoint, travellerContact, specialRequest, paymentMethod, couponCode,
     } = req.body;
 
     const { pkg, operator } = await loadSellablePackage(packageId);
@@ -143,7 +158,22 @@ export const createBooking = async (req, res) => {
     const problem = validateDeparture(pkg, travelDate, totalTravellers);
     if (problem) return res.status(400).json({ success: false, message: problem });
 
-    const quote = quoteBooking({ pkg, party, settings });
+    const undiscounted = quoteBooking({ pkg, party, settings });
+
+    // Here an unusable code is a hard error. Quietly charging the full fare
+    // after the screen showed a discount is the payment mismatch this project
+    // has already been bitten by — better to say why and let them book without it.
+    const offer = await resolveOffer({
+      code: couponCode,
+      baseAmount: undiscounted.baseAmount,
+      pkg,
+      userId: req.user._id,
+    });
+    if (offer.reason) return res.status(400).json({ success: false, message: offer.reason });
+
+    const quote = offer.discount
+      ? quoteBooking({ pkg, party, settings, discount: offer.discount })
+      : undiscounted;
 
     const booking = await TourBooking.create({
       bookingId: `TR-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -165,6 +195,7 @@ export const createBooking = async (req, res) => {
       childPricePerPerson: quote.childPricePerPerson,
       baseAmount: quote.baseAmount,
       discount: quote.discount,
+      couponCode: offer.code || undefined,
       taxRate: quote.taxRate,
       taxes: quote.taxes,
       totalAmount: quote.totalAmount,
@@ -176,6 +207,9 @@ export const createBooking = async (req, res) => {
       paymentMethod: paymentMethod || 'online',
       createdBy: 'user',
     });
+
+    // Counted only now, so browsing a quote never burns a redemption.
+    await claimOffer(offer.code);
 
     res.status(201).json({
       success: true,
