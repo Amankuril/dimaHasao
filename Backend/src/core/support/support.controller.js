@@ -14,6 +14,9 @@ import {
 import { createTicket, addMessage, statusesInGroup } from './support.service.js';
 import { searchRegex } from '../../utils/searchRegex.js';
 
+/** Matches the cap on a message in the ticket schema. */
+const MAX_MESSAGE_LENGTH = 4000;
+
 const CATEGORIES_BY_MODULE = {
   hotel: ['booking', 'payment', 'property', 'refund', 'account', 'technical', 'other'],
   tours: ['booking', 'payment', 'package', 'refund', 'account', 'technical', 'other'],
@@ -32,6 +35,20 @@ export const raiseTicket = async (req, res) => {
 
     if (!String(description || '').trim() && !String(subject || '').trim()) {
       return res.status(400).json({ success: false, message: 'Tell us what went wrong' });
+    }
+
+    /*
+     * The opening description also becomes the thread's first message, and that
+     * field is capped at 4000 characters. Without this check an over-long one
+     * reached mongoose and came back as a 500 "Could not raise this ticket",
+     * which reads to the person typing as the server being broken rather than
+     * their message being too long.
+     */
+    if (String(description || '').length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({
+        success: false,
+        message: `Please keep it under ${MAX_MESSAGE_LENGTH.toLocaleString('en-IN')} characters`,
+      });
     }
 
     const allowed = CATEGORIES_BY_MODULE[module];
@@ -128,6 +145,12 @@ export const replyToMyTicket = async (req, res) => {
   try {
     const message = String(req.body.message || '').trim();
     if (!message) return res.status(400).json({ success: false, message: 'Write a message first' });
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({
+        success: false,
+        message: `Please keep it under ${MAX_MESSAGE_LENGTH.toLocaleString('en-IN')} characters`,
+      });
+    }
 
     const ticket = await findOwnTicket(req);
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
@@ -331,6 +354,12 @@ export const replyAsAdmin = async (req, res) => {
   try {
     const message = String(req.body.message || '').trim();
     if (!message) return res.status(400).json({ success: false, message: 'Write a reply first' });
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({
+        success: false,
+        message: `Please keep it under ${MAX_MESSAGE_LENGTH.toLocaleString('en-IN')} characters`,
+      });
+    }
 
     const ticket = await SupportTicket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });

@@ -142,9 +142,10 @@ export const run = async ({ primary, secondary, admin }) => {
   const bigRes = await post('/support', {
     token: primary.token, body: { module: 'hotel', issueType: 'QA size probe', description: huge },
   });
-  check('INJ-160', 'oversized body is rejected, not fatal', [400, 413, 500].includes(bigRes.status) || bigRes.status === 201, {
-    expected: 'a status, not a dead socket', actual: bigRes.status || 'connection dropped', severity: SEVERITY.MEDIUM,
-  });
+  check('INJ-160', 'oversized body is refused cleanly, not as a 500',
+    [400, 413].includes(bigRes.status), {
+      expected: '400/413', actual: bigRes.status || 'connection dropped', severity: SEVERITY.MEDIUM,
+    });
   const alive = await get('/health');
   check('INJ-161', 'server still alive after the oversized body', alive.status === 200, {
     expected: '200', actual: alive.status, severity: SEVERITY.CRITICAL,

@@ -16,6 +16,10 @@ import { getRazorpayClient, getRazorpayKeyId } from '../../../core/payments/razo
 import PaymentConfig from '../config/payment.config.js';
 import mongoose from 'mongoose';
 import emailService from '../services/emailService.js';
+// Used by the partner booking alert below. Its absence meant every one of those
+// alerts died as a ReferenceError inside the surrounding catch — the same miss
+// as getRazorpayClient in this file.
+import smsService from '../utils/smsService.js';
 import notificationService from '../services/notificationService.js';
 import referralService from '../services/referralService.js';
 import User from '../models/User.js';

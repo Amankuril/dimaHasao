@@ -72,7 +72,7 @@ run `node scripts/qa/run.js && node scripts/qa/report.js` instead.
 | INJ-142 | injection | client cannot forge a pass code | no pass code before payment | — | ✅ PASS |
 | INJ-150 | injection | path traversal blocked (/../../../../etc/passwd) | no file contents | — | ✅ PASS |
 | INJ-151 | injection | path traversal blocked (/uploads/../../../../etc/passwd) | no file contents | — | ✅ PASS |
-| INJ-160 | injection | oversized body is rejected, not fatal | a status, not a dead socket | — | ✅ PASS |
+| INJ-160 | injection | oversized body is refused cleanly, not as a 500 | 400/413 | — | ✅ PASS |
 | INJ-161 | injection | server still alive after the oversized body | 200 | — | ✅ PASS |
 | VAL-100 | validation | empty basket refused | 4xx | — | ✅ PASS |
 | VAL-101 | validation | missing festivalId refused | 4xx | — | ✅ PASS |
@@ -125,7 +125,7 @@ run `node scripts/qa/run.js && node scripts/qa/report.js` instead.
 | UPL-122 | uploads | an empty file is refused | 4xx | — | ✅ PASS |
 | UPL-123 | uploads | a request with no file is refused | 4xx | — | ✅ PASS |
 | UPL-130 | uploads | a traversing folder name cannot escape the storage root | refused or flattened | — | ✅ PASS |
-| UPL-140 | uploads | an oversized upload is refused | 4xx | — | ✅ PASS |
+| UPL-140 | uploads | an oversized upload is refused as 413 | 413 | — | ✅ PASS |
 | UPL-141 | uploads | server still alive after the oversized upload | 200 | — | ✅ PASS |
 
 ## By suite

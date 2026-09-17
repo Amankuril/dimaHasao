@@ -50,7 +50,7 @@ to attack. Verified the guest can still cancel their own.
 | --- | --- |
 | Module | Uploads (platform-wide) |
 | Severity | **Critical** |
-| Status | Fixed — `40b2e2d` |
+| Status | Fixed — `b9cef9d` |
 | Regression test | `UPL-100`, `UPL-101`, `UPL-110` |
 
 **Description.** `POST /v1/uploads/image` carried the comment "auth may be
@@ -83,7 +83,7 @@ it. Recorded in `SECURITY_AUDIT.md` as an open item.
 | --- | --- |
 | Module | Uploads |
 | Severity | **High** |
-| Status | Fixed — `40b2e2d` |
+| Status | Fixed — `b9cef9d` |
 | Regression test | `UPL-140`, `UPL-141` |
 
 **Description.** `multer({ storage })` was configured with no `limits`. Files
@@ -204,6 +204,58 @@ returns `''`, which callers already refuse.
 | BUG-016 | Festivals | **Medium** | A booking window could be set but never cleared | `ea88058` |
 | BUG-017 | Admin | **Medium** | `/admin/login` while signed in landed on a dead route, with a location modal over it | `a1695cb` |
 | BUG-018 | Admin | **Medium** | Login sent every admin to Food, including ones with no access to it | `a1695cb` |
+
+---
+
+## BUG-019 — Hotel partners never received their booking-alert SMS
+
+| | |
+| --- | --- |
+| Module | Hotel |
+| Severity | **Medium** |
+| Status | Fixed |
+| Regression test | covered indirectly; the error no longer appears in the log |
+
+`bookingController` called `smsService.sendSMS(...)` without importing it, so
+every partner booking alert died as `ReferenceError: smsService is not defined`
+inside the surrounding catch and was logged rather than surfaced. The same
+missing-import class as BUG-009. `paymentController` imported it correctly; the
+booking path did not.
+
+---
+
+## BUG-020 — A rejected upload was reported as a server error
+
+| | |
+| --- | --- |
+| Module | Platform (error handling) |
+| Severity | **Low** |
+| Status | Fixed |
+| Regression test | `UPL-140` |
+
+Multer reports a rejected upload by throwing, with no `statusCode`, so an
+oversized file came back as `500 Server Error` — which reads as the server
+breaking rather than the request being refused. Multer's error codes are now
+mapped to client statuses; an oversized upload answers `413 That file is too
+large`.
+
+---
+
+## BUG-021 — A long support message was reported as a server error
+
+| | |
+| --- | --- |
+| Module | Support |
+| Severity | **Low** |
+| Status | Fixed |
+| Regression test | `INJ-160` |
+
+The opening description also becomes the thread's first message, which the
+schema caps at 4000 characters. The controller did not check, so an over-long
+one reached mongoose and came back as `500 Could not raise this ticket` — to
+the person typing, the server appearing broken rather than their message being
+too long. Now a `400` naming the limit, on both the opening description and
+replies from either side.
 
 ---
 

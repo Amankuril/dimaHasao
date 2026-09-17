@@ -139,8 +139,8 @@ export const run = async ({ primary, admin }) => {
   const oversized = Buffer.concat([png, Buffer.alloc(12 * 1024 * 1024, 0x50)]);
   const big = await upload(primary.token, { folder: 'qa' },
     { name: 'huge.png', type: 'image/png', buffer: oversized });
-  check('UPL-140', 'an oversized upload is refused', big.status >= 400, {
-    expected: '4xx', actual: big.status, severity: SEVERITY.HIGH,
+  check('UPL-140', 'an oversized upload is refused as 413', big.status === 413, {
+    expected: '413', actual: big.status, severity: SEVERITY.HIGH,
   });
 
   const alive = await get('/health');
