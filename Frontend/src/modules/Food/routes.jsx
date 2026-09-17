@@ -243,7 +243,8 @@ export default function App() {
       const module = event.detail?.module || 'user'
       
       const loginPaths = {
-        admin: '/food/admin/login',
+        // One admin login for the whole platform.
+        admin: '/admin/login',
         restaurant: '/food/restaurant/login',
         delivery: '/food/delivery/login',
         user: '/login'

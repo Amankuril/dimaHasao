@@ -4,7 +4,8 @@ export const adminService = {
   /**
    * Admin Authentication
    */
-  login: (credentials) => api.post('/admin/login', credentials),
+  // No login here on purpose: the platform has one admin login, at
+  // /admin/login, and it posts to /auth/admin/login.
   forgotPassword: (email) => api.post('/admin/forgot-password', { email }),
   verifyResetOtp: (data) => api.post('/admin/verify-reset-otp', data),
   resetPassword: (data) => api.post('/admin/reset-password', data),

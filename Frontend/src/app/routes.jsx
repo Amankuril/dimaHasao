@@ -196,9 +196,9 @@ const AppRoutes = () => {
         {/* Root lands on the client-approved Dima Hasao customer app. The
             Hello-Parth consumer shells stay reachable at /food/* and /taxi/*. */}
         <Route path="/" element={<Navigate to="/app" replace />} />
-        {/* Consumer login is the Dima Hasao screen only. Vendor/admin logins
-            keep their own paths (/food/restaurant/login, /food/delivery/login,
-            /food/admin/login) and are unaffected. */}
+        {/* Consumer login is the Dima Hasao screen only. Vendor logins keep
+            their own paths (/food/restaurant/login, /food/delivery/login) and
+            the one admin login lives at /admin/login. */}
         <Route path="/login/*" element={<Navigate to="/app/login" replace />} />
         <Route path="/app/*" element={<Suspense fallback={<SoftFallback />}><DimaHasaoApp /></Suspense>} />
         {/* Gated consumer shells must precede the generic module routes. */}

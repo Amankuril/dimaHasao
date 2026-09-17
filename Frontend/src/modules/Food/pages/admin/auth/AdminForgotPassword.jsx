@@ -1,23 +1,22 @@
 import { useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Button } from "@food/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@food/components/ui/card"
-import { Input } from "@food/components/ui/input"
-import { Label } from "@food/components/ui/label"
-import { Mail, ArrowLeft, Shield } from "lucide-react"
-import { DEFAULT_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import { ArrowLeft, KeyRound, Loader2, Mail, Shield, Eye, EyeOff } from "lucide-react"
 import { adminAPI } from "@food/api"
-import { useCompanyName } from "@food/hooks/useCompanyName"
+import AdminAuthShell, {
+  authFieldClass,
+  authLabelClass,
+  authInputClass,
+  authButtonClass,
+} from "./AdminAuthShell"
 
+/**
+ * Admin password reset: email → 6-digit code → new password.
+ *
+ * Shares AdminAuthShell with the login it is reached from, so the two read as
+ * one flow. Nothing linked here before, so this page existed and worked but was
+ * unreachable.
+ */
 export default function AdminForgotPassword() {
-  const companyName = useCompanyName()
   const navigate = useNavigate()
   const [step, setStep] = useState(1) // 1: email, 2: OTP, 3: new password
   const [email, setEmail] = useState("")
@@ -30,6 +29,19 @@ export default function AdminForgotPassword() {
   const [error, setError] = useState("")
   const [resendTimer, setResendTimer] = useState(0)
   const inputRefs = useRef(Array(6).fill(null).map(() => null))
+
+  const startResendCountdown = () => {
+    setResendTimer(60)
+    const timer = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault()
@@ -46,16 +58,7 @@ export default function AdminForgotPassword() {
       await adminAPI.requestForgotPasswordOtp(trimmedEmail)
       setEmail(trimmedEmail)
       setStep(2)
-      setResendTimer(60)
-      const timer = setInterval(() => {
-        setResendTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+      startResendCountdown()
     } catch (err) {
       const message =
         err?.response?.data?.message ||
@@ -110,7 +113,7 @@ export default function AdminForgotPassword() {
 
     const otpCode = otp.join("")
     if (otpCode.length !== 6) {
-      setError("Please enter the complete 6-digit OTP")
+      setError("Please enter the complete 6-digit code")
       return
     }
     setStep(3)
@@ -123,22 +126,13 @@ export default function AdminForgotPassword() {
     setError("")
     try {
       await adminAPI.requestForgotPasswordOtp(email)
-      setResendTimer(60)
-      const timer = setInterval(() => {
-        setResendTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+      startResendCountdown()
     } catch (err) {
       const message =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.message ||
-        "Failed to resend OTP. Please try again."
+        "Failed to resend the code. Please try again."
       setError(message)
     } finally {
       setIsLoading(false)
@@ -183,228 +177,183 @@ export default function AdminForgotPassword() {
     }
   }
 
+  const heading = { 1: "Forgot password", 2: "Check your email", 3: "Set a new password" }[step]
+  const subheading = {
+    1: "We'll email you a 6-digit verification code.",
+    2: `Enter the code we sent to ${email}.`,
+    3: "Choose a password you have not used before.",
+  }[step]
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-neutral-50 via-gray-100 to-white relative">
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-24 -top-24 h-64 w-64 rounded-full bg-neutral-900/5 blur-3xl" />
-        <div className="absolute right-[-80px] bottom-[-80px] h-72 w-72 rounded-full bg-gray-700/5 blur-3xl" />
+    <AdminAuthShell>
+      <div className="flex items-center justify-center gap-2.5 md:justify-start">
+        <KeyRound size={15} className="text-[#caa83e]" />
+        <span className="dh-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa83e]">
+          Step {step} of 3
+        </span>
       </div>
 
-      <div className="flex min-h-screen items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-lg bg-white/90 backdrop-blur border-neutral-200 shadow-2xl">
-          <CardHeader className="pb-4">
-            <div className="flex w-full items-center gap-4 sm:gap-5">
-              <div className="flex h-14 w-28 shrink-0 items-center justify-center rounded-xl bg-gray-900/5 ring-1 ring-neutral-200">
-                <img
-                  src={DEFAULT_BRAND_LOGO}
-                  alt={companyName}
-                  className="h-10 w-24 object-contain"
-                  loading="lazy"
+      <h2 className="dh-montserrat mt-3 text-center text-2xl font-black tracking-wide text-[#f4efe2] md:text-left">
+        {heading}
+      </h2>
+      <p className="mt-1.5 break-words text-center text-[13px] text-[#9fb3a4] md:text-left">
+        {subheading}
+      </p>
+
+      {error && (
+        <p className="mt-5 rounded-xl border border-red-400/40 bg-red-500/10 px-3.5 py-2.5 text-[12px] leading-relaxed text-red-200">
+          {error}
+        </p>
+      )}
+
+      {step === 1 && (
+        <form onSubmit={handleEmailSubmit} className="mt-6 space-y-4" noValidate>
+          <div>
+            <label htmlFor="reset-email" className={authLabelClass}>
+              Email
+            </label>
+            <div className={authFieldClass(false)}>
+              <span className="grid w-11 shrink-0 place-items-center text-[#caa83e]">
+                <Mail size={16} />
+              </span>
+              <input
+                id="reset-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                placeholder="admin@dimahasao.in"
+                className={`${authInputClass} pr-3`}
+              />
+            </div>
+          </div>
+
+          <button type="submit" disabled={isLoading} className={authButtonClass}>
+            {isLoading ? <Loader2 size={18} className="animate-spin" /> : "Send code"}
+          </button>
+        </form>
+      )}
+
+      {step === 2 && (
+        <form onSubmit={handleOtpSubmit} className="mt-6 space-y-4">
+          <div>
+            <span className={authLabelClass}>Verification code</span>
+            <div className="flex justify-between gap-1.5 sm:gap-2">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => {
+                    if (inputRefs.current) inputRefs.current[index] = el
+                  }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  // Only the first box takes a paste, so one paste fills the row.
+                  onPaste={index === 0 ? handleOtpPaste : undefined}
+                  disabled={isLoading}
+                  className="h-13 w-full rounded-xl border border-[#caa83e]/35 bg-[#02130a] py-3 text-center text-xl font-bold text-[#f4efe2] outline-none transition-colors focus:border-[#caa83e] focus:ring-0"
                 />
-              </div>
-              <div className="flex flex-col gap-1">
-                <CardTitle className="text-3xl leading-tight text-gray-900">
-                  {step === 1 && "Forgot Password"}
-                  {step === 2 && "Verify OTP"}
-                  {step === 3 && "Reset Password"}
-                </CardTitle>
-                <CardDescription className="text-base text-gray-600">
-                  {step === 1 && "Enter your email to receive a verification code"}
-                  {step === 2 && "Enter the 6-digit code sent to your email"}
-                  {step === 3 && "Enter your new password"}
-                </CardDescription>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-[12px]">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 font-semibold text-[#9fb3a4] transition-colors hover:text-[#f4efe2]"
+            >
+              <ArrowLeft size={13} />
+              Change email
+            </button>
+            <button
+              type="button"
+              onClick={handleResendOtp}
+              disabled={resendTimer > 0 || isLoading}
+              className="font-semibold text-[#caa83e] transition-colors hover:text-[#e8c558] disabled:text-[#5d7264]"
+            >
+              {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend code"}
+            </button>
+          </div>
+
+          <button type="submit" disabled={isLoading} className={authButtonClass}>
+            {isLoading ? <Loader2 size={18} className="animate-spin" /> : "Verify code"}
+          </button>
+        </form>
+      )}
+
+      {step === 3 && (
+        <form onSubmit={handlePasswordSubmit} className="mt-6 space-y-4" noValidate>
+          {[
+            {
+              id: "new-password",
+              label: "New password",
+              value: newPassword,
+              onChange: setNewPassword,
+              visible: showPassword,
+              toggle: () => setShowPassword((c) => !c),
+              placeholder: "At least 6 characters",
+            },
+            {
+              id: "confirm-password",
+              label: "Confirm password",
+              value: confirmPassword,
+              onChange: setConfirmPassword,
+              visible: showConfirmPassword,
+              toggle: () => setShowConfirmPassword((c) => !c),
+              placeholder: "Type it again",
+            },
+          ].map((field) => (
+            <div key={field.id}>
+              <label htmlFor={field.id} className={authLabelClass}>
+                {field.label}
+              </label>
+              <div className={authFieldClass(false)}>
+                <span className="grid w-11 shrink-0 place-items-center text-[#caa83e]">
+                  <Shield size={16} />
+                </span>
+                <input
+                  id={field.id}
+                  type={field.visible ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  disabled={isLoading}
+                  placeholder={field.placeholder}
+                  className={authInputClass}
+                />
+                <button
+                  type="button"
+                  onClick={field.toggle}
+                  disabled={isLoading}
+                  aria-label={field.visible ? "Hide password" : "Show password"}
+                  className="grid w-11 shrink-0 place-items-center text-[#5d7264] transition-colors hover:text-[#caa83e]"
+                >
+                  {field.visible ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
-          </CardHeader>
+          ))}
 
-          <CardContent>
-            {error && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-6">
-                {error}
-              </div>
-            )}
+          <button type="submit" disabled={isLoading} className={authButtonClass}>
+            {isLoading ? <Loader2 size={18} className="animate-spin" /> : "Reset password"}
+          </button>
+        </form>
+      )}
 
-            {step === 1 && (
-              <form onSubmit={handleEmailSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-base font-medium text-gray-900">
-                    Email Address
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                      <Mail className="h-5 w-5" />
-                    </span>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="admin@domain.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                      autoComplete="email"
-                      required
-                      className="h-12 pl-10 text-base"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="h-12 w-full bg-black text-white transition-colors hover:bg-neutral-900"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Sending..." : "Send Verification Code"}
-                </Button>
-              </form>
-            )}
-
-            {step === 2 && (
-              <form onSubmit={handleOtpSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <Label className="text-base font-medium text-gray-900 text-center block">
-                    Enter Verification Code
-                  </Label>
-                  <div className="flex justify-center gap-2">
-                    {otp.map((digit, index) => (
-                      <Input
-                        key={index}
-                        ref={(el) => {
-                          if (inputRefs.current) {
-                            inputRefs.current[index] = el
-                          }
-                        }}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => handleOtpChange(index, e.target.value)}
-                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        onPaste={index === 0 ? handleOtpPaste : undefined}
-                        className="h-14 w-14 text-center text-2xl font-semibold border-2 focus-visible:ring-2 focus-visible:ring-black"
-                        disabled={isLoading}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-500 text-center">
-                    Code sent to <span className="font-medium">{email}</span>
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-                    disabled={isLoading}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Change email
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleResendOtp}
-                    disabled={resendTimer > 0 || isLoading}
-                    className="text-black hover:underline font-medium disabled:text-gray-400 disabled:no-underline"
-                  >
-                    {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend code"}
-                  </button>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="h-12 w-full bg-black text-white transition-colors hover:bg-neutral-900"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Verifying..." : "Verify Code"}
-                </Button>
-              </form>
-            )}
-
-            {step === 3 && (
-              <form onSubmit={handlePasswordSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-base font-medium text-gray-900">
-                    New Password
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                      <Shield className="h-5 w-5" />
-                    </span>
-                    <Input
-                      id="newPassword"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter new password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      disabled={isLoading}
-                      autoComplete="new-password"
-                      required
-                      className="h-12 pl-10 pr-10 text-base"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-                      disabled={isLoading}
-                    >
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-base font-medium text-gray-900">
-                    Confirm Password
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                      <Shield className="h-5 w-5" />
-                    </span>
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      disabled={isLoading}
-                      autoComplete="new-password"
-                      required
-                      className="h-12 pl-10 pr-10 text-base"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-                      disabled={isLoading}
-                    >
-                      {showConfirmPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="h-12 w-full bg-black text-white transition-colors hover:bg-neutral-900"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Resetting..." : "Reset Password"}
-                </Button>
-              </form>
-            )}
-          </CardContent>
-
-          <CardFooter className="flex-col items-start gap-2 text-sm text-gray-500">
-            <button
-              onClick={() => navigate("/admin/login")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to login
-            </button>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+      <button
+        type="button"
+        onClick={() => navigate("/admin/login")}
+        className="mt-7 flex w-full items-center justify-center gap-1.5 text-[12px] font-semibold text-[#9fb3a4] transition-colors hover:text-[#f4efe2] md:justify-start"
+      >
+        <ArrowLeft size={13} />
+        Back to sign in
+      </button>
+    </AdminAuthShell>
   )
 }
-

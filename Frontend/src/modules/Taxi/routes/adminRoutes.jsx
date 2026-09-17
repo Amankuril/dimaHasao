@@ -182,8 +182,6 @@ const AdminSectionPlaceholder = () => {
 
 const adminRoutes = (
   <>
-    {/* One admin login for the whole platform, routed by the food shell. */}
-    <Route path="/admin/login" element={<Navigate to="/admin/login" replace />} />
     <Route path="/user-import/create" element={<AdminLayout />}>
       <Route index element={<AdminUserImportCreate />} />
     </Route>

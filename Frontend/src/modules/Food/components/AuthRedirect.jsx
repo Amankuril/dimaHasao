@@ -32,7 +32,9 @@ export default function AuthRedirect({ children, module, redirectTo = null }) {
     user: "/food/user",
     restaurant: "/food/restaurant",
     delivery: "/food/delivery",
-    admin: "/food/admin",
+    // The admin panel lives at /admin/food, not under /food. Sending an
+    // already-signed-in admin to /food/admin landed them on a blank page.
+    admin: "/admin/food",
   }
 
   if (isAuthenticated) {

@@ -24,19 +24,11 @@ import {
   prefetchTaxiAdmin,
 } from '../../utils/activeModule.js'
 import { getCurrentUser } from '../../utils/moduleAuth.js'
+// The same rule the login screen uses to pick where to land, so the tab an
+// admin arrives on is always one they can actually see.
+import { canSeeAdminModule as canSeeModule } from '../../utils/adminHome.js'
 
 const cn = (...inputs) => twMerge(clsx(inputs))
-
-/**
- * A tab is visible to the platform superadmin, to that module's own superadmin,
- * and to a subadmin scoped to it. A profile with no adminLevel at all is a
- * legacy session — show everything rather than locking it out of the panel.
- */
-const canSeeModule = (profile, moduleKey) =>
-  profile.adminLevel === 'platform_superadmin' ||
-  profile.adminLevel === `${moduleKey}_superadmin` ||
-  (profile.adminLevel === 'subadmin' && profile.module === moduleKey) ||
-  !profile.adminLevel
 
 export default function AdminModuleSwitcher({ isCollapsed = false, className }) {
   const location = useLocation()

@@ -1,138 +1,45 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { adminAPI } from "@food/api";
 import { setAuthData } from "@food/utils/auth";
 import { setUnifiedAdminSession } from "../../../../Taxi/modules/admin/services/adminSession";
-import { User, Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import { Lock, Loader2, Eye, EyeOff, Mail, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { DEFAULT_BRAND_LOGO } from "@/shared/constants/brandLogo";
+import { resolveAdminHome } from "@/shared/utils/adminHome";
+import AdminAuthShell, {
+  authFieldClass,
+  authLabelClass,
+  authInputClass,
+  authButtonClass,
+} from "./AdminAuthShell";
 
-
-// Reusable Input Component (Inline)
-function LoginInput({
-  label,
-  icon: Icon,
-  type = "text",
-  placeholder = "",
-  value,
-  onChange,
-  error,
-  required = false,
-  ...props
-}) {
-  const isPassword = type === "password";
-  const [showPassword, setShowPassword] = useState(false);
-  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
-
-  return (
-    <div className="flex flex-col w-full font-poppins">
-      {label && (
-        <label className="text-white text-[12px] md:text-[14px] font-normal tracking-wide mb-1.5 md:mb-2">
-          {label}
-        </label>
-      )}
-      <div
-        className={`w-full h-[42px] md:h-[50px] bg-white/10 md:bg-white/20 hover:bg-white/15 md:hover:bg-white/25 focus-within:bg-white/20 md:focus-within:bg-white/30 transition-all duration-300 rounded-full flex items-center px-1.5 border border-white/10 md:border-transparent hover:border-white/20 md:hover:border-transparent focus-within:border-white/30 md:focus-within:border-transparent shadow-inner md:shadow-none ${
-          error ? "border-red-400 focus-within:ring-red-400/20" : ""
-        }`}
-      >
-        {/* Left Icon Circle */}
-        {Icon && (
-          <div className="w-[30px] h-[30px] md:w-[38px] md:h-[38px] rounded-full bg-gradient-to-br from-[#A31515] to-[#801124] md:bg-none md:bg-[#801124] flex items-center justify-center text-white shrink-0 shadow-md md:shadow-sm shadow-black/10">
-            <Icon size={15} className="md:scale-[1.2]" />
-          </div>
-        )}
-
-        {/* Text Input with class to force transparency */}
-        <input
-          type={inputType}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          required={required}
-          className="login-input-field bg-transparent text-white placeholder-white/50 text-[13px] md:text-[15px] h-full flex-1 px-2.5 md:px-3 border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:bg-transparent"
-          {...props}
-        />
-
-        {/* Right Password Toggle Icon */}
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="w-[30px] h-[30px] md:w-[38px] md:h-[38px] flex items-center justify-center text-white/60 hover:text-white transition-colors duration-200 shrink-0 focus:outline-none mr-1"
-          >
-            {showPassword ? <EyeOff size={15} className="md:scale-[1.2]" /> : <Eye size={15} className="md:scale-[1.2]" />}
-          </button>
-        )}
-      </div>
-
-      {error && (
-        <span className="text-red-200 text-[10px] md:text-xs font-normal mt-1 pl-4 transition-all duration-300 animate-fadeIn">
-          {error}
-        </span>
-      )}
-    </div>
-  );
-}
-
-// Reusable Button Component (Inline)
-function LoginButton({
-  children,
-  onClick,
-  type = "submit",
-  disabled = false,
-  loading = false,
-  ...props
-}) {
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled || loading}
-      className="w-[160px] md:w-[220px] h-[40px] md:h-[48px] rounded-full bg-white/20 hover:bg-white/25 focus:bg-white/35 border border-white/20 backdrop-blur-md text-white text-[13px] md:text-[16px] font-semibold font-poppins tracking-wider shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center"
-      {...props}
-    >
-      {loading ? <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" /> : children}
-    </button>
-  );
-}
-
-
-// Main Export Component
+/**
+ * The one admin login for the whole platform.
+ *
+ * Every panel — Food, Taxi, Hotel, Tours, Global — redirects here; there is no
+ * second admin login anywhere, and self-serve signup is gone (an administrator
+ * is created by a platform superadmin in Global › Administrators).
+ */
 export default function AdminLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const submitting = useRef(false);
-  const [isDesktop, setIsDesktop] = useState(true);
-
-  // Responsiveness tracker for conditional clip-path
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 768);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setErrors({});
 
-    let newErrors = {};
-    if (!email) newErrors.email = "Username is required";
-    if (!password) newErrors.password = "Password is required";
+    const nextErrors = {};
+    if (!email.trim()) nextErrors.email = "Enter your admin email";
+    if (!password) nextErrors.password = "Enter your password";
+    setErrors(nextErrors);
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      toast.error("Please fill in all fields");
-      return;
-    }
-
+    if (Object.keys(nextErrors).length > 0) return;
     if (submitting.current) return;
+
     submitting.current = true;
     setLoading(true);
 
@@ -150,15 +57,19 @@ export default function AdminLogin() {
 
       setAuthData("admin", accessToken, adminUser, refreshToken);
       setUnifiedAdminSession({ token: accessToken, user: adminUser, refreshToken });
-      toast.success("Welcome, Administrator");
-      navigate("/admin/food", { replace: true });
+
+      toast.success(`Welcome back, ${adminUser.name || "Administrator"}`);
+      // Land on a module this admin can actually open. Sending everyone to Food
+      // dropped a tours-only admin on a panel their sidebar would not even
+      // offer them a tab for.
+      navigate(resolveAdminHome(adminUser), { replace: true });
     } catch (err) {
-      const msg =
+      const message =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.message ||
-        "Login failed. Check your credentials.";
-      toast.error(msg);
+        "Sign in failed. Check your email and password.";
+      toast.error(message);
     } finally {
       setLoading(false);
       submitting.current = false;
@@ -166,123 +77,99 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col-reverse md:flex-row overflow-hidden font-poppins bg-white relative">
-      <style>{`
-        /* Override Chrome Autofill styling */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active  {
-          -webkit-text-fill-color: white !important;
-          -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
-          transition: background-color 5000s ease-in-out 0s !important;
-        }
-        /* Override global preflight inputs and borders */
-        .login-input-field {
-          background-color: transparent !important;
-          background: transparent !important;
-          border: none !important;
-          outline: none !important;
-          box-shadow: none !important;
-        }
-        .login-input-field:focus {
-          background-color: transparent !important;
-          background: transparent !important;
-          border: none !important;
-          outline: none !important;
-          box-shadow: none !important;
-        }
-        .premium-heading {
-          font-family: 'Outfit', sans-serif !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.25em !important;
-          background: linear-gradient(135deg, #FFFFFF 0%, #FFEBEF 100%) !important;
-          -webkit-background-clip: text !important;
-          -webkit-text-fill-color: transparent !important;
-          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-      `}</style>
-
-      {/* SVG Wave Clip Path Definition */}
-      <svg className="absolute w-0 h-0">
-        <defs>
-          <clipPath id="wave-clip" clipPathUnits="objectBoundingBox">
-            <path d="M 0.13,0 C 0.13,0.08 0.24,0.1 0.24,0.18 C 0.24,0.26 0.16,0.38 0.16,0.5 C 0.16,0.62 0.28,0.7 0.28,0.82 C 0.28,0.92 0.24,0.96 0.24,1 L 1,1 L 1,0 Z" />
-          </clipPath>
-        </defs>
-      </svg>
-
-      {/* LEFT SECTION (54% desktop, hidden on mobile) */}
-      <div className="hidden md:flex w-full md:w-[54%] h-[45vh] md:h-full bg-white relative items-center justify-center overflow-hidden shrink-0 z-0">
-        <img
-          src="/assets/images/adminloginpagedesign.webp"
-          alt="Login Illustration"
-          className="w-full h-full object-contain scale-[0.86] md:-translate-x-10"
-        />
+    <AdminAuthShell>
+      <div className="flex items-center justify-center gap-2.5 md:justify-start">
+        <ShieldCheck size={15} className="text-[#caa83e]" />
+        <span className="dh-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa83e]">
+          Administrator
+        </span>
       </div>
 
-      {/* RIGHT SECTION CONTENT (46% desktop, full h-screen on mobile) */}
-      <div className={`w-full md:w-[46%] h-screen md:h-full relative flex flex-col justify-center items-center px-4 sm:px-12 md:px-16 lg:px-24 shrink-0 z-20 overflow-hidden ${!isDesktop ? "bg-gradient-to-br from-[#8B0000] via-[#B71C1C] to-[#8B0000]" : "bg-transparent"}`}>
-        {/* Ambient Glow Blobs (Mobile only) */}
-        <div className="absolute -top-20 -left-20 w-[280px] h-[280px] rounded-full bg-[#FF8A80]/15 blur-[60px] pointer-events-none md:hidden" />
-        <div className="absolute -bottom-20 -right-20 w-[300px] h-[300px] rounded-full bg-[#FF8A80]/12 blur-[70px] pointer-events-none md:hidden" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-white/5 blur-[90px] pointer-events-none md:hidden" />
+      <h2 className="dh-montserrat mt-3 text-center text-2xl font-black tracking-wide text-[#f4efe2] md:text-left">
+        Sign in
+      </h2>
+      <p className="mt-1.5 text-center text-[13px] text-[#9fb3a4] md:text-left">
+        Accounts are issued by a platform superadmin.
+      </p>
 
-        <form onSubmit={handleLogin} className="w-full max-w-[350px] sm:max-w-[380px] p-7 sm:p-9 md:p-0 rounded-[2rem] md:rounded-none bg-white/10 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none border border-white/10 md:border-none shadow-2xl md:shadow-none shadow-black/25 flex flex-col items-center -mt-16 md:-mt-16 z-10">
-          {/* Logo */}
-          <div className="w-[160px] md:w-[220px] mb-4 select-none flex justify-center items-center md:items-start">
-             <img
-              src={DEFAULT_BRAND_LOGO}
-              alt="Dima Hasao"
-              className="w-full object-contain"
-            />
-          </div>
-
-          {/* Heading */}
-          <h1 className="premium-heading text-[16px] sm:text-[18px] md:text-[32px] mb-8 text-center uppercase whitespace-nowrap">
-            Admin Panel
-          </h1>
-
-          {/* Inputs */}
-          <div className="w-full space-y-3 md:space-y-5 mb-5 md:mb-8">
-            <LoginInput
-              label="Username"
-              icon={User}
-              type="text"
-              placeholder=""
+      <form onSubmit={handleLogin} className="mt-7 space-y-4" noValidate>
+        <div>
+          <label htmlFor="admin-email" className={authLabelClass}>
+            Email
+          </label>
+          <div className={authFieldClass(errors.email)}>
+            <span className="grid w-11 shrink-0 place-items-center text-[#caa83e]">
+              <Mail size={16} />
+            </span>
+            <input
+              id="admin-email"
+              type="email"
+              autoComplete="username"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={errors.email}
-            />
-            <LoginInput
-              label="Password"
-              icon={Lock}
-              type="password"
-              placeholder=""
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={errors.password}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors((c) => ({ ...c, email: undefined }));
+              }}
+              placeholder="admin@dimahasao.in"
+              className={`${authInputClass} pr-3`}
             />
           </div>
+          {errors.email && <p className="mt-1.5 text-[11px] text-red-300">{errors.email}</p>}
+        </div>
 
-          {/* Submit Button */}
-          <LoginButton loading={loading}>
-            LOGIN
-          </LoginButton>
-        </form>
-      </div>
+        <div>
+          <label htmlFor="admin-password" className={authLabelClass}>
+            Password
+          </label>
+          <div className={authFieldClass(errors.password)}>
+            <span className="grid w-11 shrink-0 place-items-center text-[#caa83e]">
+              <Lock size={16} />
+            </span>
+            <input
+              id="admin-password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errors.password) setErrors((c) => ({ ...c, password: undefined }));
+              }}
+              placeholder="••••••••"
+              className={authInputClass}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="grid w-11 shrink-0 place-items-center text-[#5d7264] transition-colors hover:text-[#caa83e]"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {errors.password && <p className="mt-1.5 text-[11px] text-red-300">{errors.password}</p>}
+        </div>
 
-      {/* RIGHT BACKGROUND WAVE OVERLAY (Direct Sibling, NOT clipped by right container!) */}
-      <div
-        className={`absolute top-0 right-0 h-full w-[59vw] bg-gradient-to-br from-[#8B0000] via-[#A31515] to-[#C62828] z-10 pointer-events-none ${isDesktop ? "block" : "hidden"}`}
-        style={{
-          clipPath: isDesktop ? "url(#wave-clip)" : "none",
-        }}
-      />
-    </div>
+        <div className="flex justify-end">
+          {/* The reset flow already existed and worked; nothing linked to it,
+              so an admin who forgot their password had no way in. */}
+          <button
+            type="button"
+            onClick={() => navigate("/admin/forgot-password")}
+            className="text-[12px] font-semibold text-[#caa83e] transition-colors hover:text-[#e8c558]"
+          >
+            Forgot password?
+          </button>
+        </div>
+
+        <button type="submit" disabled={loading} className={authButtonClass}>
+          {loading ? <Loader2 size={18} className="animate-spin" /> : "Sign in"}
+        </button>
+      </form>
+
+      <p className="mt-7 text-center text-[11px] leading-relaxed text-[#5d7264] md:text-left">
+        Authorised access only. Every action in this console is recorded against
+        your account.
+      </p>
+    </AdminAuthShell>
   );
 }
-
-
-
-
