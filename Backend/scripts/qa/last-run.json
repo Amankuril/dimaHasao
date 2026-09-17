@@ -1,0 +1,232 @@
+{
+  "total": 22,
+  "passed": 22,
+  "failed": 0,
+  "blocked": 0,
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "low": 0,
+  "results": [
+    {
+      "module": "authz",
+      "id": "AUTHZ-101",
+      "title": "another user's support ticket refused",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-102",
+      "title": "cannot reply on another user's ticket",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-103",
+      "title": "owner can still read their own ticket",
+      "status": "PASS",
+      "expected": "200",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-110",
+      "title": "cannot open a payment order on another user's basket",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-111",
+      "title": "cannot release another user's held seats",
+      "status": "PASS",
+      "expected": "released 0 or refused",
+      "actual": "status 200, released 0",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-112",
+      "title": "cannot cancel another user's pass",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-113",
+      "title": "another user's passes absent from my list",
+      "status": "PASS",
+      "expected": "no trace of the other user's booking",
+      "actual": "booking visible",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-120",
+      "title": "cannot settle another user's tour booking",
+      "status": "PASS",
+      "expected": "refused",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-121",
+      "title": "cannot open a payment order on another user's tour",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-130",
+      "title": "another user's stay refused",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-131",
+      "title": "another user's invoice refused",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-132",
+      "title": "cannot cancel another user's stay",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-133",
+      "title": "the guest can still cancel their own stay",
+      "status": "PASS",
+      "expected": "200",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-140",
+      "title": "consumer refused on tours operator bookings",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-141",
+      "title": "consumer refused on hotel partner bookings",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-142",
+      "title": "consumer refused on tours operator wallet",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-143",
+      "title": "consumer refused on hotel partner wallet",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-150",
+      "title": "consumer cannot create a festival",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-151",
+      "title": "consumer cannot create a tour offer",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-152",
+      "title": "consumer cannot create an administrator",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-153",
+      "title": "consumer cannot update a support ticket",
+      "status": "PASS",
+      "expected": "401/403/404",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "authz",
+      "id": "AUTHZ-160",
+      "title": "platform superadmin can list administrators",
+      "status": "PASS",
+      "expected": "200",
+      "actual": "level platform_superadmin",
+      "severity": "Info",
+      "evidence": ""
+    }
+  ]
+}

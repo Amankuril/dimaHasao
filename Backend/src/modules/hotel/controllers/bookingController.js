@@ -593,13 +593,30 @@ export const getPartnerBookingDetail = async (req, res) => {
 
 export const cancelBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id).populate('propertyId', 'partnerId');
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
-    // Allow user to cancel or admin/partner
-    if (booking.userId.toString() !== req.user._id.toString()) {
-      // Add logic for partner/admin override if needed
-      // return res.status(403).json({ message: 'Not authorized' });
+    /*
+     * Who may cancel this stay.
+     *
+     * The ownership test was here but its rejection was commented out, so the
+     * check ran and then did nothing: any signed-in user could cancel anyone
+     * else's booking by id, which released the room, moved commission between
+     * the partner and admin wallets, and sent the guest a cancellation.
+     *
+     * Three parties have a legitimate reason: the guest who booked it, the
+     * partner whose property it is, and an admin.
+     */
+    const callerId = String(req.user._id);
+    const role = String(req.user.role || '').toLowerCase();
+    const isGuest = String(booking.userId) === callerId;
+    const isPartner = role === 'partner' && String(booking.propertyId?.partnerId || '') === callerId;
+    const isAdmin = ['admin', 'superadmin'].includes(role);
+
+    if (!isGuest && !isPartner && !isAdmin) {
+      // 404 rather than 403: confirming the id exists tells an outsider that
+      // somebody's booking is there to attack.
+      return res.status(404).json({ message: 'Booking not found' });
     }
 
     if (booking.bookingStatus === 'cancelled') {
