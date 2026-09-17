@@ -82,8 +82,16 @@ export const MODULE_SOURCES = {
 
 export const REPORT_MODULES = Object.keys(MODULE_SOURCES);
 
-/** `$sum` of a field that may not exist on this module at all. */
-const sumOf = (path) => (path ? { $sum: { $ifNull: [path, 0] } } : { $literal: 0 });
+/**
+ * `$sum` of a field that may not exist on this module at all.
+ *
+ * The absent case has to be `{ $sum: 0 }`, not `{ $literal: 0 }` — $literal is
+ * not a $group accumulator, and Mongo rejects the whole pipeline with "unknown
+ * group operator". That took out every figure for festivals, which has no
+ * commission, and would have done the same to taxi, which has no tax field, as
+ * soon as it had a completed ride.
+ */
+const sumOf = (path) => (path ? { $sum: { $ifNull: [path, 0] } } : { $sum: 0 });
 
 const rangeMatch = (source, from, to) => {
   if (!from && !to) return {};
