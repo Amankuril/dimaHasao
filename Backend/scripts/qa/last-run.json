@@ -1,6 +1,6 @@
 {
-  "total": 22,
-  "passed": 22,
+  "total": 97,
+  "passed": 97,
   "failed": 0,
   "blocked": 0,
   "critical": 0,
@@ -8,6 +8,286 @@
   "medium": 0,
   "low": 0,
   "results": [
+    {
+      "module": "auth",
+      "id": "AUTH-101",
+      "title": "no token rejected — GET /food/user/profile",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-102",
+      "title": "no token rejected — GET /hotel/bookings/my",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-103",
+      "title": "no token rejected — GET /tours/bookings/my",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-104",
+      "title": "no token rejected — GET /festivals/bookings/my",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-105",
+      "title": "no token rejected — GET /support",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-106",
+      "title": "no token rejected — GET /admin/support",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-107",
+      "title": "no token rejected — GET /admin/reports/overview",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-108",
+      "title": "no token rejected — GET /admin/administrators",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-109",
+      "title": "no token rejected — GET /taxi/rides",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-110",
+      "title": "no token rejected — GET /food/orders",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-111",
+      "title": "no token rejected — GET /festivals/admin",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-112",
+      "title": "no token rejected — GET /tours/admin/dashboard",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-113",
+      "title": "no token rejected — GET /hotel/admin/dashboard-stats",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-120",
+      "title": "malformed token rejected",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-121",
+      "title": "empty bearer rejected",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-122",
+      "title": "literal \"null\" rejected",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-130",
+      "title": "JWT signed with an unknown key rejected",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-131",
+      "title": "expired token rejected",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-140",
+      "title": "role rewritten to ADMIN rejected",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-141",
+      "title": "user id rewritten rejected",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 401,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-150",
+      "title": "consumer token refused on /admin/administrators",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-151",
+      "title": "consumer token refused on /admin/support",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-152",
+      "title": "consumer token refused on /admin/reports/overview",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-153",
+      "title": "consumer token refused on /festivals/admin",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-154",
+      "title": "consumer token refused on /tours/admin/dashboard",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-155",
+      "title": "consumer token refused on /hotel/admin/dashboard-stats",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-156",
+      "title": "consumer token refused on /food/admin/dashboard-stats",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "auth",
+      "id": "AUTH-157",
+      "title": "consumer token refused on /taxi/admin/dashboard/data",
+      "status": "PASS",
+      "expected": "401/403",
+      "actual": 403,
+      "severity": "Info",
+      "evidence": ""
+    },
     {
       "module": "authz",
       "id": "AUTHZ-101",
@@ -225,6 +505,476 @@
       "status": "PASS",
       "expected": "200",
       "actual": "level platform_superadmin",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-101",
+      "title": "OTP request refuses phone as { $ne: null }",
+      "status": "PASS",
+      "expected": "no OTP issued",
+      "actual": "refused 400",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-102",
+      "title": "OTP request refuses phone as { $gt: \"\" }",
+      "status": "PASS",
+      "expected": "no OTP issued",
+      "actual": "refused 400",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-103",
+      "title": "OTP request refuses audience as { $ne: null }",
+      "status": "PASS",
+      "expected": "no OTP issued",
+      "actual": "refused 400",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-104",
+      "title": "admin login refuses operator objects",
+      "status": "PASS",
+      "expected": "no session",
+      "actual": "refused 400",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-110",
+      "title": "festival search survives an operator in the query",
+      "status": "PASS",
+      "expected": "not 500",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-111",
+      "title": "tour package filter survives an operator in the query",
+      "status": "PASS",
+      "expected": "not 500",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-112",
+      "title": "property filter survives an operator in the query",
+      "status": "PASS",
+      "expected": "not 500",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-120",
+      "title": "support ticket is served as JSON, not HTML",
+      "status": "PASS",
+      "expected": "application/json",
+      "actual": "application/json; charset=utf-8",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-121",
+      "title": "script payload round-trips as data (escaped downstream)",
+      "status": "PASS",
+      "expected": "stored verbatim for the client to escape",
+      "actual": "altered or dropped",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-130",
+      "title": "profile update cannot set role",
+      "status": "PASS",
+      "expected": "role stays USER",
+      "actual": "role is USER (update returned 200)",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-140",
+      "title": "server prices the pass, not the client",
+      "status": "PASS",
+      "expected": "₹250",
+      "actual": "₹250",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-141",
+      "title": "client cannot mark its own booking paid",
+      "status": "PASS",
+      "expected": "pending",
+      "actual": "pending",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-142",
+      "title": "client cannot forge a pass code",
+      "status": "PASS",
+      "expected": "no pass code before payment",
+      "actual": "(none)",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-150",
+      "title": "path traversal blocked (/../../../../etc/passwd)",
+      "status": "PASS",
+      "expected": "no file contents",
+      "actual": "refused 404",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-151",
+      "title": "path traversal blocked (/uploads/../../../../etc/passwd)",
+      "status": "PASS",
+      "expected": "no file contents",
+      "actual": "refused 404",
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-160",
+      "title": "oversized body is rejected, not fatal",
+      "status": "PASS",
+      "expected": "a status, not a dead socket",
+      "actual": 500,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "injection",
+      "id": "INJ-161",
+      "title": "server still alive after the oversized body",
+      "status": "PASS",
+      "expected": "200",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-100",
+      "title": "empty basket refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-101",
+      "title": "missing festivalId refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-102",
+      "title": "zero tickets refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-103",
+      "title": "negative tickets refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-104",
+      "title": "non-numeric ticket count refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-105",
+      "title": "unknown category id refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-106",
+      "title": "malformed object id refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 404,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-107",
+      "title": "duplicate category refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-108",
+      "title": "absurd ticket count refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-120",
+      "title": "check-out before check-in refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-121",
+      "title": "same-day check-in and check-out refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-122",
+      "title": "check-in in the past refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-123",
+      "title": "unparseable dates refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-130",
+      "title": "empty phone refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-131",
+      "title": "short phone refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-132",
+      "title": "alphabetic phone refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-133",
+      "title": "absurdly long phone refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-140",
+      "title": "offer with no code refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-141",
+      "title": "offer with no title refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-142",
+      "title": "zero discount refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-143",
+      "title": "negative discount refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-144",
+      "title": "percentage over 100 refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-145",
+      "title": "end before start refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-150",
+      "title": "festival with no name refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-151",
+      "title": "festival with no categories refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-152",
+      "title": "category with no seats refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-153",
+      "title": "booking window closing before it opens refused",
+      "status": "PASS",
+      "expected": "4xx",
+      "actual": 400,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-160",
+      "title": "negative page handled",
+      "status": "PASS",
+      "expected": "200 with sane defaults",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-161",
+      "title": "absurd limit capped",
+      "status": "PASS",
+      "expected": "200 with sane defaults",
+      "actual": 200,
+      "severity": "Info",
+      "evidence": ""
+    },
+    {
+      "module": "validation",
+      "id": "VAL-162",
+      "title": "non-numeric page handled",
+      "status": "PASS",
+      "expected": "200 with sane defaults",
+      "actual": 200,
       "severity": "Info",
       "evidence": ""
     }

@@ -26,7 +26,21 @@ const notFound = (res) => res.status(404).json({ success: false, message: 'Packa
  */
 export const getPublicPackages = async (req, res) => {
   try {
-    const { category, difficulty, search, minPrice, maxPrice, sort, limit = 50, page = 1 } = req.query;
+    const { minPrice, maxPrice, sort, limit = 50, page = 1 } = req.query;
+
+    /*
+     * Query filters are read as text, whatever arrived.
+     *
+     * `?category[$ne]=null` reaches Express as an object; mongoSanitize strips
+     * the operator key and leaves `{}`, which then fails to cast against a
+     * string path and took the whole catalogue down with a 500. Coercing here
+     * means a malformed filter finds nothing, which is the honest answer, and
+     * the endpoint keeps serving.
+     */
+    const asText = (value) => (typeof value === 'string' ? value.trim() : '');
+    const category = asText(req.query.category);
+    const difficulty = asText(req.query.difficulty);
+    const search = asText(req.query.search);
 
     const match = publicPackageMatch({ operatorId: { $in: await sellableOperatorIds() } });
 
@@ -38,7 +52,8 @@ export const getPublicPackages = async (req, res) => {
       if (maxPrice) match.pricePerPerson.$lte = Number(maxPrice);
     }
     if (search) {
-      const regex = new RegExp(String(search).trim(), 'i');
+      // Escaped: a search box is not a place to accept a regular expression.
+      const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       match.$or = [{ title: regex }, { subtitle: regex }, { destinations: regex }];
     }
 

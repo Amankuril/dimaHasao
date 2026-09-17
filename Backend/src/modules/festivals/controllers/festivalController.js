@@ -8,6 +8,7 @@
 import mongoose from 'mongoose';
 import Festival, { bookingWindow, festivalStatus } from '../models/Festival.js';
 import { deleteStoredAssets, deleteReplacedAssets } from '../../../services/storage.service.js';
+import { searchRegex } from '../../../utils/searchRegex.js';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -192,7 +193,7 @@ export const getPublicFestivals = async (req, res) => {
     const conditions = [];
 
     if (search) {
-      const regex = new RegExp(String(search).trim(), 'i');
+      const regex = searchRegex(search);
       conditions.push({ $or: [{ name: regex }, { venue: regex }, { location: regex }, { tagline: regex }] });
     }
     if (upcoming === 'true') {

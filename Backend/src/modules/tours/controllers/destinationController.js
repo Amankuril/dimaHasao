@@ -10,6 +10,7 @@ import TourismDestination from '../models/Destination.js';
 import TourPackage from '../models/TourPackage.js';
 import { publicPackageMatch, sellableOperatorIds } from '../services/package.service.js';
 import { deleteStoredAssets, deleteReplacedAssets } from '../../../services/storage.service.js';
+import { searchRegex } from '../../../utils/searchRegex.js';
 
 const slugify = (value) =>
   String(value || '')
@@ -116,7 +117,7 @@ export const getPublicDestinations = async (req, res) => {
     const match = { isActive: true };
     if (category && category !== 'all') match.category = category;
     if (search) {
-      const regex = new RegExp(String(search).trim(), 'i');
+      const regex = searchRegex(search);
       match.$or = [{ name: regex }, { location: regex }, { description: regex }, { subtitle: regex }];
     }
 

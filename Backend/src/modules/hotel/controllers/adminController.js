@@ -15,6 +15,7 @@ import emailService from '../services/emailService.js';
 import notificationService from '../services/notificationService.js';
 import Wallet from '../models/Wallet.js';
 import Transaction from '../models/Transaction.js';
+import { searchRegex } from '../../../utils/searchRegex.js';
 
 
 
@@ -1180,7 +1181,7 @@ export const getWithdrawals = async (req, res) => {
     if (status && status !== 'all') query.status = status;
 
     if (search) {
-      const regex = new RegExp(String(search).trim(), 'i');
+      const regex = searchRegex(search);
       const partners = await Partner.find({
         $or: [{ name: regex }, { phone: regex }, { email: regex }],
       }).select('_id');

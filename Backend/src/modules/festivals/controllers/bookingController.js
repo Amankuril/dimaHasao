@@ -276,6 +276,11 @@ export const checkoutBasket = async (req, res) => {
 
     // Validate everything before taking a single seat, so an obviously bad
     // basket never leaves a hold behind.
+    // The id is checked for shape first: handing Mongo a malformed one throws a
+    // CastError, which surfaced as a 500 rather than "not found".
+    if (!mongoose.Types.ObjectId.isValid(festivalId)) {
+      return res.status(404).json({ success: false, message: 'Festival not found' });
+    }
     const festival = await Festival.findOne({ _id: festivalId, isActive: true });
     if (!festival) return res.status(404).json({ success: false, message: 'Festival not found' });
 
@@ -286,6 +291,9 @@ export const checkoutBasket = async (req, res) => {
 
     const lines = [];
     for (const item of requested) {
+      if (!mongoose.Types.ObjectId.isValid(item.ticketCategoryId)) {
+        return res.status(404).json({ success: false, message: 'That pass is not available' });
+      }
       const category = festival.ticketCategories.id(item.ticketCategoryId);
       if (!category || !category.isActive) {
         return res.status(404).json({ success: false, message: 'That pass is not available' });

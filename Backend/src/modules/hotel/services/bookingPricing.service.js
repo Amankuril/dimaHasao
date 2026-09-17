@@ -125,10 +125,33 @@ export const quoteStay = async ({
 
   const checkIn = new Date(checkInDate);
   const checkOut = new Date(checkOutDate);
+
+  if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) {
+    const error = new Error('Invalid check-in/check-out dates');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  /*
+   * A stay cannot start in the past.
+   *
+   * Only the night count was checked, so yesterday-to-tomorrow priced and
+   * booked happily — it holds inventory for a night that has already gone and
+   * puts a check-in date behind the front desk's own clock. Compared at day
+   * granularity so a booking made later the same morning still works.
+   */
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  if (checkIn < startOfToday) {
+    const error = new Error('Check-in cannot be a date in the past');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const totalNights = Math.ceil((checkOut - checkIn) / DAY_MS);
 
   if (!totalNights || totalNights <= 0) {
-    const error = new Error('Invalid check-in/check-out dates');
+    const error = new Error('Check-out must be after check-in');
     error.statusCode = 400;
     throw error;
   }

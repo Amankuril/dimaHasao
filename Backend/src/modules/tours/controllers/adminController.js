@@ -11,6 +11,7 @@ import ToursTransaction from '../models/ToursTransaction.js';
 import ToursSettings from '../models/ToursSettings.js';
 import { createPackage, assertOperatorSellable } from '../services/package.service.js';
 import { notifyOperatorApproval, notifyPackageDecision } from '../services/notify.service.js';
+import { searchRegex } from '../../../utils/searchRegex.js';
 
 /* ------------------------------------------------------------------ *
  * Operators
@@ -24,7 +25,7 @@ export const getOperators = async (req, res) => {
     const query = {};
     if (approvalStatus && approvalStatus !== 'all') query.operatorApprovalStatus = approvalStatus;
     if (search) {
-      const regex = new RegExp(String(search).trim(), 'i');
+      const regex = searchRegex(search);
       query.$or = [{ name: regex }, { agencyName: regex }, { phone: regex }, { email: regex }];
     }
 
@@ -142,7 +143,8 @@ export const getAdminPackages = async (req, res) => {
     const query = {};
     if (status && status !== 'all') query.status = status;
     if (operatorId && mongoose.Types.ObjectId.isValid(operatorId)) query.operatorId = operatorId;
-    if (search) query.title = new RegExp(String(search).trim(), 'i');
+    const titleMatch = searchRegex(search);
+    if (titleMatch) query.title = titleMatch;
 
     const perPage = Math.min(Number(limit) || 20, 100);
     const [packages, total, summary] = await Promise.all([
@@ -260,7 +262,8 @@ export const getAdminBookings = async (req, res) => {
     const query = {};
     if (status && status !== 'all') query.bookingStatus = status;
     if (operatorId && mongoose.Types.ObjectId.isValid(operatorId)) query.operatorId = operatorId;
-    if (search) query.bookingId = new RegExp(String(search).trim(), 'i');
+    const bookingMatch = searchRegex(search);
+    if (bookingMatch) query.bookingId = bookingMatch;
 
     const perPage = Math.min(Number(limit) || 20, 100);
     const [bookings, total] = await Promise.all([

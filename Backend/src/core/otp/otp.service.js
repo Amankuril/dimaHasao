@@ -8,11 +8,27 @@ import { ApiError } from '../../utils/ApiError.js';
 const INDIA_HUB_ENDPOINT = 'http://cloud.smsindiahub.in/api/mt/SendSMS';
 const MSG91_OTP_ENDPOINT = 'https://control.msg91.com/api/v5/otp';
 
-/** Normalize to 10-digit Indian mobile (no country code). */
+/**
+ * Normalize to a 10-digit Indian mobile (no country code).
+ *
+ * Implausible input returns '' rather than being salvaged. The rule used to be
+ * "take the last ten digits of whatever arrived", which quietly accepted a
+ * 200-character string, a number typed twice, or a stray card number — and then
+ * sent an OTP to the ten digits that happened to fall at the end. Callers
+ * already refuse an empty phone, so '' is the refusal.
+ *
+ * The accepted shapes are the ones people actually type: a bare 10-digit
+ * mobile, a 0-prefixed national number, or one carrying the 91 country code
+ * with or without a leading 0.
+ */
 export const normalizeOtpPhone = (phone) => {
     const digits = String(phone || '').replace(/\D/g, '').trim();
+
+    if (digits.length === 10) return digits;
+    if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
     if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
-    return digits.slice(-10);
+    if (digits.length === 13 && digits.startsWith('091')) return digits.slice(3);
+    return '';
 };
 
 export const getOtpTtlMs = () => {

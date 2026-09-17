@@ -12,6 +12,7 @@ import {
   SUPPORT_STATUSES_BY_MODULE,
 } from './supportTicket.model.js';
 import { createTicket, addMessage, statusesInGroup } from './support.service.js';
+import { searchRegex } from '../../utils/searchRegex.js';
 
 const CATEGORIES_BY_MODULE = {
   hotel: ['booking', 'payment', 'property', 'refund', 'account', 'technical', 'other'],
@@ -203,7 +204,7 @@ export const listAllTickets = async (req, res) => {
     else if (group && statusesInGroup(group)) match.status = { $in: statusesInGroup(group) };
 
     if (search) {
-      const regex = new RegExp(String(search).trim(), 'i');
+      const regex = searchRegex(search);
       match.$or = [
         { ticketCode: regex }, { subject: regex }, { issueType: regex },
         { description: regex }, { requesterName: regex }, { requesterPhone: regex },
