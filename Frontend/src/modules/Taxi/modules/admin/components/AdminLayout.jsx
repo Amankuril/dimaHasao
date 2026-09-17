@@ -1,13 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState, startTransition, Suspense } from 'react';
+import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import {
-  FOOD_ADMIN_HOME,
-  TAXI_ADMIN_HOME,
-  HOTEL_ADMIN_HOME,
-  TOURS_ADMIN_HOME,
-  prefetchFoodAdmin,
-  prefetchTaxiAdmin,
-} from '@/shared/utils/activeModule.js';
+import { prefetchFoodAdmin } from '@/shared/utils/activeModule.js';
+import { canSeeAdminModule } from '@/shared/utils/adminHome.js';
+import AdminModuleSwitcher from '@/shared/components/admin/AdminModuleSwitcher';
 import { POOLING_ENABLED, RENTAL_ENABLED } from '../../../shared/featureFlags';
 import { socketService } from '../../../shared/api/socket';
 import { useSettings } from '../../../shared/context/SettingsContext';
@@ -52,12 +47,8 @@ import {
   Star,
   Trash2,
   TrendingUp,
-  Truck,
   UserCog,
   Users,
-  UtensilsCrossed,
-  Hotel,
-  Compass,
   Wallet,
   X,
   Zap,
@@ -645,38 +636,16 @@ const AdminLayout = () => {
   const userMenuRef = useRef(null);
   const notificationsMenuRef = useRef(null);
   const [adminProfile, setAdminProfile] = useState(() => readAdminProfile());
-  const showFoodTab = adminProfile.adminLevel === "platform_superadmin" || 
-                       adminProfile.adminLevel === "food_superadmin" || 
-                       (adminProfile.adminLevel === "subadmin" && adminProfile.module === "food");
-
-  const showTaxiTab = adminProfile.adminLevel === "platform_superadmin" || 
-                       adminProfile.adminLevel === "taxi_superadmin" || 
-                       (adminProfile.adminLevel === "subadmin" && adminProfile.module === "taxi");
-
   const appName = settings.general?.app_name || 'App';
 
+  // Which tabs to show is AdminModuleSwitcher's job now. This only needs to
+  // know whether Food is reachable, so its chunk can be warmed on mount.
+  const canReachFood = canSeeAdminModule(adminProfile, "food");
+
   useEffect(() => {
-    if (showFoodTab) prefetchFoodAdmin();
-  }, [showFoodTab]);
+    if (canReachFood) prefetchFoodAdmin();
+  }, [canReachFood]);
 
-  const switchAdminModule = (path) => {
-    const go = () => {
-      startTransition(() => {
-        navigate(path);
-      });
-    };
-
-    // Wait for sibling chunks so the first Food ↔ Taxi switch has no blank flash.
-    if (path === FOOD_ADMIN_HOME) {
-      Promise.resolve(prefetchFoodAdmin()).finally(go);
-      return;
-    }
-    if (path === TAXI_ADMIN_HOME) {
-      Promise.resolve(prefetchTaxiAdmin()).finally(go);
-      return;
-    }
-    go();
-  };
 
   useEffect(() => {
     const syncAdminProfile = () => setAdminProfile(readAdminProfile());
@@ -1467,61 +1436,12 @@ const AdminLayout = () => {
             </div>
           )}
 
-          {/* Module Switcher Tabs */}
-          {!isCollapsed && (showFoodTab || showTaxiTab) && (
-              <div className="grid grid-cols-2 gap-1 p-1 bg-neutral-800/40 backdrop-blur-sm rounded-xl mb-4 border border-white/5 shadow-inner">
-                {showFoodTab && (
-                  <button
-                    type="button"
-                    onClick={() => switchAdminModule(FOOD_ADMIN_HOME)}
-                    onMouseEnter={prefetchFoodAdmin}
-                    onFocus={prefetchFoodAdmin}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
-                      "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-                    )}
-                  >
-                    <UtensilsCrossed className="w-3.5 h-3.5 text-neutral-500" />
-                    Food
-                  </button>
-                )}
-                {showTaxiTab && (
-                  <button
-                    type="button"
-                    onClick={() => switchAdminModule(TAXI_ADMIN_HOME)}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
-                      "bg-white text-black shadow-[0_4px_12px_rgba(255,255,255,0.15)] scale-[1.02]"
-                    )}
-                  >
-                    <Truck className="w-3.5 h-3.5 text-black" />
-                    Taxi
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => switchAdminModule(HOTEL_ADMIN_HOME)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
-                    "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-                  )}
-                >
-                  <Hotel className="w-3.5 h-3.5 text-neutral-500" />
-                  Hotel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchAdminModule(TOURS_ADMIN_HOME)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
-                    "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-                  )}
-                >
-                  <Compass className="w-3.5 h-3.5 text-neutral-500" />
-                  Tours
-                </button>
-              </div>
-          )}
+          {/* Taxi kept its own copy of this strip: it had no Global tab, its
+              Food/Taxi tabs were hardcoded active/inactive regardless of the
+              route, Hotel and Tours only rendered when Food or Taxi was
+              visible, and its gating dropped the legacy "no adminLevel"
+              fallback, so an older admin account saw no tabs at all. */}
+          <AdminModuleSwitcher isCollapsed={isCollapsed} />
 
             {!isCollapsed && (
               <div className="relative">

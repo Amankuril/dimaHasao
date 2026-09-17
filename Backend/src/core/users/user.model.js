@@ -243,3 +243,19 @@ userSchema.index({ 'addresses.location': '2dsphere' });
 
 export const FoodUser = mongoose.model('FoodUser', userSchema);
 
+/**
+ * The same model registered a second time under the name `User`.
+ *
+ * Nine schemas across hotel, taxi and food declare `ref: 'User'` on a customer
+ * id. That name used to be registered by hotel's own User model; once that
+ * became a shim over this one, nothing answered to `'User'` any more and every
+ * populate through those refs threw MissingSchemaError — which is what took out
+ * the hotel admin dashboard.
+ *
+ * Registering an alias is the small fix: one model, one `users` collection, two
+ * names, and no module has to be edited. `FoodUser` stays the canonical one to
+ * import; `User` exists so those declared refs keep resolving.
+ */
+export const User =
+  mongoose.models.User || mongoose.model('User', userSchema, 'users');
+

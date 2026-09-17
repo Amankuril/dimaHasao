@@ -1,13 +1,8 @@
-import { useState, useEffect, useMemo, useRef, useLayoutEffect, startTransition } from "react"
-import { Link, useLocation, useNavigationType, useNavigate } from "react-router-dom"
-import {
-  FOOD_ADMIN_HOME,
-  TAXI_ADMIN_HOME,
-  HOTEL_ADMIN_HOME,
-  TOURS_ADMIN_HOME,
-  prefetchFoodAdmin,
-  prefetchTaxiAdmin,
-} from "@/shared/utils/activeModule.js"
+import { useState, useEffect, useMemo, useRef, useLayoutEffect } from "react"
+import { Link, useLocation, useNavigationType } from "react-router-dom"
+import { prefetchTaxiAdmin } from "@/shared/utils/activeModule.js"
+import { canSeeAdminModule } from "@/shared/utils/adminHome.js"
+import AdminModuleSwitcher from "@/shared/components/admin/AdminModuleSwitcher"
 import {
   Search,
   FileText,
@@ -19,8 +14,6 @@ import {
   MapPin,
   Link as LinkIcon,
   UtensilsCrossed,
-  Hotel,
-  Compass,
   Building2,
   FolderTree,
   Plus,
@@ -197,7 +190,6 @@ function refreshAdminListForPath(path = "") {
 
 export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange }) {
   const location = useLocation()
-  const navigate = useNavigate()
   const navigationType = useNavigationType()
   const [searchQuery, setSearchQuery] = useState("")
   const [badges, setBadges] = useState({})
@@ -209,45 +201,13 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
   const pendingNavScrollPath = useRef(null)
   const [isLoading, setIsLoading] = useState(true)
   const adminProfile = useMemo(() => getCurrentUser("admin") || {}, [])
-  const showFoodTab = adminProfile.adminLevel === "platform_superadmin" ||
-                       adminProfile.adminLevel === "food_superadmin" ||
-                       (adminProfile.adminLevel === "subadmin" && adminProfile.module === "food") ||
-                       !adminProfile.adminLevel
-  const showTaxiTab = adminProfile.adminLevel === "platform_superadmin" ||
-                       adminProfile.adminLevel === "taxi_superadmin" ||
-                       (adminProfile.adminLevel === "subadmin" && adminProfile.module === "taxi") ||
-                       !adminProfile.adminLevel
-  const showHotelTab = adminProfile.adminLevel === "platform_superadmin" ||
-                       adminProfile.adminLevel === "hotel_superadmin" ||
-                       (adminProfile.adminLevel === "subadmin" && adminProfile.module === "hotel") ||
-                       !adminProfile.adminLevel
-  const showToursTab = adminProfile.adminLevel === "platform_superadmin" ||
-                       adminProfile.adminLevel === "tours_superadmin" ||
-                       (adminProfile.adminLevel === "subadmin" && adminProfile.module === "tours") ||
-                       !adminProfile.adminLevel
+  // Which tabs to show is AdminModuleSwitcher's job now. This only needs to
+  // know whether Taxi is reachable, so its chunk can be warmed on mount.
+  const canReachTaxi = canSeeAdminModule(adminProfile, "taxi")
 
   useEffect(() => {
-    if (showTaxiTab) prefetchTaxiAdmin()
-  }, [showTaxiTab])
-
-  const switchAdminModule = (path) => {
-    const go = () => {
-      startTransition(() => {
-        navigate(path)
-      })
-    }
-
-    // Wait for sibling chunks so the first Food ↔ Taxi switch has no blank flash.
-    if (path === TAXI_ADMIN_HOME) {
-      Promise.resolve(prefetchTaxiAdmin()).finally(go)
-      return
-    }
-    if (path === FOOD_ADMIN_HOME) {
-      Promise.resolve(prefetchFoodAdmin()).finally(go)
-      return
-    }
-    go()
-  }
+    if (canReachTaxi) prefetchTaxiAdmin()
+  }, [canReachTaxi])
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -987,94 +947,11 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
             </div>
           )}
 
-          {!isCollapsed && (showFoodTab || showTaxiTab || showHotelTab || showToursTab) && (
-            <div className="grid grid-cols-2 gap-1 p-1 bg-neutral-800/40 backdrop-blur-sm rounded-xl mb-4 border border-white/5 shadow-inner animate-[slideIn_0.4s_ease-out_0.15s_both]">
-              {showFoodTab && (
-                <button
-                  type="button"
-                  onClick={() => switchAdminModule(FOOD_ADMIN_HOME)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
-                    location.pathname.includes("/admin/food") || location.pathname === "/admin" || location.pathname === "/admin/"
-                      ? "bg-white text-black shadow-[0_4px_12px_rgba(255,255,255,0.15)] scale-[1.02]"
-                      : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-                  )}
-                >
-                  <UtensilsCrossed
-                    className={cn(
-                      "w-3.5 h-3.5",
-                      location.pathname.includes("/admin/food") || location.pathname === "/admin" || location.pathname === "/admin/"
-                        ? "text-black"
-                        : "text-neutral-500"
-                    )}
-                  />
-                  Food
-                </button>
-              )}
-              {showTaxiTab && (
-                <button
-                  type="button"
-                  onClick={() => switchAdminModule(TAXI_ADMIN_HOME)}
-                  onMouseEnter={prefetchTaxiAdmin}
-                  onFocus={prefetchTaxiAdmin}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
-                    location.pathname.startsWith("/taxi")
-                      ? "bg-white text-black shadow-[0_4px_12px_rgba(255,255,255,0.15)] scale-[1.02]"
-                      : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-                  )}
-                >
-                  <Truck
-                    className={cn(
-                      "w-3.5 h-3.5",
-                      location.pathname.startsWith("/taxi") ? "text-black" : "text-neutral-500"
-                    )}
-                  />
-                  Taxi
-                </button>
-              )}
-              {showHotelTab && (
-                <button
-                  type="button"
-                  onClick={() => switchAdminModule(HOTEL_ADMIN_HOME)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
-                    location.pathname.startsWith("/hotel")
-                      ? "bg-white text-black shadow-[0_4px_12px_rgba(255,255,255,0.15)] scale-[1.02]"
-                      : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-                  )}
-                >
-                  <Hotel
-                    className={cn(
-                      "w-3.5 h-3.5",
-                      location.pathname.startsWith("/hotel") ? "text-black" : "text-neutral-500"
-                    )}
-                  />
-                  Hotel
-                </button>
-              )}
-              {showToursTab && (
-                <button
-                  type="button"
-                  onClick={() => switchAdminModule(TOURS_ADMIN_HOME)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300",
-                    location.pathname.startsWith("/tours")
-                      ? "bg-white text-black shadow-[0_4px_12px_rgba(255,255,255,0.15)] scale-[1.02]"
-                      : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-                  )}
-                >
-                  <Compass
-                    className={cn(
-                      "w-3.5 h-3.5",
-                      location.pathname.startsWith("/tours") ? "text-black" : "text-neutral-500"
-                    )}
-                  />
-                  Tours
-                </button>
-              )}
-            </div>
-          )}
+          {/* The four-module strip plus Global. Food kept its own copy of
+              this markup, which is why Global never appeared here even
+              though the section existed — the shared component is the only
+              one that knows about it. */}
+          <AdminModuleSwitcher isCollapsed={isCollapsed} />
 
           {/* Search Bar */}
           {!isCollapsed && (
