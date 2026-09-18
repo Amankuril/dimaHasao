@@ -1911,7 +1911,21 @@ export const saveUserFcmToken = async (req, res) => {
 };
 
 export const getCurrentUser = async (req, res) => {
-  const user = await User.findById(req.auth?.sub);
+  /*
+   * The account and the subscription summary are fetched together.
+   *
+   * The summary only ever needed the id, which is already in the token — it was
+   * waiting on findById for nothing, and this endpoint reads 0.5kb in ~138ms
+   * against a nearly empty database. getUserSubscriptionSummary is a pure read
+   * (the wallet upsert nearby belongs to purchaseUserSubscription, not to
+   * this), so running it before we know the account exists writes nothing; the
+   * 404 below is unchanged and still wins.
+   */
+  const userId = req.auth?.sub;
+  const [user, subscriptionSummary] = await Promise.all([
+    User.findById(userId),
+    getUserSubscriptionSummary(userId),
+  ]);
 
   if (!user) {
     throw new ApiError(404, 'User not found');
@@ -1921,8 +1935,6 @@ export const getCurrentUser = async (req, res) => {
     user.referralCode = generateUserReferralCode(user);
     await user.save();
   }
-
-  const subscriptionSummary = await getUserSubscriptionSummary(user._id);
 
   res.json({
     success: true,

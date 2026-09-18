@@ -172,6 +172,7 @@ the same body. QA suite unchanged.
 | OPT-007 | Same change on hotel — **reverted** | 13% *slower*; hotel's first lookup already hit |
 | OPT-008 | Three duplicate frontend fetches removed | `/food/user` 14→12 calls, `/taxi/user` 17→16, 0 duplicates |
 | OPT-009 | Admin badge poll pauses on a hidden tab | ~1 request/min saved per idle admin tab |
+| OPT-010 | Taxi `/users/me` fetches account + subscriptions together | **−20%** (108ms → 86ms) |
 
 ---
 
@@ -392,3 +393,44 @@ Pausing those would mean missed orders, which is a business failure, not a
 performance win. The admin badge poll was changed because it is demonstrably
 safe; the rest need the same per-site judgment `.lean()` needed, and none of
 them should be changed in bulk.
+
+---
+
+## OPT-010 — Taxi's `/users/me` fetches account and subscriptions together
+
+**Module:** taxi · **File:** `Backend/src/modules/taxi/user/controllers/userController.js`
+
+**Problem.** `GET /taxi/users/me` took ~108ms to return 0.5kb.
+
+**Root cause.** `User.findById` then `getUserSubscriptionSummary(user._id)`, in
+series. The summary only ever needed the id, which is already in the token — it
+was waiting on `findById` for nothing.
+
+**A check that changed the plan.** An initial reading of the summary suggested
+it did four queries including a wallet upsert, which would have made
+parallelising it a write-ordering risk. Reading the function boundaries properly
+showed `getUserSubscriptionSummary` ends after **one** await and is a pure read;
+the upsert belongs to `purchaseUserSubscription` further down the file. The
+first count had spanned two functions.
+
+**Solution.** Both go out together. Running the summary before we know the
+account exists writes nothing, and the 404 below is unchanged and still wins.
+
+**Measured:** 115ms and 101ms → **88ms and 85ms**, about **−20%**, both passes
+agreeing while controls moved −6% and +9%.
+
+Two earlier attempts at this reading were discarded: one where the before side
+was missing the endpoints entirely (the harness's target list lived in the
+working tree, so `git stash` took it away with the fix — the harness is now
+committed separately), and one whose controls moved further than the target.
+
+**Regression status:** `/taxi/users/me`, `/taxi/users/subscriptions/me` and
+`/taxi/rides` all compared before and after — identical. QA 124/125, 1 blocked.
+
+**Found and NOT fixed:** `listUserSubscriptions` in
+`taxi/user/services/subscriptionService.js` awaits
+`ensureSubscriptionStatusFresh(item)` **inside a loop** — one round trip per
+subscription. Invisible here because the test account has none, and it is a
+concrete instance of audit finding P10. It is left alone because that helper may
+write status updates, and parallelising writes is exactly what this work does
+not do without reading each one.
