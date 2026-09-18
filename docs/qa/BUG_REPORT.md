@@ -714,3 +714,76 @@ any SLA measurement have nothing to read.
 Add Restaurant wizard step 3 · delivery partner onboarding (both blocked on
 government-ID and bank fields) · hotel, tours and festival bookings · card
 payments.
+
+---
+
+# Hotel booking, end to end, 2026-09-18
+
+## PASSED — booking `BK-1789726147851-388`
+
+Booked through the UI at `/app/hotels` as a customer, paying **at the property**
+(no card involved).
+
+| Step | Result |
+|---|---|
+| Listing | 3 approved stays, all real Dima Hasao properties |
+| Property detail | Live inventory ("6 rooms left"), check-in/out times, room types |
+| Fare | ₹3,800 + 12% GST ₹456 = **₹4,256** — correct |
+| Payment method | "Pay at Hotel" changes the button to **"Reserve (₹4,256 at hotel)"** |
+| Confirmation | Booking ID returned on screen |
+| Customer list | Present |
+| Admin list | Present as the newest booking |
+
+Stored booking:
+
+```
+bookingStatus  : confirmed      paymentStatus: pending      method: pay_at_hotel
+checkInDate    : 2026-09-19     checkOutDate : 2026-09-20   totalNights: 1
+guests         : 2 adults       pricePerNight: 3800
+totalAmount 4256 | taxes 456 | adminCommission 380 | partnerPayout 3420
+```
+
+**The money is right.** Commission is 10% of the ₹3,800 base = ₹380; payout
+3800 − 380 = ₹3,420; platform keeps 380 + 456 = ₹836; 3420 + 836 = 4256.
+
+## PASSED — pay-at-hotel settlement debits the partner, as designed
+
+The partner wallet reads **−₹1,672**, which is exactly −836 × 2 for the two
+pay-at-hotel bookings. That is the documented behaviour: the partner collects
+the full ₹4,256 in cash at the property, so the platform's cut (commission plus
+taxes) is **debited** from their wallet rather than credited. The negative
+balance is the partner owing the platform, not a bug.
+
+This is worth contrasting with the food module, where a completed delivery moved
+**no** balance at all (see the previous entry). Hotel settles; food does not.
+
+## Not a bug — Razorpay opening on "Pay at Hotel"
+
+I reported this to myself mid-test and it was wrong. Clicking the *text* of the
+Pay-at-Hotel option does not select it; the first radio (UPI/QR) stayed checked,
+so opening Razorpay was correct. Selecting the radio properly changes the button
+to "Reserve (… at hotel)" and no gateway opens. **The app behaved correctly; my
+click did not.**
+
+## Inventory is derived, not decremented
+
+`roomtypes` carries `totalInventory` and no per-booking counter. "6 rooms left"
+is computed against existing bookings rather than stored, so there is no stale
+counter to drift — but it also means **the concurrent-booking test matters
+more**, since two simultaneous bookings both read the same derived number. That
+test has not been run.
+
+## Method note for whoever picks this up
+
+Four times now I have reported something as broken that was my own
+response-parsing or a wrong field name — `checkIn` vs `checkInDate`,
+`availableRooms` vs `totalInventory`, `data.orders` vs `data`, and the
+vehicle-types endpoint. **Read the shape before believing the number.** Calling
+the service or reading the schema directly settles in one step what guessing
+never does.
+
+## Still remaining
+
+Concurrent double-booking · hotel cancellation and refund · partner-side
+booking view · tours booking (advance payment needs a card) · festivals ·
+Add Restaurant wizard step 3 · delivery partner onboarding.
