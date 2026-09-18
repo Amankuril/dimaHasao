@@ -3,7 +3,7 @@ import RoomType from '../models/RoomType.js';
 import Booking from '../models/Booking.js';
 import Offer from '../models/Offer.js';
 import PlatformSettings from '../models/PlatformSettings.js';
-import { quoteStay } from '../services/bookingPricing.service.js';
+import { quoteStay, claimAvailability, releaseAvailability } from '../services/bookingPricing.service.js';
 import { buildInvoice } from '../services/invoiceService.js';
 import AvailabilityLedger from '../models/AvailabilityLedger.js';
 import Wallet from '../models/Wallet.js';
@@ -196,6 +196,33 @@ export const createBooking = async (req, res) => {
     } = quote;
     const discountAmount = quote.discount;
     const appliedCoupon = quote.couponCode;
+
+    /*
+     * Take the inventory before writing the booking.
+     *
+     * Nothing here consumed inventory before: the quote reported availableUnits
+     * and the booking ignored it, so the room type's capacity was never
+     * enforced at all. Claim first, and if it fails nothing is written.
+     */
+    const claim = await claimAvailability({
+      propertyId: property._id,
+      roomTypeId: roomType._id,
+      // quoteStay returns totals, not the parsed dates, so parse them here.
+      checkIn: new Date(checkInDate),
+      checkOut: new Date(checkOutDate),
+      units: 1, // one booking takes one unit; there is no multi-room field on this payload
+      roomType,
+    });
+
+    if (!claim.ok) {
+      return res.status(409).json({
+        message: claim.availableUnits > 0
+          ? `Only ${claim.availableUnits} of these rooms are left for those dates`
+          : 'Those dates are fully booked for this room type',
+        availableUnits: claim.availableUnits,
+        totalInventory: claim.totalInventory,
+      });
+    }
 
     const bookingId = `BK-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -427,6 +454,12 @@ export const createBooking = async (req, res) => {
     }
 
     await booking.save();
+
+    // Point the inventory claim at the booking now that it has an id, so the
+    // existing cancellation cleanup (which deletes by referenceId) releases it.
+    if (claim.ledgerId) {
+      await AvailabilityLedger.updateOne({ _id: claim.ledgerId }, { $set: { referenceId: booking._id } });
+    }
 
     // Update Inventory (Block Room) - Only if confirmed (Pay at Hotel or Paid)
     // If Razorpay pending, we still block inventory to avoid race conditions? 

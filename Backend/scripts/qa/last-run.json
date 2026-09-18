@@ -993,8 +993,8 @@
       "id": "BIZ-101",
       "title": "releasing a basket returns every seat",
       "status": "PASS",
-      "expected": "2992 left",
-      "actual": "2992",
+      "expected": "2990 left",
+      "actual": "2990",
       "severity": "Info",
       "evidence": ""
     },
@@ -1134,7 +1134,7 @@
       "title": "a signed-in caller can upload an image",
       "status": "PASS",
       "expected": "200 with a url",
-      "actual": "200 http://localhost:5000/uploads/qa_45dd959397ba02f73842.webp",
+      "actual": "200 http://localhost:5000/uploads/qa_33d183953964a17d6d44.webp",
       "severity": "Info",
       "evidence": ""
     },
@@ -1204,7 +1204,7 @@
       "title": "a traversing folder name cannot escape the storage root",
       "status": "PASS",
       "expected": "refused or flattened",
-      "actual": "http://localhost:5000/uploads/tmp_qa-escape_19de0923a4955c17b9c5.webp",
+      "actual": "http://localhost:5000/uploads/tmp_qa-escape_8bb934b6f80fc5939d68.webp",
       "severity": "Info",
       "evidence": ""
     },

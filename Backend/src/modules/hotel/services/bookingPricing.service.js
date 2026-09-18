@@ -47,6 +47,77 @@ export const getAvailability = async ({ propertyId, roomTypeId, checkIn, checkOu
 };
 
 /**
+ * Take inventory for a stay, or refuse.
+ *
+ * Booking used to write nothing here and check nothing: `availableUnits` was
+ * reported in the quote and then ignored, and the ledger was only ever written
+ * by a partner blocking rooms by hand. So customer bookings consumed no
+ * inventory at all — six simultaneous requests for a room type with
+ * totalInventory 1 all succeeded, and a single request beyond capacity would
+ * have too.
+ *
+ * Mongo may be standalone here, so a transaction is not assumed. Instead the
+ * claim is written first and then ranked: every overlapping entry is ordered by
+ * _id (monotonic, so it is insertion order), and a claim is kept only if it
+ * lands within the room type's capacity. Two racing requests therefore both
+ * insert, both rank, and exactly the ones that fit survive — the rest remove
+ * their own entry and are refused. Under-selling by one is possible only if a
+ * winner crashes between insert and rank; overselling is not.
+ */
+export const claimAvailability = async ({ propertyId, roomTypeId, checkIn, checkOut, units = 1, roomType, referenceId }) => {
+  const total = Number(roomType?.totalInventory || 0);
+  if (total <= 0) {
+    return { ok: false, availableUnits: 0, totalInventory: total };
+  }
+
+  const entry = await AvailabilityLedger.create({
+    propertyId,
+    roomTypeId,
+    inventoryType: roomType.inventoryType || 'room',
+    source: 'platform',
+    referenceId,
+    startDate: checkIn,
+    endDate: checkOut,
+    units,
+    createdBy: 'system',
+  });
+
+  // Everything overlapping this stay, oldest first.
+  const overlapping = await AvailabilityLedger.find({
+    propertyId,
+    roomTypeId,
+    startDate: { $lt: checkOut },
+    endDate: { $gt: checkIn },
+  }).sort({ _id: 1 }).select('_id units').lean();
+
+  let consumed = 0;
+  for (const row of overlapping) {
+    const rowUnits = Number(row.units || 0);
+    if (String(row._id) === String(entry._id)) {
+      // Ours fits only if everything ahead of it left room.
+      if (consumed + rowUnits > total) {
+        await AvailabilityLedger.deleteOne({ _id: entry._id });
+        return { ok: false, availableUnits: Math.max(0, total - consumed), totalInventory: total };
+      }
+      return { ok: true, ledgerId: entry._id, availableUnits: Math.max(0, total - consumed - rowUnits), totalInventory: total };
+    }
+    consumed += rowUnits;
+  }
+
+  // Our own entry vanished (a concurrent release). Safer to refuse than to
+  // assume the room is ours.
+  await AvailabilityLedger.deleteOne({ _id: entry._id });
+  return { ok: false, availableUnits: Math.max(0, total - consumed), totalInventory: total };
+};
+
+/** Give a booking's inventory back. Safe to call twice. */
+export const releaseAvailability = async (referenceId) => {
+  if (!referenceId) return 0;
+  const result = await AvailabilityLedger.deleteMany({ source: 'platform', referenceId });
+  return result?.deletedCount || 0;
+};
+
+/**
  * Resolve a coupon against this stay. Returns a zero discount rather than
  * throwing when the code does not apply — an invalid code must not block a
  * booking, only fail to discount it.
