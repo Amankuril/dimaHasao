@@ -201,10 +201,21 @@ export const LoginScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="bg-[#051f11]/96 backdrop-blur-md border-2 border-[#caa83e] rounded-[22px] p-3.5 sm:p-4 shadow-[0_15px_40px_rgba(0,0,0,0.85)] relative overflow-hidden"
+          className="dh-login-card bg-[#051f11]/96 backdrop-blur-md border-2 border-[#caa83e] rounded-[22px] p-4 sm:p-5 shadow-[0_15px_40px_rgba(0,0,0,0.85)] relative overflow-hidden"
         >
           {/* Leaf flourishes & Card Title */}
-          <div className="flex items-center justify-center space-x-2 mb-2.5 relative z-10">
+          {/* The weave that edges every other Dima Hasao surface, so the card
+              belongs to the same platform as the panels behind it. */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-1.5"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(45deg,#04190c 0,#04190c 7px,#caa83e 7px,#caa83e 14px,#0d3d20 14px,#0d3d20 21px,#8c1c13 21px,#8c1c13 28px)',
+            }}
+          />
+
+          <div className="flex items-center justify-center space-x-2 mb-3 mt-1 relative z-10">
             <i className="fa-solid fa-leaf text-[#caa83e] text-[11px] transform -scale-x-100"></i>
             <h3 className="text-[#caa83e] font-extrabold tracking-wider text-[11px] uppercase font-cinzel">
               {step === 'name'
@@ -213,11 +224,11 @@ export const LoginScreen = () => {
                 ? 'VERIFY YOUR NUMBER'
                 : 'LOGIN TO YOUR ACCOUNT'}
             </h3>
-            <i className="fa-solid fa-leaf text-[#caa83e] text-[11px]"></i>
+            <i className="fa-solid fa-leaf text-[#caa83e] text-[13px]"></i>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-2 relative z-10">
+          <form onSubmit={handleSubmit} className="space-y-3 relative z-10">
             {/* Full Name — only for a number with no account yet, asked after
                 the OTP has already been verified. */}
             <AnimatePresence mode="wait">
@@ -234,8 +245,8 @@ export const LoginScreen = () => {
                     Number verified — tell us your name to finish signing up.
                   </p>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <i className="fa-solid fa-user text-[#caa83e] text-[11px]"></i>
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <i className="fa-solid fa-user text-[#caa83e] text-[13px]"></i>
                     </div>
                     <input
                       id="name"
@@ -245,7 +256,7 @@ export const LoginScreen = () => {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Full Name"
-                      className="block w-full pl-8 pr-3 py-1.5 border border-[#caa83e]/50 rounded-xl bg-[#02130a] text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#caa83e] text-xs transition-all"
+                      className="block w-full pl-10 pr-3 h-11 border border-[#caa83e]/50 rounded-xl bg-[#02130a] text-gray-100 placeholder-[#5d7264] focus:outline-none focus:border-[#caa83e] focus:ring-1 focus:ring-[#caa83e] text-sm transition-all"
                     />
                   </div>
                 </motion.div>
@@ -255,8 +266,8 @@ export const LoginScreen = () => {
             {/* Phone Number Input */}
             {step !== 'name' && (
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i className="fa-solid fa-phone text-[#caa83e] text-[11px]"></i>
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <i className="fa-solid fa-phone text-[#caa83e] text-[13px]"></i>
                 </div>
                 <input
                   id="phone"
@@ -266,7 +277,7 @@ export const LoginScreen = () => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Phone Number"
-                  className="block w-full pl-8 pr-3 py-1.5 border border-[#caa83e]/50 rounded-xl bg-[#02130a] text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#caa83e] text-xs transition-all disabled:opacity-75"
+                  className="block w-full pl-10 pr-3 h-11 border border-[#caa83e]/50 rounded-xl bg-[#02130a] text-gray-100 placeholder-[#5d7264] focus:outline-none focus:border-[#caa83e] focus:ring-1 focus:ring-[#caa83e] text-sm transition-all disabled:opacity-75"
                 />
                 {step === 'otp' && (
                   <button
@@ -292,8 +303,8 @@ export const LoginScreen = () => {
                 className="space-y-1"
               >
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i className="fa-solid fa-shield-halved text-[#caa83e] text-[11px]"></i>
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <i className="fa-solid fa-shield-halved text-[#caa83e] text-[13px]"></i>
                   </div>
                   <input
                     id="otp"
@@ -303,10 +314,10 @@ export const LoginScreen = () => {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     placeholder="Enter 4-Digit OTP"
-                    className="block w-full pl-8 pr-3 py-1.5 border border-[#caa83e] rounded-xl bg-[#02130a] text-amber-300 font-mono font-bold tracking-widest text-center focus:outline-none focus:ring-1 focus:ring-[#caa83e] text-sm transition-all"
+                    className="block w-full pl-10 pr-3 h-12 border border-[#caa83e] rounded-xl bg-[#02130a] text-amber-300 font-mono font-black tracking-[0.45em] text-center focus:outline-none focus:ring-1 focus:ring-[#caa83e] text-lg transition-all"
                   />
                 </div>
-                <div className="flex justify-between items-center text-[10px] px-1">
+                <div className="flex justify-between items-center text-[11px] px-1 pt-0.5">
                   <span className="text-amber-200/80">
                     {devOtp ? `Code: ${devOtp}` : 'Sent to your phone'}
                   </span>
@@ -327,7 +338,7 @@ export const LoginScreen = () => {
               whileTap={{ scale: 0.97 }}
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center py-2 px-4 rounded-xl shadow-md text-xs font-black text-black bg-[#e5b33b] hover:bg-[#efc04c] transition-all cursor-pointer uppercase tracking-wider"
+              className="w-full flex items-center justify-center h-12 px-4 rounded-xl text-sm font-black text-[#04190c] bg-[#e5b33b] hover:bg-[#efc04c] shadow-[0_10px_24px_rgba(229,179,59,0.28)] transition-all cursor-pointer uppercase tracking-[0.16em]"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -351,7 +362,7 @@ export const LoginScreen = () => {
                 whileTap={{ scale: 0.96 }}
                 type="button"
                 onClick={handleGuestLogin}
-                className="text-[10px] text-emerald-300 hover:text-white transition-colors cursor-pointer font-semibold inline-flex items-center gap-1"
+                className="text-[11px] text-emerald-300 hover:text-[#caa83e] transition-colors cursor-pointer font-semibold inline-flex items-center gap-1"
               >
                 <span>Continue as Guest Explorer →</span>
               </motion.button>
