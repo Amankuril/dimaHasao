@@ -4,6 +4,12 @@ import { Phone, User, Mail, ArrowRight, Loader2, Shield, Building2 } from 'lucid
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../../services/apiService';
 import { DEFAULT_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import DimaHasaoAuthShell, {
+    authFieldClass,
+    authLabelClass,
+    authInputClass,
+    authButtonClass,
+} from '@/shared/components/auth/DimaHasaoAuthShell';
 
 const HotelLogin = () => {
     const navigate = useNavigate();
@@ -110,250 +116,196 @@ const HotelLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#04301b] via-[#06381e] to-[#0a4d2b] flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-                <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-            </div>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative w-full max-w-md z-10"
-            >
-                {/* Logo */}
-                <div className="text-center mb-8">
+        <DimaHasaoAuthShell
+            width="760px"
+            blurb="List your hotel, resort, lodge or homestay and take bookings from travellers exploring Dima Hasao."
+            points={["Resorts", "Hotels", "Lodges", "Homestays"]}
+        >
+            <AnimatePresence mode="wait">
+                {step === 1 ? (
                     <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", delay: 0.2 }}
-                        className="inline-block mb-4"
+                        key="step1"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
                     >
-                        <img src={DEFAULT_BRAND_LOGO} alt="Dima Hasao Partner" className="w-24 h-auto" />
+                        <h2 className="dh-playfair text-[26px] font-black text-[#f4efe2]">Partner sign in</h2>
+                        <p className="mt-1.5 text-sm text-[#9fb3a4]">
+                            Enter your phone number — we'll sign you in, or set you up if you're new.
+                        </p>
+
+                        <form onSubmit={handleSendOTP} className="mt-7 space-y-5">
+                            <div>
+                                <label className={authLabelClass}>Phone Number</label>
+                                <div className={authFieldClass(Boolean(error))}>
+                                    <Phone size={17} className="ml-3.5 shrink-0 text-[#caa83e]" />
+                                    <input
+                                        type="tel"
+                                        inputMode="numeric"
+                                        maxLength={10}
+                                        value={contact}
+                                        onChange={(e) => setContact(e.target.value.replace(/\D/g, ''))}
+                                        placeholder="9876543210"
+                                        className={`${authInputClass} px-3`}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {error && (
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-sm text-red-300"
+                                >
+                                    {error}
+                                </motion.p>
+                            )}
+
+                            <button type="submit" disabled={loading} className={authButtonClass}>
+                                {loading ? (
+                                    <Loader2 size={18} className="animate-spin" />
+                                ) : (
+                                    <>
+                                        Send OTP
+                                        <ArrowRight size={18} />
+                                    </>
+                                )}
+                            </button>
+                        </form>
                     </motion.div>
-                    <h1 className="text-3xl font-bold text-white">Partner Login</h1>
-                    <p className="text-blue-100 mt-2">Access your hotel dashboard</p>
-                </div>
+                ) : step === 2 ? (
+                    <motion.div
+                        key="step2"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <div className="mb-7 text-center">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[#caa83e]/30 bg-[#caa83e]/10">
+                                <Shield size={28} className="text-[#caa83e]" />
+                            </div>
+                            <h2 className="dh-playfair text-[24px] font-black text-[#f4efe2]">Enter OTP</h2>
+                            <p className="mt-1.5 text-sm text-[#9fb3a4]">Code sent to +91 {contact}</p>
+                        </div>
 
-                {/* Main Card */}
-                <motion.div
-                    layout
-                    className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20"
-                >
-                    <AnimatePresence mode="wait">
-                        {step === 1 ? (
-                            <motion.div
-                                key="step1"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
+                        <form onSubmit={handleVerifyOTP} className="space-y-6">
+                            <div className="flex justify-center gap-2.5">
+                                {otp.map((digit, index) => (
+                                    <input
+                                        key={index}
+                                        id={`otp-${index}`}
+                                        type="text"
+                                        maxLength={1}
+                                        value={digit}
+                                        onChange={(e) => handleOTPChange(index, e.target.value)}
+                                        className="h-13 w-12 rounded-xl border border-[#caa83e]/35 bg-[#02130a] text-center text-xl font-black text-[#f4efe2] outline-none transition-colors focus:border-[#caa83e]"
+                                    />
+                                ))}
+                            </div>
+
+                            {error && (
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-center text-sm text-red-300"
+                                >
+                                    {error}
+                                </motion.p>
+                            )}
+
+                            <button type="submit" disabled={loading} className={authButtonClass}>
+                                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Verify & Login'}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setStep(1)}
+                                className="w-full text-sm text-[#9fb3a4] transition-colors hover:text-[#caa83e]"
                             >
-                                <h2 className="text-xl font-bold text-gray-900 mb-2">Login or Register</h2>
-                                <p className="text-sm text-gray-500 mb-6">
-                                    Enter your phone number — we'll sign you in, or set you up if you're new.
-                                </p>
+                                Change number
+                            </button>
+                        </form>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="step3"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <div className="mb-7 text-center">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[#caa83e]/30 bg-[#caa83e]/10">
+                                <Building2 size={28} className="text-[#caa83e]" />
+                            </div>
+                            <h2 className="dh-playfair text-[24px] font-black text-[#f4efe2]">Create your partner account</h2>
+                            <p className="mt-1.5 text-sm text-[#9fb3a4]">
+                                +91 {contact} verified. Tell us who you are to finish.
+                            </p>
+                        </div>
 
-                                <form onSubmit={handleSendOTP} className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Phone Number
-                                        </label>
-                                        <div className="relative">
-                                            <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                                            <input
-                                                type="tel"
-                                                inputMode="numeric"
-                                                maxLength={10}
-                                                value={contact}
-                                                onChange={(e) => setContact(e.target.value.replace(/\D/g, ''))}
-                                                placeholder="9876543210"
-                                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#005CA8] focus:border-transparent outline-none transition-all"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {error && (
-                                        <motion.p
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="text-red-500 text-sm"
-                                        >
-                                            {error}
-                                        </motion.p>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="w-full bg-[#005CA8] hover:bg-[#004b8a] text-white py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        {loading ? (
-                                            <Loader2 size={20} className="animate-spin" />
-                                        ) : (
-                                            <>
-                                                Send OTP
-                                                <ArrowRight size={20} />
-                                            </>
-                                        )}
-                                    </button>
-                                </form>
-                            </motion.div>
-                        ) : step === 2 ? (
-                            <motion.div
-                                key="step2"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                            >
-                                <div className="text-center mb-6">
-                                    <div className="w-16 h-16 bg-[#005CA8]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Shield size={32} className="text-[#005CA8]" />
-                                    </div>
-                                    <h2 className="text-xl font-bold text-gray-900">Enter OTP</h2>
-                                    <p className="text-sm text-gray-500 mt-2">
-                                        Code sent to +91 {contact}
-                                    </p>
+                        <form onSubmit={handleRegister} className="space-y-5">
+                            <div>
+                                <label className={authLabelClass}>Full Name</label>
+                                <div className={authFieldClass(false)}>
+                                    <User size={17} className="ml-3.5 shrink-0 text-[#caa83e]" />
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        placeholder="Your full name"
+                                        className={`${authInputClass} px-3`}
+                                        required
+                                    />
                                 </div>
+                            </div>
 
-                                <form onSubmit={handleVerifyOTP} className="space-y-6">
-                                    <div className="flex gap-2 justify-center">
-                                        {otp.map((digit, index) => (
-                                            <input
-                                                key={index}
-                                                id={`otp-${index}`}
-                                                type="text"
-                                                maxLength={1}
-                                                value={digit}
-                                                onChange={(e) => handleOTPChange(index, e.target.value)}
-                                                className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-400 rounded-xl focus:border-[#005CA8] focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                                            />
-                                        ))}
-                                    </div>
-
-                                    {error && (
-                                        <motion.p
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="text-red-500 text-sm text-center"
-                                        >
-                                            {error}
-                                        </motion.p>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="w-full bg-[#005CA8] hover:bg-[#004b8a] text-white py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        {loading ? (
-                                            <Loader2 size={20} className="animate-spin" />
-                                        ) : (
-                                            'Verify & Login'
-                                        )}
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(1)}
-                                        className="w-full text-gray-500 text-sm hover:text-gray-700"
-                                    >
-                                        Change number
-                                    </button>
-                                </form>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="step3"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                            >
-                                <div className="text-center mb-6">
-                                    <div className="w-16 h-16 bg-[#005CA8]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Building2 size={32} className="text-[#005CA8]" />
-                                    </div>
-                                    <h2 className="text-xl font-bold text-gray-900">Create your partner account</h2>
-                                    <p className="text-sm text-gray-500 mt-2">
-                                        +91 {contact} verified. Tell us who you are to finish.
-                                    </p>
+                            <div>
+                                <label className={authLabelClass}>
+                                    Email <span className="normal-case tracking-normal text-[#5d7264]">(optional)</span>
+                                </label>
+                                <div className={authFieldClass(false)}>
+                                    <Mail size={17} className="ml-3.5 shrink-0 text-[#caa83e]" />
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="partner@hotel.com"
+                                        className={`${authInputClass} px-3`}
+                                    />
                                 </div>
+                            </div>
 
-                                <form onSubmit={handleRegister} className="space-y-5">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Full Name
-                                        </label>
-                                        <div className="relative">
-                                            <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                                            <input
-                                                type="text"
-                                                autoFocus
-                                                value={name}
-                                                onChange={(e) => setName(e.target.value)}
-                                                placeholder="Your full name"
-                                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#005CA8] focus:border-transparent outline-none transition-all"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
+                            {error && (
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-sm text-red-300"
+                                >
+                                    {error}
+                                </motion.p>
+                            )}
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Email <span className="text-gray-400 font-normal">(optional)</span>
-                                        </label>
-                                        <div className="relative">
-                                            <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                                            <input
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                placeholder="partner@hotel.com"
-                                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#005CA8] focus:border-transparent outline-none transition-all"
-                                            />
-                                        </div>
-                                    </div>
+                            <button type="submit" disabled={loading} className={authButtonClass}>
+                                {loading ? (
+                                    <Loader2 size={18} className="animate-spin" />
+                                ) : (
+                                    <>
+                                        Create Account
+                                        <ArrowRight size={18} />
+                                    </>
+                                )}
+                            </button>
 
-                                    {error && (
-                                        <motion.p
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="text-red-500 text-sm"
-                                        >
-                                            {error}
-                                        </motion.p>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="w-full bg-[#005CA8] hover:bg-[#004b8a] text-white py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        {loading ? (
-                                            <Loader2 size={20} className="animate-spin" />
-                                        ) : (
-                                            <>
-                                                Create Account
-                                                <ArrowRight size={20} />
-                                            </>
-                                        )}
-                                    </button>
-
-                                    <p className="text-xs text-gray-400 text-center">
-                                        You can add property and KYC details once you're in.
-                                    </p>
-                                </form>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </motion.div>
-
-                <p className="text-center text-blue-100 text-sm mt-6">
-                    New here? Just enter your number above — we'll register you.
-                </p>
-            </motion.div>
-        </div>
+                            <p className="text-center text-xs text-[#5d7264]">
+                                You can add property and KYC details once you're in.
+                            </p>
+                        </form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </DimaHasaoAuthShell>
     );
 };
 

@@ -14,6 +14,12 @@ import { requestOtp, verifyOtp, completeSignup, AUDIENCE, NEXT_STEP } from '@/se
 import { saveOperatorSession } from '../../../services/operatorService';
 import { DEFAULT_BRAND_LOGO } from '@/shared/constants/brandLogo';
 import '../toursTheme.css';
+import DimaHasaoAuthShell, {
+  authFieldClass,
+  authLabelClass,
+  authInputClass,
+  authButtonClass,
+} from '@/shared/components/auth/DimaHasaoAuthShell';
 
 const OPERATOR_AUDIENCE = AUDIENCE.TOURS_OPERATOR;
 
@@ -88,93 +94,99 @@ const OperatorLogin = () => {
   };
 
   return (
-    <div className="tours-operator min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#04301b] via-[#06381e] to-[#0a4d2b]">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <img src={DEFAULT_BRAND_LOGO} alt="Dima Hasao" className="w-20 h-auto mx-auto mb-3" />
-          <h1 className="text-2xl font-black text-white">Tour Operator</h1>
-          <p className="text-sm text-white/70 mt-1">Manage your packages and bookings</p>
-        </div>
-
-        <div className="to-card p-6 space-y-5">
-          {step === 'phone' && (
-            <form onSubmit={sendOtp} className="space-y-4">
-              <div>
-                <h2 className="font-bold text-gray-900">Sign in or register</h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter your phone number — we'll sign you in, or set you up if you're new.
-                </p>
-              </div>
-              <div>
-                <label className="to-label" htmlFor="phone">Phone number</label>
-                <div className="relative">
-                  <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    id="phone" type="tel" inputMode="numeric" className="to-input pl-10"
-                    placeholder="9876543210" value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
-                </div>
-              </div>
-              <button type="submit" disabled={loading} className="to-btn w-full">
-                {loading ? <Loader2 size={16} className="animate-spin" /> : null} Send OTP <ArrowRight size={16} />
-              </button>
-            </form>
-          )}
-
-          {step === 'otp' && (
-            <form onSubmit={submitOtp} className="space-y-4">
-              <div>
-                <h2 className="font-bold text-gray-900 flex items-center gap-2">
-                  <ShieldCheck size={18} className="text-[#0a4d2b]" /> Enter the code
-                </h2>
-                <p className="text-xs text-gray-500 mt-1">Sent to +91 {digits}</p>
-              </div>
+    <DimaHasaoAuthShell
+      width="760px"
+      blurb="Publish guided treks, curated journeys and day trips across Dima Hasao, and take bookings from travellers."
+      points={["Guided treks", "Curated journeys", "Day trips", "Cultural tours"]}
+    >
+      {step === 'phone' && (
+        <form onSubmit={sendOtp} className="space-y-5">
+          <div>
+            <h2 className="dh-playfair text-[26px] font-black text-[#f4efe2]">Tour operator</h2>
+            <p className="mt-1.5 text-sm text-[#9fb3a4]">
+              Enter your phone number — we'll sign you in, or set you up if you're new.
+            </p>
+          </div>
+          <div>
+            <label className={authLabelClass} htmlFor="phone">Phone number</label>
+            <div className={authFieldClass(false)}>
+              <Phone size={17} className="ml-3.5 shrink-0 text-[#caa83e]" />
               <input
-                className="to-input text-center text-2xl tracking-[0.5em] font-bold"
-                inputMode="numeric" maxLength={4} placeholder="••••"
-                value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                id="phone" type="tel" inputMode="numeric" className={`${authInputClass} px-3`}
+                placeholder="9876543210" value={phone}
+                onChange={(e) => setPhone(e.target.value)}
               />
-              <button type="submit" disabled={loading} className="to-btn w-full">
-                {loading ? <Loader2 size={16} className="animate-spin" /> : null} Verify
-              </button>
-              <button type="button" onClick={() => setStep('phone')} className="w-full text-xs text-gray-500 hover:text-gray-900">
-                Use a different number
-              </button>
-            </form>
-          )}
+            </div>
+          </div>
+          <button type="submit" disabled={loading} className={authButtonClass}>
+            {loading ? <Loader2 size={16} className="animate-spin" /> : null} Send OTP <ArrowRight size={16} />
+          </button>
+        </form>
+      )}
 
-          {step === 'profile' && (
-            <form onSubmit={submitProfile} className="space-y-4">
-              <div>
-                <h2 className="font-bold text-gray-900">Tell us about your agency</h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Documents come later — an admin reviews your account before packages go live.
-                </p>
-              </div>
-              <div>
-                <label className="to-label">Your name <span className="text-red-500">*</span></label>
-                <input className="to-input" value={profile.name}
-                  onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} />
-              </div>
-              <div>
-                <label className="to-label">Agency name</label>
-                <input className="to-input" placeholder="e.g. Borail Expeditions" value={profile.agencyName}
-                  onChange={(e) => setProfile((p) => ({ ...p, agencyName: e.target.value }))} />
-              </div>
-              <div>
-                <label className="to-label">Email</label>
-                <input className="to-input" type="email" value={profile.email}
-                  onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))} />
-              </div>
-              <button type="submit" disabled={loading} className="to-btn w-full">
-                {loading ? <Loader2 size={16} className="animate-spin" /> : null} Create my account
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
+      {step === 'otp' && (
+        <form onSubmit={submitOtp} className="space-y-5">
+          <div>
+            <h2 className="dh-playfair flex items-center gap-2 text-[24px] font-black text-[#f4efe2]">
+              <ShieldCheck size={20} className="text-[#caa83e]" /> Enter the code
+            </h2>
+            <p className="mt-1.5 text-sm text-[#9fb3a4]">Sent to +91 {digits}</p>
+          </div>
+          <div className={authFieldClass(false)}>
+            <input
+              className={`${authInputClass} px-3 text-center text-2xl font-black tracking-[0.5em]`}
+              inputMode="numeric" maxLength={4} placeholder="••••"
+              value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            />
+          </div>
+          <button type="submit" disabled={loading} className={authButtonClass}>
+            {loading ? <Loader2 size={16} className="animate-spin" /> : null} Verify
+          </button>
+          <button
+            type="button"
+            onClick={() => setStep('phone')}
+            className="w-full text-xs text-[#9fb3a4] transition-colors hover:text-[#caa83e]"
+          >
+            Use a different number
+          </button>
+        </form>
+      )}
+
+      {step === 'profile' && (
+        <form onSubmit={submitProfile} className="space-y-5">
+          <div>
+            <h2 className="dh-playfair text-[24px] font-black text-[#f4efe2]">Tell us about your agency</h2>
+            <p className="mt-1.5 text-sm text-[#9fb3a4]">
+              Documents come later — an admin reviews your account before packages go live.
+            </p>
+          </div>
+          <div>
+            <label className={authLabelClass}>Your name <span className="text-red-300">*</span></label>
+            <div className={authFieldClass(false)}>
+              <input className={`${authInputClass} px-3`} value={profile.name}
+                onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <label className={authLabelClass}>Agency name</label>
+            <div className={authFieldClass(false)}>
+              <input className={`${authInputClass} px-3`} placeholder="e.g. Borail Expeditions" value={profile.agencyName}
+                onChange={(e) => setProfile((p) => ({ ...p, agencyName: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <label className={authLabelClass}>Email</label>
+            <div className={authFieldClass(false)}>
+              <input className={`${authInputClass} px-3`} type="email" value={profile.email}
+                onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))} />
+            </div>
+          </div>
+          <button type="submit" disabled={loading} className={authButtonClass}>
+            {loading ? <Loader2 size={16} className="animate-spin" /> : null} Create my account
+          </button>
+        </form>
+      )}
+    </DimaHasaoAuthShell>
   );
 };
 
