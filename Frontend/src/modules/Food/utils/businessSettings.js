@@ -46,9 +46,19 @@ export const loadBusinessSettings = async () => {
     }
 
     inFlightSettingsPromise = (async () => {
-      // Use public endpoint that doesn't require authentication
-      // Use noCache to ensure we get fresh data from server this time
-      const response = await publicGetOnce(endpoint, { noCache: true });
+      /*
+       * Public endpoint, no auth needed — and deliberately NOT { noCache: true }.
+       *
+       * The in-flight guard above only covers *concurrent* callers: it is
+       * cleared in the `finally` below the moment the first call settles. App
+       * boot loads these settings at ~360ms and the navbar mounts and asks
+       * again at ~1740ms, by which point the guard is gone — so the same
+       * response was fetched twice on every page load. `noCache: true` was
+       * explicitly opting out of the 3-second dedup that would have collapsed
+       * them. Three seconds is still "fresh data from the server"; the second
+       * request was not buying anything.
+       */
+      const response = await publicGetOnce(endpoint);
       const settings = response?.data?.data || response?.data;
 
       if (settings) {

@@ -3,6 +3,7 @@ import { ShoppingBag, Tag, Truck, UtensilsCrossed } from "lucide-react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { motion } from "framer-motion"
 import api from "@food/api"
+import { publicGetOnce } from "@food/api"
 import { useProfile } from "@food/context/ProfileContext"
 import {
   getCachedUnder250PriceLimit,
@@ -44,7 +45,10 @@ export default function BottomNavigation() {
   // Fetch landing settings to get dynamic price limit (shared cache)
   useEffect(() => {
     let cancelled = false
-    getLandingSettingsPublic(() => api.get("/food/landing/settings/public"))
+    // Through publicGetOnce, not a bare api.get: Home fetches this same URL
+    // that way, and two different dedup caches for one endpoint meant two
+    // requests 12ms apart on every food page load.
+    getLandingSettingsPublic(() => publicGetOnce("/food/landing/settings/public"))
       .then((settings) => {
         if (cancelled) return
         if (settings && typeof settings.under250PriceLimit === "number") {

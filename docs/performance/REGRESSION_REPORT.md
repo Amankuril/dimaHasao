@@ -48,6 +48,23 @@ behave differently. That is a stronger statement than a screenshot, and it is
 why no UI walkthrough of the hotel admin dashboard was performed for these
 changes.
 
+## Frontend checks (OPT-008)
+
+| Check | Result |
+|---|---|
+| `/app`, `/app/bookings`, `/app/profile`, `/food/user`, `/taxi/user` — API calls after 15s idle | **No growth on any screen** — no render loops |
+| Taxi home service grid renders from the deduped fetch | Pass — Parcel on Bike, Auto, Cab Economy, Bike all present |
+| Taxi all-services entry still present | Pass |
+| Food home restaurant list renders | Pass |
+| Document title and favicon (driven by business settings) | Pass — still applied |
+| Frontend production build | Pass, including the bundled-icon guard |
+
+All frontend measurements were taken against the **production build**
+(`vite preview`), never the dev server: React StrictMode double-invokes effects
+in development only, and measuring there reports duplicate requests that do not
+exist in production. An earlier dev-server reading showed 16 requests with 5
+duplicates on `/app` where production has 7 with none.
+
 ## Workflows checked
 
 | Workflow | How | Result |
@@ -84,6 +101,9 @@ booking · payments · notifications · admin approval workflows.
 | Behaviour at real data volume | Untested. The dev database holds 6 food orders and 16 hotel bookings. Every measurement here is a floor. |
 | Production latency | Unmeasured. No access from this environment. |
 | N+1 sites (audit P10) | 21 candidates identified, none reviewed or changed. |
+| `/app` still fetches five booking lists on load | Deliberate (see changelog). Parallel, and loaded once per page load rather than per navigation. |
+| No memoisation added anywhere | Deliberate. The idle-growth measurement found no render loops, so there is no profiling evidence to justify `React.memo`/`useMemo`, and adding them blind risks stale data. |
+| Frontend screens not measured | Admin panels, restaurant and delivery partner panels, hotel/tours operator panels. Only consumer screens were measured this pass. |
 | `/food/orders` payload (audit P6) | 40.5kb for 6 orders. Untouched — changing it alters a response shape with multiple known consumers. |
 
 ## Reproducing

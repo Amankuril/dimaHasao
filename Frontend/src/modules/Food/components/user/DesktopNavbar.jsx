@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { DEFAULT_BRAND_LOGO } from "@/shared/constants/brandLogo"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import api from "@food/api"
+import { publicGetOnce } from "@food/api"
 import { isModuleAuthenticated } from "@food/utils/auth"
 import {
   getCachedUnder250PriceLimit,
@@ -175,7 +176,10 @@ export default function DesktopNavbar({ showLogo = true }) {
     // Fetch landing settings to get dynamic price limit (shared cache)
     useEffect(() => {
         let cancelled = false
-        getLandingSettingsPublic(() => api.get("/food/landing/settings/public"))
+        // Through publicGetOnce, not a bare api.get: Home fetches this same URL
+        // that way, and two different dedup caches for one endpoint meant two
+        // requests 12ms apart on every food page load.
+        getLandingSettingsPublic(() => publicGetOnce("/food/landing/settings/public"))
             .then((settings) => {
                 if (cancelled) return
                 if (settings && typeof settings.under250PriceLimit === "number") {

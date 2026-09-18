@@ -170,6 +170,7 @@ the same body. QA suite unchanged.
 | OPT-005 | Invalid id returns 400 instead of 500 | No latency change; defect fixed |
 | OPT-006 | Tours resolves the caller in one round trip | **−43%** (188ms → 107ms) |
 | OPT-007 | Same change on hotel — **reverted** | 13% *slower*; hotel's first lookup already hit |
+| OPT-008 | Three duplicate frontend fetches removed | `/food/user` 14→12 calls, `/taxi/user` 17→16, 0 duplicates |
 
 ---
 
@@ -234,3 +235,93 @@ was no waterfall to fix for the common caller.
 fourth lookup re-queries a model that already missed and can never succeed.
 It is dead work on every failed authentication. Low value, recorded rather than
 changed.
+
+---
+
+## OPT-008 — Three requests that were fetched twice on every page load
+
+**Module:** food, taxi · **Audit finding:** new (frontend pass, 2026-09-18)
+
+**How these were found.** Each screen was loaded in the **production build**,
+its API calls counted, then counted again after 15 seconds of sitting idle. The
+idle re-count matters: calls that keep arriving while nothing happens are a
+render loop or a poll, not page load.
+
+**No render loops exist.** Every screen measured — `/app`, `/app/bookings`,
+`/app/profile`, `/food/user`, `/taxi/user` — showed **zero growth while idle**.
+Nothing is re-rendering into a refetch.
+
+Three endpoints were genuinely fetched twice:
+
+### `/food/admin/business-settings/public` ×2
+
+`Backend`-agnostic; `Frontend/src/modules/Food/utils/businessSettings.js`.
+
+`loadBusinessSettings` guards against concurrent callers with
+`inFlightSettingsPromise`, but clears it in a `finally` the moment the first
+call settles — so it dedupes *concurrent* callers only. App boot fetches at
+~364ms; the navbar mounts and asks again at ~1736ms, by which point the guard
+is gone. Measured 1.37s apart.
+
+The call also passed `{ noCache: true }`, explicitly opting out of the shared
+3-second dedup cache that would have collapsed the pair. Removed. Three seconds
+is still fresh data from the server; the second request bought nothing.
+
+### `/food/landing/settings/public` ×2
+
+Two dedup caches for one URL. `BottomNavigation` and `DesktopNavbar` went
+through `getLandingSettingsPublic` (its own in-flight map); `Home.jsx` went
+through `publicGetOnce` (the shared 3-second cache). Neither knew about the
+other, so both fired — 12ms apart.
+
+The two navigation call sites now pass `publicGetOnce` as the fetcher, so every
+caller of this URL shares one cache. No response shape changed: the helper
+already unwraps the payload itself.
+
+### `/taxi/users/app-modules` ×2
+
+`ServiceGrid` is rendered **twice** on the taxi home screen — once in the grid,
+once behind the all-services modal — and each instance runs its own mount
+effect. The effect is correct (empty deps, `isMounted` guard, cleanup); the
+duplication is structural.
+
+Deduped in `userService.getAppModules` rather than in the component, so it stays
+fixed however many `ServiceGrid`s exist and the rendering structure — which is
+deliberate — is untouched. The window is cleared **on a timer, not on settle**:
+two components mounting a few hundred milliseconds apart are not concurrent, and
+clearing on settle would let the second through, which is exactly the bug in the
+business-settings case above.
+
+**Measured, production build:**
+
+| Screen | Calls before | Calls after | Duplicates before | after |
+|---|---:|---:|---:|---:|
+| `/food/user` | 14 | **12** | 2 endpoints | **0** |
+| `/taxi/user` | 17 | **16** | 1 endpoint | **0** |
+| `/app` | 7 | 7 | 0 | 0 |
+
+**Regression status:** taxi home renders its full service grid (Parcel on Bike,
+Auto, Cab Economy, Bike) from the deduped fetch, and the all-services entry is
+present. Food home still shows its restaurant list, and the document title and
+favicon — both driven by business settings — are still applied. Frontend build
+passes.
+
+---
+
+## Frontend findings deliberately NOT acted on
+
+**`/app` fetching five modules' booking lists (audit P7).** Left as is. The five
+calls are already issued in parallel, and `BookingContext` loads once per page
+load rather than per navigation — `/app`, `/app/bookings` and `/app/profile` all
+show the same 7 calls because they share one load, not because each refetches.
+Deferring them would make the bookings screen slower on first visit and risks
+context consumers rendering empty. That is a trade, not a win.
+
+**876KB entry CSS (audit P9).** Unchanged. The Taxi stylesheet carries global
+rules other modules inherit — it blanked every icon in the app once already —
+so splitting it is behavioural, not cosmetic.
+
+**`React.memo` / `useMemo` / `useCallback`.** None added. The mandate's own rule
+applies: they need profiling evidence, and the idle-growth measurement found no
+render loops to justify them. Adding them blind risks stale closures for no
+measured gain.
