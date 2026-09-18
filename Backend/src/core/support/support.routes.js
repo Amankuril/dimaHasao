@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import express from 'express';
 import { authMiddleware } from '../auth/auth.middleware.js';
 import { requireRoles } from '../roles/role.middleware.js';
@@ -81,7 +82,18 @@ consumerSupportRouter.get('/', listAllOwnTickets);
 
 // Reading or replying to one of the customer's own tickets — whichever service
 // it belongs to, which is why no module is pinned.
-const asOwnTicket = (req, _res, next) => { req.support = { role: 'user' }; next(); };
+//
+// The id is checked before it reaches the query. `/support/tickets` is an easy
+// path to guess, and it matches this route with id="tickets"; without this the
+// ObjectId cast throws and a client's wrong URL is reported as a 500, which
+// makes the server's own error rate meaningless.
+const asOwnTicket = (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ success: false, message: 'That is not a valid ticket reference' });
+  }
+  req.support = { role: 'user' };
+  next();
+};
 
 consumerSupportRouter.get('/:id', asOwnTicket, getMyTicket);
 consumerSupportRouter.post('/:id/messages', asOwnTicket, replyToMyTicket);

@@ -32,136 +32,110 @@ export const getDashboardStats = async (req, res) => {
       return ((current - previous) / previous) * 100;
     };
 
-    // 1. KPI Counts & Trends
+    /*
+     * Every read below is independent, so they go out together.
+     *
+     * This handler used to issue nine queries in a Promise.all and then twelve
+     * more one line at a time. None of the twelve read another's result — they
+     * were sequential only because they were written on consecutive lines, and
+     * at roughly 40ms per round trip that accounted for the endpoint's 511ms
+     * against a nearly empty database.
+     *
+     * Three of the original queries were dead: usersLastMonth and
+     * bookingsLastMonth were destructured and never read, and
+     * lastMonthRevenueData fed only `prevRevenue`, which nothing used. They are
+     * gone rather than parallelised.
+     */
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+
+    const PAID_STAY = { bookingStatus: { $in: ['confirmed', 'checked_out', 'checked_in'] }, paymentStatus: 'paid' };
+    const revenueIn = (createdAt) => Booking.aggregate([
+      { $match: createdAt ? { ...PAID_STAY, createdAt } : PAID_STAY },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    ]);
+
     const [
-      totalUsers, usersLastMonth,
+      totalUsers,
       totalPartners,
       totalHotels,
       pendingHotels,
-      totalBookings, bookingsLastMonth,
-      currentRevenueData, lastMonthRevenueData
+      totalBookings,
+      currentRevenueData,
+      usersNewThisMonth,
+      usersNewLastMonth,
+      bookingsThisMonth,
+      bookingsLastMonthCount,
+      revThisMonthAgg,
+      revLastMonthAgg,
+      monthlyRevenue,
+      bookingStatusStats,
+      recentBookings,
+      recentPropertyRequests,
     ] = await Promise.all([
       User.countDocuments({}),
-      User.countDocuments({ createdAt: { $lt: startOfThisMonth } }), // Approximation for trend base
       Partner.countDocuments({}),
       Property.countDocuments({}),
       Property.countDocuments({ status: 'pending' }),
       Booking.countDocuments({}),
-      Booking.countDocuments({ createdAt: { $lt: startOfThisMonth } }), // trend base
+      revenueIn(null),
+      User.countDocuments({ createdAt: { $gte: startOfThisMonth } }),
+      User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } }),
+      Booking.countDocuments({ createdAt: { $gte: startOfThisMonth } }),
+      Booking.countDocuments({ createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } }),
+      revenueIn({ $gte: startOfThisMonth }),
+      revenueIn({ $gte: startOfLastMonth, $lte: endOfLastMonth }),
       Booking.aggregate([
-        { $match: { bookingStatus: { $in: ['confirmed', 'checked_out', 'checked_in'] }, paymentStatus: 'paid' } },
-        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-      ]),
-      Booking.aggregate([ // Revenue before this month
+        { $match: { ...PAID_STAY, createdAt: { $gte: sixMonthsAgo } } },
         {
-          $match: {
-            bookingStatus: { $in: ['confirmed', 'checked_out', 'checked_in'] },
-            paymentStatus: 'paid',
-            createdAt: { $lt: startOfThisMonth }
-          }
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+            amount: { $sum: '$totalAmount' },
+          },
         },
-        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-      ])
+        { $sort: { _id: 1 } },
+      ]),
+      Booking.aggregate([
+        { $group: { _id: '$bookingStatus', count: { $sum: 1 } } },
+      ]),
+      // Read-only and serialised straight to JSON, so no need for full documents.
+      Booking.find()
+        .populate('userId', 'name email')
+        .populate('propertyId', 'propertyName address')
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
+      Property.find({ status: 'pending' })
+        .populate('partnerId', 'name email')
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
     ]);
 
     const totalRevenue = currentRevenueData[0]?.total || 0;
-    const prevRevenue = lastMonthRevenueData[0]?.total || 0;
-
-    // Calculate trends (Simple approx based on total vs total-this-month isn't perfect for "vs last month", 
-    // but better: Calculate created in THIS month vs created in LAST month)
-
-    const usersNewThisMonth = await User.countDocuments({ createdAt: { $gte: startOfThisMonth } });
-    const usersNewLastMonth = await User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } });
-
-    const bookingsThisMonth = await Booking.countDocuments({ createdAt: { $gte: startOfThisMonth } });
-    const bookingsLastMonthCount = await Booking.countDocuments({ createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } });
-
-    // Revenue This Month vs Last Month
-    const revThisMonthAgg = await Booking.aggregate([
-      {
-        $match: {
-          bookingStatus: { $in: ['confirmed', 'checked_out', 'checked_in'] },
-          paymentStatus: 'paid',
-          createdAt: { $gte: startOfThisMonth }
-        }
-      },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-    ]);
-    const revLastMonthAgg = await Booking.aggregate([
-      {
-        $match: {
-          bookingStatus: { $in: ['confirmed', 'checked_out', 'checked_in'] },
-          paymentStatus: 'paid',
-          createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
-        }
-      },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-    ]);
-
     const incomeThisMonth = revThisMonthAgg[0]?.total || 0;
     const incomeLastMonth = revLastMonthAgg[0]?.total || 0;
 
     const trends = {
       users: calculateGrowth(usersNewThisMonth, usersNewLastMonth),
       bookings: calculateGrowth(bookingsThisMonth, bookingsLastMonthCount),
-      revenue: calculateGrowth(incomeThisMonth, incomeLastMonth)
+      revenue: calculateGrowth(incomeThisMonth, incomeLastMonth),
     };
 
-    // 2. Charts Data
-
-    // Revenue Chart (Last 6 Months)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-    sixMonthsAgo.setDate(1);
-
-    const monthlyRevenue = await Booking.aggregate([
-      {
-        $match: {
-          bookingStatus: { $in: ['confirmed', 'checked_out', 'checked_in'] },
-          paymentStatus: 'paid',
-          createdAt: { $gte: sixMonthsAgo }
-        }
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-          amount: { $sum: "$totalAmount" }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
-
-    // Booking Status Distribution
-    const bookingStatusStats = await Booking.aggregate([
-      { $group: { _id: "$bookingStatus", count: { $sum: 1 } } }
-    ]);
-
-    // Format for frontend
-    const revenueChart = monthlyRevenue.map(item => {
+    const revenueChart = monthlyRevenue.map((item) => {
       const [year, month] = item._id.split('-');
       const date = new Date(year, month - 1);
       return {
         name: date.toLocaleString('default', { month: 'short' }),
-        value: item.amount
+        value: item.amount,
       };
     });
 
-    const statusChart = bookingStatusStats.map(item => ({
+    const statusChart = bookingStatusStats.map((item) => ({
       name: item._id.charAt(0).toUpperCase() + item._id.slice(1),
-      value: item.count
+      value: item.count,
     }));
-
-    // 3. Lists
-    const recentBookings = await Booking.find()
-      .populate('userId', 'name email')
-      .populate('propertyId', 'propertyName address')
-      .sort({ createdAt: -1 })
-      .limit(5);
-
-    const recentPropertyRequests = await Property.find({ status: 'pending' })
-      .populate('partnerId', 'name email')
-      .sort({ createdAt: -1 })
-      .limit(5);
 
     res.status(200).json({
       success: true,
@@ -207,11 +181,21 @@ export const getAllUsers = async (req, res) => {
       query.isBlocked = status === 'blocked';
     }
 
-    const total = await User.countDocuments(query);
-    const users = await User.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    /*
+     * The count does not inform the find, so they go out together.
+     *
+     * Deliberately NOT .lean() here, unlike the sibling list endpoints. The
+     * User schema defines defaults for fields most stored documents do not
+     * carry — `active`, `address.country`, `deletionRequest`, and several
+     * nulls — and Mongoose materialises those during hydration. A lean read
+     * returns the raw document, so those keys simply disappear from the
+     * response. Measured: nine fields vanished from this endpoint's payload.
+     * The parallel count is the safe half of the optimisation; the lean is not.
+     */
+    const [total, users] = await Promise.all([
+      User.countDocuments(query),
+      User.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    ]);
 
     res.status(200).json({ success: true, users, total, page, limit });
   } catch (error) {
@@ -247,11 +231,15 @@ export const getAllPartners = async (req, res) => {
       }
     }
 
-    const total = await Partner.countDocuments(query);
-    const partners = await Partner.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    /*
+     * The count does not inform the find, so they go out together; and the rows
+     * are serialised straight to JSON, so they do not need to be full Mongoose
+     * documents. Nothing here is saved back.
+     */
+    const [total, partners] = await Promise.all([
+      Partner.countDocuments(query),
+      Partner.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    ]);
 
     res.status(200).json({ success: true, partners, total, page, limit });
   } catch (error) {
@@ -285,13 +273,20 @@ export const getAllHotels = async (req, res) => {
       query.propertyType = String(type).toLowerCase();
     }
 
-    const total = await Property.countDocuments(query);
-
-    const hotels = await Property.find(query)
-      .populate('partnerId', 'name email phone')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    /*
+     * The count does not inform the find, so they go out together; and the rows
+     * are serialised straight to JSON, so they do not need to be full Mongoose
+     * documents. Nothing here is saved back.
+     */
+    const [total, hotels] = await Promise.all([
+      Property.countDocuments(query),
+      Property.find(query)
+        .populate('partnerId', 'name email phone')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
 
     res.status(200).json({ success: true, hotels, total, page, limit });
   } catch (e) {
@@ -341,14 +336,22 @@ export const getAllBookings = async (req, res) => {
       }
     }
 
-    const total = await Booking.countDocuments(query);
-    const bookings = await Booking.find(query)
-      .populate('userId', 'name email phone')
-      .populate('propertyId', 'propertyName address')
-      .populate('roomTypeId', 'name')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    /*
+     * The count does not inform the find, so they go out together; and the rows
+     * are serialised straight to JSON, so they do not need to be full Mongoose
+     * documents. Nothing here is saved back.
+     */
+    const [total, bookings] = await Promise.all([
+      Booking.countDocuments(query),
+      Booking.find(query)
+        .populate('userId', 'name email phone')
+        .populate('propertyId', 'propertyName address')
+        .populate('roomTypeId', 'name')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
 
     res.status(200).json({ success: true, bookings, total, page, limit });
   } catch (e) {
@@ -1096,7 +1099,13 @@ export const getFinanceStats = async (req, res) => {
       ]
     };
 
-    const financialsOr = await Booking.aggregate([
+    /*
+     * The totals and the transaction list read the same set with the same
+     * filter and neither needs the other's result, so they go out together
+     * rather than one after the next.
+     */
+    const [financialsOr, transactions] = await Promise.all([
+      Booking.aggregate([
       { $match: matchStage },
       {
         $group: {
@@ -1107,6 +1116,19 @@ export const getFinanceStats = async (req, res) => {
           totalPayout: { $sum: '$partnerPayout' }
         }
       }
+      ]),
+      // Read-only, serialised straight to JSON.
+      Booking.find(matchStage)
+        .select('bookingId createdAt totalAmount adminCommission taxes partnerPayout bookingStatus paymentStatus userId propertyId')
+        .populate('userId', 'name email')
+        .populate({
+          path: 'propertyId',
+          select: 'propertyName partnerId',
+          populate: { path: 'partnerId', select: 'name email' } // Get Partner Info
+        })
+        .sort({ createdAt: -1 })
+        .limit(50) // Limit to last 50 for now
+        .lean(),
     ]);
 
     const financials = financialsOr[0] || {
@@ -1115,18 +1137,6 @@ export const getFinanceStats = async (req, res) => {
       totalTax: 0,
       totalPayout: 0
     };
-
-    // 3. Fetch Transaction List (Bookings Breakdown)
-    const transactions = await Booking.find(matchStage)
-      .select('bookingId createdAt totalAmount adminCommission taxes partnerPayout bookingStatus paymentStatus userId propertyId')
-      .populate('userId', 'name email')
-      .populate({
-        path: 'propertyId',
-        select: 'propertyName partnerId',
-        populate: { path: 'partnerId', select: 'name email' } // Get Partner Info
-      })
-      .sort({ createdAt: -1 })
-      .limit(50); // Limit to last 50 for now
 
     // Correct Admin Balance: Sum of Commission + Taxes from all valid financial transactions
     const derivedAdminBalance = (financials.totalCommission || 0) + (financials.totalTax || 0);
