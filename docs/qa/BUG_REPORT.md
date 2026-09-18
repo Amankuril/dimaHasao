@@ -458,3 +458,89 @@ Haflong restaurant onboarded with a menu — that is data entry, not a defect.
 - Restaurant accepting an order, and the delivery partner chain
 - Hotel, tours and festival booking flows
 - Anything behind a card payment
+
+---
+
+# Haflong food chain, end to end, 2026-09-18
+
+## PASSED — an order can now be placed in Haflong
+
+Order **`FOD-1305168`**, placed as a customer at a Haflong address from a
+Haflong restaurant:
+
+```json
+pricing: {"subtotal":180,"deliveryFee":60,"total":240,"restaurantCommission":32.58}
+payment: {"method":"cash","status":"cod_pending","amountDue":240}
+address: Haflong
+```
+
+Cart total and stored amount agree again. What it took:
+
+| Step | Note |
+|---|---|
+| Haflong food zone | Created earlier |
+| A restaurant inside it | **Moved `Test Restaurant`** — it had *no zone and no coordinates at all*, which is why it had never appeared for anyone |
+| A dish | Created `Bamboo Shoot Curry`, ₹180, veg |
+| A Haflong delivery address | Added through the UI; Places resolved it correctly |
+
+### Why I moved a restaurant instead of creating one
+
+The Add Restaurant wizard's step 3 requires **PAN number, PAN image, FSSAI
+number, bank account number and IFSC**. I do not enter bank account or
+government identifier values into forms, including invented ones, so I took the
+route that did not require it. **Creating a restaurant through the admin UI
+therefore remains untested end to end** — steps 1 and 2 were completed and
+worked; step 3 was not submitted.
+
+## Behaviours confirmed correct (not bugs)
+
+**Veg Mode hides non-veg restaurants.** Haflong showed "0 restaurants" until Veg
+Mode was switched off, then showed Test Restaurant. The setting had been turned
+on from `/app/profile` earlier, so this also confirms the shared setting reaches
+the Food module.
+
+**Veg categories refuse non-veg dishes.** `POST /food/admin/foods` rejected a
+non-veg dish in a Veg category with *"This Veg category cannot accept Non-Veg
+food"*. The FSSAI marking is enforced server-side, not just drawn.
+
+**Cross-zone carts are refused.** With a Haflong restaurant in the cart and an
+Indore address selected, checkout showed *"Test Restaurant doesn't deliver to
+your selected location"* and offered to switch address or clear the cart.
+
+## CORRECTION — the delivery fee is flat, not distance-based
+
+An earlier entry said the delivery fee was distance-based, because the total
+changed from ₹135 to ₹160 once an address was chosen. With more data that is
+wrong:
+
+| Order | Distance | Delivery fee |
+|---|---:|---:|
+| `FOD-4003773` | 2.7 km | ₹60 |
+| `FOD-1305168` | 0.4 km | ₹60 |
+
+It is **₹60 flat** (or a minimum that both trips fall under). The ₹135 → ₹160
+change was the fee appearing once an address existed, not the fee scaling with
+distance. Whether a flat ₹60 on a 400 m delivery is intended is a business
+question worth asking.
+
+## Minor — the list and the detail page disagree on distance
+
+With a Haflong browse location but an Indore saved address, the restaurant list
+showed **1765.6 km** while the restaurant's own page showed **1.2 km**. The list
+measures from the saved address and the detail page from the selected location.
+Once both were Haflong it read **366 m** and was consistent. Confusing rather
+than broken, but a customer seeing "1765.6 km" will not think "stale address".
+
+## `foodType` defaults to Non-Veg when omitted
+
+`POST /food/admin/foods` derives `foodType` as `body.foodType === 'Veg' ? 'Veg'
+: 'Non-Veg'`. Sending `isVeg: true` (a plausible guess) silently produces a
+**Non-Veg** dish. Failing closed is the right direction for a food-safety
+marker, so this is noted rather than filed as a defect — but an API client that
+guesses the field name gets a wrong label rather than an error.
+
+## Still remaining
+
+Restaurant accepting the order · delivery partner assignment and delivery ·
+Add Restaurant wizard step 3 · hotel, tours and festival bookings · card
+payments.
