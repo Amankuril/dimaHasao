@@ -10,7 +10,12 @@ import {
 } from "@food/utils/auth"
 import { clearOnboardingFromLocalStorage, clearAllFilesFromDB, checkOnboardingStatus, isRestaurantOnboardingComplete } from "@/modules/Food/utils/onboardingUtils"
 import { collectFcmTokenFast, persistModuleFcmToken } from "@food/utils/firebaseMessaging"
-import { DEFAULT_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import DimaHasaoAuthShell, {
+  authFieldClass,
+  authLabelClass,
+  authInputClass,
+  authButtonClass,
+} from "@/shared/components/auth/DimaHasaoAuthShell"
 
 const DEFAULT_COUNTRY_CODE = "+91"
 
@@ -560,62 +565,11 @@ export default function RestaurantLogin() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-white dark:bg-[#0a0a0a] flex flex-col relative overflow-hidden font-['Poppins']">
-      <style>
-        {`
-          @keyframes floatDish1 {
-            0%, 100% { transform: translateX(0vw) translateY(0px) rotate(0deg); }
-            50% { transform: translateX(25vw) translateY(-15px) rotate(8deg); }
-          }
-          @keyframes floatDish2 {
-            0%, 100% { transform: translateX(0vw) translateY(0px) rotate(0deg); }
-            50% { transform: translateX(-25vw) translateY(-15px) rotate(-8deg); }
-          }
-          .animate-float-dish-1 {
-            animation: floatDish1 12s ease-in-out infinite;
-          }
-          .animate-float-dish-2 {
-            animation: floatDish2 12s ease-in-out infinite;
-          }
-        `}
-      </style>
-
-      {/* Top Wave */}
-      <div className="absolute top-0 left-0 w-full h-[40vh] pointer-events-none z-0 transform scale-[1.05] origin-center">
-        <svg viewBox="0 0 1440 320" className="w-full h-full block" preserveAspectRatio="none" overflow="visible">
-          <defs>
-            <linearGradient id="topRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0A4D2B" />
-              <stop offset="100%" stopColor="#06381E" />
-            </linearGradient>
-          </defs>
-          <path fill="url(#topRedGrad)" d="M -50,-50 L -50,280 C 200,100 800,100 1490,100 L 1490,-50 Z" filter="drop-shadow(0px 5px 15px rgba(0,0,0,0.15))" />
-        </svg>
-        <img
-          src="/assets/images/Restaurant_logo_2.png"
-          alt="Restaurant Partner"
-          className="absolute top-[8%] left-[5%] w-[14vh] h-[14vh] md:w-[120px] md:h-[120px] object-contain animate-float-dish-1 drop-shadow-xl"
-        />
-      </div>
-
-      {/* Bottom Wave */}
-      <div className="absolute bottom-0 left-0 w-full h-[50vh] pointer-events-none z-0 transform scale-[1.05] origin-center">
-        <svg viewBox="0 0 1440 320" className="w-full h-full block" preserveAspectRatio="none" overflow="visible">
-          <defs>
-            <linearGradient id="botRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0A4D2B" />
-              <stop offset="100%" stopColor="#06381E" />
-            </linearGradient>
-          </defs>
-          <path fill="url(#botRedGrad)" d="M -50,370 L -50,220 C 640,220 1240,220 1490,40 L 1490,370 Z" filter="drop-shadow(0px -5px 15px rgba(0,0,0,0.15))" />
-        </svg>
-        <img
-          src="/assets/images/Restaurant_logo_1.png"
-          alt="Restaurant Partner"
-          className="absolute bottom-[13%] right-[5%] w-[18vh] h-[18vh] md:w-[150px] md:h-[150px] object-contain animate-float-dish-2 drop-shadow-2xl"
-        />
-      </div>
-
+    <DimaHasaoAuthShell
+      width="880px"
+      blurb="Manage your menu, take orders and track payouts across the district's food network."
+      points={["Menu & dishes", "Live orders", "Payouts & finance", "Ratings & reviews"]}
+    >
       {/* Hidden keyboard-keeper: focused on the "Log in" tap so iOS keeps the
           soft-keyboard open while transitioning to the OTP step. */}
       <input
@@ -628,207 +582,212 @@ export default function RestaurantLogin() {
         className="absolute opacity-0 w-px h-px -z-10 pointer-events-none"
       />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 pb-24 relative z-10 overflow-y-auto">
-        <div className="w-full max-w-sm flex flex-col relative -top-10 my-auto">
-
-          {/* Logo & Header */}
-          <div className="mb-5 text-center flex flex-col items-center">
-            <img
-              src={DEFAULT_BRAND_LOGO}
-              alt="Dima Hasao"
-              className="h-28 -mb-3.5 object-contain drop-shadow-md"
-            />
-            <h2 className="text-[25px] font-extrabold text-[#0A4D2B] dark:text-red-400 tracking-tight font-['Outfit']">
-              Restaurant Partner
-            </h2>
-            <div className="text-[13.5px] text-slate-600 dark:text-slate-350 font-['Outfit'] font-medium tracking-wide leading-relaxed max-w-[310px] text-center px-4 mt-3">
-              {!isOtpStep ? (
-                "Enter your registered mobile number to manage your restaurant"
-              ) : (
-                <div className="text-[13px] text-slate-500/90 dark:text-slate-400/90 font-['Outfit'] font-semibold tracking-[0.015em] leading-relaxed max-w-[300px] text-center mt-2 flex items-center justify-center gap-1.5 whitespace-nowrap">
-                  <span>We've sent a code to {contactInfo}</span>
-                  <button
-                    onClick={() => navigate("/food/restaurant/login")}
-                    className="p-1.5 ml-1 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#90082E] hover:to-[#4A0014] rounded-[10px] text-white shadow-md shadow-[#0A4D2B]/20 transition-all hover:scale-105 active:scale-95"
-                    aria-label="Edit phone number"
-                  >
-                    <Pencil className="w-3.5 h-3.5" strokeWidth={2.5} />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="relative">
-            <AnimatePresence mode="wait">
-              {!isOtpStep ? (
-                // Step 1: Mobile Form
-                <motion.form
-                  key="phone-form"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                  onSubmit={handleSendOTP}
-                  className="space-y-6"
-                >
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400 pr-3 border-r border-gray-300 dark:border-gray-600">+91</span>
-                    </div>
-                    <input
-                      ref={phoneInputRef}
-                      type="tel"
-                      required
-                      autoFocus
-                      onFocus={handleInputFocusScroll}
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      maxLength={10}
-                      className="block w-full pl-20 pr-6 py-3.5 bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-sm text-gray-900 dark:text-white rounded-full outline-none transition-all duration-300 placeholder:text-gray-400 font-medium text-base focus:bg-white dark:focus:bg-gray-900 focus:border-[#0A4D2B] focus:ring-4 focus:ring-[#0A4D2B]/10 hover:border-gray-400"
-                      placeholder="Mobile number"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || phone.length < 10}
-                    className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#A10935] hover:to-[#4F0016] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(184,11,61,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      "Log in"
-                    )}
-                  </button>
-                </motion.form>
-              ) : (
-                // Step 2: OTP Verification Form
-                <motion.form
-                  key="otp-form"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  onSubmit={(e) => { e.preventDefault(); handleVerify(); }}
-                  className="space-y-6"
-                >
-                  {otpError && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-600 dark:text-red-500 text-[15px] font-bold text-center tracking-wide mb-4 mt-2"
-                    >
-                      {otpError}
-                    </motion.div>
-                  )}
-
-                  <div className="flex justify-between gap-3">
-                    {[0, 1, 2, 3].map((index) => (
-                      <input
-                        key={index}
-                        ref={(el) => (inputRefs.current[index] = el)}
-                        type="tel"
-                        inputMode="numeric"
-                        required
-                        disabled={loading || blockTimer > 0}
-                        autoFocus={index === 0}
-                        value={otp[index]}
-                        onChange={(e) => handleChange(index, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(index, e)}
-                        onPaste={index === 0 ? handlePaste : undefined}
-                        className={`w-14 h-14 sm:w-16 sm:h-16 text-center text-2xl font-bold bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 shadow-sm rounded-[20px] outline-none transition-all duration-300 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-gray-900 focus:border-[#0A4D2B] focus:ring-4 focus:ring-[#0A4D2B]/10 hover:border-gray-400 ${blockTimer > 0 ? "opacity-50 cursor-not-allowed border-red-400 bg-red-50 text-red-800" : ""}`}
-                        placeholder="•"
-                      />
-                    ))}
-                  </div>
-
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-2 text-xs font-semibold">
-                      {blockTimer > 0 ? (
-                        <span className="text-gray-400 uppercase tracking-wider font-extrabold">Resend SMS</span>
-                      ) : resendTimer > 0 ? (
-                        <span className="text-gray-400 font-extrabold">Resend SMS in <span className="text-slate-800 dark:text-slate-200 font-black">{formatResendTimer(resendTimer)}</span></span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleResend}
-                          className="text-slate-800 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:underline font-extrabold"
-                        >
-                          Didn't receive SMS? Resend SMS
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || !isOtpComplete || blockTimer > 0}
-                    className="w-full py-3.5 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] hover:from-[#A10935] hover:to-[#4F0016] disabled:opacity-50 text-white rounded-full font-medium text-base shadow-[0_8px_20px_rgba(184,11,61,0.3)] disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Verifying...
-                      </span>
-                    ) : (
-                      "Verify & Continue"
-                    )}
-                  </button>
-
-                  {blockTimer > 0 && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center w-fit mx-auto px-6 py-2.5 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-100 dark:border-red-900/50 mt-4">
-                      <p className="text-[11px] font-bold text-[#0A4D2B] uppercase tracking-wider">
-                        Too many failed attempts
-                      </p>
-                      <p className="text-sm font-bold text-[#0A4D2B]">
-                        Try again after {Math.floor((blockTimer - 1) / 60)}:{String((blockTimer - 1) % 60).padStart(2, '0')}
-                      </p>
-                    </motion.div>
-                  )}
-                </motion.form>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Footer Info - only on login step, not OTP */}
-          {!isOtpStep && (
-            <div className="mt-8 text-center">
-              <p className="text-[11px] text-gray-400/80 font-medium leading-relaxed max-w-[320px] mx-auto">
-                By continuing, you agree to our <br />
-                <Link
-                  to="/food/restaurant/terms"
-                  state={{ from: "/food/restaurant/login" }}
-                  onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
-                >
-                  TERMS
-                </Link>
-                <span className="mx-2 text-gray-400/80 font-bold">•</span>
-                <Link
-                  to="/food/restaurant/privacy"
-                  state={{ from: "/food/restaurant/login" }}
-                  onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
-                >
-                  PRIVACY
-                </Link>
-                <span className="mx-2 text-gray-400/80 font-bold">•</span>
-                <Link
-                  to="/food/restaurant/help-content"
-                  state={{ from: "/food/restaurant/login" }}
-                  onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
-                >
-                  SUPPORT
-                </Link>
-              </p>
-            </div>
-          )}
-
+      <div className="mb-7 text-center md:text-left">
+        <h2 className="dh-playfair text-[26px] font-black tracking-wide text-[#f4efe2]">
+          Restaurant Partner
+        </h2>
+        <div className="mt-2 flex items-center justify-center gap-2 md:justify-start">
+          <span className="h-px w-6 bg-[#caa83e]" />
+          <span className="dh-montserrat text-[9px] font-black uppercase tracking-[0.3em] text-[#caa83e]">
+            {!isOtpStep ? "Sign in" : "Verify"}
+          </span>
         </div>
+
+        {!isOtpStep ? (
+          <p className="mt-4 text-[13px] leading-relaxed text-[#9fb3a4]">
+            Enter your registered mobile number to manage your restaurant.
+          </p>
+        ) : (
+          <div className="mt-4 flex items-center justify-center gap-2 text-[13px] text-[#9fb3a4] md:justify-start">
+            <span>We&apos;ve sent a code to {contactInfo}</span>
+            <button
+              type="button"
+              onClick={() => navigate("/food/restaurant/login")}
+              className="rounded-lg border border-[#caa83e]/35 p-1.5 text-[#caa83e] transition-colors hover:bg-[#caa83e]/12"
+              aria-label="Edit phone number"
+            >
+              <Pencil className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
       </div>
+
+      <div className="relative">
+        <AnimatePresence mode="wait">
+          {!isOtpStep ? (
+            // Step 1: Mobile Form
+            <motion.form
+              key="phone-form"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              onSubmit={handleSendOTP}
+              className="space-y-6"
+            >
+              <div>
+                <label className={authLabelClass} htmlFor="restaurant-phone">
+                  Mobile number
+                </label>
+                <div className={authFieldClass(false)}>
+                  <span className="dh-montserrat border-r border-[#caa83e]/25 px-4 text-sm font-bold text-[#9fb3a4]">
+                    {DEFAULT_COUNTRY_CODE}
+                  </span>
+                  <input
+                    id="restaurant-phone"
+                    ref={phoneInputRef}
+                    type="tel"
+                    required
+                    autoFocus
+                    onFocus={handleInputFocusScroll}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    maxLength={10}
+                    className={`${authInputClass} px-4 tracking-[0.12em]`}
+                    placeholder="10-digit number"
+                  />
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading || phone.length < 10} className={authButtonClass}>
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Log in"}
+              </button>
+            </motion.form>
+          ) : (
+            // Step 2: OTP Verification Form
+            <motion.form
+              key="otp-form"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              onSubmit={(e) => { e.preventDefault(); handleVerify(); }}
+              className="space-y-6"
+            >
+              {otpError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center text-[13px] font-bold tracking-wide text-red-300"
+                >
+                  {otpError}
+                </motion.div>
+              )}
+
+              <div className="flex justify-center gap-3">
+                {[0, 1, 2, 3].map((index) => (
+                  <input
+                    key={index}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    type="tel"
+                    inputMode="numeric"
+                    required
+                    disabled={loading || blockTimer > 0}
+                    autoFocus={index === 0}
+                    value={otp[index]}
+                    onChange={(e) => handleChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    onPaste={index === 0 ? handlePaste : undefined}
+                    className={`h-14 w-14 rounded-xl border bg-[#02130a] text-center text-2xl font-bold text-[#f4efe2] outline-none transition-colors focus:border-[#caa83e] sm:h-16 sm:w-16 ${
+                      blockTimer > 0
+                        ? "cursor-not-allowed border-red-400/70 opacity-50"
+                        : "border-[#caa83e]/35"
+                    }`}
+                    placeholder="•"
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 text-xs font-semibold">
+                  {blockTimer > 0 ? (
+                    <span className="uppercase tracking-wider text-[#5d7264]">Resend SMS</span>
+                  ) : resendTimer > 0 ? (
+                    <span className="text-[#9fb3a4]">
+                      Resend SMS in{" "}
+                      <span className="font-black text-[#caa83e]">{formatResendTimer(resendTimer)}</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      className="font-bold text-[#caa83e] transition-colors hover:text-[#e8c558] hover:underline"
+                    >
+                      Didn&apos;t receive SMS? Resend SMS
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !isOtpComplete || blockTimer > 0}
+                className={authButtonClass}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Verifying...
+                  </span>
+                ) : (
+                  "Verify & Continue"
+                )}
+              </button>
+
+              {blockTimer > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mx-auto mt-4 w-fit rounded-xl border border-red-400/30 bg-red-500/10 px-6 py-2.5 text-center"
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-red-300">
+                    Too many failed attempts
+                  </p>
+                  <p className="text-sm font-bold text-[#f4efe2]">
+                    Try again after {Math.floor((blockTimer - 1) / 60)}:{String((blockTimer - 1) % 60).padStart(2, '0')}
+                  </p>
+                </motion.div>
+              )}
+            </motion.form>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Footer Info - only on login step, not OTP */}
+      {!isOtpStep && (
+        <div className="mt-8 text-center">
+          <p className="dh-montserrat text-[10px] font-semibold leading-relaxed text-[#5d7264]">
+            By continuing, you agree to our
+            <br />
+            <Link
+              to="/food/restaurant/terms"
+              state={{ from: "/food/restaurant/login" }}
+              onClick={clearPersistedLoginPhone}
+              className="uppercase tracking-[0.18em] transition-colors hover:text-[#caa83e]"
+            >
+              TERMS
+            </Link>
+            <span className="mx-2 text-[#caa83e]/50">•</span>
+            <Link
+              to="/food/restaurant/privacy"
+              state={{ from: "/food/restaurant/login" }}
+              onClick={clearPersistedLoginPhone}
+              className="uppercase tracking-[0.18em] transition-colors hover:text-[#caa83e]"
+            >
+              PRIVACY
+            </Link>
+            <span className="mx-2 text-[#caa83e]/50">•</span>
+            <Link
+              to="/food/restaurant/help-content"
+              state={{ from: "/food/restaurant/login" }}
+              onClick={clearPersistedLoginPhone}
+              className="uppercase tracking-[0.18em] transition-colors hover:text-[#caa83e]"
+            >
+              SUPPORT
+            </Link>
+          </p>
+        </div>
+      )}
 
       {/* Restore/New Account Popup */}
       <AnimatePresence>
@@ -838,14 +797,14 @@ export default function RestaurantLogin() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-sm bg-white dark:bg-[#1a1a1a] rounded-3xl shadow-2xl overflow-hidden p-8 text-center border border-gray-100 dark:border-gray-800 relative z-10"
+              className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl border border-[#caa83e]/30 bg-[#051f11] p-8 text-center shadow-[0_28px_80px_rgba(0,0,0,0.7)]"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -853,32 +812,30 @@ export default function RestaurantLogin() {
                   setShowRestorePopup(false)
                   navigate("/food/restaurant/login")
                 }}
-                className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl text-gray-400 hover:text-gray-600 transition-all active:scale-95"
+                className="absolute right-4 top-4 rounded-xl p-2 text-[#9fb3a4] transition-all hover:bg-[#caa83e]/12 hover:text-[#f4efe2] active:scale-95"
                 aria-label="Close and return to login"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
 
-              <div className="w-20 h-20 bg-[#0A4D2B]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShieldCheck className="h-10 w-10 text-[#0A4D2B]" />
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#caa83e]/12">
+                <ShieldCheck className="h-10 w-10 text-[#caa83e]" />
               </div>
 
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Restaurant Found!</h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
-                An existing deleted restaurant for <span className="font-bold text-gray-900 dark:text-white">{contactInfo}</span> was found.
+              <h3 className="dh-playfair mb-3 text-2xl font-bold text-[#f4efe2]">Restaurant Found!</h3>
+              <p className="mb-8 text-sm leading-relaxed text-[#9fb3a4]">
+                An existing deleted restaurant for{" "}
+                <span className="font-bold text-[#f4efe2]">{contactInfo}</span> was found.
                 Do you want to restore your old data or start fresh with a new account?
               </p>
 
               <div className="space-y-4">
-                <button
-                  onClick={() => handleRestoreAction("restore")}
-                  className="w-full h-14 bg-gradient-to-r from-[#0A4D2B] to-[#06381E] text-white font-bold rounded-2xl shadow-xl shadow-[#0A4D2B]/20 transition-all active:scale-[0.98]"
-                >
+                <button onClick={() => handleRestoreAction("restore")} className={authButtonClass}>
                   Restore My Account
                 </button>
                 <button
                   onClick={() => handleRestoreAction("new")}
-                  className="w-full h-14 border-2 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-[0.98]"
+                  className="dh-montserrat h-12 w-full rounded-xl border border-[#caa83e]/35 text-sm font-bold uppercase tracking-[0.16em] text-[#9fb3a4] transition-all hover:border-[#caa83e] hover:text-[#f4efe2] active:scale-[0.99]"
                 >
                   Create New Account
                 </button>
@@ -887,6 +844,6 @@ export default function RestaurantLogin() {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </DimaHasaoAuthShell>
   )
 }
