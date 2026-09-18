@@ -544,3 +544,91 @@ guesses the field name gets a wrong label rather than an error.
 Restaurant accepting the order · delivery partner assignment and delivery ·
 Add Restaurant wizard step 3 · hotel, tours and festival bookings · card
 payments.
+
+---
+
+# Restaurant and delivery legs, 2026-09-18
+
+## PASSED — the restaurant receives and processes orders
+
+Signed in at `/food/restaurant/login` with `8888888888` / OTP `1234`
+(Test Restaurant).
+
+| Check | Result |
+|---|---|
+| Order arrives in the panel | **Live, no refresh** — popped up as a modal within seconds |
+| Order detail | Address, item, ₹180 total, Cash on Delivery, adjustable prep time |
+| The restaurant's total | Shows **₹180**, not the customer's ₹240 — correct, the ₹60 delivery fee is not theirs |
+| Lifecycle | `created → confirmed → preparing → ready_for_pickup`, all accepted |
+| Customer sees it | Customer's order read back `ready_for_pickup` — status propagates |
+
+## CONFIRMED FEATURE — orders auto-reject after ~5 minutes
+
+My first Haflong order (`FOD-1305168`) was cancelled without anyone touching it:
+
+```
+09:46:01  Order placed
+09:51:39  No response from restaurant (Auto-rejected)
+```
+
+Five minutes 38 seconds. The accept modal shows a live countdown
+("Slide to accept (04:38)"), so this is deliberate, not a defect. Worth knowing
+before anyone reports it as a bug: **the restaurant has ~5 minutes.**
+
+## BLOCKED — orders never reach a delivery partner
+
+`FOD-9103420` reached `ready_for_pickup` and **stopped there**:
+
+```json
+dispatch: {"modeAtCreation":"auto","status":"unassigned","deliveryPartnerId":null,"offeredTo":[]}
+```
+
+The rider was signed in and online, and `/food/delivery/orders/available`,
+`/pending` and `/assigned` all returned **zero**.
+
+**Cause: no delivery partner has a zone.** Both partners in the database have
+`zoneId: undefined`:
+
+| Partner | Phone | zoneId | Status |
+|---|---|---|---|
+| aman | 7974161582 | **undefined** | online |
+| Test Delivery Partner | 8888888888 | **undefined** | online |
+
+Auto-dispatch has nothing to match against, so `offeredTo` stays empty. Whether
+partners are simply missing zone assignment or dispatch never sets one, the
+observable effect is the same: **an order can be cooked and marked ready, and no
+rider will ever be offered it.** That ends the food chain one step short of
+delivery.
+
+## Could not automate — the slide-to-accept control
+
+The restaurant accepts by dragging a "Slide to accept" control. Synthetic
+pointer, mouse and touch event sequences all failed to move it (it needs trusted
+input, as framer-motion drag does). **Not a defect — a person can slide it.** I
+drove the same transition through
+`PATCH /v1/food/restaurant/orders/:id/status` instead, which is the call the
+control makes.
+
+## BLOCKED — delivery partner onboarding
+
+Creating a new partner requires **Aadhaar photo, PAN number and photo, and
+driving licence number and photo**. I do not enter government identifier values
+into forms, so I signed in as the existing approved partner instead.
+**`/food/delivery/signup` remains untested.**
+
+Also worth noting: `POST /v1/auth/otp/complete` refuses the delivery audience
+outright — *"delivery partner accounts are created through onboarding"* — so
+there is no API shortcut either.
+
+## API notes gathered while testing
+
+| Endpoint | Detail |
+|---|---|
+| `PATCH /food/restaurant/orders/:id/status` | Field is **`orderStatus`**, not `status`; accept value is `confirmed`. Sending `status` returns a bare `"Required"` |
+| `PATCH /food/delivery/availability` | Field is **`status: 'online'`**. Sending `isOnline`/`available` returns **200 "Availability updated successfully"** while setting the partner **offline** — a success message for an ignored payload |
+| `POST /auth/otp/complete` | Needs the **`signupToken`** from verify, not the OTP. `Backend/scripts/qa/lib/identities.js` passes the OTP, which works only because its phones are already registered — it would fail for a genuinely new number |
+
+## Still remaining
+
+Delivery completed end to end (blocked above) · Add Restaurant wizard step 3 ·
+delivery partner onboarding · hotel, tours and festival bookings · card payments.
