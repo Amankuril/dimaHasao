@@ -188,3 +188,102 @@
   border-color: color-mix(in srgb, var(--rt-primary) 55%, #ffffff) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--rt-primary) 15%, transparent) !important;
 }
+
+/* ---- Onboarding wizard ---------------------------------------------------
+ *
+ * The rules above only remap the brand hexes the pages paint themselves with.
+ * The onboarding wizard paints almost nothing: it is built from neutral
+ * `bg-gray-100` / `bg-white` / `text-gray-*` utilities, so it inherited none of
+ * the district's palette and stood out as the one plain grey screen between a
+ * themed sign-in and a themed dashboard.
+ *
+ * Scoped to `.restaurant-onboarding` rather than `.restaurant-theme` so this
+ * only dresses the wizard. The rest of the panel is a separate job.
+ *
+ * `red-*`, `green-*` and the veg toggle are deliberately absent here: in this
+ * module they are food-safety markers and validation state, not decoration.
+ */
+.restaurant-onboarding {
+  --rt-weave: repeating-linear-gradient(
+    45deg,
+    #04190c 0, #04190c 9px,
+    #caa83e 9px, #caa83e 18px,
+    #0d3d20 18px, #0d3d20 27px,
+    #8c1c13 27px, #8c1c13 36px
+  );
+  background-color: var(--rt-bg) !important;
+}
+
+/* The header carries the weave, so the district is present on every step
+   without the form itself having to shout. */
+.restaurant-onboarding > header {
+  position: relative;
+  background-color: var(--rt-surface) !important;
+  border-bottom: 1px solid var(--rt-border) !important;
+}
+
+.restaurant-onboarding > header::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 5px;
+  background-image: var(--rt-weave);
+}
+
+/* Cards: a warm hairline and a soft lift, instead of a flat white block on
+   flat grey. Only the step sections — `bg-white` is also on pills, dropdown
+   panels and image thumbnails here, and none of those want a card's edge. */
+.restaurant-onboarding section.bg-white {
+  background-color: var(--rt-surface) !important;
+  border: 1px solid var(--rt-border);
+  box-shadow: 0 6px 18px rgba(10, 77, 43, 0.05);
+}
+
+/* The FSSAI non-veg marker is a food-safety signal, not brand paint. Pinned
+   here so no later brand remap can quietly turn it green again. */
+.restaurant-theme .dh-nonveg-marker,
+.restaurant-onboarding .dh-nonveg-marker {
+  background-color: #8c1c13 !important;
+  background-image: none !important;
+  border-color: #8c1c13 !important;
+  color: #ffffff !important;
+}
+
+.restaurant-onboarding .bg-gray-50 {
+  background-color: color-mix(in srgb, var(--rt-bg) 70%, #ffffff) !important;
+}
+
+.restaurant-onboarding .bg-gray-100 {
+  background-color: var(--rt-bg) !important;
+}
+
+/* Type. Section headings take the district green; body text warms up. */
+.restaurant-onboarding .text-black,
+.restaurant-onboarding .text-gray-900 {
+  color: var(--rt-primary-strong) !important;
+}
+
+.restaurant-onboarding .text-gray-800,
+.restaurant-onboarding .text-gray-700 {
+  color: var(--rt-text) !important;
+}
+
+.restaurant-onboarding .text-gray-500,
+.restaurant-onboarding .text-gray-400 {
+  color: var(--rt-muted) !important;
+}
+
+/* Fields sit in a warm well so the form reads as one surface. */
+.restaurant-onboarding input:not([type="checkbox"]):not([type="radio"]),
+.restaurant-onboarding textarea,
+.restaurant-onboarding select {
+  background-color: color-mix(in srgb, var(--rt-bg) 55%, #ffffff);
+  border-color: var(--rt-border);
+}
+
+.restaurant-onboarding .border-gray-200,
+.restaurant-onboarding .border-gray-100,
+.restaurant-onboarding [class*="border-gray-200/"] {
+  border-color: var(--rt-border) !important;
+}

@@ -1664,7 +1664,11 @@ export default function RestaurantOnboarding() {
                 onClick={() => isEditing && setStep1({ ...step1, pureVegRestaurant: false })}
                 className={`px-3 py-1.5 text-xs rounded-full border ${
                   step1.pureVegRestaurant === false
-                    ? "bg-gradient-to-br from-[#B80B3D] to-[#66001D] text-white border-gray-900"
+                    // Not the brand colour: this is the FSSAI non-veg marker and
+                    // has to stay distinct from the green above. Painting it with
+                    // the brand hex made the theme layer remap it to the same
+                    // district green as "Pure Veg", so both answers looked alike.
+                    ? "dh-nonveg-marker bg-[#8c1c13] text-white border-[#8c1c13]"
                     : "bg-white text-gray-700 border-gray-200"
                 } ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
               >
@@ -3018,7 +3022,7 @@ export default function RestaurantOnboarding() {
       {loading ? (
         <OnboardingSkeleton />
       ) : (
-        <div className="min-h-screen bg-gray-100 flex flex-col">
+        <div className="restaurant-onboarding min-h-screen bg-gray-100 flex flex-col">
           <header className="px-4 py-4 sm:px-6 sm:py-5 bg-white flex items-center justify-between border-b">
             <div className="flex items-center gap-3">
               {step === 1 ? (
