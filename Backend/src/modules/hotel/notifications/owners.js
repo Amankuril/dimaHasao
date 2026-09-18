@@ -43,9 +43,13 @@ export const registerHotelNotificationOwners = () => {
     for (const owner of HOTEL_OWNERS) {
         registerNotificationOwner({
             ...owner,
-            // Hotel's nested object lives under this one field.
-            webField: 'fcmTokens',
-            mobileField: 'fcmTokens',
+            // Name the leaf inside the nested object, not the object itself.
+            // Pointing both platforms at bare 'fcmTokens' made a save overwrite
+            // the whole `{ app, web }` with one bare string, losing the other
+            // platform's token. Mongoose updates only the named leaf.
+            // 'app' is hotel's spelling of mobile — see readHotelTokens.
+            webField: 'fcmTokens.web',
+            mobileField: 'fcmTokens.app',
             selectFields: 'fcmTokens',
             readTokens: readHotelTokens,
         });

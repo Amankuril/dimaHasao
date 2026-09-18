@@ -316,15 +316,40 @@ const normalizeTokenList = (tokens = []) => {
     return normalized.slice(-10);
 };
 
+/**
+ * Read a token field that may be named as a dot path.
+ *
+ * Food and taxi give each platform its own top-level field. Hotel and tours
+ * keep both in one nested object (`fcmTokens: { app, web }`), so their
+ * registrations name the leaf — 'fcmTokens.web' — instead. Mongoose already
+ * understands that spelling in `$set` and updates only the named leaf, so
+ * resolving it on the way in makes the nested shape work for read, write and
+ * remove without a second code path.
+ *
+ * Without this, `doc['fcmTokens.web']` is undefined, the existing token reads
+ * as empty, and the scalar branch below writes the whole `{ app, web }` object
+ * away — replacing it with a bare string and taking the other platform's token
+ * with it.
+ */
+const readAtPath = (doc, path) => {
+    if (!doc || !path) return undefined;
+    const key = String(path);
+    if (!key.includes('.')) return doc[key];
+    return key.split('.').reduce((acc, part) => (acc == null ? undefined : acc[part]), doc);
+};
+
 const readTokenFieldAsList = (doc, fieldName) => {
     if (!doc || !fieldName) return [];
-    return normalizeTokenList(doc[fieldName] || []);
+    return normalizeTokenList(readAtPath(doc, fieldName) || []);
 };
+
+/** True when the field holds a list of tokens rather than a single one. */
+const isTokenListField = (doc, fieldName) => Array.isArray(readAtPath(doc, fieldName));
 
 const writeTokenFieldFromList = (doc, fieldName, tokens) => {
     const normalizedTokens = normalizeTokenList(tokens);
     if (!fieldName) return;
-    if (Array.isArray(doc[fieldName])) {
+    if (isTokenListField(doc, fieldName)) {
         doc[fieldName] = normalizedTokens;
         return;
     }
@@ -394,7 +419,7 @@ export const upsertFirebaseDeviceToken = async ({ ownerType, ownerId, token, pla
     );
 
     const tokens = normalizeTokenList([...existingTokens, normalizedToken]);
-    const updateValue = Array.isArray(doc[field]) ? tokens : (tokens[tokens.length - 1] || '');
+    const updateValue = isTokenListField(doc, field) ? tokens : (tokens[tokens.length - 1] || '');
 
     await model.updateOne({ _id: normalizedOwnerId }, { $set: { [field]: updateValue } });
     logger.info(
@@ -492,18 +517,18 @@ export const removeFirebaseDeviceToken = async ({ ownerType, ownerId, token, pla
         if (field) {
             const existing = readTokenFieldAsList(doc, field);
             const remaining = existing.filter((t) => t !== normalizedToken);
-            updates[field] = Array.isArray(doc[field]) ? remaining : (remaining[remaining.length - 1] || '');
+            updates[field] = isTokenListField(doc, field) ? remaining : (remaining[remaining.length - 1] || '');
         }
     } else {
         const webField = getTokenFieldForOwnerPlatform(ownerType, 'web');
         const mobileField = getTokenFieldForOwnerPlatform(ownerType, 'mobile');
         if (webField) {
             const existingWeb = readTokenFieldAsList(doc, webField).filter((t) => t !== normalizedToken);
-            updates[webField] = Array.isArray(doc[webField]) ? existingWeb : (existingWeb[existingWeb.length - 1] || '');
+            updates[webField] = isTokenListField(doc, webField) ? existingWeb : (existingWeb[existingWeb.length - 1] || '');
         }
         if (mobileField) {
             const existingMobile = readTokenFieldAsList(doc, mobileField).filter((t) => t !== normalizedToken);
-            updates[mobileField] = Array.isArray(doc[mobileField]) ? existingMobile : (existingMobile[existingMobile.length - 1] || '');
+            updates[mobileField] = isTokenListField(doc, mobileField) ? existingMobile : (existingMobile[existingMobile.length - 1] || '');
         }
     }
 
@@ -608,7 +633,7 @@ export const sendNotificationToOwner = async ({ ownerType, ownerId, payload, pla
                 for (const field of fieldNames) {
                     if (!field) continue;
                     const remaining = readTokenFieldAsList(doc, field).filter((t) => !invalidTokens.includes(t));
-                    updates[field] = Array.isArray(doc[field]) ? remaining : (remaining[remaining.length - 1] || '');
+                    updates[field] = isTokenListField(doc, field) ? remaining : (remaining[remaining.length - 1] || '');
                 }
                 if (Object.keys(updates).length > 0) {
                     await model.updateOne({ _id: ownerId }, { $set: updates });

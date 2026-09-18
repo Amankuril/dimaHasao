@@ -28,7 +28,14 @@ const ROLE_TO_OWNER_TYPE = {
     owner: 'OWNER',
     bus_driver: 'BUS_DRIVER',
     service_center: 'SERVICE_CENTER',
-    service_center_staff: 'SERVICE_CENTER_STAFF'
+    service_center_staff: 'SERVICE_CENTER_STAFF',
+    // Hotel and tours sign with the same JWT_ACCESS_SECRET, so their tokens
+    // always verified here — they just had no owner type, and an unmapped role
+    // leaves the verifier loop reporting 'Invalid or expired token' for a
+    // perfectly valid token. Both owner types are registered at boot from
+    // their own modules (see routes/index.js).
+    partner: 'HOTEL_PARTNER',
+    operator: 'TOURS_OPERATOR'
 };
 
 const resolveOwnerType = (role) => ROLE_TO_OWNER_TYPE[String(role || '').trim()] || null;
