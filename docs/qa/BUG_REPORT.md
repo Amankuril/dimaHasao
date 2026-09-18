@@ -862,3 +862,64 @@ prices.
 Festival payment completion (needs a card) · concurrent seat race · booking
 window open/close/clear · hotel cancellation and refund · tours advance
 payment · the two onboarding flows behind government-ID and bank fields.
+
+---
+
+# Corrections and further passes, 2026-09-18 (final)
+
+## CORRECTION — "nothing is credited to any wallet" was wrong
+
+An earlier entry reported that after a completed food delivery no party's
+balance moved, on the evidence that every `*_wallets` collection was empty.
+
+**That was the wrong evidence.** Balances are **derived from orders**, and
+wallet documents are created lazily when one is actually needed (withdrawals,
+bonuses). Asking the endpoints the apps actually call:
+
+| Endpoint | Reports |
+|---|---|
+| `GET /food/restaurant/finance` | `totalEarnings: 147.42`, `totalOrders: 1` |
+| `GET /food/delivery/earnings` | `totalEarnings: 27`, `totalOrders: 1` |
+| `GET /food/delivery/wallet` | `totalBalance: 27`, **`cashInHand: 240`** |
+
+Every figure is correct: 180 − 32.58 commission = **147.42** for the restaurant,
+**27** for the rider, and the ₹240 of collected cash **is** tracked — which the
+same entry also said it was not.
+
+**Nothing is broken here, and nothing needed fixing.** This is the fifth time
+in this pass that reading a collection or a response field instead of calling
+the endpoint produced a false finding. The rule earned the hard way: **ask the
+API the app asks, before concluding from storage.**
+
+## PASSED — concurrent seat race has exactly one winner
+
+Reduced a category to a single remaining seat, then fired **eight simultaneous
+checkouts** for it:
+
+```
+succeeded: 1
+refused  : 7  ("Daily General Access Pass just sold out")
+other    : 0
+```
+
+The conditional `findOneAndUpdate` claim holds under contention — no
+overselling, no lost seats, and the refusal message is useful.
+
+## PASSED — the booking window, including the clear that used to be the trap
+
+| Action | Result |
+|---|---|
+| `PUT /festivals/admin/:id` with `bookingClosesAt` in the past | Checkout refused, **409 "Bookings have closed for this festival"** |
+| Clear with `null` | **Silently ignored** — the global null-stripping middleware removes it before the handler sees it |
+| Clear with `''` | Cleared, bookings reopened, checkout 201 |
+
+The `null` no-op is the documented trap, and it matters only if the admin UI
+sends the wrong one. It does not: `Global/app/admin/pages/Festivals.jsx` sends
+`form.bookingClosesAt || ''`, which is the correct clear signal. **Set, close,
+clear and reopen all work end to end.**
+
+## Still remaining
+
+Festival and tours payment completion (both need a card) · hotel cancellation
+and refund · hotel concurrent double-booking · Add Restaurant wizard step 3 ·
+delivery partner onboarding.
