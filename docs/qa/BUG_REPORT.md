@@ -1001,3 +1001,73 @@ with a clear message.
 | Delivery partner onboarding | Requires Aadhaar, PAN and driving licence values |
 
 Everything else discoverable in this platform has now been walked end to end.
+
+---
+
+# Two corrections and one open decision, 2026-09-18
+
+## CORRECTION — `deliveredAt` is recorded after all
+
+An earlier entry said the delivered timestamp is never set, so delivery-time
+reporting has nothing to read. **Wrong.** The canonical field is
+`deliveryState.deliveredAt`, and the delivered order carries a full phase
+timeline:
+
+```json
+{"currentPhase":"delivered","reachedPickupAt":"…10:03:15","pickedUpAt":"…10:03:16",
+ "reachedDropAt":"…10:03:26","deliveredAt":"…10:03:26"}
+```
+
+The top-level `deliveredAt` is a legacy denormalised field, and every reader
+already falls back (`o?.deliveryState?.deliveredAt || o?.deliveredAt`). Nothing
+is missing. **Seventh time this pass that reading one field instead of the
+document produced a false finding.**
+
+## CORRECTION — money *is* returned on a paid cancellation
+
+The original audit said cancelling "marks refunded and reverses the vendor
+wallet but does not return the customer's money". Half right. The hotel cancel
+path **does** credit the customer:
+
+```js
+await userWallet.credit(booking.totalAmount, `Refund for Booking #…`, …, 'refund');
+```
+
+The customer is made whole — **to their in-app wallet**, not to the card they
+paid with.
+
+## OPEN DECISION — refund destination, and one real defect behind it
+
+This is a business call, not a bug, so it is recorded rather than changed.
+
+**What exists.** A full gateway-refund capability:
+`core/payments/refund.service.js` (`processGatewayRefund` calls
+`instance.payments.refund`), a hotel route `POST /api/payments/refund/:bookingId`,
+and a queue processor for order cancellations.
+
+**What actually happens.** Cancelling a paid hotel booking credits the in-app
+wallet. **No cancellation path anywhere calls the gateway.**
+
+**The defect behind it**, in `queues/processors/payment.processor.js`:
+
+```js
+refundTo: paymentMethod === 'wallet' ? 'wallet' : 'wallet' // Default to wallet refund
+```
+
+Both branches are identical — a placeholder nobody finished. And the processor
+is **never enqueued**: there is no `queue.add` for it anywhere, so the whole
+gateway path is dead code regardless.
+
+**Why this needs a decision rather than a fix.** Refund-to-wallet is a
+legitimate model, but the order documents themselves declare
+`refund.destination: "source"`, which says the intent was refund-to-source. For
+card payments in India that is also the conventional expectation. Changing where
+customer money goes is a compliance and product decision, and getting it wrong
+in either direction has real consequences — so it is left as it is until
+somebody decides.
+
+## Still genuinely blocked
+
+Card entry (festival and tours payment completion, and a card-paid hotel booking
+to test a real refund against) and government identifiers plus bank details
+(Add Restaurant step 3, delivery partner onboarding).
