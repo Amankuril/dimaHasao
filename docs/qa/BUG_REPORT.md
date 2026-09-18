@@ -787,3 +787,78 @@ never does.
 Concurrent double-booking · hotel cancellation and refund · partner-side
 booking view · tours booking (advance payment needs a card) · festivals ·
 Add Restaurant wizard step 3 · delivery partner onboarding.
+
+---
+
+# Festivals, 2026-09-18
+
+## FIXED — an abandoned basket held its seats forever
+
+**Severity: high. Fixed in commit `5766320`.**
+
+Checkout takes seats up front (correct — a race for the last pass needs one
+winner) and gives them back only when the browser calls the release endpoint. A
+browser that is closed, offline or killed never calls it.
+
+**Measured:** three abandoned baskets moved this festival's sold count from
+**3 to 12**, with 28 pending holds on one account and nothing to return them.
+At scale a festival sells out to people who were only browsing.
+
+The release handler's own comment already described the hole — *"nothing
+expires them"* — it simply had no counterpart.
+
+**Fix:** holds carry `holdExpiresAt` (30 minutes, longer than a payment session,
+short enough not to lock a festival up). `sweepExpiredHolds` returns the seats
+and cancels the booking with a reason, running **lazily** wherever availability
+is read or taken — before a checkout, and on the public detail screen — so the
+counts heal without a scheduler to install and forget. It ages out pre-existing
+holds on the same clock, since those were the ones already sitting on seats.
+
+The verify path got a matching guard: a hold that expired mid-payment has
+already returned its seats, so confirming it would issue a pass the festival no
+longer has. It re-takes the seats first and, if they are genuinely gone,
+refuses and flags that a refund is owed rather than overselling silently.
+
+**Verified:** a backdated hold released its 3 seats on the next read (11 → 8)
+and reads `cancelled — Hold expired before payment`. QA suite 124/125, 1
+blocked, unchanged.
+
+## PASSED — multi-category checkout takes one payment
+
+The bug originally reported (Razorpay charging only the first category) is
+fixed and I confirmed it end to end:
+
+| | |
+|---|---|
+| Basket | 2 × Daily General (₹250) + 1 × Season Pass (₹650) |
+| Expected | ₹1,150 |
+| `POST /payments/orders/:groupId` | **₹1,150**, one order, covering 2 bookings |
+
+One `orderGroupId` groups the bookings, and the frontend
+(`FestivalDetailScreen`) calls the **group** endpoints, releases the checkout
+when the payment window is dismissed, and has a no-gateway settle path.
+
+A caution for anyone testing this: the **per-booking** endpoint
+`POST /payments/bookings/:id/order` still exists and correctly prices one
+booking. Calling it for a multi-category basket reproduces the original
+symptom exactly — I did that first and briefly believed the bug was back.
+
+## PASSED — per-category seat configuration
+
+`ticketCategories` carries `totalTickets` / `soldTickets` with derived
+`remainingTickets` and `isSoldOut`, plus `maxPerBooking` so one buyer cannot
+take a whole allocation. The festival-level aggregate agrees with the parts
+(3000 + 1500 = 4500; 2 + 1 = 3 sold).
+
+## Fixed in passing — a fragile test
+
+`BIZ-151` selected `vehicle-types[0]`. Adding a vehicle type with no tariff
+turned fare enforcement from a pass into a *blocked* — a silent coverage loss
+that reads like a configuration note. It now looks for a type that actually
+prices.
+
+## Still remaining
+
+Festival payment completion (needs a card) · concurrent seat race · booking
+window open/close/clear · hotel cancellation and refund · tours advance
+payment · the two onboarding flows behind government-ID and bank fields.
