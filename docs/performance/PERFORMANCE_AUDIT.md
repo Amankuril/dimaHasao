@@ -145,9 +145,29 @@ listed individually above. The scan is kept as a tool, not as a task list.
 | `GET /festivals/bookings/my` | 167ms | 2kb |
 
 Returning an empty list should cost one indexed query. At 3–4× the 40ms floor,
-these are doing setup work before they know there is nothing to do. Not yet root
-caused — needs `explain()` to say whether it is an unindexed scan or extra
-queries. **Unverified; investigation queued.**
+these are doing setup work before they know there is nothing to do.
+
+**Root caused (2026-09-18).** It is not the query — it is authentication.
+`modules/tours/middlewares/authMiddleware.js` resolved the caller by trying
+three collections *in series* (`TourOperator`, `FoodAdmin`, `FoodUser`). A
+consumer sits in the third, so every consumer request paid two guaranteed
+misses before the hit — three round trips before the handler ran. Fixed in
+OPT-006, measured at −43%.
+
+Hotel's middleware has the same four-deep shape and got the same fix, which
+**made it slower** and was reverted (OPT-007): `modules/hotel/models/User.js`
+re-exports `FoodUser` onto the same `users` collection, so hotel's *first*
+lookup is already the consumer lookup. Reading the code suggested a waterfall;
+measuring showed there was none for the common caller.
+
+That same aliasing leaves a smaller finding behind: hotel's fourth lookup
+(`FoodUser`) re-queries a model that already missed as `User`, so it can never
+succeed. Dead work on every failed authentication. **Not fixed** — low value,
+recorded here.
+
+`/support` at ~100ms for an empty list is **still unexplained**. Its router also
+does a `FoodUser.findById` in middleware on top of `authMiddleware`, which is a
+likely contributor, but this was not measured.
 
 ---
 
@@ -255,7 +275,7 @@ booking's categories) and are fine.
 | P2 | count + find serialised in list endpoints | Medium | Ready to fix |
 | P3 | Hotel reads without `.lean()` | Medium | Ready, per-site |
 | P4 | Sequential writes | Info | **No action — business logic** |
-| P5 | 100ms+ for empty responses | Medium | Needs `explain()` |
+| P5 | 100ms+ for empty responses | Medium | Root caused: sequential auth lookups. Tours fixed (OPT-006); hotel attempted and reverted (OPT-007); `/support` still open |
 | P6 | `/food/orders` 6.7kb per row | Medium | Needs consumer audit |
 | P7 | Home fetches 5 unused booking lists | Medium | Needs context review |
 | P8 | Invalid id → 500 | Low | Ready to fix |

@@ -168,3 +168,69 @@ the same body. QA suite unchanged.
 | OPT-003 | Four list endpoints stop serialising count + find | No change outside noise |
 | OPT-004 | `.lean()` reverted where it dropped response fields | Regression avoided |
 | OPT-005 | Invalid id returns 400 instead of 500 | No latency change; defect fixed |
+| OPT-006 | Tours resolves the caller in one round trip | **−43%** (188ms → 107ms) |
+| OPT-007 | Same change on hotel — **reverted** | 13% *slower*; hotel's first lookup already hit |
+
+---
+
+## OPT-006 — Tours resolves the caller's account in one round trip
+
+**Module:** tours · **File:** `Backend/src/modules/tours/middlewares/authMiddleware.js`
+**Audit finding:** P5
+
+**Problem.** `GET /tours/bookings/my` took ~190ms to return a 2.3kb response,
+and earlier, 131ms to return **nothing at all**. The handler itself is already
+one lean query with two populates — the cost was before it ran.
+
+**Root cause.** `protect` → `resolveAccount` tried three collections in series:
+`TourOperator`, then `FoodAdmin`, then `FoodUser`. A consumer's account is in
+the third, so every consumer request paid two guaranteed misses before the hit.
+Three round trips at this stack's ~40ms floor, spent before the handler started,
+on **every authenticated tours request**.
+
+The code's own comment said "operators first — they are the common case on this
+router", which is true of the operator panel and false of `/bookings/my`.
+
+**Solution.** The three lookups are issued together with `Promise.all` and the
+first hit **in the original order** wins. Precedence is unchanged, so an id
+present in two collections resolves exactly as before. The trade is two extra
+indexed `_id` reads in parallel against up to three in series.
+
+**Measured:** 209ms and 167ms → **98ms and 116ms**. A **43% reduction**, both
+passes agreeing, against controls that moved ~10%.
+
+**Regression status:** `/tours/bookings/my` (as consumer and as admin) and
+`/tours/packages` compared before and after — identical. QA suite 124/125,
+1 blocked, unchanged.
+
+---
+
+## OPT-007 — The same change was made to hotel, measured, and reverted
+
+**Module:** hotel · **Audit finding:** P5
+**This entry records an optimization that made things worse.**
+
+Hotel's `resolveAccount` has the identical shape — four sequential `findById`
+calls (`User`, `Partner`, `Admin`, `FoodUser`) — so it got the identical
+treatment, on the reasoning that four misses in series must be worse than four
+lookups in parallel.
+
+**The measurement disagreed.** `/hotel/bookings/my` went from 137ms and 143ms to
+**153ms and 162ms** — roughly 13% *slower*, with both passes agreeing on the
+sign while the unrelated `/hotel/properties` and `/festivals` controls did not
+move.
+
+**Why.** `Backend/src/modules/hotel/models/User.js` is a re-export of
+`FoodUser`, and both point at the same `users` collection. Hotel's **first**
+lookup is therefore the consumer lookup — a consumer was already resolving in
+one query. Parallelising turned one query into four.
+
+Reading the code suggested a four-deep waterfall. Only measuring showed there
+was no waterfall to fix for the common caller.
+
+**Resolution.** Reverted. Hotel's middleware is untouched.
+
+**Left as a finding, not fixed:** because `User` *is* `FoodUser`, hotel's
+fourth lookup re-queries a model that already missed and can never succeed.
+It is dead work on every failed authentication. Low value, recorded rather than
+changed.

@@ -33,6 +33,9 @@ field, including nested fields**, not merely by status code.
 | `GET /hotel/admin/users?page=1&limit=20` | Identical **after** the OPT-004 revert |
 | `GET /hotel/admin/partners?page=1&limit=20` | Identical |
 | `GET /hotel/admin/bookings?page=1&limit=20` | Identical |
+| `GET /tours/bookings/my` (as consumer) | Identical |
+| `GET /tours/bookings/my` (as admin) | Identical |
+| `GET /tours/packages` | Identical |
 
 The `/hotel/admin/users` row is the point of this section. The first run of that
 comparison showed **nine fields missing** from the response, caused by a
@@ -76,6 +79,8 @@ booking · payments · notifications · admin approval workflows.
 |---|---|
 | Other `.lean()` sites in the audit's P3 | **Not yet acted on.** OPT-004 shows why each needs a per-endpoint response comparison first. Do not apply in bulk. |
 | `/hotel/admin/hotels` still ~200ms | Cause not identified. The parallelisation did not move it; something else dominates. |
+| `/support` still ~100ms for an empty list | Unexplained. Its router adds a `FoodUser.findById` on top of `authMiddleware`; suspected but not measured. |
+| Hotel auth still four sequential lookups | Deliberate — parallelising it was measured and was **worse** (OPT-007). Do not retry without re-measuring. |
 | Behaviour at real data volume | Untested. The dev database holds 6 food orders and 16 hotel bookings. Every measurement here is a floor. |
 | Production latency | Unmeasured. No access from this environment. |
 | N+1 sites (audit P10) | 21 candidates identified, none reviewed or changed. |

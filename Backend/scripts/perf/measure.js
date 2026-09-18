@@ -32,7 +32,10 @@ const sessions = async () => {
     try {
       const cached = JSON.parse(readFileSync(CACHE, 'utf8'));
       const probe = await request('GET', '/food/user/profile', { token: cached.user });
-      if (probe.status === 200) return cached;
+      // 429 means the probe was rate limited, not that the token went bad —
+      // discarding the session there sends us to re-provision through the very
+      // endpoint that is rate limiting us, which then fails too.
+      if (probe.status === 200 || probe.status === 429) return cached;
     } catch {
       /* fall through and re-provision */
     }
@@ -55,6 +58,15 @@ const arg = (name, fallback) => {
 
 const SAMPLES = Number(arg('samples', 7));
 const OUT = arg('out', null);
+/*
+ * --only narrows the run to endpoints whose label matches.
+ *
+ * A full 19-endpoint sweep is ~200 requests. Four of those back to back, which
+ * is what an interleaved A/B costs, walks into the API rate limiter and the run
+ * silently measures nothing. When comparing one change, measure the endpoints
+ * it touches plus a control, not everything.
+ */
+const ONLY = arg('only', null);
 
 const median = (values) => {
   const sorted = [...values].sort((a, b) => a - b);
@@ -123,8 +135,17 @@ const run = async () => {
     ['admin', 'hotel finance stats', 'GET', '/hotel/admin/finance', adminToken],
   ];
 
+  const selected = ONLY
+    ? targets.filter(([, label]) => new RegExp(ONLY, 'i').test(label))
+    : targets;
+
+  if (!selected.length) {
+    console.error(`--only ${ONLY} matched no endpoint`);
+    process.exit(1);
+  }
+
   const results = [];
-  for (const [group, label, method, path, token] of targets) {
+  for (const [group, label, method, path, token] of selected) {
     if (!token) {
       results.push({ group, label, path, skipped: true, status: 'no token' });
       continue;
