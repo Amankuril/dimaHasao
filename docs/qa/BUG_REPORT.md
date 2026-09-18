@@ -632,3 +632,85 @@ there is no API shortcut either.
 
 Delivery completed end to end (blocked above) · Add Restaurant wizard step 3 ·
 delivery partner onboarding · hotel, tours and festival bookings · card payments.
+
+---
+
+# Food chain completed end to end, 2026-09-18
+
+## PASSED — order `FOD-9504209` went all the way to delivered
+
+Every step executed against the running stack:
+
+| Step | Actor | Result |
+|---|---|---|
+| Place order | Customer (UI) | ₹180 + ₹60 = ₹240, COD, Haflong |
+| `confirmed` → `preparing` → `ready_for_pickup` | Restaurant | 200 each; customer saw each change |
+| Order offered | Dispatch | Appeared in the rider's offers |
+| Accept | Rider | 200 |
+| Reached pickup → confirm pickup | Rider | 200 each |
+| Reached drop → complete | Rider | 200 each |
+
+Final state:
+
+```
+orderStatus : delivered
+payment     : {"method":"cash","status":"paid","amountDue":240}
+riderEarning: 27   platformProfit: 65.58   restaurantCommission: 32.58
+```
+
+**The split adds up:** ₹240 = ₹180 item + ₹60 delivery. Platform takes ₹32.58
+commission from the item plus ₹33 of the delivery fee; the rider gets ₹27;
+32.58 + 33 = 65.58. Correct.
+
+## CORRECTION — two wrong diagnoses in my previous entry
+
+The previous entry blamed dispatch on delivery partners having no zone, then I
+blamed a zero cash limit. **Both were wrong**, and both wrong for the same
+reason — I read the symptom, not the code.
+
+1. **"Riders have no zone."** A partner's `zoneId` field is irrelevant. The zone
+   is detected from their **GPS** —
+   `detectZoneIdForPoint(partner.lastLat, partner.lastLng)`. Once the rider went
+   online with coordinates, detection resolved the Haflong zone correctly.
+2. **"`deliveryCashLimit: 0` blocks dispatch."** The opposite: a total limit of
+   `0` returns `hasCapacity: true` with `availableCashLimit` set to
+   `MAX_SAFE_INTEGER` — zero means **unlimited**. I changed it to 5000 on that
+   wrong reading, which imposed a real limit where none existed, and **restored
+   it to 0** once I understood the code.
+
+**What was actually wrong: my response parsing.** The endpoint returns
+`{data, meta, cashLimit, capacity, newOffers, acceptedOrders}` and I was reading
+`data.orders`. The service was returning the order the whole time. Calling the
+service directly is what settled it — three "findings" that were one parsing
+mistake.
+
+## Real finding — nothing is credited to any wallet
+
+The order is `delivered` and `paid`, and the split is computed and stored on the
+order. But **every wallet collection is empty**:
+
+| Collection | Documents |
+|---|---:|
+| `food_restaurant_wallets` | **0** |
+| `food_delivery_wallets` | **0** |
+| `food_admin_wallets` | **0** |
+
+The restaurant's ₹147.42, the rider's ₹27 and the platform's ₹65.58 exist only
+as numbers on the order document. For a cash order the rider is also holding
+₹240 that no `cashInHand` record tracks — which is what the cash-limit feature
+reads, so that limit can never bind.
+
+Whether wallets are created lazily on first payout or this is a missing credit
+step needs a look at the settlement path. Either way, **after a completed
+delivery no party's balance moved.**
+
+## Minor — `deliveredAt` is never set
+
+The delivered order has `deliveredAt: undefined`. Delivery-time reporting and
+any SLA measurement have nothing to read.
+
+## Still remaining
+
+Add Restaurant wizard step 3 · delivery partner onboarding (both blocked on
+government-ID and bank fields) · hotel, tours and festival bookings · card
+payments.
