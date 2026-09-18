@@ -975,6 +975,37 @@ html, body, #root {
   font-family: 'Outfit', system-ui, -apple-system, sans-serif !important;
 }
 
+/*
+ * ...but never the icons.
+ *
+ * Font Awesome draws every glyph through a ::before whose font-family *is*
+ * the icon set, so the blanket rule above erased every icon on the page. And
+ * a lazily-loaded stylesheet is never unloaded: one visit to the taxi panel
+ * left the rest of the app — the /app bottom nav, every back arrow — blank
+ * until a full page reload, which is why coming back did not bring them back.
+ *
+ * These win on specificity rather than on load order, so it does not matter
+ * which chunk arrives first. The pseudo-elements take `inherit` so brands
+ * follow the element to the Brands face instead of being hard-coded here.
+ */
+.fa, .fas, .far, .fal, .fat, .fad, .fab, .fak,
+.fa-solid, .fa-regular, .fa-light, .fa-thin, .fa-duotone, .fa-brands,
+[class^="fa-"], [class*=" fa-"] {
+  font-family: "Font Awesome 6 Free" !important;
+}
+
+.fab,
+.fa-brands {
+  font-family: "Font Awesome 6 Brands" !important;
+}
+
+.fa::before, .fas::before, .far::before, .fal::before,
+.fat::before, .fad::before, .fab::before,
+[class^="fa-"]::before, [class*=" fa-"]::before,
+[class^="fa-"]::after, [class*=" fa-"]::after {
+  font-family: inherit !important;
+}
+
 /* Custom Utility overrides to force dark text on light elements (like yellow cards) inside dark mode */
 .user-app-theme .text-dark-force {
   color: #0f172a !important;

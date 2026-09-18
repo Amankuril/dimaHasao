@@ -43,16 +43,23 @@ if (externals.length) {
 }
 
 // 2. Font Awesome must actually be in the bundle, not merely imported.
+//    Naming the family is not declaring it — module stylesheets legitimately
+//    say "Font Awesome 6 Free" to re-assert it against their own resets. What
+//    counts is the @font-face that points at the webfont.
 const cssFiles = assets.filter((f) => f.endsWith('.css'))
-const faCss = cssFiles.find((f) =>
-  readFileSync(join(dist, 'assets', f), 'utf8').includes('Font Awesome 6 Free')
-)
-if (!faCss) {
+const declaresFace = (f) => {
+  const css = readFileSync(join(dist, 'assets', f), 'utf8')
+  return css.includes('Font Awesome 6 Free') && /fa-solid-900[^)]*\.woff2/.test(css)
+}
+const faCss = cssFiles.filter(declaresFace)
+if (!faCss.length) {
   failures.push('no built stylesheet declares the Font Awesome face — every icon would render blank.')
-} else if (!html.includes(faCss)) {
-  // Found, but in a lazy chunk: icons would pop in late, or not at all on
-  // routes that never load that chunk.
-  failures.push(`Font Awesome landed in ${faCss}, which index.html does not load eagerly.`)
+} else if (!faCss.some((f) => html.includes(f))) {
+  // Declared, but only in a lazy chunk: icons would pop in late, or not at
+  // all on routes that never load that chunk.
+  failures.push(
+    `Font Awesome is declared only in ${faCss.join(', ')}, which index.html does not load eagerly.`
+  )
 }
 
 // 3. The webfonts the stylesheet points at must have been emitted.
@@ -68,4 +75,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log(`verify-build: icons ship with the bundle (${faCss}); no third-party render dependencies.`)
+console.log(`verify-build: icons ship with the bundle (${faCss.join(', ')}); no third-party render dependencies.`)
