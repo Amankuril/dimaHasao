@@ -923,3 +923,81 @@ clear and reopen all work end to end.**
 Festival and tours payment completion (both need a card) · hotel cancellation
 and refund · hotel concurrent double-booking · Add Restaurant wizard step 3 ·
 delivery partner onboarding.
+
+---
+
+# Everything remaining, 2026-09-18 (closing pass)
+
+## FIXED — hotel bookings took no inventory at all
+
+**Severity: critical. Fixed in commit `d00dd3a`.**
+
+Six simultaneous requests for a room type with `totalInventory: 1` **all
+succeeded**, and the database agreed: six live bookings against one room.
+
+The race was not the whole story. `createBooking` **never checked availability
+and never wrote the ledger** — the quote reported `availableUnits` and the
+booking ignored it, and `AvailabilityLedger` was only ever written by a partner
+blocking rooms by hand. A single request beyond capacity would have gone
+through too.
+
+**Fix:** booking claims inventory before writing anything. Mongo may be
+standalone here so no transaction is assumed — the claim is inserted, every
+overlapping entry is ranked by `_id` (monotonic, so insertion order), and the
+claim survives only if it lands inside capacity. Racers outside it delete their
+own entry and are refused. Under-selling by one is possible if a winner dies
+between insert and rank; **overselling is not**. The entry is pointed at the
+booking once it has an id, so the cancellation cleanup that already deletes by
+`referenceId` releases it.
+
+| | Before | After |
+|---|---|---|
+| 6 simultaneous, inventory 1 | **6 succeeded** | **1 succeeded, 5 refused 409** |
+| Sequential second attempt | succeeded | refused 400 |
+| Cancel then rebook | n/a | works |
+
+With bookings finally writing the ledger, the **pre-existing** sequential check
+started working too — one path catches the sequential case, the new claim
+catches the concurrent one.
+
+## PASSED — hotel cancellation reverses the partner debit exactly
+
+Cancelling the pay-at-hotel booking returned *"Booking cancelled successfully
+(Pay at Hotel - Commission Refunded)"*, and the partner wallet moved
+**−1,672 → −836**: precisely the +836 reversal (commission 380 + taxes 456).
+Status, `cancelledAt` and reason all recorded.
+
+## PASSED — tours pricing and the settlement identity
+
+| | |
+|---|---|
+| Quote (2 adults, 1 child, ₹2,200 pp) | base 5,720 = 2×2200 + 1×1320 (child at 60%) |
+| Tax 5% | 286 → **total 6,006** |
+| Advance 25% | **1,502**, balance **4,504** |
+| Booking `TR-1789728059763-948` | commission 572 (10% of gross), payout **5,148** |
+
+The documented identity holds: `operatorPayout = total − taxes − commission`
+= 6006 − 286 − 572 = **5148**. Visible to the tours admin immediately.
+
+**Advance payment itself is blocked for me** (card). The no-gateway settle path
+correctly refuses while Razorpay is configured — *"Complete the payment through
+the gateway to confirm this booking"* — so it cannot be used as a free bypass.
+That guard working is itself worth recording.
+
+## PASSED — support, end to end
+
+Ticket `TR-TWCP3-2875` raised as a customer against the `tours` module and
+immediately visible in the admin desk. Note the module must be one of
+`food, taxi, hotel, tours, festivals, platform` — `tour` singular is refused
+with a clear message.
+
+## Truly remaining, and why
+
+| Item | Why it is not done |
+|---|---|
+| Festival and tours payment completion | Needs card entry, which I do not do |
+| Hotel gateway refund on cancellation | Same — needs a paid-by-card booking first |
+| Add Restaurant wizard step 3 | Requires PAN, bank account and IFSC values |
+| Delivery partner onboarding | Requires Aadhaar, PAN and driving licence values |
+
+Everything else discoverable in this platform has now been walked end to end.
