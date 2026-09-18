@@ -35,7 +35,8 @@ export const MoreScreen = () => {
       icon: 'fa-solid fa-utensils',
       color: 'text-rose-600',
       bg: 'bg-rose-50',
-      path: '/food'
+      path: '/food/user',
+      host: true
     },
     {
       title: 'Taxi & Auto Booking',
@@ -43,7 +44,8 @@ export const MoreScreen = () => {
       icon: 'fa-solid fa-taxi',
       color: 'text-amber-600',
       bg: 'bg-amber-50',
-      path: '/book-ride'
+      path: '/taxi/user',
+      host: true
     },
     {
       title: 'Tour & Trek Packages',
@@ -106,7 +108,7 @@ export const MoreScreen = () => {
       desc: 'Judima rice brew, smoked meat & organic herbs',
       icon: 'fa-solid fa-utensils',
       color: 'text-red-500',
-      action: () => navigate('/food')
+      action: () => hostNavigate('/food/user')
     }
   ];
 
@@ -160,7 +162,7 @@ export const MoreScreen = () => {
               <motion.button
                 key={idx}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(item.path)}
+                onClick={() => (item.host ? hostNavigate : navigate)(item.path)}
                 className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 hover:border-emerald-300 hover:bg-emerald-50/40 transition-all text-left cursor-pointer bg-gray-50/50"
               >
                 <div className={`w-10 h-10 rounded-xl ${item.bg} ${item.color} flex items-center justify-center text-lg shrink-0 shadow-xs`}>

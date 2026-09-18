@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from '../../router';
+import { useNavigate, useHostNavigate } from '../../router';
 import { useBooking } from '../../context/BookingContext';
 
 export const CartFloatingBar = () => {
   const { cart, cartRestaurant } = useBooking();
   const navigate = useNavigate();
+  const hostNavigate = useHostNavigate();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -42,7 +43,7 @@ export const CartFloatingBar = () => {
 
           <motion.button
             whileTap={{ scale: 0.94 }}
-            onClick={() => navigate('/food/cart')}
+            onClick={() => hostNavigate('/food/user/cart')}
             className="bg-amber-400 hover:bg-amber-300 text-[#06381e] font-black text-xs px-4 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <span>View Cart</span>

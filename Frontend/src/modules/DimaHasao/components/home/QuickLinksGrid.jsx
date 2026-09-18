@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from '../../router';
+import { useNavigate, useHostNavigate } from '../../router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooking } from '../../context/BookingContext';
 
@@ -7,6 +7,7 @@ export const QuickLinksGrid = () => {
   const [activeModal, setActiveModal] = useState(null);
   const { showToast } = useBooking();
   const navigate = useNavigate();
+  const hostNavigate = useHostNavigate();
 
   const links = [
     {
@@ -91,7 +92,7 @@ export const QuickLinksGrid = () => {
                 } else if (item.id === 'places') {
                   navigate('/places');
                 } else if (item.id === 'food') {
-                  navigate('/food');
+                  hostNavigate('/food/user');
                 } else {
                   setActiveModal(item.id);
                 }
@@ -169,7 +170,7 @@ export const QuickLinksGrid = () => {
                     if (modalId === 'events') {
                       navigate('/festivals');
                     } else if (modalId === 'food') {
-                      navigate('/food');
+                      hostNavigate('/food/user');
                     } else {
                       showToast(`Opening ${modalDetails[modalId]?.title}`);
                     }

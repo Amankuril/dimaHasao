@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from '../router';
+import { useNavigate, useHostNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
@@ -9,6 +9,7 @@ export const CartScreen = () => {
   const { cart, cartRestaurant, updateCartQuantity, removeFromCart, clearCart, createFoodOrder, showToast } =
     useBooking();
   const navigate = useNavigate();
+  const hostNavigate = useHostNavigate();
 
   const [deliveryMode, setDeliveryMode] = useState('delivery'); // 'delivery', 'pickup'
   const [deliveryAddress, setDeliveryAddress] = useState('Circuit House Road, Upper Bagetar, Haflong');
@@ -82,7 +83,7 @@ export const CartScreen = () => {
             Explore authentic local Dimasa restaurants and add delicious meals to your cart.
           </p>
           <button
-            onClick={() => navigate('/food')}
+            onClick={() => hostNavigate('/food/user')}
             className="bg-[#06381e] text-amber-300 text-xs font-bold px-5 py-2.5 rounded-xl shadow-md hover:bg-emerald-900 transition-colors cursor-pointer"
           >
             Explore Restaurants

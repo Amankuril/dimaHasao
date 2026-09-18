@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from '../router';
+import { useParams, useNavigate, useHostNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { fetchDestinationById } from '../services/toursApi';
 import { Header } from '../components/layout/Header';
@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 export const TouristPlaceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const hostNavigate = useHostNavigate();
   const { setSelectedPlaceId, setSelectedTransportId } = useBooking();
 
   const [place, setPlace] = useState(null);
@@ -32,7 +33,7 @@ export const TouristPlaceDetail = () => {
   const handleBookDirect = (transportType = 'auto') => {
     setSelectedPlaceId(place.id);
     setSelectedTransportId(transportType);
-    navigate('/book-ride');
+    hostNavigate('/taxi/user');
   };
 
   if (loading) {

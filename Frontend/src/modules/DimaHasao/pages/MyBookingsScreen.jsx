@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from '../router';
+import { useNavigate, useSearchParams, useHostNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { groupPasses } from '../services/festivalApi';
 import { Header } from '../components/layout/Header';
@@ -21,6 +21,7 @@ export const MyBookingsScreen = () => {
     return TAB_IDS.includes(requested) ? requested : 'rides';
   });
   const navigate = useNavigate();
+  const hostNavigate = useHostNavigate();
 
   return (
     <div className="bg-[#FAF6ED] text-gray-800 antialiased min-h-screen pb-28 relative font-poppins">
@@ -148,7 +149,7 @@ export const MyBookingsScreen = () => {
                 <h3 className="font-bold text-gray-800 text-sm">No Active Rides</h3>
                 <p className="text-xs text-gray-500">You haven't booked any taxi or auto rides yet.</p>
                 <button
-                  onClick={() => navigate('/book-ride')}
+                  onClick={() => hostNavigate('/taxi/user')}
                   className="bg-[#06381e] text-amber-300 text-xs font-bold px-4 py-2 rounded-xl shadow hover:bg-emerald-900 transition-colors cursor-pointer"
                 >
                   Book a Taxi Now
@@ -284,7 +285,7 @@ export const MyBookingsScreen = () => {
                     </div>
 
                     <button
-                      onClick={() => navigate(`/food/orders/${fo.id}`)}
+                      onClick={() => hostNavigate(`/food/user/orders/${fo.id}`)}
                       className="bg-[#06381e] text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       <i className="fa-solid fa-location-crosshairs text-[10px]"></i>
@@ -299,7 +300,7 @@ export const MyBookingsScreen = () => {
                 <h3 className="font-bold text-gray-800 text-sm">No Food Orders Yet</h3>
                 <p className="text-xs text-gray-500">Order traditional Dimasa food & bakes.</p>
                 <button
-                  onClick={() => navigate('/food')}
+                  onClick={() => hostNavigate('/food/user')}
                   className="bg-[#06381e] text-amber-300 text-xs font-bold px-4 py-2 rounded-xl shadow hover:bg-emerald-900 transition-colors cursor-pointer"
                 >
                   Explore Restaurants

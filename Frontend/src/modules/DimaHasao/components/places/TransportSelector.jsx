@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from '../../router';
+import { useNavigate, useHostNavigate } from '../../router';
 import { useBooking } from '../../context/BookingContext';
 import { TRANSPORTS_DATA } from '../../data/tourismData';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,11 +8,12 @@ export const TransportSelector = ({ place }) => {
   const { selectedTransportId, setSelectedTransportId, setSelectedPlaceId, pickupLocation } = useBooking();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const navigate = useNavigate();
+  const hostNavigate = useHostNavigate();
 
   const handleSelect = (transportId) => {
     setSelectedTransportId(transportId);
     setSelectedPlaceId(place.id);
-    navigate('/book-ride');
+    hostNavigate('/taxi/user');
   };
 
   return (
@@ -158,7 +159,7 @@ export const TransportSelector = ({ place }) => {
               <button
                 onClick={() => {
                   setIsMapModalOpen(false);
-                  navigate('/book-ride');
+                  hostNavigate('/taxi/user');
                 }}
                 className="w-full py-2.5 bg-[#0a3a22] hover:bg-emerald-800 text-white rounded-xl font-bold text-xs shadow cursor-pointer"
               >

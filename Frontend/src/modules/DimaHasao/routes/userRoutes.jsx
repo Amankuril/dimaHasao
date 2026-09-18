@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation, Navigate } from '../router';
+import { Navigate as HostRedirect, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useBooking } from '../context/BookingContext';
 
@@ -6,14 +7,9 @@ import { LoginScreen } from '../pages/LoginScreen';
 import { HomeScreen } from '../pages/HomeScreen';
 import { TouristPlacesList } from '../pages/TouristPlacesList';
 import { TouristPlaceDetail } from '../pages/TouristPlaceDetail';
-import { RideBookingScreen } from '../pages/RideBookingScreen';
 import { HotelListScreen } from '../pages/HotelListScreen';
 import { HotelDetailScreen } from '../pages/HotelDetailScreen';
 import { HotelBookingScreen } from '../pages/HotelBookingScreen';
-import { RestaurantListScreen } from '../pages/RestaurantListScreen';
-import { RestaurantDetailScreen } from '../pages/RestaurantDetailScreen';
-import { CartScreen } from '../pages/CartScreen';
-import { OrderTrackingScreen } from '../pages/OrderTrackingScreen';
 import { TourPackageListScreen } from '../pages/TourPackageListScreen';
 import { TourPackageDetailScreen } from '../pages/TourPackageDetailScreen';
 import { TourBookingScreen } from '../pages/TourBookingScreen';
@@ -36,6 +32,22 @@ const PageWrapper = ({ children }) => (
     {children}
   </motion.div>
 );
+
+/*
+ * Food and taxi are Hello Parth's, not this shell's.
+ *
+ * The v1 design shipped its own food browse/cart/tracking screens and a ride
+ * screen, and several tourism screens still pointed at them — so "Food &
+ * Dining" in More opened a second, thinner food app next to the real one. The
+ * real module is the product; these paths now hand over to it instead.
+ *
+ * Kept as redirects rather than deleted routes so old links, bookmarks and any
+ * native shell's stored last-route still land somewhere correct.
+ */
+const ToFoodOrder = () => {
+  const { id } = useParams();
+  return <HostRedirect to={`/food/user/orders/${id}`} replace />;
+};
 
 export const UserRoutes = () => {
   const location = useLocation();
@@ -115,14 +127,7 @@ export const UserRoutes = () => {
               </PageWrapper>
             }
           />
-          <Route
-            path="book-ride"
-            element={
-              <PageWrapper>
-                <RideBookingScreen />
-              </PageWrapper>
-            }
-          />
+          <Route path="book-ride" element={<HostRedirect to="/taxi/user" replace />} />
           <Route
             path="hotels"
             element={
@@ -147,38 +152,11 @@ export const UserRoutes = () => {
               </PageWrapper>
             }
           />
-          <Route
-            path="food"
-            element={
-              <PageWrapper>
-                <RestaurantListScreen />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="food/:id"
-            element={
-              <PageWrapper>
-                <RestaurantDetailScreen />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="food/cart"
-            element={
-              <PageWrapper>
-                <CartScreen />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="food/orders/:id"
-            element={
-              <PageWrapper>
-                <OrderTrackingScreen />
-              </PageWrapper>
-            }
-          />
+          <Route path="food" element={<HostRedirect to="/food/user" replace />} />
+          {/* v1 addressed restaurants by id; the module addresses them by slug, so this lands on the list. */}
+          <Route path="food/:id" element={<HostRedirect to="/food/user" replace />} />
+          <Route path="food/cart" element={<HostRedirect to="/food/user/cart" replace />} />
+          <Route path="food/orders/:id" element={<ToFoodOrder />} />
           <Route
             path="packages"
             element={
