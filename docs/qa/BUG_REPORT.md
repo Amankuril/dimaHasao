@@ -272,3 +272,98 @@ replies from either side.
 | ~~`legacyBackendShim.js`~~ | Taxi | ~~Low~~ | **Fixed** — deleted. |
 | ~~Leftover debug log~~ | Taxi | ~~Low~~ | **Fixed** — removed. |
 | Gateway refunds are not issued | Hotel, Tours, Festivals | Medium | Cancelling marks `refunded` and reverses the vendor wallet, but does not return the customer's money through Razorpay. That is a deliberate separate step. |
+
+---
+
+# Findings from the E2E pass, 2026-09-18
+
+Run after the Google Maps key was added. Everything below was executed against
+the running stack, not inferred.
+
+## FIXED — every geocode endpoint threw, and the missing key hid it
+
+**Severity: high. Fixed in commit `5d34a46`.**
+
+`sanitize` was called at three places in
+`Backend/src/modules/food/landing/controllers/geocodePublic.controller.js` and
+defined at none of them. Reverse geocode, place lookup and nearby places all
+threw `sanitize is not defined` as soon as they got past the key check.
+
+It had never been reported because the server had no Maps key: every request
+returned "not configured" and stopped before reaching the broken line. **Adding
+the key is what exposed it** — the environment gap was masking a code gap.
+
+Verified after the fix: reverse geocode returns Haflong addresses, nearby places
+returns results, place lookup resolves a place_id, and the whole address flow
+works in the UI.
+
+## BLOCKER — the only delivery zone is "indore"
+
+**Severity: launch blocker. Configuration, not code. Not fixed — this is a
+business decision.**
+
+`food_zones` holds exactly **one** document: `indore`, a leftover from the
+original Hello Parth app. No zone covers Haflong or anywhere else in Dima Hasao.
+
+Reproduce: set the delivery location to any Haflong address at `/food/user`.
+The app shows *"We'll be there soon — online ordering isn't available at your
+location yet."* **Food ordering is impossible in the district the platform
+serves.**
+
+Zones are drawn at `/admin/food/zone-setup`.
+
+## BLOCKER — taxi has no vehicle types and no zones
+
+**Severity: launch blocker. Configuration, not code. Not fixed.**
+
+Straight from the database:
+
+| Collection | Documents |
+|---|---:|
+| vehicle types (consumer-visible) | **0** |
+| `taxizones` | **0** |
+| `taxirentalvehicletypes` | 0 |
+| `taxirentalpackagetypes` | 0 |
+| `taxisetprices` | 1, **not active** |
+
+`POST /taxi/rides/fare-estimate` refuses with `vehicleTypeId is required`, and
+there is no vehicle type to supply. **No ride can be quoted or booked at all.**
+
+Set up at `/taxi/admin/pricing/vehicle-type/create`, then zones, then tariffs.
+The single inactive `taxisetprices` row is the "bike lite" tariff created during
+development with invented numbers — replace it rather than activate it.
+
+## PASSED — food ordering works end to end on cash on delivery
+
+Walked as a real customer at `/food/user`, signed in as `8962843670`:
+
+| Step | Result |
+|---|---|
+| Search "Haflong" in the address picker | Real place suggestions returned |
+| Pin a location, add an address | Reverse-geocoded to a real address, fields pre-filled |
+| Browse in the Indore zone | "1 RESTAURANTS DELIVERING TO YOU", distance 3.7 km |
+| Open restaurant, view menu | Menu renders; veg marker shows |
+| Add to cart | Cart updates |
+| Bill | Item ₹100 + **Delivery ₹60 (Distance 2.7 km)** = ₹160 |
+| Place order (COD) | **Order `FOD-4003773` placed** |
+| Customer history | 6 orders → 7 |
+| Admin order list | Appears immediately |
+
+**The amount matches what was stored**, which is the thing worth checking here —
+a cart/charge mismatch was a real bug once:
+
+```json
+pricing: {"subtotal":100,"deliveryFee":60,"total":160,"restaurantCommission":18.1}
+payment: {"method":"cash","status":"cod_pending","amountDue":160}
+```
+
+Also confirmed in passing: **Veg Mode set from `/app/profile` reached the Food
+module** — the shared localStorage keys work as intended.
+
+## Still untested
+
+Restaurant accepting the order · delivery partner assignment and delivery ·
+hotel booking · tours advance payment · festival multi-category checkout ·
+anything behind a **card payment** (I do not enter card details, and I will not
+forge a gateway signature to fake one — cash, pay-at-hotel, pay-later and wallet
+paths remain testable).
