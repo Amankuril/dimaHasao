@@ -185,18 +185,41 @@ export const run = async ({ primary, secondary, admin }) => {
   }
 
   /* ---------- taxi fares are the server's, not the caller's ---------- */
+  /*
+   * Find a vehicle type that actually has a tariff, rather than taking the
+   * first one in the list.
+   *
+   * Taking [0] made this test's coverage depend on insertion order: adding a
+   * new vehicle type with no tariff silently turned the fare-enforcement case
+   * from a pass into a blocked, which is a coverage loss that looks like a
+   * configuration note. The endpoint also answers with `results` at the top
+   * level, not under `data`, so both shapes are read here.
+   */
   const vehicles = await get('/taxi/users/vehicle-types').catch(() => null);
-  const vehicleTypeId = vehicles?.body?.data?.[0]?._id
-    || vehicles?.body?.data?.results?.[0]?._id
-    || null;
+  const vehicleList = vehicles?.body?.results
+    || vehicles?.body?.data?.results
+    || (Array.isArray(vehicles?.body?.data) ? vehicles.body.data : [])
+    || [];
+
+  let vehicleTypeId = null;
+  let estimate = null;
+  for (const candidate of vehicleList) {
+    const quote = await post('/taxi/rides/fare-estimate', {
+      token: primary.token,
+      body: { vehicleTypeId: candidate._id, estimatedDistanceMeters: 50000, estimatedDurationMinutes: 90 },
+    });
+    vehicleTypeId = vehicleTypeId || candidate._id;
+    estimate = estimate || quote;
+    if (quote.body?.data?.priced) {
+      vehicleTypeId = candidate._id;
+      estimate = quote;
+      break;
+    }
+  }
 
   if (!vehicleTypeId) {
     blocked('BIZ-150', 'taxi fare is priced by the server', 'no vehicle type available to quote');
   } else {
-    const estimate = await post('/taxi/rides/fare-estimate', {
-      token: primary.token,
-      body: { vehicleTypeId, estimatedDistanceMeters: 50000, estimatedDurationMinutes: 90 },
-    });
 
     check('BIZ-150', 'the server will quote a fare', estimate.status === 200, {
       expected: '200', actual: estimate.status, severity: SEVERITY.HIGH,

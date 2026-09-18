@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import Festival, { bookingWindow, festivalStatus } from '../models/Festival.js';
 import { deleteStoredAssets, deleteReplacedAssets } from '../../../services/storage.service.js';
 import { searchRegex } from '../../../utils/searchRegex.js';
+import { sweepExpiredHolds } from './bookingController.js';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -220,7 +221,15 @@ export const getFestivalDetail = async (req, res) => {
     const { id } = req.params;
     const by = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id };
 
-    const festival = await Festival.findOne({ ...by, isActive: true }).lean();
+    // Read the festival once to find it, sweep its expired holds, then read the
+    // counts. Without the sweep this screen shows seats as taken that no longer
+    // belong to anyone — an abandoned basket looks identical to a sale.
+    const found = await Festival.findOne({ ...by, isActive: true }).select('_id').lean();
+    if (!found) return res.status(404).json({ success: false, message: 'Festival not found' });
+
+    await sweepExpiredHolds(found._id);
+
+    const festival = await Festival.findById(found._id).lean();
     if (!festival) return res.status(404).json({ success: false, message: 'Festival not found' });
 
     res.json({ success: true, festival: withTicketCounts(festival, { publicView: true }) });

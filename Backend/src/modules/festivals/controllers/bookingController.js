@@ -157,6 +157,67 @@ const releaseSeats = (festivalId, categoryId, count) =>
     { arrayFilters: [{ 'cat._id': categoryId }] },
   );
 
+/**
+ * How long an unpaid basket keeps its seats.
+ *
+ * Comfortably longer than a payment session, short enough that a festival is
+ * not locked up by people who wandered off. The buyer's own release call still
+ * runs first whenever the browser manages to send it; this is the floor for
+ * when it cannot.
+ */
+export const HOLD_MINUTES = 30;
+
+/**
+ * Give back the seats of every hold that has run out, for one festival.
+ *
+ * Called before anything reads or takes availability, so the counts heal
+ * themselves without a scheduler to install, watch and forget. Paid bookings
+ * are never touched — the filter is pending-and-not-cancelled only.
+ *
+ * Releasing first and marking second is deliberate: if this crashes in the
+ * middle, the worst case is a seat released twice on the next sweep, which the
+ * `bookingStatus` guard prevents. The reverse order would lose seats for good.
+ */
+export const sweepExpiredHolds = async (festivalId) => {
+  if (!festivalId || !mongoose.Types.ObjectId.isValid(festivalId)) return 0;
+
+  const now = new Date();
+  const legacyCutoff = new Date(now.getTime() - HOLD_MINUTES * 60 * 1000);
+
+  const expired = await FestivalBooking.find({
+    festivalId,
+    paymentStatus: 'pending',
+    bookingStatus: { $ne: 'cancelled' },
+    $or: [
+      { holdExpiresAt: { $ne: null, $lt: now } },
+      // Holds taken before this field existed carry no expiry. They are the
+      // ones already sitting on seats nobody is paying for, so they are aged
+      // out on the same clock rather than left holding forever.
+      { holdExpiresAt: null, createdAt: { $lt: legacyCutoff } },
+    ],
+  });
+
+  for (const booking of expired) {
+    await releaseSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount);
+    booking.bookingStatus = 'cancelled';
+    booking.cancelledAt = new Date();
+    booking.cancellationReason = 'Hold expired before payment';
+    await booking.save();
+  }
+
+  return expired.length;
+};
+
+/**
+ * Take a booking's seats again after a sweep released them.
+ *
+ * Same conditional update as the original claim, so a race for the last pass
+ * still has exactly one winner. Returns false when the seats are genuinely
+ * gone, which the payment verify turns into a refusal rather than a pass.
+ */
+export const claimSeatsForBooking = async (booking) =>
+  Boolean(await claimSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount));
+
 /** What is left in a category right now, for a useful refusal message. */
 const remainingIn = async (festivalId, categoryId) => {
   const fresh = await Festival.findById(festivalId).lean();
@@ -281,6 +342,10 @@ export const checkoutBasket = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(festivalId)) {
       return res.status(404).json({ success: false, message: 'Festival not found' });
     }
+    // Hand back anything that has run out before reading what is left, so a
+    // basket is not refused over seats nobody is paying for.
+    await sweepExpiredHolds(festivalId);
+
     const festival = await Festival.findOne({ _id: festivalId, isActive: true });
     if (!festival) return res.status(404).json({ success: false, message: 'Festival not found' });
 
@@ -349,6 +414,7 @@ export const checkoutBasket = async (req, res) => {
       ...line.pricing,
       attendee: who,
       paymentMethod: 'razorpay',
+      holdExpiresAt: new Date(Date.now() + HOLD_MINUTES * 60 * 1000),
     })));
 
     const payable = bookings.reduce((sum, b) => sum + b.totalAmount, 0);

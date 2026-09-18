@@ -12,7 +12,7 @@ import {
   isRazorpayConfigured,
   verifyPaymentSignature,
 } from '../../../core/payments/razorpay.service.js';
-import { confirmBookingPayment } from './bookingController.js';
+import { confirmBookingPayment, claimSeatsForBooking } from './bookingController.js';
 
 const findOwnBooking = (id, userId) => FestivalBooking.findOne({ _id: id, userId });
 
@@ -178,6 +178,41 @@ export const verifyGroupPayment = async (req, res) => {
 
     const bookings = await findOwnGroup(req.params.groupId, req.user._id);
     if (!bookings.length) return res.status(404).json({ success: false, message: 'Booking not found' });
+
+    /*
+     * A hold that expired mid-payment has already given its seats back, so
+     * confirming it would hand out a pass the festival no longer has. Take the
+     * seats again before confirming, and if they are genuinely gone say so
+     * rather than issuing a pass that does not exist.
+     *
+     * The signature is already verified at this point, so money may well have
+     * been captured. Reporting the failure loudly is the honest outcome — the
+     * alternative is a silent oversell that nobody notices until the gate.
+     */
+    const reclaimFailed = [];
+    for (const booking of bookings) {
+      if (booking.paymentStatus === 'paid') continue;
+      if (booking.bookingStatus !== 'cancelled') continue;
+
+      const retaken = await claimSeatsForBooking(booking);
+      if (!retaken) {
+        reclaimFailed.push(booking);
+        continue;
+      }
+      booking.bookingStatus = 'confirmed';
+      booking.cancelledAt = null;
+      booking.cancellationReason = '';
+      await booking.save();
+    }
+
+    if (reclaimFailed.length) {
+      return res.status(409).json({
+        success: false,
+        message: 'These passes sold out while the payment was being completed. Nothing was confirmed for them.',
+        soldOut: reclaimFailed.map((b) => ({ bookingId: b.bookingId, category: b.ticketCategoryName })),
+        refundRequired: true,
+      });
+    }
 
     const confirmed = [];
     for (const booking of bookings) {

@@ -21,6 +21,19 @@ const festivalBookingSchema = new mongoose.Schema({
    */
   orderGroupId: { type: String, index: true },
 
+  /*
+   * When an unpaid hold stops holding its seats.
+   *
+   * Checkout takes the seats up front so a race for the last pass has one
+   * winner, and they were given back only if the browser asked — which it
+   * cannot do if it is closed, offline, or killed. Every abandoned basket then
+   * held its passes forever: measured, three abandoned baskets moved a
+   * festival's sold count from 3 to 12 and nothing ever gave them back.
+   *
+   * Indexed because the sweep queries on it.
+   */
+  holdExpiresAt: { type: Date, default: null, index: true },
+
   userId: { type: mongoose.Schema.Types.ObjectId, refPath: 'userModel', required: true, index: true },
   userModel: { type: String, enum: ['FoodUser', 'User'], default: 'FoodUser' },
 
