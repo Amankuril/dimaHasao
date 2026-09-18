@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from '../router';
+import { useNavigate, useSearchParams } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { groupPasses } from '../services/festivalApi';
 import { Header } from '../components/layout/Header';
@@ -9,7 +9,17 @@ import { motion } from 'framer-motion';
 export const MyBookingsScreen = () => {
   const { bookings, hotelBookings, foodOrders, tourBookings, festivalBookings, showToast } =
     useBooking();
-  const [activeTab, setActiveTab] = useState('rides'); // 'rides', 'hotels', 'food', 'events'
+  /*
+   * Tours and festivals used to share one "Passes" tab. They are separate
+   * products with separate operators, so each module now gets its own — which
+   * also lets Profile link straight at a module's bookings via ?tab=.
+   */
+  const [searchParams] = useSearchParams();
+  const TAB_IDS = ['rides', 'hotels', 'food', 'tours', 'festivals'];
+  const [activeTab, setActiveTab] = useState(() => {
+    const requested = searchParams.get('tab');
+    return TAB_IDS.includes(requested) ? requested : 'rides';
+  });
   const navigate = useNavigate();
 
   return (
@@ -29,11 +39,8 @@ export const MyBookingsScreen = () => {
             { id: 'rides', label: `Rides (${bookings.length})`, icon: 'fa-solid fa-taxi' },
             { id: 'hotels', label: `Stays (${hotelBookings.length})`, icon: 'fa-solid fa-hotel' },
             { id: 'food', label: `Food (${foodOrders.length})`, icon: 'fa-solid fa-utensils' },
-            {
-              id: 'events',
-              label: `Passes (${tourBookings.length + festivalBookings.length})`,
-              icon: 'fa-solid fa-ticket'
-            }
+            { id: 'tours', label: `Tours (${tourBookings.length})`, icon: 'fa-solid fa-suitcase-rolling' },
+            { id: 'festivals', label: `Passes (${festivalBookings.length})`, icon: 'fa-solid fa-ticket' }
           ];
           const activeIndex = bookingTabs.findIndex((t) => t.id === activeTab);
 
@@ -302,11 +309,11 @@ export const MyBookingsScreen = () => {
           </div>
         )}
 
-        {/* TAB 4: TOURS & FESTIVAL PASSES */}
-        {activeTab === 'events' && (
+        {/* TAB 4 & 5: TOURS, AND FESTIVAL PASSES */}
+        {(activeTab === 'tours' || activeTab === 'festivals') && (
           <div className="space-y-4">
             {/* Festival Passes */}
-            {festivalBookings.length > 0 && (
+            {activeTab === 'festivals' && festivalBookings.length > 0 && (
               <div className="space-y-3">
                 <h4 className="font-montserrat font-bold text-xs text-gray-500 uppercase tracking-wider px-1">
                   Festival & Event Passes
@@ -402,7 +409,7 @@ export const MyBookingsScreen = () => {
             )}
 
             {/* Tour Packages */}
-            {tourBookings.length > 0 && (
+            {activeTab === 'tours' && tourBookings.length > 0 && (
               <div className="space-y-3">
                 <h4 className="font-montserrat font-bold text-xs text-gray-500 uppercase tracking-wider px-1">
                   Guided Tour Packages
@@ -491,10 +498,12 @@ export const MyBookingsScreen = () => {
               </div>
             )}
 
-            {festivalBookings.length === 0 && tourBookings.length === 0 && (
+            {(activeTab === 'festivals' ? festivalBookings : tourBookings).length === 0 && (
               <div className="text-center py-14 bg-white rounded-2xl border border-[#E5DDC3] p-6 space-y-3">
                 <i className="fa-solid fa-ticket text-4xl text-gray-300"></i>
-                <h3 className="font-bold text-gray-800 text-sm">No Tour or Festival Bookings</h3>
+                <h3 className="font-bold text-gray-800 text-sm">
+                  {activeTab === 'festivals' ? 'No Festival Passes Yet' : 'No Tour Bookings Yet'}
+                </h3>
                 <p className="text-xs text-gray-500">Explore Falcon Festival passes or guided hill treks.</p>
                 <div className="flex justify-center gap-2">
                   <button

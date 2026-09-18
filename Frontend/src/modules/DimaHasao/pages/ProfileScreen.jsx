@@ -1,10 +1,33 @@
 import { useState } from 'react';
-import { useNavigate } from '../router';
+import { useNavigate, useHostNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { PLACES_DATA } from '../data/tourismData';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
+import { ModuleAccordion } from '../components/layout/ModuleAccordion';
+import {
+  MODULE_SECTIONS,
+  PLATFORM_ACCOUNT,
+  VEG_MODE_KEY,
+  VEG_MODE_OPTION_KEY,
+} from '@/shared/components/app/moduleSections';
 import { motion, AnimatePresence } from 'framer-motion';
+
+/** Food's three Veg Mode states, in the order they are offered. */
+const VEG_CHOICES = [
+  { id: 'off', label: 'Off', on: false, option: 'all' },
+  { id: 'all', label: 'Veg dishes', on: true, option: 'all' },
+  { id: 'pure-veg', label: 'Pure veg', on: true, option: 'pure-veg' },
+];
+
+const readVegChoice = () => {
+  try {
+    if (localStorage.getItem(VEG_MODE_KEY) !== 'true') return 'off';
+    return localStorage.getItem(VEG_MODE_OPTION_KEY) === 'pure-veg' ? 'pure-veg' : 'all';
+  } catch {
+    return 'off';
+  }
+};
 
 export const ProfileScreen = () => {
   const { user, login, logout, favorites, bookings, showToast } = useBooking();
@@ -12,7 +35,53 @@ export const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user.name);
   const [editPhone, setEditPhone] = useState(user.phone || '+91 98765 43210');
+  const [vegChoice, setVegChoice] = useState(readVegChoice);
   const navigate = useNavigate();
+  // Module screens live outside this mount, so they need unprefixed paths.
+  const hostNavigate = useHostNavigate();
+
+  /**
+   * Veg Mode is Food's setting, and Food's ProfileContext seeds itself from
+   * these same localStorage keys — so setting it here is the same switch, not
+   * a copy of it. Food picks the new value up the next time it mounts.
+   */
+  const applyVegChoice = (choice) => {
+    setVegChoice(choice.id);
+    try {
+      localStorage.setItem(VEG_MODE_KEY, String(choice.on));
+      localStorage.setItem(VEG_MODE_OPTION_KEY, choice.option);
+    } catch {
+      /* private mode: the toggle still reads correctly for this session */
+    }
+    showToast(`Veg Mode: ${choice.label}`);
+  };
+
+  const renderVegControl = (row) => (
+    <div className="p-2.5 rounded-xl bg-[#FAF6ED] border border-[#E5DDC3]/70 space-y-2">
+      <div className="flex items-center gap-3">
+        <i className={`${row.icon} text-emerald-700 text-xs w-4 text-center shrink-0`}></i>
+        <div className="min-w-0 flex-1">
+          <span className="block text-xs font-semibold text-gray-800">{row.label}</span>
+          <span className="block text-[10px] text-gray-500 leading-snug">{row.sub}</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {VEG_CHOICES.map((choice) => (
+          <button
+            key={choice.id}
+            onClick={() => applyVegChoice(choice)}
+            className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+              vegChoice === choice.id
+                ? 'bg-[#0a3a22] text-amber-300 border-[#0a3a22]'
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            {choice.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   const favoritePlaces = PLACES_DATA.filter((p) => favorites.includes(p.id));
 
@@ -89,6 +158,56 @@ export const ProfileScreen = () => {
               <strong className="text-base font-bold text-amber-300">Gold</strong>
             </div>
           </div>
+        </div>
+
+        {/*
+          One identity above, each module's own account screens below it.
+          Those screens were never removed when the nav was unified — they just
+          stopped being reachable from it. The rows link to the module's real
+          screen rather than reimplementing it, so there is one of each.
+        */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between px-1">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
+              <i className="fa-solid fa-layer-group text-emerald-700"></i>
+              <span>Your Services</span>
+            </h4>
+            <span className="text-[9px] text-gray-500">One account, every service</span>
+          </div>
+
+          {MODULE_SECTIONS.map((section) => (
+            <ModuleAccordion
+              key={section.id}
+              section={section}
+              rows={section.account}
+              onNavigate={hostNavigate}
+              renderControl={renderVegControl}
+            />
+          ))}
+        </div>
+
+        {/* Platform-wide rows: these belong to no single module. */}
+        <div className="bg-white rounded-2xl p-4 shadow-xs border border-[#E5DDC3] space-y-1">
+          <h4 className="font-bold text-xs uppercase tracking-wider text-gray-800 mb-2 flex items-center gap-1.5">
+            <i className="fa-solid fa-circle-info text-emerald-700"></i>
+            <span>Help &amp; Feedback</span>
+          </h4>
+          {PLATFORM_ACCOUNT.map((row) => (
+            <button
+              key={row.path}
+              onClick={() => hostNavigate(row.path)}
+              className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left cursor-pointer"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <i className={`${row.icon} text-emerald-700 text-base w-5 shrink-0`}></i>
+                <div className="min-w-0">
+                  <span className="block text-xs font-semibold text-gray-800 truncate">{row.label}</span>
+                  <span className="block text-[10px] text-gray-500 truncate">{row.sub}</span>
+                </div>
+              </div>
+              <i className="fa-solid fa-chevron-right text-gray-400 text-xs shrink-0"></i>
+            </button>
+          ))}
         </div>
 
         {/* Saved Wishlist Section */}

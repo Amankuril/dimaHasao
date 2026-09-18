@@ -1,12 +1,16 @@
-import { useNavigate } from '../router';
+import { useNavigate, useHostNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
+import { ModuleAccordion } from '../components/layout/ModuleAccordion';
+import { MODULE_SECTIONS } from '@/shared/components/app/moduleSections';
 import { motion } from 'framer-motion';
 
 export const MoreScreen = () => {
   const { user, logout, showToast } = useBooking();
   const navigate = useNavigate();
+  // Module tabs live outside this mount, so they need unprefixed paths.
+  const hostNavigate = useHostNavigate();
 
   const services = [
     {
@@ -171,6 +175,34 @@ export const MoreScreen = () => {
             ))}
           </div>
         </section>
+
+        {/*
+          Each module's own navigation.
+
+          Food used to carry Delivery/Takeaway/Under-250/Dining in its own
+          bottom bar and taxi carried Ride/Bus/Support in its own — one app, but
+          a different bar depending on where you stood. The five anchors are
+          shared now, and what was specific to a module lives here instead of
+          being dropped.
+        */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between px-1">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
+              <i className="fa-solid fa-compass text-emerald-700"></i>
+              <span>Inside Each Service</span>
+            </h4>
+            <span className="text-[9px] text-gray-500">Every module&rsquo;s own tabs</span>
+          </div>
+
+          {MODULE_SECTIONS.map((section) => (
+            <ModuleAccordion
+              key={section.id}
+              section={section}
+              rows={section.services}
+              onNavigate={hostNavigate}
+            />
+          ))}
+        </div>
 
         {/* Cultural & Tourism Services */}
         <section className="bg-white rounded-2xl p-4 shadow-sm border border-[#E5DDC3]">
