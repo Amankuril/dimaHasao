@@ -367,3 +367,94 @@ hotel booking · tours advance payment · festival multi-category checkout ·
 anything behind a **card payment** (I do not enter card details, and I will not
 forge a gateway signature to fake one — cash, pay-at-hotel, pay-later and wallet
 paths remain testable).
+
+---
+
+# Correction and configuration created, 2026-09-18 (later)
+
+## CORRECTION — my "taxi has 0 vehicle types" report was wrong
+
+The earlier entry said taxi had **0 vehicle types** and **0 tariffs**. That was
+wrong, and worth being precise about how I got it wrong:
+
+1. I called `/taxi/users/settings/vehicle-types`, which matches the
+   `settings/:category` route with `category="vehicle-types"` and returns
+   `{settings:{}}`. The real endpoint is `/taxi/users/vehicle-types`.
+2. I then parsed `body.data`, but these endpoints return `results` at the top
+   level, so my array came out empty regardless.
+3. My database scan filtered collection names with a regex that missed the
+   collections holding them.
+
+Three separate mistakes pointing the same way, which is how a wrong number
+survives. The true state was:
+
+| | Reported | Actual |
+|---|---:|---:|
+| Vehicle types | 0 | **1** (`bike lite`) |
+| Tariffs (`set-prices`) | 0 | **1** |
+| Taxi zones | 0 | **0** — this part was right |
+
+**Only the zone was genuinely missing.** The lesson for anyone re-running this:
+confirm an empty list against the endpoint the app itself calls, not the one
+that looks right.
+
+## Configuration created
+
+| What | Where | Value |
+|---|---|---|
+| Vehicle type **Bike** | `/taxi/admin/pricing/vehicle-type/create` | taxi, normal dispatch, capacity 2, size 1 |
+| Service location **Haflong** | `/taxi/admin/pricing/service-location/add` | INR, ₹ |
+| Taxi zone **Haflong Town** | API `POST /v1/taxi/admin/zones` | circle, centre 25.1667/93.0167, radius 15 km |
+| Food zone **Haflong** | API `POST /v1/food/admin/zones` | polygon roughly 25.09–25.24 N, 92.94–93.09 E |
+
+Created through the admin UI where the UI worked, and through the API where the
+map drawing tools did not automate reliably. All four are **test configuration**
+and should be reviewed before launch — particularly the zone boundaries, which
+are rough boxes around Haflong, not surveyed service areas.
+
+### A robustness note found while doing it
+
+`POST /v1/food/admin/zones` accepted coordinates in the wrong shape
+(`{lat,lng}` instead of `{latitude,longitude}`) **without complaining**, and
+stored a polygon of `{latitude:0, longitude:0}` points. A zone at the origin
+covers nothing, and nothing said so. Corrected by hand afterwards. Worth
+validating that payload.
+
+## PASSED — taxi fare quoting, with arithmetic checked
+
+`POST /v1/taxi/rides/fare-estimate`, tariff `bike lite`
+(₹45 base / 2 km included / ₹14 per km / ₹1 per min / 5% tax):
+
+| Trip | Total | Breakdown |
+|---|---:|---|
+| 2 km, 5 min | ₹47 | base 45, within base distance, tax 2 |
+| 10 km, 25 min | ₹191 | 45 + (8 × 14 = 112) + 25 + tax 9 |
+| 20 km, 45 min | ₹359 | 45 + (18 × 14 = 252) + 45 + tax 17 |
+
+Every line adds up. **The tariff numbers are still the invented development
+values** — replace them with real rates.
+
+Worth knowing about this endpoint: it prices from `estimatedDistanceMeters` in
+the request body and **ignores the pickup/drop coordinates entirely**. Sending
+coordinates alone returns the base fare with `chargeableKm: 0`, which looks like
+a pricing bug and is not one. It does mean the **distance is client-supplied**;
+the server refuses a fare below its own computed one, but its computation uses
+the distance the client sent.
+
+## PASSED — Haflong is now a served location for food
+
+Setting a Haflong delivery address no longer shows "online ordering isn't
+available at your location yet". The header reads HAFLONG and the app proceeds
+normally.
+
+It now says **"0 RESTAURANTS DELIVERING TO YOU"**, which is correct: both
+existing restaurants are physically in Indore. Ordering in Haflong needs a
+Haflong restaurant onboarded with a menu — that is data entry, not a defect.
+
+## Still remaining
+
+- A restaurant that actually serves Haflong (create → onboard → timings → menu)
+- Ride booked end to end (needs a concurrent driver session)
+- Restaurant accepting an order, and the delivery partner chain
+- Hotel, tours and festival booking flows
+- Anything behind a card payment
