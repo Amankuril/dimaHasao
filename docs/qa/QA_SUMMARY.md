@@ -38,3 +38,9 @@ node scripts/qa/report.js            # regenerate these documents
 The suite needs the API running and `USE_DEFAULT_OTP=true`, which is how it
 provisions its two consumer identities through the real login flow. It creates
 bookings and uploads as it goes and releases or deletes them at the end.
+
+## Manual walkthroughs
+
+[E2E_TEST_PLAN.md](E2E_TEST_PLAN.md) covers what the API suite cannot: onboarding
+wizards, adding a dish or a vehicle, and the full order/booking/ride flows per
+module, with the entry URL for every role.
