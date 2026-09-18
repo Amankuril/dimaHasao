@@ -41,7 +41,13 @@ api.interceptors.response.use(
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         if (!path.includes('/login') && !path.includes('/otp')) {
-          window.location.href = '/app/login';
+          // The partner panel has its own login. Sending a partner to the
+          // consumer one ejected them from the module entirely: every partner
+          // page fires a request on mount, so opening one without a partner
+          // session bounced straight to /app with no route back.
+          window.location.href = path.startsWith('/hotel/partner')
+            ? '/hotel/partner/login'
+            : '/app/login';
         }
       }
     }
