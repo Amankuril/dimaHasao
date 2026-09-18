@@ -171,6 +171,7 @@ the same body. QA suite unchanged.
 | OPT-006 | Tours resolves the caller in one round trip | **−43%** (188ms → 107ms) |
 | OPT-007 | Same change on hotel — **reverted** | 13% *slower*; hotel's first lookup already hit |
 | OPT-008 | Three duplicate frontend fetches removed | `/food/user` 14→12 calls, `/taxi/user` 17→16, 0 duplicates |
+| OPT-009 | Admin badge poll pauses on a hidden tab | ~1 request/min saved per idle admin tab |
 
 ---
 
@@ -325,3 +326,69 @@ so splitting it is behavioural, not cosmetic.
 applies: they need profiling evidence, and the idle-growth measurement found no
 render loops to justify them. Adding them blind risks stale closures for no
 measured gain.
+
+---
+
+## OPT-009 — The admin badge poll stops when nobody is looking
+
+**Module:** food (admin) · **File:** `Frontend/src/modules/Food/components/admin/AdminSidebar.jsx`
+
+**Problem.** `/admin/food` was the only panel measured whose request count grew
+while the screen sat idle: `/food/admin/sidebar-badges`, every 15 seconds.
+
+**Not a bug.** The poll is deliberate and well built — pending-order badges have
+to be live for an admin, the interval is cleaned up properly, and the request
+behind it already has a 12-second TTL cache with 429 backoff. The problem is
+only *where* it polls: an admin console is a tab that stays open all day, and
+this kept fetching counts nobody could see.
+
+**Solution.** The interval skips the fetch while `document.hidden`, and a
+`visibilitychange` listener refetches **immediately** on return, so coming back
+to the tab never shows a stale count — the one thing that would make this worse
+than polling blindly.
+
+**Measured, production build:**
+
+| Tab state | Badge requests |
+|---|---|
+| Hidden, 17 seconds | 1 → 1 — **paused** (was 1 → 2) |
+| Returning to visible | 1 → 2 — immediate refetch |
+| Visible, 8 seconds | 6 → 7 — still polling normally |
+
+**Honest sizing:** browsers throttle a hidden tab's timers to roughly once a
+minute rather than stopping them, so this saves about one request per minute per
+idle admin tab, not four. Small per tab; it is a drip per admin, all day.
+
+**Regression status:** the dashboard renders unchanged and badges still update.
+
+---
+
+## Panels measured this pass
+
+| Panel | Calls on load | Duplicates | Growth while idle |
+|---|---:|---:|---|
+| `/admin/food` (food admin) | 11 | 0 | badge poll — now visibility-gated |
+| `/taxi/admin/dashboard` | 16 | 0 | none |
+| `/hotel/admin` | 4 | 0 | none |
+| `/tours/admin` | 3 | 0 | none |
+| `/global/admin` | 3 | 0 | none |
+
+### A duplicate that was not one
+
+`/taxi/admin/dashboard` appeared to load the Google Maps JS API **twice** —
+which would matter, since Maps JS loads are billed. Checking the DOM rather than
+trusting the resource count showed a **single** `<script>` tag and no "included
+multiple times" console warning: the second entry is 0 bytes, the loader's own
+fetch counted twice by the Performance API. **Not a defect. Not changed.**
+
+### The systemic finding that was not acted on
+
+**50 files poll an API on a timer; only 8 check whether the tab is visible.**
+
+This is deliberately *not* a blanket fix. Several of those polls must keep
+running when hidden — a restaurant panel waiting on new orders, a delivery
+partner or driver waiting on assignments, a customer watching a ride track.
+Pausing those would mean missed orders, which is a business failure, not a
+performance win. The admin badge poll was changed because it is demonstrably
+safe; the rest need the same per-site judgment `.lean()` needed, and none of
+them should be changed in bulk.

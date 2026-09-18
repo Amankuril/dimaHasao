@@ -243,9 +243,31 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
       fetchBadges()
     }
 
-    fetchBadges()
-    const timer = setInterval(fetchBadges, 15000)
+    /*
+     * Poll every 15s, but only while someone is actually looking.
+     *
+     * An admin console is a tab that stays open all day. Without this the badge
+     * poll kept requesting counts nobody could see — browsers throttle a hidden
+     * tab's timers to roughly once a minute rather than stopping them, so it is
+     * a slow drip rather than four a minute, but it is a drip per idle tab per
+     * admin, all day.
+     *
+     * Coming back refetches immediately rather than waiting out the interval,
+     * so returning to the tab never shows a stale count — which is the only
+     * thing that would make this a worse experience than polling blindly.
+     */
+    const tick = () => {
+      if (!document.hidden) fetchBadges()
+    }
 
+    const handleVisibilityChange = () => {
+      if (!document.hidden) fetchBadges()
+    }
+
+    fetchBadges()
+    const timer = setInterval(tick, 15000)
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
     window.addEventListener("refresh-sidebar-badges", handleRefreshBadges)
 
     // Fallback timer to turn off loading in case network hangs or is slow
@@ -256,6 +278,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     return () => {
       clearInterval(timer)
       clearTimeout(fallbackTimer)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
       window.removeEventListener("refresh-sidebar-badges", handleRefreshBadges)
     }
   }, [])

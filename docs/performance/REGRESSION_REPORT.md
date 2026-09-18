@@ -58,6 +58,9 @@ changes.
 | Food home restaurant list renders | Pass |
 | Document title and favicon (driven by business settings) | Pass — still applied |
 | Frontend production build | Pass, including the bundled-icon guard |
+| Admin panels — `/admin/food`, `/taxi/admin`, `/hotel/admin`, `/tours/admin`, `/global/admin` | Pass — no duplicates, no idle growth except the badge poll |
+| Admin badge poll: visible / hidden / returning | Pass — polls, pauses, refetches on return |
+| Food admin dashboard renders after the poll change | Pass |
 
 All frontend measurements were taken against the **production build**
 (`vite preview`), never the dev server: React StrictMode double-invokes effects
@@ -103,7 +106,8 @@ booking · payments · notifications · admin approval workflows.
 | N+1 sites (audit P10) | 21 candidates identified, none reviewed or changed. |
 | `/app` still fetches five booking lists on load | Deliberate (see changelog). Parallel, and loaded once per page load rather than per navigation. |
 | No memoisation added anywhere | Deliberate. The idle-growth measurement found no render loops, so there is no profiling evidence to justify `React.memo`/`useMemo`, and adding them blind risks stale data. |
-| Frontend screens not measured | Admin panels, restaurant and delivery partner panels, hotel/tours operator panels. Only consumer screens were measured this pass. |
+| Frontend screens not measured | Restaurant and delivery partner panels, hotel/tours operator panels — these need their own logins, which this pass did not provision. Admin panels **are** now measured. |
+| 42 pollers that ignore tab visibility | Untouched by design. Several must keep polling when hidden (restaurant orders, driver assignments, live ride tracking); pausing those would cause missed work. Needs per-site judgment. |
 | `/food/orders` payload (audit P6) | 40.5kb for 6 orders. Untouched — changing it alters a response shape with multiple known consumers. |
 
 ## Reproducing
