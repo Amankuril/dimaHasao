@@ -232,11 +232,11 @@ export default function VerificationPending() {
 
   return (
     <div className={`min-h-[100dvh] overflow-y-auto overscroll-contain px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-10 transition-all duration-300 ${isDisabledByAdmin
-        ? "bg-gradient-to-br from-[#FFF5F5] via-[#FFEBEB] to-[#FEF2F2]"
-        : "bg-gradient-to-br from-slate-50 via-slate-100 to-zinc-100"
+        ? "bg-[#1b0b09]"
+        : "bg-[#04190c]"
       }`}>
       <div className="mx-auto flex w-full max-w-md min-h-[calc(100dvh-2rem)] flex-col justify-center py-2 sm:py-0">
-        <div className="w-full rounded-[20px] sm:rounded-[28px] border border-slate-200 bg-white p-5 sm:p-8 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+        <div className="w-full rounded-[20px] sm:rounded-[28px] border border-[#caa83e]/30 bg-[#051f11] p-5 sm:p-8 shadow-[0_28px_80px_rgba(0,0,0,0.65)]">
           <div className="mb-4 sm:mb-6 flex items-center justify-center">
             {localStatus === "rejected" || localStatus === "banned" ? (
               <div className="flex items-center justify-center my-2 select-none">
@@ -258,7 +258,7 @@ export default function VerificationPending() {
 
                   {/* Diamond shape on the left - overlaps without clipping! */}
                   <div
-                    className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-8 h-8 bg-[#E51A21] border-[3px] border-white rotate-45 flex items-center justify-center shadow-lg"
+                    className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-8 h-8 bg-[#E51A21] border-[3px] border-[#051f11] rotate-45 flex items-center justify-center shadow-lg"
                     style={{
                       zIndex: 10
                     }}
@@ -269,7 +269,7 @@ export default function VerificationPending() {
                 </div>
               </div>
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#caa83e]/15 text-[#caa83e]">
                 <Clock3 className="h-8 w-8" />
               </div>
             )}
@@ -278,18 +278,18 @@ export default function VerificationPending() {
           <div className="mb-4 sm:mb-6 text-center">
             {localStatus === "rejected" || localStatus === "banned" ? (
               <>
-                <h1 className="text-xl font-extrabold text-slate-950">
+                <h1 className="text-xl font-extrabold text-[#f4efe2]">
                   {isDisabledByAdmin ? "Restaurant Disabled" : "Registration Rejected"}
                 </h1>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
+                <p className="mt-3 text-sm leading-6 text-[#9fb3a4]">
                   {isDisabledByAdmin ? "Your restaurant has been disabled." : parsedMessage.text}
                 </p>
                 {parsedMessage.reason && !isDisabledByAdmin && (
-                  <div className="mt-4 text-sm font-semibold text-left p-3.5 rounded-2xl border border-red-100 bg-red-50/50">
-                    <span className="text-red-600 block text-xs uppercase tracking-widest font-extrabold mb-1">
+                  <div className="mt-4 text-sm font-semibold text-left p-3.5 rounded-2xl border border-red-400/30 bg-red-500/10">
+                    <span className="text-red-300 block text-xs uppercase tracking-widest font-extrabold mb-1">
                       Reason for Rejection:
                     </span>
-                    <span className="text-slate-800 font-medium leading-relaxed block">
+                    <span className="text-[#f4efe2] font-medium leading-relaxed block">
                       {parsedMessage.reason}
                     </span>
                   </div>
@@ -297,20 +297,20 @@ export default function VerificationPending() {
               </>
             ) : (
               <>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.32em] text-amber-600">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.32em] text-[#caa83e]">
                   Verification Pending
                 </p>
-                <h1 className="mx-auto max-w-[19rem] text-center text-[15px] font-extrabold leading-5 text-slate-950 sm:text-xl sm:leading-tight">
+                <h1 className="mx-auto max-w-[19rem] text-center text-[15px] font-extrabold leading-5 text-[#f4efe2] sm:text-xl sm:leading-tight">
                   <span className="block">Your restaurant is</span>
                   <span className="block">under{"\u00A0"}review</span>
                 </h1>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
+                <p className="mt-3 text-sm leading-6 text-[#9fb3a4]">
                   Admin received your onboarding details successfully. Our team will verify your restaurant and activate your dashboard once approval is complete.
                 </p>
               </>
             )}
             {checkingStatus ? (
-              <p className="mt-3 min-h-[1rem] text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+              <p className="mt-3 min-h-[1rem] text-xs font-medium uppercase tracking-[0.18em] text-[#5d7264]">
                 Checking latest approval status...
               </p>
             ) : (
@@ -318,34 +318,34 @@ export default function VerificationPending() {
             )}
           </div>
 
-          <div className="mb-4 sm:mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 sm:p-4">
+          <div className="mb-4 sm:mb-6 rounded-2xl border border-[#caa83e]/20 bg-[#02130a] p-3.5 sm:p-4">
             <div className="flex items-start gap-3">
               {localStatus === "rejected" || localStatus === "banned" ? (
                 <>
-                  <AlertTriangle className="mt-0.5 h-5 w-5 text-red-600" />
-                  <div className="text-sm text-slate-700">
-                    <p className="font-semibold text-slate-900">What to do next</p>
+                  <AlertTriangle className="mt-0.5 h-5 w-5 text-red-300" />
+                  <div className="text-sm text-[#9fb3a4]">
+                    <p className="font-semibold text-[#f4efe2]">What to do next</p>
                     <p className="mt-1">
                       {isDisabledByAdmin
                         ? "Please reach out to support for more details or assistance regarding your account status."
                         : "Please review the reason above or reach out to support. You can register a new account if you need to submit new details."}
                     </p>
                     {pendingPhone ? (
-                      <p className="mt-2 text-slate-500">
-                        Registered phone: <span className="font-medium text-slate-700">{pendingPhone}</span>
+                      <p className="mt-2 text-[#5d7264]">
+                        Registered phone: <span className="font-medium text-[#9fb3a4]">{pendingPhone}</span>
                       </p>
                     ) : null}
                   </div>
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600" />
-                  <div className="text-sm text-slate-700">
-                    <p className="font-semibold text-slate-900">What happens next</p>
+                  <ShieldCheck className="mt-0.5 h-5 w-5 text-[#caa83e]" />
+                  <div className="text-sm text-[#9fb3a4]">
+                    <p className="font-semibold text-[#f4efe2]">What happens next</p>
                     <p className="mt-1">We will notify you by email and push notification once verification is approved.</p>
                     {pendingPhone ? (
-                      <p className="mt-2 text-slate-500">
-                        Registered phone: <span className="font-medium text-slate-700">{pendingPhone}</span>
+                      <p className="mt-2 text-[#5d7264]">
+                        Registered phone: <span className="font-medium text-[#9fb3a4]">{pendingPhone}</span>
                       </p>
                     ) : null}
                   </div>
@@ -358,14 +358,14 @@ export default function VerificationPending() {
             {isDisabledByAdmin ? (
               <>
                 <Button
-                  className="h-12 w-full rounded-xl text-base font-semibold bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/20 border border-blue-500/20 active:scale-[0.98] transition-all duration-300"
+                  className="h-12 w-full rounded-xl text-base font-semibold bg-[#caa83e] hover:bg-[#e8c558] text-[#04190c] shadow-[0_10px_24px_rgba(202,168,62,0.25)] active:scale-[0.98] transition-all duration-300"
                   onClick={() => navigate("/food/restaurant/help-content")}
                 >
                   Contact Support
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-12 w-full rounded-xl text-base font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] transition-all duration-300"
+                  className="h-12 w-full rounded-xl text-base font-semibold border border-[#caa83e]/35 bg-transparent text-[#9fb3a4] hover:border-[#caa83e] hover:text-[#f4efe2] active:scale-[0.98] transition-all duration-300"
                   onClick={() => {
                     syncFcmBeforeLeave()
                     clearModuleAuth("restaurant")
@@ -381,7 +381,7 @@ export default function VerificationPending() {
             ) : localStatus === "rejected" ? (
               <>
                 <Button
-                  className="h-12 w-full rounded-xl text-base font-semibold transition-all duration-300 bg-gradient-to-br from-[#B80B3D] to-[#66001D] hover:opacity-90 text-white active:scale-[0.98]"
+                  className="h-12 w-full rounded-xl text-base font-semibold transition-all duration-300 bg-[#caa83e] hover:bg-[#e8c558] text-[#04190c] active:scale-[0.98]"
                   onClick={() => {
                     clearOnboardingFromLocalStorage()
                     localStorage.removeItem("restaurant_pendingStatus")
@@ -393,7 +393,7 @@ export default function VerificationPending() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-12 w-full rounded-xl text-base font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] transition-all duration-300"
+                  className="h-12 w-full rounded-xl text-base font-semibold border border-[#caa83e]/35 bg-transparent text-[#9fb3a4] hover:border-[#caa83e] hover:text-[#f4efe2] active:scale-[0.98] transition-all duration-300"
                   onClick={() => {
                     syncFcmBeforeLeave()
                     clearModuleAuth("restaurant")
@@ -410,7 +410,7 @@ export default function VerificationPending() {
               <>
                 {pushPermission !== "granted" && pushPermission !== "unsupported" && !isNativeAppWebView() ? (
                   <Button
-                    className="h-12 w-full rounded-xl text-base font-semibold bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.98] transition-all duration-300"
+                    className="h-12 w-full rounded-xl text-base font-semibold bg-[#0d6b39] hover:bg-[#108045] text-[#f4efe2] active:scale-[0.98] transition-all duration-300"
                     disabled={enablingPush}
                     onClick={handleEnablePush}
                   >
@@ -425,7 +425,7 @@ export default function VerificationPending() {
                   </Button>
                 ) : null}
                 <Button
-                  className="h-12 w-full rounded-xl text-base font-semibold transition-all duration-300 bg-gradient-to-br from-[#B80B3D] to-[#66001D] hover:opacity-90 text-white active:scale-[0.98]"
+                  className="h-12 w-full rounded-xl text-base font-semibold transition-all duration-300 bg-[#caa83e] hover:bg-[#e8c558] text-[#04190c] active:scale-[0.98]"
                   onClick={() => {
                     syncFcmBeforeLeave()
                     clearModuleAuth("restaurant")

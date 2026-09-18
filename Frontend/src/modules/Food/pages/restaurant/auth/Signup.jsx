@@ -2,10 +2,6 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Phone, User, AlertCircle, Loader2 } from "lucide-react"
 import { restaurantAPI } from "@food/api"
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@food/components/ui/card"
-import { Button } from "@food/components/ui/button"
-import { Input } from "@food/components/ui/input"
-import { Label } from "@food/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -13,8 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@food/components/ui/select"
-import loginBg from "@food/assets/loginbanner.png"
-import { DEFAULT_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import DimaHasaoAuthShell, {
+  authFieldClass,
+  authLabelClass,
+  authInputClass,
+  authButtonClass,
+} from "@/shared/components/auth/DimaHasaoAuthShell"
 
 const countryCodes = [
   { code: "+91", country: "IN", flag: "🇮🇳" },
@@ -135,248 +135,153 @@ export default function RestaurantSignup() {
   }
 
   return (
-    <div className="h-screen w-full flex bg-white overflow-hidden">
-      {/* Left image section */}
-      <div className="hidden lg:flex lg:w-1/2 relative">
-        <img
-          src={loginBg}
-          alt="Restaurant background"
-          className="w-full h-full object-cover"
-        />
-        {/* Orange half-circle text block attached to the left with animation */}
-        <div className="absolute inset-0 flex items-center text-white pointer-events-none">
-          <div
-            className="bg-gradient-to-br from-[#B80B3D] to-[#66001D]/80 rounded-r-full py-10 xl:py-20 pl-10 xl:pl-14 pr-10 xl:pr-20 max-w-[70%] shadow-xl backdrop-blur-[1px]"
-            style={{ animation: "slideInLeft 0.8s ease-out both" }}
-          >
-            <h1 className="text-[#B80B3D]xl xl:text-4xl font-extrabold mb-4 tracking-wide leading-tight">
-              JOIN AS
-              <br />
-              RESTAURANT PARTNER
-            </h1>
-            <p className="text-base xl:text-lg opacity-95 max-w-xl">
-              Register your restaurant and start serving customers.
-            </p>
-          </div>
+    <DimaHasaoAuthShell
+      width="880px"
+      blurb="Register your restaurant and start serving customers across the district."
+      points={["List your menu", "Reach local diners", "Track every order", "Get paid on time"]}
+    >
+      <div className="mb-7 text-center md:text-left">
+        <h2 className="dh-playfair text-[26px] font-black tracking-wide text-[#f4efe2]">
+          Register Your Restaurant
+        </h2>
+        <div className="mt-2 flex items-center justify-center gap-2 md:justify-start">
+          <span className="h-px w-6 bg-[#caa83e]" />
+          <span className="dh-montserrat text-[9px] font-black uppercase tracking-[0.3em] text-[#caa83e]">
+            Join as partner
+          </span>
         </div>
+        <p className="mt-4 text-[13px] leading-relaxed text-[#9fb3a4]">
+          Enter your details to get started.
+        </p>
       </div>
 
-      {/* Right form section */}
-      <div className="w-full lg:w-1/2 h-full flex flex-col">
-        {/* Top logo and version */}
-        <div className="relative flex items-center justify-center px-6 sm:px-10 lg:px-16 pt-6 pb-4">
-          <div
-            className="flex items-center gap-3"
-            style={{ animation: "fadeInDown 0.7s ease-out both" }}
-          >
-            <img
-              src={DEFAULT_BRAND_LOGO}
-              alt="Dima Hasao"
-              className="h-12 w-auto max-w-[160px] object-contain"
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Restaurant name input */}
+        <div>
+          <label className={authLabelClass} htmlFor="name">
+            Restaurant name
+          </label>
+          <div className={authFieldClass(!!errors.name)}>
+            <span className="pl-4 text-[#5d7264]">
+              <User className="h-4 w-4" />
+            </span>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              placeholder="Enter restaurant name"
+              value={formData.name}
+              onChange={handleChange}
+              className={`${authInputClass} px-3`}
+              required
             />
-            <div className="flex flex-col items-start">
-              <span className="text-xs font-medium text-gray-500">
-                Restaurant Panel
-              </span>
+          </div>
+          {errors.name && (
+            <div className="mt-1.5 flex items-center gap-1 text-xs text-red-300">
+              <AlertCircle className="h-3 w-3" />
+              <span>{errors.name}</span>
             </div>
-          </div>
-          <div className="absolute right-6 sm:right-10 lg:right-16 top-6 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-medium text-emerald-700 shadow-sm">
-            Software Version : 1.0.0
-          </div>
+          )}
         </div>
 
-        {/* Centered content (title + form + info) */}
-        <div
-          className="flex-1 flex flex-col items-center justify-center px-6 sm:px-10 lg:px-16 pb-8"
-          style={{ animation: "fadeInUp 0.8s ease-out 0.15s both" }}
-        >
-          {/* Title */}
-          <div className="mb-8 text-center">
-            <h2 className="text-2xl sm:text-[#B80B3D]xl font-semibold text-gray-900 mb-2">
-              Register Your Restaurant
-            </h2>
-            <p className="text-sm text-gray-500">
-              Enter your details to get started.
-            </p>
-          </div>
-
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-5 w-full max-w-lg rounded-xl bg-white/80 backdrop-blur-sm p-1 sm:p-2"
-          >
-            {/* Restaurant name input */}
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Restaurant Name
-              </Label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                  <User className="h-4 w-4" />
-                </span>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Enter restaurant name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={`h-11 pl-9 border-gray-300 rounded-md shadow-sm focus-visible:ring-primary-orange focus-visible:ring-2 transition-colors placeholder:text-gray-400 ${errors.name ? "border-red-500" : ""}`}
-                  required
-                />
-              </div>
-              {errors.name && (
-                <div className="flex items-center gap-1 text-xs sm:text-sm text-[#B80B3D]">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{errors.name}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Phone input */}
-            <div className="space-y-1.5">
-              <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                Phone Number
-              </Label>
-              <div className="flex gap-2">
-                <Select
-                  value={formData.countryCode}
-                  onValueChange={handleCountryCodeChange}
-                >
-                  <SelectTrigger className="w-20 sm:w-24 md:w-[100px] text-xs sm:text-sm">
-                    <SelectValue placeholder="Code" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countryCodes.map((country) => (
-                      <SelectItem key={country.code} value={country.code}>
-                        <span className="flex items-center gap-2 text-xs sm:text-sm">
-                          <span>{country.flag}</span>
-                          <span>{country.code}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex-1 min-w-0">
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                      <Phone className="h-4 w-4" />
+        {/* Phone input */}
+        <div>
+          <label className={authLabelClass} htmlFor="phone">
+            Phone number
+          </label>
+          <div className="flex gap-2">
+            <Select value={formData.countryCode} onValueChange={handleCountryCodeChange}>
+              <SelectTrigger className="h-12 w-24 rounded-xl border border-[#caa83e]/35 bg-[#02130a] text-sm text-[#f4efe2] focus:ring-0 focus:ring-offset-0 data-[placeholder]:text-[#5d7264]">
+                <SelectValue placeholder="Code" />
+              </SelectTrigger>
+              <SelectContent className="border-[#caa83e]/35 bg-[#051f11] text-[#f4efe2]">
+                {countryCodes.map((country) => (
+                  <SelectItem
+                    key={country.code}
+                    value={country.code}
+                    className="text-[#f4efe2] focus:bg-[#caa83e]/15 focus:text-[#f4efe2]"
+                  >
+                    <span className="flex items-center gap-2 text-sm">
+                      <span>{country.flag}</span>
+                      <span>{country.code}</span>
                     </span>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className={`h-11 pl-9 border-gray-300 rounded-md shadow-sm focus-visible:ring-primary-orange focus-visible:ring-2 transition-colors placeholder:text-gray-400 ${errors.phone ? "border-red-500" : ""}`}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-              {errors.phone && (
-                <div className="flex items-center gap-1 text-xs sm:text-sm text-[#B80B3D]">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{errors.phone}</span>
-                </div>
-              )}
-              {apiError && !errors.phone && (
-                <div className="flex items-center gap-1 text-xs sm:text-sm text-[#B80B3D] mt-1">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{apiError}</span>
-                </div>
-              )}
-            </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Sign up button */}
-            <Button
-              type="submit"
-              className="mt-2 h-11 w-full bg-gradient-to-br from-[#B80B3D] to-[#66001D] hover:bg-gradient-to-br from-[#B80B3D] to-[#66001D]/90 text-white text-base font-semibold rounded-md shadow-md transition-colors"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Sending OTP...
-                </>
-              ) : (
-                "Send OTP"
-              )}
-            </Button>
-          </form>
-
-          {/* Login link */}
-          <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
-            <button
-              type="button"
-              onClick={() => navigate("/food/restaurant/login")}
-              className="text-primary-orange hover:underline font-medium"
-            >
-              Login
-            </button>
-          </div>
-
-          {/* Demo credentials / info bar */}
-          <div className="mt-8 w-full max-w-lg rounded-lg border border-orange-100 bg-orange-50 px-4 py-3 text-xs sm:text-sm text-gray-800 flex items-start gap-3">
-            <div className="mt-0.5 text-primary-orange">
-              <AlertCircle className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="font-semibold mb-1">Demo Credentials</div>
-              <div>
-                <span className="font-semibold">Phone :</span> +91 9876543210
-              </div>
-              <div>
-                <span className="font-semibold">OTP :</span> 1234
-              </div>
+            <div className={`${authFieldClass(!!errors.phone)} min-w-0 flex-1`}>
+              <span className="pl-4 text-[#5d7264]">
+                <Phone className="h-4 w-4" />
+              </span>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="Enter phone number"
+                value={formData.phone}
+                onChange={handleChange}
+                className={`${authInputClass} px-3`}
+                required
+              />
             </div>
           </div>
+          {errors.phone && (
+            <div className="mt-1.5 flex items-center gap-1 text-xs text-red-300">
+              <AlertCircle className="h-3 w-3" />
+              <span>{errors.phone}</span>
+            </div>
+          )}
+          {apiError && !errors.phone && (
+            <div className="mt-1.5 flex items-center gap-1 text-xs text-red-300">
+              <AlertCircle className="h-3 w-3" />
+              <span>{apiError}</span>
+            </div>
+          )}
         </div>
 
-        {/* Simple keyframe animations */}
-        <style>{`
-          @keyframes slideInLeft {
-            from {
-              opacity: 0;
-              transform: translateX(-40px);
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          @keyframes fadeInDown {
-            from {
-              opacity: 0;
-              transform: translateY(-16px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-        `}</style>
+        {/* Sign up button */}
+        <button type="submit" className={authButtonClass} disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending OTP...
+            </>
+          ) : (
+            "Send OTP"
+          )}
+        </button>
+      </form>
+
+      {/* Login link */}
+      <div className="mt-6 text-center text-sm">
+        <span className="text-[#9fb3a4]">Already have an account? </span>
+        <button
+          type="button"
+          onClick={() => navigate("/food/restaurant/login")}
+          className="font-bold text-[#caa83e] transition-colors hover:text-[#e8c558] hover:underline"
+        >
+          Login
+        </button>
       </div>
-    </div>
+
+      {/* Demo credentials / info bar */}
+      <div className="mt-8 flex items-start gap-3 rounded-xl border border-[#caa83e]/25 bg-[#caa83e]/8 px-4 py-3 text-xs text-[#9fb3a4]">
+        <div className="mt-0.5 text-[#caa83e]">
+          <AlertCircle className="h-4 w-4" />
+        </div>
+        <div>
+          <div className="dh-montserrat mb-1 font-bold uppercase tracking-[0.14em] text-[#caa83e]">
+            Demo Credentials
+          </div>
+          <div>
+            <span className="font-semibold text-[#f4efe2]">Phone :</span> +91 9876543210
+          </div>
+          <div>
+            <span className="font-semibold text-[#f4efe2]">OTP :</span> 1234
+          </div>
+        </div>
+      </div>
+    </DimaHasaoAuthShell>
   )
 }
-
-
-
-
-
-
-
-
