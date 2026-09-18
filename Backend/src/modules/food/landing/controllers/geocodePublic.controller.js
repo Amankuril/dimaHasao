@@ -4,6 +4,21 @@ import { getGoogleMapsApiKey } from '../../../../core/maps/googleMaps.service.js
 // VITE_ prefixed spelling.
 const getGoogleMapsServerKey = () => getGoogleMapsApiKey();
 
+/*
+ * Strip surrounding quotes and whitespace from a query value.
+ *
+ * This was used at three call sites in this file and defined at none of them —
+ * every endpoint here threw "sanitize is not defined" the moment it got past
+ * the key check. It never surfaced because the server had no Google Maps key,
+ * so all three returned "not configured" and never reached the broken line.
+ * Adding the key is what exposed it.
+ *
+ * Same one-liner as core/maps/googleMaps.service.js and publicEnv.controller.js,
+ * which is three copies of it now; worth collapsing into one export, but that is
+ * a wider change than fixing the crash.
+ */
+const sanitize = (value) => (value ? String(value).trim().replace(/^['"]|['"]$/g, '') : '');
+
 const toFinite = (v) => {
     const n = typeof v === 'number' ? v : parseFloat(String(v));
     return Number.isFinite(n) ? n : null;
