@@ -28,3 +28,21 @@ export const DEFAULT_BRAND_LOGO = "/logo.png"
 
 /** @deprecated Use DEFAULT_BRAND_LOGO */
 export const DEFAULT_BRAND_LOGO_PUBLIC = DEFAULT_BRAND_LOGO
+
+/**
+ * Fall back to the district crest when an audience mark is missing.
+ *
+ * Put this on every <img> that renders one of the marks above. A missing file
+ * otherwise renders as the alt text, which looks like a broken page rather
+ * than a missing asset — and these are public-facing sign-in screens.
+ *
+ * The data flag stops an infinite loop if the fallback itself 404s.
+ *
+ * @param {import('react').SyntheticEvent<HTMLImageElement>} event
+ */
+export const logoFallback = (event) => {
+  const img = event.currentTarget;
+  if (img.dataset.logoFellBack) return;
+  img.dataset.logoFellBack = "1";
+  img.src = DEFAULT_BRAND_LOGO;
+}

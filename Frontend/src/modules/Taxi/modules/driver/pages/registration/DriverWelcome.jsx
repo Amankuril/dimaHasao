@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ShieldCheck, Wallet, Clock, Star, TrendingUp, Sparkles, UserCheck } from 'lucide-react';
 import DriverHero from '@/assets/driver_welcome_hero.png';
 import { useSettings } from '../../../../shared/context/SettingsContext';
-import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const partnerAvatars = [
     {
@@ -51,7 +51,7 @@ const DriverWelcome = () => {
                 {/* Branding Top Overlay */}
                 <div className="absolute top-10 left-8 z-20">
                      {appLogo ? (
-                         <img src={appLogo} alt={appName} className="h-10 drop-shadow-sm" />
+                         <img src={appLogo} onError={logoFallback} alt={appName} className="h-10 drop-shadow-sm" />
                      ) : (
                          <div className="rounded-2xl bg-white px-4 py-2 text-sm font-black tracking-tighter text-slate-900 shadow-xl">
                             {appName}

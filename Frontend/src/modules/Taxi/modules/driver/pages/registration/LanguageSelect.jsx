@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Check, Globe, ChevronRight } from 'lucide-react';
 import { useSettings } from '../../../../shared/context/SettingsContext';
 import { getLocalDriverToken, getStoredDriverRole } from '../../services/registrationService';
-import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const LanguageSelect = () => {
     const navigate = useNavigate();
@@ -39,7 +39,7 @@ const LanguageSelect = () => {
             {/* Branding */}
             <div className="mb-6 flex flex-col items-center text-center space-y-4">
                 {appLogo ? (
-                    <img src={appLogo} alt={appName} className="h-10 object-contain drop-shadow-sm" />
+                    <img src={appLogo} onError={logoFallback} alt={appName} className="h-10 object-contain drop-shadow-sm" />
                 ) : (
                     <div className="rounded-xl bg-slate-900 px-4 py-2 text-base font-black tracking-tighter text-white shadow-xl shadow-slate-900/10">
                         {appName}

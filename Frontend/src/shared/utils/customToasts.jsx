@@ -1,7 +1,7 @@
 import React from "react";
 import { Trash2, CheckCircle2, Bell } from "lucide-react";
 import { toast } from "sonner";
-import { CONSUMER_BRAND_LOGO } from "@/shared/constants/brandLogo";
+import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo";
 
 const NOTIF_TOAST_ID = "app-notification-toast";
 
@@ -13,6 +13,7 @@ export const showNotificationToast = ({ title, message } = {}) => {
         <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#0a4d2b] to-[#06381e] flex items-center justify-center shadow-lg">
           <img
             src={CONSUMER_BRAND_LOGO}
+            onError={logoFallback}
             alt="Dima Hasao Food"
             className="w-7 h-7 object-contain brightness-0 invert"
             onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
@@ -42,6 +43,7 @@ export const showHelloParthBrandedToast = ({ title, message, id = "helloparth-br
           <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#0a4d2b] to-[#06381e] flex items-center justify-center p-1.5 shadow-lg">
             <img
               src={CONSUMER_BRAND_LOGO}
+              onError={logoFallback}
               alt="Dima Hasao Food"
               className="w-full h-full object-contain brightness-0 invert"
             />

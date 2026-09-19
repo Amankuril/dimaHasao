@@ -10,7 +10,7 @@ import { useLocationSelector, useSearchOverlay } from "./UserLayout"
 import { useProfile } from "@food/context/ProfileContext"
 import { FaLocationDot } from "react-icons/fa6"
 import { AnimatePresence, motion } from "framer-motion"
-import { CONSUMER_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import api from "@food/api"
 import { publicGetOnce } from "@food/api"
@@ -220,7 +220,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                             }}
                                         />
                                     ) : (
-                                        <img src={CONSUMER_BRAND_LOGO} alt={companyName || "Logo"} className="h-10 w-auto md:h-14 lg:h-16 object-contain" />
+                                        <img src={CONSUMER_BRAND_LOGO} onError={logoFallback} alt={companyName || "Logo"} className="h-10 w-auto md:h-14 lg:h-16 object-contain" />
                                     )}
                                 </Link>
                             )}

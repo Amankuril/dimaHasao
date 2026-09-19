@@ -13,7 +13,7 @@ import {
 } from '../../services/registrationService';
 import { useSettings } from '../../../../shared/context/SettingsContext';
 import taxiBg from '../../../../assets/images/light-taxi-bg.png';
-import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const getErrorMessage = (err) => String(
   err?.message ||
@@ -223,6 +223,7 @@ const PhoneRegistration = () => {
               {appLogo ? (
                 <img
                   src={appLogo}
+                  onError={logoFallback}
                   alt={`${appName} logo`}
                   className="h-14 w-14 rounded-2xl object-cover bg-white p-1.5 shadow-xl shadow-slate-200/70 border border-white"
                 />

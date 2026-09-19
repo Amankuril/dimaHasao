@@ -19,7 +19,7 @@ import {
 import RegistrationProgress from '../../../shared/components/RegistrationProgress';
 import { useSettings } from '../../../../shared/context/SettingsContext';
 import { getStoredDriverRegistrationSession } from '../../services/registrationService';
-import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const RegistrationDashboard = () => {
     const navigate = useNavigate();
@@ -47,7 +47,7 @@ const RegistrationDashboard = () => {
                     className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-taxi-text shadow-2xl overflow-hidden p-2"
                 >
                     {appLogo ? (
-                        <img src={appLogo} alt={appName} className="w-full h-full object-contain" />
+                        <img src={appLogo} onError={logoFallback} alt={appName} className="w-full h-full object-contain" />
                     ) : (
                         <Zap size={24} className="text-slate-900" />
                     )}

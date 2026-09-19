@@ -27,7 +27,7 @@ import useAdminStore from '../store/adminStore';
 import adminService from '../../../services/adminService';
 import AdminModuleSwitcher from '@/shared/components/admin/AdminModuleSwitcher.jsx';
 import { clearModuleAuth } from '@/shared/utils/moduleAuth';
-import { HOTEL_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import { HOTEL_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const HOTEL_ADMIN_BASE = '/hotel/admin';
 
@@ -129,6 +129,7 @@ const AdminLayout = () => {
                         <div className="relative flex items-center mb-3 min-h-[80px]">
                             <img
                                 src={HOTEL_BRAND_LOGO}
+                                onError={logoFallback}
                                 alt="Dima Hasao"
                                 className={isCollapsed ? 'h-14 w-14 object-contain' : 'h-20 w-20 object-contain'}
                             />

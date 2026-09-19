@@ -22,7 +22,7 @@ import {
   verifyDriverPanDocument,
   verifyDriverRcDocument,
 } from "../../services/registrationService";
-import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const APPROVAL_POLL_MS = 2500;
 const normalizePortalRole = (role) => {
@@ -480,6 +480,7 @@ const getStatusColor = (status) => {
         {appLogo ? (
           <img
             src={appLogo}
+            onError={logoFallback}
             alt={appName}
             className="h-10 object-contain drop-shadow-sm"
           />

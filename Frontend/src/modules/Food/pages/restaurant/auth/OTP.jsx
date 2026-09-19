@@ -10,7 +10,7 @@ import {
 } from "@food/utils/auth"
 import { checkOnboardingStatus, isRestaurantOnboardingComplete } from "@food/utils/onboardingUtils"
 import { collectFcmTokenFast, persistModuleFcmToken, syncPendingPartnerFcmQuick } from "@food/utils/firebaseMessaging"
-import { RESTAURANT_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import { RESTAURANT_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo"
 
 export default function RestaurantOTP() {
   const navigate = useNavigate()
@@ -438,6 +438,7 @@ export default function RestaurantOTP() {
           <div className="mb-5 text-center flex flex-col items-center">
             <img 
               src={RESTAURANT_BRAND_LOGO} 
+              onError={logoFallback}
               alt="Dima Hasao" 
               className="h-28 -mb-3.5 object-contain drop-shadow-md" 
             />

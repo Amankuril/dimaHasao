@@ -4,7 +4,7 @@ import { useBooking } from '../context/BookingContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { requestUserOtp, verifyUserOtp, completeUserSignup } from '../../../services/api/auth';
 import { setUnifiedAuthData } from '../../../shared/utils/moduleAuth';
-import { CONSUMER_BRAND_LOGO } from "@/shared/constants/brandLogo";
+import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo";
 
 const TEST_PHONE =
   String(import.meta.env?.VITE_USE_DEFAULT_TEST_PHONE) === 'true'
@@ -173,6 +173,7 @@ export const LoginScreen = () => {
             alt="Dima Hasao Tourism Logo"
             className="w-full h-full object-contain"
             src={CONSUMER_BRAND_LOGO}
+            onError={logoFallback}
           />
         </motion.div>
 

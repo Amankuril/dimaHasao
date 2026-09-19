@@ -1,4 +1,4 @@
-import { DEFAULT_BRAND_LOGO } from "@/shared/constants/brandLogo";
+import { DEFAULT_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo";
 
 /**
  * The frame every sign-in, sign-up and onboarding screen on the platform sits
@@ -74,6 +74,7 @@ export default function DimaHasaoAuthShell({
             <div>
               <img
                 src={logo}
+                onError={logoFallback}
                 alt="Dima Hasao Tourism"
                 className="h-24 w-24 object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.55)]"
               />
@@ -109,6 +110,7 @@ export default function DimaHasaoAuthShell({
             {/* The mark again for phones, where the identity panel is hidden. */}
             <img
               src={logo}
+              onError={logoFallback}
               alt="Dima Hasao Tourism"
               className="mx-auto mb-4 h-16 w-16 object-contain md:hidden"
             />

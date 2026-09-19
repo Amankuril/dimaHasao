@@ -25,7 +25,7 @@ import MainTabKeepAlive from "./MainTabKeepAlive"
 import { getMainTabFromPath, isExactMainTabPath, rememberMainTabBeforeProfile, shouldPreserveMainTabsUnderPath, getCategorySlugFromPath, isRestaurantDetailPath, rememberCategoryKeepAliveSlug, peekCategoryKeepAliveSlug, clearCategoryKeepAliveSlug } from "@food/utils/mainTabRoutes"
 import { registerFoodPageCacheLifecycle } from "@food/utils/foodPageCache"
 import CategoryBrowseKeepAlive from "./CategoryBrowseKeepAlive"
-import { CONSUMER_BRAND_LOGO } from "@/shared/constants/brandLogo";
+import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo";
 
 let reloadManualLocationFlagCleared = false
 /** Clear sticky manual-location loader flag on F5 before first paint. */
@@ -214,7 +214,7 @@ function UserLayoutContent() {
         <div className="w-[calc(100vw-32px)] sm:w-[380px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-3xl pointer-events-auto flex items-center gap-4 p-3.5 border border-gray-50 animate-in fade-in slide-in-from-top-4">
           <div className="flex-shrink-0">
             <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#0a4d2b] to-[#06381e] flex items-center justify-center shadow-lg">
-              <img src={CONSUMER_BRAND_LOGO} alt="Dima Hasao Food" className="w-7 h-7 object-contain brightness-0 invert" />
+              <img src={CONSUMER_BRAND_LOGO} onError={logoFallback} alt="Dima Hasao Food" className="w-7 h-7 object-contain brightness-0 invert" />
             </div>
           </div>
           <div className="flex-1 pr-1 min-w-0">
@@ -482,6 +482,7 @@ function UserLayoutContent() {
               <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#0a4d2b] to-[#06381e] flex items-center justify-center p-1.5 shadow-lg">
                 <img 
                   src={CONSUMER_BRAND_LOGO} 
+                  onError={logoFallback}
                   alt="Dima Hasao Food" 
                   className="w-full h-full object-contain brightness-0 invert" 
                 />

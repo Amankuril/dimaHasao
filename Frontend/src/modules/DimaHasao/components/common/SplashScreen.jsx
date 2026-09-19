@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CONSUMER_BRAND_LOGO } from "@/shared/constants/brandLogo";
+import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo";
 
 export const SplashScreen = ({ onFinish }) => {
   const [progress, setProgress] = useState(0);
@@ -97,6 +97,7 @@ export const SplashScreen = ({ onFinish }) => {
               alt="Dima Hasao Tourism Emblem"
               className="w-full h-full object-contain"
               src={CONSUMER_BRAND_LOGO}
+              onError={logoFallback}
             />
           </motion.div>
         </div>
