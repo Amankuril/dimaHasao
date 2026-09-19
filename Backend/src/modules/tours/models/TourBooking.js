@@ -60,6 +60,11 @@ const tourBookingSchema = new mongoose.Schema({
   balanceCollectedAt: { type: Date },
 
   // SETTLEMENT
+  /**
+   * Historical only, like `operatorId` above. Tours are single-vendor, so the
+   * district keeps the whole fare — nothing writes these, and they are here so
+   * the bookings taken under the old commission split still add up.
+   */
   adminCommission: { type: Number, default: 0 },
   operatorPayout: { type: Number, default: 0 },
 
