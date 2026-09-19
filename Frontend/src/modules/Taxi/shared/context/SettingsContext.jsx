@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import api from '../api/axiosInstance';
+
+/** Shortest gap between two resume-triggered settings refetches. */
+const SETTINGS_REFRESH_MIN_MS = 5 * 60 * 1000;
 import { BACKEND_ORIGIN } from '../api/runtimeConfig';
 
 // Favicon object URL tracking removed
@@ -205,6 +208,9 @@ const writeCachedSettings = (settings) => {
 };
 
 export const SettingsProvider = ({ children }) => {
+  // When the settings were last pulled, so a resume does not refetch them for
+  // the sake of it. See the resume listener below.
+  const lastSettingsFetchRef = useRef(0);
   const cachedSettings = readCachedSettings();
   const [settings, setSettings] = useState(cachedSettings || DEFAULT_SETTINGS_CONTEXT.settings);
   const [loading, setLoading] = useState(true);
@@ -212,6 +218,7 @@ export const SettingsProvider = ({ children }) => {
   const [modules, setModules] = useState([]);
 
   const fetchSettings = async () => {
+    lastSettingsFetchRef.current = Date.now();
     try {
       const response = await api.get('/users/bootstrap');
       const data = response?.data?.data || response?.data || {};
@@ -241,7 +248,21 @@ export const SettingsProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const refreshOnResume = () => {
+    /*
+     * Re-read settings when the app comes back, but not every single time.
+     *
+     * `focus` fires whenever the page regains focus, which in a browser tab is
+     * occasional and inside the Flutter wrapper is constant: tapping a field,
+     * dismissing the keyboard, returning from the camera or a payment sheet all
+     * count. Each one was a fresh /users/bootstrap, and branding settings do not
+     * change minute to minute.
+     *
+     * `online` is left unthrottled on purpose — coming back from no connection
+     * is exactly when a refetch is worth making.
+     */
+    const refreshOnResume = (event) => {
+      const force = event?.type === 'online';
+      if (!force && Date.now() - lastSettingsFetchRef.current < SETTINGS_REFRESH_MIN_MS) return;
       fetchSettings();
     };
 

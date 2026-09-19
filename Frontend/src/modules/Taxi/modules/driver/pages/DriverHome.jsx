@@ -829,14 +829,28 @@ const DriverHome = () => {
         refreshNotificationCount();
         loadScheduledRides();
 
-        const handleFocus = () => {
+        /*
+         * The 30s poll below is deliberate — a driver needs their ride list to
+         * be current. The focus handler on top of it was not: `focus` fires
+         * every time the webview regains it, which inside the wrapper means
+         * every tap on a field, every dismissed keyboard, every return from
+         * the map or the camera. That put two more requests on the wire each
+         * time, on top of the poll already running.
+         *
+         * Refresh on resume only if the poll has not just done it.
+         */
+        let lastRefreshAt = Date.now();
+        const refreshBoth = () => {
+            lastRefreshAt = Date.now();
             refreshNotificationCount();
             loadScheduledRides();
         };
-        const refreshInterval = window.setInterval(() => {
-            refreshNotificationCount();
-            loadScheduledRides();
-        }, 30000);
+
+        const handleFocus = () => {
+            if (Date.now() - lastRefreshAt < 10000) return;
+            refreshBoth();
+        };
+        const refreshInterval = window.setInterval(refreshBoth, 30000);
 
         window.addEventListener('focus', handleFocus);
 

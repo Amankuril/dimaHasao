@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import { API_BASE_URL } from '../config/apiConfig';
 import { requestOtp, verifyOtp, completeSignup, AUDIENCE } from '../../../services/auth/otpAuthClient';
+import { cachedRead, keyFor, TTL } from '@/shared/utils/apiCache';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -611,12 +612,16 @@ export const userService = {
 export const offerService = {
   // Use by users to see available coupons
   getActive: async () => {
-    try {
-      const response = await api.get('/offers');
-      return response.data;
-    } catch (error) {
+    return cachedRead(
+      'hotel:offers',
+      async () => {
+        const response = await api.get('/offers');
+        return response.data;
+      },
+      { ttl: TTL.PANEL },
+    ).catch((error) => {
       throw error.response?.data || error.message;
-    }
+    });
   },
   // Validate coupon before booking
   validate: async (code, bookingAmount) => {
@@ -670,28 +675,40 @@ export const paymentService = {
 
 export const legalService = {
   getPage: async (audience, slug) => {
-    try {
-      const response = await api.get(`/info/${audience}/${slug}`);
-      return response.data;
-    } catch (error) {
+    return cachedRead(
+      keyFor('hotel:info', `${audience}/${slug}`),
+      async () => {
+        const response = await api.get(`/info/${audience}/${slug}`);
+        return response.data;
+      },
+      { ttl: TTL.CATALOGUE },
+    ).catch((error) => {
       throw error.response?.data || error.message;
-    }
+    });
   },
   getPlatformStatus: async () => {
-    try {
-      const response = await api.get('/info/platform/status');
-      return response.data;
-    } catch (error) {
+    return cachedRead(
+      'hotel:platform-status',
+      async () => {
+        const response = await api.get('/info/platform/status');
+        return response.data;
+      },
+      { ttl: TTL.CATALOGUE },
+    ).catch((error) => {
       throw error.response?.data || error.message;
-    }
+    });
   },
   getFinancialSettings: async () => {
-    try {
-      const response = await api.get('/info/platform/financials');
-      return response.data;
-    } catch (error) {
+    return cachedRead(
+      'hotel:platform-financials',
+      async () => {
+        const response = await api.get('/info/platform/financials');
+        return response.data;
+      },
+      { ttl: TTL.CATALOGUE },
+    ).catch((error) => {
       throw error.response?.data || error.message;
-    }
+    });
   },
   submitContact: async (audience, payload) => {
     try {
@@ -828,12 +845,16 @@ export const handleError = (error) => {
 export const faqService = {
   // Public - Get active FAQs for an audience
   getFaqs: async (audience) => {
-    try {
-      const response = await api.get(`/faqs?audience=${audience}`);
-      return response.data;
-    } catch (error) {
+    return cachedRead(
+      keyFor('hotel:faqs', audience),
+      async () => {
+        const response = await api.get(`/faqs?audience=${audience}`);
+        return response.data;
+      },
+      { ttl: TTL.CATALOGUE },
+    ).catch((error) => {
       throw error.response?.data || error.message;
-    }
+    });
   },
 
   // Admin - Get all FAQs
