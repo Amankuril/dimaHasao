@@ -1,9 +1,18 @@
 import { API_BASE_URL } from "@food/api/config";
+import { apiOrigin } from "@/shared/utils/assetUrl";
 
 const defaultBackendOrigin = (API_BASE_URL || "").replace(/\/api\/v1\/?$/i, "").replace(/\/api\/?$/i, "");
+/*
+ * Where /uploads is served from.
+ *
+ * VITE_ASSET_BASE_URL still wins when a deployment puts uploads on their own
+ * host. The fallback used to be a hard-coded `https://helloparth.in` — the
+ * previous product's domain — so any environment that did not set the variable
+ * pointed every uploaded image at somebody else's server. It now falls back to
+ * the origin the API is on, which is where these files are actually served.
+ */
 const ASSET_BASE_URL = String(
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_ASSET_BASE_URL) ||
-    "https://helloparth.in"
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_ASSET_BASE_URL) || apiOrigin
 ).replace(/\/$/, "");
 
 const rewriteUploadsUrl = (absoluteUrl) => {

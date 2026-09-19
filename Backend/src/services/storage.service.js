@@ -26,7 +26,27 @@ export const flattenFolder = (folder) => {
 
 const randomId = () => crypto.randomBytes(10).toString('hex');
 
-export const buildAssetUrl = (filename) => `${config.assetBaseUrl}/uploads/${filename}`;
+/**
+ * The path an uploaded file is stored and served under.
+ *
+ * Root-relative on purpose. This value goes into the database, and an origin
+ * baked into it is wrong the moment the record is read from anywhere else: an
+ * upload made against a laptop was persisted as
+ * `http://localhost:5000/uploads/x.webp`, which on the live site pointed at
+ * the visitor's own machine. ASSET_BASE_URL being unset in production turned
+ * that into the default, and the default was localhost.
+ *
+ * Uploads are served from the same host as the API, so the client resolves
+ * this against wherever it is talking to — see shared/utils/assetUrl.js.
+ */
+export const buildAssetUrl = (filename) => `/uploads/${filename}`;
+
+/**
+ * The same path with an origin, for the places that cannot resolve one:
+ * email bodies and push payloads are read outside the app.
+ */
+export const buildAbsoluteAssetUrl = (filename) =>
+    `${config.assetBaseUrl}${buildAssetUrl(filename)}`;
 
 export const extractAssetUrl = (value) => {
     if (!value) return '';

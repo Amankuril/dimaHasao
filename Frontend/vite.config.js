@@ -49,6 +49,14 @@ export default defineConfig({
         target: process.env.VITE_BACKEND_PROXY_TARGET || 'http://localhost:5000',
         changeOrigin: true,
       },
+      // Uploaded images are stored as root-relative paths (/uploads/x.webp) so
+      // that no server origin ends up in the database. In production nginx
+      // serves them from the same domain as the app; in dev the app is on 5173
+      // and the files are on 5000, so they are proxied here.
+      '/uploads': {
+        target: process.env.VITE_BACKEND_PROXY_TARGET || 'http://localhost:5000',
+        changeOrigin: true,
+      },
       // Proxy Socket.IO so frontend-origin socket connections are forwarded to backend in dev
       '/socket.io': {
         target: process.env.VITE_BACKEND_PROXY_TARGET || 'http://localhost:5000',
