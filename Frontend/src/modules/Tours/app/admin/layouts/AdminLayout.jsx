@@ -1,14 +1,18 @@
 /**
- * Tours admin shell.
+ * Tours & Festivals admin shell.
+ *
+ * Both are run by the district itself rather than by any vendor, so they are
+ * administered from one section rather than tours here and festivals over in
+ * the Global panel.
  *
  * Same dark rail as the Food, Taxi and Hotel admin panels, and it renders the
- * shared AdminModuleSwitcher — without which entering Tours was a one-way trip
- * with no way back to the other modules.
+ * shared AdminModuleSwitcher — without which entering this section was a
+ * one-way trip with no way back to the other modules.
  */
 import React, { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-    LayoutDashboard, Users, Package, Calendar, Wallet, Settings,
+    LayoutDashboard, Package, Calendar, Settings, Ticket,
     Search, LogOut, X, ChevronLeft, ChevronRight, PlusCircle, Star, MapPin, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -20,11 +24,10 @@ const BASE = '/tours/admin';
 
 const MENU_ITEMS = [
     { icon: LayoutDashboard, label: 'Dashboard', path: `${BASE}/dashboard` },
-    { icon: Users, label: 'Operators', path: `${BASE}/operators` },
     { icon: Package, label: 'Packages', path: `${BASE}/packages` },
     { icon: PlusCircle, label: 'Create Package', path: `${BASE}/packages/new` },
     { icon: Calendar, label: 'Bookings', path: `${BASE}/bookings` },
-    { icon: Wallet, label: 'Payouts', path: `${BASE}/payouts` },
+    { icon: Ticket, label: 'Festivals', path: `${BASE}/festivals` },
     { icon: Star, label: 'Reviews', path: `${BASE}/reviews` },
     { icon: MapPin, label: 'Tourist Places', path: `${BASE}/destinations` },
     { icon: Tag, label: 'Offers', path: `${BASE}/offers` },
@@ -89,7 +92,7 @@ const AdminLayout = () => {
                                     <div className="mt-1 flex items-center gap-1.5">
                                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                         <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                                            Tours Admin
+                                            Tours &amp; Festivals
                                         </span>
                                     </div>
                                 </div>
@@ -179,7 +182,7 @@ const AdminLayout = () => {
 
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shadow-sm z-10 shrink-0">
-                    <h1 className="text-xl font-bold text-gray-800">Tours &amp; Travels</h1>
+                    <h1 className="text-xl font-bold text-gray-800">Tours &amp; Festivals</h1>
                     <div className="h-8 w-8 rounded-full bg-neutral-950 text-white flex items-center justify-center font-bold text-sm">
                         A
                     </div>

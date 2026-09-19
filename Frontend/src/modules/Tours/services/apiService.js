@@ -1,25 +1,18 @@
 /**
- * Axios instance for the tours panels.
+ * Axios instance for the tours panel.
  *
  * The shared client in services/api/axios.js picks its token from the URL and
- * would hand an operator the *consumer* token, so tours resolves its own:
- * admin screens use the platform admin session, operator screens use the
- * operator token issued by the tours-operator audience.
+ * would hand these screens the *consumer* token, so tours resolves its own:
+ * the platform admin session, which is the only session this module has now
+ * that it is single-vendor.
  */
 import axios from 'axios';
 import { API_BASE_URL } from '../config/apiConfig';
 
-export const OPERATOR_TOKEN_KEY = 'tours_operator_token';
-
 const api = axios.create({ baseURL: API_BASE_URL, timeout: 20000 });
 
-const resolveToken = () => {
-  const path = String(window.location?.pathname || '');
-  if (path.includes('/tours/admin')) {
-    return localStorage.getItem('admin_accessToken') || localStorage.getItem('adminToken');
-  }
-  return localStorage.getItem(OPERATOR_TOKEN_KEY);
-};
+const resolveToken = () =>
+  localStorage.getItem('admin_accessToken') || localStorage.getItem('adminToken');
 
 api.interceptors.request.use((config) => {
   const token = resolveToken();
@@ -37,7 +30,7 @@ const request = async (promise) => {
     const thrown = typeof body === 'object' && body !== null
       ? { ...body }
       : { message: body || error.message || 'Request failed' };
-    // Callers branch on this (a 401 signs the operator out), and axios buries it.
+    // Callers branch on this (a 401 signs the admin out), and axios buries it.
     thrown.status = error.response?.status ?? 0;
     throw thrown;
   }

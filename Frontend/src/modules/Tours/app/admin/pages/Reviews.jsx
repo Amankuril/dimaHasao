@@ -90,7 +90,7 @@ const Reviews = () => {
                     {review.packageId?.title || 'Package'}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {review.operatorId?.agencyName || review.operatorId?.name || 'Operator'}
+                    {review.packageId?.title || 'Package'}
                     {' · '}
                     {review.userId?.name || 'Traveller'}
                     {' · '}
@@ -109,7 +109,7 @@ const Reviews = () => {
 
               {review.reply && (
                 <p className="text-xs text-emerald-900 bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
-                  <span className="font-bold">Operator replied: </span>{review.reply}
+                  <span className="font-bold">Replied: </span>{review.reply}
                 </p>
               )}
 

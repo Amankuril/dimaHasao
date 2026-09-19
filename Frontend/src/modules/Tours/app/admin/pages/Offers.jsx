@@ -20,7 +20,7 @@ const BLANK = {
   discountType: 'percentage', discountValue: '', maxDiscount: '', minBookingAmount: '',
   startDate: '', endDate: '',
   usageLimit: 1000, userLimit: 1,
-  packageIds: [], operatorIds: [],
+  packageIds: [],
   isActive: true,
 };
 
@@ -35,7 +35,6 @@ const fromOffer = (o) => (!o ? BLANK : {
   startDate: dateInput(o.startDate),
   endDate: dateInput(o.endDate),
   packageIds: (o.packageIds || []).map(String),
-  operatorIds: (o.operatorIds || []).map(String),
 });
 
 const rupees = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
@@ -47,7 +46,6 @@ const worthOf = (o) => (o.discountType === 'flat'
 
 const Offers = () => {
   const [offers, setOffers] = useState([]);
-  const [operators, setOperators] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null = list, {} = new, {...} = edit
@@ -73,9 +71,6 @@ const Offers = () => {
   // Scope lists are only needed by the form; failing to load one should narrow
   // the choices, not stop an admin creating a platform-wide code.
   useEffect(() => {
-    adminService.getOperators({ status: 'approved' })
-      .then((d) => setOperators(d.operators || []))
-      .catch(() => setOperators([]));
     adminService.getPackages({ status: 'approved' })
       .then((d) => setPackages(d.packages || []))
       .catch(() => setPackages([]));
@@ -225,7 +220,7 @@ const Offers = () => {
           )}
           <p className="text-xs text-gray-400">
             The discount comes off the fare. Tax and the platform commission are still
-            charged on the undiscounted fare, so the operator funds the offer.
+            charged on the undiscounted fare.
           </p>
         </section>
 
@@ -267,21 +262,6 @@ const Offers = () => {
                     <input type="checkbox" checked={form.packageIds.includes(String(p._id))}
                       onChange={() => toggleScope('packageIds', String(p._id))} />
                     <span className="truncate">{p.title}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className={label}>Operators</label>
-              <div className="border border-gray-200 rounded-xl max-h-52 overflow-y-auto divide-y divide-gray-100">
-                {operators.length === 0 ? (
-                  <p className="text-xs text-gray-400 p-3">No approved operators.</p>
-                ) : operators.map((o) => (
-                  <label key={o._id} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50">
-                    <input type="checkbox" checked={form.operatorIds.includes(String(o._id))}
-                      onChange={() => toggleScope('operatorIds', String(o._id))} />
-                    <span className="truncate">{o.agencyName || o.name}</span>
                   </label>
                 ))}
               </div>
@@ -354,7 +334,6 @@ const Offers = () => {
                     Used {o.usageCount}{o.usageLimit > 0 ? ` of ${o.usageLimit}` : ''}
                     {o.minBookingAmount > 0 ? ` · min ${rupees(o.minBookingAmount)}` : ''}
                     {o.packageIds?.length ? ` · ${o.packageIds.length} package(s)` : ''}
-                    {o.operatorIds?.length ? ` · ${o.operatorIds.length} operator(s)` : ''}
                     {o.endDate ? ` · until ${new Date(o.endDate).toLocaleDateString('en-IN')}` : ''}
                   </p>
                 </div>

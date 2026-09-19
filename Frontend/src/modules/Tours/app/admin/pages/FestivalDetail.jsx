@@ -14,7 +14,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft, Loader2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import globalService from '../../../services/globalService';
+import festivalService from '../../../services/festivalService';
 
 const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
@@ -55,7 +55,7 @@ const FestivalDetail = ({ festivalId, onBack }) => {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      setData(await globalService.getFestivalSummary(festivalId, { status }));
+      setData(await festivalService.getFestivalSummary(festivalId, { status }));
     } catch (error) {
       toast.error(error.message || 'Could not load this festival');
     } finally {

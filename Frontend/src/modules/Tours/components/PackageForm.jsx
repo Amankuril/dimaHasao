@@ -1,11 +1,11 @@
 /**
  * The one package form.
  *
- * Admin-on-behalf and the operator's own create/edit all render this, so the
+ * Create and edit both render this, so the
  * fields cannot drift apart — the same reasoning as `createPackage` on the
  * server, where both entry points share one document builder.
  *
- * Callers own whatever is specific to them (the admin's operator picker and
+ * Callers own whatever is specific to them (the create screen's publish toggle and
  * publish toggle) by passing it as `children`, and merge it into the payload
  * in their own `onSubmit`.
  */
@@ -199,12 +199,11 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
             <p className="text-gray-800">
               Traveller pays <strong>{currency(advancePreview.advance)}</strong> online
               {advancePreview.balance > 0 && (
-                <> and <strong>{currency(advancePreview.balance)}</strong> to the operator on the day</>
+                <> and <strong>{currency(advancePreview.balance)}</strong> on the day</>
               )}.
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Commission and tax are charged on the full trip value either way — the advance only
-              decides who is holding the cash.
+              Tax is charged on the full trip value either way.
             </p>
           </div>
         )}

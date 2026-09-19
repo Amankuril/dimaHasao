@@ -21,12 +21,11 @@ const UPLOAD_ROOT = API_BASE_URL.replace(/\/tours$/, '');
  * These calls used a bare axios instance with no Authorization header, which
  * worked only because the upload endpoints took no credentials at all. They do
  * now, so the token has to travel with the request. Tours panels run as either
- * an admin or an operator, so whichever session is present is used.
+ * the platform admin session.
  */
 const authHeaders = () => {
   const token =
     localStorage.getItem('admin_accessToken') ||
-    localStorage.getItem('operator_accessToken') ||
     localStorage.getItem('accessToken');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };

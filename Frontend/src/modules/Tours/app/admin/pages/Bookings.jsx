@@ -31,7 +31,7 @@ const Bookings = () => {
     <div className="space-y-4">
       <PageHeader
         title="Bookings"
-        subtitle="Advance is what the platform collected; the balance goes straight to the operator."
+        subtitle="Every trip booked across the district."
         action={
           <button type="button" onClick={load} className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" aria-label="Refresh">
             <RefreshCw size={14} />
@@ -57,21 +57,18 @@ const Bookings = () => {
               <tr>
                 <th className="p-4 font-semibold">Booking</th>
                 <th className="p-4 font-semibold">Package</th>
-                <th className="p-4 font-semibold">Operator</th>
                 <th className="p-4 font-semibold">Travel</th>
                 <th className="p-4 font-semibold text-right">Total</th>
                 <th className="p-4 font-semibold text-right">Advance</th>
                 <th className="p-4 font-semibold text-right">Balance</th>
-                <th className="p-4 font-semibold text-right">Commission</th>
-                <th className="p-4 font-semibold text-right">Payout</th>
                 <th className="p-4 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan="10"><Spinner /></td></tr>
+                <tr><td colSpan="7"><Spinner /></td></tr>
               ) : bookings.length === 0 ? (
-                <tr><td colSpan="10"><EmptyState message="No bookings yet." /></td></tr>
+                <tr><td colSpan="7"><EmptyState message="No bookings yet." /></td></tr>
               ) : (
                 bookings.map((b) => (
                   <tr key={b._id} className="hover:bg-gray-50/60">
@@ -80,7 +77,6 @@ const Bookings = () => {
                       <p className="text-[10px] text-gray-400">{b.travellerContact?.name || '—'}</p>
                     </td>
                     <td className="p-4 text-xs text-gray-700">{(b.packageId || {}).title || '—'}</td>
-                    <td className="p-4 text-xs text-gray-600">{(b.operatorId || {}).agencyName || '—'}</td>
                     <td className="p-4 text-xs text-gray-600">
                       <p>{shortDate(b.travelDate)}</p>
                       <p className="text-[10px] text-gray-400">{b.totalTravellers} traveller(s)</p>
@@ -97,8 +93,6 @@ const Bookings = () => {
                         </span>
                       ) : '—'}
                     </td>
-                    <td className="p-4 text-right text-amber-700">{currency(b.adminCommission)}</td>
-                    <td className="p-4 text-right font-bold text-[#0a4d2b]">{currency(b.operatorPayout)}</td>
                     <td className="p-4">
                       <StatusPill status={b.bookingStatus} />
                       <span className="block mt-1"><StatusPill status={b.paymentStatus} /></span>

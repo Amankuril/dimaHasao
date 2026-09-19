@@ -36,15 +36,6 @@ const request = async (promise) => {
   }
 };
 
-/** Festivals live at their own API root, not under /admin. */
-const festivalApi = axios.create({ baseURL: `${API_ROOT}/festivals`, timeout: 20000 });
-festivalApi.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem('admin_accessToken') || localStorage.getItem('adminToken');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
 const globalService = {
   getMyProfile: () => request(api.get('/me')),
   updateMyProfile: (payload) => request(api.patch('/me', payload)),
@@ -54,18 +45,6 @@ const globalService = {
   getAdministrators: () => request(api.get('/administrators')),
   createAdministrator: (payload) => request(api.post('/administrators', payload)),
   updateAdministrator: (id, payload) => request(api.patch(`/administrators/${id}`, payload)),
-
-  // Festivals — platform-run events, so they belong to Global rather than to
-  // any one module.
-  getFestivals: () => request(festivalApi.get('/admin')),
-  createFestival: (payload) => request(festivalApi.post('/admin', payload)),
-  updateFestival: (id, payload) => request(festivalApi.put(`/admin/${id}`, payload)),
-  toggleFestival: (id, isActive) => request(festivalApi.patch(`/admin/${id}/active`, { isActive })),
-  deleteFestival: (id) => request(festivalApi.delete(`/admin/${id}`)),
-  getFestivalBookings: (params = {}) => request(festivalApi.get('/admin/bookings', { params })),
-  /** One festival: seat status per category, plus every booking behind it. */
-  getFestivalSummary: (id, params = {}) => request(festivalApi.get(`/admin/${id}/bookings`, { params })),
-  verifyFestivalPass: (qrCode) => request(festivalApi.post('/admin/bookings/verify', { qrCode })),
 
   // Support — one desk for every module's tickets.
   getSupportTickets: (params = {}) => request(api.get('/support', { params })),

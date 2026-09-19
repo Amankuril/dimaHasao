@@ -26,7 +26,6 @@ const Settings = () => {
       const data = await adminService.updateSettings({
         platformOpen: settings.platformOpen,
         bookingDisabledMessage: settings.bookingDisabledMessage,
-        defaultCommission: Number(settings.defaultCommission),
         taxRate: Number(settings.taxRate),
       });
       setSettings(data.settings);
@@ -51,8 +50,6 @@ const Settings = () => {
       <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={label}>Platform commission %</label>
-            <input type="number" min="0" max="100" value={settings.defaultCommission} onChange={set('defaultCommission')} className={field} />
             <p className="text-xs text-gray-400 mt-1.5">Charged on the full trip value, not on the advance.</p>
           </div>
           <div>

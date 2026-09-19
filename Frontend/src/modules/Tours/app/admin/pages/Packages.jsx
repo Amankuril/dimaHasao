@@ -34,7 +34,7 @@ const Packages = () => {
   const decide = async (pkg, next) => {
     let reason;
     if (next === 'rejected') {
-      // The server requires this, and the operator sees it.
+      // The server requires this.
       reason = window.prompt('Why is this package being rejected?', '');
       if (!reason || !reason.trim()) return;
     }
@@ -61,7 +61,7 @@ const Packages = () => {
               to="/tours/admin/packages/new"
               className="flex items-center gap-2 px-4 py-2 bg-neutral-950 text-white rounded-lg text-xs font-bold hover:bg-neutral-800"
             >
-              <PlusCircle size={14} /> Create for an operator
+              <PlusCircle size={14} /> Create a package
             </Link>
             <button type="button" onClick={load} className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" aria-label="Refresh">
               <RefreshCw size={14} />
@@ -91,18 +91,16 @@ const Packages = () => {
             <thead className="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500">
               <tr>
                 <th className="p-4 font-semibold">Package</th>
-                <th className="p-4 font-semibold">Operator</th>
                 <th className="p-4 font-semibold text-right">Price</th>
-                <th className="p-4 font-semibold text-right">Advance</th>
                 <th className="p-4 font-semibold">Status</th>
                 <th className="p-4 font-semibold">Review</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan="6"><Spinner /></td></tr>
+                <tr><td colSpan="4"><Spinner /></td></tr>
               ) : packages.length === 0 ? (
-                <tr><td colSpan="6"><EmptyState message="No packages here." /></td></tr>
+                <tr><td colSpan="4"><EmptyState message="No packages here." /></td></tr>
               ) : (
                 packages.map((pkg) => (
                   <tr key={pkg._id} className="hover:bg-gray-50/60">
@@ -113,11 +111,7 @@ const Packages = () => {
                         {pkg.createdBy === 'admin' && ' · created by admin'}
                       </p>
                     </td>
-                    <td className="p-4 text-xs text-gray-600">
-                      {(pkg.operatorId || {}).agencyName || (pkg.operatorId || {}).name || '—'}
-                    </td>
                     <td className="p-4 text-right font-bold text-gray-900">{currency(pkg.pricePerPerson)}</td>
-                    <td className="p-4 text-right text-xs text-gray-600">{pkg.advancePercent}%</td>
                     <td className="p-4">
                       <StatusPill status={pkg.status} />
                       {!pkg.isActive && (

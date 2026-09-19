@@ -109,7 +109,7 @@ export default function AdminModuleSwitcher({ isCollapsed = false, className }) 
       {showToursTab && (
         <button type="button" onClick={() => switchAdminModule(TOURS_ADMIN_HOME)} className={tabClass(isToursActive)}>
           <Compass className={iconClass(isToursActive)} />
-          Tours
+          Tours &amp; Festivals
         </button>
       )}
       {showGlobalTab && (

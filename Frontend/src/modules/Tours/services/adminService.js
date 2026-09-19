@@ -4,17 +4,12 @@ import { toursApi } from './apiService';
 const adminService = {
   getDashboard: () => toursApi.get('/admin/dashboard'),
 
-  // Operators
-  getOperators: (params = {}) => toursApi.get('/admin/operators', { params }),
-  getOperatorDetail: (id) => toursApi.get(`/admin/operators/${id}`),
-  updateOperatorApproval: (id, status, reason) =>
-    toursApi.patch(`/admin/operators/${id}/approval`, { status, reason }),
-  updateOperatorBlock: (id, isBlocked) =>
-    toursApi.patch(`/admin/operators/${id}/block`, { isBlocked }),
-
   // Packages
   getPackages: (params = {}) => toursApi.get('/admin/packages', { params }),
-  createPackageForOperator: (payload) => toursApi.post('/admin/packages', payload),
+  createPackage: (payload) => toursApi.post('/admin/packages', payload),
+  updatePackage: (id, payload) => toursApi.put(`/admin/packages/${id}`, payload),
+  togglePackage: (id, isActive) => toursApi.patch(`/admin/packages/${id}/active`, { isActive }),
+  deletePackage: (id) => toursApi.delete(`/admin/packages/${id}`),
   updatePackageStatus: (id, status, reason) =>
     toursApi.patch(`/admin/packages/${id}/status`, { status, reason }),
 
@@ -35,14 +30,12 @@ const adminService = {
   // Reviews
   getReviews: (params = {}) => toursApi.get('/admin/reviews', { params }),
   updateReviewStatus: (id, status) => toursApi.patch(`/admin/reviews/${id}/status`, { status }),
+  replyToReview: (id, reply) => toursApi.post(`/admin/reviews/${id}/reply`, { reply }),
 
   // Bookings
   getBookings: (params = {}) => toursApi.get('/admin/bookings', { params }),
-
-  // Payouts
-  getWithdrawals: (params = {}) => toursApi.get('/admin/withdrawals', { params }),
-  updateWithdrawalStatus: (id, payload) =>
-    toursApi.patch(`/admin/withdrawals/${id}/status`, payload),
+  updateBookingStatus: (id, status, reason) =>
+    toursApi.patch(`/admin/bookings/${id}/status`, { status, reason }),
 
   // Settings
   getSettings: () => toursApi.get('/admin/settings'),

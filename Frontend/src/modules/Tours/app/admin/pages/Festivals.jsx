@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Loader2, Plus, QrCode, Save, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import globalService from '../../../services/globalService';
+import festivalService from '../../../services/festivalService';
 import FestivalDetail from './FestivalDetail';
 
 const field =
@@ -80,7 +80,7 @@ const Festivals = () => {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await globalService.getFestivals();
+      const data = await festivalService.getFestivals();
       setFestivals(data.festivals || []);
     } catch (error) {
       toast.error(error.message || 'Failed to load festivals');
@@ -141,8 +141,8 @@ const Festivals = () => {
     try {
       setSaving(true);
       const result = editing?._id
-        ? await globalService.updateFestival(editing._id, payload)
-        : await globalService.createFestival(payload);
+        ? await festivalService.updateFestival(editing._id, payload)
+        : await festivalService.createFestival(payload);
       toast.success(result.message || 'Saved');
       closeForm();
       await load();
@@ -156,7 +156,7 @@ const Festivals = () => {
   const toggle = async (f) => {
     try {
       setBusyId(f._id);
-      await globalService.toggleFestival(f._id, !f.isActive);
+      await festivalService.toggleFestival(f._id, !f.isActive);
       await load();
     } catch (error) {
       toast.error(error.message || 'Could not update this festival');
@@ -169,7 +169,7 @@ const Festivals = () => {
     if (confirmingId !== f._id) return setConfirmingId(f._id);
     try {
       setBusyId(f._id);
-      await globalService.deleteFestival(f._id);
+      await festivalService.deleteFestival(f._id);
       toast.success('Festival deleted');
       setConfirmingId(null);
       await load();
@@ -187,7 +187,7 @@ const Festivals = () => {
     if (!scan.trim()) return;
     try {
       setScanning(true);
-      const result = await globalService.verifyFestivalPass(scan.trim().toUpperCase());
+      const result = await festivalService.verifyFestivalPass(scan.trim().toUpperCase());
       setScanResult({ ok: true, ...result });
       setScan('');
     } catch (error) {
