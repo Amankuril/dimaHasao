@@ -6,7 +6,7 @@ import { HelpCircle, ArrowRight, Phone, Ambulance, AlertTriangle, Shield, Shield
 import { toast } from "sonner";
 import { deliveryAPI } from "@food/api";
 import { useCompanyName } from "@food/hooks/useCompanyName";
-import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings";
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -61,32 +61,11 @@ function BottomPopup({
 export default function FeedNavbar({ className = "" }) {
   const companyName = useCompanyName()
   const navigate = useNavigate();
-  const [logoUrl, setLogoUrl] = useState(null)
-
-  // Load logo for branding
-  useEffect(() => {
-    const loadLogo = async () => {
-      const cached = getCachedSettings()
-      if (cached?.logo?.url) {
-        setLogoUrl(cached.logo.url)
-      } else {
-        const settings = await loadBusinessSettings()
-        if (settings?.logo?.url) {
-          setLogoUrl(settings.logo.url)
-        }
-      }
-    }
-    loadLogo()
-
-    const handleSettingsUpdate = () => {
-      const cached = getCachedSettings()
-      if (cached?.logo?.url) {
-        setLogoUrl(cached.logo.url)
-      }
-    }
-    window.addEventListener('businessSettingsUpdated', handleSettingsUpdate)
-    return () => window.removeEventListener('businessSettingsUpdated', handleSettingsUpdate)
-  }, [])
+  /*
+   * The navbar used to fetch business settings on every mount purely to find a
+   * logo URL. The mark is a constant now, so that request — and the settings
+   * listener behind it — went with it.
+   */
 
   const normalizePhoneForDial = (value) => String(value || "").replace(/[^\d]/g, "");
 
@@ -413,9 +392,12 @@ export default function FeedNavbar({ className = "" }) {
     >
         {/* Logo and Online/Offline Toggle */}
       <div className="flex items-center gap-3">
-        {logoUrl && (
-          <img src={logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
-        )}
+        <img
+          src={DRIVER_BRAND_LOGO}
+          onError={logoFallback}
+          alt="Dima Hasao Tourism"
+          className="h-8 w-8 object-contain"
+        />
         <div className="relative" style={{ zIndex: 100 }}>
           <button
             onClick={handleToggle}

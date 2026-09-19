@@ -8,6 +8,7 @@ import { useUserTheme } from '../../../../shared/context/UserThemeContext';
 import { uploadService } from '../../../../shared/services/uploadService';
 import yellowTaxiLoginBg from '../../../../assets/images/yellow_taxi_login_bg.png';
 import { toast } from 'react-hot-toast';
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const PENDING_SIGNUP_PHONE_KEY = 'pendingUserSignupPhone';
 const PENDING_SIGNUP_REFERRAL_CODE_KEY = 'pendingUserSignupReferralCode';
@@ -63,8 +64,11 @@ const Signup = () => {
   const fileInputRef = useRef(null);
 
   const appName = settings.general?.app_name || 'Dima Hasao';
-  const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || '';
-
+  // One mark for the rider and delivery apps. Deliberately not the CMS
+  // logo setting: that still holds the old vendor artwork, and these two
+  // apps are meant to look like the district's, not like whatever is left
+  // configured in taxi settings.
+  const appLogo = DRIVER_BRAND_LOGO;
   const isValidPhone = /^\d{10}$/.test(formData.phone);
   const showHelperText = formData.phone.length > 0 && formData.phone.length < 10;
   const hasVerifiedSignupContext = Boolean(location.state?.otpVerified) || Boolean(preservedPhone);

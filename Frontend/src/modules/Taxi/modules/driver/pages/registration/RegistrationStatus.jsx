@@ -83,7 +83,11 @@ const RegistrationStatus = () => {
   const verificationStartedRef = useRef({});
 
   const appName = settings.general?.app_name || "App";
-  const appLogo = settings.general?.logo || settings.customization?.logo || DRIVER_BRAND_LOGO;
+  // One mark for the rider and delivery apps. Deliberately not the CMS
+  // logo setting: that still holds the old vendor artwork, and these two
+  // apps are meant to look like the district's, not like whatever is left
+  // configured in taxi settings.
+  const appLogo = DRIVER_BRAND_LOGO;
   const isVehicleReapproval = location.state?.statusReason === "vehicle-update" || driver?.approve === false;
   const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
 

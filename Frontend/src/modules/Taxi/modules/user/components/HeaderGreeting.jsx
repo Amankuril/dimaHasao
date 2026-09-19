@@ -12,6 +12,7 @@ const fallingCoins = [
 ];
 
 import { useSettings } from '../../../shared/context/SettingsContext';
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const HeaderGreeting = ({ floating = false, hideSearch = false }) => {
   const navigate = useNavigate();
@@ -20,7 +21,11 @@ const HeaderGreeting = ({ floating = false, hideSearch = false }) => {
   const { theme } = useUserTheme();
 
   const { settings, loading, hasBootstrapSettings } = useSettings();
-  const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || '';
+  // One mark for the rider and delivery apps. Deliberately not the CMS
+  // logo setting: that still holds the old vendor artwork, and these two
+  // apps are meant to look like the district's, not like whatever is left
+  // configured in taxi settings.
+  const appLogo = DRIVER_BRAND_LOGO;
   let appName = settings.general?.app_name || 'Dima Hasao ';
   if (appName === 'Dima Hasao') appName = 'Dima Hasao ';
   const [locationLabel, setLocationLabel] = useState(getSavedLocationLabel);

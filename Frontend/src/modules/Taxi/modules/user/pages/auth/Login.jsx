@@ -7,6 +7,7 @@ import { useSettings } from '../../../../shared/context/SettingsContext';
 import { useUserTheme } from '../../../../shared/context/UserThemeContext';
 import yellowTaxiLoginBg from '../../../../assets/images/yellow_taxi_login_bg.png';
 import { toast } from 'react-hot-toast';
+import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const extractLoginErrorMessage = (error) => {
   if (typeof error === 'string') {
@@ -68,8 +69,11 @@ const Login = () => {
   const [showInput, setShowInput] = useState(false);
 
   const appName = settings.general?.app_name || 'Dima Hasao';
-  const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || '';
-
+  // One mark for the rider and delivery apps. Deliberately not the CMS
+  // logo setting: that still holds the old vendor artwork, and these two
+  // apps are meant to look like the district's, not like whatever is left
+  // configured in taxi settings.
+  const appLogo = DRIVER_BRAND_LOGO;
   const userHomeRoute = useMemo(
     () => (location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '/user'),
     [location.pathname],

@@ -11,7 +11,11 @@ const LanguageSelect = () => {
     const location = useLocation();
     const { settings } = useSettings();
     const appName = settings.general?.app_name || 'App';
-    const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || DRIVER_BRAND_LOGO;
+    // One mark for the rider and delivery apps. Deliberately not the CMS
+    // logo setting: that still holds the old vendor artwork, and these two
+    // apps are meant to look like the district's, not like whatever is left
+    // configured in taxi settings.
+    const appLogo = DRIVER_BRAND_LOGO;
     const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('driver_lang') || 'english');
     const isAuthenticatedDriver = Boolean(getLocalDriverToken()) && !location.state?.registrationFlow;
     const authenticatedHome =

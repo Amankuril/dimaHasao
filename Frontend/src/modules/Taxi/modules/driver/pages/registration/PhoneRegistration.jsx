@@ -27,7 +27,11 @@ const PhoneRegistration = () => {
   const location = useLocation();
   const { settings } = useSettings();
   const appName = settings.general?.app_name || 'Dima Hasao Trawler';
-  const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || DRIVER_BRAND_LOGO;
+  // One mark for the rider and delivery apps. Deliberately not the CMS
+  // logo setting: that still holds the old vendor artwork, and these two
+  // apps are meant to look like the district's, not like whatever is left
+  // configured in taxi settings.
+  const appLogo = DRIVER_BRAND_LOGO;
   const storedSession = getStoredDriverRegistrationSession();
   const isOwnerPortal = location.pathname.startsWith('/taxi/owner');
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
