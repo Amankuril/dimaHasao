@@ -58,16 +58,10 @@ export const adaptFestival = (f = {}) => {
 };
 
 /** Every published festival. */
-export const fetchFestivals = (params = {}) =>
-  // Inventory TTL: the list prints remaining seats per festival.
-  cachedRead(
-    keyFor('festival:list', params),
-    async () => {
-      const body = unwrap(await apiClient.get('/festivals', { params }));
-      return asArray(body.festivals).map(adaptFestival);
-    },
-    { ttl: TTL.INVENTORY },
-  );
+export const fetchFestivals = async (params = {}) => {
+  const body = unwrap(await apiClient.get('/festivals', { params }));
+  return asArray(body.festivals).map(adaptFestival);
+};
 
 /** One festival, by id or slug. */
 export const fetchFestivalById = (id) => {

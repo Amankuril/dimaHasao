@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchPackages, PACKAGE_TYPES } from '../services/toursApi';
 import { PackageCard } from '../components/tour/PackageCard';
 import { Header } from '../components/layout/Header';
@@ -10,25 +11,23 @@ export const TourPackageListScreen = () => {
   const [selectedType, setSelectedType] = useState('All');
   const [sortBy, setSortBy] = useState('popular');
 
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  /*
+   * Cached by React Query, so returning to this screen paints from cache with
+   * no spinner and refreshes quietly behind it. Error text is unchanged.
+   */
+  const {
+    data: packages = [],
+    isPending: loading,
+    error,
+  } = useQuery({ queryKey: ['tour-packages'], queryFn: () => fetchPackages() });
+
+  const loadError = error ? error?.response?.data?.message || 'Could not load packages. Please try again.' : '';
 
   const packageTypes = ['All', ...PACKAGE_TYPES];
 
   // Fetched once and filtered in the browser: the catalogue is small, and
   // searching on every keystroke against the server would be a request per
   // character for no benefit at this size.
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchPackages()
-      .then((list) => { if (!cancelled) { setPackages(list); setLoadError(''); } })
-      .catch(() => { if (!cancelled) setLoadError('We could not load tour packages just now.'); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-
-    return () => { cancelled = true; };
-  }, []);
 
   const filteredPackages = useMemo(() => {
     return packages.filter((pkg) => {

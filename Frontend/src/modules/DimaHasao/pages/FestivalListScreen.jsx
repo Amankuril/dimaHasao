@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '../router';
 import { fetchFestivals } from '../services/festivalApi';
 import { Header } from '../components/layout/Header';
@@ -8,20 +9,18 @@ import { motion } from 'framer-motion';
 export const FestivalListScreen = () => {
   const navigate = useNavigate();
 
-  const [festivals, setFestivals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  /*
+   * Cached by React Query, so returning to this screen paints from cache with
+   * no spinner and refreshes quietly behind it. Error text is unchanged.
+   */
+  const {
+    data: festivals = [],
+    isPending: loading,
+    error,
+  } = useQuery({ queryKey: ['festivals'], queryFn: () => fetchFestivals() });
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadError = error ? error?.response?.data?.message || 'We could not load festivals just now.' : '';
 
-    fetchFestivals()
-      .then((list) => { if (!cancelled) { setFestivals(list); setLoadError(''); } })
-      .catch(() => { if (!cancelled) setLoadError('We could not load festivals just now.'); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-
-    return () => { cancelled = true; };
-  }, []);
 
   // The banner spotlights whichever festival an admin sorted first, rather
   // than a hard-coded index into a fixture file.

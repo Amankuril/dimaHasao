@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchDestinations } from '../services/toursApi';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
@@ -10,9 +11,17 @@ export const TouristPlacesList = () => {
   const [searchFilter, setSearchFilter] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
 
-  const [places, setPlaces] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  /*
+   * Cached by React Query, so returning to this screen paints from cache with
+   * no spinner and refreshes quietly behind it. Error text is unchanged.
+   */
+  const {
+    data: places = [],
+    isPending: loading,
+    error,
+  } = useQuery({ queryKey: ['destinations'], queryFn: () => fetchDestinations() });
+
+  const loadError = error ? error?.response?.data?.message || 'Could not load places. Please try again.' : '';
 
   const filterChips = [
     { id: 'all', label: 'All Places' },
@@ -24,16 +33,6 @@ export const TouristPlacesList = () => {
     { id: 'wildlife', label: 'Wildlife' }
   ];
 
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchDestinations()
-      .then((list) => { if (!cancelled) { setPlaces(list); setLoadError(''); } })
-      .catch(() => { if (!cancelled) setLoadError('We could not load destinations just now.'); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-
-    return () => { cancelled = true; };
-  }, []);
 
   // Filtered in the browser — the directory is small, and the chips used to
   // compare hard-coded ids, which silently broke as soon as a place was added.

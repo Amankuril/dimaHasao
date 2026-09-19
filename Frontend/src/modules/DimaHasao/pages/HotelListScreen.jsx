@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '../router';
 import { fetchHotels } from '../services/hotelApi';
 import { HotelCard } from '../components/hotel/HotelCard';
@@ -14,37 +15,28 @@ export const HotelListScreen = () => {
   const [guestCount, setGuestCount] = useState(2);
   const [nights, setNights] = useState(1);
 
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  /*
+   * Cached by React Query, so coming back to this list is instant: `data` is
+   * there on the first render and `isPending` is only true when there is
+   * genuinely nothing to show yet. A stale result still paints immediately
+   * and is replaced when the refetch behind it lands.
+   *
+   * The error message is unchanged from when this fetched by hand.
+   */
+  const {
+    data: hotels = [],
+    isPending: loading,
+    error,
+  } = useQuery({ queryKey: ['hotels'], queryFn: () => fetchHotels() });
+
+  const loadError = error
+    ? error?.response?.data?.message || 'Could not load stays. Please try again.'
+    : '';
 
   const propertyTypes = ['All', 'Resort', 'Homestay', 'Hotel', 'Lodge'];
 
   // Live stays from the hotel backend. Filtering and sorting stay client-side
   // so the existing chips and sort control keep working unchanged.
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      setLoading(true);
-      setLoadError('');
-      try {
-        const results = await fetchHotels();
-        if (!cancelled) setHotels(results);
-      } catch (err) {
-        if (!cancelled) {
-          setHotels([]);
-          setLoadError(
-            err?.response?.data?.message || 'Could not load stays. Please try again.',
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
 
   // Filtered & Sorted Hotels
   const filteredHotels = useMemo(() => {

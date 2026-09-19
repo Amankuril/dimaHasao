@@ -178,16 +178,21 @@ const unwrapList = (payload) => {
  * @returns {Promise<Array>} adapted properties ([] on failure — the screen
  *   shows its empty state rather than breaking)
  */
-export const fetchHotels = (params = {}) =>
-  cachedRead(keyFor('hotel:properties', params), async () => {
-    const query = {};
-    if (params.search) query.search = params.search;
-    if (params.type && params.type !== 'All') query.type = String(params.type).toLowerCase();
-    if (params.guests) query.guests = params.guests;
+/*
+ * Not cached here: the screen that calls this reads it through React Query,
+ * which owns the caching. A second cache underneath would hand the background
+ * refetch the same stale copy it already had, and the data would quietly stop
+ * updating.
+ */
+export const fetchHotels = async (params = {}) => {
+  const query = {};
+  if (params.search) query.search = params.search;
+  if (params.type && params.type !== 'All') query.type = String(params.type).toLowerCase();
+  if (params.guests) query.guests = params.guests;
 
-    const { data } = await hotelClient.get('/properties', { params: query });
-    return unwrapList(data).map(adaptProperty);
-  });
+  const { data } = await hotelClient.get('/properties', { params: query });
+  return unwrapList(data).map(adaptProperty);
+};
 
 /**
  * One stay, with its room types.

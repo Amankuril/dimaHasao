@@ -152,8 +152,7 @@ export const adaptPackage = (pkg = {}) => {
  * Live packages for the list screen.
  * @param {{search?: string, category?: string, sort?: string}} [params]
  */
-export const fetchPackages = (params = {}) =>
-  cachedRead(keyFor('tours:packages', params), async () => {
+export const fetchPackages = async (params = {}) => {
   const query = {};
   if (params.search) query.search = params.search;
   if (params.category && params.category !== 'all') query.category = params.category;
@@ -161,7 +160,7 @@ export const fetchPackages = (params = {}) =>
 
   const body = unwrap(await apiClient.get('/tours/packages', { params: query }));
   return asArray(body.packages).map(adaptPackage);
-  });
+};
 
 /** One package, with its approved reviews. */
 export const fetchPackageById = (id) => {
@@ -341,15 +340,14 @@ export const adaptDestination = (d = {}, index = 0) => ({
 });
 
 /** The published destination directory. */
-export const fetchDestinations = (params = {}) =>
-  cachedRead(keyFor('tours:destinations', params), async () => {
+export const fetchDestinations = async (params = {}) => {
   const query = {};
   if (params.category && params.category !== 'all') query.category = params.category;
   if (params.search) query.search = params.search;
 
   const body = unwrap(await apiClient.get('/tours/destinations', { params: query }));
   return asArray(body.destinations).map(adaptDestination);
-  });
+};
 
 /** One destination, plus the live tour packages that visit it. */
 export const fetchDestinationById = (id) => {
