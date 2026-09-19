@@ -11,6 +11,7 @@
  * token and handles refresh.
  */
 import apiClient from '../../../services/api/axios';
+import { cachedRead, invalidate, keyFor, TTL } from './cache';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 const unwrap = (res) => res?.data?.data ?? res?.data ?? {};
@@ -151,7 +152,8 @@ export const adaptPackage = (pkg = {}) => {
  * Live packages for the list screen.
  * @param {{search?: string, category?: string, sort?: string}} [params]
  */
-export const fetchPackages = async (params = {}) => {
+export const fetchPackages = (params = {}) =>
+  cachedRead(keyFor('tours:packages', params), async () => {
   const query = {};
   if (params.search) query.search = params.search;
   if (params.category && params.category !== 'all') query.category = params.category;
@@ -159,17 +161,18 @@ export const fetchPackages = async (params = {}) => {
 
   const body = unwrap(await apiClient.get('/tours/packages', { params: query }));
   return asArray(body.packages).map(adaptPackage);
-};
+  });
 
 /** One package, with its approved reviews. */
-export const fetchPackageById = async (id) => {
-  if (!id) return null;
+export const fetchPackageById = (id) => {
+  if (!id) return Promise.resolve(null);
+  return cachedRead(keyFor('tours:package', id), async () => {
+    const body = unwrap(await apiClient.get(`/tours/packages/${encodeURIComponent(id)}`));
+    const pkg = body.package;
+    if (!pkg || !(pkg._id || pkg.id)) return null;
 
-  const body = unwrap(await apiClient.get(`/tours/packages/${encodeURIComponent(id)}`));
-  const pkg = body.package;
-  if (!pkg || !(pkg._id || pkg.id)) return null;
-
-  return adaptPackage({ ...pkg, reviews: body.reviews });
+    return adaptPackage({ ...pkg, reviews: body.reviews });
+  });
 };
 
 /**
@@ -191,23 +194,32 @@ export const fetchTourOffers = async (packageId) =>
   unwrap(await apiClient.get('/tours/offers', { params: { packageId } })).offers || [];
 
 /** Create the booking. Returns the booking plus the amount payable now. */
-export const createBooking = async (payload) =>
-  unwrap(await apiClient.post('/tours/bookings', payload));
+export const createBooking = async (payload) => {
+  const result = unwrap(await apiClient.post('/tours/bookings', payload));
+  invalidate('tours:bookings');
+  return result;
+};
 
 /** Open a Razorpay order for the advance. */
 export const createPaymentOrder = async (bookingId) =>
   unwrap(await apiClient.post(`/tours/payments/bookings/${bookingId}/order`));
 
 /** Confirm the booking with Razorpay's signature. */
-export const verifyPayment = async (bookingId, payload) =>
-  unwrap(await apiClient.post(`/tours/payments/bookings/${bookingId}/verify`, payload));
+export const verifyPayment = async (bookingId, payload) => {
+  const result = unwrap(await apiClient.post(`/tours/payments/bookings/${bookingId}/verify`, payload));
+  invalidate('tours:bookings');
+  return result;
+};
 
 /**
  * Confirm without a gateway. The server refuses this whenever Razorpay *is*
  * configured, so it can never become a way to book a trip without paying.
  */
-export const settleWithoutGateway = async (bookingId) =>
-  unwrap(await apiClient.post(`/tours/bookings/${bookingId}/settle`, {}));
+export const settleWithoutGateway = async (bookingId) => {
+  const result = unwrap(await apiClient.post(`/tours/bookings/${bookingId}/settle`, {}));
+  invalidate('tours:bookings');
+  return result;
+};
 
 const STATUS_LABELS = {
   pending: 'Awaiting Payment',
@@ -276,10 +288,15 @@ export const adaptBooking = (booking = {}) => {
 };
 
 /** The signed-in traveller's tour bookings. */
-export const fetchMyBookings = async () => {
-  const body = unwrap(await apiClient.get('/tours/bookings/my'));
-  return asArray(body.bookings).map(adaptBooking);
-};
+export const fetchMyBookings = () =>
+  cachedRead(
+    'tours:bookings',
+    async () => {
+      const body = unwrap(await apiClient.get('/tours/bookings/my'));
+      return asArray(body.bookings).map(adaptBooking);
+    },
+    { ttl: TTL.MINE },
+  );
 
 /* ------------------------------------------------------------------ *
  * Tourist destinations (scope of work section 9)
@@ -324,31 +341,36 @@ export const adaptDestination = (d = {}, index = 0) => ({
 });
 
 /** The published destination directory. */
-export const fetchDestinations = async (params = {}) => {
+export const fetchDestinations = (params = {}) =>
+  cachedRead(keyFor('tours:destinations', params), async () => {
   const query = {};
   if (params.category && params.category !== 'all') query.category = params.category;
   if (params.search) query.search = params.search;
 
   const body = unwrap(await apiClient.get('/tours/destinations', { params: query }));
   return asArray(body.destinations).map(adaptDestination);
-};
+  });
 
 /** One destination, plus the live tour packages that visit it. */
-export const fetchDestinationById = async (id) => {
-  if (!id) return null;
+export const fetchDestinationById = (id) => {
+  if (!id) return Promise.resolve(null);
+  return cachedRead(keyFor('tours:destination', id), async () => {
+    const body = unwrap(await apiClient.get(`/tours/destinations/${encodeURIComponent(id)}`));
+    if (!body.destination) return null;
 
-  const body = unwrap(await apiClient.get(`/tours/destinations/${encodeURIComponent(id)}`));
-  if (!body.destination) return null;
-
-  return {
-    ...adaptDestination(body.destination),
-    packages: asArray(body.packages).map(adaptPackage),
-  };
+    return {
+      ...adaptDestination(body.destination),
+      packages: asArray(body.packages).map(adaptPackage),
+    };
+  });
 };
 
 /** Review a completed trip. */
-export const createReview = async ({ bookingId, rating, comment }) =>
-  unwrap(await apiClient.post('/tours/reviews', { bookingId, rating, comment }));
+export const createReview = async ({ bookingId, rating, comment }) => {
+  const result = unwrap(await apiClient.post('/tours/reviews', { bookingId, rating, comment }));
+  invalidate('tours:package', 'tours:packages');
+  return result;
+};
 
 export default {
   fetchPackages,

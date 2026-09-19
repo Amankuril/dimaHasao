@@ -7,6 +7,7 @@
  * already render, so the UI is untouched — only its data source changes.
  */
 import apiClient from '../../../services/api/axios';
+import { cachedRead, invalidate, keyFor, TTL } from './cache';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 const unwrap = (res) => res?.data?.data ?? res?.data ?? {};
@@ -57,16 +58,30 @@ export const adaptFestival = (f = {}) => {
 };
 
 /** Every published festival. */
-export const fetchFestivals = async (params = {}) => {
-  const body = unwrap(await apiClient.get('/festivals', { params }));
-  return asArray(body.festivals).map(adaptFestival);
-};
+export const fetchFestivals = (params = {}) =>
+  // Inventory TTL: the list prints remaining seats per festival.
+  cachedRead(
+    keyFor('festival:list', params),
+    async () => {
+      const body = unwrap(await apiClient.get('/festivals', { params }));
+      return asArray(body.festivals).map(adaptFestival);
+    },
+    { ttl: TTL.INVENTORY },
+  );
 
 /** One festival, by id or slug. */
-export const fetchFestivalById = async (id) => {
-  if (!id) return null;
-  const body = unwrap(await apiClient.get(`/festivals/${encodeURIComponent(id)}`));
-  return body.festival ? adaptFestival(body.festival) : null;
+export const fetchFestivalById = (id) => {
+  if (!id) return Promise.resolve(null);
+  // Inventory TTL: this screen is where seats are chosen, so a stale count
+  // here is a booking that fails at checkout.
+  return cachedRead(
+    keyFor('festival:one', id),
+    async () => {
+      const body = unwrap(await apiClient.get(`/festivals/${encodeURIComponent(id)}`));
+      return body.festival ? adaptFestival(body.festival) : null;
+    },
+    { ttl: TTL.INVENTORY },
+  );
 };
 
 /** What the passes cost. Server-computed; the screen never derives a total. */
@@ -76,8 +91,11 @@ export const quotePasses = async ({ festivalId, ticketCategoryId, ticketCount })
   })).quote;
 
 /** Hold the passes. They are not yours until payment lands. */
-export const createFestivalBooking = async (payload) =>
-  unwrap(await apiClient.post('/festivals/bookings', payload));
+export const createFestivalBooking = async (payload) => {
+  const result = unwrap(await apiClient.post('/festivals/bookings', payload));
+  invalidate('festival:passes', 'festival:list', 'festival:one');
+  return result;
+};
 
 /**
  * A whole basket in one call — several categories, one payment.
@@ -85,34 +103,52 @@ export const createFestivalBooking = async (payload) =>
  * Replaces looping createFestivalBooking per category, which opened a separate
  * Razorpay window for each one.
  */
-export const checkoutFestivalBasket = async ({ festivalId, items, attendee }) =>
-  unwrap(await apiClient.post('/festivals/bookings/checkout', { festivalId, items, attendee }));
+export const checkoutFestivalBasket = async ({ festivalId, items, attendee }) => {
+  const result = unwrap(await apiClient.post('/festivals/bookings/checkout', { festivalId, items, attendee }));
+  invalidate('festival:passes', 'festival:list', 'festival:one');
+  return result;
+};
 
 /** One gateway order covering every booking in a checkout. */
 export const createGroupPaymentOrder = async (orderGroupId) =>
   unwrap(await apiClient.post(`/festivals/payments/orders/${orderGroupId}`));
 
 /** One signature, every booking in the basket confirmed. */
-export const verifyGroupPayment = async (orderGroupId, payload) =>
-  unwrap(await apiClient.post(`/festivals/payments/orders/${orderGroupId}/verify`, payload));
+export const verifyGroupPayment = async (orderGroupId, payload) => {
+  const result = unwrap(await apiClient.post(`/festivals/payments/orders/${orderGroupId}/verify`, payload));
+  invalidate('festival:passes', 'festival:list', 'festival:one');
+  return result;
+};
 
 /** Hand a basket's held seats back when the buyer abandons the payment. */
-export const releaseCheckout = async (orderGroupId) =>
-  unwrap(await apiClient.post(`/festivals/bookings/checkout/${orderGroupId}/release`, {}));
+export const releaseCheckout = async (orderGroupId) => {
+  const result = unwrap(await apiClient.post(`/festivals/bookings/checkout/${orderGroupId}/release`, {}));
+  invalidate('festival:list', 'festival:one');
+  return result;
+};
 
 /** Refused whenever Razorpay is configured, so it is a dev path only. */
-export const settleGroupWithoutGateway = async (orderGroupId) =>
-  unwrap(await apiClient.post(`/festivals/payments/orders/${orderGroupId}/settle`, {}));
+export const settleGroupWithoutGateway = async (orderGroupId) => {
+  const result = unwrap(await apiClient.post(`/festivals/payments/orders/${orderGroupId}/settle`, {}));
+  invalidate('festival:passes', 'festival:list', 'festival:one');
+  return result;
+};
 
 export const createPaymentOrder = async (bookingId) =>
   unwrap(await apiClient.post(`/festivals/payments/bookings/${bookingId}/order`));
 
-export const verifyPayment = async (bookingId, payload) =>
-  unwrap(await apiClient.post(`/festivals/payments/bookings/${bookingId}/verify`, payload));
+export const verifyPayment = async (bookingId, payload) => {
+  const result = unwrap(await apiClient.post(`/festivals/payments/bookings/${bookingId}/verify`, payload));
+  invalidate('festival:passes', 'festival:list', 'festival:one');
+  return result;
+};
 
 /** Refused whenever Razorpay is configured, so it is a dev path only. */
-export const settleWithoutGateway = async (bookingId) =>
-  unwrap(await apiClient.post(`/festivals/bookings/${bookingId}/settle`, {}));
+export const settleWithoutGateway = async (bookingId) => {
+  const result = unwrap(await apiClient.post(`/festivals/bookings/${bookingId}/settle`, {}));
+  invalidate('festival:passes', 'festival:list', 'festival:one');
+  return result;
+};
 
 const STATUS_LABELS = {
   pending: 'Awaiting Payment',
@@ -190,13 +226,21 @@ export const groupPasses = (passes = []) => {
   }));
 };
 
-export const fetchMyPasses = async () => {
-  const body = unwrap(await apiClient.get('/festivals/bookings/my'));
-  return asArray(body.bookings).map(adaptBooking);
-};
+export const fetchMyPasses = () =>
+  cachedRead(
+    'festival:passes',
+    async () => {
+      const body = unwrap(await apiClient.get('/festivals/bookings/my'));
+      return asArray(body.bookings).map(adaptBooking);
+    },
+    { ttl: TTL.MINE },
+  );
 
-export const cancelFestivalBooking = async (bookingId, reason) =>
-  unwrap(await apiClient.post(`/festivals/bookings/${bookingId}/cancel`, { reason }));
+export const cancelFestivalBooking = async (bookingId, reason) => {
+  const result = unwrap(await apiClient.post(`/festivals/bookings/${bookingId}/cancel`, { reason }));
+  invalidate('festival:passes', 'festival:list', 'festival:one');
+  return result;
+};
 
 export default {
   fetchFestivals,

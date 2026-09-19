@@ -43,43 +43,50 @@ export const MyBookingsScreen = () => {
             { id: 'tours', label: `Tours (${tourBookings.length})`, icon: 'fa-solid fa-suitcase-rolling' },
             { id: 'festivals', label: `Passes (${festivalBookings.length})`, icon: 'fa-solid fa-ticket' }
           ];
-          const activeIndex = bookingTabs.findIndex((t) => t.id === activeTab);
 
+          /*
+           * Scrolls sideways rather than dividing the width five ways. Five
+           * labels with icons and counts do not fit across a phone: they used
+           * to squeeze until the icons sat on top of the text.
+           *
+           * The active state is painted on the button itself. It used to be an
+           * absolutely positioned pill sized `calc((100% - 8px) / 4)` — four,
+           * while there were five tabs — so it was both too wide and parked
+           * one fifth away from whatever it was meant to be highlighting. A
+           * pill cannot follow a scrolling strip without re-deriving that
+           * arithmetic on every scroll, and this needs no arithmetic at all.
+           */
           return (
-            <div className="bg-[#ede8dc] p-1 rounded-2xl relative flex items-center border border-[#dfd6c4] shadow-xs">
-              {/* Smooth Horizontal Sliding Active Pill */}
-              <div
-                className="absolute top-1 bottom-1 rounded-xl bg-white shadow-xs border border-[#dfd6c4]/80 transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] pointer-events-none"
-                style={{
-                  left: '4px',
-                  width: 'calc((100% - 8px) / 4)',
-                  transform: `translateX(${activeIndex * 100}%)`
-                }}
-              />
+            <div className="bg-[#ede8dc] p-1 rounded-2xl border border-[#dfd6c4] shadow-xs overflow-x-auto scrollbar-none">
+              <div className="flex items-center gap-1 w-max min-w-full">
+                {bookingTabs.map((tab) => {
+                  const isActive = activeTab === tab.id;
 
-              {bookingTabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 py-2 px-1 text-[11px] rounded-xl transition-colors duration-200 flex items-center justify-center gap-1.5 relative z-10 cursor-pointer ${
-                      isActive
-                        ? 'text-[#06381e] font-extrabold'
-                        : 'text-stone-600 hover:text-stone-900 font-semibold'
-                    }`}
-                  >
-                    <i
-                      className={`${tab.icon} text-[10px] transition-colors duration-200 ${
-                        isActive ? 'text-[#06381e]' : 'text-stone-400'
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveTab(tab.id)}
+                      aria-pressed={isActive}
+                      // Keeps the chosen tab on screen when it sits off the
+                      // edge of the strip.
+                      ref={(el) => { if (el && isActive) el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }}
+                      className={`flex-none whitespace-nowrap py-2 px-3 text-[11px] rounded-xl transition-colors duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                        isActive
+                          ? 'bg-white border border-[#dfd6c4]/80 shadow-xs text-[#06381e] font-extrabold'
+                          : 'border border-transparent text-stone-600 hover:text-stone-900 font-semibold'
                       }`}
-                    ></i>
-                    <span className="truncate">{tab.label}</span>
-                  </button>
-                );
-              })}
+                    >
+                      <i
+                        className={`${tab.icon} text-[10px] transition-colors duration-200 ${
+                          isActive ? 'text-[#06381e]' : 'text-stone-400'
+                        }`}
+                      ></i>
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           );
         })()}

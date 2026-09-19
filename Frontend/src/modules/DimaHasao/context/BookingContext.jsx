@@ -6,6 +6,7 @@ import { fetchMyHotelBookings } from '../services/hotelApi';
 import { fetchMyRides } from '../services/taxiApi';
 import { fetchMyPasses } from '../services/festivalApi';
 import { isModuleAuthenticated, clearAuthData } from '../../../shared/utils/moduleAuth';
+import { clearCache } from '../services/cache';
 
 // v1's display labels -> the API's paymentMethod enum
 const PAYMENT_METHOD_MAP = {
@@ -245,6 +246,8 @@ export const BookingProvider = ({ children }) => {
   };
 
   const login = (phone, profile = null) => {
+    // Whoever was cached before this is not the person signing in now.
+    clearCache();
     const newUser = {
       name: profile?.name || 'Dima Explorer',
       phone: profile?.phone || phone || '',
@@ -260,6 +263,9 @@ export const BookingProvider = ({ children }) => {
     setUser({ name: 'Guest', phone: '', isLoggedIn: false });
     sessionStorage.removeItem('dima_user');
     clearAuthData();
+    // Cached bookings and orders belong to the person who just left. Clearing
+    // the token alone would leave the next person looking at their records.
+    clearCache();
     showToast('Logged out successfully');
   };
 

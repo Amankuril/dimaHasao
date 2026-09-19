@@ -1,5 +1,6 @@
 import apiClient from '../../../services/api/axios';
 import { normalizeImageUrl } from '../../Food/utils/common';
+import { cachedRead, invalidate, keyFor, TTL } from './cache';
 
 // Maps the Hello-Parth food API onto the shapes the approved v1 screens already
 // consume (see data/foodData.js), so no screen needs to change.
@@ -76,14 +77,16 @@ export const adaptMenu = (menu = {}) => {
   };
 };
 
-export const fetchRestaurants = async (params = {}) => {
-  const res = await apiClient.get('/food/restaurant/restaurants', { params });
-  const body = unwrap(res);
-  const list = asArray(body.restaurants ?? body.items ?? body.data ?? body);
-  return list.map(adaptRestaurant);
-};
+export const fetchRestaurants = (params = {}) =>
+  cachedRead(keyFor('food:restaurants', params), async () => {
+    const res = await apiClient.get('/food/restaurant/restaurants', { params });
+    const body = unwrap(res);
+    const list = asArray(body.restaurants ?? body.items ?? body.data ?? body);
+    return list.map(adaptRestaurant);
+  });
 
-export const fetchRestaurantWithMenu = async (id) => {
+export const fetchRestaurantWithMenu = (id) =>
+  cachedRead(keyFor('food:restaurant', id), async () => {
   const [listed, menuRes] = await Promise.all([
     apiClient
       .get(`/food/restaurant/restaurants/${id}`)
@@ -94,13 +97,16 @@ export const fetchRestaurantWithMenu = async (id) => {
 
   const base = adaptRestaurant(listed || { _id: id });
   return { ...base, ...adaptMenu(unwrap(menuRes, 'menu')) };
-};
+  });
 
 export const calculateOrder = async (payload) =>
   unwrap(await apiClient.post('/food/orders/calculate', payload));
 
-export const placeOrder = async (payload) =>
-  unwrap(await apiClient.post('/food/orders', payload));
+export const placeOrder = async (payload) => {
+  const result = unwrap(await apiClient.post('/food/orders', payload));
+  invalidate('food:orders', 'food:order');
+  return result;
+};
 
 const ORDER_STATUS = {
   pending: 'Placed',
@@ -152,10 +158,19 @@ export const adaptOrder = (order = {}) => {
   };
 };
 
-export const fetchMyOrders = async () => {
-  const body = unwrap(await apiClient.get('/food/orders'));
-  return asArray(body.orders ?? body.items ?? body).map(adaptOrder);
-};
+export const fetchMyOrders = () =>
+  cachedRead(
+    'food:orders',
+    async () => {
+      const body = unwrap(await apiClient.get('/food/orders'));
+      return asArray(body.orders ?? body.items ?? body).map(adaptOrder);
+    },
+    { ttl: TTL.MINE },
+  );
 
+/**
+ * One order. Not cached: this is what order tracking polls, and a cached
+ * status is the one thing that screen must never show.
+ */
 export const fetchOrderById = async (orderId) =>
   unwrap(await apiClient.get(`/food/orders/${orderId}`), 'order');

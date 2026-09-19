@@ -10,6 +10,7 @@ import axios from 'axios';
 // Reads go through the module-scoped client below; authenticated writes use the
 // shared client, which attaches the bearer token and handles refresh.
 import apiClient from '../../../services/api/axios';
+import { cachedRead, invalidate, keyFor, TTL } from './cache';
 
 const baseURL =
   typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL
@@ -177,24 +178,25 @@ const unwrapList = (payload) => {
  * @returns {Promise<Array>} adapted properties ([] on failure — the screen
  *   shows its empty state rather than breaking)
  */
-export const fetchHotels = async (params = {}) => {
-  const query = {};
-  if (params.search) query.search = params.search;
-  if (params.type && params.type !== 'All') query.type = String(params.type).toLowerCase();
-  if (params.guests) query.guests = params.guests;
+export const fetchHotels = (params = {}) =>
+  cachedRead(keyFor('hotel:properties', params), async () => {
+    const query = {};
+    if (params.search) query.search = params.search;
+    if (params.type && params.type !== 'All') query.type = String(params.type).toLowerCase();
+    if (params.guests) query.guests = params.guests;
 
-  const { data } = await hotelClient.get('/properties', { params: query });
-  return unwrapList(data).map(adaptProperty);
-};
+    const { data } = await hotelClient.get('/properties', { params: query });
+    return unwrapList(data).map(adaptProperty);
+  });
 
 /**
  * One stay, with its room types.
  * @param {string} id
  * @returns {Promise<Object|null>}
  */
-export const fetchHotelById = async (id) => {
-  if (!id) return null;
-
+export const fetchHotelById = (id) => {
+  if (!id) return Promise.resolve(null);
+  return cachedRead(keyFor('hotel:property', id), async () => {
   const [detail, reviews] = await Promise.all([
     hotelClient.get(`/properties/${encodeURIComponent(id)}`),
     // Reviews are a separate endpoint; a failure here must not hide the stay.
@@ -217,6 +219,7 @@ export const fetchHotelById = async (id) => {
     ...adaptProperty({ ...property, roomTypes }),
     reviews: reviews.map(adaptReview),
   };
+  });
 };
 
 /* ------------------------------------------------------------------ *
@@ -240,12 +243,18 @@ export const quoteStay = async ({ propertyId, roomTypeId, checkInDate, checkOutD
  * @returns {Promise<{booking, paymentRequired, order, key}>} `order` is present
  *   when the chosen method needs a gateway round-trip.
  */
-export const createHotelBooking = async (payload) =>
-  unwrap(await apiClient.post('/hotel/bookings', payload));
+export const createHotelBooking = async (payload) => {
+  const result = unwrap(await apiClient.post('/hotel/bookings', payload));
+  invalidate('hotel:bookings', 'hotel:property', 'hotel:properties');
+  return result;
+};
 
 /** Confirm a Razorpay payment against a booking. */
-export const verifyHotelPayment = async (payload) =>
-  unwrap(await apiClient.post('/hotel/payments/verify', payload));
+export const verifyHotelPayment = async (payload) => {
+  const result = unwrap(await apiClient.post('/hotel/payments/verify', payload));
+  invalidate('hotel:bookings', 'hotel:property', 'hotel:properties');
+  return result;
+};
 
 const STAY_STATUS = {
   pending: 'Awaiting Payment',
@@ -293,11 +302,16 @@ export const adaptBooking = (booking = {}) => {
 };
 
 /** The signed-in guest's stays. */
-export const fetchMyHotelBookings = async () => {
-  const body = unwrap(await apiClient.get('/hotel/bookings/my'));
-  const list = Array.isArray(body) ? body : body.bookings || [];
-  return list.map(adaptBooking);
-};
+export const fetchMyHotelBookings = () =>
+  cachedRead(
+    'hotel:bookings',
+    async () => {
+      const body = unwrap(await apiClient.get('/hotel/bookings/my'));
+      const list = Array.isArray(body) ? body : body.bookings || [];
+      return list.map(adaptBooking);
+    },
+    { ttl: TTL.MINE },
+  );
 
 export default {
   fetchHotels,
