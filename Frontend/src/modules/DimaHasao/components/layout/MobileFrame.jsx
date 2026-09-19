@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useNavigationType } from 'react-router-dom';
 import { useLocation } from '../../router';
 import { useBooking } from '../../context/BookingContext';
@@ -15,36 +15,39 @@ export const MobileFrame = ({ children }) => {
    * Where each history entry was scrolled to.
    *
    * Keyed by `location.key`, which identifies a history *entry* rather than a
-   * path: visiting the same list twice gives two entries with two positions,
-   * which is what you want when you have opened a different item from each.
+   * path: opening two different stays from the same list gives two entries
+   * with two positions, which is what you want on the way back.
    *
-   * A ref rather than state — writing it must never cause a render, it is
-   * written on every scroll frame.
+   * A ref, not state — writing it must never cause a render.
    */
   const scrollMemory = useRef(new Map());
 
-  // Record where we are, continuously, so there is something to go back to.
-  useEffect(() => {
+  /*
+   * Record the outgoing position, in a layout-effect *cleanup*.
+   *
+   * The timing is the whole trick. On a navigation React runs every layout
+   * effect cleanup before any new layout effect, so this reads the viewport
+   * while it is still scrolled where the person left it — a moment later the
+   * restore effect below has already moved it.
+   *
+   * The obvious implementation, saving on the container's scroll event, was
+   * tried first and is not reliable: this element does not emit scroll events
+   * in every environment, and when it does not, nothing is ever recorded.
+   */
+  useLayoutEffect(() => {
     const viewport = scrollViewportRef.current;
-    if (!viewport) return undefined;
-
-    const remember = () => {
-      scrollMemory.current.set(location.key, viewport.scrollTop);
-    };
-
-    viewport.addEventListener('scroll', remember, { passive: true });
+    const key = location.key;
     return () => {
-      remember();
-      viewport.removeEventListener('scroll', remember);
+      if (viewport) scrollMemory.current.set(key, viewport.scrollTop);
     };
   }, [location.key]);
 
   /*
    * Going back restores where you were; going somewhere new starts at the top.
    *
-   * Layout effect, not effect: this has to run before the browser paints, or
-   * the screen shows the top for a frame and then jumps, which looks worse
-   * than not restoring at all.
+   * Layout effect so it lands before the browser paints — otherwise the screen
+   * shows the top for a frame and then jumps, which looks worse than not
+   * restoring at all.
    */
   useLayoutEffect(() => {
     const viewport = scrollViewportRef.current;
@@ -57,16 +60,14 @@ export const MobileFrame = ({ children }) => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
     // Cached data paints immediately, but images and lazy chunks can still
-    // change the height a frame or two later and shorten the scroll range.
-    // Re-applying on the next frames makes the restore stick without
-    // animating anything the person can see.
+    // change the height a frame or two later and clamp the scroll range.
+    // Re-applying over the next few frames makes the restore stick.
     if (!target) return undefined;
     let frame = 0;
-    const settle = () => {
+    let id = requestAnimationFrame(function settle() {
       if (viewport.scrollTop !== target) viewport.scrollTop = target;
-      if (frame++ < 3) requestAnimationFrame(settle);
-    };
-    const id = requestAnimationFrame(settle);
+      if (frame++ < 5) id = requestAnimationFrame(settle);
+    });
     return () => cancelAnimationFrame(id);
   }, [location.key, navigationType]);
 

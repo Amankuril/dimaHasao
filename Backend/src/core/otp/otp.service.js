@@ -280,15 +280,33 @@ export const createOrUpdateOtp = async (phone, scope = 'default', { metadata = n
     }
     const now = new Date();
 
-    if (existing) {
+    const resolved = resolveOtpForPhone(normalizedPhone, normalizedScope);
+    const otp = resolved.otp;
+
+    // The limit is an SMS budget: it caps what one number can make the provider
+    // send, and costs money to exceed. A static code sends nothing — the branch
+    // at the bottom skips sendOtpSms for USE_DEFAULT_OTP and for the
+    // DEFAULT_TEST_PHONE — so charging it against the budget protected nothing
+    // and locked every tester out of every module for ten minutes after three
+    // taps. Static requests neither spend the budget nor accumulate one:
+    // resetting the counter keeps a burst of them from blocking the first real
+    // SMS that follows, once a provider is configured.
+    if (existing && resolved.isStatic) {
+        existing.requestCount = 0;
+    } else if (existing) {
         const windowMs = (config.otpRateWindow || 600) * 1000;
         const isInWindow = now - existing.lastRequestAt < windowMs;
 
         if (isInWindow) {
             if (existing.requestCount >= (config.otpRateLimit || 3)) {
                 logger.warn(`Rate limit exceeded for phone ${phone} scope=${normalizedScope}`);
+                // Count down from the last request rather than quoting the whole
+                // window — a caller three seconds short of the limit was being
+                // told to wait the full ten minutes.
+                const retryInMs = Math.max(0, windowMs - (now - existing.lastRequestAt));
+                const retryInMinutes = Math.max(1, Math.ceil(retryInMs / 60000));
                 throw new ValidationError(
-                    `Too many OTP requests. Please try again after ${Math.ceil(windowMs / 60000)} minutes.`,
+                    `Too many OTP requests. Please try again after ${retryInMinutes} minute${retryInMinutes === 1 ? '' : 's'}.`,
                 );
             }
             existing.requestCount += 1;
@@ -296,9 +314,6 @@ export const createOrUpdateOtp = async (phone, scope = 'default', { metadata = n
             existing.requestCount = 1;
         }
     }
-
-    const resolved = resolveOtpForPhone(normalizedPhone, normalizedScope);
-    const otp = resolved.otp;
 
     logger.info(
         `[OTP] phone=${normalizedPhone} scope=${normalizedScope} mode=${resolved.reason} otp=${otp}`,
