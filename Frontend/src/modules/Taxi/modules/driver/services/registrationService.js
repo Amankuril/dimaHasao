@@ -79,9 +79,28 @@ export const saveDriverRegistrationSession = (session = {}) => {
 
   const storableSession = buildStorableDriverRegistrationSession(nextSession);
 
+  let serialized = "";
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storableSession));
+    serialized = JSON.stringify(storableSession);
+    localStorage.setItem(STORAGE_KEY, serialized);
   } catch {}
+
+  // Hand back the round-tripped copy, not the object we just built.
+  //
+  // Taxi's axios interceptor returns a Proxy view of every response, and its
+  // get trap re-wraps nested values (shared/api/axiosInstance.js,
+  // createCompatibleResponseView). So a field lifted straight off a response
+  // — availableRoles, say — is a Proxy around an array, not an array.
+  // Callers pass this session into navigate(..., { state }), and pushState
+  // structured-clones its argument, which refuses a Proxy: the driver login
+  // died on "[object Object] could not be cloned" before it ever reached the
+  // OTP screen. Parsing back what we just stored costs one pass over a small
+  // object and guarantees plain data for all 30-odd call sites at once.
+  if (serialized) {
+    try {
+      return JSON.parse(serialized);
+    } catch {}
+  }
 
   return storableSession;
 };
