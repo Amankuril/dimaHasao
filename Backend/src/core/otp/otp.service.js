@@ -52,7 +52,6 @@ const OTP_SCOPES = {
     'taxi-user': { length: 4, ttlMs: 10 * 60 * 1000 },
     'taxi-driver': { length: 4, ttlMs: 10 * 60 * 1000 },
     hotel: { length: 4, ttlMs: 10 * 60 * 1000 },
-    tours: { length: 4, ttlMs: 10 * 60 * 1000 },
 };
 
 /** Policy for a scope, falling back to the 4-digit default. */

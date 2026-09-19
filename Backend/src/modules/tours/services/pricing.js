@@ -5,17 +5,27 @@
  * the same shape as the food bug where Razorpay was handed one figure while
  * verification expected another — so the screen now asks for a quote and only
  * ever displays what comes back.
+ *
+ * Tours are single-vendor: the district runs them itself, exactly as it runs
+ * its festivals. There is no operator to pay, so there is no commission to
+ * take and no payout to settle — the customer pays in full and the whole
+ * amount belongs to the platform.
  */
-import PaymentConfig from '../config/payment.config.js';
 
 const round = (value) => Math.round(Number(value) || 0);
 
 /**
  * Price a booking.
  *
- * @param {object} pkg       TourPackage (needs pricePerPerson, childPricePercent, advancePercent)
+ * `advanceAmount` and `balanceDue` are kept in the response even though a tour
+ * is now paid in full: the approved booking screen reads `advanceAmount` as
+ * "payable now" and prints `balanceDue` on the confirmation. Holding them at
+ * `total` and `0` keeps that screen honest without it having to know the
+ * settlement model changed.
+ *
+ * @param {object} pkg       TourPackage (needs pricePerPerson, childPricePercent)
  * @param {object} party     { adults, children }
- * @param {object} settings  ToursSettings (taxRate, defaultCommission)
+ * @param {object} settings  ToursSettings (taxRate)
  * @param {number} discount  absolute discount already validated by the caller
  */
 export const quoteBooking = ({ pkg, party, settings, discount = 0 }) => {
@@ -35,23 +45,6 @@ export const quoteBooking = ({ pkg, party, settings, discount = 0 }) => {
   const taxes = round((baseAmount * taxRate) / 100);
   const totalAmount = baseAmount - appliedDiscount + taxes;
 
-  const advancePercent = Math.min(100, Math.max(1, Number(pkg.advancePercent) || 100));
-  // Rounded up on purpose: a rounding rupee should sit with the platform, which
-  // has to pay the gateway, rather than with the balance collected in cash.
-  const advanceAmount = Math.min(totalAmount, Math.ceil((totalAmount * advancePercent) / 100));
-  const balanceDue = totalAmount - advanceAmount;
-
-  const commissionRate = Number(settings?.defaultCommission) || 0;
-  const adminCommission = Math.max(
-    round((baseAmount * commissionRate) / 100),
-    PaymentConfig.minCommission,
-  );
-
-  // What the operator ends up with once the platform has taken its cut. Part of
-  // it arrives through the wallet and part as the balance they collect in
-  // person — see settlementSplit below.
-  const operatorPayout = totalAmount - taxes - adminCommission;
-
   return {
     adults,
     children,
@@ -63,35 +56,11 @@ export const quoteBooking = ({ pkg, party, settings, discount = 0 }) => {
     taxRate,
     taxes,
     totalAmount,
-    advancePercent,
-    advanceAmount,
-    balanceDue,
-    adminCommission,
-    operatorPayout,
+    // Paid in full at booking; nothing is collected later.
+    advancePercent: 100,
+    advanceAmount: totalAmount,
+    balanceDue: 0,
   };
 };
 
-/**
- * How the online advance is divided once it lands.
- *
- * The platform always keeps commission + tax, and the operator always ends up
- * with `operatorPayout`. Since the operator collects `balanceDue` in cash
- * directly, the wallet only has to settle the difference:
- *
- *   advance >= platformCut  → credit the operator what is left over
- *   advance <  platformCut  → the advance did not cover the platform's cut, so
- *                             recover the shortfall from the operator's wallet
- *                             (hotel does exactly this for pay-at-property)
- *
- * Either way: walletMovement + balanceDue === operatorPayout.
- */
-export const settlementSplit = ({ advanceAmount, taxes, adminCommission }) => {
-  const platformCut = taxes + adminCommission;
-  const net = advanceAmount - platformCut;
-
-  return net >= 0
-    ? { direction: 'credit', amount: net, platformCut }
-    : { direction: 'debit', amount: Math.abs(net), platformCut };
-};
-
-export default { quoteBooking, settlementSplit };
+export default { quoteBooking };

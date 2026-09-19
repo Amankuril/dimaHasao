@@ -73,7 +73,6 @@ export const createReview = async (req, res) => {
       userId: req.user._id,
       userModel: req.user.constructor.modelName === 'FoodUser' ? 'FoodUser' : 'User',
       packageId: booking.packageId,
-      operatorId: booking.operatorId,
       bookingId: booking._id,
       rating: score,
       comment: String(comment || '').trim(),
@@ -89,12 +88,12 @@ export const createReview = async (req, res) => {
 };
 
 /**
- * @route POST /v1/tours/reviews/:id/reply
- * The operator answers a review of their own package.
+ * @route POST /v1/tours/admin/reviews/:id/reply
+ * The district answers a review of one of its packages.
  */
 export const replyToReview = async (req, res) => {
   try {
-    const review = await TourReview.findOne({ _id: req.params.id, operatorId: req.user._id });
+    const review = await TourReview.findById(req.params.id);
     if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
 
     review.reply = String(req.body.reply || '').trim();
@@ -108,22 +107,6 @@ export const replyToReview = async (req, res) => {
   }
 };
 
-/** @route GET /v1/tours/reviews/operator — the operator's own reviews. */
-export const getOperatorReviews = async (req, res) => {
-  try {
-    const reviews = await TourReview.find({ operatorId: req.user._id })
-      .sort({ createdAt: -1 })
-      .populate('packageId', 'title')
-      .populate('userId', 'name')
-      .lean();
-
-    res.json({ success: true, reviews });
-  } catch (error) {
-    console.error('Get operator reviews error:', error);
-    res.status(500).json({ success: false, message: 'Failed to load reviews' });
-  }
-};
-
 /* ------------------------------------------------------------------ *
  * Admin moderation
  * ------------------------------------------------------------------ */
@@ -131,16 +114,14 @@ export const getOperatorReviews = async (req, res) => {
 /** @route GET /v1/tours/admin/reviews */
 export const getAdminReviews = async (req, res) => {
   try {
-    const { status, operatorId } = req.query;
+    const { status } = req.query;
     const match = {};
     if (status && status !== 'all') match.status = status;
-    if (operatorId) match.operatorId = operatorId;
 
     const reviews = await TourReview.find(match)
       .sort({ createdAt: -1 })
       .limit(200)
       .populate('packageId', 'title')
-      .populate('operatorId', 'agencyName name')
       .populate('userId', 'name')
       .lean();
 
@@ -176,7 +157,6 @@ export default {
   getPackageReviews,
   createReview,
   replyToReview,
-  getOperatorReviews,
   getAdminReviews,
   updateReviewStatus,
 };

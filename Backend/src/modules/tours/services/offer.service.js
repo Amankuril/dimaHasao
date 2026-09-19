@@ -41,9 +41,6 @@ export const resolveOffer = async ({ code, baseAmount, pkg, userId }) => {
   if (offer.packageIds?.length && !offer.packageIds.some((id) => String(id) === String(pkg._id))) {
     return { discount: 0, code: null, reason: 'This code does not apply to this package' };
   }
-  if (offer.operatorIds?.length && !offer.operatorIds.some((id) => String(id) === String(pkg.operatorId))) {
-    return { discount: 0, code: null, reason: 'This code does not apply to this operator' };
-  }
 
   // Counted per traveller on bookings that still stand.
   if (userId) {

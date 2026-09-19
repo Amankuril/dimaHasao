@@ -8,7 +8,7 @@
 import mongoose from 'mongoose';
 import TourismDestination from '../models/Destination.js';
 import TourPackage from '../models/TourPackage.js';
-import { publicPackageMatch, sellableOperatorIds } from '../services/package.service.js';
+import { publicPackageMatch } from '../services/package.service.js';
 import { deleteStoredAssets, deleteReplacedAssets } from '../../../services/storage.service.js';
 import { searchRegex } from '../../../utils/searchRegex.js';
 
@@ -153,10 +153,7 @@ export const getDestinationDetail = async (req, res) => {
     // destination page down with it.
     const tokens = placeTokens(destination);
     const packages = !tokens.length ? [] : await TourPackage.find(
-      publicPackageMatch({
-        operatorId: { $in: await sellableOperatorIds() },
-        destinations: new RegExp(tokens.join('|'), 'i'),
-      }),
+      publicPackageMatch({ destinations: new RegExp(tokens.join('|'), 'i') }),
     )
       .select('title slug heroImage pricePerPerson durationDays durationNights advancePercent avgRating totalReviews category difficulty')
       .limit(10)

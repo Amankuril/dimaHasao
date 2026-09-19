@@ -38,7 +38,6 @@ const departureSchema = new mongoose.Schema({
 }, { _id: false });
 
 const tourPackageSchema = new mongoose.Schema({
-  operatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'TourOperator', required: true, index: true },
   createdBy: { type: String, enum: ['operator', 'admin'], default: 'operator' },
 
   title: { type: String, required: true, trim: true },

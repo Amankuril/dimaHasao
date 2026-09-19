@@ -16,7 +16,6 @@ const toursSettingsSchema = new mongoose.Schema({
     type: String,
     default: 'Tour bookings are temporarily disabled. Please try again later.',
   },
-  defaultCommission: { type: Number, default: 10 },
   taxRate: { type: Number, default: 5 },
 }, { timestamps: true });
 

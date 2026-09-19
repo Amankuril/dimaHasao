@@ -24,8 +24,6 @@ const tourOfferSchema = new mongoose.Schema({
 
   /** Empty means every package; otherwise only these. */
   packageIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TourPackage' }],
-  /** Empty means every operator. */
-  operatorIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TourOperator' }],
 
   startDate: { type: Date, default: Date.now },
   endDate: { type: Date },

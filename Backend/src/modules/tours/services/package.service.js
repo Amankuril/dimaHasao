@@ -1,20 +1,18 @@
 /**
  * Shared package construction and visibility rules.
  *
- * Both create paths — the operator's own and the admin's create-for-operator —
- * go through `buildPackageDocument`, so validation cannot drift between them.
- * Hotel does not do this: `createProperty` and `updateRoomTypeAsAdmin` validate
- * the same fields differently, which is the bug this file exists to avoid.
+ * Create and update both go through `buildPackageDocument`, so validation
+ * cannot drift between them. Hotel does not do this: `createProperty` and
+ * `updateRoomTypeAsAdmin` validate the same fields differently, which is the
+ * bug this file exists to avoid.
  */
-import mongoose from 'mongoose';
 import TourPackage from '../models/TourPackage.js';
-import TourOperator from '../models/TourOperator.js';
 
 /**
  * Edits that change what a traveller is buying. Touching one of these on an
  * approved package sends it back for review; editing copy or photos does not.
  * Deliberately narrower than hotel, where any update re-pends the listing and
- * an operator fixing a typo delists themselves for a day.
+ * fixing a typo delists the package for a day.
  */
 export const MATERIAL_FIELDS = [
   'pricePerPerson',
@@ -139,12 +137,15 @@ export const buildPackageDocument = (payload = {}) => ({
 });
 
 /**
- * Create a package for an operator.
+ * Create a package.
  *
- * `createdBy` and `autoApprove` are the only things that differ between the two
- * entry points — the operator id is a parameter, never read from the caller.
+ * Tours are single-vendor, so there is one entry point and the admin creating
+ * the package is also its approver — nothing here waits in a queue. The
+ * `status` machinery stays on the model for the packages that came through the
+ * old operator flow, but a package created now is live the moment it is saved
+ * unless the caller asks otherwise.
  */
-export const createPackage = async ({ operatorId, payload, createdBy = 'operator', autoApprove = false, approvedBy }) => {
+export const createPackage = async ({ payload, autoApprove = true, approvedBy }) => {
   const validationError = validatePackagePayload(payload);
   if (validationError) {
     const error = new Error(validationError);
@@ -153,8 +154,7 @@ export const createPackage = async ({ operatorId, payload, createdBy = 'operator
   }
 
   const doc = buildPackageDocument(payload);
-  doc.operatorId = operatorId;
-  doc.createdBy = createdBy;
+  doc.createdBy = 'admin';
   doc.slug = await buildUniqueSlug(doc.title);
 
   if (autoApprove) {
@@ -169,50 +169,15 @@ export const createPackage = async ({ operatorId, payload, createdBy = 'operator
 };
 
 /**
- * Confirm an operator may have packages created against them.
- * Throws with a statusCode the controller can pass straight through.
- */
-export const assertOperatorSellable = async (operatorId) => {
-  if (!mongoose.Types.ObjectId.isValid(operatorId)) {
-    const error = new Error('A valid operator must be selected');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const operator = await TourOperator.findById(operatorId);
-  if (!operator) {
-    const error = new Error('Operator not found');
-    error.statusCode = 404;
-    throw error;
-  }
-  if (operator.isBlocked || operator.operatorApprovalStatus !== 'approved') {
-    const error = new Error(`${operator.agencyName || operator.name} is not an approved operator yet`);
-    error.statusCode = 422;
-    throw error;
-  }
-
-  return operator;
-};
-
-/**
  * The one definition of "a traveller can see this".
  * Kept in a single place so a new listing endpoint cannot accidentally expose
- * drafts or packages belonging to a suspended operator.
+ * a draft or a package the admin has switched off.
  */
 export const publicPackageMatch = (extra = {}) => ({
   status: 'approved',
   isActive: true,
   ...extra,
 });
-
-/** Ids of operators currently allowed to sell. */
-export const sellableOperatorIds = async () => {
-  const operators = await TourOperator.find({
-    operatorApprovalStatus: 'approved',
-    isBlocked: false,
-  }).select('_id').lean();
-  return operators.map((o) => o._id);
-};
 
 /**
  * True when an edit actually *changes* something a traveller is paying for.
@@ -239,9 +204,7 @@ export const isMaterialEdit = (current = {}, payload = {}) => {
 
 export default {
   createPackage,
-  assertOperatorSellable,
   publicPackageMatch,
-  sellableOperatorIds,
   isMaterialEdit,
   validatePackagePayload,
   buildPackageDocument,

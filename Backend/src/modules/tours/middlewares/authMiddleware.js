@@ -11,7 +11,6 @@
  * only ever an account resolved from the admin collection.
  */
 import jwt from 'jsonwebtoken';
-import TourOperator from '../models/TourOperator.js';
 import FoodAdmin from '../../../core/admin/admin.model.js';
 import { FoodUser } from '../../../core/users/user.model.js';
 
@@ -31,24 +30,18 @@ const resolveAccount = async (decoded) => {
   if (!id) return null;
 
   /*
-   * All three collections are asked at once, and the first hit in the original
-   * order wins.
+   * Both collections are asked at once and admin wins, as it always did.
    *
-   * These ran in series, and the comment above is only true of the operator
-   * panel: /bookings/my is a consumer route, and a consumer missed the operator
-   * and admin collections before hitting the third. Three round trips at this
-   * stack's ~40ms floor accounted for nearly all of that endpoint's 131ms —
-   * spent before the handler ran, on a response that was empty.
-   *
-   * Precedence is unchanged: operator, then admin, then user.
+   * These used to run in series across three collections, operator first. That
+   * cost a consumer route like /bookings/my two wasted round trips at this
+   * stack's ~40ms floor before the handler even ran. The operator collection
+   * is gone with the vendor panel, so this is now two.
    */
-  const [operator, admin, user] = await Promise.all([
-    TourOperator.findById(id),
+  const [admin, user] = await Promise.all([
     FoodAdmin.findById(id),
     FoodUser.findById(id),
   ]);
 
-  if (operator) return { account: operator, role: 'operator' };
   if (admin) {
     return {
       account: admin,
@@ -113,18 +106,4 @@ export const optionalProtect = async (req, _res, next) => {
   next();
 };
 
-/** An approved, unblocked operator — the bar for selling anything. */
-export const requireApprovedOperator = (req, res, next) => {
-  if (req.userRole !== 'operator') {
-    return res.status(403).json({ message: 'Operator account required' });
-  }
-  if (req.user.operatorApprovalStatus !== 'approved') {
-    return res.status(403).json({
-      message: 'Your operator account is awaiting admin approval.',
-      operatorApprovalStatus: req.user.operatorApprovalStatus,
-    });
-  }
-  next();
-};
-
-export default { protect, authorizedRoles, optionalProtect, requireApprovedOperator };
+export default { protect, authorizedRoles, optionalProtect };

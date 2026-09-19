@@ -74,3 +74,6 @@ Thumbs.db
 # ─── Scratch ─────────────────────────────────────────────────────────────────
 notes.txt
 *.tmp
+
+# Local DB exports taken before destructive migrations — contain customer PII.
+backups/

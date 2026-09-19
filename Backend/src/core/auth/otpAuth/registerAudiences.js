@@ -10,7 +10,6 @@
 import { registerFoodAuthAudiences } from '../../../modules/food/auth/audiences.js';
 import { registerTaxiAuthAudiences } from '../../../modules/taxi/auth/audiences.js';
 import { registerHotelAuthAudiences } from '../../../modules/hotel/auth/audiences.js';
-import { registerToursAuthAudiences } from '../../../modules/tours/auth/audiences.js';
 import { listAuthAudiences } from './audienceRegistry.js';
 import { logger } from '../../../utils/logger.js';
 
@@ -22,7 +21,6 @@ export const registerAllAuthAudiences = () => {
     registerFoodAuthAudiences(); // user, restaurant, delivery
     registerTaxiAuthAudiences(); // taxi-driver
     registerHotelAuthAudiences(); // hotel-partner
-    registerToursAuthAudiences(); // tours-operator
 
     registered = true;
     logger.info(`[OtpAuth] audiences registered: ${listAuthAudiences().join(', ')}`);

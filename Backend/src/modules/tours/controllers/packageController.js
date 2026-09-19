@@ -1,18 +1,13 @@
 /**
- * Package endpoints for operators and for the public catalogue.
- * Admin-side package management lives in adminController.js.
+ * The public tour catalogue.
+ *
+ * Tours are single-vendor, so every management endpoint lives in
+ * adminController.js — nothing here writes.
  */
 import mongoose from 'mongoose';
 import TourPackage from '../models/TourPackage.js';
 import TourReview from '../models/Review.js';
-import {
-  createPackage,
-  buildPackageDocument,
-  validatePackagePayload,
-  publicPackageMatch,
-  sellableOperatorIds,
-  isMaterialEdit,
-} from '../services/package.service.js';
+import { publicPackageMatch } from '../services/package.service.js';
 
 const notFound = (res) => res.status(404).json({ success: false, message: 'Package not found' });
 
@@ -42,7 +37,7 @@ export const getPublicPackages = async (req, res) => {
     const difficulty = asText(req.query.difficulty);
     const search = asText(req.query.search);
 
-    const match = publicPackageMatch({ operatorId: { $in: await sellableOperatorIds() } });
+    const match = publicPackageMatch();
 
     if (category && category !== 'all') match.category = category;
     if (difficulty) match.difficulty = difficulty;
@@ -69,7 +64,6 @@ export const getPublicPackages = async (req, res) => {
         .sort(sortBy)
         .skip((Math.max(1, Number(page)) - 1) * perPage)
         .limit(perPage)
-        .populate('operatorId', 'name agencyName phone')
         .lean(),
       TourPackage.countDocuments(match),
     ]);
@@ -91,7 +85,6 @@ export const getPackageDetail = async (req, res) => {
     const byId = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id };
 
     const pkg = await TourPackage.findOne(publicPackageMatch(byId))
-      .populate('operatorId', 'name agencyName phone email')
       .lean();
 
     if (!pkg) return notFound(res);
@@ -110,107 +103,5 @@ export const getPackageDetail = async (req, res) => {
   } catch (error) {
     console.error('Get package detail error:', error);
     res.status(500).json({ success: false, message: 'Failed to load package' });
-  }
-};
-
-/* ------------------------------------------------------------------ *
- * Operator
- * ------------------------------------------------------------------ */
-
-/** @route POST /v1/tours/packages — the operator's own create. */
-export const createOperatorPackage = async (req, res) => {
-  try {
-    // The operator id is never taken from the body here; an operator can only
-    // ever create for themselves.
-    const pkg = await createPackage({
-      operatorId: req.user._id,
-      payload: req.body,
-      createdBy: 'operator',
-      autoApprove: false,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Package submitted for approval',
-      package: pkg,
-    });
-  } catch (error) {
-    const status = error.statusCode || 500;
-    if (status === 500) console.error('Create package error:', error);
-    res.status(status).json({ success: false, message: error.message || 'Failed to create package' });
-  }
-};
-
-/** @route GET /v1/tours/packages/mine */
-export const getMyPackages = async (req, res) => {
-  try {
-    const packages = await TourPackage.find({ operatorId: req.user._id })
-      .sort({ createdAt: -1 })
-      .lean();
-    res.json({ success: true, packages });
-  } catch (error) {
-    console.error('Get my packages error:', error);
-    res.status(500).json({ success: false, message: 'Failed to load your packages' });
-  }
-};
-
-/** @route PUT /v1/tours/packages/:id */
-export const updateOperatorPackage = async (req, res) => {
-  try {
-    const pkg = await TourPackage.findOne({ _id: req.params.id, operatorId: req.user._id });
-    if (!pkg) return notFound(res);
-
-    // Snapshot before Object.assign mutates the document underneath us.
-    const before = pkg.toObject();
-
-    const validationError = validatePackagePayload({ ...before, ...req.body });
-    if (validationError) return res.status(400).json({ success: false, message: validationError });
-
-    Object.assign(pkg, buildPackageDocument({ ...before, ...req.body }));
-
-    // Only edits that change what is being sold go back for review. A typo fix
-    // should not delist a live package for a day.
-    if (pkg.status === 'approved' && isMaterialEdit(before, req.body)) {
-      pkg.status = 'pending';
-      pkg.approvedAt = undefined;
-      pkg.approvedBy = undefined;
-    }
-
-    await pkg.save();
-    res.json({
-      success: true,
-      message: pkg.status === 'pending' ? 'Saved — resubmitted for approval' : 'Package updated',
-      package: pkg,
-    });
-  } catch (error) {
-    console.error('Update package error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update package' });
-  }
-};
-
-/** @route PATCH /v1/tours/packages/:id/active — the operator's own on/off switch. */
-export const toggleOperatorPackage = async (req, res) => {
-  try {
-    const pkg = await TourPackage.findOne({ _id: req.params.id, operatorId: req.user._id });
-    if (!pkg) return notFound(res);
-
-    pkg.isActive = Boolean(req.body.isActive);
-    await pkg.save();
-    res.json({ success: true, isActive: pkg.isActive });
-  } catch (error) {
-    console.error('Toggle package error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update package' });
-  }
-};
-
-/** @route DELETE /v1/tours/packages/:id */
-export const deleteOperatorPackage = async (req, res) => {
-  try {
-    const pkg = await TourPackage.findOneAndDelete({ _id: req.params.id, operatorId: req.user._id });
-    if (!pkg) return notFound(res);
-    res.json({ success: true, message: 'Package deleted' });
-  } catch (error) {
-    console.error('Delete package error:', error);
-    res.status(500).json({ success: false, message: 'Failed to delete package' });
   }
 };

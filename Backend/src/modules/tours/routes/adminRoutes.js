@@ -1,22 +1,19 @@
 import express from 'express';
 import { protect, authorizedRoles } from '../middlewares/authMiddleware.js';
 import {
-  getOperators,
-  getOperatorDetail,
-  updateOperatorApproval,
-  updateOperatorBlock,
   getAdminPackages,
-  createPackageForOperator,
+  createAdminPackage,
+  updateAdminPackage,
+  toggleAdminPackage,
+  deleteAdminPackage,
   updatePackageStatus,
   getAdminBookings,
   getDashboardStats,
-  getWithdrawals,
-  updateWithdrawalStatus,
   getSettings,
   updateSettings,
 } from '../controllers/adminController.js';
-import { cancelBookingAsAdmin } from '../controllers/bookingController.js';
-import { getAdminReviews, updateReviewStatus } from '../controllers/reviewController.js';
+import { cancelBookingAsAdmin, updateBookingStatus } from '../controllers/bookingController.js';
+import { getAdminReviews, updateReviewStatus, replyToReview } from '../controllers/reviewController.js';
 import {
   getAdminOffers,
   createOffer,
@@ -42,17 +39,16 @@ router.use(authorizedRoles('admin', 'superadmin'));
 
 router.get('/dashboard', getDashboardStats);
 
-router.get('/operators', getOperators);
-router.get('/operators/:id', getOperatorDetail);
-router.patch('/operators/:id/approval', updateOperatorApproval);
-router.patch('/operators/:id/block', updateOperatorBlock);
-
 router.get('/packages', getAdminPackages);
-router.post('/packages', createPackageForOperator);
+router.post('/packages', createAdminPackage);
+router.put('/packages/:id', updateAdminPackage);
+router.patch('/packages/:id/active', toggleAdminPackage);
 router.patch('/packages/:id/status', updatePackageStatus);
+router.delete('/packages/:id', deleteAdminPackage);
 
 router.get('/bookings', getAdminBookings);
 router.post('/bookings/:id/cancel', cancelBookingAsAdmin);
+router.patch('/bookings/:id/status', updateBookingStatus);
 
 router.get('/destinations', getAdminDestinations);
 router.post('/destinations', createDestination);
@@ -68,9 +64,7 @@ router.delete('/offers/:id', deleteOffer);
 
 router.get('/reviews', getAdminReviews);
 router.patch('/reviews/:id/status', updateReviewStatus);
-
-router.get('/withdrawals', getWithdrawals);
-router.patch('/withdrawals/:id/status', updateWithdrawalStatus);
+router.post('/reviews/:id/reply', replyToReview);
 
 router.get('/settings', getSettings);
 router.put('/settings', updateSettings);

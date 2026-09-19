@@ -9,7 +9,6 @@
 import mongoose from 'mongoose';
 import TourPackage from '../models/TourPackage.js';
 import TourBooking from '../models/TourBooking.js';
-import TourOperator from '../models/TourOperator.js';
 import ToursSettings from '../models/ToursSettings.js';
 import { quoteBooking } from '../services/pricing.js';
 import { publicPackageMatch } from '../services/package.service.js';
@@ -65,14 +64,7 @@ const loadSellablePackage = async (packageId) => {
     throw error;
   }
 
-  const operator = await TourOperator.findById(pkg.operatorId);
-  if (!operator || operator.isBlocked || operator.operatorApprovalStatus !== 'approved') {
-    const error = new Error('This package is not available right now');
-    error.statusCode = 422;
-    throw error;
-  }
-
-  return { pkg, operator };
+  return { pkg };
 };
 
 /**
@@ -150,7 +142,7 @@ export const createBooking = async (req, res) => {
       pickupPoint, travellerContact, specialRequest, paymentMethod, couponCode,
     } = req.body;
 
-    const { pkg, operator } = await loadSellablePackage(packageId);
+    const { pkg } = await loadSellablePackage(packageId);
 
     const party = { adults: Number(adults) || 1, children: Number(children) || 0 };
     const totalTravellers = party.adults + party.children;
@@ -180,7 +172,6 @@ export const createBooking = async (req, res) => {
       userModel: req.user.constructor.modelName === 'FoodUser' ? 'FoodUser' : 'User',
       userId: req.user._id,
       packageId: pkg._id,
-      operatorId: operator._id,
       travelDate: startOfDay(travelDate),
       travellers: { adults: quote.adults, children: quote.children },
       totalTravellers: quote.totalTravellers,
@@ -202,8 +193,6 @@ export const createBooking = async (req, res) => {
       advancePercent: quote.advancePercent,
       advanceAmount: quote.advanceAmount,
       balanceDue: quote.balanceDue,
-      adminCommission: quote.adminCommission,
-      operatorPayout: quote.operatorPayout,
       paymentMethod: paymentMethod || 'online',
       createdBy: 'user',
     });
@@ -264,36 +253,6 @@ export const settleAdvance = async (req, res) => {
   }
 };
 
-/**
- * @route PATCH /v1/tours/bookings/:id/collect-balance
- * Records that the operator took the remaining cash from the traveller.
- *
- * This moves NO money. The platform already took its full cut out of the
- * advance (or booked the shortfall as a wallet debit), and the balance went
- * straight from traveller to operator. Adding a wallet credit here would pay
- * the operator twice.
- */
-export const collectBalance = async (req, res) => {
-  try {
-    const booking = await TourBooking.findOne({ _id: req.params.id, operatorId: req.user._id });
-    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
-
-    if (booking.paymentStatus !== 'advance_paid') {
-      return res.status(400).json({ success: false, message: 'This booking has no balance outstanding' });
-    }
-
-    booking.amountPaid = booking.totalAmount;
-    booking.paymentStatus = 'paid';
-    booking.balanceCollectedAt = new Date();
-    await booking.save();
-
-    res.json({ success: true, message: 'Balance marked as collected', booking });
-  } catch (error) {
-    console.error('Collect balance error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update this booking' });
-  }
-};
-
 /** Trips that have run cannot be cancelled; the rest can, by the right person. */
 const CANCELLABLE = ['pending', 'confirmed'];
 
@@ -325,8 +284,8 @@ const applyCancellation = async (booking, { reason, cancelledBy }) => {
  * @route POST /v1/tours/bookings/:id/cancel
  *
  * The traveller's own cancellation. Hotel and festivals both had one; tours
- * did not, so a traveller who could no longer go had no way to say so and the
- * operator kept a seat held against a trip nobody was coming to.
+ * did not, so a traveller who could no longer go had no way to say so and a
+ * seat stayed held against a trip nobody was coming to.
  */
 export const cancelBooking = async (req, res) => {
   try {
@@ -393,7 +352,6 @@ export const getMyBookings = async (req, res) => {
     const bookings = await TourBooking.find({ userId: req.user._id })
       .sort({ createdAt: -1 })
       .populate('packageId', 'title heroImage durationDays durationNights slug')
-      .populate('operatorId', 'name agencyName phone')
       .lean();
     res.json({ success: true, bookings });
   } catch (error) {
@@ -402,25 +360,7 @@ export const getMyBookings = async (req, res) => {
   }
 };
 
-/** @route GET /v1/tours/bookings/operator */
-export const getOperatorBookings = async (req, res) => {
-  try {
-    const { status } = req.query;
-    const query = { operatorId: req.user._id };
-    if (status && status !== 'all') query.bookingStatus = status;
-
-    const bookings = await TourBooking.find(query)
-      .sort({ travelDate: 1 })
-      .populate('packageId', 'title heroImage')
-      .lean();
-    res.json({ success: true, bookings });
-  } catch (error) {
-    console.error('Get operator bookings error:', error);
-    res.status(500).json({ success: false, message: 'Failed to load bookings' });
-  }
-};
-
-/** @route PATCH /v1/tours/bookings/:id/status — operator moves a trip along. */
+/** @route PATCH /v1/tours/admin/bookings/:id/status — admin moves a trip along. */
 export const updateBookingStatus = async (req, res) => {
   const ALLOWED = {
     confirmed: ['ongoing', 'cancelled', 'no_show'],
@@ -432,7 +372,7 @@ export const updateBookingStatus = async (req, res) => {
   };
 
   try {
-    const booking = await TourBooking.findOne({ _id: req.params.id, operatorId: req.user._id });
+    const booking = await TourBooking.findById(req.params.id);
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
 
     const { status, reason } = req.body;
@@ -445,7 +385,7 @@ export const updateBookingStatus = async (req, res) => {
 
     booking.bookingStatus = status;
     if (status === 'cancelled') {
-      booking.cancellationReason = reason || 'Cancelled by operator';
+      booking.cancellationReason = reason || 'Cancelled by the administration';
       booking.cancelledAt = new Date();
     }
     await booking.save();

@@ -21,7 +21,6 @@ const buildDocument = (payload = {}) => ({
   maxDiscount: payload.maxDiscount ? Math.max(0, Number(payload.maxDiscount)) : undefined,
   minBookingAmount: Math.max(0, Number(payload.minBookingAmount) || 0),
   packageIds: asIds(payload.packageIds),
-  operatorIds: asIds(payload.operatorIds),
   startDate: payload.startDate ? new Date(payload.startDate) : new Date(),
   endDate: payload.endDate ? new Date(payload.endDate) : undefined,
   usageLimit: Math.max(0, Number(payload.usageLimit) || 0),

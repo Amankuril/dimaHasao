@@ -19,7 +19,12 @@ const tourBookingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, refPath: 'userModel', required: true, index: true },
 
   packageId: { type: mongoose.Schema.Types.ObjectId, ref: 'TourPackage', required: true, index: true },
-  operatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'TourOperator', required: true, index: true },
+  /**
+   * Historical only. Tours are single-vendor now, so nothing writes this —
+   * it stays on the schema (and unindexed by `required`) so bookings taken
+   * while the module was multi-vendor keep the operator they were sold by.
+   */
+  operatorId: { type: mongoose.Schema.Types.ObjectId, index: true },
 
   // TRAVEL
   travelDate: { type: Date, required: true },
@@ -48,8 +53,8 @@ const tourBookingSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true },
 
   // ADVANCE SPLIT
-  advancePercent: { type: Number, required: true, min: 1, max: 100 },
-  advanceAmount: { type: Number, required: true },
+  advancePercent: { type: Number, default: 100, min: 1, max: 100 },
+  advanceAmount: { type: Number, default: 0 },
   balanceDue: { type: Number, default: 0 },
   amountPaid: { type: Number, default: 0 },
   balanceCollectedAt: { type: Date },
