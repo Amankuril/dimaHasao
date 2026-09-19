@@ -4,7 +4,7 @@ import { Toaster } from 'sonner'
 import App from './app/App.jsx'
 import { isModuleAuthenticated } from './shared/utils/moduleAuth.js'
 import { syncThemeForPath } from './shared/utils/theme.js'
-import { NATIVE_LAST_ROUTE_KEY, resolveAppColdStartRoute } from './shared/utils/activeModule.js'
+import { NATIVE_LAST_ROUTE_KEY, modulePrefixFor, resolveAppColdStartRoute } from './shared/utils/activeModule.js'
 /*
  * Font Awesome ships with the bundle rather than being fetched at runtime.
  *
@@ -74,11 +74,15 @@ function resolveNativeInitialRoute() {
 
   // Explicit deep-link / in-app path still wins (except broken transient ride flows).
   if (pathname.startsWith('/taxi/')) return isTransient(pathname) ? '/taxi/user' : pathname
-  if (pathname.startsWith('/food/')) return pathname
+  // Single-segment aliases that app/routes.jsx redirects into Food.
   if (pathname.startsWith('/restaurant')) return `/food${pathname}`
   if (pathname.startsWith('/delivery')) return `/food${pathname}`
   if (pathname.startsWith('/user')) return `/food${pathname}`
-  if (pathname.startsWith('/admin')) return pathname
+  // Any other mounted module, served from its own path. This used to name
+  // only /food and /admin, so the Hotel partner APK — which loads
+  // /hotel/partner — matched nothing, fell through to the consumer cold start
+  // below, and opened #/app/login instead of the partner panel.
+  if (modulePrefixFor(pathname)) return pathname
 
   // Cold start at `/` or blank: restore last consumer module home.
   if (storedRoute.startsWith('/taxi/') || storedRoute.startsWith('/food/') || storedRoute.startsWith('/admin')) {
@@ -113,15 +117,16 @@ function bootstrapNativeHashRoute() {
   const search = String(window.location?.search || '')
 
   if (currentHash.startsWith('#/')) {
-    const nativePathPrefix = targetPath.startsWith('/taxi/')
-      ? '/taxi/'
-      : targetPath.startsWith('/food/')
-        ? '/food/'
-        : targetPath.startsWith('/admin')
-          ? '/admin'
-          : ''
+    // Which module the shell is meant to be in. Derived from the same list as
+    // above so a module added to the routes cannot be missed here — naming
+    // only taxi/food/admin meant a Hotel or Tours target scored no prefix, so
+    // the branch below rewrote the hash on every load and no in-module route
+    // could survive a reload.
+    const nativePathPrefix = modulePrefixFor(targetPath)
 
-    const hashMatchesPrefix = nativePathPrefix ? hashPath.startsWith(nativePathPrefix) : false;
+    const hashMatchesPrefix = nativePathPrefix
+      ? hashPath === nativePathPrefix || hashPath.startsWith(`${nativePathPrefix}/`)
+      : false;
     const pathSuggestsTaxi = pathname.startsWith('/taxi/');
 
     // Normalize stale hash routes in native shells (e.g. /taxi/... with #/food/...)

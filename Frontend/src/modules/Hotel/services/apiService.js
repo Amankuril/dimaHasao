@@ -13,8 +13,22 @@ export const api = axios.create({
 // Interceptor to add Token and Log
 // Admin screens run on the platform admin session; partner/consumer screens use
 // the consumer token. The backend accepts both (see hotel authMiddleware).
+/**
+ * The route the user is actually on.
+ *
+ * The native shells run the app on HashRouter (see app/providers.jsx), so the
+ * route lives in the hash and `pathname` is only where index.html was served
+ * from — the Hotel APK sits on /hotel/partner for the whole session. Reading
+ * pathname alone mistook every in-app route for the launch path.
+ */
+const currentRoute = () => {
+  const hash = String(window.location?.hash || '');
+  if (hash.startsWith('#/')) return hash.slice(1).split('?')[0];
+  return String(window.location?.pathname || '');
+};
+
 const resolveToken = () => {
-  const isAdmin = String(window.location?.pathname || '').includes('/admin');
+  const isAdmin = currentRoute().includes('/admin');
   const adminToken = localStorage.getItem('admin_accessToken');
   const userToken = localStorage.getItem('token');
   return isAdmin ? adminToken || userToken : userToken || adminToken;
@@ -36,7 +50,7 @@ api.interceptors.response.use(
     const isBlocked = error.response?.data?.isBlocked;
 
     if (status === 401 || (status === 403 && isBlocked)) {
-      const path = String(window.location?.pathname || '');
+      const path = currentRoute();
       // Admin sessions are owned by the platform shell — don't clear them here.
       if (!path.includes('/admin')) {
         localStorage.removeItem('token');
@@ -46,9 +60,17 @@ api.interceptors.response.use(
           // consumer one ejected them from the module entirely: every partner
           // page fires a request on mount, so opening one without a partner
           // session bounced straight to /app with no route back.
-          window.location.href = path.startsWith('/hotel/partner')
+          const loginRoute = path.startsWith('/hotel/partner')
             ? '/hotel/partner/login'
             : '/app/login';
+
+          // Under HashRouter the route is the hash, so assigning a pathname
+          // would reload the whole document for an in-app navigation.
+          if (String(window.location?.hash || '').startsWith('#/')) {
+            window.location.hash = `#${loginRoute}`;
+          } else {
+            window.location.href = loginRoute;
+          }
         }
       }
     }

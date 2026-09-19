@@ -8,6 +8,33 @@ export const HOTEL_ADMIN_HOME = '/hotel/admin/dashboard'
 export const TOURS_ADMIN_HOME = '/tours/admin'
 export const GLOBAL_ADMIN_HOME = '/global/admin'
 
+/**
+ * Every path prefix app/routes.jsx mounts a module at.
+ *
+ * A native shell can be pointed at any of them — the Hotel partner APK loads
+ * /hotel/partner, for instance. A prefix missing from this list is not treated
+ * as a deep link, so the shell falls through to the consumer cold start and the
+ * APK opens the consumer login instead of its own module. Keep it in step with
+ * the <Route path="..."> list in app/routes.jsx.
+ */
+export const MODULE_PATH_PREFIXES = [
+  '/app',
+  '/food',
+  '/taxi',
+  '/hotel',
+  '/tours',
+  '/global',
+  '/admin',
+]
+
+/** The module prefix a path belongs to, or '' when it is not a module route. */
+export function modulePrefixFor(pathname = '') {
+  const path = String(pathname || '')
+  return (
+    MODULE_PATH_PREFIXES.find((prefix) => path === prefix || path.startsWith(`${prefix}/`)) || ''
+  )
+}
+
 /** Logged-in consumer default — Taxi opens first on app/web launch. */
 export const CONSUMER_POST_LOGIN_HOME = '/taxi/user'
 /** Guest browse after "Skip for now" — Food allows limited access without login. */
