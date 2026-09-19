@@ -7,6 +7,7 @@ import { QuickLinksGrid } from '../components/home/QuickLinksGrid';
 import { PromoBanner } from '../components/home/PromoBanner';
 import { WhyVisitGrid } from '../components/home/WhyVisitGrid';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CONSUMER_BRAND_LOGO } from "@/shared/constants/brandLogo";
 
 const HERO_SLIDES = [
   {
@@ -119,7 +120,7 @@ export const HomeScreen = () => {
             <img
               alt="Dima Hasao Tourism Logo"
               className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
-              src="/logo.png"
+              src={CONSUMER_BRAND_LOGO}
             />
           </motion.div>
 

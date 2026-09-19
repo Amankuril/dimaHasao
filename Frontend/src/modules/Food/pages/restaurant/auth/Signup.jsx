@@ -15,6 +15,7 @@ import DimaHasaoAuthShell, {
   authInputClass,
   authButtonClass,
 } from "@/shared/components/auth/DimaHasaoAuthShell"
+import { RESTAURANT_BRAND_LOGO } from "@/shared/constants/brandLogo"
 
 const countryCodes = [
   { code: "+91", country: "IN", flag: "🇮🇳" },
@@ -136,6 +137,7 @@ export default function RestaurantSignup() {
 
   return (
     <DimaHasaoAuthShell
+      logo={RESTAURANT_BRAND_LOGO}
       width="880px"
       blurb="Register your restaurant and start serving customers across the district."
       points={["List your menu", "Reach local diners", "Track every order", "Get paid on time"]}

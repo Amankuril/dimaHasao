@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, User, Mail, ArrowRight, Loader2, Shield, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../../services/apiService';
-import { DEFAULT_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import { HOTEL_BRAND_LOGO } from '@/shared/constants/brandLogo';
 import DimaHasaoAuthShell, {
     authFieldClass,
     authLabelClass,
@@ -117,6 +117,7 @@ const HotelLogin = () => {
 
     return (
         <DimaHasaoAuthShell
+      logo={HOTEL_BRAND_LOGO}
             width="760px"
             blurb="List your hotel, resort, lodge or homestay and take bookings from travellers exploring Dima Hasao."
             points={["Resorts", "Hotels", "Lodges", "Homestays"]}

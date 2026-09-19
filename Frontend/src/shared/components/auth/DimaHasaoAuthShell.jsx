@@ -24,6 +24,8 @@ export default function DimaHasaoAuthShell({
   points = ['Food', 'Taxi', 'Hotels', 'Tours', 'Festivals'],
   /** Widen for forms with two columns, narrow for a single field. */
   width = '940px',
+  /** The crest for this audience — each panel has its own. */
+  logo = DEFAULT_BRAND_LOGO,
 }) {
   return (
     <div className="dh-auth relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-[#04190c] px-4 py-8 sm:py-12">
@@ -71,7 +73,7 @@ export default function DimaHasaoAuthShell({
           <div className="relative hidden flex-col justify-between gap-8 border-r border-[#caa83e]/20 p-9 md:flex lg:p-11">
             <div>
               <img
-                src={DEFAULT_BRAND_LOGO}
+                src={logo}
                 alt="Dima Hasao Tourism"
                 className="h-24 w-24 object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.55)]"
               />
@@ -106,7 +108,7 @@ export default function DimaHasaoAuthShell({
           <div className="p-7 sm:p-9 lg:p-11">
             {/* The mark again for phones, where the identity panel is hidden. */}
             <img
-              src={DEFAULT_BRAND_LOGO}
+              src={logo}
               alt="Dima Hasao Tourism"
               className="mx-auto mb-4 h-16 w-16 object-contain md:hidden"
             />

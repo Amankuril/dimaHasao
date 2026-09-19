@@ -18,6 +18,7 @@ import { Loader } from '@googlemaps/js-api-loader'
 import AnimatedPage from "@food/components/user/AnimatedPage"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { reverseGeocodeWithGoogle, geocodeGooglePlaceId, getFreshGpsCoordinates } from "@food/utils/googleGeocoding"
+import { CONSUMER_BRAND_LOGO } from "@/shared/constants/brandLogo";
 
 const MAP_SEARCH_INPUT_CLASS =
   "pl-12 pr-10 h-14 bg-white dark:bg-[#1a1a1a] border-2 border-zinc-200/90 dark:border-zinc-700 rounded-2xl focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-zinc-400 dark:focus:border-zinc-500 text-zinc-900 dark:text-zinc-50 placeholder:!text-neutral-400 dark:placeholder:!text-neutral-500 font-medium text-sm transition-all shadow-sm w-full"
@@ -89,7 +90,7 @@ const showAddressRemovedBrandedToast = (uiTheme) => {
       <div className="w-[calc(100vw-28px)] sm:w-[340px] flex items-center gap-2.5 py-2 px-3 rounded-2xl bg-white/72 dark:bg-zinc-900/72 backdrop-blur-xl border border-white/60 dark:border-white/10 shadow-[0_8px_28px_rgba(0,0,0,0.14)] ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${uiTheme.toastGradient} flex items-center justify-center p-0.5 shadow-md flex-shrink-0`}>
           <img
-            src="/logo.png"
+            src={CONSUMER_BRAND_LOGO}
             alt="Dima Hasao Food"
             className="w-full h-full object-contain brightness-0 invert scale-110"
           />

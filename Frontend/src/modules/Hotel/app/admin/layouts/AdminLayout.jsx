@@ -27,7 +27,7 @@ import useAdminStore from '../store/adminStore';
 import adminService from '../../../services/adminService';
 import AdminModuleSwitcher from '@/shared/components/admin/AdminModuleSwitcher.jsx';
 import { clearModuleAuth } from '@/shared/utils/moduleAuth';
-import { DEFAULT_BRAND_LOGO } from '@/shared/constants/brandLogo';
+import { HOTEL_BRAND_LOGO } from '@/shared/constants/brandLogo';
 
 const HOTEL_ADMIN_BASE = '/hotel/admin';
 
@@ -128,7 +128,7 @@ const AdminLayout = () => {
                     <div className="shrink-0 px-3 py-3 border-b border-neutral-800/60 bg-neutral-900">
                         <div className="relative flex items-center mb-3 min-h-[80px]">
                             <img
-                                src={DEFAULT_BRAND_LOGO}
+                                src={HOTEL_BRAND_LOGO}
                                 alt="Dima Hasao"
                                 className={isCollapsed ? 'h-14 w-14 object-contain' : 'h-20 w-20 object-contain'}
                             />

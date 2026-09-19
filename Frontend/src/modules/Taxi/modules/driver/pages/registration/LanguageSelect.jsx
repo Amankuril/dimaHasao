@@ -4,13 +4,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Check, Globe, ChevronRight } from 'lucide-react';
 import { useSettings } from '../../../../shared/context/SettingsContext';
 import { getLocalDriverToken, getStoredDriverRole } from '../../services/registrationService';
+import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
 
 const LanguageSelect = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { settings } = useSettings();
     const appName = settings.general?.app_name || 'App';
-    const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || '';
+    const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || DRIVER_BRAND_LOGO;
     const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('driver_lang') || 'english');
     const isAuthenticatedDriver = Boolean(getLocalDriverToken()) && !location.state?.registrationFlow;
     const authenticatedHome =

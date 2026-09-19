@@ -4,6 +4,7 @@ import { useBooking } from '../context/BookingContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { requestUserOtp, verifyUserOtp, completeUserSignup } from '../../../services/api/auth';
 import { setUnifiedAuthData } from '../../../shared/utils/moduleAuth';
+import { CONSUMER_BRAND_LOGO } from "@/shared/constants/brandLogo";
 
 const TEST_PHONE =
   String(import.meta.env?.VITE_USE_DEFAULT_TEST_PHONE) === 'true'
@@ -17,7 +18,6 @@ export const LoginScreen = () => {
   const [phone, setPhone] = useState(TEST_PHONE);
   const [fullName, setFullName] = useState('');
   const [otp, setOtp] = useState('');
-  const [devOtp, setDevOtp] = useState('');
   // 'phone' → 'otp' → 'name' (name step only for unregistered numbers).
   const [step, setStep] = useState('phone');
   const [needsName, setNeedsName] = useState(false);
@@ -48,12 +48,16 @@ export const LoginScreen = () => {
       // Backend tells us up front whether this number already has an account,
       // so the OTP step can present itself as sign-in vs. registration.
       setNeedsName(data.nextStepIfVerified === 'collect_name');
-      // Dev/staging backends return the OTP so it can be shown in-app.
-      const exposed = String(data.otp || '');
-      setDevOtp(exposed);
-      if (exposed) setOtp(exposed);
+      /*
+       * Dev and staging backends return the code in the response. It is
+       * deliberately not used: filling the field, printing it under the input
+       * or putting it in the toast all mean nobody ever types an OTP, so the
+       * one step this screen exists to test is never exercised. The code still
+       * arrives by SMS, and in dev it is the fixed one.
+       */
+      setOtp('');
       setStep('otp');
-      showToast(exposed ? `OTP sent! Code: ${exposed} 📱` : 'OTP sent to your phone 📱');
+      showToast('OTP sent to your phone 📱');
     } catch (err) {
       showToast(readApiError(err, 'Could not send OTP. Please try again.'));
     } finally {
@@ -168,7 +172,7 @@ export const LoginScreen = () => {
           <img
             alt="Dima Hasao Tourism Logo"
             className="w-full h-full object-contain"
-            src="/logo.png"
+            src={CONSUMER_BRAND_LOGO}
           />
         </motion.div>
 
@@ -318,9 +322,7 @@ export const LoginScreen = () => {
                   />
                 </div>
                 <div className="flex justify-between items-center text-[11px] px-1 pt-0.5">
-                  <span className="text-amber-200/80">
-                    {devOtp ? `Code: ${devOtp}` : 'Sent to your phone'}
-                  </span>
+                  <span className="text-amber-200/80">Sent to your phone</span>
                   <button
                     type="button"
                     onClick={handleSendOtp}

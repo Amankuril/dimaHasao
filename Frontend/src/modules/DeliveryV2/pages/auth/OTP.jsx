@@ -7,7 +7,7 @@ import { deliveryAPI } from "@food/api"
 import { setAuthData as storeAuthData } from "@food/utils/auth"
 import { collectFcmTokenFast, persistModuleFcmToken, finalizeDeliveryPendingSubmission, prefetchModuleFcmToken } from "@food/utils/firebaseMessaging"
 import { getUserFacingApiError, showUserFacingApiError } from "@/shared/utils/apiError"
-import { DEFAULT_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import { DRIVER_BRAND_LOGO } from "@/shared/constants/brandLogo"
 
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -559,7 +559,7 @@ export default function DeliveryOTP() {
           {/* Main Title */}
           <div className="mb-5 text-center flex flex-col items-center">
             <img
-              src={DEFAULT_BRAND_LOGO}
+              src={DRIVER_BRAND_LOGO}
               alt="Dima Hasao"
               className="h-28 -mb-3.5 object-contain drop-shadow-md"
             />

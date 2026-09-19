@@ -13,6 +13,7 @@ import {
 } from '../../services/registrationService';
 import { useSettings } from '../../../../shared/context/SettingsContext';
 import taxiBg from '../../../../assets/images/light-taxi-bg.png';
+import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
 
 const getErrorMessage = (err) => String(
   err?.message ||
@@ -26,7 +27,7 @@ const PhoneRegistration = () => {
   const location = useLocation();
   const { settings } = useSettings();
   const appName = settings.general?.app_name || 'Dima Hasao Trawler';
-  const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || '';
+  const appLogo = settings.general?.logo || settings.customization?.logo || settings.general?.favicon || DRIVER_BRAND_LOGO;
   const storedSession = getStoredDriverRegistrationSession();
   const isOwnerPortal = location.pathname.startsWith('/taxi/owner');
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);

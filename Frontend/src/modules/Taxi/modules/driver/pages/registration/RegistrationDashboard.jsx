@@ -19,13 +19,14 @@ import {
 import RegistrationProgress from '../../../shared/components/RegistrationProgress';
 import { useSettings } from '../../../../shared/context/SettingsContext';
 import { getStoredDriverRegistrationSession } from '../../services/registrationService';
+import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
 
 const RegistrationDashboard = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { settings } = useSettings();
     const appName = settings.general?.app_name || 'App';
-    const appLogo = settings.general?.logo || settings.customization?.logo;
+    const appLogo = settings.general?.logo || settings.customization?.logo || DRIVER_BRAND_LOGO;
     const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
     const storedSession = getStoredDriverRegistrationSession();
 

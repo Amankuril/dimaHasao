@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ShieldCheck, Wallet, Clock, Star, TrendingUp, Sparkles, UserCheck } from 'lucide-react';
 import DriverHero from '@/assets/driver_welcome_hero.png';
 import { useSettings } from '../../../../shared/context/SettingsContext';
+import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
 
 const partnerAvatars = [
     {
@@ -24,7 +25,7 @@ const DriverWelcome = () => {
     const navigate = useNavigate();
     const { settings } = useSettings();
     const appName = settings.general?.app_name || 'App';
-    const appLogo = settings.general?.logo || settings.customization?.logo;
+    const appLogo = settings.general?.logo || settings.customization?.logo || DRIVER_BRAND_LOGO;
 
     const perks = [
         { icon: <Wallet size={18} />, title: 'Weekly Payouts', sub: 'Receive your earnings directly every week.' },

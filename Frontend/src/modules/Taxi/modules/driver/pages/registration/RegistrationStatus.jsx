@@ -22,6 +22,7 @@ import {
   verifyDriverPanDocument,
   verifyDriverRcDocument,
 } from "../../services/registrationService";
+import { DRIVER_BRAND_LOGO } from '@/shared/constants/brandLogo';
 
 const APPROVAL_POLL_MS = 2500;
 const normalizePortalRole = (role) => {
@@ -82,7 +83,7 @@ const RegistrationStatus = () => {
   const verificationStartedRef = useRef({});
 
   const appName = settings.general?.app_name || "App";
-  const appLogo = settings.general?.logo || settings.customization?.logo;
+  const appLogo = settings.general?.logo || settings.customization?.logo || DRIVER_BRAND_LOGO;
   const isVehicleReapproval = location.state?.statusReason === "vehicle-update" || driver?.approve === false;
   const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
 
