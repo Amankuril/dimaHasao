@@ -11,17 +11,32 @@
  * (the admin console, the platform footer).
  */
 
+/*
+ * The source art is 1254x1254 at ~1.5MB per mark, which is fine as a master
+ * and absurd for something drawn at 96px on a sign-in screen. Each mark is
+ * served from a 384px derivative (~68kB, 96% smaller) generated from the
+ * original next to it; the full-size file stays in the same folder.
+ */
+
 /** Consumer app — the Juthai gate and dancers. */
-export const CONSUMER_BRAND_LOGO = "/logo-user.png"
+export const CONSUMER_BRAND_LOGO = "/assets/logos/user-384.png"
 
 /** Restaurant partner panel — the stay-and-eat mark. */
-export const RESTAURANT_BRAND_LOGO = "/logo-restaurant.png"
+export const RESTAURANT_BRAND_LOGO = "/assets/logos/restaurant-384.png"
 
 /** Hotel partner panel — the operator mark. */
-export const HOTEL_BRAND_LOGO = "/logo-hotel.png"
+export const HOTEL_BRAND_LOGO = "/assets/logos/hotel-384.png"
 
-/** Taxi drivers and food delivery partners — the on-the-road mark. */
-export const DRIVER_BRAND_LOGO = "/logo-driver.png"
+/**
+ * Taxi drivers and food delivery partners — the on-the-road mark.
+ *
+ * The art for this one has not landed yet: taxilogo.png and deliverylogo.png
+ * in that folder are both byte-identical copies of the hotel mark. Pointing at
+ * a name that does not exist means these screens fall back to the district
+ * crest rather than showing a hotel logo to a driver. Save the vehicles
+ * artwork as driver-384.png and it appears with no code change.
+ */
+export const DRIVER_BRAND_LOGO = "/assets/logos/driver-384.png"
 
 /** The district crest. Shared surfaces and the fallback. */
 export const DEFAULT_BRAND_LOGO = "/logo.png"
