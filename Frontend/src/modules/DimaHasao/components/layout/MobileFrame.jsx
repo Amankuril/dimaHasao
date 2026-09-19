@@ -23,22 +23,37 @@ export const MobileFrame = ({ children }) => {
   const scrollMemory = useRef(new Map());
 
   /*
-   * Record the outgoing position, in a layout-effect *cleanup*.
+   * Record where this entry is scrolled to, continuously.
    *
-   * The timing is the whole trick. On a navigation React runs every layout
-   * effect cleanup before any new layout effect, so this reads the viewport
-   * while it is still scrolled where the person left it — a moment later the
-   * restore effect below has already moved it.
+   * Two listeners, because neither alone is enough:
    *
-   * The obvious implementation, saving on the container's scroll event, was
-   * tried first and is not reliable: this element does not emit scroll events
-   * in every environment, and when it does not, nothing is ever recorded.
+   * `scroll` is the obvious one and covers ordinary scrolling — but it does
+   * not fire in every environment, and where it does not, nothing is ever
+   * recorded.
+   *
+   * `click`, captured, is the one that actually matters. Every in-app
+   * navigation starts with a tap, and this runs before React has swapped the
+   * screen. That timing is the point: by the time a layout-effect cleanup
+   * runs the new screen is already in the DOM, and if it is shorter than the
+   * old scroll offset the browser has already clamped `scrollTop` — the
+   * position is gone before anything gets a chance to read it. Saving on the
+   * tap captures it while it is still true.
    */
   useLayoutEffect(() => {
     const viewport = scrollViewportRef.current;
+    if (!viewport) return undefined;
+
     const key = location.key;
+    const remember = () => {
+      scrollMemory.current.set(key, viewport.scrollTop);
+    };
+
+    viewport.addEventListener('scroll', remember, { passive: true });
+    viewport.addEventListener('click', remember, { capture: true, passive: true });
+
     return () => {
-      if (viewport) scrollMemory.current.set(key, viewport.scrollTop);
+      viewport.removeEventListener('scroll', remember);
+      viewport.removeEventListener('click', remember, { capture: true });
     };
   }, [location.key]);
 
