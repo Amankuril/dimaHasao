@@ -28,7 +28,6 @@ export const FaqPage = lazy(() => import('../modules/shared/pages/FaqPage'));
 export const ServicesPage = lazy(() => import('../modules/shared/pages/ServicesPage'));
 export const BlogPage = lazy(() => import('../modules/shared/pages/BlogPage'));
 export const LinksPage = lazy(() => import('../modules/shared/pages/LinksPage'));
-export const CareersPage = lazy(() => import('../modules/shared/pages/CareersPage'));
 export const PhonePeStatusPage = lazy(() => import('../modules/shared/pages/PhonePeStatusPage'));
 export const RazorpayStatusPage = lazy(() => import('../modules/shared/pages/RazorpayStatusPage'));
 export const RazorpayLaunchPage = lazy(() => import('../modules/shared/pages/RazorpayLaunchPage'));
@@ -248,8 +247,6 @@ export const AdminDispatcherAddons = lazy(() => import('../modules/admin/pages/s
 export const AdminCountryManagement = lazy(() => import('../modules/admin/pages/masters/CountryManagement'));
 export const AdminSupportTicketTitle = lazy(() => import('../modules/admin/pages/support/TicketTitle'));
 export const AdminSupportTickets = lazy(() => import('../modules/admin/pages/support/SupportTickets'));
-export const AdminJobPositions = lazy(() => import('../modules/admin/pages/careers/JobPositions'));
-export const AdminCareerApplications = lazy(() => import('../modules/admin/pages/careers/CareerApplications'));
 export const AdminUserReport = lazy(() => import('../modules/admin/pages/reports/UserReport'));
 export const AdminDriverReport = lazy(() => import('../modules/admin/pages/reports/DriverReport'));
 export const AdminDriverDutyReport = lazy(() => import('../modules/admin/pages/reports/DriverDutyReport'));

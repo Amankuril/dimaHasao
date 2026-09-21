@@ -13,7 +13,6 @@ import {
   AdminBusCommissionManager,
   AdminBusServiceDetails,
   AdminBusServiceManager,
-  AdminCareerApplications,
   AdminCMSBuilder,
   AdminCountryManagement,
   AdminCreatePackagePrice,
@@ -60,7 +59,6 @@ import {
   AdminGlobalDocuments,
   AdminHeaderFooter,
   AdminHeatMap,
-  AdminJobPositions,
   AdminLanguages,
   AdminLayout,
   AdminMailSettings,
@@ -367,8 +365,6 @@ const adminRoutes = (
       <Route path="settings/cms/header-footer" element={<AdminHeaderFooter />} />
       <Route path="support/ticket-title" element={<AdminSupportTicketTitle />} />
       <Route path="support/tickets" element={<AdminSupportTickets />} />
-      <Route path="careers/jobs" element={<AdminJobPositions />} />
-      <Route path="careers/applications" element={<AdminCareerApplications />} />
       <Route path="*" element={<AdminSectionPlaceholder />} />
 
       <Route path="reports/user" element={<AdminUserReport />} />

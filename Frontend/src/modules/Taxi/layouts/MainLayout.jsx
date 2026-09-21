@@ -24,7 +24,6 @@ const MainLayout = ({ children }) => {
     '/cancellation',
     '/blog',
     '/links',
-    '/careers',
   ];
   const isStaticPath = staticPages.includes(location.pathname);
   const isAdminPath =

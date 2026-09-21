@@ -16,7 +16,6 @@ import {
   BusSeats,
   CabHome,
   CabSharing,
-  CareersPage,
   ComingSoon,
   ContactPage,
   DeleteAccount,
@@ -82,7 +81,6 @@ const publicRoutes = (
     <Route path="/faq" element={<FaqPage />} />
     <Route path="/services" element={<ServicesPage />} />
     <Route path="/blog" element={<BlogPage />} />
-    <Route path="/careers" element={<CareersPage />} />
     <Route path="/links" element={<LinksPage />} />
     <Route path="/terms" element={<LegalPage />} />
     <Route path="/terms-and-conditions" element={<LegalPage />} />

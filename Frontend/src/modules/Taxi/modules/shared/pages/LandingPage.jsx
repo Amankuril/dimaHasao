@@ -443,7 +443,6 @@ function LandingPage() {
               <h3>COMPANY</h3>
               <ul>
                 <li><Link to="/about">About Us</Link></li>
-                <li><Link to="/careers">Careers</Link></li>
                 <li><Link to="/blog">Press</Link></li>
               </ul>
             </div>
