@@ -566,19 +566,6 @@ export const updateMailSettings = asyncHandler(async (req, res) =>
   ok(res, { settings: await adminService.updateMailSettings(req.body) }),
 );
 
-export const getRechargeApiSettings = asyncHandler(async (_req, res) =>
-  ok(res, await adminService.getRechargeApiSettings()),
-);
-export const updateRechargeApiSettings = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateRechargeApiSettings(req.body)),
-);
-export const generateRechargeApiToken = asyncHandler(async (_req, res) =>
-  ok(res, await adminService.generateRechargeApiToken()),
-);
-export const runRechargeApiTest = asyncHandler(async (_req, res) =>
-  ok(res, await adminService.runRechargeApiTest()),
-);
-
 export const getUserOnboarding = asyncHandler(async (_req, res) =>
   res.json({
     success: true,

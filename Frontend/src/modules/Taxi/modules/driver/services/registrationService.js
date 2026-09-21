@@ -207,15 +207,6 @@ export const getDriverOnboardingSession = ({ registrationId, phone }) =>
     params: phone ? { phone } : {},
   });
 
-export const getDriverOnboardingSignupOptions = () =>
-  api.get("/drivers/onboarding/signup-options");
-
-export const saveDriverOnboardingRole = (payload) =>
-  api.patch("/drivers/onboarding/role", payload);
-
-export const saveDriverOnboardingRoleDetails = (payload) =>
-  api.patch("/drivers/onboarding/role-details", payload);
-
 export const saveDriverPersonalDetails = (payload) =>
   api.patch("/drivers/onboarding/personal", payload);
 
@@ -224,13 +215,6 @@ export const saveDriverReferral = (payload) =>
 
 export const saveDriverVehicle = (payload) =>
   api.patch("/drivers/onboarding/vehicle", payload);
-
-export const verifyDriverVehicleRc = (payload) =>
-  api.post("/drivers/onboarding/vehicle/verify-rc", payload);
-
-export const verifyDriverOnboardingLicenseDocument = (documentKey, payload) =>
-  api.post(`/drivers/onboarding/documents/${encodeURIComponent(documentKey)}/verify-license`, payload);
-
 export const saveDriverDocuments = (payload) =>
   api.patch("/drivers/onboarding/documents", payload);
 
@@ -255,9 +239,7 @@ export const buildDriverOnboardingSessionSnapshot = (payload = {}, fallbackSessi
     registrationId: serverSession.registrationId || fallbackSession.registrationId || "",
     phone: serverSession.phone || fallbackSession.phone || "",
     role: serverSession.role || fallbackSession.role || "driver",
-    roleConfirmed: serverSession.roleConfirmed ?? fallbackSession.roleConfirmed ?? true,
-    needsRoleSelection:
-      fallbackSession.needsRoleSelection === true && serverSession.roleConfirmed === false,
+    roleConfirmed: true,
     status: serverSession.status || fallbackSession.status || "",
     otpVerified:
       serverSession.otpVerified === true
@@ -307,40 +289,21 @@ export const buildDriverOnboardingSessionSnapshot = (payload = {}, fallbackSessi
 
 export const getDriverOnboardingResumeStep = (session = {}) => {
   const status = String(session?.status || "").toLowerCase();
-  const role = normalizeDriverPortalRole(session?.role);
-  const hasOtp = Boolean(session?.otpVerified);
-  const roleConfirmed = session?.roleConfirmed !== false;
   const hasPersonal = Boolean(
     String(session?.fullName || "").trim()
     && String(session?.email || "").trim()
     && String(session?.gender || "").trim(),
   );
   const hasVehicle = Boolean(
-    String(session?.locationId || "").trim()
-    && (
-      String(session?.role || "").toLowerCase() === "owner"
-        ? String(session?.companyName || "").trim()
-        : String(session?.vehicleTypeId || "").trim()
-    ),
+    String(session?.vehicle?.locationId || session?.locationId || "").trim()
+    && String(session?.vehicle?.vehicleTypeId || session?.vehicleTypeId || "").trim(),
   );
 
-  if (!hasOtp && status !== "otp_verified" && status !== "personal_saved" && status !== "vehicle_saved" && status !== "documents_saved") {
+  if (
+    !session?.otpVerified
+    && !["otp_verified", "personal_saved", "vehicle_saved", "documents_saved"].includes(status)
+  ) {
     return "otp-verify";
-  }
-
-  if (!roleConfirmed) {
-    return "select-role";
-  }
-
-  if (session?.needsRoleSelection === true) {
-    return "select-role";
-  }
-
-  if (["bus_driver", "service_center", "service_center_staff"].includes(role)) {
-    if (status === "personal_saved" || status === "role_details_saved" || Object.keys(session?.roleDetails || {}).length > 0) {
-      return "role-signup";
-    }
-    return "step-personal";
   }
 
   if (status === "vehicle_saved" || status === "documents_saved" || hasVehicle) {
@@ -348,7 +311,7 @@ export const getDriverOnboardingResumeStep = (session = {}) => {
   }
 
   if (status === "personal_saved" || hasPersonal) {
-    return "step-referral";
+    return "step-vehicle";
   }
 
   return "step-personal";
@@ -492,10 +455,6 @@ export const getDriverRideHistory = (params = {}) =>
 
 export const updateDriverProfile = (payload) =>
   api.patch("/drivers/me", payload, withDriverAuth());
-export const verifyDriverBankDetails = (mode = "penny_less") =>
-  api.post("/drivers/me/bank-details/verify", { mode }, withDriverAuth());
-export const verifyDriverUpiDetails = (mode = "basic") =>
-  api.post("/drivers/me/upi/verify", { mode }, withDriverAuth());
 export const deleteCurrentDriverAccount = (reason = "") =>
   api.delete("/drivers/me", withDriverAuth({ data: { reason } }));
 export const requestDriverAccountDeletion = (reason) =>
@@ -683,42 +642,6 @@ export const updateDriverDocument = (documentKey, document) =>
     { document },
     withDriverAuth(),
   );
-
-export const verifyDriverLicenseDocument = (documentKey, payload = {}) =>
-  api.post(
-    `/drivers/documents/${encodeURIComponent(documentKey)}/verify-license`,
-    payload,
-    withDriverAuth(),
-  );
-
-export const verifyDriverPanDocument = (documentKey, payload = {}) =>
-  api.post(
-    `/drivers/documents/${encodeURIComponent(documentKey)}/verify-pan`,
-    payload,
-    withDriverAuth(),
-  );
-
-export const verifyDriverGstinDocument = (documentKey, payload = {}) =>
-  api.post(
-    `/drivers/documents/${encodeURIComponent(documentKey)}/verify-gst`,
-    payload,
-    withDriverAuth(),
-  );
-
-export const verifyDriverRcDocument = (documentKey, payload = {}) =>
-  api.post(
-    `/drivers/documents/${encodeURIComponent(documentKey)}/verify-rc`,
-    payload,
-    withDriverAuth(),
-  );
-
-export const verifyDriverBankDocument = (documentKey, payload = {}) =>
-  api.post(
-    `/drivers/documents/${encodeURIComponent(documentKey)}/verify-bank`,
-    payload,
-    withDriverAuth(),
-  );
-
 export const getDriverIncentives = () =>
   api.get("/drivers/incentives", withDriverAuth());
 

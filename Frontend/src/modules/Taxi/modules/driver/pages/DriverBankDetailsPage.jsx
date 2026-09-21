@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, Landmark, Loader2, QrCode, Save, ShieldCheck, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentDriver, updateDriverProfile, verifyDriverBankDetails, verifyDriverUpiDetails } from '../services/registrationService';
+import { getCurrentDriver, updateDriverProfile } from '../services/registrationService';
 import { uploadService } from '../../../shared/services/uploadService';
 
 const unwrapDriver = (response) => response?.data?.data || response?.data || response || null;
@@ -57,8 +57,6 @@ const DriverBankDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [verifyingUpi, setVerifyingUpi] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -161,72 +159,6 @@ const DriverBankDetailsPage = () => {
       setError(err?.response?.data?.message || err?.message || 'Unable to save bank details');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleVerify = async () => {
-    if (saving || uploading || verifying) return;
-
-    setVerifying(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      await updateDriverProfile({
-        bankDetails: {
-          accountHolderName: bankForm.accountHolderName,
-          upiId: bankForm.upiId,
-          qrCodeImage: bankForm.qrCodeImage,
-          accountNumber: bankForm.accountNumber,
-          ifsc: bankForm.ifsc,
-          branchName: bankForm.branchName,
-        },
-      });
-
-      const response = await verifyDriverBankDetails('penny_less');
-      const payload = unwrapDriver(response);
-      const nextBankDetails = normalizeBankDetails(payload?.bankDetails || {});
-
-      setDriver((current) => ({ ...(current || {}), bankDetails: nextBankDetails }));
-      setBankForm(nextBankDetails);
-      setSuccess(payload?.verification?.msg || 'Bank account verified successfully.');
-    } catch (err) {
-      setError(err?.response?.data?.message || err?.message || 'Unable to verify bank details');
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const handleVerifyUpi = async () => {
-    if (saving || uploading || verifyingUpi) return;
-
-    setVerifyingUpi(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      await updateDriverProfile({
-        bankDetails: {
-          accountHolderName: bankForm.accountHolderName,
-          upiId: bankForm.upiId,
-          qrCodeImage: bankForm.qrCodeImage,
-          accountNumber: bankForm.accountNumber,
-          ifsc: bankForm.ifsc,
-          branchName: bankForm.branchName,
-        },
-      });
-
-      const response = await verifyDriverUpiDetails('advance');
-      const payload = unwrapDriver(response);
-      const nextBankDetails = normalizeBankDetails(payload?.bankDetails || {});
-
-      setDriver((current) => ({ ...(current || {}), bankDetails: nextBankDetails }));
-      setBankForm(nextBankDetails);
-      setSuccess(payload?.verification?.msg || 'UPI verified successfully.');
-    } catch (err) {
-      setError(err?.response?.data?.message || err?.message || 'Unable to verify UPI details');
-    } finally {
-      setVerifyingUpi(false);
     }
   };
 
@@ -413,7 +345,7 @@ const DriverBankDetailsPage = () => {
                 <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{success}</p>
               ) : null}
 
-              <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => navigate(`${routePrefix}/profile`)}
@@ -423,34 +355,8 @@ const DriverBankDetailsPage = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={handleVerify}
-                  disabled={saving || uploading || verifying}
-                  className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 text-[13px] font-bold text-emerald-700 disabled:opacity-60"
-                >
-                  {verifying ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : (
-                    <ShieldCheck size={15} />
-                  )}
-                  Verify
-                </button>
-                <button
-                  type="button"
-                  onClick={handleVerifyUpi}
-                  disabled={saving || uploading || verifyingUpi}
-                  className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 text-[13px] font-bold text-sky-700 disabled:opacity-60"
-                >
-                  {verifyingUpi ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : (
-                    <ShieldCheck size={15} />
-                  )}
-                  Verify UPI
-                </button>
-                <button
-                  type="button"
                   onClick={handleSave}
-                  disabled={saving || uploading || verifying || verifyingUpi}
+                  disabled={saving || uploading}
                   className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 text-[13px] font-bold text-white disabled:opacity-60"
                 >
                   {saving ? (

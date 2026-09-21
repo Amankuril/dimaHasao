@@ -84,14 +84,10 @@ const AddressSettings = lazy(() => import('./modules/user/pages/profile/AddressS
 import DriverLayout from './modules/driver/components/DriverLayout';
 
 // Driver Module - Registration
-const LanguageSelect = lazy(() => import('./modules/driver/pages/registration/LanguageSelect'));
-const DriverWelcome = lazy(() => import('./modules/driver/pages/registration/DriverWelcome'));
 const PhoneRegistration = lazy(() => import('./modules/driver/pages/registration/PhoneRegistration'));
 const OTPVerification = lazy(() => import('./modules/driver/pages/registration/OTPVerification'));
-const RoleSelection = lazy(() => import('./modules/driver/pages/registration/RoleSelection'));
 const RegistrationStatus = lazy(() => import('./modules/driver/pages/registration/RegistrationStatus'));
 const StepPersonal = lazy(() => import('./modules/driver/pages/registration/StepPersonal'));
-const StepReferral = lazy(() => import('./modules/driver/pages/registration/StepReferral'));
 const StepVehicle = lazy(() => import('./modules/driver/pages/registration/StepVehicle'));
 const StepDocuments = lazy(() => import('./modules/driver/pages/registration/StepDocuments'));
 const ApplicationStatus = lazy(() => import('./modules/driver/pages/registration/ApplicationStatus'));
@@ -686,16 +682,12 @@ function TaxiApp() {
                   index
                   element={<DriverEntryRedirect />}
                 />
-                <Route path="lang-select" element={<LanguageSelect />} />
-                <Route path="welcome" element={<DriverWelcome />} />
                 <Route path="login" element={<PhoneRegistration />} />
                 <Route path="reg-phone" element={<PhoneRegistration />} />
                 <Route path="otp-verify" element={<OTPVerification />} />
                 {/* Reached when one phone holds several portal roles; both
                     OTPVerification and StepPersonal navigate here. */}
-                <Route path="select-role" element={<RoleSelection />} />
                 <Route path="step-personal" element={<StepPersonal />} />
-                <Route path="step-referral" element={<StepReferral />} />
                 <Route path="step-vehicle" element={<StepVehicle />} />
                 <Route path="step-documents" element={<StepDocuments />} />
                 <Route

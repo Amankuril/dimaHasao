@@ -168,14 +168,3 @@ export const acknowledgePhonePeCallback = asyncHandler(async (req, res) => {
     });
 });
 
-export const acknowledgeRechargeApiCallback = asyncHandler(async (req, res) => {
-    return res.json({
-        success: true,
-        message: 'Recharge API callback received',
-        data: {
-            query: req.query || {},
-            body: req.body || {},
-            receivedAt: new Date().toISOString(),
-        },
-    });
-});

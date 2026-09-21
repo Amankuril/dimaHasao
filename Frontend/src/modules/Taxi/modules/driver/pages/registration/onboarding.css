@@ -1,0 +1,167 @@
+/*
+ * Driver onboarding — Dima Hasao theme.
+ *
+ * These screens arrived from the previous product painted in its black-and-gold
+ * SaaS look (slate-900 headings on white, amber accents) and never followed the
+ * district palette the rest of the app uses. The tokens below match the hotel
+ * partner and restaurant panels so the four partner surfaces read as one
+ * product: district green on the cream ground, amber only as an accent.
+ *
+ * Scoped to .dh-onboarding rather than :root — the taxi bundle is lazily loaded
+ * and CSS is never unloaded once it is, so an unscoped rule here would follow
+ * the user into every other module for the rest of the session.
+ */
+.dh-onboarding {
+  --dh-primary: #0a4d2b;
+  --dh-primary-strong: #06381e;
+  --dh-primary-soft: #e8f2ec;
+  --dh-accent: #f59e0b;
+  --dh-surface: #ffffff;
+  --dh-bg: #faf6ed;
+  --dh-border: #e5ddc3;
+  --dh-text: #1f1f24;
+  --dh-muted: #6b7280;
+  --dh-danger: #b91c1c;
+  --dh-danger-soft: #fef2f2;
+
+  background: var(--dh-bg);
+  color: var(--dh-text);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100dvh;
+}
+
+/* ---- Progress -------------------------------------------------------- */
+
+.dh-progress-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--dh-border);
+  overflow: hidden;
+}
+
+.dh-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--dh-primary);
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- Fields ---------------------------------------------------------- */
+
+.dh-field {
+  border: 1.5px solid var(--dh-border);
+  background: var(--dh-surface);
+  border-radius: 16px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.dh-field:focus-within {
+  border-color: var(--dh-primary);
+  box-shadow: 0 0 0 4px rgb(10 77 43 / 0.08);
+}
+
+.dh-field[data-invalid='true'] {
+  border-color: var(--dh-danger);
+  box-shadow: 0 0 0 4px rgb(185 28 28 / 0.07);
+}
+
+.dh-field input,
+.dh-field select,
+.dh-field textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--dh-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dh-field input::placeholder,
+.dh-field textarea::placeholder {
+  color: #c2bda9;
+  font-weight: 500;
+}
+
+.dh-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dh-muted);
+}
+
+/* ---- Choice chips ---------------------------------------------------- */
+
+.dh-chip {
+  border: 1.5px solid var(--dh-border);
+  background: var(--dh-surface);
+  color: var(--dh-muted);
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 160ms ease;
+}
+
+.dh-chip:hover:not([data-selected='true']) {
+  border-color: var(--dh-primary);
+  color: var(--dh-primary);
+}
+
+.dh-chip[data-selected='true'] {
+  background: var(--dh-primary);
+  border-color: var(--dh-primary);
+  color: #fff;
+}
+
+/* ---- Buttons --------------------------------------------------------- */
+
+.dh-cta {
+  background: var(--dh-primary);
+  color: #fff;
+  border-radius: 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.dh-cta:hover:not(:disabled) {
+  background: var(--dh-primary-strong);
+}
+
+.dh-cta:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.dh-cta:disabled {
+  background: #d9d3c2;
+  color: #93917f;
+  cursor: not-allowed;
+}
+
+.dh-ghost {
+  color: var(--dh-primary);
+  font-weight: 700;
+}
+
+.dh-ghost:hover {
+  color: var(--dh-primary-strong);
+}
+
+/* ---- Cards ----------------------------------------------------------- */
+
+.dh-card {
+  background: var(--dh-surface);
+  border: 1px solid var(--dh-border);
+  border-radius: 22px;
+}
+
+.dh-alert {
+  background: var(--dh-danger-soft);
+  border: 1px solid rgb(185 28 28 / 0.2);
+  color: var(--dh-danger);
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+}

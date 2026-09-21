@@ -17,10 +17,6 @@ import {
 } from './loginOtpService.js';
 import { findZoneByPickup } from './locationService.js';
 import { createOrUpdateOtp, verifyOtp } from '../../../../core/otp/otp.service.js';
-import {
-  verifyDrivingLicenseWithRecharge,
-  verifyRcWithRecharge,
-} from '../../services/rechargeVerificationService.js';
 import { WalletTransaction } from '../models/WalletTransaction.js';
 import { applyDriverWalletAdjustment } from './walletService.js';
 
@@ -103,79 +99,6 @@ const getPrimaryRegisterFor = (serviceCategories = [], fallback = 'taxi') => {
   return String(fallback || 'taxi').trim().toLowerCase() || 'taxi';
 };
 const normalizeReferralCode = (value = '') => String(value || '').trim().toUpperCase();
-const buildOnboardingRcVerificationRequestId = (session) =>
-  `RC-${String(session?.registrationId || '').replace(/[^A-Za-z0-9]/g, '').slice(-8) || 'ONBOARD'}-${Date.now()}`;
-const buildOnboardingLicenseVerificationRequestId = (session) =>
-  `DL-${String(session?.registrationId || '').replace(/[^A-Za-z0-9]/g, '').slice(-8) || 'ONBOARD'}-${Date.now()}`;
-
-const resolveRechargeVerificationState = (providerResponse = {}, fallbackMessage = '') => {
-  const normalizedStatus = String(providerResponse?.status ?? '').trim().toLowerCase();
-  const message = String(
-    providerResponse?.cardData?.response?.message ||
-    providerResponse?.cardData?.message ||
-    providerResponse?.msg ||
-    providerResponse?.message ||
-    fallbackMessage ||
-    '',
-  ).trim();
-  const lowerMessage = message.toLowerCase();
-  const explicitPending =
-    ['pending', 'processing', 'queued', 'in_progress', 'in progress'].includes(normalizedStatus) ||
-    lowerMessage.includes('pending') ||
-    lowerMessage.includes('processing') ||
-    lowerMessage.includes('try after sometime') ||
-    lowerMessage.includes('please try after sometime');
-  const succeeded = normalizedStatus === '1' || normalizedStatus === 'success' || normalizedStatus === 'verified' || Number(providerResponse?.status || 0) === 1;
-
-  return {
-    succeeded,
-    status: succeeded ? 'verified' : explicitPending ? 'pending' : 'failed',
-    message,
-  };
-};
-
-const parseRcManufacturingYear = (value = '') => {
-  const normalized = String(value || '').trim();
-  const yearMatch = normalized.match(/\b(19|20)\d{2}\b/);
-  return yearMatch ? yearMatch[0] : '';
-};
-
-const normalizeRcVerificationResult = (result = {}, rcNumber = '') => ({
-  make: String(result?.vehicle_manufacturer_name || '').trim(),
-  model: String(result?.model || '').trim(),
-  year: parseRcManufacturingYear(result?.vehicle_manufacturing_month_year),
-  number: String(result?.reg_no || rcNumber || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(),
-  color: String(result?.vehicle_colour || '').trim(),
-  fuelType: String(result?.type || '').trim(),
-  seatCapacity: String(result?.vehicle_seat_capacity || '').trim(),
-  ownerName: String(result?.owner_name || '').trim(),
-  status: String(result?.status || '').trim(),
-  registrationDate: String(result?.reg_date || '').trim(),
-  insuranceUpto: String(result?.vehicle_insurance_upto || '').trim(),
-  fitnessUpto: String(result?.fitness_upto || result?.vehicle_fitness_upto || '').trim(),
-  permitNumber: String(result?.permit_no || result?.permit_number || '').trim(),
-  permitValidUpto: String(result?.permit_valid_upto || result?.permit_upto || '').trim(),
-  pucNumber: String(
-    result?.vehicle_pucc_number ||
-    result?.pucc_number ||
-    result?.pucc_no ||
-    result?.puc_number ||
-    result?.puc_no ||
-    '',
-  ).trim(),
-  pucValidUpto: String(
-    result?.vehicle_pucc_upto ||
-    result?.pucc_upto ||
-    result?.puc_valid_upto ||
-    result?.puc_upto ||
-    '',
-  ).trim(),
-  financer: String(result?.financer || result?.financer_name || '').trim(),
-  engineNumber: String(result?.engine_no || '').trim(),
-  chassisNumber: String(result?.chasi_no || result?.chassis_no || '').trim(),
-  manufacturingMonthYear: String(result?.vehicle_manufacturing_month_year || '').trim(),
-});
-
 const generateDriverReferralCode = (driver) => {
   const idPart = String(driver?._id || '')
     .slice(-6)
@@ -636,7 +559,7 @@ export const startDriverOnboarding = async ({ phone, role }) => {
       registrationId,
       phone: normalizedPhone,
       role: normalizedRole,
-      roleConfirmed: roleProvided,
+      roleConfirmed: true,
       status: 'otp_sent',
       otpVerifiedAt: null,
       expiresAt: new Date(now + SESSION_TTL_MS),
@@ -682,58 +605,11 @@ export const verifyDriverOtp = async ({ registrationId, phone, otp }) => {
   };
 };
 
-export const setDriverOnboardingRole = async ({ registrationId, phone, role }) => {
-  const session = await getSession(registrationId, phone);
-
-  if (!session.otpVerifiedAt) {
-    throw new ApiError(400, 'Verify OTP before selecting a role');
-  }
-
-  const normalizedRole = normalizeRole(role);
-  session.role = normalizedRole;
-  session.roleConfirmed = true;
-  await session.save();
-
-  return {
-    message: 'Signup role selected successfully',
-    session: publicSessionPayload(session),
-  };
-};
-
-export const getDriverOnboardingSignupOptions = async () => {
-  const serviceLocations = await ServiceLocation.find({ active: { $ne: false } })
-    .select('name service_location_name address country latitude longitude location')
-    .sort({ service_location_name: 1, name: 1 })
-    .lean();
-
-  return {
-    serviceLocations: (Array.isArray(serviceLocations) ? serviceLocations : []).map((item) => ({
-      _id: item._id,
-      id: item._id,
-      name: item.service_location_name || item.name || '',
-      service_location_name: item.service_location_name || item.name || '',
-      address: item.address || '',
-      country: item.country || '',
-      latitude: item.latitude ?? item.location?.coordinates?.[1] ?? null,
-      longitude: item.longitude ?? item.location?.coordinates?.[0] ?? null,
-      location: item.location || null,
-    })),
-  };
-};
-
-export const saveDriverRoleDetails = async () => {
-  throw new ApiError(400, 'This role does not use the self-signup details form');
-};
-
 export const saveDriverPersonalDetails = async ({ registrationId, phone, fullName, email, gender, password }) => {
   const session = await getSession(registrationId, phone);
 
   if (!session.otpVerifiedAt) {
     throw new ApiError(400, 'Verify OTP before continuing');
-  }
-
-  if (session.roleConfirmed === false) {
-    throw new ApiError(400, 'Select your signup role before continuing');
   }
 
   if (!fullName || !email || !gender) {
@@ -810,11 +686,7 @@ export const saveDriverVehicle = async ({
   year,
   number,
   color,
-  companyName,
-  companyAddress,
   city,
-  postalCode,
-  taxNumber,
   customFields = {},
 }) => {
   const session = await getSession(registrationId, phone);
@@ -836,7 +708,6 @@ export const saveDriverVehicle = async ({
   const normalizedYear = String(year || '').trim();
   const normalizedRcNumber = String(rcNumber || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
   const normalizedNumber = String(number || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  const normalizedPostalCode = String(postalCode || '').replace(/\D/g, '');
   const normalizedCustomFields = Object.entries(customFields || {}).reduce((acc, [key, value]) => {
     const normalizedKey = String(key || '').trim();
     if (!normalizedKey) {
@@ -898,11 +769,7 @@ export const saveDriverVehicle = async ({
         'year',
         'number',
         'color',
-        'companyName',
-        'companyAddress',
         'city',
-        'postalCode',
-        'taxNumber',
       ].includes(key);
     })
     .forEach((config) => {
@@ -942,11 +809,7 @@ export const saveDriverVehicle = async ({
     year: normalizedYear,
     number: normalizedNumber,
     color: String(color || '').trim(),
-    companyName: String(companyName || '').trim(),
-    companyAddress: String(companyAddress || '').trim(),
     city: String(city || selectedLocation).trim(),
-    postalCode: normalizedPostalCode,
-    taxNumber: String(taxNumber || '').trim().toUpperCase(),
     customFields: normalizedCustomFields,
   };
   session.status = 'vehicle_saved';
@@ -1192,185 +1055,3 @@ export const getDriverOnboardingSession = async ({ registrationId, phone }) => {
   };
 };
 
-export const verifyDriverVehicleRc = async ({
-  registrationId,
-  phone,
-  rcNumber,
-}) => {
-  const session = await getSession(registrationId, phone);
-
-  if (!session.personal?.fullName) {
-    throw new ApiError(400, 'Save personal details before RC verification');
-  }
-
-  const normalizedRcNumber = String(rcNumber || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-
-  if (!normalizedRcNumber) {
-    throw new ApiError(400, 'RC number is required');
-  }
-
-  if (!VEHICLE_NUMBER_PATTERNS.some((pattern) => pattern.test(normalizedRcNumber))) {
-    throw new ApiError(400, 'RC number must be in a valid format, for example DL1AB2345 or MH12AB1234');
-  }
-
-  const providerResponse = await verifyRcWithRecharge({
-    rcNumber: normalizedRcNumber,
-    partnerRequestId: buildOnboardingRcVerificationRequestId(session),
-  });
-
-  const cardData = providerResponse?.cardData || {};
-  const result = cardData?.result || providerResponse?.result || providerResponse?.data || {};
-  const verificationSucceeded =
-    Number(providerResponse?.status || 0) === 1
-    || String(providerResponse?.status || '').trim() === '1';
-
-  if (!verificationSucceeded) {
-    throw new ApiError(
-      400,
-      String(providerResponse?.msg || providerResponse?.message || 'RC verification failed'),
-    );
-  }
-
-  const vehicle = normalizeRcVerificationResult(result, normalizedRcNumber);
-
-  return {
-    message: String(providerResponse?.msg || 'RC verified successfully').trim(),
-    rcNumber: normalizedRcNumber,
-    vehicle,
-    verification: providerResponse,
-  };
-};
-
-export const verifyDriverOnboardingLicenseDocument = async ({
-  registrationId,
-  phone,
-  documentKey,
-  licenseNumber,
-  birthDate,
-  requestNumber,
-}) => {
-  const session = await getSession(registrationId, phone);
-
-  if (!session.personal?.fullName) {
-    throw new ApiError(400, 'Save personal details before DL verification');
-  }
-
-  const normalizedDocumentKey = String(documentKey || '').trim();
-  if (!normalizedDocumentKey) {
-    throw new ApiError(400, 'Document key is required');
-  }
-
-  const existingDocument = session.documents?.[normalizedDocumentKey] || {};
-  const normalizedLicenseNumber = String(
-    licenseNumber ||
-    existingDocument.identifyNumber ||
-    existingDocument.identify_number ||
-    existingDocument.documentNumber ||
-    existingDocument.document_number ||
-    '',
-  ).trim().toUpperCase();
-  const normalizedBirthDate = String(
-    birthDate ||
-    existingDocument.birthDate ||
-    existingDocument.birth_date ||
-    '',
-  ).trim();
-
-  if (!normalizedLicenseNumber) {
-    throw new ApiError(400, 'Driving license number is required before verification');
-  }
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedBirthDate) && !/^\d{2}\/\d{2}\/\d{4}$/.test(normalizedBirthDate)) {
-    throw new ApiError(400, 'Birth date must use YYYY-MM-DD or DD/MM/YYYY format before verification');
-  }
-
-  const providerResponse = await verifyDrivingLicenseWithRecharge({
-    licenseNumber: normalizedLicenseNumber,
-    birthDate: normalizedBirthDate,
-    partnerRequestId: buildOnboardingLicenseVerificationRequestId(session),
-    requestNumber: String(
-      requestNumber ||
-      existingDocument.requestNumber ||
-      existingDocument.request_no ||
-      '',
-    ).trim(),
-  });
-
-  const result = providerResponse?.cardData?.result || {};
-  const licenseDetails = result?.details_of_driving_licence || {};
-  const nonTransportValidity = result?.dl_validity?.non_transport || {};
-  const badgeDetails = Array.isArray(result?.badge_details) ? result.badge_details : [];
-  const firstBadge = badgeDetails[0] || {};
-  const verification = resolveRechargeVerificationState(
-    providerResponse,
-    String(licenseDetails?.status || '').trim(),
-  );
-  const verificationMessage = verification.message;
-
-  const updatedDocument = {
-    ...(typeof existingDocument === 'object' ? existingDocument : {}),
-    key: normalizedDocumentKey,
-    identifyNumber: normalizedLicenseNumber,
-    identify_number: normalizedLicenseNumber,
-    documentNumber: normalizedLicenseNumber,
-    document_number: normalizedLicenseNumber,
-    birthDate: normalizedBirthDate,
-    birth_date: normalizedBirthDate,
-    requestNumber: String(
-      providerResponse?.partnerreqid ||
-      providerResponse?.cardData?.request_id ||
-      providerResponse?.orderid ||
-      requestNumber ||
-      existingDocument.requestNumber ||
-      existingDocument.request_no ||
-      '',
-    ).trim(),
-    request_no: String(
-      providerResponse?.partnerreqid ||
-      providerResponse?.cardData?.request_id ||
-      providerResponse?.orderid ||
-      requestNumber ||
-      existingDocument.requestNumber ||
-      existingDocument.request_no ||
-      '',
-    ).trim(),
-    verificationStatus: verification.status,
-    verifiedAt: verification.succeeded ? new Date().toISOString() : existingDocument.verifiedAt || null,
-    verificationMessage,
-    verificationReferenceId: String(
-      providerResponse?.orderid ||
-      providerResponse?.partnerreqid ||
-      providerResponse?.cardData?.request_id ||
-      '',
-    ).trim(),
-    verifiedName: String(licenseDetails?.name || '').trim(),
-    verifiedDob: String(result?.dob || normalizedBirthDate).trim(),
-    dlStatus: String(licenseDetails?.status || '').trim(),
-    issuingRtoName: '',
-    relativeName: String(licenseDetails?.father_or_husband_name || '').trim(),
-    dlNumber: String(result?.dl_number || normalizedLicenseNumber).trim(),
-    nonTransportValidFrom: String(nonTransportValidity?.from || '').trim(),
-    nonTransportValidTo: String(nonTransportValidity?.to || '').trim(),
-    transportValidFrom: String(result?.dl_validity?.transport?.from || '').trim(),
-    transportValidTo: String(result?.dl_validity?.transport?.to || '').trim(),
-    badgeNumber: String(firstBadge?.badge_no || '').trim(),
-    badgeIssueDate: String(firstBadge?.badge_issue_date || '').trim(),
-    classOfVehicle: Array.isArray(firstBadge?.class_of_vehicle) ? firstBadge.class_of_vehicle : [],
-    verificationResponse: providerResponse,
-  };
-
-  session.documents = {
-    ...(session.documents || {}),
-    [normalizedDocumentKey]: updatedDocument,
-  };
-
-  session.markModified('documents');
-  await session.save();
-
-  return {
-    message: verificationMessage || 'Driving license verified successfully',
-    document: updatedDocument,
-    documents: session.documents || {},
-    verification: providerResponse,
-  };
-};

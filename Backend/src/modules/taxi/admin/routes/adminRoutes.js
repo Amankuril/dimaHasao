@@ -71,7 +71,6 @@ import {
   getGeneralSettingsCategory,
   getMailSettings,
   getMapSettings,
-  getRechargeApiSettings,
   getNearbyServiceLocations,
   getNotificationChannels,
   getOngoingRides,
@@ -131,7 +130,6 @@ import {
   updateGeneralSettingsCategory,
   updateMailSettings,
   updateMapSettings,
-  updateRechargeApiSettings,
   updatePaymentSettings,
   updatePaymentMethod,
   updatePreferenceStatus,
@@ -141,8 +139,6 @@ import {
   updateUser,
   updateVehicleType,
   updateZone,
-  generateRechargeApiToken,
-  runRechargeApiTest,
   createVehicleType,
   deleteAirport,
   deleteAdminAccount,
@@ -151,6 +147,7 @@ import {
   getAdmins,
   getTransportTypes,
 } from "../controllers/adminController.js";
+
 
 
 
@@ -337,10 +334,6 @@ adminRouter.get('/admin/integration-settings/map', getMapSettings);
 adminRouter.patch('/admin/integration-settings/map', updateMapSettings);
 adminRouter.get('/admin/integration-settings/mail', getMailSettings);
 adminRouter.patch('/admin/integration-settings/mail', updateMailSettings);
-adminRouter.get('/admin/integration-settings/recharge-api', getRechargeApiSettings);
-adminRouter.patch('/admin/integration-settings/recharge-api', updateRechargeApiSettings);
-adminRouter.post('/admin/integration-settings/recharge-api/generate-token', generateRechargeApiToken);
-adminRouter.post('/admin/integration-settings/recharge-api/test', runRechargeApiTest);
 
 adminRouter.get('/admin/general-settings/:category', getGeneralSettingsCategory);
 adminRouter.patch('/admin/general-settings/:category', updateGeneralSettingsCategory);

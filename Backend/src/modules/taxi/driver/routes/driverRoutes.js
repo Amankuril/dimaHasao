@@ -27,17 +27,12 @@ import {
   saveDriverFcmToken,
   getMyWallet,
   getOnboardingSession,
-  getOnboardingSignupOptions,
   getServiceLocations,
   loginDriver,
   saveOnboardingDocuments,
-  saveOnboardingRoleDetails,
-  saveOnboardingRole,
   saveOnboardingPersonal,
   saveOnboardingReferral,
   saveOnboardingVehicle,
-  verifyOnboardingLicenseDocument,
-  verifyOnboardingVehicleRc,
   registerDriver,
   requestDriverAccountDeletion,
   startOnboarding,
@@ -46,18 +41,13 @@ import {
   createDriverPhonePeWalletTopupOrder,
   verifyDriverWalletTopup,
   verifyDriverPhonePeWalletTopup,
-  verifyCurrentDriverBankDetails,
-  verifyCurrentDriverBankDocument,
-  verifyCurrentDriverUpiDetails,
-  verifyCurrentDriverLicenseDocument,
-  verifyCurrentDriverGstinDocument,
-  verifyCurrentDriverPanDocument,
-  verifyCurrentDriverRcDocument,
   updateCurrentDriver,
   updateDriverVehicle,
   verifyOnboardingOtp,
   updateCurrentDriverDocument,
 } from "../controllers/driverController.js";
+
+
 
 
 import { triggerDriverSosAlert } from '../../safety/controllers/safetyController.js';
@@ -76,16 +66,6 @@ driverRouter.patch(
   "/me",
   authenticate(["driver"]),
   asyncHandler(updateCurrentDriver),
-);
-driverRouter.post(
-  "/me/bank-details/verify",
-  authenticate(["driver"]),
-  asyncHandler(verifyCurrentDriverBankDetails),
-);
-driverRouter.post(
-  "/me/upi/verify",
-  authenticate(["driver"]),
-  asyncHandler(verifyCurrentDriverUpiDetails),
 );
 driverRouter.delete(
   "/me",
@@ -121,31 +101,6 @@ driverRouter.patch(
   "/documents/:documentKey",
   authenticate(["driver"], { allowPending: true }),
   asyncHandler(updateCurrentDriverDocument),
-);
-driverRouter.post(
-  "/documents/:documentKey/verify-license",
-  authenticate(["driver"], { allowPending: true }),
-  asyncHandler(verifyCurrentDriverLicenseDocument),
-);
-driverRouter.post(
-  "/documents/:documentKey/verify-pan",
-  authenticate(["driver"], { allowPending: true }),
-  asyncHandler(verifyCurrentDriverPanDocument),
-);
-driverRouter.post(
-  "/documents/:documentKey/verify-gst",
-  authenticate(["driver"], { allowPending: true }),
-  asyncHandler(verifyCurrentDriverGstinDocument),
-);
-driverRouter.post(
-  "/documents/:documentKey/verify-rc",
-  authenticate(["driver"], { allowPending: true }),
-  asyncHandler(verifyCurrentDriverRcDocument),
-);
-driverRouter.post(
-  "/documents/:documentKey/verify-bank",
-  authenticate(["driver"], { allowPending: true }),
-  asyncHandler(verifyCurrentDriverBankDocument),
 );
 driverRouter.get(
   "/notifications",
@@ -250,9 +205,6 @@ driverRouter.get(
 );
 driverRouter.post("/onboarding/send-otp", asyncHandler(startOnboarding));
 driverRouter.post("/onboarding/verify-otp", asyncHandler(verifyOnboardingOtp));
-driverRouter.patch("/onboarding/role", asyncHandler(saveOnboardingRole));
-driverRouter.get("/onboarding/signup-options", asyncHandler(getOnboardingSignupOptions));
-driverRouter.patch("/onboarding/role-details", asyncHandler(saveOnboardingRoleDetails));
 driverRouter.patch(
   "/onboarding/personal",
   asyncHandler(saveOnboardingPersonal),
@@ -262,11 +214,6 @@ driverRouter.patch(
   asyncHandler(saveOnboardingReferral),
 );
 driverRouter.patch("/onboarding/vehicle", asyncHandler(saveOnboardingVehicle));
-driverRouter.post("/onboarding/vehicle/verify-rc", asyncHandler(verifyOnboardingVehicleRc));
-driverRouter.post(
-  "/onboarding/documents/:documentKey/verify-license",
-  asyncHandler(verifyOnboardingLicenseDocument),
-);
 driverRouter.patch(
   "/onboarding/documents",
   asyncHandler(saveOnboardingDocuments),

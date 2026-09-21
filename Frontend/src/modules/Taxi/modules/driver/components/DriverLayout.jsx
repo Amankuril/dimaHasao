@@ -31,17 +31,13 @@ const isDriverApproved = (driver) => {
 };
 
 const onboardingRoutes = new Set([
-    '/taxi/driver/lang-select',
-    '/taxi/driver/welcome',
     '/taxi/driver/login',
     '/taxi/driver/terms',
     '/taxi/driver/privacy',
     '/taxi/driver/support',
     '/taxi/driver/reg-phone',
     '/taxi/driver/otp-verify',
-    '/taxi/driver/select-role',
     '/taxi/driver/step-personal',
-    '/taxi/driver/step-referral',
     '/taxi/driver/step-vehicle',
     '/taxi/driver/step-documents',
     '/taxi/driver/registration-status',
@@ -51,7 +47,6 @@ const onboardingRoutes = new Set([
 const isOnboardingRoute = (pathname = '') => onboardingRoutes.has(pathname);
 
 const softEntryRoutes = new Set([
-    '/taxi/driver/welcome',
     '/taxi/driver/login',
     '/taxi/driver/reg-phone',
 ]);
@@ -90,16 +85,7 @@ const DriverLayout = () => {
         const token = getLocalDriverToken();
         const authenticatedHome = getAuthenticatedDriverHome(currentPath);
         const authenticatedRole = getAuthenticatedRole();
-        const shouldVerifyOnboardingRoute =
-            Boolean(token)
-            && (
-                softEntryRoutes.has(currentPath)
-                || (
-                    currentPath === '/taxi/driver/lang-select'
-                    && !onboardingState.registrationFlow
-                    && !onboardingState.allowAuthenticated
-                )
-            );
+        const shouldVerifyOnboardingRoute = Boolean(token) && softEntryRoutes.has(currentPath);
 
         if (isOnboardingRoute(currentPath) && !shouldVerifyOnboardingRoute) {
             setIsAllowed(true);
@@ -166,14 +152,6 @@ const DriverLayout = () => {
                 if (softEntryRoutes.has(currentPath)) {
                     navigate(authenticatedHome, { replace: true });
                     return;
-                }
-
-                if (
-                    currentPath === '/taxi/driver/lang-select'
-                    && !onboardingState.registrationFlow
-                    && !onboardingState.allowAuthenticated
-                ) {
-                    navigate(authenticatedHome, { replace: true });
                 }
             } catch (error) {
                 if (!active) {

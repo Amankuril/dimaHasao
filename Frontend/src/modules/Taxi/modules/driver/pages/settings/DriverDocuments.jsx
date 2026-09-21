@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, BadgeCheck, CalendarDays, Camera, CheckCircle2, Eye, FileText, Loader2, RefreshCw, ShieldCheck, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getCurrentDriver, getDriverDocumentTemplates, updateDriverDocument, verifyDriverBankDocument, verifyDriverGstinDocument, verifyDriverLicenseDocument, verifyDriverPanDocument, verifyDriverRcDocument } from '../../services/registrationService';
+import { getCurrentDriver, getDriverDocumentTemplates, updateDriverDocument } from '../../services/registrationService';
 import { useImageUpload } from '../../../../shared/hooks/useImageUpload';
 import {
   flattenDriverDocumentFields,
@@ -161,7 +161,6 @@ const DriverDocuments = () => {
     ifsc: '',
     accountHolderName: '',
     isSubmitting: false,
-    isVerifying: false,
   });
   const uploadingDocumentKeyRef = useRef('');
   const documentInputRefs = useRef({});
@@ -340,7 +339,6 @@ const DriverDocuments = () => {
       ifsc: '',
       accountHolderName: '',
       isSubmitting: false,
-      isVerifying: false,
     });
   };
 
@@ -384,7 +382,7 @@ const DriverDocuments = () => {
     }
   };
 
-  const handleMetaSave = async ({ verify = false } = {}) => {
+  const handleMetaSave = async () => {
     if (!metaModal.docId) {
       return;
     }
@@ -399,8 +397,7 @@ const DriverDocuments = () => {
     try {
       setMetaModal((prev) => ({
         ...prev,
-        isSubmitting: !verify,
-        isVerifying: verify,
+        isSubmitting: true,
       }));
       setError('');
 
@@ -441,24 +438,6 @@ const DriverDocuments = () => {
         },
       };
 
-      if (verify) {
-        const verifyResponse =
-          metaModal.mode === 'pan'
-            ? await verifyDriverPanDocument(metaModal.docId)
-            : metaModal.mode === 'gst'
-              ? await verifyDriverGstinDocument(metaModal.docId)
-              : metaModal.mode === 'rc'
-                ? await verifyDriverRcDocument(metaModal.docId)
-                : metaModal.mode === 'bank'
-                  ? await verifyDriverBankDocument(metaModal.docId, {
-                      accountNumber: identifyNumber,
-                      ifsc,
-                      accountHolderName,
-                    })
-                : await verifyDriverLicenseDocument(metaModal.docId);
-        documents = verifyResponse?.data?.data?.documents || verifyResponse?.data?.documents || documents;
-      }
-
       setDriver((prev) => ({ ...(prev || {}), documents }));
       closeMetaModal();
     } catch (requestError) {
@@ -466,7 +445,6 @@ const DriverDocuments = () => {
       setMetaModal((prev) => ({
         ...prev,
         isSubmitting: false,
-        isVerifying: false,
       }));
     }
   };
@@ -677,12 +655,11 @@ const DriverDocuments = () => {
               </label>
               ) : null}
 
-              <div className="grid grid-cols-2 gap-3">
+              <div>
                 <button
-                  onClick={() => handleMetaSave({ verify: false })}
+                  onClick={() => handleMetaSave()}
                   disabled={
                     metaModal.isSubmitting ||
-                    metaModal.isVerifying ||
                     !metaModal.identifyNumber ||
                     (metaModal.mode === 'license' && !metaModal.birthDate) ||
                     (metaModal.mode === 'bank' && (!metaModal.ifsc || !metaModal.accountHolderName))
@@ -690,29 +667,6 @@ const DriverDocuments = () => {
                   className="h-11 rounded-xl bg-slate-100 text-[12px] font-black uppercase tracking-widest text-slate-700 transition-all active:scale-95 disabled:opacity-50"
                 >
                   {metaModal.isSubmitting ? 'Saving...' : 'Save'}
-                </button>
-                <button
-                  onClick={() => handleMetaSave({ verify: true })}
-                  disabled={
-                    metaModal.isSubmitting ||
-                    metaModal.isVerifying ||
-                    !metaModal.identifyNumber ||
-                    (metaModal.mode === 'license' && !metaModal.birthDate) ||
-                    (metaModal.mode === 'bank' && (!metaModal.ifsc || !metaModal.accountHolderName))
-                  }
-                  className="h-11 rounded-xl bg-emerald-600 text-[12px] font-black uppercase tracking-widest text-white transition-all active:scale-95 disabled:opacity-50"
-                >
-                  {metaModal.isVerifying
-                    ? 'Verifying...'
-                    : metaModal.mode === 'pan'
-                      ? 'Verify PAN'
-                      : metaModal.mode === 'gst'
-                        ? 'Verify GST'
-                        : metaModal.mode === 'rc'
-                          ? 'Verify RC'
-                          : metaModal.mode === 'bank'
-                            ? 'Verify Bank'
-                          : 'Verify DL'}
                 </button>
               </div>
             </motion.div>
@@ -853,7 +807,6 @@ const DriverDocuments = () => {
                               ifsc: doc.ifsc || '',
                               accountHolderName: doc.accountHolderName || '',
                               isSubmitting: false,
-                              isVerifying: false,
                             });
                           }}
                           className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 text-[10px] font-black uppercase tracking-widest text-emerald-600 transition-all hover:bg-emerald-100 active:scale-90"
