@@ -19,7 +19,7 @@ import CarIcon from '@/assets/icons/car.png';
 import BikeIcon from '@/assets/icons/bike.png';
 import AutoIcon from '@/assets/icons/auto.png';
 
-const INDIA_CENTER = { lat: 22.7196, lng: 75.8577 };
+const DISTRICT_CENTER = { lat: 22.7196, lng: 75.8577 };
 
 const mapOptions = {
   disableDefaultUI: true, // we build our own floating controls
@@ -246,7 +246,7 @@ const GodsEye = () => {
 
   const mapCenter = filteredDrivers.length > 0 && controls.autoFollow && selectedDriver
     ? { lat: Number(selectedDriver.latitude), lng: Number(selectedDriver.longitude) }
-    : (filteredDrivers.length > 0 ? { lat: Number(filteredDrivers[0].latitude), lng: Number(filteredDrivers[0].longitude) } : INDIA_CENTER);
+    : (filteredDrivers.length > 0 ? { lat: Number(filteredDrivers[0].latitude), lng: Number(filteredDrivers[0].longitude) } : DISTRICT_CENTER);
 
   return (
     <div className={`flex flex-col h-screen bg-gray-50 font-sans ${controls.fullscreen ? 'fixed inset-0 z-50' : ''}`}>

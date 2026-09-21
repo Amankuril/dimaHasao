@@ -180,6 +180,7 @@ const FooterBannerImage = ({ footerSettings, fallbackImage }) => {
 };
 import { userService } from '../services/userService';
 import { getLocalUserToken, clearLocalUserSession } from '../services/authService';
+import { DISTRICT_PLACES } from '../constants/districtPlaces';
 import {
   CURRENT_RIDE_UPDATED_EVENT,
   getCurrentRide,
@@ -239,29 +240,29 @@ const defaultSettings = {
     enableFooter: true
   },
   everything: [
-    { id: '1', title: 'Parcel', subtitle: 'Send anything', image: '', route: '/taxi/user/parcel/type', order: 1, status: 'active' },
+    { id: '1', title: 'Book now', subtitle: 'Your everyday rides', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
     { id: '2', title: 'Bike Taxi', subtitle: 'Beat the traffic', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
-    { id: '3', title: 'Book now', subtitle: 'Your everyday rides', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' },
+    { id: '3', title: 'Outstation', subtitle: 'Trips beyond the district', image: '', route: '/taxi/user/intercity', order: 3, status: 'active' },
     { id: '4', title: 'All Services', subtitle: 'All Services', image: '', route: '', order: 4, status: 'active' }
   ],
   explore: [
-    { id: '1', title: 'Parcel on Bike', image: '', route: '/taxi/user/parcel/type', order: 1, status: 'active' },
-    { id: '2', title: 'Auto', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
-    { id: '3', title: 'Cab Economy', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' },
-    { id: '4', title: 'Bike', image: '', route: '/taxi/user/ride/select-location', order: 4, status: 'active' }
+    { id: '1', title: 'Auto', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+    { id: '2', title: 'Cab Economy', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
+    { id: '3', title: 'Bike', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' },
+    { id: '4', title: 'Outstation', image: '', route: '/taxi/user/intercity', order: 4, status: 'active' }
   ],
   promos: [
-    { id: '1', title: 'Experience A New Standard With Dima Hasao ', subtitle: 'A premier private hire service where luxury and reliability converge.', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
-    { id: '2', title: 'Need to Send Packages? Try Parcel!', subtitle: 'Fast and secure delivery across Indore at affordable prices.', image: '', route: '/taxi/user/parcel/type', order: 2, status: 'active' }
+    { id: '1', title: 'Rides across Dima Hasao', subtitle: 'Haflong, Maibang, Umrangso and everywhere between.', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+    { id: '2', title: 'Heading out of the district?', subtitle: 'Book an outstation cab to Silchar, Guwahati or Lumding.', image: '', route: '/taxi/user/intercity', order: 2, status: 'active' }
   ],
   goPlaces: [
-    { id: '1', title: 'Hassle-Free Airport Rides', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
-    { id: '2', title: 'Quick Rides to Railway Station', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
-    { id: '3', title: 'Ride to Bus Terminal', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' }
+    { id: '1', title: 'Rides to Haflong Railway Station', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+    { id: '2', title: 'Airport transfers to Silchar', image: '', route: '/taxi/user/intercity', order: 2, status: 'active' },
+    { id: '3', title: 'Outstation trips', image: '', route: '/taxi/user/intercity', order: 3, status: 'active' }
   ],
   footer: {
-    hashtag: '#goAppzeto 24',
-    line1: 'Made for India',
+    hashtag: '#DimaHasao',
+    line1: 'Made for the district',
     line2: 'Crafted for riders'
   }
 };
@@ -431,30 +432,15 @@ const RecentLocationsList = ({ routePrefix }) => {
         }
       }
     } catch (e) { }
-    // Pre-fill with dynamic defaults from reference screenshot if empty
-    return [
-      {
-        name: 'Prakash Bakery',
-        address: 'Bk Sindhi Colony, Indore, Madhya Pradesh, India',
-        lat: 22.7039,
-        lon: 75.9048,
-        distance: '2.5 km',
-      },
-      {
-        name: 'Navlakha Bus Stand',
-        address: 'Ahilyapur, Chhanera, New Harsud, Harsud, Madhya Pradesh',
-        lat: 22.6926,
-        lon: 75.8586,
-        distance: '3.1 km',
-      },
-      {
-        name: 'Jhabua Tower Road',
-        address: 'Chhoti Gwaltoli, Indore, Madhya Pradesh, India',
-        lat: 22.7187,
-        lon: 75.8553,
-        distance: '1.2 km',
-      },
-    ];
+    // Nothing saved yet: show district landmarks rather than an empty list.
+    // These were three Indore addresses copied from a reference screenshot.
+    return DISTRICT_PLACES.slice(0, 3).map((place) => ({
+      name: place.title,
+      address: place.address,
+      lat: place.coords[1],
+      lon: place.coords[0],
+      distance: '',
+    }));
   });
 
   const getSavedLocationCoords = () => {
@@ -636,9 +622,9 @@ const Home = () => {
   const [pickupAddress, setPickupAddress] = useState(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem('Appzeto 24:lastLocation') || '{}');
-      return String(saved?.address || '').trim() || 'Indore, Madhya Pradesh';
+      return String(saved?.address || '').trim() || 'Dima Hasao, Assam';
     } catch (e) {
-      return 'Indore, Madhya Pradesh';
+      return 'Dima Hasao, Assam';
     }
   });
   const [isLocationLoading, setIsLocationLoading] = useState(() => {
@@ -654,7 +640,7 @@ const Home = () => {
     const handleLocationUpdate = () => {
       try {
         const saved = JSON.parse(window.localStorage.getItem('Appzeto 24:lastLocation') || '{}');
-        setPickupAddress(String(saved?.address || '').trim() || 'Indore, Madhya Pradesh');
+        setPickupAddress(String(saved?.address || '').trim() || 'Dima Hasao, Assam');
       } catch (e) { }
     };
     const handleLocationStatus = (e) => {
@@ -759,11 +745,12 @@ const Home = () => {
     // Helper to map fallback routes to registered routes defensively
     const cleanRoute = (route) => {
       if (!route) return '/taxi/user/ride/select-location';
-      if (route === '/delivery') return '/taxi/user/parcel/type';
-      if (route === '/rental') return '/taxi/user/rental';
-      if (route === '/bus') return '/taxi/user/bus';
-      if (route === '/truck') return '/taxi/user/ride/select-location';
-      if (route === '/self-drive') return '/taxi/user/rental';
+      // Parcel, rental, bus and self-drive left the taxi scope; an admin
+      // module still carrying one of those routes would otherwise drop the
+      // rider on a screen that no longer exists.
+      if (['/delivery', '/rental', '/bus', '/truck', '/self-drive'].includes(route)) {
+        return '/taxi/user/ride/select-location';
+      }
       return route;
     };
 
@@ -782,10 +769,6 @@ const Home = () => {
       if (tName.includes('bike') || tName.includes('moto')) vehicleType = 'bike';
       else if (tName.includes('auto')) vehicleType = 'auto';
       else if (tName.includes('cab') || tName.includes('taxi') || tName.includes('car') || tName === 'book now' || tName === 'ride') vehicleType = 'cab';
-      else if (tName.includes('parcel') || tName.includes('delivery')) vehicleType = 'parcel';
-
-      console.log('--- TEMPORARY DEBUG LOG ---');
-      console.log('selectedVehicleType from home:', vehicleType);
 
       if (vehicleType) {
         localStorage.setItem('selectedVehicleType', vehicleType);
@@ -810,10 +793,6 @@ const Home = () => {
       if (name.includes('bike') || name.includes('moto')) vehicleType = 'bike';
       else if (name.includes('auto')) vehicleType = 'auto';
       else if (name.includes('cab') || name.includes('taxi') || name.includes('car') || name === 'book now' || name === 'ride') vehicleType = 'cab';
-      else if (name.includes('parcel') || name.includes('delivery')) vehicleType = 'parcel';
-
-      console.log('--- TEMPORARY DEBUG LOG ---');
-      console.log('selectedVehicleType from home:', vehicleType);
 
       if (vehicleType) {
         localStorage.setItem('selectedVehicleType', vehicleType);
@@ -822,26 +801,6 @@ const Home = () => {
         localStorage.removeItem('selectedVehicleType');
         navigate(cleanRoute(definedPath), { state: { selectedCategory: vehicleType } });
       }
-      return;
-    }
-
-    if (name.includes("parcel") || name.includes("delivery") || name.includes("courier") || serviceType.includes("delivery") || serviceType.includes("parcel")) {
-      navigate("/taxi/user/parcel/type");
-      return;
-    }
-
-    if (name.includes("rental") || serviceType.includes("rental") || name.includes("self-drive")) {
-      navigate("/taxi/user/rental");
-      return;
-    }
-
-    if (name.includes("bus") || transportType.includes("bus") || serviceType.includes("bus")) {
-      navigate("/taxi/user/bus");
-      return;
-    }
-
-    if (name.includes("pooling") || serviceType.includes("pooling")) {
-      navigate("/taxi/user/pooling");
       return;
     }
 
@@ -1486,6 +1445,8 @@ const Home = () => {
       return null;
     }
 
+    const footer = { ...defaultSettings.footer, ...(uiSettings?.footer || {}) };
+
     return (
       <div className="pt-4 pb-6">
         <style>{`
@@ -1579,7 +1540,7 @@ const Home = () => {
                 textShadow: 'none'
               }}
             >
-              #GOAPPZETO
+              {footer.hashtag}
             </motion.h3>
 
             {/* Holiday taxi inline image removed to show background image only */}
@@ -1591,7 +1552,7 @@ const Home = () => {
               className="text-[13px] font-black uppercase tracking-widest font-sans flex items-center justify-center gap-1 text-[#0B1220]"
               style={{ textShadow: 'none' }}
             >
-              MADE FOR INDIA
+              {footer.line1}
             </motion.p>
             <motion.p
               initial={{ opacity: 0, x: 20 }}
@@ -1600,7 +1561,7 @@ const Home = () => {
               className="text-[10px] font-bold uppercase tracking-[0.16em] mt-1 text-[#64748B]"
               style={{ textShadow: 'none' }}
             >
-              CRAFTED FOR RIDERS
+              {footer.line2}
             </motion.p>
           </motion.div>
         </motion.div>
@@ -1922,10 +1883,11 @@ const Home = () => {
                 Dima Hasao
               </div>
               <div className="mt-2 text-[14px] font-sans italic font-bold tracking-[0.04em] text-slate-800 dark:text-slate-200">
-                #goAppzeto 24
+                {uiSettings?.footer?.hashtag || defaultSettings.footer.hashtag}
               </div>
               <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                Made for India, Crafted for riders.
+                {uiSettings?.footer?.line1 || defaultSettings.footer.line1},{' '}
+                {uiSettings?.footer?.line2 || defaultSettings.footer.line2}.
               </div>
             </div>
           </div>

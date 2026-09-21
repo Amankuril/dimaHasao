@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Landmark, Loader2, QrCode, Save, ShieldCheck, Upload } from 'lucide-react';
+import { ArrowLeft, Landmark, QrCode, Save, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentDriver, updateDriverProfile } from '../services/registrationService';
 import { uploadService } from '../../../shared/services/uploadService';
@@ -13,22 +13,6 @@ const normalizeBankDetails = (bankDetails = {}) => ({
   accountNumber: String(bankDetails?.accountNumber || '').trim(),
   ifsc: String(bankDetails?.ifsc || '').trim().toUpperCase(),
   branchName: String(bankDetails?.branchName || '').trim(),
-  verificationStatus: String(bankDetails?.verificationStatus || '').trim(),
-  verificationMode: String(bankDetails?.verificationMode || '').trim(),
-  verificationMessage: String(bankDetails?.verificationMessage || '').trim(),
-  verificationReferenceId: String(bankDetails?.verificationReferenceId || '').trim(),
-  verifiedBankName: String(bankDetails?.verifiedBankName || '').trim(),
-  verifiedBranchName: String(bankDetails?.verifiedBranchName || '').trim(),
-  verifiedAccountHolderName: String(bankDetails?.verifiedAccountHolderName || '').trim(),
-  verifiedAt: bankDetails?.verifiedAt || null,
-  upiVerificationStatus: String(bankDetails?.upiVerificationStatus || '').trim(),
-  upiVerificationMode: String(bankDetails?.upiVerificationMode || '').trim(),
-  upiVerificationMessage: String(bankDetails?.upiVerificationMessage || '').trim(),
-  upiVerificationReferenceId: String(bankDetails?.upiVerificationReferenceId || '').trim(),
-  upiVerifiedName: String(bankDetails?.upiVerifiedName || '').trim(),
-  upiAccountIfsc: String(bankDetails?.upiAccountIfsc || '').trim(),
-  upiAccountType: String(bankDetails?.upiAccountType || '').trim(),
-  upiVerifiedAt: bankDetails?.upiVerifiedAt || null,
   updatedAt: bankDetails?.updatedAt || null,
 });
 
@@ -215,36 +199,6 @@ const DriverBankDetailsPage = () => {
                 />
               </div>
 
-              {driver?.bankDetails?.upiVerificationStatus ? (
-                <div className={`rounded-[24px] border px-4 py-3 ${
-                  driver.bankDetails.upiVerificationStatus === 'verified'
-                    ? 'border-emerald-200 bg-emerald-50'
-                    : 'border-amber-200 bg-amber-50'
-                }`}>
-                  <div className="flex items-start gap-3">
-                    <div className={driver.bankDetails.upiVerificationStatus === 'verified' ? 'text-emerald-600' : 'text-amber-600'}>
-                      {driver.bankDetails.upiVerificationStatus === 'verified' ? <CheckCircle2 size={18} /> : <ShieldCheck size={18} />}
-                    </div>
-                    <div>
-                      <p className={`text-sm font-black ${
-                        driver.bankDetails.upiVerificationStatus === 'verified' ? 'text-emerald-800' : 'text-amber-800'
-                      }`}>
-                        {driver.bankDetails.upiVerificationStatus === 'verified' ? 'UPI verified' : 'UPI verification attempted'}
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-slate-600">
-                        {driver.bankDetails.upiVerificationMessage || 'UPI verification response received from provider.'}
-                      </p>
-                      {(driver.bankDetails.upiVerifiedName || driver.bankDetails.upiAccountIfsc) ? (
-                        <p className="mt-1 text-xs font-semibold text-slate-500">
-                          {driver.bankDetails.upiVerifiedName || bankForm.upiId}
-                          {driver.bankDetails.upiAccountIfsc ? ` • ${driver.bankDetails.upiAccountIfsc}` : ''}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
               <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   <div className="flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white sm:w-36">
@@ -301,36 +255,6 @@ const DriverBankDetailsPage = () => {
                 placeholder="Enter branch name"
                 onChange={(value) => handleFieldChange('branchName', value)}
               />
-
-              {driver?.bankDetails?.verificationStatus ? (
-                <div className={`rounded-[24px] border px-4 py-3 ${
-                  driver.bankDetails.verificationStatus === 'verified'
-                    ? 'border-emerald-200 bg-emerald-50'
-                    : 'border-amber-200 bg-amber-50'
-                }`}>
-                  <div className="flex items-start gap-3">
-                    <div className={driver.bankDetails.verificationStatus === 'verified' ? 'text-emerald-600' : 'text-amber-600'}>
-                      {driver.bankDetails.verificationStatus === 'verified' ? <CheckCircle2 size={18} /> : <ShieldCheck size={18} />}
-                    </div>
-                    <div>
-                      <p className={`text-sm font-black ${
-                        driver.bankDetails.verificationStatus === 'verified' ? 'text-emerald-800' : 'text-amber-800'
-                      }`}>
-                        {driver.bankDetails.verificationStatus === 'verified' ? 'Bank account verified' : 'Verification attempted'}
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-slate-600">
-                        {driver.bankDetails.verificationMessage || 'Verification response received from provider.'}
-                      </p>
-                      {(driver.bankDetails.verifiedAccountHolderName || driver.bankDetails.verifiedBankName) ? (
-                        <p className="mt-1 text-xs font-semibold text-slate-500">
-                          {driver.bankDetails.verifiedAccountHolderName || 'Account holder'}
-                          {driver.bankDetails.verifiedBankName ? ` • ${driver.bankDetails.verifiedBankName}` : ''}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
 
               {driver?.bankDetails?.updatedAt ? (
                 <p className="text-xs font-medium text-slate-400">

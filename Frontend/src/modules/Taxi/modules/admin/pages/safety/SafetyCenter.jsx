@@ -8,7 +8,7 @@ import {
 import toast from 'react-hot-toast';
 import { socketService } from '../../../../shared/api/socket';
 import { adminService } from '../../services/adminService';
-import { HAS_VALID_GOOGLE_MAPS_KEY, INDIA_CENTER, useBaseGoogleMapsLoader } from '../../utils/googleMaps';
+import { HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER, useBaseGoogleMapsLoader } from '../../utils/googleMaps';
 import { getChatSession } from '../../../shared/chat/chatIdentity';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
@@ -45,7 +45,7 @@ const getParticipantTitle = (alert) =>
 const getMapCenter = (alert) =>
   Number.isFinite(Number(alert?.location?.lat)) && Number.isFinite(Number(alert?.location?.lng))
     ? { lat: Number(alert.location.lat), lng: Number(alert.location.lng) }
-    : INDIA_CENTER;
+    : DISTRICT_CENTER;
 
 // -------------- SUB-COMPONENTS -------------- //
 

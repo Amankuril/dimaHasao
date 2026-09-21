@@ -32,6 +32,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import DriverBottomNav from '../../shared/components/DriverBottomNav';
 import { clearDriverAuthState, getCurrentDriver } from '../services/registrationService';
+import { useSupportInfo } from '../../shared/content/supportInfo';
 
 const unwrapDriver = (response) => response?.data?.data || response?.data || response || null;
 const ROUTE_BOOKING_STORAGE_KEY = 'driver_route_booking_preferences';
@@ -96,6 +97,7 @@ const DriverProfile = () => {
     const [error, setError] = useState('');
     const [routeBookingBusy, setRouteBookingBusy] = useState(false);
     const routePrefix = '/taxi/driver';
+    const supportInfo = useSupportInfo();
 
     useEffect(() => {
         let active = true;
@@ -472,36 +474,42 @@ Processing Time: Refunds are typically credited back to the original payment met
             </main>
 
             {/* Owner Support Section */}
+            {(supportInfo.email || supportInfo.phone) && (
             <div className="px-6 py-4 mt-6">
                 <div className="rounded-[28px] border border-slate-100 bg-slate-50/50 p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        <h3 className="text-[13px] font-bold text-slate-900 uppercase tracking-wider">Owner Support</h3>
+                        <h3 className="text-[13px] font-bold text-slate-900 uppercase tracking-wider">District Support</h3>
                     </div>
 
                     <div className="space-y-5">
-                        <a href="mailto:customercare@Appzeto 24.com" className="flex items-center gap-4 group">
+                        {supportInfo.email && (
+                        <a href={`mailto:${supportInfo.email}`} className="flex items-center gap-4 group">
                             <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 transition-colors shadow-sm">
                                 <Mail size={18} />
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email Support</p>
-                                <p className="text-[14px] font-bold text-slate-800">customercare@Appzeto 24.com</p>
+                                <p className="text-[14px] font-bold text-slate-800">{supportInfo.email}</p>
                             </div>
                         </a>
+                        )}
 
-                        <a href="tel:" className="flex items-center gap-4 group">
+                        {supportInfo.phone && (
+                        <a href={`tel:${supportInfo.phoneHref}`} className="flex items-center gap-4 group">
                             <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-colors shadow-sm">
                                 <Phone size={18} />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Call Owner</p>
-                                <p className="text-[14px] font-bold text-slate-800">91-93-911-911</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Call Support</p>
+                                <p className="text-[14px] font-bold text-slate-800">{supportInfo.phone}</p>
                             </div>
                         </a>
+                        )}
                     </div>
                 </div>
             </div>
+            )}
 
             {/* Sign Out Section */}
             <div className="px-6 py-6">

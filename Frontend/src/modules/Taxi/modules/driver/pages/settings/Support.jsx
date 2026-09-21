@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, HelpCircle, Phone, MessageCircle, ChevronRight, FileText, Globe, Search, ArrowUpRight, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useSupportInfo } from '../../../shared/content/supportInfo';
 
 const DriverSupport = () => {
     const navigate = useNavigate();
@@ -16,9 +17,12 @@ const DriverSupport = () => {
         { q: 'How to change active vehicle?', a: 'Go to Vehicle Fleet and select primary.' }
     ];
 
+    const { phoneHref: supportPhone } = useSupportInfo();
+
     const openHelp = (type) => {
-        if(type === 'call') window.open('tel:1800123456');
-        if(type === 'wa') window.open('https://wa.me/919424100424');
+        if (!supportPhone) return;
+        if (type === 'call') window.open(`tel:${supportPhone}`, '_self');
+        if (type === 'wa') window.open(`https://wa.me/${supportPhone.replace(/\D/g, '')}`);
     };
 
     return (
@@ -66,6 +70,7 @@ const DriverSupport = () => {
                     />
                 </div>
 
+                {supportPhone && (
                 <div className="grid grid-cols-2 gap-3">
                     <button 
                         onClick={() => openHelp('wa')}
@@ -82,6 +87,7 @@ const DriverSupport = () => {
                         <span className="text-[9px] font-black uppercase tracking-widest">Speak to Agent</span>
                     </button>
                 </div>
+                )}
 
                 <div className="space-y-4">
                      <div className="flex items-center justify-between px-1">

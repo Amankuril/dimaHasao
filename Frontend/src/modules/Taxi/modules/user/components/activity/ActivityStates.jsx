@@ -58,6 +58,18 @@ export const ActivityErrorState = ({ error, onRetry }) => (
   </motion.div>
 );
 
+/*
+ * The tab id went straight into the sentence, so the default tab read
+ * "No all found".
+ */
+const EMPTY_MESSAGES = {
+  all: 'Nothing here yet',
+  rides: 'No rides yet',
+  outstation: 'No outstation trips yet',
+  scheduled: 'No scheduled rides',
+  support: 'No support requests yet',
+};
+
 export const ActivityEmptyState = ({ activeTab }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -67,6 +79,8 @@ export const ActivityEmptyState = ({ activeTab }) => (
     <div className="w-14 h-14 rounded-3xl bg-white/80 border border-white/80 shadow-sm flex items-center justify-center text-slate-400 text-[22px] font-black">
       -
     </div>
-    <p className="text-[15px] font-black text-slate-500">No {activeTab.toLowerCase()} found</p>
+    <p className="text-[15px] font-black text-slate-500">
+      {EMPTY_MESSAGES[String(activeTab || '').toLowerCase()] || 'Nothing here yet'}
+    </p>
   </motion.div>
 );

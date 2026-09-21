@@ -11,7 +11,7 @@ import AppBottomNav from '@/shared/components/app/AppBottomNav';
 const TAXI_EXTRAS = [
   { label: 'Book a Ride', icon: 'fa-solid fa-car-side', path: '/taxi/user' },
   { label: 'My Rides', icon: 'fa-solid fa-route', path: '/taxi/user/activity' },
-  { label: 'Bus', icon: 'fa-solid fa-bus', path: '/taxi/user/bus' },
+  { label: 'Outstation', icon: 'fa-solid fa-road', path: '/taxi/user/intercity' },
   { label: 'Support', icon: 'fa-solid fa-headset', path: '/taxi/user/support' },
 ];
 

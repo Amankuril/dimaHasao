@@ -46,7 +46,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import { adminService } from '../../services/adminService';
 import { BACKEND_LABEL } from '../../../../shared/api/runtimeConfig';
-import { GOOGLE_MAPS_API_KEY, HAS_VALID_GOOGLE_MAPS_KEY, INDIA_CENTER, useBaseGoogleMapsLoader } from '../../utils/googleMaps';
+import { GOOGLE_MAPS_API_KEY, HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER, useBaseGoogleMapsLoader } from '../../utils/googleMaps';
 
 const currency = (value) => Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 });
 const DASHBOARD_REFRESH_INTERVAL_MS = 60000;
@@ -559,7 +559,7 @@ const MainDashboard = () => {
             {isLoaded ? (
               <GoogleMap
                 mapContainerClassName="w-full h-full"
-                center={INDIA_CENTER}
+                center={DISTRICT_CENTER}
                 zoom={5}
                 options={{
                   disableDefaultUI: true,
@@ -580,7 +580,7 @@ const MainDashboard = () => {
                 }}
               >
                 {/* Central operational coordinate */}
-                <MarkerF position={INDIA_CENTER} />
+                <MarkerF position={DISTRICT_CENTER} />
               </GoogleMap>
             ) : (
               <div className="text-center text-xs text-[#64748B] flex flex-col items-center gap-2">

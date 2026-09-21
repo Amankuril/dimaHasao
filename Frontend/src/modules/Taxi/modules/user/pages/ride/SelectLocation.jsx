@@ -3,31 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, MapPin, X, Plus, Minus, Check, Map as MapIcon, LoaderCircle, Navigation, AlertTriangle, ChevronRight } from 'lucide-react';
 import { GoogleMap } from '@react-google-maps/api';
-import { useAppGoogleMapsLoader, INDIA_CENTER, HAS_VALID_GOOGLE_MAPS_KEY } from '../../../admin/utils/googleMaps';
+import { useAppGoogleMapsLoader, DISTRICT_CENTER, HAS_VALID_GOOGLE_MAPS_KEY } from '../../../admin/utils/googleMaps';
 import api from '../../../../shared/api/axiosInstance';
 import { getSavedLocation, getSavedLocationCoords, saveLocation } from '../../services/locationStore';
+import { coordsForPlace, DEFAULT_COORDS, DEFAULT_PLACE, DISTRICT_PLACES, DISTRICT_PLACE_COORDS } from '../../constants/districtPlaces';
 
-const LOCATION_COORDS = {
-  'Pipaliyahana, Indore': [75.9048, 22.7039],
-  'Vijay Nagar': [75.8937, 22.7533],
-  'Vijay Nagar Square': [75.8947, 22.7518],
-  'Vijayawada': [80.6480, 16.5062],
-  'Vijay Nagar Police Station': [75.8934, 22.7506],
-  'Rajwada': [75.8553, 22.7187],
-  'Bhawarkua': [75.8586, 22.6926],
-  'MG Road': [75.8721, 22.7196],
-  'Palasia Square': [75.8863, 22.7242],
-  'LIG Colony': [75.8904, 22.7322],
-  'Scheme No 54': [75.8978, 22.7567],
-  'Bhangadh': [75.8438, 22.7552],
-  'AB Road': [75.8878, 22.7423],
-  'Geeta Bhawan': [75.8834, 22.7208],
-  'Sapna Sangeeta': [75.8587, 22.6984],
-  'Mahalaxmi Nagar': [75.9114, 22.7676],
-};
-
-const getCoords = (title, fallback = [75.8577, 22.7196]) => LOCATION_COORDS[title] || fallback;
-const DEFAULT_COORDS = [75.8577, 22.7196];
+const getCoords = coordsForPlace;
 const MAP_REVERSE_GEOCODE_DEBOUNCE_MS = 500;
 const getLatLngCacheKey = (coords, precision = 5) =>
   `${Number(coords?.lat || 0).toFixed(precision)},${Number(coords?.lng || 0).toFixed(precision)}`;
@@ -200,14 +181,14 @@ const SelectLocation = () => {
   const savedLocation = getSavedLocation();
   const savedPickupLabel = String(savedLocation?.address || '').trim();
   const savedPickupCoords = getSavedLocationCoords();
-  const [pickup, setPickup] = useState(() => routeState.pickup || savedPickupLabel || 'Pipaliyahana, Indore');
+  const [pickup, setPickup] = useState(() => routeState.pickup || savedPickupLabel || DEFAULT_PLACE.title);
   const [drop, setDrop] = useState(() => routeState.drop || '');
-  const [pickupCoords, setPickupCoords] = useState(() => routeState.pickupCoords || savedPickupCoords || getCoords(routeState.pickup || savedPickupLabel || 'Pipaliyahana, Indore'));
+  const [pickupCoords, setPickupCoords] = useState(() => routeState.pickupCoords || savedPickupCoords || getCoords(routeState.pickup || savedPickupLabel || DEFAULT_PLACE.title));
   const [dropCoords, setDropCoords] = useState(() => routeState.dropCoords || null);
   const [stops, setStops] = useState(() => routeState.stops || []);          // array of stop strings
   const [activeInput, setActiveInput] = useState(routeActiveInput); // 'pickup' | 'drop' | stopIdx
   const [showMapPicker, setShowMapPicker] = useState(Boolean(routeState.openMapPicker));
-  const [mapCenter, setMapCenter] = useState(INDIA_CENTER);
+  const [mapCenter, setMapCenter] = useState(DISTRICT_CENTER);
   const [pickedAddress, setPickedAddress] = useState('Loading address...');
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -218,7 +199,7 @@ const SelectLocation = () => {
   const [remoteResults, setRemoteResults] = useState([]);
   const [isSearchingLocations, setIsSearchingLocations] = useState(false);
   const mapInstanceRef = useRef(null);
-  const lastCenterRef = useRef(INDIA_CENTER);
+  const lastCenterRef = useRef(DISTRICT_CENTER);
   const reverseGeocodeTimerRef = useRef(null);
   const lastReverseGeocodedCenterRef = useRef(null);
   const geocoderRef = useRef(null);
@@ -236,23 +217,7 @@ const SelectLocation = () => {
   const parcelReturnPath = routeState.returnTo || `${routePrefix}/parcel/details`;
 
   // All known locations â€” filtered live as user types
-  const allResults = [
-    { title: 'Vijay Nagar', address: 'Vijay Nagar, Indore, Madhya Pradesh' },
-    { title: 'Vijay Nagar Square', address: 'Vijay Nagar Square, Bhagyashree Colony, Indore' },
-    { title: 'Vijayawada', address: 'Vijayawada, Andhra Pradesh, India' },
-    { title: 'Vijay Nagar Police Station', address: 'Vijay Nagar Police Station, Sector D, Indore' },
-    { title: 'Rajwada', address: 'Rajwada, Old Palasia, Indore, MP' },
-    { title: 'Bhawarkua', address: 'Bhawarkua, Indore, Madhya Pradesh' },
-    { title: 'MG Road', address: 'MG Road, Indore, Madhya Pradesh' },
-    { title: 'Palasia Square', address: 'Palasia Square, AB Road, Indore' },
-    { title: 'LIG Colony', address: 'LIG Colony, Indore, Madhya Pradesh' },
-    { title: 'Scheme No 54', address: 'Scheme No 54, Vijay Nagar, Indore' },
-    { title: 'Bhangadh', address: 'Bhangadh, Indore, Madhya Pradesh' },
-    { title: 'AB Road', address: 'AB Road, Indore, Madhya Pradesh' },
-    { title: 'Geeta Bhawan', address: 'Geeta Bhawan, Indore, Madhya Pradesh' },
-    { title: 'Sapna Sangeeta', address: 'Sapna Sangeeta Road, Indore, MP' },
-    { title: 'Mahalaxmi Nagar', address: 'Mahalaxmi Nagar, Indore, Madhya Pradesh' },
-  ];
+  const allResults = DISTRICT_PLACES;
 
   const zoneBounds = useMemo(() => getBoundsFromPaths(zonePaths), [zonePaths]);
 
@@ -369,7 +334,7 @@ const SelectLocation = () => {
       return fallback;
     }
 
-    const knownCoords = LOCATION_COORDS[label];
+    const knownCoords = DISTRICT_PLACE_COORDS[label];
     if (knownCoords) {
       return knownCoords;
     }
@@ -657,7 +622,7 @@ const SelectLocation = () => {
       return { lat: pickupCoords[1], lng: pickupCoords[0] };
     }
 
-    return INDIA_CENTER;
+    return DISTRICT_CENTER;
   };
 
   const shouldSkipReverseGeocode = (nextCenter, threshold = 0.00015) => (
@@ -798,7 +763,7 @@ const SelectLocation = () => {
 
   const handleConfirmNavigate = async (optionalDrop, optionalDropCoords = null) => {
     const finalDrop = optionalDrop || drop;
-    const finalPickup = pickup || 'Pipaliyahana, Indore';
+    const finalPickup = pickup || DEFAULT_PLACE.title;
 
     if (!finalDrop || finalDrop.trim().length === 0) return;
 
@@ -1495,7 +1460,7 @@ const SelectLocation = () => {
            )}
            {/* Overlay overlaying the map with branding */}
            <div className="absolute top-6 right-6 bg-white/90 backdrop-blur px-4 py-2 rounded-2xl shadow-lg border border-slate-100 font-black text-[#FFC400] text-[18px] tracking-tight flex items-center gap-2">
-             <MapPin className="text-[#FFC400]" size={20} fill="currentColor" /> Appzeto
+             <MapPin className="text-[#FFC400]" size={20} fill="currentColor" /> Dima Hasao
            </div>
         </div>
       </div>

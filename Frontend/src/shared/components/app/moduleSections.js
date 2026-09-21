@@ -65,8 +65,8 @@ export const MODULE_SECTIONS = [
     home: '/taxi/user',
     services: [
       { label: 'Book a ride', sub: 'Cab, auto or bike', icon: 'fa-solid fa-car-side', path: '/taxi/user' },
-      { label: 'My rides', sub: 'Rides, parcels and trips', icon: 'fa-solid fa-route', path: '/taxi/user/activity' },
-      { label: 'Bus', sub: 'Intercity bus tickets', icon: 'fa-solid fa-bus', path: '/taxi/user/bus' },
+      { label: 'My rides', sub: 'City rides and outstation trips', icon: 'fa-solid fa-route', path: '/taxi/user/activity' },
+      { label: 'Outstation', sub: 'Intercity and airport trips', icon: 'fa-solid fa-road', path: '/taxi/user/intercity' },
       { label: 'Taxi support', sub: 'Raise a ride complaint', icon: 'fa-solid fa-headset', path: '/taxi/user/support' },
     ],
     account: [

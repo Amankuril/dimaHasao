@@ -582,15 +582,7 @@ const ServiceGrid = ({
     const transportType = String(module?.transport_type || '').trim().toLowerCase();
     const moduleName = String(module?.name || '').trim().toLowerCase();
 
-    if (serviceType === 'rental') return '/taxi/user/rental';
     if (serviceType === 'outstation') return '/taxi/user/intercity';
-    if (serviceType === 'pooling' || moduleName.includes('pooling')) {
-      return '/taxi/user/pooling';
-    }
-
-    if (serviceType === 'bus' || transportType === 'bus' || moduleName.includes('bus')) {
-      return '/taxi/user/bus';
-    }
 
     if (
       ['normal', 'taxi', 'ride', 'ride_hailing', 'ride-hailing'].includes(serviceType) ||
@@ -806,15 +798,8 @@ const ServiceGrid = ({
                   } else if (onServiceClick) {
                     onServiceClick(item);
                   } else {
-                    const fallbackRoute = isParcel ? '/taxi/user/parcel/type' : '/taxi/user/ride/select-location';
-                    const isSelectLocationRoute = fallbackRoute.includes('/ride/select-location');
-
-                    if (isSelectLocationRoute) {
-                      const category = isBike ? 'bike' : 'car';
-                      navigate(fallbackRoute, { state: { selectedCategory: category, flow: 'ride', activeInput: 'drop' } });
-                    } else {
-                      navigate(fallbackRoute);
-                    }
+                    const category = isBike ? 'bike' : 'car';
+                    navigate('/taxi/user/ride/select-location', { state: { selectedCategory: category, flow: 'ride', activeInput: 'drop' } });
                   }
                 };
 

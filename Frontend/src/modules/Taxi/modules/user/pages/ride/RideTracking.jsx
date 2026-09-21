@@ -15,6 +15,7 @@ import bikeIcon from '../../../../assets/icons/bike.png';
 import autoIcon from '../../../../assets/icons/auto.png';
 import deliveryIcon from '../../../../assets/icons/Delivery.png';
 import { useSettings } from '../../../../shared/context/SettingsContext';
+import { DEFAULT_COORDS, DEFAULT_PLACE } from '../../constants/districtPlaces';
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 const DEFAULT_CENTER = { lat: 22.7196, lng: 75.8577 };
@@ -458,14 +459,14 @@ const RideTracking = () => {
     () => state.driver || { name: 'Captain', rating: '4.9', vehicle: 'Taxi', plate: 'Assigned', phone: '', profileImage: '', vehicleImage: '' },
     [state.driver],
   );
-  const pickupLabel = rideRealtime?.pickup?.address || state.pickup || 'Pipaliyahana, Indore';
-  const dropLabel = rideRealtime?.drop?.address || state.drop || 'Vijay Nagar, Indore';
+  const pickupLabel = rideRealtime?.pickup?.address || state.pickup || DEFAULT_PLACE.address;
+  const dropLabel = rideRealtime?.drop?.address || state.drop || '';
   const pickupPosition = useMemo(
-    () => toLatLng(rideRealtime?.pickup?.coordinates || state.pickupCoords || [75.9048, 22.7039]),
+    () => toLatLng(rideRealtime?.pickup?.coordinates || state.pickupCoords || DEFAULT_COORDS),
     [rideRealtime?.pickup?.coordinates, state.pickupCoords],
   );
   const dropPosition = useMemo(
-    () => toLatLng(rideRealtime?.drop?.coordinates || state.dropCoords || [75.8937, 22.7533], pickupPosition),
+    () => toLatLng(rideRealtime?.drop?.coordinates || state.dropCoords || DEFAULT_COORDS, pickupPosition),
     [pickupPosition, rideRealtime?.drop?.coordinates, state.dropCoords],
   );
   const driverPosition = useMemo(

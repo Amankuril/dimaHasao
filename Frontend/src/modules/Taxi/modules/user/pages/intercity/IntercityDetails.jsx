@@ -3,22 +3,27 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, MapPin, Navigation, ChevronRight, LoaderCircle, AlertTriangle, X, Check, ShieldCheck, MapPinned, Search } from 'lucide-react';
 import { GoogleMap, Autocomplete } from '@react-google-maps/api';
-import { HAS_VALID_GOOGLE_MAPS_KEY, INDIA_CENTER, useAppGoogleMapsLoader } from '../../../admin/utils/googleMaps';
+import { HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER, useAppGoogleMapsLoader } from '../../../admin/utils/googleMaps';
 import api from '../../../../shared/api/axiosInstance';
 
+/*
+ * Seeds the map and biases place search when a trip names a city. It held the
+ * previous product's Madhya Pradesh routes; these are the towns an outstation
+ * trip from Dima Hasao actually starts or ends in.
+ */
 const CITY_CENTERS = {
-  Indore: { lat: 22.7196, lng: 75.8577 },
-  Bhopal: { lat: 23.2599, lng: 77.4126 },
-  Ujjain: { lat: 23.1765, lng: 75.7885 },
-  Jabalpur: { lat: 23.1815, lng: 79.9864 },
-  Ratlam: { lat: 23.3315, lng: 75.0367 },
-  Dewas: { lat: 22.9676, lng: 76.0534 },
-  Mumbai: { lat: 19.076, lng: 72.8777 },
-  Delhi: { lat: 28.6139, lng: 77.209 },
-  Pune: { lat: 18.5204, lng: 73.8567 },
+  Haflong: { lat: 25.1667, lng: 93.0167 },
+  Maibang: { lat: 25.3, lng: 93.1333 },
+  Umrangso: { lat: 25.55, lng: 92.7 },
+  Silchar: { lat: 24.8333, lng: 92.7789 },
+  Lumding: { lat: 25.7486, lng: 93.1697 },
+  Guwahati: { lat: 26.1445, lng: 91.7362 },
+  Shillong: { lat: 25.5788, lng: 91.8933 },
+  Dimapur: { lat: 25.9063, lng: 93.7276 },
+  Badarpur: { lat: 24.8686, lng: 92.5951 },
 };
 
-const getCityCenter = (city) => CITY_CENTERS[city] || INDIA_CENTER;
+const getCityCenter = (city) => CITY_CENTERS[city] || DISTRICT_CENTER;
 const getCityCoords = (city) => {
   const center = getCityCenter(city);
   return [center.lng, center.lat];
@@ -49,7 +54,7 @@ const IntercityDetails = () => {
   const [dropCoords, setDropCoords] = useState(null);
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [activeMapField, setActiveMapField] = useState('pickup');
-  const [mapCenter, setMapCenter] = useState(INDIA_CENTER);
+  const [mapCenter, setMapCenter] = useState(DISTRICT_CENTER);
   const [pickedAddress, setPickedAddress] = useState('Move the map to choose a location');
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -58,7 +63,7 @@ const IntercityDetails = () => {
   const [mapSearchResults, setMapSearchResults] = useState([]);
   const [isSearchingMapLocations, setIsSearchingMapLocations] = useState(false);
   const mapInstanceRef = useRef(null);
-  const lastCenterRef = useRef(INDIA_CENTER);
+  const lastCenterRef = useRef(DISTRICT_CENTER);
   const geocoderRef = useRef(null);
   const autocompleteServiceRef = useRef(null);
   const placesServiceRef = useRef(null);

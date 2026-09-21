@@ -31,29 +31,29 @@ const defaultSettings = {
     enableFooter: true
   },
   everything: [
-    { id: '1', title: 'Parcel', subtitle: 'Send anything', image: '', route: '/taxi/user/parcel/type', order: 1, status: 'active' },
+    { id: '1', title: 'Book now', subtitle: 'Your everyday rides', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
     { id: '2', title: 'Bike Taxi', subtitle: 'Beat the traffic', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
-    { id: '3', title: 'Book now', subtitle: 'Your everyday rides', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' },
+    { id: '3', title: 'Outstation', subtitle: 'Trips beyond the district', image: '', route: '/taxi/user/intercity', order: 3, status: 'active' },
     { id: '4', title: 'All Services', subtitle: 'All Services', image: '', route: '', order: 4, status: 'active' }
   ],
   explore: [
-    { id: '1', title: 'Parcel on Bike', image: '', route: '/taxi/user/parcel/type', order: 1, status: 'active' },
-    { id: '2', title: 'Auto', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
-    { id: '3', title: 'Cab Economy', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' },
-    { id: '4', title: 'Bike', image: '', route: '/taxi/user/ride/select-location', order: 4, status: 'active' }
+    { id: '1', title: 'Auto', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+    { id: '2', title: 'Cab Economy', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
+    { id: '3', title: 'Bike', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' },
+    { id: '4', title: 'Outstation', image: '', route: '/taxi/user/intercity', order: 4, status: 'active' }
   ],
   promos: [
-    { id: '1', title: 'Experience A New Standard With Dima Hasao', subtitle: 'A premier private hire service where luxury and reliability converge.', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
-    { id: '2', title: 'Need to Send Packages? Try Parcel!', subtitle: 'Fast and secure delivery across Indore at affordable prices.', image: '', route: '/taxi/user/parcel/type', order: 2, status: 'active' }
+    { id: '1', title: 'Rides across Dima Hasao', subtitle: 'Haflong, Maibang, Umrangso and everywhere between.', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+    { id: '2', title: 'Heading out of the district?', subtitle: 'Book an outstation cab to Silchar, Guwahati or Lumding.', image: '', route: '/taxi/user/intercity', order: 2, status: 'active' }
   ],
   goPlaces: [
-    { id: '1', title: 'Hassle-Free Airport Rides', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
-    { id: '2', title: 'Quick Rides to Railway Station', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
-    { id: '3', title: 'Ride to Bus Terminal', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' }
+    { id: '1', title: 'Rides to Haflong Railway Station', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+    { id: '2', title: 'Airport transfers to Silchar', image: '', route: '/taxi/user/intercity', order: 2, status: 'active' },
+    { id: '3', title: 'Outstation trips', image: '', route: '/taxi/user/intercity', order: 3, status: 'active' }
   ],
   footer: {
-    hashtag: '#goAppzeto',
-    line1: 'Made for India',
+    hashtag: '#DimaHasao',
+    line1: 'Made for the district',
     line2: 'Crafted for riders'
   }
 };
@@ -479,7 +479,7 @@ const AdminUserAppManagement = ({ tab: initialTab }) => {
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                   <div>
                     <div className="text-[15px] font-semibold text-gray-800">Everything In Minutes Grid</div>
-                    <p className="text-[11px] font-medium text-gray-400 mt-1">Masonry grid displaying main travel & parcel categories.</p>
+                    <p className="text-[11px] font-medium text-gray-400 mt-1">Masonry grid displaying the main ride categories.</p>
                   </div>
                   <button
                     onClick={() => updateHomeSectionToggle('enableEverything')}
@@ -554,7 +554,7 @@ const AdminUserAppManagement = ({ tab: initialTab }) => {
                     value={settings.footer.hashtag}
                     onChange={(e) => handleFooterChange('hashtag', e.target.value)}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#405189] text-[13px] font-semibold"
-                    placeholder="#goAppzeto"
+                    placeholder="#DimaHasao"
                   />
                 </div>
                 <div>

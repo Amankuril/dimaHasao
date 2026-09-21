@@ -3,12 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MessageCircle, Phone, HelpCircle, AlertCircle, XCircle, ShieldCheck, ChevronRight, Siren } from 'lucide-react';
 // ... removed BottomNavbar import ...
-import { SUPPORT_INFO } from '../../../shared/content/supportInfo';
+import { useSupportInfo } from '../../../shared/content/supportInfo';
 
 const Support = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const SUPPORT_INFO = useSupportInfo();
 
   const helpTopics = [
     { title: "Driver didn't arrive", Icon: XCircle, iconClass: 'text-rose-500', ringClass: 'bg-rose-50/70 dark:bg-rose-950/20' },

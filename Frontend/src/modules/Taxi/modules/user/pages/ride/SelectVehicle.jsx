@@ -23,6 +23,7 @@ import ScootyIcon from '../../../../assets/icons/scooty.png';
 import HatchbackIcon from '../../../../assets/icons/Hatchback.png';
 import BusIcon from '../../../../assets/icons/bus.png';
 import MiniBusIcon from '../../../../assets/icons/mini_bus.png';
+import { DEFAULT_COORDS, DEFAULT_PLACE } from '../../constants/districtPlaces';
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 const SELECT_VEHICLE_MAP_OPTIONS = {
@@ -1165,8 +1166,8 @@ const SelectVehicle = () => {
     }
 
     const fallbackDistanceMeters = calculateDistanceMeters(
-      routeState?.pickupCoords || [75.9048, 22.7039],
-      routeState?.dropCoords || [75.8937, 22.7533],
+      routeState?.pickupCoords || DEFAULT_COORDS,
+      routeState?.dropCoords || DEFAULT_COORDS,
     );
 
     return {
@@ -1183,10 +1184,10 @@ const SelectVehicle = () => {
   const scheduledAtInputRef = useRef(null);
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const pickup = routeState.pickup || 'Pipaliyahana, Indore';
-  const drop = routeState.drop || 'Vijay Nagar, Indore';
-  const pickupCoords = useMemo(() => routeState.pickupCoords || [75.9048, 22.7039], [routeState.pickupCoords]);
-  const dropCoords = useMemo(() => routeState.dropCoords || [75.8937, 22.7533], [routeState.dropCoords]);
+  const pickup = routeState.pickup || DEFAULT_PLACE.address;
+  const drop = routeState.drop || '';
+  const pickupCoords = useMemo(() => routeState.pickupCoords || DEFAULT_COORDS, [routeState.pickupCoords]);
+  const dropCoords = useMemo(() => routeState.dropCoords || DEFAULT_COORDS, [routeState.dropCoords]);
   const stops = useMemo(
     () => (Array.isArray(routeState.stops) ? routeState.stops : []),
     [routeState.stops],

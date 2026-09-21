@@ -9,7 +9,6 @@ import {
   MapPin,
   Search,
   Sparkles,
-  Clock,
   Navigation,
   X,
   ShieldCheck,
@@ -27,8 +26,9 @@ import {
 } from 'lucide-react';
 import { userService } from '../../services/userService';
 import { GoogleMap } from '@react-google-maps/api';
-import { useAppGoogleMapsLoader, HAS_VALID_GOOGLE_MAPS_KEY, INDIA_CENTER } from '../../../admin/utils/googleMaps';
+import { useAppGoogleMapsLoader, HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER } from '../../../admin/utils/googleMaps';
 import toast from 'react-hot-toast';
+import usePlatformSettings from '@/shared/hooks/usePlatformSettings';
 
 const normalizeSearchValue = (value) => String(value || '').trim().toLowerCase();
 
@@ -86,6 +86,8 @@ const IntercityHome = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  // The district's own number, set once in Global Settings.
+  const supportPhone = String(usePlatformSettings().supportPhone || '').trim();
 
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +117,7 @@ const IntercityHome = () => {
 
   // Map Picker State
   const [showMapPicker, setShowMapPicker] = useState(false);
-  const [mapCenter, setMapCenter] = useState(INDIA_CENTER);
+  const [mapCenter, setMapCenter] = useState(DISTRICT_CENTER);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -125,7 +127,7 @@ const IntercityHome = () => {
   const [isMapSearchFocused, setIsMapSearchFocused] = useState(false);
   const [isEditingPickup, setIsEditingPickup] = useState(false);
   const mapInstanceRef = useRef(null);
-  const lastCenterRef = useRef(INDIA_CENTER);
+  const lastCenterRef = useRef(DISTRICT_CENTER);
   const dateTimeInputRef = useRef(null);
   const mapSearchInputRef = useRef(null);
   const geocoderRef = useRef(null);
@@ -383,6 +385,13 @@ const IntercityHome = () => {
     setIsMapSearchFocused(false);
     setIsEditingPickup(false);
     setShowMapPicker(true);
+
+    // Reverse geocoding only ran on drag end, so a rider who opened the picker
+    // and pressed Confirm without moving the map confirmed a pin with no
+    // address — and then could not get past "Please set your Pickup Location".
+    if (!pickupAddress) {
+      reverseGeocode(center);
+    }
   };
 
   const handleEditPickup = () => {
@@ -726,6 +735,9 @@ const IntercityHome = () => {
                   const lng = center?.lng?.() ?? lastCenterRef.current.lng;
                   const lat = center?.lat?.() ?? lastCenterRef.current.lat;
                   setPickupCoords([lng, lat]);
+                  if (!pickupAddress) {
+                    reverseGeocode({ lat, lng });
+                  }
                   setShowMapPicker(false);
                 }}
                 disabled={isGeocoding}
@@ -953,68 +965,29 @@ const IntercityHome = () => {
         </div>
       </div>
 
-      {/* Horizontal Scroll Banners */}
-      <div className="mt-6">
-        <div className="flex gap-4 overflow-x-auto px-5 py-2 scrollbar-hide">
-
-          {/* Banner 1: Chardham */}
-          <div className="w-[280px] shrink-0 h-[140px] rounded-2xl overflow-hidden relative shadow-md group">
-            <img
-              src="/chardham_banner.png"
-              alt="Chardham Cab Packages"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end p-4">
-              <span className="self-start bg-black/75 border border-amber-400/40 text-amber-400 text-[8px] font-extrabold px-2 py-0.5 rounded-full tracking-wider uppercase mb-1">
-                ★ Exclusive ★
-              </span>
-              <h4 className="text-white text-[15px] font-black uppercase tracking-tight leading-tight">
-                Chardham Cab Packages
-              </h4>
-            </div>
-          </div>
-
-          {/* Banner 2: Offers */}
-          <div className="w-[280px] shrink-0 h-[140px] rounded-2xl overflow-hidden relative shadow-md group">
-            <img
-              src="/offers_banner.png"
-              alt="Beach Cab Offers"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end p-4">
-              <span className="self-start bg-amber-500 text-slate-900 text-[8px] font-extrabold px-2 py-0.5 rounded-full tracking-wider uppercase mb-1">
-                Offers
-              </span>
-              <h4 className="text-white text-[15px] font-black uppercase tracking-tight leading-tight">
-                First Intercity Trip? Get 20% Off!
-              </h4>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
       {/* Travel Expert CTA Banner */}
-      <div className="px-5 mt-6">
-        <div className="p-4 bg-gradient-to-r from-[#E3F2FD]/80 to-[#E1F5FE]/80 border border-blue-100 rounded-2xl flex items-center justify-between shadow-sm">
-          <div className="min-w-0 flex-1 pr-3">
-            <p className="text-[8px] font-extrabold text-blue-500 tracking-wider uppercase mb-0.5">SAY HELLO TO</p>
-            <h4 className="text-[13px] font-extrabold text-slate-900 leading-tight">YOUR TRAVEL EXPERT</h4>
-            <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Get expert advice for smarter travel plans!</p>
+      {supportPhone && (
+        <div className="px-5 mt-6">
+          <div className="p-4 bg-gradient-to-r from-[#E8F2EC]/80 to-[#F3F8F5]/80 border border-[#0a4d2b]/15 rounded-2xl flex items-center justify-between shadow-sm">
+            <div className="min-w-0 flex-1 pr-3">
+              <p className="text-[8px] font-extrabold text-[#0a4d2b] tracking-wider uppercase mb-0.5">Need help planning?</p>
+              <h4 className="text-[13px] font-extrabold text-slate-900 leading-tight">TALK TO THE DISTRICT TEAM</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">We can help you pick a route and a vehicle.</p>
+            </div>
+            <button
+              onClick={() => window.open(`tel:${supportPhone.replace(/\s+/g, '')}`, '_self')}
+              type="button"
+              className="bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-1.5 shadow-sm transition-all text-[11px] font-black cursor-pointer shrink-0 active:scale-95"
+            >
+              <PhoneCall size={12} className="text-[#0a4d2b]" />
+              Call us
+            </button>
           </div>
-          <button
-            onClick={() => window.open('tel:+918000000000', '_self')}
-            type="button"
-            className="bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-1.5 shadow-sm transition-all text-[11px] font-black cursor-pointer shrink-0 active:scale-95"
-          >
-            <PhoneCall size={12} className="text-[#1E90FF]" />
-            Call Expert | 24x7
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-white border-t border-slate-200 grid grid-cols-3 h-16 items-center z-40 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-white border-t border-slate-200 grid grid-cols-2 h-16 items-center z-40 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
 
         {/* ONE WAY */}
         <button
@@ -1040,24 +1013,7 @@ const IntercityHome = () => {
           <span className="text-[9px] tracking-wide uppercase font-extrabold">Round Trip</span>
         </button>
 
-        {/* LOCAL */}
-        <button
-          onClick={() => navigate(`${routePrefix}/rental`)}
-          className="flex flex-col items-center justify-center h-full border-r border-slate-100 text-slate-500 hover:bg-slate-50 transition-colors"
-        >
-          <Clock size={18} strokeWidth={2.5} className="mb-0.5" />
-          <span className="text-[9px] tracking-wide uppercase font-extrabold">Local</span>
-        </button>
 
-        {/*
-        <button
-          onClick={() => navigate(`${routePrefix}/cab/airport`)}
-          className="flex flex-col items-center justify-center h-full text-slate-500 hover:bg-slate-50 transition-colors"
-        >
-          <Plane size={18} strokeWidth={2.5} className="mb-0.5" />
-          <span className="text-[9px] tracking-wide uppercase font-extrabold">Airport</span>
-        </button>
-        */}
 
       </nav>
     </div>

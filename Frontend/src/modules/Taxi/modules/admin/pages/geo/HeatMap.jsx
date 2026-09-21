@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useBaseGoogleMapsLoader, HAS_VALID_GOOGLE_MAPS_KEY } from '../../utils/googleMaps';
 import { adminService } from '../../services/adminService';
 
-const INDIA_CENTER = { lat: 22.7196, lng: 75.8577 };
+const DISTRICT_CENTER = { lat: 22.7196, lng: 75.8577 };
 const MAP_CONTAINER_STYLE = { width: '100%', height: '400px' };
 
 const mapOptions = {
@@ -198,7 +198,7 @@ const HeatMap = () => {
     if (requestOverlays.length > 0) {
       return requestOverlays[0].center;
     }
-    return INDIA_CENTER;
+    return DISTRICT_CENTER;
   }, [requestOverlays]);
 
   const circleRadiusMeters = Math.max(250, radius * 140);

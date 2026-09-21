@@ -1,13 +1,14 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Building2, Clock3, Mail, MapPin, Phone, ShieldCheck } from 'lucide-react';
-import { SUPPORT_INFO } from '../../shared/content/supportInfo';
+import { useSupportInfo } from '../../shared/content/supportInfo';
 
 const PortalSupportPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const routePrefix = '/taxi/driver';
   const portalLabel = 'Driver';
+  const SUPPORT_INFO = useSupportInfo();
 
   const quickCards = [
     {
@@ -83,7 +84,7 @@ const PortalSupportPage = () => {
           </p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {quickCards.map((item) => (
+            {quickCards.filter((item) => item.value).map((item) => (
               <a
                 key={item.title}
                 href={item.href}
@@ -135,7 +136,7 @@ const PortalSupportPage = () => {
 
       <section className="px-6 py-16">
         <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2">
-          {detailCards.map((card) => (
+          {detailCards.filter((card) => card.value).map((card) => (
             <div
               key={card.title}
               className="rounded-[28px] border border-stone-200 bg-white p-7 shadow-sm"

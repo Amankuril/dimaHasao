@@ -44,7 +44,6 @@ const Profile = lazy(() => import('./modules/user/pages/Profile'));
 const Wallet = lazy(() => import('./modules/user/pages/Wallet'));
 
 // Coming Soon placeholder (for /tours and any unbuilt routes)
-const ComingSoon = lazy(() => import('./modules/shared/pages/ComingSoon'));
 
 
 // Phase 2 — Core utility pages
@@ -59,9 +58,6 @@ const SupportTicketDetail = lazy(() => import('./modules/user/pages/support/Supp
 const DeleteAccount = lazy(() => import('./modules/user/pages/profile/DeleteAccount'));
 
 // Phase 4 — Cab/Intercity/Bus flows
-const CabHome = lazy(() => import('./modules/user/pages/cab/CabHome'));
-const AirportCab = lazy(() => import('./modules/user/pages/cab/AirportCab'));
-const AirportCabConfirm = lazy(() => import('./modules/user/pages/cab/AirportCabConfirm'));
 
 const IntercityVehicle = lazy(() => import('./modules/user/pages/intercity/IntercityVehicle'));
 const IntercityDetails = lazy(() => import('./modules/user/pages/intercity/IntercityDetails'));
@@ -72,7 +68,6 @@ const IntercityConfirm = lazy(() => import('./modules/user/pages/intercity/Inter
 
 // New Feature Pages
 const IntercityHome = lazy(() => import('./modules/user/pages/intercity/IntercityHome'));
-const CabSharing = lazy(() => import('./modules/user/pages/cabsharing/CabSharing'));
 
 // Car Pooling flow
 
@@ -104,7 +99,7 @@ const DriverIncentives = lazy(() => import('./modules/driver/pages/DriverIncenti
 const EditProfile = lazy(() => import('./modules/driver/pages/settings/EditProfile'));
 const DriverDocuments = lazy(() => import('./modules/driver/pages/settings/DriverDocuments'));
 const Notifications = lazy(() => import('./modules/driver/pages/settings/Notifications'));
-const PayoutMethods = lazy(() => import('./modules/driver/pages/settings/PayoutMethods'));
+const DriverBankDetails = lazy(() => import('./modules/driver/pages/DriverBankDetailsPage'));
 const Referral = lazy(() => import('./modules/driver/pages/settings/Referral'));
 const DriverDeleteAccount = lazy(() => import('./modules/driver/pages/settings/DeleteAccount'));
 const SecuritySOS = lazy(() => import('./modules/driver/pages/settings/SecuritySOS'));
@@ -300,6 +295,25 @@ const clearUserSession = () => {
   socketService.disconnect();
   syncThemeForPath('/login');
   clearLocalUserSessionData();
+};
+
+/**
+ * TaxiApp is mounted twice — at /taxi/* and again at /taxi/user/* — so a
+ * relative catch-all path would only be right under one of them. Reading the
+ * pathname works under both.
+ */
+const TaxiUnknownRoute = () => {
+  const { pathname } = useLocation();
+
+  if (pathname.startsWith('/taxi/driver')) {
+    return <Navigate to="/taxi/driver" replace />;
+  }
+
+  if (pathname.startsWith('/taxi/user') || pathname.startsWith('/taxi/ride')) {
+    return <Navigate to="/taxi/user" replace />;
+  }
+
+  return null;
 };
 
 const UserProtectedRoute = () => {
@@ -545,19 +559,10 @@ function TaxiApp() {
                 <Route path="support" element={<Support />} />
                 <Route path="ride/detail/:id" element={<RideDetail />} />
 
-                {/* New Service Routes — Real pages replacing ComingSoon */}
                 <Route path="intercity" element={<IntercityHome />} />
                 <Route path="intercity/vehicle" element={<IntercityVehicle />} />
                 <Route path="intercity/details" element={<IntercityDetails />} />
                 <Route path="intercity/confirm" element={<IntercityConfirm />} />
-                <Route path="cab-sharing" element={<CabSharing />} />
-                <Route path="cab" element={<CabHome />} />
-                <Route path="cab/airport" element={<AirportCab />} />
-                <Route
-                  path="cab/airport-confirm"
-                  element={<AirportCabConfirm />}
-                />
-                <Route path="tours" element={<ComingSoon />} />
 
                 <Route path="activity" element={<Activity />} />
                 <Route path="profile" element={<Profile />} />
@@ -626,14 +631,6 @@ function TaxiApp() {
                   path="user/intercity/confirm"
                   element={<IntercityConfirm />}
                 />
-                <Route path="user/cab-sharing" element={<CabSharing />} />
-                <Route path="user/cab" element={<CabHome />} />
-                <Route path="user/cab/airport" element={<AirportCab />} />
-                <Route
-                  path="user/cab/airport-confirm"
-                  element={<AirportCabConfirm />}
-                />
-                <Route path="user/tours" element={<ComingSoon />} />
 
                 <Route path="user/activity" element={<UserMainTabKeepAlive />} />
                 <Route path="user/profile" element={<UserMainTabKeepAlive />} />
@@ -708,7 +705,7 @@ function TaxiApp() {
                 <Route path="edit-profile" element={<EditProfile />} />
                 <Route path="documents" element={<DriverDocuments />} />
                 <Route path="notifications" element={<Notifications />} />
-                <Route path="payout-methods" element={<PayoutMethods />} />
+                <Route path="profile/bank-details" element={<DriverBankDetails />} />
                 <Route path="referral" element={<Referral />} />
                 <Route
                   path="delete-account"
@@ -1110,7 +1107,12 @@ function TaxiApp() {
                 />
               </Route>
 
-              {/* Removed catch-all to allow parent routing to handle 404s */}
+              {/* A taxi URL that no longer exists — a stale deep link, or the
+                  screen the APK remembered — used to render the module shell
+                  around nothing, with no way back but the nav. Only taxi
+                  prefixes are claimed here; anything else still falls through
+                  to the app's own 404. */}
+              <Route path="*" element={<TaxiUnknownRoute />} />
             </Routes>
           </Suspense>
         </MainLayout>

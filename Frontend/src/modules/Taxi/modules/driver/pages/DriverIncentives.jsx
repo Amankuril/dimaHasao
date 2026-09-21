@@ -236,7 +236,14 @@ const DriverIncentives = () => {
         <section className="bg-black rounded-3xl p-6 text-white overflow-hidden relative">
           <div className="relative z-10">
             <h3 className="text-lg font-bold mb-2">Invite a Friend</h3>
-            <p className="text-sm text-gray-400 mb-6">Earn {formatCurrency(data?.referralRewardAmount || 500)} for every new driver you refer.</p>
+            {/* The ₹500 that used to stand in here was the previous product's
+                figure; with referral rewards unconfigured the screen promised
+                a payout the referral page then showed as ₹0. */}
+            <p className="text-sm text-gray-400 mb-6">
+              {Number(data?.referralRewardAmount) > 0
+                ? `Earn ${formatCurrency(data.referralRewardAmount)} for every new driver you refer.`
+                : 'Invite other drivers to join. Rewards are set by the district team.'}
+            </p>
             <button 
               onClick={() => navigate('/taxi/driver/referral')}
               className="px-6 py-3 bg-white text-black rounded-2xl text-xs font-bold uppercase tracking-widest"

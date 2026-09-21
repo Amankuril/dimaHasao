@@ -220,7 +220,7 @@ const getHelperText = (tab) => {
   if (tab === 'Support') return 'Tickets and help requests';
   if (tab === 'Outstation') return 'Long-distance trips and outstation deliveries';
   if (tab === 'Scheduled') return 'Bookings reserved for a later pickup time';
-  return 'Your recent trips, deliveries, and bookings';
+  return 'Your recent rides and outstation trips';
 };
 
 const buildRentalActivityState = (booking) => ({
