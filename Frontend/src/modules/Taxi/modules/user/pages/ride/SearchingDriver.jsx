@@ -220,24 +220,11 @@ const SearchingDriver = () => {
   const [rideOtp, setRideOtp] = useState('');
   const [searchStatus, setSearchStatus] = useState('Connecting with drivers nearby');
   const [nearbyVehicleCount, setNearbyVehicleCount] = useState(4);
-  const [rideBids, setRideBids] = useState([]);
-  const [biddingSummary, setBiddingSummary] = useState(() => ({
-    bookingMode: String(routeState.bookingMode || 'normal'),
-    pricingNegotiationMode: String(routeState.pricingNegotiationMode || 'none'),
-    baseFare: Number(routeState.baseFare || routeState.fare || routeState.vehicle?.price || 0),
-    bidFloorFare: Number(routeState.bidFloorFare || routeState.baseFare || routeState.fare || routeState.vehicle?.price || 0),
-    userMaxBidFare: Number(routeState.userMaxBidFare || routeState.fare || routeState.vehicle?.price || 0),
-    bidCeilingMaxFare: Number(routeState.bidCeilingMaxFare || routeState.userMaxBidFare || routeState.fare || routeState.vehicle?.price || 0),
-    bidStepAmount: Number(routeState.bidStepAmount || 10),
-    fareIncreaseWaitMinutes: Number(routeState.fareIncreaseWaitMinutes || 0),
-    nextFareIncreaseAt: routeState.nextFareIncreaseAt || null,
-  }));
-  const [bidActionLoading, setBidActionLoading] = useState(false);
   const [scheduledStatus, setScheduledStatus] = useState(() => (routeState.scheduledAt ? 'saving' : 'idle'));
   const [scheduledError, setScheduledError] = useState('');
   const [now, setNow] = useState(() => Date.now());
   const [fareHistory, setFareHistory] = useState(() => {
-    const initialFare = Number(routeState.userMaxBidFare || routeState.fare || routeState.vehicle?.price || 0);
+    const initialFare = Number(routeState.fare || routeState.vehicle?.price || 0);
     return initialFare > 0 ? [initialFare] : [];
   });
   const timerRef = useRef(null);
@@ -260,25 +247,9 @@ const SearchingDriver = () => {
   );
   const activeRideIdRef = useRef('');
   const searchNonce = String(routeState.searchNonce || '');
-  const isDriverBidRide = biddingSummary.pricingNegotiationMode === 'driver_bid';
-  const isUserIncrementRide = biddingSummary.pricingNegotiationMode === 'user_increment_only';
-  const isBiddingRide = isDriverBidRide;
   const isScheduledRide = Boolean(routeState.scheduledAt);
-  const isScheduledBiddingRide = isScheduledRide && isBiddingRide;
   const isSearching = stage === STAGES.SEARCHING;
   const isAccepted = stage === STAGES.ACCEPTED || stage === STAGES.COMPLETING;
-  const fareIncreaseCountdownMs = Math.max(0, new Date(biddingSummary.nextFareIncreaseAt || 0).getTime() - now);
-  const canIncreaseFare = !isUserIncrementRide || !biddingSummary.nextFareIncreaseAt || fareIncreaseCountdownMs <= 0;
-  const formatCountdown = (milliseconds) => {
-    const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${String(seconds).padStart(2, '0')}`;
-  };
-  const fareIncreaseCountdownLabel = canIncreaseFare
-    ? 'You can increase the fare now.'
-    : `Next increase in ${formatCountdown(fareIncreaseCountdownMs)}`;
-
   const appendFareHistory = (fare) => {
     const normalizedFare = Math.round(Number(fare || 0));
     if (!Number.isFinite(normalizedFare) || normalizedFare <= 0) {
@@ -326,40 +297,9 @@ const SearchingDriver = () => {
     [routeState.scheduledAt],
   );
 
-  const loadRideBids = async (rideId) => {
-    const response = await userAuthService.getRideBids(rideId);
-    const payload = unwrap(response);
-    setRideBids(Array.isArray(payload?.bids) ? payload.bids : []);
-    setBiddingSummary((current) => ({
-      ...current,
-      bookingMode: String(payload?.ride?.bookingMode || current.bookingMode || 'normal'),
-      pricingNegotiationMode: String(payload?.ride?.pricingNegotiationMode || current.pricingNegotiationMode || 'none'),
-      baseFare: Number(payload?.ride?.baseFare || current.baseFare || routeState.baseFare || 0),
-      bidFloorFare: Number(payload?.ride?.bidFloorFare || current.bidFloorFare || routeState.bidFloorFare || routeState.baseFare || 0),
-      userMaxBidFare: Number(payload?.ride?.userMaxBidFare || current.userMaxBidFare || routeState.userMaxBidFare || 0),
-      bidCeilingMaxFare: Number(payload?.ride?.bidCeilingMaxFare || current.bidCeilingMaxFare || routeState.bidCeilingMaxFare || routeState.userMaxBidFare || 0),
-      bidStepAmount: Number(payload?.ride?.bidStepAmount || current.bidStepAmount || routeState.bidStepAmount || 10),
-      fareIncreaseWaitMinutes: Number(payload?.ride?.fareIncreaseWaitMinutes || current.fareIncreaseWaitMinutes || 0),
-      nextFareIncreaseAt: payload?.ride?.nextFareIncreaseAt || current.nextFareIncreaseAt || null,
-    }));
-    appendFareHistory(payload?.ride?.userMaxBidFare);
-  };
-
   useEffect(() => {
     driverRef.current = driver;
   }, [driver]);
-
-  useEffect(() => {
-    if (!isUserIncrementRide || canIncreaseFare) {
-      return undefined;
-    }
-
-    const intervalId = setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [canIncreaseFare, isUserIncrementRide]);
 
   useEffect(() => {
     if (!searchNonce) {
@@ -504,54 +444,6 @@ const SearchingDriver = () => {
       moveToTracking({ acceptedDriver, rideId });
     };
 
-    const onRideBidUpdated = ({ rideId, bid, userMaxBidFare, bidStepAmount, bookingMode }) => {
-      if (!rideId || String(rideId) !== String(activeRideIdRef.current || '')) {
-        return;
-      }
-
-      if (bid) {
-        setRideBids((current) => {
-          const filtered = current.filter((item) => item.id !== bid.id);
-          return [...filtered, bid].sort((first, second) => {
-            const fareDelta = Number(first.bidFare || 0) - Number(second.bidFare || 0);
-            if (fareDelta !== 0) return fareDelta;
-            return new Date(first.createdAt || 0).getTime() - new Date(second.createdAt || 0).getTime();
-          });
-        });
-      }
-
-      setBiddingSummary((current) => ({
-        ...current,
-        bookingMode: String(bookingMode || current.bookingMode || 'normal'),
-        pricingNegotiationMode: String(current.pricingNegotiationMode || 'driver_bid'),
-        bidFloorFare: Number(current.bidFloorFare || routeState.bidFloorFare || current.baseFare || 0),
-        userMaxBidFare: Number(userMaxBidFare || current.userMaxBidFare || 0),
-        bidCeilingMaxFare: Number(current.bidCeilingMaxFare || routeState.bidCeilingMaxFare || userMaxBidFare || 0),
-        bidStepAmount: Number(bidStepAmount || current.bidStepAmount || 10),
-      }));
-      setSearchStatus('Drivers are sending fare offers.');
-    };
-
-    const onRideBiddingUpdated = ({ rideId, userMaxBidFare, bidStepAmount, bookingMode, pricingNegotiationMode, baseFare, bidFloorFare, bidCeilingMaxFare, fareIncreaseWaitMinutes, nextFareIncreaseAt, fare }) => {
-      if (!rideId || String(rideId) !== String(activeRideIdRef.current || '')) {
-        return;
-      }
-
-      setBiddingSummary((current) => ({
-        ...current,
-        bookingMode: String(bookingMode || current.bookingMode || 'normal'),
-        pricingNegotiationMode: String(pricingNegotiationMode || current.pricingNegotiationMode || 'none'),
-        baseFare: Number(baseFare || current.baseFare || 0),
-        bidFloorFare: Number(bidFloorFare || current.bidFloorFare || baseFare || fare || 0),
-        userMaxBidFare: Number(userMaxBidFare || fare || current.userMaxBidFare || 0),
-        bidCeilingMaxFare: Number(bidCeilingMaxFare || current.bidCeilingMaxFare || userMaxBidFare || fare || 0),
-        bidStepAmount: Number(bidStepAmount || current.bidStepAmount || 10),
-        fareIncreaseWaitMinutes: Number(fareIncreaseWaitMinutes || current.fareIncreaseWaitMinutes || 0),
-        nextFareIncreaseAt: nextFareIncreaseAt || current.nextFareIncreaseAt || null,
-      }));
-      appendFareHistory(userMaxBidFare || fare);
-    };
-
     const onRideState = (payload) => {
       if (!payload || String(payload.rideId || '') !== String(activeRideIdRef.current || '')) {
         return;
@@ -606,8 +498,6 @@ const SearchingDriver = () => {
 
     socketService.on('rideSearchUpdate', onRideSearchUpdate);
     socketService.on('rideAccepted', onRideAccepted);
-    socketService.on('rideBidUpdated', onRideBidUpdated);
-    socketService.on('rideBiddingUpdated', onRideBiddingUpdated);
     socketService.on('ride:state', onRideState);
     socketService.on('ride:status:updated', onRideStatusUpdated);
     socketService.on('rideCancelled', onRideCancelled);
@@ -627,8 +517,6 @@ const SearchingDriver = () => {
       activeRidePollRef.current = null;
       socketService.off('rideSearchUpdate', onRideSearchUpdate);
       socketService.off('rideAccepted', onRideAccepted);
-      socketService.off('rideBidUpdated', onRideBidUpdated);
-      socketService.off('rideBiddingUpdated', onRideBiddingUpdated);
       socketService.off('ride:state', onRideState);
       socketService.off('ride:status:updated', onRideStatusUpdated);
       socketService.off('rideCancelled', onRideCancelled);
@@ -676,9 +564,6 @@ const SearchingDriver = () => {
           zone_id: routeState.zone_id || routeState.zoneId || '',
           service_location_id: routeState.service_location_id || routeState.serviceLocationId || '',
           transport_type: routeState.transport_type || routeState.transportType || routeState.vehicle?.transportType || 'taxi',
-          bookingMode: routeState.bookingMode || 'normal',
-          userMaxBidFare: routeState.userMaxBidFare || routeState.fare || routeState.vehicle?.price || 22,
-          bidStepAmount: routeState.bidStepAmount || 10,
           scheduledAt: routeState.scheduledAt || null,
         };
 
@@ -696,24 +581,7 @@ const SearchingDriver = () => {
         const rideId = ride?._id || ride?.id || payload?.realtime?.rideId;
         const normalizedRideId = String(rideId || '');
         activeRideIdRef.current = normalizedRideId;
-        if ((ride?.pricingNegotiationMode || routeState.pricingNegotiationMode || 'none') !== 'none') {
-          setBiddingSummary({
-            bookingMode: String(ride?.bookingMode || routeState.bookingMode || 'normal'),
-            pricingNegotiationMode: String(ride?.pricingNegotiationMode || routeState.pricingNegotiationMode || 'none'),
-            baseFare: Number(ride?.baseFare || routeState.baseFare || routeState.fare || 0),
-            bidFloorFare: Number(ride?.bidFloorFare || routeState.bidFloorFare || routeState.baseFare || routeState.fare || 0),
-            userMaxBidFare: Number(ride?.userMaxBidFare || routeState.userMaxBidFare || routeState.fare || 0),
-            bidCeilingMaxFare: Number(ride?.bidCeilingMaxFare || routeState.bidCeilingMaxFare || routeState.userMaxBidFare || routeState.fare || 0),
-            bidStepAmount: Number(ride?.bidStepAmount || routeState.bidStepAmount || 10),
-            fareIncreaseWaitMinutes: Number(ride?.fareIncreaseWaitMinutes || routeState.fareIncreaseWaitMinutes || 0),
-            nextFareIncreaseAt: ride?.nextFareIncreaseAt || routeState.nextFareIncreaseAt || null,
-          });
-          if ((ride?.pricingNegotiationMode || routeState.pricingNegotiationMode) === 'driver_bid') {
-            loadRideBids(rideId).catch(() => { });
-          }
-          appendFareHistory(ride?.userMaxBidFare || ride?.fare);
-        }
-        if (isScheduledRide && !isScheduledBiddingRide) {
+        if (isScheduledRide) {
           scheduleScheduledRideReminders({
             ...ride,
             rideId: normalizedRideId,
@@ -778,13 +646,7 @@ const SearchingDriver = () => {
         );
 
         if (!disposed) {
-          setSearchStatus(
-            (ride?.pricingNegotiationMode || routeState.pricingNegotiationMode) === 'driver_bid'
-              ? (isScheduledRide ? 'Scheduled ride created. Waiting for driver bids...' : 'Booking created. Waiting for driver bids...')
-              : (ride?.pricingNegotiationMode || routeState.pricingNegotiationMode) === 'user_increment_only'
-                ? 'Booking created. Notifying nearby drivers at your current fare...'
-                : 'Booking created. Notifying nearby drivers...',
-          );
+          setSearchStatus('Booking created. Notifying nearby drivers...');
         }
       } catch (error) {
         console.error('[searching-driver] Ride creation error:', error);
@@ -792,7 +654,7 @@ const SearchingDriver = () => {
           const errorMessage = error?.response?.data?.message || error?.message || 'Network error or server down';
           const isNoDrivers = errorMessage.toLowerCase().includes('no driver') || errorMessage.toLowerCase().includes('not available');
 
-          if (isScheduledRide && !isScheduledBiddingRide) {
+          if (isScheduledRide) {
             setScheduledStatus('error');
             setScheduledError(errorMessage);
             setSearchStatus(errorMessage);
@@ -814,7 +676,7 @@ const SearchingDriver = () => {
         cleanupSearchRef.current?.();
       }, 0);
     };
-  }, [isScheduledBiddingRide, isScheduledRide, navigate, routePrefix, routeState, searchNonce, selectedVehicleTypeId, userHomeRoute]);
+  }, [isScheduledRide, navigate, routePrefix, routeState, searchNonce, selectedVehicleTypeId, userHomeRoute]);
 
   const handleCancel = useCallback(async () => {
     if (cancellingRef.current) {
@@ -870,59 +732,6 @@ const SearchingDriver = () => {
     };
   }, [handleCancel, isSearching, searchNonce]);
 
-  const handleAcceptBid = async (bidId) => {
-    const rideId = activeRideIdRef.current;
-    if (!rideId || !bidId || bidActionLoading) {
-      return;
-    }
-
-    setBidActionLoading(true);
-    try {
-      await userAuthService.acceptRideBid(rideId, bidId);
-      setSearchStatus('Confirming your selected bid...');
-    } catch (error) {
-      setSearchStatus(error?.message || 'Could not accept this bid.');
-    } finally {
-      setBidActionLoading(false);
-    }
-  };
-
-  const handleIncreaseBid = async () => {
-    const rideId = activeRideIdRef.current;
-    if (!rideId || bidActionLoading) {
-      return;
-    }
-
-    setBidActionLoading(true);
-    try {
-      const response = await userAuthService.increaseRideBidCeiling(rideId, 1);
-      const payload = unwrap(response);
-      setBiddingSummary((current) => ({
-        ...current,
-        bookingMode: String(payload?.bookingMode || current.bookingMode || 'bidding'),
-        pricingNegotiationMode: String(payload?.pricingNegotiationMode || current.pricingNegotiationMode || 'none'),
-        baseFare: Number(payload?.baseFare || current.baseFare || 0),
-        bidFloorFare: Number(payload?.bidFloorFare || current.bidFloorFare || payload?.baseFare || 0),
-        userMaxBidFare: Number(payload?.userMaxBidFare || payload?.fare || current.userMaxBidFare || 0),
-        bidCeilingMaxFare: Number(payload?.bidCeilingMaxFare || current.bidCeilingMaxFare || payload?.userMaxBidFare || payload?.fare || 0),
-        bidStepAmount: Number(payload?.bidStepAmount || current.bidStepAmount || 10),
-        fareIncreaseWaitMinutes: Number(payload?.fareIncreaseWaitMinutes || current.fareIncreaseWaitMinutes || 0),
-        nextFareIncreaseAt: payload?.nextFareIncreaseAt || current.nextFareIncreaseAt || null,
-      }));
-      appendFareHistory(payload?.userMaxBidFare || payload?.fare);
-      setNow(Date.now());
-      setSearchStatus(
-        (payload?.pricingNegotiationMode || biddingSummary.pricingNegotiationMode) === 'user_increment_only'
-          ? 'Raised the fare and resent the request to nearby drivers.'
-          : 'Raised your max fare by one step.',
-      );
-    } catch (error) {
-      setSearchStatus(error?.message || 'Could not increase bid ceiling.');
-    } finally {
-      setBidActionLoading(false);
-    }
-  };
-
   const navigateAfterCancel = async (nextState = {}) => {
     const rideId = activeRideIdRef.current;
 
@@ -943,7 +752,7 @@ const SearchingDriver = () => {
     });
   };
 
-  if (isScheduledRide && !isScheduledBiddingRide) {
+  if (isScheduledRide) {
     return (
       <div className="min-h-screen max-w-lg mx-auto flex items-center justify-center bg-slate-950 px-6">
         <motion.div
@@ -1160,98 +969,7 @@ const SearchingDriver = () => {
                 ))}
               </div>
 
-              {isBiddingRide && (
-                <div className="rounded-[24px] border border-orange-100 bg-orange-50/70 p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-500">Bid Mode</p>
-                      <p className="mt-1 text-[13px] font-bold text-slate-900">Drivers can bid from {formatCurrency(biddingSummary.bidFloorFare || biddingSummary.baseFare)} up to {formatCurrency(biddingSummary.userMaxBidFare)}.</p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={bidActionLoading}
-                      onClick={handleIncreaseBid}
-                      className="shrink-0 rounded-full bg-slate-950 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white disabled:opacity-60"
-                    >
-                      +{formatCurrency(biddingSummary.bidStepAmount)}
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {rideBids.length ? rideBids.map((bid) => (
-                      <div key={bid.id} className="flex items-center justify-between gap-3 rounded-[18px] bg-white px-3 py-3 border border-orange-100">
-                        <div className="min-w-0">
-                          <p className="truncate text-[13px] font-black text-slate-900">{bid.driver?.name || 'Driver'}</p>
-                          <p className="truncate text-[11px] font-bold text-slate-500">{bid.driver?.vehicleNumber || bid.driver?.vehicleType || 'Ride offer'}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[15px] font-black text-slate-900">{formatCurrency(bid.bidFare)}</span>
-                          <button
-                            type="button"
-                            disabled={bidActionLoading}
-                            onClick={() => handleAcceptBid(bid.id)}
-                            className="rounded-full bg-emerald-500 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white disabled:opacity-60"
-                          >
-                            Accept
-                          </button>
-                        </div>
-                      </div>
-                    )) : (
-                      <div className="rounded-[18px] bg-white px-3 py-3 border border-orange-100">
-                        <p className="text-[12px] font-bold text-slate-600">No bids yet. We&apos;re still reaching nearby drivers.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
-              {isUserIncrementRide && (
-                <div className="rounded-[24px] border border-blue-100 bg-blue-50/70 p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Current Offer</p>
-                      <p className="mt-1 text-[18px] font-black text-slate-900">{formatCurrency(biddingSummary.userMaxBidFare)}</p>
-
-                    </div>
-                    <button
-                      type="button"
-                      disabled={bidActionLoading || !canIncreaseFare}
-                      onClick={handleIncreaseBid}
-                      className="shrink-0 rounded-full bg-slate-950 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white disabled:opacity-60"
-                    >
-                      +{formatCurrency(biddingSummary.bidStepAmount)}
-                    </button>
-                  </div>
-                  <div className="rounded-[18px] border border-blue-100 bg-white px-3 py-3">
-                    <p className="text-[11px] font-black text-slate-700">
-                      {canIncreaseFare ? 'You can increase the fare now and rebroadcast the request.' : fareIncreaseCountdownLabel}
-                    </p>
-                  </div>
-                  {fareHistory.length > 0 && (
-                    <div className="rounded-[18px] border border-blue-100/80 bg-white px-3 py-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Fare History</p>
-                      <p className="mt-2 text-[12px] font-black text-slate-800">
-                        {fareHistory.map((fare) => formatCurrency(fare)).join(' -> ')}
-                      </p>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => navigateAfterCancel()}
-                      className="rounded-[16px] border border-slate-200 bg-white px-3 py-3 text-[11px] font-black uppercase tracking-[0.12em] text-slate-700"
-                    >
-                      Try Another Vehicle
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigateAfterCancel({ rideMode: 'schedule' })}
-                      className="rounded-[16px] border border-blue-200 bg-blue-100/70 px-3 py-3 text-[11px] font-black uppercase tracking-[0.12em] text-blue-700"
-                    >
-                      Schedule Instead
-                    </button>
-                  </div>
-                </div>
-              )}
 
               <div className="flex items-center justify-between px-5 py-4 rounded-[24px] bg-slate-50/80 border border-slate-100">
                 <div className="flex items-center gap-3">

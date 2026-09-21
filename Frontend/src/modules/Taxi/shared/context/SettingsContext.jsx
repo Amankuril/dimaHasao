@@ -34,15 +34,6 @@ const DEFAULT_SETTINGS_CONTEXT = {
     transportRide: {
       enable_bus_service: '0',
     },
-    bidRide: {
-      bidding_low_percentage: '10',
-      bidding_high_percentage: '20',
-      bidding_amount_increase_or_decrease: '10',
-      user_bidding_low_percentage: '10',
-      user_bidding_high_percentage: '20',
-      user_bidding_amount_increase_or_decrease: '10',
-      user_fare_increase_wait_minutes: '2',
-    },
     paymentGateway: null,
     userHomeSettings: {},
   },

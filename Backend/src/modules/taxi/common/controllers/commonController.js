@@ -109,7 +109,7 @@ export const getPaymentGatewayConfig = asyncHandler(async (_req, res) => {
 export const getPublicSettingsBootstrap = asyncHandler(async (_req, res) => {
     const [businessSettings, appSettings, paymentGateway] = await Promise.all([
         AdminBusinessSetting.findOne({ scope: 'default' })
-            .select('general customization transport_ride bid_ride')
+            .select('general customization transport_ride')
             .lean(),
         AdminAppSetting.findOne({ scope: 'default' })
             .select('wallet_setting tip_setting country')
@@ -134,10 +134,6 @@ export const getPublicSettingsBootstrap = asyncHandler(async (_req, res) => {
             transportRide: {
                 ...(defaultBusinessSettings.transport_ride || {}),
                 ...(businessSettings?.transport_ride || {}),
-            },
-            bidRide: {
-                ...(defaultBusinessSettings.bid_ride || {}),
-                ...(businessSettings?.bid_ride || {}),
             },
             wallet: {
                 ...(defaultAppSettings.wallet_setting || {}),

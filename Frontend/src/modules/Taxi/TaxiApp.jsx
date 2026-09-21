@@ -213,7 +213,6 @@ const AdminCMSBuilder = lazy(() => import('./modules/admin/pages/cms/CMSBuilder'
 const AdminHeaderFooter = lazy(() => import('./modules/admin/pages/cms/HeaderFooter'));
 const AdminGeneralSettings = lazy(() => import('./modules/admin/pages/settings/GeneralSettings'));
 const AdminTransportRideSettings = lazy(() => import('./modules/admin/pages/settings/TransportRideSettings'));
-const AdminBidRideSettings = lazy(() => import('./modules/admin/pages/settings/BidRideSettings'));
 const AdminWalletSettings = lazy(() => import('./modules/admin/pages/settings/WalletSettings'));
 const AdminTipSettings = lazy(() => import('./modules/admin/pages/settings/TipSettings'));
 const AdminAppModules = lazy(() => import('./modules/admin/pages/settings/AppModules'));
@@ -1197,10 +1196,6 @@ function TaxiApp() {
                 <Route
                   path="settings/business/transport-ride"
                   element={<AdminTransportRideSettings />}
-                />
-                <Route
-                  path="settings/business/bid-ride"
-                  element={<AdminBidRideSettings />}
                 />
 
                 <Route

@@ -3,7 +3,6 @@ import { AdminBusinessSetting } from '../admin/models/AdminBusinessSetting.js';
 import { getOrLoadCachedValue } from '../../../utils/cache.js';
 
 const defaultTransportRideSettings = createDefaultBusinessSettings().transport_ride || {};
-const defaultBidRideSettings = createDefaultBusinessSettings().bid_ride || {};
 const SETTINGS_CACHE_TTL_MS = 30_000;
 
 const toPositiveNumber = (value, fallback) => {
@@ -24,25 +23,6 @@ export const getTransportRideSettings = async () => {
         return {
           ...defaultTransportRideSettings,
           ...(businessSettings?.transport_ride || {}),
-        };
-      },
-    },
-  );
-};
-
-export const getBidRideSettings = async () => {
-  return getOrLoadCachedValue(
-    'cache:settings:bid_ride',
-    {
-      ttlMs: SETTINGS_CACHE_TTL_MS,
-      load: async () => {
-        const businessSettings = await AdminBusinessSetting.findOne({ scope: 'default' })
-          .select('bid_ride')
-          .lean();
-
-        return {
-          ...defaultBidRideSettings,
-          ...(businessSettings?.bid_ride || {}),
         };
       },
     },

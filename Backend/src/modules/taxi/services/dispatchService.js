@@ -557,12 +557,6 @@ const persistDispatchTrackingProgress = async ({
   await Ride.updateOne({ _id: rideId }, update);
 };
 
-const emitToSocket = (socketId, event, payload) => {
-  if (ioInstance && socketId) {
-    ioInstance.to(socketId).emit(event, payload);
-  }
-};
-
 const emitToRoom = (room, event, payload) => {
   if (ioInstance) {
     ioInstance.to(room).emit(event, payload);
@@ -719,23 +713,6 @@ const emitRideRequestToDrivers = async ({
       vehicleIconUrl: ride.vehicleIconUrl || '',
       fare: ride.fare,
       baseFare: Number(ride.baseFare || ride.fare || 0),
-      bookingMode: ride.bookingMode || 'normal',
-      pricingNegotiationMode: ride.pricingNegotiationMode || 'none',
-      biddingStatus: ride.biddingStatus || 'none',
-      bidding: ride.pricingNegotiationMode === 'driver_bid'
-        ? {
-            enabled: true,
-            baseFare: Number(ride.baseFare || ride.fare || 0),
-            bidFloorFare: Number(ride.bidFloorFare ?? ride.baseFare ?? ride.fare ?? 0),
-            userMaxBidFare: Number(ride.userMaxBidFare || ride.fare || 0),
-            bidCeilingMaxFare: Number(ride.bidCeilingMaxFare || ride.userMaxBidFare || ride.fare || 0),
-            bidStepAmount: Number(ride.bidStepAmount || 10),
-          }
-        : {
-            enabled: false,
-          },
-      fareIncreaseWaitMinutes: Number(ride.fareIncreaseWaitMinutes || 0),
-      nextFareIncreaseAt: ride.nextFareIncreaseAt || null,
       paymentMethod: ride.paymentMethod,
       intercity: ride.intercity || null,
       radius: effectiveRadius,
@@ -784,7 +761,6 @@ const closeRideAsUnmatched = async (rideId) => {
     {
       status: RIDE_STATUS.CANCELLED,
       liveStatus: RIDE_LIVE_STATUS.CANCELLED,
-      biddingStatus: 'expired',
     },
     { returnDocument: 'after' },
   );
@@ -833,9 +809,6 @@ export const cancelRideByAdmin = async (rideId) => {
 
   ride.status = RIDE_STATUS.CANCELLED;
   ride.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
-  if (ride.bookingMode === 'bidding') {
-    ride.biddingStatus = 'cancelled';
-  }
   await ride.save();
 
   await Promise.all([
@@ -904,9 +877,6 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
 
     ride.status = RIDE_STATUS.CANCELLED;
     ride.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
-    if (ride.bookingMode === 'bidding') {
-      ride.biddingStatus = 'cancelled';
-    }
     await ride.save({ session });
 
     await Promise.all([
@@ -1020,9 +990,6 @@ export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
 
     ride.status = RIDE_STATUS.CANCELLED;
     ride.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
-    if (ride.bookingMode === 'bidding') {
-      ride.biddingStatus = 'cancelled';
-    }
     await ride.save({ session });
 
     await Promise.all([
@@ -1248,10 +1215,7 @@ export const startDispatchFlow = async (ride, { forceRestart = false } = {}) => 
 
   const scheduledAt = ride?.scheduledAt ? new Date(ride.scheduledAt) : null;
   const delayMs = scheduledAt ? scheduledAt.getTime() - Date.now() : 0;
-  const bookingMode = String(ride?.bookingMode || 'normal').trim().toLowerCase();
-  const shouldDispatchImmediately = bookingMode === 'bidding';
-
-  if (!shouldDispatchImmediately && scheduledAt && Number.isFinite(delayMs) && delayMs > 0) {
+  if (scheduledAt && Number.isFinite(delayMs) && delayMs > 0) {
     const rideId = String(ride._id);
     const timer = setTimeout(() => {
       scheduledDispatchTimers.delete(rideId);
@@ -1508,60 +1472,3 @@ export const notifyRideAccepted = async (ride) => {
   });
 };
 
-export const notifyRideBidUpdated = async ({ ride, bid }) => {
-  const safeRide = ride?._id ? ride : await Ride.findById(ride?.rideId || ride);
-
-  if (!safeRide) {
-    return;
-  }
-
-  const payload = {
-    rideId: String(safeRide._id),
-    bookingMode: safeRide.bookingMode || 'normal',
-    pricingNegotiationMode: safeRide.pricingNegotiationMode || 'none',
-    biddingStatus: safeRide.biddingStatus || 'none',
-    fare: Number(safeRide.fare || 0),
-    baseFare: Number(safeRide.baseFare || safeRide.fare || 0),
-    bidFloorFare: Number(safeRide.bidFloorFare ?? safeRide.baseFare ?? safeRide.fare ?? 0),
-    userMaxBidFare: Number(safeRide.userMaxBidFare || safeRide.fare || 0),
-    bidCeilingMaxFare: Number(safeRide.bidCeilingMaxFare || safeRide.userMaxBidFare || safeRide.fare || 0),
-    bidStepAmount: Number(safeRide.bidStepAmount || 10),
-    fareIncreaseWaitMinutes: Number(safeRide.fareIncreaseWaitMinutes || 0),
-    nextFareIncreaseAt: safeRide.nextFareIncreaseAt || null,
-    bid,
-  };
-
-  emitToRoom(getUserRoom(safeRide.userId), 'rideBidUpdated', payload);
-  emitToRoom(getRideRoom(safeRide._id), 'rideBidUpdated', payload);
-};
-
-export const notifyRideBiddingUpdated = async (ride) => {
-  const safeRide = ride?._id ? ride : await Ride.findById(ride);
-
-  if (!safeRide) {
-    return;
-  }
-
-  const payload = {
-    rideId: String(safeRide._id),
-    bookingMode: safeRide.bookingMode || 'normal',
-    pricingNegotiationMode: safeRide.pricingNegotiationMode || 'none',
-    biddingStatus: safeRide.biddingStatus || 'none',
-    fare: Number(safeRide.fare || 0),
-    baseFare: Number(safeRide.baseFare || safeRide.fare || 0),
-    bidFloorFare: Number(safeRide.bidFloorFare ?? safeRide.baseFare ?? safeRide.fare ?? 0),
-    userMaxBidFare: Number(safeRide.userMaxBidFare || safeRide.fare || 0),
-    bidCeilingMaxFare: Number(safeRide.bidCeilingMaxFare || safeRide.userMaxBidFare || safeRide.fare || 0),
-    bidStepAmount: Number(safeRide.bidStepAmount || 10),
-    fareIncreaseWaitMinutes: Number(safeRide.fareIncreaseWaitMinutes || 0),
-    nextFareIncreaseAt: safeRide.nextFareIncreaseAt || null,
-  };
-
-  emitToRoom(getUserRoom(safeRide.userId), 'rideBiddingUpdated', payload);
-  emitToRoom(getRideRoom(safeRide._id), 'rideBiddingUpdated', payload);
-
-  const dispatchState = getDispatchState(safeRide._id);
-  for (const driverId of dispatchState.notifiedDriverIds) {
-    emitToDriver(driverId, 'rideBiddingUpdated', payload);
-  }
-};

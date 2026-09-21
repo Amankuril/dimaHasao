@@ -64,7 +64,7 @@ const vehicleSchema = new mongoose.Schema(
     },
     dispatch_type: {
       type: String,
-      enum: ['normal', 'bidding', 'both'],
+      enum: ['normal'],
       default: 'normal',
       trim: true,
     },

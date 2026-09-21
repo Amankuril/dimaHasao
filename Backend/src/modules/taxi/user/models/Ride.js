@@ -182,61 +182,6 @@ const rideSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
-    bookingMode: {
-      type: String,
-      enum: ['normal', 'bidding'],
-      default: 'normal',
-      lowercase: true,
-      trim: true,
-    },
-    pricingNegotiationMode: {
-      type: String,
-      enum: ['none', 'driver_bid', 'user_increment_only'],
-      default: 'none',
-      lowercase: true,
-      trim: true,
-    },
-    biddingStatus: {
-      type: String,
-      enum: ['none', 'open', 'accepted', 'expired', 'cancelled'],
-      default: 'none',
-      lowercase: true,
-      trim: true,
-    },
-    bidStepAmount: {
-      type: Number,
-      default: 10,
-      min: 1,
-    },
-    bidFloorFare: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    userMaxBidFare: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    bidCeilingMaxFare: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    fareIncreaseWaitMinutes: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    nextFareIncreaseAt: {
-      type: Date,
-      default: null,
-    },
-    acceptedBidId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'TaxiRideBid',
-      default: null,
-    },
     estimatedDistanceMeters: {
       type: Number,
       default: 0,
