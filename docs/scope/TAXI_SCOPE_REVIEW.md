@@ -76,6 +76,44 @@ withdrawals · safety/SOS · support tickets · notifications.
   with `--apply`, drops the empty ones. All 25 were empty when last checked; it
   refuses to delete anything holding rows.
 
+## What the 2026-09-21 UI pass found
+
+Removing a feature's screens is not the same as removing every way in. Walking
+the rider and driver apps found six entry points still pointing at removed
+features — Bus and Rental in three different navs, a Tours tile, Parcel tiles on
+the home screen, and a Cab Sharing screen the removal missed entirely, still
+listing Indore→Bhopal seats. All are gone; `9ab73dc` has the detail.
+
+Two screens turned out never to have been wired at all: **Airport Cab**, whose
+confirmation screen showed "Booking Confirmed!" without calling any API, and
+**Promo Codes**, which listed four invented codes and faked applying them.
+Airport cab was removed — the SOP keeps airport transfers, but building them
+means pricing them through SetPrice and dispatching them like any other ride,
+not restoring a screen that pretends. Promo codes now reads the real endpoint.
+
+**Still open after that pass**
+
+- **Airport transfers have no implementation.** Listed under Kept above on the
+  strength of screens that turned out to be a mock. Intercity covers the route
+  today.
+- **Tariffs and vehicle types are not configured for the district.** The one
+  `SetPrice` row belongs to the Indore service location and names no vehicle
+  type, and the only two vehicle types are both bikes. Nothing matches a
+  Haflong ride, so the rider app falls back to a flat per-category figure —
+  ₹22 for a bike whether the trip is 12 km or 41 km — and the server, which
+  correctly declines to price an unconfigured ride, stores the submitted fare
+  because refusing every ride would take the module down. Setting
+  `TAXI_ENFORCE_FARE=true` turns that into a refusal once real tariffs exist.
+- **Indore and New Delhi service locations** still sit alongside Haflong in
+  `taxiservicelocations`, and the only tariff row hangs off Indore.
+- **Pooling residue** outside the consumer screens: admin transport-type
+  dropdowns, driver service categories, promo transport types and an unused
+  `normalizePoolingBooking` helper still name it.
+- **Storage keys and event names** across the taxi module are still prefixed
+  `Appzeto 24:` (`lastLocation`, `recentLocations`, `savedAddresses`). They are
+  invisible to users; renaming them would silently drop what riders have saved,
+  so they stay until there is a migration reason to touch them.
+
 ## Commits
 
 `1e82c8a` careers · `127c4e3` staff attribution, language and translation CMS ·
