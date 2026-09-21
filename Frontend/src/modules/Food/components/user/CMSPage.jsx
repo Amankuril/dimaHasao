@@ -134,10 +134,10 @@ export default function CMSPage({
                   Email Us
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                  {pageData.email || "support@helloparth.com"}
+                  {pageData.email}
                 </p>
                 <a
-                  href={`mailto:${pageData.email || "support@helloparth.com"}`}
+                  href={`mailto:${pageData.email}`}
                   className="mt-4 text-xs font-black text-[#0a4d2b] uppercase tracking-widest hover:underline"
                 >
                   Send Message

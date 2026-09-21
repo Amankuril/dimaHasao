@@ -29,7 +29,7 @@ const ROLES = {
 };
 
 const DEFAULT_CREDENTIALS = {
-  adminEmail: String(process.env.DEFAULT_ADMIN_EMAIL || "admin@helloparth.com")
+  adminEmail: String(process.env.DEFAULT_ADMIN_EMAIL || "admin@tourismdimahasao.in")
     .trim()
     .toLowerCase(),
   adminPassword: String(
@@ -391,7 +391,7 @@ export const verifyRestaurantOtpAndLogin = async (phone, otp, fcmToken, platform
     restaurantDoc = await FoodRestaurant.create({
       restaurantName: "Dima Hasao Demo Restaurant",
       ownerName: "Dima Hasao Restaurant Owner",
-      ownerEmail: "restaurant@helloparth.com",
+      ownerEmail: "",
       ownerPhone: normalizePhone10(DEFAULT_CREDENTIALS.restaurantPhone),
       primaryContactNumber: normalizePhone10(DEFAULT_CREDENTIALS.restaurantPhone),
       city: "Bhopal",

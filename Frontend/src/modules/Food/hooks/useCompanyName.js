@@ -1,52 +1,52 @@
 import { useState, useEffect } from 'react';
-import { loadBusinessSettings, getCachedSettings, getCompanyName } from '@food/utils/businessSettings';
+import { loadBusinessSettings, getCachedSettings } from '@food/utils/businessSettings';
+import usePlatformSettings from '@/shared/hooks/usePlatformSettings';
 
 /**
- * Custom hook to get company name from business settings
- * @returns {string} Company name with fallback to "Dima Hasao Food"
+ * The district's name, for the twenty-odd screens that print it.
+ *
+ * This used to read food's own business settings, so the food app could call
+ * the district one thing while taxi and hotel called it another — each had its
+ * own settings screen and nothing kept them in step.
+ *
+ * Global Settings → Brand & Contact is the answer now. Food's own business
+ * settings stay as the fallback: they are still what the food admin panel
+ * edits, and a deployment that has not set the central brand name yet keeps
+ * showing whatever it showed before rather than a placeholder.
+ *
+ * @returns {string} the brand name
  */
 export const useCompanyName = () => {
-  const [companyName, setCompanyName] = useState(() => {
-    // Initialize with cached value if available
-    const cached = getCachedSettings();
-    return cached?.companyName || 'Dima Hasao Food';
-  });
+  const platform = usePlatformSettings();
+
+  const [moduleName, setModuleName] = useState(() => getCachedSettings()?.companyName || '');
 
   useEffect(() => {
-    const loadCompanyName = async () => {
-      try {
-        const settings = await loadBusinessSettings();
-        if (settings?.companyName) {
-          setCompanyName(settings.companyName);
-        }
-      } catch (error) {
-        // Keep default value on error
-        console.warn('Failed to load company name:', error);
-      }
+    let cancelled = false;
+
+    const readCached = () => {
+      const cached = getCachedSettings();
+      if (cached?.companyName && !cancelled) setModuleName(cached.companyName);
     };
 
-    // Load if not cached
-    const cached = getCachedSettings();
-    if (!cached?.companyName) {
-      loadCompanyName();
+    if (getCachedSettings()?.companyName) {
+      readCached();
     } else {
-      setCompanyName(cached.companyName);
+      loadBusinessSettings()
+        .then((settings) => {
+          if (settings?.companyName && !cancelled) setModuleName(settings.companyName);
+        })
+        .catch(() => {
+          // The central name below is the one that matters; this is a fallback.
+        });
     }
 
-    // Listen for business settings updates
-    const handleSettingsUpdate = () => {
-      const updated = getCachedSettings();
-      if (updated?.companyName) {
-        setCompanyName(updated.companyName);
-      }
-    };
-
-    window.addEventListener('businessSettingsUpdated', handleSettingsUpdate);
-
+    window.addEventListener('businessSettingsUpdated', readCached);
     return () => {
-      window.removeEventListener('businessSettingsUpdated', handleSettingsUpdate);
+      cancelled = true;
+      window.removeEventListener('businessSettingsUpdated', readCached);
     };
   }, []);
 
-  return companyName;
+  return platform?.brandName || moduleName || 'Dima Hasao';
 };

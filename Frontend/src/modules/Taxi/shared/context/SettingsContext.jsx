@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import api from '../api/axiosInstance';
+import usePlatformSettings from '@/shared/hooks/usePlatformSettings';
 
 /** Shortest gap between two resume-triggered settings refetches. */
 const SETTINGS_REFRESH_MIN_MS = 5 * 60 * 1000;
@@ -210,6 +211,7 @@ const writeCachedSettings = (settings) => {
 export const SettingsProvider = ({ children }) => {
   // When the settings were last pulled, so a resume does not refetch them for
   // the sake of it. See the resume listener below.
+  const platform = usePlatformSettings();
   const lastSettingsFetchRef = useRef(0);
   const cachedSettings = readCachedSettings();
   const [settings, setSettings] = useState(cachedSettings || DEFAULT_SETTINGS_CONTEXT.settings);
@@ -246,6 +248,23 @@ export const SettingsProvider = ({ children }) => {
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  /*
+   * The district's name comes from Global Settings, not from this module.
+   *
+   * Taxi kept its own `app_name` in its CMS settings, so the rider app could
+   * call the district one thing while the food and hotel apps called it
+   * another, with nothing keeping them in step. Taxi's own value stays as the
+   * fallback — it is still what the taxi admin edits, and a deployment that
+   * has not set the central name keeps showing what it showed before.
+   */
+  useEffect(() => {
+    if (!platform?.brandName) return;
+    setSettings((current) => {
+      if (current.general?.app_name === platform.brandName) return current;
+      return { ...current, general: { ...current.general, app_name: platform.brandName } };
+    });
+  }, [platform?.brandName]);
 
   useEffect(() => {
     /*

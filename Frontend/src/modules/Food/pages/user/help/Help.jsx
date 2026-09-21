@@ -24,6 +24,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@food
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import { Badge } from "@food/components/ui/badge"
+import usePlatformSettings from "@/shared/hooks/usePlatformSettings"
 
 const helpCategories = [
   {
@@ -185,6 +186,7 @@ const helpCategories = [
 ]
 
 export default function Help() {
+  const platform = usePlatformSettings();
   const [searchQuery, setSearchQuery] = useState("")
   const [expandedCategory, setExpandedCategory] = useState(null)
   const [expandedQuestion, setExpandedQuestion] = useState(null)
@@ -405,12 +407,20 @@ export default function Help() {
                     <p className="text-sm text-muted-foreground mb-2">
                       We'll respond within 24 hours
                     </p>
-                    <a
-                      href="mailto:support@helloparth.com"
-                      className="text-sm text-primary hover:underline font-medium"
-                    >
-                      support@helloparth.com
-                    </a>
+                    {/* The district's own address, set in Global Settings.
+                        This was hard-coded to the previous product's. */}
+                    {platform.supportEmail ? (
+                      <a
+                        href={`mailto:${platform.supportEmail}`}
+                        className="text-sm text-primary hover:underline font-medium"
+                      >
+                        {platform.supportEmail}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        Not configured yet
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-4 bg-white rounded-lg">

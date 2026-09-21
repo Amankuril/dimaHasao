@@ -22,6 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@food
 import { Button } from "@food/components/ui/button"
 import { Badge } from "@food/components/ui/badge"
 import { useOrders } from "@food/context/OrdersContext"
+import usePlatformSettings from "@/shared/hooks/usePlatformSettings"
 
 const commonIssues = [
   {
@@ -123,6 +124,7 @@ const commonIssues = [
 ]
 
 export default function OrderHelp() {
+  const platform = usePlatformSettings();
   const { orderId } = useParams()
   const navigate = useNavigate()
   const { getOrderById } = useOrders()
@@ -435,12 +437,16 @@ export default function OrderHelp() {
                     <p className="text-sm text-muted-foreground mb-2">
                       Include order {order.id} in subject
                     </p>
-                    <a
-                      href={`mailto:support@helloparth.com?subject=Help with Order ${order.id}`}
-                      className="text-sm text-primary hover:underline font-medium"
-                    >
-                      support@helloparth.com
-                    </a>
+                    {platform.supportEmail ? (
+                      <a
+                        href={`mailto:${platform.supportEmail}?subject=Help with Order ${order.id}`}
+                        className="text-sm text-primary hover:underline font-medium"
+                      >
+                        {platform.supportEmail}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Not configured yet</span>
+                    )}
                   </div>
                 </div>
               </div>

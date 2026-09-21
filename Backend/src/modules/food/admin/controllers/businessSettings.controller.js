@@ -7,10 +7,9 @@ export async function getBusinessSettings(req, res, next) {
         let settings = await FoodBusinessSettings.findOne().lean();
         if (!settings) {
             // Create default settings if none exist
-            settings = await FoodBusinessSettings.create({
-                companyName: 'Dima Hasao',
-                email: 'admin@helloparth.com'
-            });
+            // Contact details belong to Global Settings now; seeding one here
+            // is how the previous product's address ended up on this one.
+            settings = await FoodBusinessSettings.create({ companyName: 'Dima Hasao' });
         }
         return sendResponse(res, 200, 'Business settings fetched successfully', settings);
     } catch (error) {
