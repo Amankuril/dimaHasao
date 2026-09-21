@@ -27,11 +27,33 @@ const currentRoute = () => {
   return String(window.location?.pathname || '');
 };
 
+/*
+ * The partner session has its own keys.
+ *
+ * It used to live in the bare `token` / `user` entries — the same ones the
+ * consumer app writes, the Taxi axios instance clears on any 401, and
+ * `clearModuleAuth('user')` deletes by name. Any of those firing signed a hotel
+ * partner out while every other panel, whose tokens are namespaced, stayed
+ * signed in. That is why closing the wrapper and reopening the hotel module
+ * landed back on the login screen.
+ *
+ * The legacy keys are still read so partners already signed in are not ejected
+ * by this change; they move onto the namespaced ones at their next sign-in.
+ */
+const PARTNER_TOKEN_KEY = 'partner_accessToken';
+const PARTNER_USER_KEY = 'partner_user';
+
+const isPartnerRoute = () => currentRoute().startsWith('/hotel/partner');
+
 const resolveToken = () => {
-  const isAdmin = currentRoute().includes('/admin');
+  const route = currentRoute();
   const adminToken = localStorage.getItem('admin_accessToken');
-  const userToken = localStorage.getItem('token');
-  return isAdmin ? adminToken || userToken : userToken || adminToken;
+  const partnerToken = localStorage.getItem(PARTNER_TOKEN_KEY);
+  const genericToken = localStorage.getItem('token');
+
+  if (route.includes('/admin')) return adminToken || genericToken;
+  if (isPartnerRoute()) return partnerToken || genericToken || adminToken;
+  return genericToken || partnerToken || adminToken;
 };
 
 api.interceptors.request.use((config) => {
@@ -53,8 +75,15 @@ api.interceptors.response.use(
       const path = currentRoute();
       // Admin sessions are owned by the platform shell — don't clear them here.
       if (!path.includes('/admin')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        if (path.startsWith('/hotel/partner')) {
+          // Only the partner's own session. Clearing the generic keys here
+          // would sign out a consumer who happens to be logged in too.
+          localStorage.removeItem(PARTNER_TOKEN_KEY);
+          localStorage.removeItem(PARTNER_USER_KEY);
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
         if (!path.includes('/login') && !path.includes('/otp')) {
           // The partner panel has its own login. Sending a partner to the
           // consumer one ejected them from the module entirely: every partner
@@ -107,8 +136,15 @@ export const authService = {
       const token = result.token || result.accessToken;
 
       if (token) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(result.user));
+        // Partners get their own keys; guests keep the shared consumer ones.
+        // Writing a partner session into `token` is what let unrelated code
+        // sign them out — see PARTNER_TOKEN_KEY above.
+        const isPartner = PARTNER_ROLES.includes(String(role).toLowerCase());
+        localStorage.setItem(isPartner ? PARTNER_TOKEN_KEY : 'token', token);
+        localStorage.setItem(
+          isPartner ? PARTNER_USER_KEY : 'user',
+          JSON.stringify(result.user),
+        );
       }
 
       return result;
@@ -201,6 +237,13 @@ export const authService = {
 
   // Logout
   logout: () => {
+    // Signing out of the partner panel must not sign out a consumer session in
+    // the same browser, and vice versa.
+    if (isPartnerRoute()) {
+      localStorage.removeItem(PARTNER_TOKEN_KEY);
+      localStorage.removeItem(PARTNER_USER_KEY);
+      return;
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   }
