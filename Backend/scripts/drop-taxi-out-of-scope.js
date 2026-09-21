@@ -15,9 +15,16 @@
  *
  *   node scripts/drop-taxi-out-of-scope.js            # report only
  *   node scripts/drop-taxi-out-of-scope.js --apply    # drop the empty ones
+ *
+ * Runnable from anywhere: it loads Backend/.env by its own path rather than
+ * from the working directory, which is what dotenv/config would do.
  */
-import 'dotenv/config';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+
+dotenv.config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
 const COLLECTIONS = {
   'careers / jobs board': ['taxicareerjobs', 'taxicareerapplications'],
