@@ -1710,7 +1710,6 @@ const serializeDriverScheduledRide = (ride = {}, currentDriverId = "") => ({
   dropLocation: ride.dropLocation || null,
   dropAddress: ride.dropAddress || "",
   scheduledAt: ride.scheduledAt || null,
-  parcel: ride.parcel || null,
   intercity: ride.intercity || null,
   driverId: ride.driverId ? String(ride.driverId) : null,
   isAssignedToCurrentDriver:
@@ -2116,7 +2115,6 @@ export const getDriverScheduledRides = async (req, res) => {
         "dropAddress",
         "scheduledAt",
         "driverId",
-        "parcel",
         "intercity",
         "vehicleTypeId",
         "dispatchVehicleTypeIds",

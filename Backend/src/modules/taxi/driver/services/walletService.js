@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import { env } from '../../../../config/env.js';
 import { ApiError } from '../../../../utils/ApiError.js';
 import { SetPrice } from '../../admin/models/SetPrice.js';
-import { Vehicle } from '../../admin/models/Vehicle.js';
 import { Driver } from '../models/Driver.js';
 import { WalletTransaction } from '../models/WalletTransaction.js';
 import { Ride } from '../../user/models/Ride.js';
@@ -48,12 +47,7 @@ const resolveCommissionConfigForRide = async (ride, session) => {
   }
 
   if (ride?.vehicleTypeId) {
-    const normalizedServiceType = String(ride?.serviceType || '').trim().toLowerCase();
-    const savedTransportType = String(ride.transport_type || '').trim().toLowerCase();
-    const normalizedTransportType =
-      normalizedServiceType === 'parcel'
-        ? (savedTransportType === 'delivery' || savedTransportType === 'both' ? savedTransportType : 'delivery')
-        : (savedTransportType || 'taxi');
+    const normalizedTransportType = String(ride.transport_type || '').trim().toLowerCase() || 'taxi';
     const filters = [
       {
         vehicle_type: ride.vehicleTypeId,
@@ -95,20 +89,6 @@ const resolveCommissionConfigForRide = async (ride, session) => {
       }
     }
 
-    if (normalizedServiceType === 'parcel') {
-      const vehicle = await Vehicle.findById(ride.vehicleTypeId)
-        .select('admin_commission_type_from_driver admin_commission_from_driver')
-        .session(session)
-        .lean();
-
-      if (vehicle) {
-        return {
-          source: 'vehicle_type_parcel_fallback',
-          type: Number(vehicle.admin_commission_type_from_driver ?? 1),
-          value: Number(vehicle.admin_commission_from_driver ?? 0),
-        };
-      }
-    }
   }
 
   return {

@@ -458,9 +458,8 @@ const ServiceCardStretched = React.memo(({ subtitle, title, icon, path, onClick,
 
 const defaultSettings = {
   everything: [
-    { id: '1', title: 'Parcel', subtitle: 'Send anything', image: '', route: '/taxi/user/parcel/type', order: 1, status: 'active' },
-    { id: '2', title: 'Bike Taxi', subtitle: 'Beat the traffic', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
-    { id: '3', title: 'Book now', subtitle: 'Your everyday rides', image: '', route: '/taxi/user/ride/select-location', order: 3, status: 'active' },
+    { id: '1', title: 'Bike Taxi', subtitle: 'Beat the traffic', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+    { id: '2', title: 'Book now', subtitle: 'Your everyday rides', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
     { id: '4', title: 'All Services', subtitle: 'All Services', image: '', route: '', order: 4, status: 'active' }
   ]
 };
@@ -583,7 +582,6 @@ const ServiceGrid = ({
     const transportType = String(module?.transport_type || '').trim().toLowerCase();
     const moduleName = String(module?.name || '').trim().toLowerCase();
 
-    if (transportType === 'delivery') return '/taxi/user/parcel/type';
     if (serviceType === 'rental') return '/taxi/user/rental';
     if (serviceType === 'outstation') return '/taxi/user/intercity';
     if (serviceType === 'pooling' || moduleName.includes('pooling')) {

@@ -4,7 +4,6 @@ import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUserTheme } from '../../../shared/context/UserThemeContext';
 import bikeImg from '../../../assets/user-app/bike.png';
-import parcelImg from '../../../assets/user-app/parcel.png';
 
 const ActionCard = ({ title, description, image, surfaceClass, glowClass, buttonBgClass, path }) => {
   const navigate = useNavigate();
@@ -83,15 +82,6 @@ const ActionsSection = () => {
           path={`${routePrefix}/ride/select-location`}
         />
 
-        <ActionCard
-          title="Delivery"
-          description="Send parcels across the city."
-          image={parcelImg}
-          surfaceClass={isDark ? "bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950/20 border-slate-800/80 text-white" : "bg-gradient-to-br from-slate-50/60 via-white/80 to-slate-100/40 border-slate-200/40 text-slate-900"}
-          glowClass={isDark ? "255,255,255" : "15,23,42"}
-          buttonBgClass={isDark ? "bg-white hover:bg-slate-100 text-slate-950" : "bg-slate-900 hover:bg-slate-800 text-white"}
-          path={`${routePrefix}/parcel/type`}
-        />
       </div>
     </div>
   );

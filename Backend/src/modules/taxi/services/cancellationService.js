@@ -16,7 +16,7 @@ export const getCancellationPolicy = async (ride) => {
   if (ride?.vehicleTypeId) {
     try {
       const serviceType = String(ride?.serviceType || '').trim().toLowerCase();
-      const transportType = serviceType === 'parcel' ? 'delivery' : serviceType === 'intercity' ? 'intercity' : 'taxi';
+      const transportType = serviceType === 'intercity' ? 'intercity' : 'taxi';
       setPrice = await resolveSetPriceForRide({
         serviceLocationId: ride.service_location_id || null,
         transportType,

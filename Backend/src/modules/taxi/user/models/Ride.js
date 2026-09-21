@@ -76,14 +76,9 @@ const rideSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
-    deliveryId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Delivery',
-      default: null,
-    },
     serviceType: {
       type: String,
-      enum: ['ride', 'parcel', 'intercity'],
+      enum: ['ride', 'intercity'],
       default: 'ride',
       lowercase: true,
       trim: true,
@@ -125,64 +120,6 @@ const rideSchema = new mongoose.Schema(
         min: 0,
       },
       vehicleName: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-    },
-    parcel: {
-      category: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      weight: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      description: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      deliveryCategory: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      goodsTypeFor: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      deliveryScope: {
-        type: String,
-        enum: ['city', 'outstation'],
-        default: 'city',
-        lowercase: true,
-        trim: true,
-      },
-      isOutstation: {
-        type: Boolean,
-        default: false,
-      },
-      senderName: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      senderMobile: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      receiverName: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      receiverMobile: {
         type: String,
         default: '',
         trim: true,
@@ -381,62 +318,6 @@ const rideSchema = new mongoose.Schema(
       updatedAt: {
         type: Date,
         default: null,
-      },
-    },
-    subscriptionUsage: {
-      covered: {
-        type: Boolean,
-        default: false,
-      },
-      subscriptionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'TaxiUserSubscription',
-        default: null,
-      },
-      planId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'TaxiSubscriptionPlan',
-        default: null,
-      },
-      planName: {
-        type: String,
-        default: '',
-        trim: true,
-      },
-      vehicleTypeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'TaxiVehicle',
-        default: null,
-      },
-      benefitType: {
-        type: String,
-        enum: ['limited', 'unlimited', ''],
-        default: '',
-      },
-      fareCovered: {
-        type: Number,
-        default: 0,
-        min: 0,
-      },
-      ridesUsedBefore: {
-        type: Number,
-        default: 0,
-        min: 0,
-      },
-      ridesRemainingBefore: {
-        type: Number,
-        default: null,
-        min: 0,
-      },
-      ridesUsedAfter: {
-        type: Number,
-        default: null,
-        min: 0,
-      },
-      ridesRemainingAfter: {
-        type: Number,
-        default: null,
-        min: 0,
       },
     },
     service_location_id: {

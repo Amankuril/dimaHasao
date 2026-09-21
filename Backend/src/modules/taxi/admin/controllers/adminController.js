@@ -265,29 +265,6 @@ export const adjustDriverWallet = asyncHandler(async (req, res) =>
   ok(res, await adminService.adjustDriverWallet(req.params.id, req.body)),
 );
 
-export const getSubscriptionPlans = asyncHandler(async (_req, res) =>
-  ok(res, { results: await adminService.listSubscriptionPlans() }),
-);
-export const createSubscriptionPlan = asyncHandler(async (req, res) =>
-  ok(res, await adminService.createSubscriptionPlan(req.body)),
-);
-export const getCustomerSubscriptionPlans = asyncHandler(async (_req, res) =>
-  ok(res, { results: await adminService.listCustomerSubscriptionPlans() }),
-);
-export const createCustomerSubscriptionPlan = asyncHandler(async (req, res) =>
-  ok(res, await adminService.createCustomerSubscriptionPlan(req.body)),
-);
-export const getUserSubscriptions = asyncHandler(async (req, res) =>
-  ok(res, await adminService.listUserSubscriptionsByUserId(req.params.id)),
-);
-
-export const getSubscriptionSettings = asyncHandler(async (_req, res) =>
-  ok(res, await adminService.getSubscriptionSettings()),
-);
-export const updateSubscriptionSettings = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateSubscriptionSettings(req.body)),
-);
-
 export const getReferralSettings = asyncHandler(async (req, res) =>
   ok(res, await adminService.getReferralSettings(req.params.type)),
 );
@@ -363,9 +340,6 @@ export const getOngoingRides = asyncHandler(async (req, res) =>
 );
 export const getRideRequests = asyncHandler(async (req, res) =>
   ok(res, await adminService.listRideRequests(req.query)),
-);
-export const getDeliveries = asyncHandler(async (req, res) =>
-  ok(res, await adminService.listDeliveries(req.query)),
 );
 export const getIntercityTrips = asyncHandler(async (req, res) =>
   ok(res, await adminService.listIntercityTrips(req.query)),
@@ -499,20 +473,6 @@ export const getRentalTrackingDashboard = asyncHandler(async (_req, res) =>
 export const updateRentalBookingRequest = asyncHandler(async (req, res) =>
   ok(res, await adminService.updateRentalBookingRequest(req.params.id, req.body, req.auth?.sub)),
 );
-
-export const getGoodsTypes = asyncHandler(async (_req, res) =>
-  res.json(await adminService.listGoodsTypes()),
-);
-export const createGoodsType = asyncHandler(async (req, res) =>
-  ok(res, await adminService.createGoodsType(req.body)),
-);
-export const updateGoodsType = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateGoodsType(req.params.id, req.body)),
-);
-export const deleteGoodsType = asyncHandler(async (req, res) => {
-  await adminService.deleteGoodsType(req.params.id);
-  ok(res, { deleted: true });
-});
 
 export const getRentalPackageTypes = asyncHandler(async (_req, res) =>
   ok(res, { rental_packages: await adminService.listRentalPackageTypes() }),

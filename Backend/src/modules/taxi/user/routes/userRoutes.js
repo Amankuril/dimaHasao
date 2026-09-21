@@ -39,14 +39,19 @@ import {
   verifyRazorpayWalletTopup,
   verifyPhonePeWalletTopup,
   verifyUserPhoneForOtpLogin,
-  getAvailableSubscriptionPlans,
-  getMySubscriptions,
-  buySubscription,
   getSetPrices,
   getZones,
 } from "../controllers/userController.js";
 
-import { getAppBootstrap, getAppModules, getGeneralSettingsCategory, getGoodsTypes, getPublicRentalVehicleCatalog, getPublicVehicleTypeCatalog } from '../../admin/controllers/adminController.js';
+
+import {
+  getAppBootstrap,
+  getAppModules,
+  getGeneralSettingsCategory,
+  getPublicRentalVehicleCatalog,
+  getPublicVehicleTypeCatalog,
+} from "../../admin/controllers/adminController.js";
+
 import { triggerUserSosAlert } from '../../safety/controllers/safetyController.js';
 
 export const userRouter = Router();
@@ -55,7 +60,6 @@ userRouter.get('/bootstrap', asyncHandler(getAppBootstrap));
 userRouter.get('/app-modules', asyncHandler(getAppModules));
 userRouter.get('/settings/:category', asyncHandler(getGeneralSettingsCategory));
 userRouter.get('/intercity-packages', asyncHandler(getIntercityPackageCatalog));
-userRouter.get('/goods-types', asyncHandler(getGoodsTypes));
 userRouter.get('/vehicle-types', asyncHandler(getPublicVehicleTypeCatalog));
 userRouter.get('/set-prices', asyncHandler(getSetPrices));
 userRouter.get('/zones', asyncHandler(getZones));
@@ -78,9 +82,6 @@ userRouter.post('/otp-login', otpVerifyRateLimit, asyncHandler(verifyUserPhoneFo
 userRouter.post('/fcm-token', authenticate(['user']), asyncHandler(saveUserFcmToken));
 userRouter.get('/me', authenticate(['user']), asyncHandler(getCurrentUser));
 userRouter.patch('/me', authenticate(['user']), asyncHandler(updateCurrentUser));
-userRouter.get('/subscriptions/plans', authenticate(['user']), asyncHandler(getAvailableSubscriptionPlans));
-userRouter.get('/subscriptions/me', authenticate(['user']), asyncHandler(getMySubscriptions));
-userRouter.post('/subscriptions/purchase', authenticate(['user']), asyncHandler(buySubscription));
 userRouter.post('/me/delete-request', authenticate(['user']), asyncHandler(requestAccountDeletion));
 userRouter.get('/notifications', authenticate(['user']), asyncHandler(getUserNotifications));
 userRouter.delete('/notifications/:id', authenticate(['user']), asyncHandler(deleteUserNotification));

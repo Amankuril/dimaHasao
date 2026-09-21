@@ -48,7 +48,7 @@ const safetyAlertSchema = new mongoose.Schema(
     },
     serviceType: {
       type: String,
-      enum: ['ride', 'parcel', 'intercity', 'general'],
+      enum: ['ride', 'intercity', 'general'],
       default: 'general',
       lowercase: true,
       trim: true,
@@ -68,12 +68,6 @@ const safetyAlertSchema = new mongoose.Schema(
     rideId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'TaxiRide',
-      default: null,
-      index: true,
-    },
-    deliveryId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Delivery',
       default: null,
       index: true,
     },

@@ -10,12 +10,10 @@ import { Driver } from '../driver/models/Driver.js';
 import { WalletTransaction } from '../driver/models/WalletTransaction.js';
 import { incrementDriverTodaySummaryForCompletedRide } from '../driver/services/driverTodaySummaryService.js';
 import { applyDriverWalletAdjustment, ensureDriverWalletCanAcceptRide, settleCompletedRideWallet } from '../driver/services/walletService.js';
-import { Delivery } from '../user/models/Delivery.js';
 import { RideBid } from '../user/models/RideBid.js';
 import { Ride } from '../user/models/Ride.js';
 import { User } from '../user/models/User.js';
 import { UserWallet } from '../user/models/UserWallet.js';
-import { consumeUserSubscriptionRide, resolveApplicableUserSubscription } from '../user/services/subscriptionService.js';
 import { applyPromoToRideInTransaction } from './promoService.js';
 import { getTipSettings } from './appSettingsService.js';
 import { getBidRideSettings } from './transportSettingsService.js';
@@ -45,7 +43,6 @@ const clearUserActiveRideIfPresent = async (user) => {
   activeRide.status = RIDE_STATUS.CANCELLED;
   activeRide.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
   await activeRide.save();
-  await syncDeliveryWithRide(activeRide);
 
   await Promise.all([
     activeRide.driverId ? Driver.findByIdAndUpdate(activeRide.driverId, { isOnRide: false }) : Promise.resolve(),
@@ -86,7 +83,7 @@ const normalizeRidePaymentMethod = (paymentMethod) => (
 
 const normalizeServiceType = (serviceType) => {
   const normalized = String(serviceType || 'ride').trim().toLowerCase();
-  return ['parcel', 'intercity'].includes(normalized) ? normalized : 'ride';
+  return normalized === 'intercity' ? 'intercity' : 'ride';
 };
 
 const ensureUserWallet = async (userId) => {
@@ -351,24 +348,6 @@ const processCompletedDriverReferralReward = async (ride) => {
 const normalizeAddress = (value = '') => String(value || '').trim();
 const generateRideOtp = () => String(Math.floor(1000 + Math.random() * 9000));
 const DEFAULT_BID_STEP_AMOUNT = 10;
-const DEFAULT_MAX_BID_STEPS = 5;
-
-const normalizeParcelPayload = (parcel = {}) => ({
-  category: String(parcel.category || '').trim(),
-  weight: String(parcel.weight || '').trim(),
-  description: String(parcel.description || '').trim(),
-  deliveryCategory: String(parcel.deliveryCategory || parcel.delivery_category || '').trim().toLowerCase(),
-  goodsTypeFor: String(parcel.goodsTypeFor || parcel.goods_type_for || '').trim(),
-  deliveryScope: String(parcel.deliveryScope || (parcel.isOutstation ? 'outstation' : 'city')).trim().toLowerCase() === 'outstation'
-    ? 'outstation'
-    : 'city',
-  isOutstation: Boolean(parcel.isOutstation || String(parcel.deliveryScope || '').trim().toLowerCase() === 'outstation'),
-  senderName: String(parcel.senderName || '').trim(),
-  senderMobile: String(parcel.senderMobile || '').trim(),
-  receiverName: String(parcel.receiverName || '').trim(),
-  receiverMobile: String(parcel.receiverMobile || '').trim(),
-});
-
 const normalizeIntercityPayload = (intercity = {}) => ({
   bookingId: String(intercity.bookingId || '').trim(),
   fromCity: String(intercity.fromCity || '').trim(),
@@ -523,18 +502,6 @@ const normalizeVehicleTypeIds = (vehicleTypeIds = [], vehicleTypeId = null) => {
 };
 
 const normalizeVehicleKey = (value = '') => String(value || '').trim().toLowerCase();
-
-const normalizeVehicleKeys = (vehicles = []) => {
-  const keys = vehicles.flatMap((vehicle) => [
-    vehicle?.name,
-    vehicle?.vehicle_type,
-    vehicle?.icon_types,
-    String(vehicle?.name || '').replace(/\s+/g, '_'),
-    String(vehicle?.icon_types || '').replace(/\s+/g, '_'),
-  ]);
-
-  return [...new Set(keys.map(normalizeVehicleKey).filter(Boolean))];
-};
 
 const normalizeBidStepAmount = (value) => {
   const amount = Number(value);
@@ -841,42 +808,6 @@ const buildDriverVehicleAcceptFilter = async (ride) => {
   return { vehicleTypeId: { $in: vehicleTypeIds } };
 };
 
-const syncDeliveryWithRide = async (ride) => {
-  if (!ride || (ride.serviceType || 'ride') !== 'parcel') {
-    return null;
-  }
-
-  const payload = {
-    rideId: ride._id,
-    userId: ride.userId,
-    driverId: ride.driverId || null,
-    vehicleTypeId: ride.vehicleTypeId || null,
-    vehicleIconType: ride.vehicleIconType || '',
-    vehicleIconUrl: ride.vehicleIconUrl || '',
-    status: ride.status,
-    liveStatus: ride.liveStatus,
-    pickupLocation: ride.pickupLocation,
-    pickupAddress: normalizeAddress(ride.pickupAddress),
-    dropLocation: ride.dropLocation,
-    dropAddress: normalizeAddress(ride.dropAddress),
-    fare: ride.fare,
-    paymentMethod: ride.paymentMethod,
-    parcel: normalizeParcelPayload(ride.parcel),
-    acceptedAt: ride.acceptedAt || null,
-    startedAt: ride.startedAt || null,
-    completedAt: ride.completedAt || null,
-  };
-
-  if (ride.deliveryId) {
-    return Delivery.findByIdAndUpdate(ride.deliveryId, payload, { returnDocument: 'after' });
-  }
-
-  const delivery = await Delivery.create(payload);
-  ride.deliveryId = delivery._id;
-  await ride.save();
-  return delivery;
-};
-
 export const createRideRecord = async ({
   userId,
   pickupCoords,
@@ -892,7 +823,6 @@ export const createRideRecord = async ({
   vehicleIconUrl,
   paymentMethod,
   serviceType,
-  parcel,
   intercity,
   promo_code,
   zone_id,
@@ -1049,21 +979,12 @@ export const createRideRecord = async ({
   const nextFareIncreaseAt = pricingNegotiationMode === 'user_increment_only'
     ? new Date(Date.now() + fareIncreaseWaitMinutes * 60 * 1000)
     : null;
-  const parcelCommissionFallback =
-    normalizedServiceType === 'parcel'
-      ? {
-          admin_commission_type_from_driver: Number(primaryVehicle?.admin_commission_type_from_driver ?? 1),
-          admin_commission_from_driver: Number(primaryVehicle?.admin_commission_from_driver ?? 0),
-          admin_commission_type_for_owner: Number(primaryVehicle?.admin_commission_type_for_owner ?? 1),
-          admin_commission_for_owner: Number(primaryVehicle?.admin_commission_for_owner ?? 0),
-        }
-      : null;
   const pricingSnapshot = {
     setPriceId: pricingRule?._id || null,
-    admin_commission_type_from_driver: Number(pricingRule?.admin_commission_type_from_driver ?? parcelCommissionFallback?.admin_commission_type_from_driver ?? 1),
-    admin_commission_from_driver: Number(pricingRule?.admin_commission_from_driver ?? parcelCommissionFallback?.admin_commission_from_driver ?? 0),
-    admin_commission_type_for_owner: Number(pricingRule?.admin_commission_type_for_owner ?? parcelCommissionFallback?.admin_commission_type_for_owner ?? 1),
-    admin_commission_for_owner: Number(pricingRule?.admin_commission_for_owner ?? parcelCommissionFallback?.admin_commission_for_owner ?? 0),
+    admin_commission_type_from_driver: Number(pricingRule?.admin_commission_type_from_driver ?? 1),
+    admin_commission_from_driver: Number(pricingRule?.admin_commission_from_driver ?? 0),
+    admin_commission_type_for_owner: Number(pricingRule?.admin_commission_type_for_owner ?? 1),
+    admin_commission_for_owner: Number(pricingRule?.admin_commission_for_owner ?? 0),
     waiting_charge: Number(pricingRule?.waiting_charge ?? 0),
     free_waiting_before: Number(pricingRule?.free_waiting_before ?? 0),
     free_waiting_after: Number(pricingRule?.free_waiting_after ?? 0),
@@ -1073,58 +994,8 @@ export const createRideRecord = async ({
 
   const promoCode = typeof promo_code === 'string' ? promo_code.trim() : '';
   const normalizedScheduledAt = normalizeScheduledAt(scheduledAt);
-  const applicableSubscription = primaryVehicleTypeId
-    ? await resolveApplicableUserSubscription({
-        userId,
-        vehicleTypeId: primaryVehicleTypeId,
-      })
-    : null;
-  const isSubscriptionCovered = Boolean(applicableSubscription?._id);
-  const subscriptionBenefitType = String(applicableSubscription?.benefit_type || '').trim().toLowerCase() === 'unlimited'
-    ? 'unlimited'
-    : 'limited';
-  const subscriptionRideLimit = Math.max(0, Number(applicableSubscription?.ride_limit || 0));
-  const subscriptionRidesUsed = Math.max(0, Number(applicableSubscription?.rides_used || 0));
-  const subscriptionRidesRemaining = subscriptionBenefitType === 'unlimited'
-    ? null
-    : Math.max(0, subscriptionRideLimit - subscriptionRidesUsed);
-  const effectiveDriverPaymentCollection = isSubscriptionCovered
-    ? {
-        provider: 'subscription',
-        providerId: String(applicableSubscription._id),
-        providerOrderId: '',
-        providerPaymentId: '',
-        providerMode: 'subscription_wallet',
-        source: 'user_subscription',
-        status: 'paid',
-        amount: safeFare,
-        currency: 'INR',
-        linkUrl: '',
-        paidAt: new Date(),
-        updatedAt: new Date(),
-      }
-    : undefined;
-  const effectivePaymentMethod = isSubscriptionCovered ? 'online' : resolvedRequestedPaymentMethod;
-  const effectiveSubscriptionUsage = isSubscriptionCovered
-    ? {
-        covered: true,
-        subscriptionId: applicableSubscription._id,
-        planId: applicableSubscription.planId || null,
-        planName: applicableSubscription.name || '',
-        vehicleTypeId: applicableSubscription.vehicle_type_id || primaryVehicleTypeId,
-        benefitType: subscriptionBenefitType,
-        fareCovered: safeFare,
-        ridesUsedBefore: subscriptionRidesUsed,
-        ridesRemainingBefore: subscriptionRidesRemaining,
-      }
-    : undefined;
-
   if (scheduledAt && !normalizedScheduledAt) {
     throw new ApiError(400, 'scheduledAt is invalid');
-  }
-
-  if (isSubscriptionCovered && promoCode) {
-    throw new ApiError(400, 'Promo codes cannot be combined with subscription rides');
   }
 
   if (!promoCode) {
@@ -1152,14 +1023,11 @@ export const createRideRecord = async ({
       nextFareIncreaseAt,
       estimatedDistanceMeters: safeEstimatedDistanceMeters,
       estimatedDurationMinutes: safeEstimatedDurationMinutes,
-      paymentMethod: effectivePaymentMethod,
-      driverPaymentCollection: effectiveDriverPaymentCollection,
-      subscriptionUsage: effectiveSubscriptionUsage,
+      paymentMethod: resolvedRequestedPaymentMethod,
       otp: generateRideOtp(),
       service_location_id: resolvedServiceLocationId,
       transport_type: normalizedTransportType,
       pricingSnapshot,
-      parcel: normalizeParcelPayload(parcel),
       intercity: normalizeIntercityPayload(intercity),
       scheduledAt: normalizedScheduledAt,
       status: RIDE_STATUS.SEARCHING,
@@ -1168,7 +1036,6 @@ export const createRideRecord = async ({
 
     user.currentRideId = ride._id;
     await user.save();
-    await syncDeliveryWithRide(ride);
 
     return ride;
   }
@@ -1207,14 +1074,11 @@ export const createRideRecord = async ({
             nextFareIncreaseAt,
             estimatedDistanceMeters: safeEstimatedDistanceMeters,
             estimatedDurationMinutes: safeEstimatedDurationMinutes,
-            paymentMethod: effectivePaymentMethod,
-            driverPaymentCollection: effectiveDriverPaymentCollection,
-            subscriptionUsage: effectiveSubscriptionUsage,
+            paymentMethod: resolvedRequestedPaymentMethod,
             otp: generateRideOtp(),
             service_location_id: resolvedServiceLocationId,
             transport_type: normalizedTransportType,
             pricingSnapshot,
-            parcel: normalizeParcelPayload(parcel),
             intercity: normalizeIntercityPayload(intercity),
             scheduledAt: normalizedScheduledAt,
             status: RIDE_STATUS.SEARCHING,
@@ -1240,7 +1104,6 @@ export const createRideRecord = async ({
       });
 
       await session.commitTransaction();
-      await syncDeliveryWithRide(rideDoc);
       return rideDoc;
     } catch (error) {
       lastError = error;
@@ -1263,7 +1126,6 @@ export const createRideRecord = async ({
 
 export const getRideDetails = async (rideId) => {
   const ride = await Ride.findById(rideId)
-    .populate('deliveryId')
     .populate('userId', 'name phone')
     .populate('driverId', 'name phone profileImage vehicleType vehicleIconType vehicleNumber vehicleColor vehicleMake vehicleModel vehicleImage rating');
 
@@ -1280,14 +1142,12 @@ const activeRideStatuses = [RIDE_STATUS.SEARCHING, RIDE_STATUS.ACCEPTED, RIDE_ST
 
 const populateRideRealtime = async (rideId) =>
   Ride.findById(rideId)
-    .populate('deliveryId')
     .populate('userId', 'name phone')
     .populate('driverId', 'name phone profileImage vehicleType vehicleIconType vehicleNumber vehicleColor vehicleMake vehicleModel vehicleImage rating');
 
 export const serializeRideRealtime = (ride) => ({
   rideId: String(ride._id),
   room: getRideRoom(ride._id),
-  deliveryId: ride.deliveryId?._id ? String(ride.deliveryId._id) : ride.deliveryId ? String(ride.deliveryId) : null,
   type: ride.serviceType || 'ride',
   serviceType: ride.serviceType || 'ride',
   status: ride.status,
@@ -1307,27 +1167,6 @@ export const serializeRideRealtime = (ride) => ({
   estimatedDistanceMeters: ride.estimatedDistanceMeters || 0,
   estimatedDurationMinutes: ride.estimatedDurationMinutes || 0,
   paymentMethod: ride.paymentMethod,
-  subscriptionUsage: ride.subscriptionUsage?.covered
-    ? {
-        covered: true,
-        subscriptionId: ride.subscriptionUsage.subscriptionId ? String(ride.subscriptionUsage.subscriptionId) : '',
-        planId: ride.subscriptionUsage.planId ? String(ride.subscriptionUsage.planId) : '',
-        planName: ride.subscriptionUsage.planName || '',
-        vehicleTypeId: ride.subscriptionUsage.vehicleTypeId ? String(ride.subscriptionUsage.vehicleTypeId) : '',
-        benefitType: ride.subscriptionUsage.benefitType || '',
-        fareCovered: Number(ride.subscriptionUsage.fareCovered || 0),
-        ridesUsedBefore: Number(ride.subscriptionUsage.ridesUsedBefore || 0),
-        ridesRemainingBefore: ride.subscriptionUsage.ridesRemainingBefore === null
-          ? null
-          : Number(ride.subscriptionUsage.ridesRemainingBefore || 0),
-        ridesUsedAfter: ride.subscriptionUsage.ridesUsedAfter === null
-          ? null
-          : Number(ride.subscriptionUsage.ridesUsedAfter || 0),
-        ridesRemainingAfter: ride.subscriptionUsage.ridesRemainingAfter === null
-          ? null
-          : Number(ride.subscriptionUsage.ridesRemainingAfter || 0),
-      }
-    : null,
   driverPaymentCollection: ride.driverPaymentCollection
     ? {
         provider: ride.driverPaymentCollection.provider || '',
@@ -1345,7 +1184,6 @@ export const serializeRideRealtime = (ride) => ({
       }
     : null,
   otp: ride.otp || '',
-  parcel: ride.deliveryId?.parcel || ride.parcel || null,
   intercity: ride.intercity || null,
   commissionAmount: ride.commissionAmount,
   driverEarnings: ride.driverEarnings,
@@ -1453,23 +1291,9 @@ export const listRideHistoryForIdentity = async ({ role, entityId, limit = 50, p
   if (normalizedCategory === 'rides') {
     query.serviceType = 'ride';
     query.scheduledAt = null;
-  } else if (normalizedCategory === 'parcels') {
-    query.serviceType = 'parcel';
-    query.scheduledAt = null;
-    query['parcel.isOutstation'] = { $ne: true };
-    query['parcel.deliveryScope'] = { $ne: 'outstation' };
   } else if (normalizedCategory === 'outstation') {
     query.scheduledAt = null;
-    query.$or = [
-      { serviceType: 'intercity' },
-      {
-        serviceType: 'parcel',
-        $or: [
-          { 'parcel.isOutstation': true },
-          { 'parcel.deliveryScope': 'outstation' },
-        ],
-      },
-    ];
+    query.serviceType = 'intercity';
   } else if (normalizedCategory === 'scheduled') {
     query.scheduledAt = { $ne: null };
   }
@@ -1483,7 +1307,6 @@ export const listRideHistoryForIdentity = async ({ role, entityId, limit = 50, p
   const ridesQuery = Ride.find(query)
     .select([
       '_id',
-      'deliveryId',
       'serviceType',
       'status',
       'liveStatus',
@@ -1498,7 +1321,6 @@ export const listRideHistoryForIdentity = async ({ role, entityId, limit = 50, p
       'estimatedDurationMinutes',
       'paymentMethod',
       'otp',
-      'parcel',
       'intercity',
       'pricingSnapshot',
       'commissionAmount',
@@ -1527,7 +1349,6 @@ export const listRideHistoryForIdentity = async ({ role, entityId, limit = 50, p
     .lean();
 
   if (role === 'user') {
-    ridesQuery.populate('deliveryId', 'parcel');
   }
 
   const [rides, total] = await Promise.all([
@@ -1538,7 +1359,6 @@ export const listRideHistoryForIdentity = async ({ role, entityId, limit = 50, p
   return {
     results: rides.map((ride) => ({
     rideId: String(ride._id),
-    deliveryId: ride.deliveryId?._id ? String(ride.deliveryId._id) : ride.deliveryId ? String(ride.deliveryId) : null,
     type: ride.serviceType || 'ride',
     serviceType: ride.serviceType || 'ride',
     status: ride.status,
@@ -1556,7 +1376,6 @@ export const listRideHistoryForIdentity = async ({ role, entityId, limit = 50, p
     estimatedDurationMinutes: ride.estimatedDurationMinutes || 0,
     paymentMethod: ride.paymentMethod,
     otp: ride.otp || '',
-    parcel: ride.deliveryId?.parcel || ride.parcel || null,
     intercity: ride.intercity || null,
     pricingSnapshot: ride.pricingSnapshot || null,
     commissionAmount: ride.commissionAmount,
@@ -1652,7 +1471,6 @@ export const acceptRideAssignment = async ({ rideId, driverId }) => {
       await ride.save({ session });
       await driver.save({ session });
       await session.commitTransaction();
-      await syncDeliveryWithRide(ride);
 
       return ride;
     } catch (error) {
@@ -1738,7 +1556,6 @@ export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymen
   }
 
   await ride.save();
-  await syncDeliveryWithRide(ride);
 
   let walletUpdate = null;
 
@@ -1749,7 +1566,6 @@ export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymen
     ]);
 
     walletUpdate = await settleCompletedRideWallet({ rideId: ride._id });
-    await consumeUserSubscriptionRide({ ride });
     const settledRide = await Ride.findById(ride._id).select('completedAt driverEarnings estimatedDistanceMeters');
 
     await incrementDriverTodaySummaryForCompletedRide({
@@ -2120,7 +1936,6 @@ export const acceptRideBidAssignment = async ({ rideId, bidId, userId }) => {
       );
 
       await session.commitTransaction();
-      await syncDeliveryWithRide(ride);
 
       return ride;
     } catch (error) {

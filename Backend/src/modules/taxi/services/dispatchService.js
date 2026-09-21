@@ -12,7 +12,6 @@ import {
   RIDE_LIVE_STATUS,
   RIDE_STATUS,
 } from '../constants/index.js';
-import { Delivery } from '../user/models/Delivery.js';
 import { getRideRoom, resolveSetPriceForRide } from './rideService.js';
 import { SOCKET_EVENTS } from '../socket/events.js';
 import { resolveTransportDispatchConfig } from './transportSettingsService.js';
@@ -159,10 +158,6 @@ const ensureUserWallet = async (userId, session = null) => {
 const normalizeRideTransportType = (ride) => {
   const serviceType = String(ride?.serviceType || '').trim().toLowerCase();
   const transportType = String(ride?.transport_type || '').trim().toLowerCase();
-
-  if (serviceType === 'parcel') {
-    return transportType === 'both' ? 'delivery' : (transportType || 'delivery');
-  }
 
   if (serviceType === 'intercity') {
     return 'intercity';
@@ -742,7 +737,6 @@ const emitRideRequestToDrivers = async ({
       fareIncreaseWaitMinutes: Number(ride.fareIncreaseWaitMinutes || 0),
       nextFareIncreaseAt: ride.nextFareIncreaseAt || null,
       paymentMethod: ride.paymentMethod,
-      parcel: ride.parcel || null,
       intercity: ride.intercity || null,
       radius: effectiveRadius,
       attempt: attemptIndex + 1,
@@ -756,7 +750,7 @@ const emitRideRequestToDrivers = async ({
 
   sendPushNotificationToEntities({
     driverIds: targetDrivers.map((driver) => String(driver._id)),
-    title: ride.serviceType === 'parcel' ? 'New delivery request' : 'New ride request',
+    title: 'New ride request',
     body: ride.pickupAddress
       ? `Pickup: ${ride.pickupAddress}`
       : 'A new booking is waiting for your response.',
@@ -797,13 +791,6 @@ const closeRideAsUnmatched = async (rideId) => {
 
   if (!ride) {
     return;
-  }
-
-  if (ride.deliveryId) {
-    await Delivery.findByIdAndUpdate(ride.deliveryId, {
-      status: ride.status,
-      liveStatus: ride.liveStatus,
-    });
   }
 
   await User.findByIdAndUpdate(ride.userId, { currentRideId: null });
@@ -850,14 +837,6 @@ export const cancelRideByAdmin = async (rideId) => {
     ride.biddingStatus = 'cancelled';
   }
   await ride.save();
-
-  if (ride.deliveryId) {
-    await Delivery.findByIdAndUpdate(ride.deliveryId, {
-      driverId: ride.driverId || null,
-      status: ride.status,
-      liveStatus: ride.liveStatus,
-    });
-  }
 
   await Promise.all([
     User.findByIdAndUpdate(ride.userId, { currentRideId: null }),
@@ -929,14 +908,6 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
       ride.biddingStatus = 'cancelled';
     }
     await ride.save({ session });
-
-    if (ride.deliveryId) {
-      await Delivery.findByIdAndUpdate(ride.deliveryId, {
-        driverId: ride.driverId || null,
-        status: ride.status,
-        liveStatus: ride.liveStatus,
-      }, { session });
-    }
 
     await Promise.all([
       User.findByIdAndUpdate(ride.userId, { currentRideId: null }, { session }),
@@ -1053,14 +1024,6 @@ export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
       ride.biddingStatus = 'cancelled';
     }
     await ride.save({ session });
-
-    if (ride.deliveryId) {
-      await Delivery.findByIdAndUpdate(ride.deliveryId, {
-        driverId: ride.driverId || null,
-        status: ride.status,
-        liveStatus: ride.liveStatus,
-      }, { session });
-    }
 
     await Promise.all([
       User.findByIdAndUpdate(ride.userId, { currentRideId: null }, { session }),
@@ -1459,7 +1422,6 @@ export const notifyRideAccepted = async (ride) => {
     vehicleIconType: populatedRide.vehicleIconType || '',
     vehicleIconUrl: populatedRide.vehicleIconUrl || '',
     driver: populatedRide.driverId,
-    parcel: populatedRide.parcel || null,
   });
 
   emitToRoom(getUserRoom(populatedRide.userId), SOCKET_EVENTS.RIDE_STATE, {
@@ -1476,7 +1438,6 @@ export const notifyRideAccepted = async (ride) => {
     otp: populatedRide.otp || '',
     vehicleIconType: populatedRide.vehicleIconType || '',
     vehicleIconUrl: populatedRide.vehicleIconUrl || '',
-    parcel: populatedRide.parcel || null,
     intercity: populatedRide.intercity || null,
     commissionAmount: populatedRide.commissionAmount,
     driverEarnings: populatedRide.driverEarnings,

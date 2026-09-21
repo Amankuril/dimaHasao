@@ -79,16 +79,6 @@ export const adminService = {
 
   getReferralDashboard: () => api.get('/admin/referral/dashboard'),
 
-  /**
-   * Subscription Management
-   */
-  getSubscriptionPlans: () => api.get('/admin/driver-subscriptions/plans/list'),
-  createSubscriptionPlan: (planData) => api.post('/admin/driver-subscriptions/plans/create', planData),
-  getSubscriptionSettings: () => api.get('/admin/driver-subscriptions/settings'),
-  updateSubscriptionSettings: (data) => api.post('/admin/driver-subscriptions/settings', data),
-  getUserSubscriptionPlans: () => api.get('/admin/user-subscriptions/plans/list'),
-  createUserSubscriptionPlan: (planData) => api.post('/admin/user-subscriptions/plans/create', planData),
-  getUserSubscriptionsByUserId: (id) => api.get(`/admin/users/${id}/subscriptions`),
   
   /**
    * Common / Configuration Data
@@ -159,8 +149,6 @@ export const adminService = {
     api.get(`/admin/ride-requests?page=${page}&limit=${limit}&tab=${encodeURIComponent(tab)}&search=${encodeURIComponent(search)}`),
   listRideRequests: ({ page = 1, limit = 10, tab = 'all', search = '' } = {}) =>
     api.get(`/admin/ride-requests?page=${page}&limit=${limit}&tab=${encodeURIComponent(tab)}&search=${encodeURIComponent(search)}`),
-  getDeliveries: ({ page = 1, limit = 10, tab = 'all', search = '' } = {}) =>
-    api.get(`/admin/deliveries?page=${page}&limit=${limit}&tab=${encodeURIComponent(tab)}&search=${encodeURIComponent(search)}`),
   getTrips: ({ page = 1, limit = 10, tab = 'all', search = '' } = {}) =>
     api.get(`/admin/trips?page=${page}&limit=${limit}&tab=${encodeURIComponent(tab)}&search=${encodeURIComponent(search)}`),
   deleteOngoingRide: (id) => api.delete(`/admin/ongoing-rides/${id}`),

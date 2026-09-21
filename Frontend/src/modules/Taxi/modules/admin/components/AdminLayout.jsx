@@ -712,7 +712,6 @@ const AdminLayout = () => {
                   ]
                 : []),
               { label: 'Set Price', path: '/taxi/admin/pricing/set-price', permission: 'set_prices.view' },
-              { label: 'Goods Types', path: '/taxi/admin/pricing/goods-types', permission: 'goods_types.view' },
             ],
           },
           {
@@ -726,7 +725,6 @@ const AdminLayout = () => {
           },
           { icon: Car, label: 'Trip Requests', path: '/taxi/admin/trips', permission: 'trips.view' },
           { icon: Ban, label: 'Cancellation Analytics', path: '/taxi/admin/cancellation-analytics', permission: 'dashboard.view' },
-          { icon: Package, label: 'Delivery Requests', path: '/taxi/admin/deliveries', permission: 'deliveries.view' },
           { icon: Clock, label: 'Ongoing Requests', path: '/taxi/admin/ongoing', permission: 'ongoing.view' },
         ],
       },
@@ -738,7 +736,6 @@ const AdminLayout = () => {
             label: 'Customer Management',
             subItems: [
               { label: 'User List', path: '/taxi/admin/users', permission: 'users.view' },
-              { label: 'Subscription Management', path: '/taxi/admin/users/subscriptions', permission: 'users.view' },
               { label: 'Delete Request Users', path: '/taxi/admin/users/delete-requests', permission: 'users.view' },
               { label: 'User Bulk Upload', path: '/taxi/admin/users/bulk-upload', permission: 'users.view' },
             ],
@@ -751,7 +748,6 @@ const AdminLayout = () => {
               { label: 'Pending Drivers', path: '/taxi/admin/drivers/pending', permission: 'drivers.view' },
               { label: 'Approved Drivers', path: '/taxi/admin/drivers', permission: 'drivers.view' },
               { label: 'Active Drivers', path: '/taxi/admin/drivers/active', permission: 'drivers.view' },
-              { label: 'Subscription', path: '/taxi/admin/drivers/subscription', permission: 'drivers.view' },
               { label: 'Drivers Ratings', path: '/taxi/admin/drivers/ratings', permission: 'drivers.view' },
               {
                 label: 'Driver Wallet',

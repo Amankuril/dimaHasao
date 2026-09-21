@@ -20,7 +20,6 @@ import { normalizeRentalBooking, normalizeRide, PAGE_SIZE, TABS } from '../compo
 
 import taxiFallback from '../../../assets/user-app/taxi.png';
 import bikeFallback from '../../../assets/user-app/bike.png';
-import parcelFallback from '../../../assets/user-app/parcel.png';
 
 import {
   CURRENT_RIDE_UPDATED_EVENT,
@@ -46,9 +45,6 @@ const getCurrentRideIcon = (ride) => {
   const serviceType = String(ride?.serviceType || ride?.type || '').toLowerCase();
   const iconType = String(ride?.vehicleIconType || ride?.driver?.vehicleIconType || ride?.driver?.vehicleType || '').toLowerCase();
 
-  if (serviceType === 'parcel' || serviceType === 'delivery') {
-    return parcelFallback;
-  }
 
   if (iconType.includes('bike')) {
     return bikeFallback;
@@ -215,7 +211,6 @@ const sortLatestFirst = (items = []) => [...items].sort((left, right) => Number(
 
 const getRideCategoryForTab = (tab) => {
   if (tab === 'Rides') return 'rides';
-  if (tab === 'Parcels') return 'parcels';
   if (tab === 'Outstation') return 'outstation';
   if (tab === 'Scheduled') return 'scheduled';
   return '';
@@ -306,14 +301,12 @@ const Activity = () => {
 
   const driverName = currentRide?.driver?.name || 'Captain';
   const serviceType = String(currentRide?.serviceType || currentRide?.type || 'ride').toLowerCase();
-  const vehicleLabel = currentRide?.driver?.vehicle || currentRide?.driver?.vehicleType || (serviceType === 'parcel' ? 'Parcel' : serviceType === 'rental' ? 'Rental' : 'Taxi');
+  const vehicleLabel = currentRide?.driver?.vehicle || currentRide?.driver?.vehicleType || (serviceType === 'rental' ? 'Rental' : 'Taxi');
   const currentRideIcon = getCurrentRideIcon(currentRide);
   const trackingPath =
-    serviceType === 'parcel'
-      ? `${routePrefix}/parcel/tracking`
-      : serviceType === 'rental'
-        ? `${routePrefix}/rental/confirmed`
-        : `${routePrefix}/ride/tracking`;
+    serviceType === 'rental'
+      ? `${routePrefix}/rental/confirmed`
+      : `${routePrefix}/ride/tracking`;
   const rideStage = String(currentRide?.liveStatus || currentRide?.status || 'accepted').toLowerCase();
   const hasAssignedDriver = Boolean(currentRide?.driver?._id || currentRide?.driver?.id || currentRide?.driver?.name);
   const scheduledTimestamp = currentRide?.scheduledAt ? new Date(currentRide.scheduledAt).getTime() : NaN;
@@ -328,14 +321,12 @@ const Activity = () => {
           ? 'Rental in progress'
           : 'Rental booking active'
       : rideStage === 'started'
-        ? serviceType === 'parcel' ? 'Parcel in transit' : 'Ride in progress'
+        ? 'Ride in progress'
         : rideStage === 'arrived'
-          ? serviceType === 'parcel' ? 'Parcel reached destination' : `${driverName} reached destination`
+          ? `${driverName} reached destination`
           : rideStage === 'arriving'
-            ? serviceType === 'parcel' ? `${driverName} reached sender` : `${driverName} has arrived`
-            : serviceType === 'parcel'
-              ? 'Parcel booked'
-              : 'Ride booked';
+            ? `${driverName} has arrived`
+            : 'Ride booked';
   const rideStageContextLabel = isScheduledAcceptedRide
     ? 'Driver assigned for your scheduled trip'
     : rideStageLabel;
@@ -563,8 +554,6 @@ const Activity = () => {
       navigate(`${routePrefix}/rental/confirmed`, {
         state: toHistorySafeState(buildRentalActivityState(item.booking)),
       });
-    } else if (item.type === 'parcel') {
-      navigate(`${routePrefix}/parcel/detail/${item.id}`);
     } else {
       navigate(`${routePrefix}/ride/detail/${item.id}`, {
         state: toHistorySafeState({ ride: item.ride }),

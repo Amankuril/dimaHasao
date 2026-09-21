@@ -456,7 +456,6 @@ const DriverDetails = () => {
     'Withdrawal History',
     'Review History',
     'Documents',
-    'Subscription',
   ];
 
   const fetchProfile = async () => {
@@ -1347,11 +1346,6 @@ const DriverDetails = () => {
             </div>
           )}
 
-          {activeTab === 'Subscription' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-500">
-              No subscription data available.
-            </div>
-          )}
         </>
       ) : (
         <>

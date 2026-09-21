@@ -105,16 +105,6 @@ export const createDefaultAdminState = () => {
         active: true,
         mobile_menu_icon: 'https://cdn.jsdelivr.net/gh/tabler/tabler-icons/icons/car.svg',
       },
-      {
-        name: 'Parcel Delivery',
-        transport_type: 'delivery',
-        service_type: 'normal',
-        order_by: 2,
-        short_description: 'Send packages fast',
-        description: 'Door to door parcel logistics.',
-        active: true,
-        mobile_menu_icon: 'https://cdn.jsdelivr.net/gh/tabler/tabler-icons/icons/package.svg',
-      },
     ],
     notificationChannels: [
       {
@@ -132,30 +122,6 @@ export const createDefaultAdminState = () => {
         push_notification: true,
         mail: true,
         for_user: false,
-      },
-    ],
-    subscriptionPlans: [
-      {
-        name: 'Daily Sedan Booster',
-        description: 'Best for active city cab drivers.',
-        amount: 149,
-        duration: 1,
-        transport_type: 'taxi',
-        vehicle_type_id: sedanId,
-        service_location_id: indoreId,
-        how_it_works: 'Pay once per day and unlock lower commission.',
-        active: true,
-      },
-      {
-        name: 'Weekly Delivery Pro',
-        description: 'Built for mini-truck logistics partners.',
-        amount: 699,
-        duration: 7,
-        transport_type: 'delivery',
-        vehicle_type_id: miniTruckId,
-        service_location_id: delhiId,
-        how_it_works: 'Flat weekly pass for delivery operations.',
-        active: true,
       },
     ],
     preferences: [

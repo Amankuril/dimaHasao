@@ -14,7 +14,6 @@ import { createDefaultBusinessSettings } from '../data/defaultBusinessSettings.j
 import { createDefaultAppSettings } from '../data/defaultAppSettings.js';
 import { Airport } from '../models/Airport.js';
 import { DriverNeededDocument } from '../models/DriverNeededDocument.js';
-import { GoodsType } from '../models/GoodsType.js';
 import { AdminThirdPartySetting } from '../models/AdminThirdPartySetting.js';
 import { createDefaultThirdPartySettings } from '../data/defaultThirdPartySettings.js';
 import { RentalPackageType } from '../models/RentalPackageType.js';
@@ -29,9 +28,7 @@ import { Vehicle } from '../models/Vehicle.js';
 import { Driver } from '../../driver/models/Driver.js';
 import { Zone } from '../../driver/models/Zone.js';
 import { Ride } from '../../user/models/Ride.js';
-import { UserSubscription } from '../../user/models/UserSubscription.js';
 import { RideModule } from '../models/RideModule.js';
-import { SubscriptionPlan } from '../models/SubscriptionPlan.js';
 import { TaxiAppModule } from '../models/TaxiAppModule.js';
 import { NotificationChannel } from '../models/NotificationChannel.js';
 import { UserPreference } from '../models/UserPreference.js';
@@ -1522,20 +1519,6 @@ const serializeSetPrice = (item) => ({
   updatedAt: item.updatedAt,
 });
 
-const serializeGoodsType = (item) => ({
-  _id: item._id,
-  id: item.external_id || item.id || 1,
-  name: item.goods_type_name || item.name || '',
-  goods_type_name: item.goods_type_name || item.name || '',
-  translation_dataset: item.translation_dataset || '',
-  goods_types_for: item.goods_types_for || 'both',
-  company_key: item.company_key || null,
-  active: item.active !== undefined ? Number(item.active) : 1,
-  created_at: item.createdAt,
-  updated_at: item.updatedAt,
-  goods_type_translation_words: item.goods_type_translation_words || [],
-});
-
 const serializeRentalPackageType = (item) => ({
   _id: item._id,
   id: item._id,
@@ -2116,11 +2099,6 @@ const seedInitialData = async () => {
   // Seed Notification Channels
   if (await NotificationChannel.countDocuments() === 0) {
     await NotificationChannel.insertMany(defaults.notificationChannels);
-  }
-
-  // Seed Subscription Plans
-  if (await SubscriptionPlan.countDocuments() === 0) {
-    await SubscriptionPlan.insertMany(defaults.subscriptionPlans);
   }
 
   // Seed Preferences
@@ -2915,14 +2893,6 @@ export const getUserById = async (id) => {
     throw new ApiError(404, 'User not found');
   }
 
-  const subscriptions = await UserSubscription.find({ userId: id })
-    .sort({ active: -1, expiresAt: 1, createdAt: -1 })
-    .populate('planId', 'name')
-    .populate('vehicle_type_id', 'name')
-    .lean();
-
-  const activeSubscriptions = subscriptions.filter((item) => item.active !== false && String(item.status || '') === 'active');
-
   const rides = await Ride.find({
     userId: id,
     'feedback.rating': { $gte: 1 },
@@ -2933,28 +2903,6 @@ export const getUserById = async (id) => {
 
   return {
     ...serializeUser(user),
-    subscriptionSummary: {
-      activeCount: activeSubscriptions.length,
-      activePlans: activeSubscriptions.map((item) => ({
-        id: String(item._id),
-        planId: item.planId?._id ? String(item.planId._id) : String(item.planId || ''),
-        name: item.name || item.planId?.name || '',
-        status: item.status || 'active',
-        benefit_type: item.benefit_type || 'limited',
-        ride_limit: Number(item.ride_limit || 0),
-        rides_used: Number(item.rides_used || 0),
-        rides_remaining: String(item.benefit_type || '') === 'unlimited'
-          ? null
-          : Math.max(0, Number(item.ride_limit || 0) - Number(item.rides_used || 0)),
-        vehicle_type: item.vehicle_type_id?._id
-          ? {
-            id: String(item.vehicle_type_id._id),
-            name: item.vehicle_type_id.name || '',
-          }
-          : null,
-        expiresAt: item.expiresAt || null,
-      })),
-    },
     reviews: rides.map((ride) => ({
       _id: ride._id,
       request_id: String(ride._id),
@@ -4165,26 +4113,6 @@ export const getDriverProfile = async (id) => {
   };
 };
 
-export const getSubscriptionSettings = async () => {
-  const setting = await AdminBusinessSetting.findOne({ scope: 'default' }).lean();
-  return setting?.subscription || { mode: 'commissionOnly' };
-};
-
-export const updateSubscriptionSettings = async (payload) => {
-  const { mode } = payload;
-  if (!['commissionOnly', 'subscriptionOnly', 'both'].includes(mode)) {
-    throw new ApiError(400, 'Invalid subscription mode');
-  }
-
-  const setting = await AdminBusinessSetting.findOneAndUpdate(
-    { scope: 'default' },
-    { $set: { 'subscription.mode': mode } },
-    { returnDocument: 'after', upsert: true },
-  );
-
-  return setting.subscription;
-};
-
 export const getReferralSettings = async (type) => {
   const setting = await AdminBusinessSetting.findOne({ scope: 'default' }).lean();
   const referral = setting?.referral || { driver: { enabled: false, type: 'instant_referrer', amount: 0 }, user: { enabled: false, type: 'instant_referrer', amount: 0 } };
@@ -4270,95 +4198,6 @@ export const getReferralDashboard = async () => {
       referral_driver: 0,
       monthly: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     }
-  };
-};
-
-export const listSubscriptionPlans = async () =>
-  SubscriptionPlan.find({ audience: 'driver' }).sort({ createdAt: -1 }).populate('vehicle_type_id').lean();
-export const createSubscriptionPlan = async (payload) => {
-  if (!String(payload?.name || '').trim()) {
-    throw new ApiError(400, 'Subscription name is required');
-  }
-
-  const plan = await SubscriptionPlan.create({
-    ...payload,
-    audience: 'driver',
-    amount: Number(payload.amount || 0),
-    duration: Number(payload.duration || 0),
-    benefit_type: 'standard',
-    ride_limit: 0,
-    active: true,
-  });
-  return plan.toObject();
-};
-
-export const listCustomerSubscriptionPlans = async () =>
-  SubscriptionPlan.find({ audience: 'user' }).sort({ createdAt: -1 }).populate('vehicle_type_id').lean();
-
-export const createCustomerSubscriptionPlan = async (payload = {}) => {
-  if (!String(payload?.name || '').trim()) {
-    throw new ApiError(400, 'Subscription name is required');
-  }
-  if (!payload?.vehicle_type_id || !mongoose.Types.ObjectId.isValid(payload.vehicle_type_id)) {
-    throw new ApiError(400, 'Valid vehicle type is required');
-  }
-
-  const benefitType = String(payload.benefit_type || '').trim().toLowerCase() === 'unlimited'
-    ? 'unlimited'
-    : 'limited';
-
-  const plan = await SubscriptionPlan.create({
-    ...payload,
-    audience: 'user',
-    amount: Number(payload.amount || 0),
-    duration: Math.max(1, Number(payload.duration || 0)),
-    benefit_type: benefitType,
-    ride_limit: benefitType === 'unlimited' ? 0 : Math.max(1, Number(payload.ride_limit || 0)),
-    active: payload.active !== undefined ? Boolean(payload.active) : true,
-  });
-  return plan.toObject();
-};
-
-export const listUserSubscriptionsByUserId = async (userId) => {
-  const user = await User.findById(userId).lean();
-
-  if (!user) {
-    throw new ApiError(404, 'User not found');
-  }
-
-  const items = await UserSubscription.find({ userId })
-    .sort({ active: -1, expiresAt: 1, createdAt: -1 })
-    .populate('planId', 'name description')
-    .populate('vehicle_type_id', 'name')
-    .lean();
-
-  return {
-    results: items.map((item) => ({
-      id: String(item._id),
-      planId: item.planId?._id ? String(item.planId._id) : String(item.planId || ''),
-      name: item.name || item.planId?.name || '',
-      description: item.description || item.planId?.description || '',
-      amount: Number(item.amount || 0),
-      durationDays: Number(item.durationDays || 0),
-      transport_type: item.transport_type || 'taxi',
-      benefit_type: item.benefit_type || 'limited',
-      ride_limit: Number(item.ride_limit || 0),
-      rides_used: Number(item.rides_used || 0),
-      rides_remaining: String(item.benefit_type || '') === 'unlimited'
-        ? null
-        : Math.max(0, Number(item.ride_limit || 0) - Number(item.rides_used || 0)),
-      status: item.status || 'active',
-      active: item.active !== false,
-      vehicle_type: item.vehicle_type_id?._id
-        ? {
-          id: String(item.vehicle_type_id._id),
-          name: item.vehicle_type_id.name || '',
-        }
-        : null,
-      purchasedAt: item.purchasedAt || null,
-      expiresAt: item.expiresAt || null,
-      createdAt: item.createdAt || null,
-    })),
   };
 };
 
@@ -4576,49 +4415,6 @@ const toAdminRideRow = (ride) => {
   };
 };
 
-const toAdminDeliveryRow = (ride) => {
-  const requestCode = `DEL_${String(ride._id).slice(-12).toUpperCase()}`;
-  const status = String(ride.status || '').toLowerCase();
-  const liveStatus = String(ride.liveStatus || '').toLowerCase();
-  const parcel = ride.deliveryId?.parcel || {};
-
-  let tripStatus = 'UPCOMING';
-  if (status === RIDE_STATUS.COMPLETED) {
-    tripStatus = 'COMPLETED';
-  } else if (status === RIDE_STATUS.CANCELLED) {
-    tripStatus = 'CANCELLED';
-  } else if (
-    status === RIDE_STATUS.ONGOING ||
-    liveStatus === RIDE_LIVE_STATUS.STARTED ||
-    liveStatus === RIDE_LIVE_STATUS.ARRIVED
-  ) {
-    tripStatus = 'ON_TRIP';
-  }
-
-  return {
-    id: String(ride._id),
-    requestId: requestCode,
-    date: ride.createdAt,
-    userName: ride.userId?.name || parcel.senderName || 'Unknown User',
-    driverName: ride.driverId?.name || 'Unassigned',
-    transportType: ride.driverId?.vehicleType || ride.vehicleIconType || 'Parcel',
-    tripStatus,
-    rideStatus: ride.status,
-    liveStatus: ride.liveStatus,
-    paymentOption: String(ride.paymentMethod || 'cash').toUpperCase(),
-    fare: Number(ride.fare || 0),
-    pickupLabel: ride.pickupAddress || formatRidePointLabel(ride.pickupLocation, 'Pickup'),
-    dropLabel: ride.dropAddress || formatRidePointLabel(ride.dropLocation, 'Drop'),
-    pickupLocation: ride.pickupLocation,
-    dropLocation: ride.dropLocation,
-    parcel: {
-      category: parcel.category || '',
-      senderName: parcel.senderName || '',
-      receiverName: parcel.receiverName || '',
-    },
-  };
-};
-
 const toAdminIntercityTripRow = (ride) => {
   const requestCode = `INT_${String(ride._id).slice(-12).toUpperCase()}`;
   const status = String(ride.status || '').toLowerCase();
@@ -4724,10 +4520,7 @@ const buildRideStatusFilter = (tab = 'all', variant = 'ride_requests') => {
   return {};
 };
 
-const buildAdminRideSearchClauses = async (
-  search = '',
-  { includeParcel = false, includeIntercity = false } = {},
-) => {
+const buildAdminRideSearchClauses = async (search = '', { includeIntercity = false } = {}) => {
   const normalizedSearch = String(search || '').trim();
   if (!normalizedSearch) {
     return [];
@@ -4767,14 +4560,6 @@ const buildAdminRideSearchClauses = async (
     clauses.push({ driverId: { $in: matchedDrivers.map((item) => item._id) } });
   }
 
-  if (includeParcel) {
-    clauses.push(
-      { 'parcel.category': regex },
-      { 'parcel.senderName': regex },
-      { 'parcel.receiverName': regex },
-    );
-  }
-
   if (includeIntercity) {
     clauses.push(
       { 'intercity.fromCity': regex },
@@ -4792,7 +4577,6 @@ const listAdminRides = async ({
   baseFilter = {},
   variant = 'ride_requests',
   serializer,
-  includeParcel = false,
   includeIntercity = false,
 }) => {
   const page = Math.max(Number(query.page || 1), 1);
@@ -4805,10 +4589,7 @@ const listAdminRides = async ({
     ...buildRideStatusFilter(tab, variant),
   };
 
-  const searchClauses = await buildAdminRideSearchClauses(search, {
-    includeParcel,
-    includeIntercity,
-  });
+  const searchClauses = await buildAdminRideSearchClauses(search, { includeIntercity });
 
   if (searchClauses.length > 0) {
     mongoFilter.$or = searchClauses;
@@ -4823,10 +4604,6 @@ const listAdminRides = async ({
         .limit(limit)
         .populate('userId', 'name phone')
         .populate('driverId', 'name phone vehicleType vehicleNumber');
-
-      if (includeParcel) {
-        rideQuery = rideQuery.populate('deliveryId');
-      }
 
       return rideQuery.lean();
     })(),
@@ -4854,22 +4631,10 @@ export const listRideRequests = async (query = {}) => {
   return listAdminRides({
     query,
     baseFilter: {
-      serviceType: { $nin: ['parcel', 'intercity'] },
+      serviceType: { $ne: 'intercity' },
     },
     variant: 'ride_requests',
     serializer: toAdminRideRow,
-  });
-};
-
-export const listDeliveries = async (query = {}) => {
-  return listAdminRides({
-    query,
-    baseFilter: {
-      serviceType: 'parcel',
-    },
-    variant: 'deliveries',
-    serializer: toAdminDeliveryRow,
-    includeParcel: true,
   });
 };
 
@@ -7347,95 +7112,6 @@ export const updateRentalBookingRequest = async (id, payload = {}, adminId = nul
 };
 
 
-export const listGoodsTypes = async () => {
-  const items = await GoodsType.find().sort({ createdAt: -1 }).lean();
-  const results = items.map(serializeGoodsType);
-
-  return {
-    success: true,
-    results,
-    paginator: {
-      current_page: 1,
-      data: results,
-      first_page_url: "http://localhost:5000/api/v1/admin/goods-types?page=1",
-      from: 1,
-      last_page: 1,
-      last_page_url: "http://localhost:5000/api/v1/admin/goods-types?page=1",
-      links: [
-        { url: null, label: "&laquo; Previous", active: false },
-        { url: "http://localhost:5000/api/v1/admin/goods-types?page=1", label: "1", active: true },
-        { url: null, label: "Next &raquo;", active: false }
-      ],
-      next_page_url: null,
-      path: "http://localhost:5000/api/v1/admin/goods-types",
-      per_page: 50,
-      prev_page_url: null,
-      to: results.length,
-      total: results.length
-    }
-  };
-};
-
-export const createGoodsType = async (payload) => {
-  const name = payload.goods_type_name || payload.name || '';
-  if (!name.trim()) {
-    throw new ApiError(400, 'Goods type name is required');
-  }
-
-  const active = payload.active !== undefined ?
-    (typeof payload.active === 'boolean' ? (payload.active ? 1 : 0) : Number(payload.active)) :
-    1;
-
-  const item = await GoodsType.create({
-    goods_type_name: name.trim(),
-    name: name.trim(),
-    goods_types_for: payload.goods_types_for || payload.goods_type_for || 'both',
-    status: payload.status || (active === 1 ? 'active' : 'inactive'),
-    active: active,
-    translation_dataset: payload.translation_dataset || '',
-  });
-
-  return serializeGoodsType(item.toObject());
-};
-
-export const updateGoodsType = async (id, payload) => {
-  const item = await GoodsType.findById(id);
-  if (!item) throw new ApiError(404, 'Goods type not found');
-
-  const name = payload.goods_type_name || payload.name;
-  if (name !== undefined) {
-    item.goods_type_name = name.trim();
-    item.name = name.trim();
-  }
-
-  if (payload.goods_types_for !== undefined || payload.goods_type_for !== undefined) {
-    item.goods_types_for = payload.goods_types_for || payload.goods_type_for || 'both';
-  }
-
-  if (payload.active !== undefined) {
-    item.active = typeof payload.active === 'boolean' ? (payload.active ? 1 : 0) : Number(payload.active);
-  }
-
-  if (payload.status !== undefined) {
-    item.status = payload.status;
-  } else if (payload.active !== undefined) {
-    item.status = item.active === 1 ? 'active' : 'inactive';
-  }
-
-  if (payload.translation_dataset !== undefined) {
-    item.translation_dataset = payload.translation_dataset;
-  }
-
-  await item.save();
-  return serializeGoodsType(item.toObject());
-};
-
-export const deleteGoodsType = async (id) => {
-  const deleted = await GoodsType.findByIdAndDelete(id);
-  if (!deleted) throw new ApiError(404, 'Goods type not found');
-  return true;
-};
-
 export const listRentalPackageTypes = async () => {
   const items = await RentalPackageType.find().sort({ createdAt: -1 }).lean();
   const results = items.map(serializeRentalPackageType);
@@ -8668,8 +8344,7 @@ export const listTransportTypes = async () => {
 export const seedTransportTypes = async () => {
   const defaults = [
     { name: 'taxi', display_name: 'Taxi' },
-    { name: 'delivery', display_name: 'Delivery' },
-    { name: 'pooling', display_name: 'Pooling' },
+    { name: 'intercity', display_name: 'Intercity' },
     { name: 'both', display_name: 'Both' }
   ];
 

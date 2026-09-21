@@ -39,9 +39,6 @@ const Chat = lazy(() => import('./modules/user/pages/ride/Chat'));
 const Support = lazy(() => import('./modules/user/pages/ride/Support'));
 const RideDetail = lazy(() => import('./modules/user/pages/ride/RideDetail'));
 
-// Parcel Module Pages
-const ParcelType = lazy(() => import('./modules/user/pages/parcel/ParcelType'));
-const SenderReceiverDetails = lazy(() => import('./modules/user/pages/parcel/SenderReceiverDetails'));
 
 // Profile & History
 const Activity = lazy(() => import('./modules/user/pages/Activity'));
@@ -59,9 +56,6 @@ const ServicesPage = lazy(() => import('./modules/shared/pages/ServicesPage'));
 const BlogPage = lazy(() => import('./modules/shared/pages/BlogPage'));
 const LinksPage = lazy(() => import('./modules/shared/pages/LinksPage'));
 
-// Phase 1 — Parcel flow completions
-const ParcelSearchingDriver = lazy(() => import('./modules/user/pages/parcel/ParcelSearchingDriver'));
-const ParcelTracking = lazy(() => import('./modules/user/pages/parcel/ParcelTracking'));
 
 // Phase 2 — Core utility pages
 const UserNotifications = lazy(() => import('./modules/user/pages/Notifications'));
@@ -76,14 +70,8 @@ const DeleteAccount = lazy(() => import('./modules/user/pages/profile/DeleteAcco
 
 // Phase 4 — Cab/Intercity/Bus flows
 const CabHome = lazy(() => import('./modules/user/pages/cab/CabHome'));
-const SharedTaxi = lazy(() => import('./modules/user/pages/cab/SharedTaxi'));
-const SharedTaxiSeats = lazy(() => import('./modules/user/pages/cab/SharedTaxiSeats'));
-const SharedTaxiConfirm = lazy(() => import('./modules/user/pages/cab/SharedTaxiConfirm'));
 const AirportCab = lazy(() => import('./modules/user/pages/cab/AirportCab'));
 const AirportCabConfirm = lazy(() => import('./modules/user/pages/cab/AirportCabConfirm'));
-const SpiritualTrip = lazy(() => import('./modules/user/pages/cab/SpiritualTrip'));
-const SpiritualTripVehicle = lazy(() => import('./modules/user/pages/cab/SpiritualTripVehicle'));
-const SpiritualTripConfirm = lazy(() => import('./modules/user/pages/cab/SpiritualTripConfirm'));
 
 const IntercityVehicle = lazy(() => import('./modules/user/pages/intercity/IntercityVehicle'));
 const IntercityDetails = lazy(() => import('./modules/user/pages/intercity/IntercityDetails'));
@@ -108,7 +96,6 @@ const CabSharing = lazy(() => import('./modules/user/pages/cabsharing/CabSharing
 const ProfileSettings = lazy(() => import('./modules/user/pages/profile/ProfileSettings'));
 const PaymentSettings = lazy(() => import('./modules/user/pages/profile/PaymentSettings'));
 const AddressSettings = lazy(() => import('./modules/user/pages/profile/AddressSettings'));
-const UserSubscriptions = lazy(() => import('./modules/user/pages/profile/Subscriptions'));
 // Driver Module - Common
 import DriverLayout from './modules/driver/components/DriverLayout';
 
@@ -156,7 +143,6 @@ const AdminCancellationAnalytics = lazy(() => import('./modules/admin/pages/Canc
 const AdminEarnings = lazy(() => import('./modules/admin/pages/dashboard/AdminEarnings'));
 const AdminChat = lazy(() => import('./modules/admin/pages/operations/Chat'));
 const AdminTrips = lazy(() => import('./modules/admin/pages/operations/Trips'));
-const AdminDeliveries = lazy(() => import('./modules/admin/pages/operations/Deliveries'));
 const AdminOngoing = lazy(() => import('./modules/admin/pages/operations/Ongoing'));
 const AdminWalletPayment = lazy(() => import('./modules/admin/pages/wallet/WalletPayment'));
 const AdminUserList = lazy(() => import('./modules/admin/pages/users/UserList'));
@@ -165,15 +151,11 @@ const AdminUserDetails = lazy(() => import('./modules/admin/pages/users/UserDeta
 const AdminDeleteRequestUsers = lazy(() => import('./modules/admin/pages/users/DeleteRequestUsers'));
 const AdminUserBulkUpload = lazy(() => import('./modules/admin/pages/users/UserBulkUpload'));
 const AdminUserImportCreate = lazy(() => import('./modules/admin/pages/users/UserImportCreate'));
-const AdminUserSubscriptions = lazy(() => import('./modules/admin/pages/users/UserSubscriptions'));
-const AdminUserSubscriptionCreate = lazy(() => import('./modules/admin/pages/users/UserSubscriptionCreate'));
 
 // DRIVER MANAGEMENT IMPORTS
 const AdminDriverList = lazy(() => import('./modules/admin/pages/drivers/DriverList'));
 const AdminDriverDetails = lazy(() => import('./modules/admin/pages/drivers/DriverDetails'));
 const AdminPendingDrivers = lazy(() => import('./modules/admin/pages/drivers/PendingDrivers'));
-const AdminDriverSubscriptions = lazy(() => import('./modules/admin/pages/drivers/DriverSubscriptions'));
-const AdminDriverSubscriptionCreate = lazy(() => import('./modules/admin/pages/drivers/DriverSubscriptionCreate'));
 const AdminDriverRatings = lazy(() => import('./modules/admin/pages/drivers/DriverRatings'));
 const AdminDriverRatingDetail = lazy(() => import('./modules/admin/pages/drivers/DriverRatingDetail'));
 const AdminDriverWallet = lazy(() => import('./modules/admin/pages/drivers/DriverWallet'));
@@ -214,7 +196,6 @@ const AdminRentalTrackingDetail = lazy(() => import('./modules/admin/pages/price
 const AdminRentalBookingRequests = lazy(() => import('./modules/admin/pages/price-management/RentalBookingRequests'));
 const AdminRentalQuoteRequests = lazy(() => import('./modules/admin/pages/price-management/RentalQuoteRequests'));
 const AdminRentalPackageTypes = lazy(() => import('./modules/admin/pages/price-management/RentalPackageTypes'));
-const AdminGoodsTypes = lazy(() => import('./modules/admin/pages/price-management/GoodsTypes'));
 const AdminPricingPlaceholder = ({ title }) => (
   <div className="flex flex-col items-center justify-center min-h-[500px] text-gray-400 bg-white rounded-[32px] border border-gray-100 shadow-sm p-10">
     <MapPin size={60} strokeWidth={1} className="mb-6 opacity-20" />
@@ -609,19 +590,6 @@ function TaxiApp() {
                 <Route path="support" element={<Support />} />
                 <Route path="ride/detail/:id" element={<RideDetail />} />
 
-                <Route path="parcel/type" element={<ParcelType />} />
-                <Route path="parcel/details" element={<SenderReceiverDetails />} />
-                <Route
-                  path="parcel/contacts"
-                  element={<SenderReceiverDetails />}
-                />
-                <Route
-                  path="parcel/searching"
-                  element={<ParcelSearchingDriver />}
-                />
-                <Route path="parcel/tracking" element={<ParcelTracking />} />
-                <Route path="parcel/detail/:id" element={<RideDetail />} />
-
                 {/* New Service Routes — Real pages replacing ComingSoon */}
                 {RENTAL_ENABLED ? (
                   <>
@@ -639,25 +607,10 @@ function TaxiApp() {
                 <Route path="intercity/confirm" element={<IntercityConfirm />} />
                 <Route path="cab-sharing" element={<CabSharing />} />
                 <Route path="cab" element={<CabHome />} />
-                <Route path="cab/shared" element={<SharedTaxi />} />
-                <Route path="cab/shared/seats" element={<SharedTaxiSeats />} />
-                <Route
-                  path="cab/shared/confirm"
-                  element={<SharedTaxiConfirm />}
-                />
                 <Route path="cab/airport" element={<AirportCab />} />
                 <Route
                   path="cab/airport-confirm"
                   element={<AirportCabConfirm />}
-                />
-                <Route path="cab/spiritual" element={<SpiritualTrip />} />
-                <Route
-                  path="cab/spiritual-vehicle"
-                  element={<SpiritualTripVehicle />}
-                />
-                <Route
-                  path="cab/spiritual-confirm"
-                  element={<SpiritualTripConfirm />}
                 />
                 <Route path="tours" element={<ComingSoon />} />
 
@@ -715,28 +668,6 @@ function TaxiApp() {
                   element={<RideDetail />}
                 />
 
-                <Route path="user/parcel/type" element={<ParcelType />} />
-                <Route
-                  path="user/parcel/details"
-                  element={<SenderReceiverDetails />}
-                />
-                <Route
-                  path="user/parcel/contacts"
-                  element={<SenderReceiverDetails />}
-                />
-                <Route
-                  path="user/parcel/searching"
-                  element={<ParcelSearchingDriver />}
-                />
-                <Route
-                  path="user/parcel/tracking"
-                  element={<ParcelTracking />}
-                />
-                <Route
-                  path="user/parcel/detail/:id"
-                  element={<RideDetail />}
-                />
-
                 {RENTAL_ENABLED ? (
                   <>
                     <Route path="user/rental" element={<BikeRentalHome />} />
@@ -774,31 +705,10 @@ function TaxiApp() {
                 />
                 <Route path="user/cab-sharing" element={<CabSharing />} />
                 <Route path="user/cab" element={<CabHome />} />
-                <Route path="user/cab/shared" element={<SharedTaxi />} />
-                <Route
-                  path="user/cab/shared/seats"
-                  element={<SharedTaxiSeats />}
-                />
-                <Route
-                  path="user/cab/shared/confirm"
-                  element={<SharedTaxiConfirm />}
-                />
                 <Route path="user/cab/airport" element={<AirportCab />} />
                 <Route
                   path="user/cab/airport-confirm"
                   element={<AirportCabConfirm />}
-                />
-                <Route
-                  path="user/cab/spiritual"
-                  element={<SpiritualTrip />}
-                />
-                <Route
-                  path="user/cab/spiritual-vehicle"
-                  element={<SpiritualTripVehicle />}
-                />
-                <Route
-                  path="user/cab/spiritual-confirm"
-                  element={<SpiritualTripConfirm />}
                 />
                 <Route path="user/tours" element={<ComingSoon />} />
 
@@ -823,10 +733,6 @@ function TaxiApp() {
                 <Route
                   path="user/profile/addresses"
                   element={<AddressSettings />}
-                />
-                <Route
-                  path="user/profile/subscriptions"
-                  element={<UserSubscriptions />}
                 />
                 <Route
                   path="user/profile/notifications"
@@ -931,13 +837,10 @@ function TaxiApp() {
                 <Route path="earnings" element={<AdminEarnings />} />
                 <Route path="chat" element={<AdminChat />} />
                 <Route path="trips" element={<AdminTrips />} />
-                <Route path="deliveries" element={<AdminDeliveries />} />
                 <Route path="ongoing" element={<AdminOngoing />} />
                 <Route path="wallet/payment" element={<AdminWalletPayment />} />
                 <Route path="users" element={<AdminUserList />} />
                 <Route path="users/create" element={<AdminUserCreate />} />
-                <Route path="users/subscriptions" element={<AdminUserSubscriptions />} />
-                <Route path="users/subscriptions/create" element={<AdminUserSubscriptionCreate />} />
                 <Route path="users/:id" element={<AdminUserDetails />} />
                 <Route
                   path="users/delete-requests"
@@ -960,14 +863,6 @@ function TaxiApp() {
                 <Route
                   path="drivers/pending"
                   element={<AdminPendingDrivers />}
-                />
-                <Route
-                  path="drivers/subscription"
-                  element={<AdminDriverSubscriptions />}
-                />
-                <Route
-                  path="drivers/subscription/create"
-                  element={<AdminDriverSubscriptionCreate />}
                 />
                 <Route
                   path="drivers/ratings"
@@ -1251,15 +1146,6 @@ function TaxiApp() {
                   <Route
                     path="set-price/surge/:id"
                     element={<AdminSurgePricing />}
-                  />
-                  <Route path="goods-types" element={<AdminGoodsTypes />} />
-                  <Route
-                    path="goods-types/create"
-                    element={<AdminGoodsTypes mode="create" />}
-                  />
-                  <Route
-                    path="goods-types/edit/:id"
-                    element={<AdminGoodsTypes mode="edit" />}
                   />
                 </Route>
                 <Route path="safety" element={<AdminSafetyCenter />} />

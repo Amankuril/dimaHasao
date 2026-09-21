@@ -2,31 +2,11 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { useSettings } from '../../../../shared/context/SettingsContext';
 
-import imgShared    from '@/assets/3d images/AutoCab/taxi.png';
 import imgAirport   from '@/assets/3d images/AutoCab/airoplan.png';
-import imgSpiritual from '@/assets/3d images/AutoCab/temple.png';
 import imgOneWay    from '@/assets/3d images/AutoCab/one way.png';
-import imgBus       from '@/assets/3d images/AutoCab/bus.png';
-
-const isEnabledFlag = (value) => {
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'number') return value === 1;
-  return ['1', 'true', 'yes', 'on', 'enabled'].includes(String(value || '').trim().toLowerCase());
-};
 
 const services = [
-  {
-    id: 'shared',
-    title: 'Shared Taxi',
-    sub: 'Split fare with co-passengers',
-    img: imgShared,
-    path: '/cab/shared',
-    accent: 'bg-[linear-gradient(135deg,#F0FDF4_0%,#BBF7D0_100%)]',
-    tag: '50% cheaper',
-    tagColor: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-  },
   {
     id: 'airport',
     title: 'Airport Cab',
@@ -38,16 +18,6 @@ const services = [
     tagColor: 'bg-blue-50 text-blue-600 border-blue-100',
   },
   {
-    id: 'spiritual',
-    title: 'Spiritual Trips',
-    sub: 'Ujjain, Omkareshwar & more',
-    img: imgSpiritual,
-    path: '/cab/spiritual',
-    accent: 'bg-[linear-gradient(135deg,#FDF4FF_0%,#F3E8FF_100%)]',
-    tag: 'Guided tours',
-    tagColor: 'bg-purple-50 text-purple-600 border-purple-100',
-  },
-  {
     id: 'oneway',
     title: 'One Way',
     sub: 'Intercity drop at best price',
@@ -57,24 +27,12 @@ const services = [
     tag: 'No return charge',
     tagColor: 'bg-orange-50 text-orange-600 border-orange-100',
   },
-  {
-    id: 'bus',
-    title: 'Bus Booking',
-    sub: 'Comfortable intercity buses',
-    img: imgBus,
-    path: '/bus',
-    accent: 'bg-[linear-gradient(135deg,#FFF1F2_0%,#FECDD3_100%)]',
-    tag: 'Sleeper & Seater',
-    tagColor: 'bg-rose-50 text-rose-600 border-rose-100',
-  },
 ];
 
 const CabHome = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { settings } = useSettings();
-  const showBusService = isEnabledFlag(settings.transportRide?.enable_bus_service);
-  const visibleServices = services.filter((service) => showBusService || service.id !== 'bus');
+  const visibleServices = services;
   const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
 
   return (
