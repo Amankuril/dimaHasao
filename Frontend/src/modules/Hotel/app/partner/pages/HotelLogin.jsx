@@ -10,6 +10,7 @@ import DimaHasaoAuthShell, {
     authInputClass,
     authButtonClass,
 } from '@/shared/components/auth/DimaHasaoAuthShell';
+import AuthLegalLinks from "@/shared/components/auth/AuthLegalLinks"
 
 const HotelLogin = () => {
     const navigate = useNavigate();
@@ -350,7 +351,13 @@ const HotelLogin = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </DimaHasaoAuthShell>
+    
+      <AuthLegalLinks
+        module="hotel"
+        className="dh-montserrat mt-7 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5d7264]"
+        linkClassName="transition-colors hover:text-[#caa83e]"
+      />
+    </DimaHasaoAuthShell>
     );
 };
 

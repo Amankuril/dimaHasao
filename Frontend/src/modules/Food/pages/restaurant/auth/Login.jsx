@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useNavigate, Link, useLocation } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Pencil, X, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
@@ -17,6 +17,7 @@ import DimaHasaoAuthShell, {
   authButtonClass,
 } from "@/shared/components/auth/DimaHasaoAuthShell"
 import { RESTAURANT_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import AuthLegalLinks from "@/shared/components/auth/AuthLegalLinks"
 
 const DEFAULT_COUNTRY_CODE = "+91"
 
@@ -755,41 +756,9 @@ export default function RestaurantLogin() {
         </AnimatePresence>
       </div>
 
-      {/* Footer Info - only on login step, not OTP */}
-      {!isOtpStep && (
-        <div className="mt-8 text-center">
-          <p className="dh-montserrat text-[10px] font-semibold leading-relaxed text-[#5d7264]">
-            By continuing, you agree to our
-            <br />
-            <Link
-              to="/food/restaurant/terms"
-              state={{ from: "/food/restaurant/login" }}
-              onClick={clearPersistedLoginPhone}
-              className="uppercase tracking-[0.18em] transition-colors hover:text-[#caa83e]"
-            >
-              TERMS
-            </Link>
-            <span className="mx-2 text-[#caa83e]/50">•</span>
-            <Link
-              to="/food/restaurant/privacy"
-              state={{ from: "/food/restaurant/login" }}
-              onClick={clearPersistedLoginPhone}
-              className="uppercase tracking-[0.18em] transition-colors hover:text-[#caa83e]"
-            >
-              PRIVACY
-            </Link>
-            <span className="mx-2 text-[#caa83e]/50">•</span>
-            <Link
-              to="/food/restaurant/help-content"
-              state={{ from: "/food/restaurant/login" }}
-              onClick={clearPersistedLoginPhone}
-              className="uppercase tracking-[0.18em] transition-colors hover:text-[#caa83e]"
-            >
-              SUPPORT
-            </Link>
-          </p>
-        </div>
-      )}
+      {/* The old footer hard-coded these three at food-module routes, which no
+          other app could serve and which nobody could edit. They now come from
+          Global Settings, via the shared component at the end of this shell. */}
 
       {/* Restore/New Account Popup */}
       <AnimatePresence>
@@ -846,6 +815,12 @@ export default function RestaurantLogin() {
           </div>
         )}
       </AnimatePresence>
+
+      <AuthLegalLinks
+        module="food"
+        className="dh-montserrat mt-8 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5d7264]"
+        linkClassName="transition-colors hover:text-[#caa83e]"
+      />
     </DimaHasaoAuthShell>
   )
 }

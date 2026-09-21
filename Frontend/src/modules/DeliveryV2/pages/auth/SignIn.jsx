@@ -8,6 +8,7 @@ import { setAuthData as storeAuthData, clearModuleAuth } from "@food/utils/auth"
 import { collectFcmTokenFast, persistModuleFcmToken, finalizeDeliveryPendingSubmission, prefetchModuleFcmToken } from "@food/utils/firebaseMessaging"
 import { getUserFacingApiError, showUserFacingApiError } from "@/shared/utils/apiError"
 import { DRIVER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo"
+import AuthLegalLinks from "@/shared/components/auth/AuthLegalLinks"
 
 const DEFAULT_COUNTRY_CODE = "+91"
 
@@ -1006,39 +1007,15 @@ export default function DeliverySignIn() {
             </AnimatePresence>
           </div>
 
-          {/* Footer Info - only on login step, not OTP */}
+          {/* Privacy, terms and support come from Global Settings now. They
+              used to be hard-coded at /food/delivery/* routes that only this
+              module could serve and nobody could edit. */}
           {!isOtpStep && (
-            <div className="mt-8 text-center">
-              <p className="text-[11px] text-gray-400/80 font-medium leading-relaxed max-w-[320px] mx-auto">
-                By continuing, you agree to our <br />
-                <Link
-                  to="/food/delivery/terms"
-                  state={{ from: "/food/delivery/login" }}
-                  onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
-                >
-                  TERMS
-                </Link>
-                <span className="mx-2 text-gray-400/80 font-bold">•</span>
-                <Link
-                  to="/food/delivery/privacy"
-                  state={{ from: "/food/delivery/login" }}
-                  onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
-                >
-                  PRIVACY
-                </Link>
-                <span className="mx-2 text-gray-400/80 font-bold">•</span>
-                <Link
-                  to="/food/delivery/help/content"
-                  state={{ from: "/food/delivery/login" }}
-                  onClick={clearPersistedLoginPhone}
-                  className="text-gray-400 hover:text-[#0A4D2B] transition-colors uppercase tracking-wider font-semibold"
-                >
-                  SUPPORT
-                </Link>
-              </p>
-            </div>
+            <AuthLegalLinks
+              module="food"
+              className="mt-8 text-center text-[11px] font-medium uppercase tracking-wider text-gray-400/80"
+              linkClassName="font-semibold text-gray-400 transition-colors hover:text-[#0A4D2B]"
+            />
           )}
 
         </div>

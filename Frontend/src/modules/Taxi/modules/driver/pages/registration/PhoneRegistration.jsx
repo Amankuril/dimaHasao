@@ -295,7 +295,7 @@ const PhoneRegistration = () => {
                 className="h-6 w-6 rounded-lg border-2 border-slate-100 bg-slate-50 text-amber-500 focus:ring-amber-500 transition-all cursor-pointer"
               />
               <label htmlFor="terms" className="text-sm font-medium text-slate-400 leading-snug cursor-pointer select-none">
-                I accept the <button type="button" onClick={() => navigate(`${routePrefix}/terms`)} className="text-amber-500 font-bold hover:underline">Terms</button> & <button type="button" onClick={() => navigate(`${routePrefix}/privacy`)} className="text-amber-500 font-bold hover:underline">Privacy</button>
+                I accept the <a href="/legal/terms?module=taxi" target="_blank" rel="noreferrer" className="text-amber-500 font-bold hover:underline">Terms</a> & <a href="/legal/privacy?module=taxi" target="_blank" rel="noreferrer" className="text-amber-500 font-bold hover:underline">Privacy</a>
               </label>
             </div>
 

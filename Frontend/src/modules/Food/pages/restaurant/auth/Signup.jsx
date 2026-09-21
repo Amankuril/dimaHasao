@@ -16,6 +16,7 @@ import DimaHasaoAuthShell, {
   authButtonClass,
 } from "@/shared/components/auth/DimaHasaoAuthShell"
 import { RESTAURANT_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import AuthLegalLinks from "@/shared/components/auth/AuthLegalLinks"
 
 const countryCodes = [
   { code: "+91", country: "IN", flag: "🇮🇳" },
@@ -284,6 +285,12 @@ export default function RestaurantSignup() {
           </div>
         </div>
       </div>
+
+      <AuthLegalLinks
+        module="food"
+        className="dh-montserrat mt-6 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5d7264]"
+        linkClassName="transition-colors hover:text-[#caa83e]"
+      />
     </DimaHasaoAuthShell>
   )
 }

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { requestUserOtp, verifyUserOtp, completeUserSignup } from '../../../services/api/auth';
 import { setUnifiedAuthData } from '../../../shared/utils/moduleAuth';
 import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo";
+import AuthLegalLinks from '@/shared/components/auth/AuthLegalLinks';
 
 const TEST_PHONE =
   String(import.meta.env?.VITE_USE_DEFAULT_TEST_PHONE) === 'true'
@@ -370,6 +371,11 @@ export const LoginScreen = () => {
                 <span>Continue as Guest Explorer →</span>
               </motion.button>
             </div>
+            <AuthLegalLinks
+              module="platform"
+              className="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200/60"
+              linkClassName="transition-colors hover:text-[#caa83e]"
+            />
           </div>
         </motion.div>
       </div>

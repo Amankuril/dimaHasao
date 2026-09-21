@@ -10,6 +10,7 @@ import { getPublicDiningCategories, getPublicDiningRestaurants } from '../module
 import uploadRoutes from '../modules/uploads/routes/upload.routes.js';
 import platformAdminRoutes from '../core/admin/admin.routes.js';
 import { legalPublicRouter } from '../core/legal/legal.routes.js';
+import { platformPublicRouter } from '../core/platform/platform.routes.js';
 import { consumerSupportRouter } from '../core/support/support.routes.js';
 import { festivalsRouter } from '../modules/festivals/routes/index.js';
 import restaurantAdminRoutes from '../modules/food/admin/routes/admin.routes.js';
@@ -68,6 +69,8 @@ router.use('/v1/uploads', uploadRoutes);
 router.use('/v1/admin', platformAdminRoutes);
 // Public on purpose: a policy behind a login is not a policy.
 router.use('/v1/legal', legalPublicRouter);
+// Sign-in screens read the brand before anyone has a session.
+router.use('/v1/platform', platformPublicRouter);
 // One help desk for the consumer app; the customer picks the service.
 router.use('/v1/support', consumerSupportRouter);
 router.use('/v1/festivals', festivalsRouter);

@@ -46,6 +46,10 @@ const globalService = {
   createAdministrator: (payload) => request(api.post('/administrators', payload)),
   updateAdministrator: (id, payload) => request(api.patch(`/administrators/${id}`, payload)),
 
+  // Brand, contact and support — one copy for every app.
+  getPlatformSettings: () => request(api.get('/platform-settings')),
+  savePlatformSettings: (payload) => request(api.put('/platform-settings', payload)),
+
   // Legal — privacy, terms and the rest, one copy for every app.
   getLegalDocuments: () => request(api.get('/legal')),
   saveLegalDocument: (payload) => request(api.put('/legal', payload)),
