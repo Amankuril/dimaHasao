@@ -50,21 +50,9 @@ const driverSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
-    owner_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'TaxiOwner',
-      default: null,
-      index: true,
-    },
     service_location_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'TaxiServiceLocation',
-      default: null,
-      index: true,
-    },
-    assignedFleetVehicleId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'TaxiFleetVehicle',
       default: null,
       index: true,
     },
@@ -261,7 +249,7 @@ const driverSchema = new mongoose.Schema(
       },
       reviewedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Admin',
+        ref: 'FoodAdmin',
         default: null,
       },
       adminNote: {

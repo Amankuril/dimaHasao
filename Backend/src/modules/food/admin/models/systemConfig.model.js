@@ -7,7 +7,7 @@ const foodSystemConfigSchema = new mongoose.Schema(
         description: { type: String },
         updatedBy: {
             role: { type: String },
-            adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+            adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodAdmin' },
             at: { type: Date, default: Date.now }
         }
     },

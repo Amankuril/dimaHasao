@@ -30,7 +30,7 @@ const rideSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'TaxiUser',
+      ref: 'User',
       required: true,
     },
     driverId: {

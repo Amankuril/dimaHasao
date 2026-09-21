@@ -12,6 +12,7 @@ import { FoodReferralSettings } from '../../modules/food/admin/models/referralSe
 import { FoodReferralLog } from '../../modules/food/admin/models/referralLog.model.js';
 import { creditReferralReward } from '../../modules/food/user/services/userWallet.service.js';
 import { logger } from '../../utils/logger.js';
+import { resolveReferrerId } from './referralCode.js';
 
 /**
  * Credit a referrer for introducing a newly created account.
@@ -32,11 +33,11 @@ export const creditSignupReferral = async ({ ref, newUser, role = 'USER' }) => {
     }
 
     try {
-        if (!mongoose.Types.ObjectId.isValid(refRaw)) {
+        const referrerId = await resolveReferrerId(FoodUser, refRaw);
+
+        if (!referrerId) {
             return { credited: false, reason: 'invalid_ref' };
         }
-
-        const referrerId = new mongoose.Types.ObjectId(refRaw);
 
         // Self-referral.
         if (String(referrerId) === String(newUser._id)) {

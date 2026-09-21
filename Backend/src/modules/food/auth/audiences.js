@@ -19,6 +19,7 @@ import { buildUnifiedUserSession } from '../../../core/auth/unifiedUserSession.j
 import { registerAuthAudience, NEXT_STEP } from '../../../core/auth/otpAuth/audienceRegistry.js';
 import { AuthError } from '../../../core/auth/errors.js';
 import { creditSignupReferral } from '../../../core/referrals/signupReferral.service.js';
+import { ensureReferralCode } from '../../../core/referrals/referralCode.js';
 import { config } from '../../../config/env.js';
 import { logger } from '../../../utils/logger.js';
 
@@ -122,6 +123,7 @@ export const registerFoodAuthAudiences = () => {
             }
 
             await saveFcmToken(FoodUser, user, ctx);
+            await ensureReferralCode(user);
 
             // One token for food, taxi, hotel and tours.
             const session = buildUnifiedUserSession(user);

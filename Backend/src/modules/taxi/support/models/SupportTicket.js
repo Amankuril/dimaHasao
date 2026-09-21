@@ -34,7 +34,7 @@ export const SupportTicket = defineSupportTicketType(
     status: { type: String, enum: SUPPORT_STATUS, default: 'pending', index: true },
     assignedAdminId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'TaxiAdmin',
+      ref: 'FoodAdmin',
       default: null,
       index: true,
     },

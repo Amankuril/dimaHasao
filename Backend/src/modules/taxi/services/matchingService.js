@@ -55,10 +55,7 @@ const buildDriverMatchFilters = ({ zoneId, serviceLocationId, vehicleTypeId, veh
   return {
     isOnline: true,
     isOnRide: false,
-    $or: [
-      { owner_id: { $ne: null } },
-      { 'wallet.isBlocked': { $ne: true } },
-    ],
+    'wallet.isBlocked': { $ne: true },
     ...(zoneId ? { zoneId } : {}),
     ...(serviceLocationId ? { service_location_id: serviceLocationId } : {}),
     ...vehicleTypeFilter,

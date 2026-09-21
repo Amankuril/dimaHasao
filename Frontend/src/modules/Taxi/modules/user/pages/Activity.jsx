@@ -16,7 +16,7 @@ import {
 import api from '../../../shared/api/axiosInstance';
 import { toHistorySafeState } from '../../../shared/utils/historyState';
 import { userService } from '../services/userService';
-import { normalizeRentalBooking, normalizeRide, PAGE_SIZE, TABS } from '../components/activity/activityHelpers';
+import { normalizeRide, PAGE_SIZE, TABS } from '../components/activity/activityHelpers';
 
 import taxiFallback from '../../../assets/user-app/taxi.png';
 import bikeFallback from '../../../assets/user-app/bike.png';
@@ -218,7 +218,6 @@ const getRideCategoryForTab = (tab) => {
 
 const getHelperText = (tab) => {
   if (tab === 'Support') return 'Tickets and help requests';
-  if (tab === 'Rental') return 'Your rental bookings, pickup schedule, and booking status';
   if (tab === 'Outstation') return 'Long-distance trips and outstation deliveries';
   if (tab === 'Scheduled') return 'Bookings reserved for a later pickup time';
   return 'Your recent trips, deliveries, and bookings';
@@ -404,81 +403,46 @@ const Activity = () => {
         let nextActivities = [];
         let nextPagination = null;
 
-        if (activeTab === 'Rental') {
-          const response = await userService.getMyRentalBookings({
-            page: currentPage,
-            limit: PAGE_SIZE,
-          });
-          const payload = getPayload(response);
-          const bookings = Array.isArray(payload?.results) ? payload.results : [];
-          nextActivities = bookings.map(normalizeRentalBooking).filter((item) => item.id);
-          nextPagination = payload?.pagination || null;
-        } else if (activeTab === 'All') {
-          const [ridesResult, rentalResult] = await Promise.allSettled([
-            api.get('/rides', {
+        if (activeTab === 'All') {
+          const ridesResult = await api.get('/rides', {
               params: {
                 limit: AGGREGATE_FETCH_LIMIT,
                 page: 1,
               },
-            }),
-            userService.getMyRentalBookings({
-              page: 1,
-              limit: AGGREGATE_FETCH_LIMIT,
-            }),
-          ]);
+            }).then((value) => ({ status: 'fulfilled', value }), () => ({ status: 'rejected' }));
 
           const ridesResponse = ridesResult.status === 'fulfilled' ? ridesResult.value : null;
-          const rentalResponse = rentalResult.status === 'fulfilled' ? rentalResult.value : null;
 
           const ridePayload = ridesResponse ? getPayload(ridesResponse) : {};
-          const rentalPayload = rentalResponse ? getPayload(rentalResponse) : {};
           const rides = Array.isArray(ridePayload?.results) ? ridePayload.results : [];
-          const rentalBookings = Array.isArray(rentalPayload?.results) ? rentalPayload.results : [];
 
-          const filteredRides = rides.filter(r => {
-            const serviceType = String(r.serviceType || r.type || r.category || '').toLowerCase();
-            return serviceType !== 'rental';
-          });
+          const filteredRides = rides;
 
           const merged = sortLatestFirst([
             ...filteredRides.map(normalizeRide).filter((item) => item.id),
-            ...rentalBookings.map(normalizeRentalBooking).filter((item) => item.id),
           ]);
           const localPage = buildLocalPagination(merged, currentPage);
           nextActivities = localPage.results;
           nextPagination = localPage.pagination;
         } else if (activeTab === 'Rides') {
-          const [ridesResult, rentalResult] = await Promise.allSettled([
-            api.get('/rides', {
+          const ridesResult = await api.get('/rides', {
               params: {
                 limit: AGGREGATE_FETCH_LIMIT,
                 page: 1,
                 category: 'rides',
               },
-            }),
-            userService.getMyRentalBookings({
-              page: 1,
-              limit: AGGREGATE_FETCH_LIMIT,
-            }),
-          ]);
+            }).then((value) => ({ status: 'fulfilled', value }), () => ({ status: 'rejected' }));
 
           const ridesResponse = ridesResult.status === 'fulfilled' ? ridesResult.value : null;
-          const rentalResponse = rentalResult.status === 'fulfilled' ? rentalResult.value : null;
 
           const ridePayload = ridesResponse ? getPayload(ridesResponse) : {};
-          const rentalPayload = rentalResponse ? getPayload(rentalResponse) : {};
 
           const rides = Array.isArray(ridePayload?.results) ? ridePayload.results : [];
-          const rentalBookings = Array.isArray(rentalPayload?.results) ? rentalPayload.results : [];
 
-          const filteredRides = rides.filter(r => {
-            const serviceType = String(r.serviceType || r.type || r.category || '').toLowerCase();
-            return serviceType !== 'rental';
-          });
+          const filteredRides = rides;
 
           const merged = sortLatestFirst([
             ...filteredRides.map(normalizeRide).filter((item) => item.id),
-            ...rentalBookings.map(normalizeRentalBooking).filter((item) => item.id),
           ]);
           const localPage = buildLocalPagination(merged, currentPage);
           nextActivities = localPage.results;
@@ -494,10 +458,7 @@ const Activity = () => {
           const payload = getPayload(response);
           const rides = Array.isArray(payload?.results) ? payload.results : [];
 
-          const filteredRides = rides.filter(r => {
-            const serviceType = String(r.serviceType || r.type || r.category || '').toLowerCase();
-            return serviceType !== 'rental';
-          });
+          const filteredRides = rides;
 
           nextActivities = filteredRides.map(normalizeRide).filter((ride) => ride.id);
           nextPagination = payload?.pagination || null;

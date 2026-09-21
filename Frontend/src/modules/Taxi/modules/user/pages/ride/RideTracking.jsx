@@ -544,7 +544,7 @@ const RideTracking = () => {
       ? 'Delivery agent is on the way'
       : 'Captain is on the way';
   const vehicleDetails = [driver.vehicleColor, driver.vehicleMake, driver.vehicleModel].filter(Boolean).join(' ');
-  const activeRideEndpoint = serviceType === 'parcel' ? '/deliveries/active/me' : '/rides/active/me';
+  const activeRideEndpoint = '/rides/active/me';
   const latestStateRef = useRef(state);
   const latestFallbackDriverRef = useRef(fallbackDriver);
   const latestDriverRef = useRef(driver);

@@ -956,7 +956,6 @@ const serializeDriver = (driver) => ({
   email: driver.email || '',
   driver_code: driver.referralCode || (driver.phone ? `DRV${String(driver.phone).slice(-4)}${String(driver._id || '').slice(-6).toUpperCase()}`.replace(/\W/g, '') : ''),
   referralCode: driver.referralCode || '',
-  owner_id: driver.owner_id || null,
   service_location_id: driver.service_location_id || null,
   zoneId: driver.zoneId?._id || driver.zoneId || null,
   zone_name: driver.zoneId?.name || driver.zone_name || '',
@@ -997,7 +996,6 @@ const DRIVER_LIST_SELECT = [
   'phone',
   'email',
   'referralCode',
-  'owner_id',
   'service_location_id',
   'zoneId',
   'city',
@@ -1028,7 +1026,6 @@ const serializeDriverListItem = (driver) => ({
   email: driver.email || '',
   driver_code: driver.referralCode || (driver.phone ? `DRV${String(driver.phone).slice(-4)}${String(driver._id || '').slice(-6).toUpperCase()}`.replace(/\W/g, '') : ''),
   referralCode: driver.referralCode || '',
-  owner_id: driver.owner_id || null,
   service_location_id: driver.service_location_id || null,
   city: driver.city || '',
   service_location_name:
@@ -3000,7 +2997,6 @@ export const createDriver = async (payload = {}, currentAdmin = null) => {
     name,
     phone,
     email,
-    owner_id: payload.owner_id && mongoose.isValidObjectId(payload.owner_id) ? toObjectId(payload.owner_id) : null,
     service_location_id:
       serviceLocationId && mongoose.isValidObjectId(serviceLocationId) ? toObjectId(serviceLocationId) : null,
     country: payload.country || null,
@@ -5249,7 +5245,7 @@ export const getOverallEarnings = async () => (await getDashboardData()).overall
 export const getTodayEarnings = async () => (await getDashboardData()).todayEarnings;
 export const getCancelChart = async () => (await getDashboardData()).cancelChart;
 
-export const listWithdrawals = async () => WithdrawalRequest.find().populate('driver_id owner_id').sort({ createdAt: -1 }).lean();
+export const listWithdrawals = async () => WithdrawalRequest.find().populate('driver_id').sort({ createdAt: -1 }).lean();
 
 export const listZones = async (currentAdmin = null) => {
   if (currentAdmin) {

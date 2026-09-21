@@ -673,7 +673,6 @@ const Home = () => {
     return isActiveCurrentRide(ride) ? ride : null;
   });
   const [clockNow, setClockNow] = useState(() => Date.now());
-  const [endingRide, setEndingRide] = useState(false);
   const [showDeferredSections, setShowDeferredSections] = useState(false);
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const [isHoveringPromo, setIsHoveringPromo] = useState(false);
@@ -747,31 +746,6 @@ const Home = () => {
     }, 300);
     return () => clearTimeout(timer);
   }, []);
-
-  const handleEndRide = async () => {
-    if (!currentRide?.rideId) return;
-
-    try {
-      setEndingRide(true);
-      const response = await userService.endRentalRide(currentRide.rideId);
-      const payload = response?.data || null;
-      const nextRideState = {
-        ...currentRide,
-        ...payload,
-        rideId: payload?.id || currentRide.rideId,
-        status: payload?.status || 'end_requested',
-        liveStatus: payload?.status || 'end_requested',
-      };
-      persistCurrentRide(nextRideState);
-      navigate(`${routePrefix}/rental/confirmed`, {
-        state: nextRideState,
-      });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setEndingRide(false);
-    }
-  };
 
   const handleServiceClick = (service) => {
     // Scroll everything to top immediately upon clicking a service

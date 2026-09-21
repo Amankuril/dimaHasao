@@ -16,22 +16,11 @@ import {
   getDriverDocumentTemplates,
   clearDriverAuthState,
   getLocalDriverToken,
-  getStoredDriverRole,
   persistDriverAuthSession,
 } from "../../services/registrationService";
 import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const APPROVAL_POLL_MS = 2500;
-const normalizePortalRole = (role) => {
-  const normalized = String(role || "").toLowerCase();
-  if (normalized === "owner") return "owner";
-  if (normalized === "pooling_driver" || normalized === "pooling-driver" || normalized === "poolingdriver" || normalized === "pooling") return "pooling_driver";
-  if (normalized === "bus_driver" || normalized === "bus-driver" || normalized === "busdriver") return "bus_driver";
-  if (normalized === "service_center" || normalized === "service-center" || normalized === "servicecenter") return "service_center";
-  if (normalized === "service_center_staff" || normalized === "service-center-staff" || normalized === "servicecenterstaff") return "service_center_staff";
-  return "driver";
-};
-
 const unwrapDriver = (response) =>
   response?.data?.data || response?.data || response;
 
@@ -88,8 +77,7 @@ const RegistrationStatus = () => {
 
   useEffect(() => {
     if (location.state?.role) {
-      const normalizedRole = normalizePortalRole(location.state.role);
-      persistDriverAuthSession({ role: normalizedRole });
+      persistDriverAuthSession({ role: "driver" });
     }
 
     const onboardingToken =
@@ -98,11 +86,7 @@ const RegistrationStatus = () => {
       "";
 
     if (onboardingToken) {
-      const roleFromState = String(location.state?.role || "").toLowerCase();
-      persistDriverAuthSession({
-        token: onboardingToken,
-        role: normalizePortalRole(roleFromState),
-      });
+      persistDriverAuthSession({ token: onboardingToken, role: "driver" });
     }
 
     syncPushTokens().catch(() => {});
@@ -111,8 +95,7 @@ const RegistrationStatus = () => {
 
     const fetchTemplates = async () => {
         try {
-            const role = normalizePortalRole(getStoredDriverRole() || location.state?.role || "driver");
-            const response = await getDriverDocumentTemplates(role);
+            const response = await getDriverDocumentTemplates("driver");
             const templates = response?.data?.data?.results || response?.data?.results || [];
             if (mountedRef.current) setDocumentTemplates(templates);
         } catch (err) {
@@ -155,15 +138,7 @@ const RegistrationStatus = () => {
 
         if (isApproved) {
           clearDriverRegistrationSession();
-          const normalizedRole = normalizePortalRole(
-            getStoredDriverRole() || location.state?.role || "driver",
-          );
-          const path =
-            normalizedRole === "service_center" || normalizedRole === "service_center_staff"
-              ? "/taxi/driver/service-center"
-              : "/taxi/driver/home";
-          
-          navigate(path, { replace: true });
+          navigate("/taxi/driver/home", { replace: true });
           requestInFlightRef.current = false;
           return;
         }
@@ -175,7 +150,7 @@ const RegistrationStatus = () => {
           return;
         }
 
-        if (error?.status === 401) {
+        if (error?.status === 401 || error?.status === 403) {
           redirectToDriverLogin(navigate);
           requestInFlightRef.current = false;
           return;

@@ -3,7 +3,7 @@ import { requestOtp, verifyOtp, AUDIENCE } from "../../../../../services/auth/ot
 
 const STORAGE_KEY = "driverRegistrationSession";
 const DRIVER_AUTH_KEYS = ["token", "driverToken", "driverInfo", "role", "driverRole", "chatRole"];
-const DRIVER_PORTAL_ROLES = ["driver", "owner", "pooling_driver", "bus_driver", "service_center", "service_center_staff"];
+const DRIVER_PORTAL_ROLES = ["driver"];
 const isDataUrl = (value) => /^data:/i.test(String(value || "").trim());
 
 const sanitizeStoredDocumentValue = (value) => {
@@ -146,26 +146,19 @@ export const persistDriverAuthSession = ({ token = "", role = "driver" } = {}) =
   }
 };
 
+/**
+ * The driver-portal role a token claims, or "" if it does not claim one.
+ *
+ * This used to fall through to "driver" for anything it did not recognise,
+ * which meant a signed-in rider's token — role "USER" — passed the
+ * DRIVER_PORTAL_ROLES check below and was adopted as a driver session. The
+ * driver app then sent a rider's token to /drivers/approval-status and polled
+ * the 403 every two and a half seconds forever. Callers that want a default
+ * apply their own.
+ */
 export const normalizeDriverPortalRole = (role) => {
-  const normalized = String(role || "").toLowerCase();
-
-  if (!normalized) return "";
-
-  if (normalized === "owner") return "owner";
-  if (normalized === "pooling_driver" || normalized === "pooling-driver" || normalized === "poolingdriver" || normalized === "pooling") {
-    return "pooling_driver";
-  }
-  if (normalized === "service_center" || normalized === "service-center" || normalized === "servicecenter") {
-    return "service_center";
-  }
-  if (normalized === "service_center_staff" || normalized === "service-center-staff" || normalized === "servicecenterstaff") {
-    return "service_center_staff";
-  }
-  if (normalized === "bus_driver" || normalized === "bus-driver" || normalized === "busdriver") {
-    return "bus_driver";
-  }
-
-  return "driver";
+  const normalized = String(role || "").trim().toLowerCase();
+  return normalized === "driver" ? "driver" : "";
 };
 
 export const sendDriverOtp = (payload) =>

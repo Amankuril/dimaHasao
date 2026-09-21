@@ -841,8 +841,7 @@ const ActiveTrip = () => {
                     }
 
                     const driverToken = getLocalDriverToken();
-                    const [activeDelivery, activeRide] = await Promise.allSettled([
-                        api.get('/deliveries/active/me', withDriverAuthorization(driverToken)),
+                    const [activeRide] = await Promise.allSettled([
                         api.get('/rides/active/me', withDriverAuthorization(driverToken)),
                     ]);
 
@@ -850,16 +849,10 @@ const ActiveTrip = () => {
                         return;
                     }
 
-                    const deliveryPayload =
-                        activeDelivery.status === 'fulfilled' ? unwrapApiPayload(activeDelivery.value) : null;
                     const ridePayload =
                         activeRide.status === 'fulfilled' ? unwrapApiPayload(activeRide.value) : null;
 
-                    const currentJob = getJobRideId(deliveryPayload)
-                        ? deliveryPayload
-                        : getJobRideId(ridePayload)
-                            ? ridePayload
-                            : null;
+                    const currentJob = getJobRideId(ridePayload) ? ridePayload : null;
                     const currentRideId = getJobRideId(currentJob);
                     const currentStatus = String(currentJob?.liveStatus || currentJob?.status || '').toLowerCase();
 
@@ -1784,8 +1777,7 @@ const ActiveTrip = () => {
 
         try {
             const driverToken = getLocalDriverToken();
-            const endpoint = isParcel ? '/deliveries/active/me' : '/rides/active/me';
-            const response = await api.get(endpoint, withDriverAuthorization(driverToken));
+            const response = await api.get('/rides/active/me', withDriverAuthorization(driverToken));
             const latestActiveJob = unwrapApiPayload(response);
             const latestRideId = getJobRideId(latestActiveJob);
 

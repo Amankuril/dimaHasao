@@ -954,13 +954,11 @@ const DriverHome = () => {
     useEffect(() => clearAcceptRecovery, [clearAcceptRecovery]);
 
 
-    const fetchActiveJob = useCallback(async (type = 'ride') => {
-        const normalizedType = String(type || 'ride').toLowerCase();
-        const endpoint = normalizedType === 'parcel' ? '/deliveries/active/me' : '/rides/active/me';
+    const fetchActiveJob = useCallback(async () => {
         const driverToken = getLocalDriverToken();
-        const response = await api.get(endpoint, {
+        const response = await api.get('/rides/active/me', {
             ...withDriverAuthorization(driverToken),
-            params: { t: Date.now(), type: normalizedType },
+            params: { t: Date.now(), type: 'ride' },
         });
         return unwrapApiPayload(response);
     }, []);

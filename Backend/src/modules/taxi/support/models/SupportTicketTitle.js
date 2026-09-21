@@ -30,7 +30,7 @@ const supportTicketTitleSchema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'TaxiAdmin',
+      ref: 'FoodAdmin',
       default: null,
     },
   },

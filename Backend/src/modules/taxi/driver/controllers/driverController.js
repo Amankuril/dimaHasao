@@ -935,9 +935,7 @@ export const goOnline = async (req, res) => {
     throw new ApiError(400, "A selfie is required before going online today");
   }
 
-  if (!existingDriver.owner_id) {
-    await ensureDriverWalletCanAcceptRide(existingDriver);
-  }
+  await ensureDriverWalletCanAcceptRide(existingDriver);
   await clearDriverActiveRideIfStale(existingDriver);
   const trackingBeforeOnline = mergeOnlineSessionIntoTracking(
     existingDriver.incentiveTracking || {},
@@ -961,7 +959,6 @@ export const goOnline = async (req, res) => {
     {
       isOnline: true,
       zoneId: zone?._id || null,
-      ...(existingDriver.owner_id ? { 'wallet.isBlocked': false } : {}),
       location: toPoint(coordinates, "location"),
       onlineSelfie: nextOnlineSelfie,
       incentiveTracking: {
@@ -1018,7 +1015,6 @@ export const getCurrentDriver = async (req, res) => {
       name: driver.name,
       phone: driver.phone,
       email: driver.email,
-      owner_id: driver.owner_id || null,
       salary: Number(driver.salary || 0),
       profileImage: driver.profileImage || "",
       gender: driver.gender,

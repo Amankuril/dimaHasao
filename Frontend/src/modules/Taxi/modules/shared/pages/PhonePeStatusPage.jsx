@@ -26,13 +26,6 @@ const FLOWS = {
     paidRedirectPath: '/taxi/driver/wallet',
     verify: (merchantTransactionId) => api.get(`/drivers/wallet/top-up/phonepe/status/${merchantTransactionId}`),
   },
-  'user-rental': {
-    flowKey: 'user-rental-advance',
-    targetPath: '/rental/deposit',
-    label: 'Rental advance',
-    paidRedirectPath: null,
-    verify: (merchantTransactionId) => userService.verifyPhonePeRentalAdvancePayment(merchantTransactionId),
-  },
 };
 
 const normalizeResponse = (response) => response?.data || response || {};

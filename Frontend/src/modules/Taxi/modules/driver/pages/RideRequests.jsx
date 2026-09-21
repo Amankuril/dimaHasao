@@ -22,7 +22,6 @@ import { getDriverRideHistory } from '../services/registrationService';
 const TABS = [
   { id: 'all', label: 'All' },
   { id: 'ride', label: 'Rides' },
-  { id: 'parcel', label: 'Deliveries' },
 ];
 
 const STATUS_FILTERS = [

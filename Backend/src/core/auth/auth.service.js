@@ -18,6 +18,7 @@ import { config } from "../../config/env.js";
 import { logger } from "../../utils/logger.js";
 import { sendAdminResetOtpEmail } from "../../utils/email.js";
 import mongoose from "mongoose";
+import { ensureReferralCode, resolveReferrerId } from "../referrals/referralCode.js";
 import { creditReferralReward } from "../../modules/food/user/services/userWallet.service.js";
 import { ALL_ADMIN_MODULES } from "../admin/adminHierarchy.constants.js";
 
@@ -172,18 +173,15 @@ export const verifyUserOtpAndLogin = async (
     }
   }
 
-  // Ensure referralCode exists (used for share links on older accounts).
-  if (!userDoc.referralCode) {
-    userDoc.referralCode = String(userDoc._id);
-    await userDoc.save();
-  }
+  await ensureReferralCode(userDoc);
 
   // Referral crediting: only for brand new accounts.
   const refRaw = typeof ref === "string" ? String(ref).trim() : "";
   if (isNewUser && refRaw) {
     try {
-      if (mongoose.Types.ObjectId.isValid(refRaw)) {
-        const referrerId = new mongoose.Types.ObjectId(refRaw);
+      const referrerId = await resolveReferrerId(FoodUser, refRaw);
+
+      if (referrerId) {
         if (String(referrerId) !== String(userDoc._id)) {
           const [referrer, settingsDoc] = await Promise.all([
             FoodUser.findById(referrerId).select("_id referralCount").lean(),
