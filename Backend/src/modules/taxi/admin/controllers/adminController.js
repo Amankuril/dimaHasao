@@ -362,9 +362,6 @@ export const deleteAdminAccount = asyncHandler(async (req, res) => {
 export const getUsers = asyncHandler(async (req, res) =>
   ok(res, await adminService.listUsers(req.query)),
 );
-export const getEmployees = asyncHandler(async (req, res) =>
-  ok(res, await adminService.listEmployees(req.query, req.auth?.admin)),
-);
 export const bulkImportUsers = asyncHandler(async (req, res) =>
   ok(res, await adminService.bulkImportUsers(req.body)),
 );
@@ -379,15 +376,6 @@ export const updateUser = asyncHandler(async (req, res) =>
 );
 export const getUser = asyncHandler(async (req, res) =>
   ok(res, await adminService.getUserById(req.params.id)),
-);
-export const createEmployee = asyncHandler(async (req, res) =>
-  ok(res, await adminService.createEmployee(req.body, req.auth?.admin)),
-);
-export const updateEmployee = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateEmployee(req.params.id, req.body, req.auth?.admin)),
-);
-export const getEmployee = asyncHandler(async (req, res) =>
-  ok(res, await adminService.getEmployeeById(req.params.id, req.auth?.admin)),
 );
 export const deleteUser = asyncHandler(async (req, res) => {
   await adminService.deleteUser(req.params.id);
@@ -1404,12 +1392,6 @@ export const deleteDriverNeededDocument = asyncHandler(async (req, res) => {
   await adminService.deleteDriverNeededDocument(req.params.id);
   ok(res, { deleted: true });
 });
-export const getReferralTranslations = asyncHandler(async (_req, res) =>
-  ok(res, { results: await adminService.listReferralTranslations() }),
-);
-export const updateReferralTranslation = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateReferralTranslation(req.params.languageCode, req.body)),
-);
 export const createOwnerNeededDocument = asyncHandler(async (req, res) =>
   ok(res, await adminService.createOwnerNeededDocument(req.body)),
 );
@@ -1421,18 +1403,6 @@ export const updateOwnerNeededDocument = asyncHandler(async (req, res) =>
 );
 export const deleteOwnerNeededDocument = asyncHandler(async (req, res) => {
   await adminService.deleteOwnerNeededDocument(req.params.id);
-  ok(res, { deleted: true });
-});
-
-export const getLanguages = asyncHandler(async (_req, res) => {
-  const items = await adminService.listLanguages();
-  res.json({ success: true, paginator: { data: items }, results: items });
-});
-export const updateLanguageStatus = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateLanguageStatus(req.params.id, req.body)),
-);
-export const deleteLanguage = asyncHandler(async (req, res) => {
-  await adminService.deleteLanguage(req.params.id);
   ok(res, { deleted: true });
 });
 

@@ -62,6 +62,47 @@ export const DRIVER_REFERRAL_TRANSLATION_FIELDS = [
   },
 ];
 
+/**
+ * The copy shown on the referral screens.
+ *
+ * This used to come from a per-language CMS in the taxi admin, which nobody in
+ * this district ever filled in — every field defaulted to an empty string, so
+ * the screens rendered blank panels. The CMS is gone; the wording lives here,
+ * and the {amount} / {ride_count} placeholders are still filled from the
+ * referral settings an admin does set.
+ */
+export const DEFAULT_USER_REFERRAL_COPY = {
+  instant_referrer_user:
+    'Invite a friend and get {amount} in your wallet as soon as they sign up.',
+  instant_referrer_user_and_new_user:
+    'You both win — you get {amount} and your friend gets {new_user_amount} on sign-up.',
+  conditional_referrer_user_ride_count:
+    'Earn {amount} once your friend completes {ride_count} rides.',
+  conditional_referrer_user_earnings:
+    'Earn {amount} once your friend has spent {user_spent_amount} on rides.',
+  dual_conditional_referrer_user_and_new_user_ride_count:
+    'You get {amount} and your friend gets {new_user_amount} after they finish {ride_count} rides.',
+  dual_conditional_referrer_user_and_new_user_earnings:
+    'You get {amount} and your friend gets {new_user_amount} once they have spent {user_spent_amount}.',
+  banner_text: 'Invite friends, earn {amount}',
+};
+
+export const DEFAULT_DRIVER_REFERRAL_COPY = {
+  instant_referrer_user:
+    'Refer another driver and get {amount} credited to your wallet when they join.',
+  instant_referrer_user_and_new_user:
+    'You get {amount} and the driver you refer gets {new_driver_amount} on joining.',
+  conditional_referrer_user_ride_count:
+    'Earn {amount} once the driver you referred completes {ride_count} rides.',
+  conditional_referrer_user_earnings:
+    'Earn {amount} once the driver you referred has earned {driver_earning_amount}.',
+  dual_conditional_referrer_user_and_new_user_ride_count:
+    'You get {amount} and they get {new_driver_amount} after {ride_count} completed rides.',
+  dual_conditional_referrer_user_and_new_user_earnings:
+    'You get {amount} and they get {new_driver_amount} once they have earned {driver_earning_amount}.',
+  banner_text: 'Refer a driver, earn {amount}',
+};
+
 export const createEmptyReferralTranslationSection = () => ({
   instant_referrer_user: '',
   instant_referrer_user_and_new_user: '',

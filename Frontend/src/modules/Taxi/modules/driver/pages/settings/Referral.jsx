@@ -3,13 +3,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Copy, Gift, Loader2, Share2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getCurrentDriver } from '../../services/registrationService';
-import {
-  getReferralSettingsContent,
-  getReferralTranslationContent,
-} from '../../../shared/services/referralTranslationService';
+import { getReferralSettingsContent } from '../../../shared/services/referralTranslationService';
 import {
   applyReferralSettingPlaceholders,
   buildReferralPreviewBlocks,
+  DEFAULT_DRIVER_REFERRAL_COPY,
   DRIVER_REFERRAL_TRANSLATION_FIELDS,
   getStoredReferralLanguageCode,
 } from '../../../shared/utils/referralTranslationFields';
@@ -62,28 +60,16 @@ const DriverReferral = () => {
       setLoading(true);
       const languageCode = getStoredReferralLanguageCode('driver');
       const stored = readStoredDriverInfo();
-      const fallbackDriverSection = {
-        instant_referrer_user: '',
-        instant_referrer_user_and_new_user: '',
-        conditional_referrer_user_ride_count: '',
-        conditional_referrer_user_earnings: '',
-        dual_conditional_referrer_user_and_new_user_ride_count: '',
-        dual_conditional_referrer_user_and_new_user_earnings: '',
-        banner_text: '',
-      };
-
       try {
-        const [driverResponse, translationResponse, settingsResponse] = await Promise.all([
+        const [driverResponse, settingsResponse] = await Promise.all([
           getCurrentDriver(),
-          getReferralTranslationContent(languageCode),
           getReferralSettingsContent('driver'),
         ]);
 
         const driver = driverResponse?.data || {};
-        const translationData = translationResponse?.data || {};
         const settingsData = settingsResponse?.data || {};
         const hydratedDriverReferral = applyReferralSettingPlaceholders(
-          translationData.driver_referral || fallbackDriverSection,
+          DEFAULT_DRIVER_REFERRAL_COPY,
           settingsData,
         );
 
@@ -91,7 +77,7 @@ const DriverReferral = () => {
           referralCode: driver.referralCode || stored.referralCode || '',
         });
         setTranslation({
-          language_code: translationData.language_code || languageCode,
+          language_code: languageCode,
           driver_referral: hydratedDriverReferral,
         });
 
@@ -104,14 +90,11 @@ const DriverReferral = () => {
         );
       } catch {
         try {
-          const [translationResponse, settingsResponse] = await Promise.all([
-            getReferralTranslationContent(languageCode),
-            getReferralSettingsContent('driver'),
-          ]);
+          const settingsResponse = await getReferralSettingsContent('driver');
           setTranslation({
-            language_code: translationResponse?.data?.language_code || languageCode,
+            language_code: languageCode,
             driver_referral: applyReferralSettingPlaceholders(
-              translationResponse?.data?.driver_referral || fallbackDriverSection,
+              DEFAULT_DRIVER_REFERRAL_COPY,
               settingsResponse?.data || {},
             ),
           });

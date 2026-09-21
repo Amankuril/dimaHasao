@@ -42,12 +42,6 @@ const PhoneRegistration = () => {
     storedSession.referralCode ||
     '',
   ).trim().toUpperCase();
-  const sharedEmployeeCode = String(
-    searchParams.get('emp') ||
-    searchParams.get('employee') ||
-    storedSession.employeeCode ||
-    '',
-  ).trim().toUpperCase();
   const storedOnboardingPhone = String(storedSession.phone || '').replace(/\D/g, '').slice(-10);
   const storedRegistrationId = String(storedSession.registrationId || '').trim();
   const storedSessionResumeKey = JSON.stringify({
@@ -188,7 +182,6 @@ const PhoneRegistration = () => {
         poolingOnboarding: false,
         entryPath,
         referralCode: sharedReferralCode,
-        employeeCode: sharedEmployeeCode,
         status: sessionData.status || '',
         availableRoles,
       });

@@ -12,7 +12,6 @@ import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
 
 const PENDING_SIGNUP_PHONE_KEY = 'pendingUserSignupPhone';
 const PENDING_SIGNUP_REFERRAL_CODE_KEY = 'pendingUserSignupReferralCode';
-const PENDING_SIGNUP_EMPLOYEE_CODE_KEY = 'pendingUserSignupEmployeeCode';
 
 const syncPushTokens = () => {
   window.__flushNativeFcmToken?.().catch?.(() => { });
@@ -36,13 +35,9 @@ const Signup = () => {
   const { theme } = useUserTheme();
 
   const referralCodeFromQuery = new URLSearchParams(location.search).get('ref') || '';
-  const employeeCodeFromQuery = new URLSearchParams(location.search).get('emp') || '';
   const preservedPhone = typeof window !== 'undefined' ? sessionStorage.getItem(PENDING_SIGNUP_PHONE_KEY) || '' : '';
   const preservedReferralCode = typeof window !== 'undefined'
     ? sessionStorage.getItem(PENDING_SIGNUP_REFERRAL_CODE_KEY) || ''
-    : '';
-  const preservedEmployeeCode = typeof window !== 'undefined'
-    ? sessionStorage.getItem(PENDING_SIGNUP_EMPLOYEE_CODE_KEY) || ''
     : '';
   const initialPhone = String(location.state?.phone || preservedPhone || '').replace(/\D/g, '').slice(-10);
 
@@ -53,7 +48,6 @@ const Signup = () => {
     gender: 'prefer-not-to-say',
     profileImage: '',
     referralCode: String(location.state?.referralCode || referralCodeFromQuery || preservedReferralCode || '').trim().toUpperCase(),
-    employeeCode: String(location.state?.employeeCode || employeeCodeFromQuery || preservedEmployeeCode || '').trim().toUpperCase(),
   });
 
   const [loading, setLoading] = useState(false);
@@ -91,15 +85,6 @@ const Signup = () => {
       sessionStorage.removeItem(PENDING_SIGNUP_REFERRAL_CODE_KEY);
     }
   }, [formData.referralCode]);
-
-  useEffect(() => {
-    const normalizedEmployeeCode = String(formData.employeeCode || '').trim().toUpperCase();
-    if (normalizedEmployeeCode) {
-      sessionStorage.setItem(PENDING_SIGNUP_EMPLOYEE_CODE_KEY, normalizedEmployeeCode);
-    } else {
-      sessionStorage.removeItem(PENDING_SIGNUP_EMPLOYEE_CODE_KEY);
-    }
-  }, [formData.employeeCode]);
 
   useEffect(() => {
     if (location.state?.otpVerified) {
@@ -192,7 +177,6 @@ const Signup = () => {
         state: {
           phone: formData.phone,
           referralCode: formData.referralCode,
-          employeeCode: formData.employeeCode,
         },
       });
     } catch (err) {
@@ -222,7 +206,6 @@ const Signup = () => {
         gender: formData.gender,
         profileImage: overrides.profileImage ?? formData.profileImage,
         referralCode: formData.referralCode,
-        employeeCode: formData.employeeCode,
       });
       const payload = response?.data || {};
 
@@ -663,24 +646,6 @@ const Signup = () => {
                         onChange={(e) => setFormData((current) => ({
                           ...current,
                           referralCode: e.target.value.trim().toUpperCase(),
-                        }))}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Employee Code */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-extrabold uppercase tracking-widest login-subtitle ml-1">Employee Code (Optional)</label>
-                    <div className="flex items-center gap-4 p-4 rounded-2xl border-2 border-zinc-200/50 bg-zinc-100/50 dark:border-white/5 dark:bg-white/5 focus-within:border-[#FFB300] focus-within:bg-zinc-50 dark:focus-within:bg-black/30 transition-all">
-                      <User size={18} className="login-subtitle" />
-                      <input
-                        type="text"
-                        placeholder="Enter employee code"
-                        className="flex-1 bg-transparent border-none p-0 text-base font-bold login-primary-text outline-none focus:ring-0 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 uppercase"
-                        value={formData.employeeCode}
-                        onChange={(e) => setFormData((current) => ({
-                          ...current,
-                          employeeCode: e.target.value.trim().toUpperCase(),
                         }))}
                       />
                     </div>

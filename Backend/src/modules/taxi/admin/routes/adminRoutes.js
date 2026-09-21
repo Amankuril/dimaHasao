@@ -16,7 +16,6 @@ import {
   createAdminBusBooking,
   createBusService,
   createAppModule,
-  createEmployee,
   createGoodsType,
   createDriver,
   createDriverNeededDocument,
@@ -49,7 +48,6 @@ import {
   deleteGoodsType,
   deleteOnboardingScreen,
   deleteRentalPackageType,
-  deleteLanguage,
   deleteOngoingRide,
   deleteOwner,
   deleteOwnerBooking,
@@ -85,8 +83,6 @@ import {
   getCountries,
   getDashboardData,
   getDeliveries,
-  getEmployee,
-  getEmployees,
   getDriver,
   getDriverNeededDocument,
   getDriverNeededDocuments,
@@ -107,9 +103,7 @@ import {
   getGoodsTypes,
   getIntercityTrips,
   getRentalPackageTypes,
-  getReferralTranslations,
   getGeneralSettingsCategory,
-  getLanguages,
   getMailSettings,
   getMapSettings,
   getRechargeApiSettings,
@@ -188,7 +182,6 @@ import {
   updateAdminAccount,
   updateBusService,
   updateDriver,
-  updateEmployee,
   updateDriverNeededDocument,
   updateDriverPassword,
   updateFirebaseSettings,
@@ -196,7 +189,6 @@ import {
   updateGoodsType,
   updateRentalPackageType,
   updateGeneralSettingsCategory,
-  updateLanguageStatus,
   updateMailSettings,
   updateMapSettings,
   updateRechargeApiSettings,
@@ -210,7 +202,6 @@ import {
   updateRentalBookingRequest,
   updateRentalQuoteRequest,
   updatePreferenceStatus,
-  updateReferralTranslation,
   updateRentalVehicleType,
   updateSetPrice,
   updateServiceLocation,
@@ -231,7 +222,8 @@ import {
   getAdmins,
   getTransportTypes,
   deleteFleetVehicle,
-} from '../controllers/adminController.js';
+} from "../controllers/adminController.js";
+
 import {
   getPoolingVehicles,
   createPoolingVehicle,
@@ -266,8 +258,6 @@ adminRouter.patch('/admin/admin-management/admins/:id', updateAdminAccount);
 adminRouter.delete('/admin/admin-management/admins/:id', deleteAdminAccount);
 
 adminRouter.get('/admin/users', getUsers);
-adminRouter.get('/admin/employees', getEmployees);
-adminRouter.post('/admin/employees', createEmployee);
 adminRouter.post('/admin/users/bulk-import', bulkImportUsers);
 adminRouter.post('/admin/users', createUser);
 adminRouter.get('/admin/users/deleted', getDeletedUsers);
@@ -277,8 +267,6 @@ adminRouter.get('/admin/users/delete-requests', getUserDeletionRequests);
 adminRouter.patch('/admin/users/delete-requests/:id/approve', approveUserDeletionRequest);
 adminRouter.patch('/admin/users/delete-requests/:id/reject', rejectUserDeletionRequest);
 adminRouter.get('/admin/users/:id', getUser);
-adminRouter.get('/admin/employees/:id', getEmployee);
-adminRouter.patch('/admin/employees/:id', updateEmployee);
 adminRouter.patch('/admin/users/:id', updateUser);
 adminRouter.delete('/admin/users/:id', deleteUser);
 adminRouter.get('/admin/users/:id/subscriptions', getUserSubscriptions);
@@ -430,8 +418,6 @@ adminRouter.get('/admin/owner-management/driver-needed-document/:id', getDriverN
 adminRouter.post('/admin/owner-management/driver-needed-document', createDriverNeededDocument);
 adminRouter.patch('/admin/owner-management/driver-needed-document/:id', updateDriverNeededDocument);
 adminRouter.delete('/admin/owner-management/driver-needed-document/:id', deleteDriverNeededDocument);
-adminRouter.get('/admin/referrals/translation', getReferralTranslations);
-adminRouter.patch('/admin/referrals/translation/:languageCode', updateReferralTranslation);
 adminRouter.get('/admin/referrals/settings/:type', getReferralSettings);
 adminRouter.patch('/admin/referrals/settings/:type', updateReferralSettings);
 adminRouter.get('/admin/referral/dashboard', getReferralDashboard);
@@ -458,9 +444,6 @@ adminRouter.patch('/admin/zones/:id', updateZone);
 adminRouter.delete('/admin/zones/:id', deleteZone);
 adminRouter.patch('/admin/zones/:id/toggle-status', toggleZoneStatus);
 
-adminRouter.get('/admin/languages', getLanguages);
-adminRouter.patch('/admin/languages/:id/status', updateLanguageStatus);
-adminRouter.delete('/admin/languages/:id', deleteLanguage);
 
 adminRouter.get('/admin/preferences', getPreferences);
 adminRouter.post('/admin/preferences', createPreference);

@@ -18,29 +18,13 @@ export const adminService = {
   /**
    * User Management
    */
-  getUsers: (page = 1, limit = 50, search = '', filters = {}) => {
+  getUsers: (page = 1, limit = 50, search = '') => {
     const params = new URLSearchParams({ page, limit });
     if (String(search || '').trim()) {
       params.set('search', String(search).trim());
-    }
-    if (String(filters.employeeId || '').trim()) {
-      params.set('employeeId', String(filters.employeeId).trim());
-    }
-    if (String(filters.referralSource || '').trim()) {
-      params.set('referralSource', String(filters.referralSource).trim());
     }
     return api.get(`/admin/users?${params.toString()}`);
   },
-  getEmployees: (page = 1, limit = 50, search = '') => {
-    const params = new URLSearchParams({ page, limit });
-    if (String(search || '').trim()) {
-      params.set('search', String(search).trim());
-    }
-    return api.get(`/admin/employees?${params.toString()}`);
-  },
-  getEmployee: (id) => api.get(`/admin/employees/${id}`),
-  createEmployee: (data) => api.post('/admin/employees', data),
-  updateEmployee: (id, data) => api.patch(`/admin/employees/${id}`, data),
   
   bulkImportUsers: (payload) => api.post('/admin/users/bulk-import', payload),
 
@@ -76,9 +60,6 @@ export const adminService = {
   createDriverNeededDocument: (data) => api.post('/admin/owner-management/driver-needed-document', data),
   updateDriverNeededDocument: (id, data) => api.patch(`/admin/owner-management/driver-needed-document/${id}`, data),
   deleteDriverNeededDocument: (id) => api.delete(`/admin/owner-management/driver-needed-document/${id}`),
-  getReferralTranslations: () => api.get('/admin/referrals/translation'),
-  updateReferralTranslation: (languageCode, data) =>
-    api.patch(`/admin/referrals/translation/${languageCode}`, data),
   getReferralSettings: (type) => api.get(`/admin/referrals/settings/${type}`),
   updateReferralSettings: (type, data) => api.patch(`/admin/referrals/settings/${type}`, data),
   // Wallet Payment APIs
@@ -284,16 +265,6 @@ export const adminService = {
   cancelAdminBusBookingSeats: (id, payload = {}) => api.post(`/admin/bus-bookings/${id}/cancel`, payload),
 
   uploadImage: (image) => api.post('/admin/upload-image', { image }),
-
-  /**
-   * Languages Management (Master)
-   */
-  getLanguages: (params) => api.get('/admin/languages', { params }),
-  createLanguage: (data) => api.post('/admin/languages', data),
-  getLanguage: (id) => api.get(`/admin/languages/${id}`),
-  updateLanguage: (id, data) => api.patch(`/admin/languages/${id}`, data),
-  updateLanguageStatus: (id, data) => api.patch(`/admin/languages/${id}/status`, data),
-  deleteLanguage: (id) => api.delete(`/admin/languages/${id}`),
 
   /**
    * Preferences Management (Master)

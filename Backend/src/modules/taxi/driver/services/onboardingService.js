@@ -20,10 +20,6 @@ import {
   listOwnerDocumentUploadFields,
   listOwnerNeededDocuments,
 } from '../../admin/services/adminService.js';
-import {
-  findActiveEmployeeByCode,
-  normalizeEmployeeCode,
-} from '../../admin/services/employeeAttributionService.js';
 import { hashPassword, signAccessToken } from './authService.js';
 import {
   findPreferredDriverPortalAccountByPhone,
@@ -497,7 +493,6 @@ const publicSessionPayload = (session, debugOtp = null) => ({
   status: session.status,
   otpVerified: Boolean(session.otpVerifiedAt),
   documentsUploaded: Object.keys(session.documents || {}).filter((key) => Boolean(session.documents?.[key])),
-  employeeCode: session.employeeCode || '',
   debugOtp,
 });
 
@@ -990,11 +985,10 @@ export const saveDriverPersonalDetails = async ({ registrationId, phone, fullNam
   };
 };
 
-export const saveDriverReferral = async ({ registrationId, phone, referralCode = '', employeeCode = '' }) => {
+export const saveDriverReferral = async ({ registrationId, phone, referralCode = '' }) => {
   const session = await getSession(registrationId, phone);
 
   const normalizedReferralCode = normalizeReferralCode(referralCode);
-  const normalizedEmployeeCode = normalizeEmployeeCode(employeeCode);
 
   if (normalizedReferralCode) {
     const referrer = await findDriverByReferralCode(normalizedReferralCode);
@@ -1003,21 +997,12 @@ export const saveDriverReferral = async ({ registrationId, phone, referralCode =
     }
   }
 
-  if (normalizedEmployeeCode) {
-    const employee = await findActiveEmployeeByCode(normalizedEmployeeCode);
-    if (!employee?._id) {
-      throw new ApiError(400, 'Invalid employee code');
-    }
-  }
-
   session.referralCode = normalizedReferralCode;
-  session.employeeCode = normalizedEmployeeCode;
   await session.save();
 
   return {
     message: 'Referral code saved',
     referralCode: session.referralCode,
-    employeeCode: session.employeeCode,
     session: publicSessionPayload(session),
   };
 };
@@ -1635,20 +1620,12 @@ export const completeDriverOnboarding = async ({ registrationId, phone, document
   }
 
   const normalizedReferralCode = normalizeReferralCode(session.referralCode);
-  const normalizedEmployeeCode = normalizeEmployeeCode(session.employeeCode);
   const referrer = normalizedReferralCode
     ? await findDriverByReferralCode(normalizedReferralCode)
-    : null;
-  const employee = normalizedEmployeeCode
-    ? await findActiveEmployeeByCode(normalizedEmployeeCode)
     : null;
 
   if (normalizedReferralCode && !referrer?._id) {
     throw new ApiError(400, 'Invalid referral code');
-  }
-
-  if (normalizedEmployeeCode && !employee?._id) {
-    throw new ApiError(400, 'Invalid employee code');
   }
 
   const driver = await Driver.create({
@@ -1672,8 +1649,6 @@ export const completeDriverOnboarding = async ({ registrationId, phone, document
     vehicleColor: session.vehicle.color,
     city: session.vehicle.city || session.vehicle.locationName,
     referredBy: referrer?._id || null,
-    acquiredByEmployeeId: employee?._id || null,
-    acquiredByEmployeeCode: employee?.employeeCode || '',
     approve: false,
     status: 'pending',
     zoneId: zone?._id || null,
@@ -1738,8 +1713,7 @@ export const getDriverOnboardingSession = async ({ registrationId, phone }) => {
     session: publicSessionPayload(session),
     personal: session.personal,
     referralCode: session.referralCode,
-    employeeCode: session.employeeCode || '',
-    vehicle: session.vehicle,
+      vehicle: session.vehicle,
     documents: session.documents,
     roleDetails: session.roleDetails,
     completedAt: session.completedAt,

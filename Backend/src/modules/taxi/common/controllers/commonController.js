@@ -9,7 +9,10 @@ import { AdminAppSetting } from '../../admin/models/AdminAppSetting.js';
 import { AdminBusinessSetting } from '../../admin/models/AdminBusinessSetting.js';
 import { createDefaultAppSettings } from '../../admin/data/defaultAppSettings.js';
 import { createDefaultBusinessSettings } from '../../admin/data/defaultBusinessSettings.js';
-import { getReferralSettings, getReferralTranslationContent } from '../../admin/services/adminService.js';
+import {
+  getReferralSettings,
+} from "../../admin/services/adminService.js";
+
 import { getPublicActivePaymentGateway } from '../../services/paymentGatewayService.js';
 import { buildPaymentRequestContext, logPaymentDiagnostic } from '../../services/paymentDiagnostics.js';
 
@@ -81,16 +84,6 @@ export const deleteUploadedImage = asyncHandler(async (req, res) => {
     return res.json({
         success: true,
         data: { deleted },
-    });
-});
-
-export const getReferralTranslation = asyncHandler(async (req, res) => {
-    const languageCode = String(req.query?.language || req.query?.lang || '').trim().toLowerCase();
-    const data = await getReferralTranslationContent(languageCode);
-
-    return res.json({
-        success: true,
-        data,
     });
 });
 

@@ -13,7 +13,6 @@ const unwrap = (response) => response?.data?.data || response?.data || response;
 const PENDING_SIGNUP_PHONE_KEY = 'pendingUserSignupPhone';
 const PENDING_OTP_PHONE_KEY = 'pendingUserOtpPhone';
 const PENDING_SIGNUP_REFERRAL_CODE_KEY = 'pendingUserSignupReferralCode';
-const PENDING_SIGNUP_EMPLOYEE_CODE_KEY = 'pendingUserSignupEmployeeCode';
 const RESEND_OTP_COOLDOWN_SECONDS = 60;
 
 const syncPushTokens = () => {
@@ -48,11 +47,6 @@ const VerifyOTP = () => {
   const referralCode = String(
     location.state?.referralCode ||
     sessionStorage.getItem(PENDING_SIGNUP_REFERRAL_CODE_KEY) ||
-    '',
-  ).trim().toUpperCase();
-  const employeeCode = String(
-    location.state?.employeeCode ||
-    sessionStorage.getItem(PENDING_SIGNUP_EMPLOYEE_CODE_KEY) ||
     '',
   ).trim().toUpperCase();
 
@@ -184,7 +178,7 @@ const VerifyOTP = () => {
       }
 
       // New user goes to Complete Profile screen
-      setTimeout(() => navigate('/taxi/user/signup', { state: { phone, otpVerified: true, referralCode, employeeCode } }), 800);
+      setTimeout(() => navigate('/taxi/user/signup', { state: { phone, otpVerified: true, referralCode } }), 800);
     } catch (err) {
       const errMsg = err?.message || 'Invalid code. Please try again.';
       setError(errMsg);

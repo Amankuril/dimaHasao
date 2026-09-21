@@ -4,12 +4,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Copy, Gift, Loader2, Share2 } from 'lucide-react';
 // ... removed BottomNavbar import ...
 import { userAuthService } from '../services/authService';
-import {
-  getReferralSettingsContent,
-  getReferralTranslationContent,
-} from '../../shared/services/referralTranslationService';
+import { getReferralSettingsContent } from '../../shared/services/referralTranslationService';
 import {
   applyReferralSettingPlaceholders,
+  DEFAULT_USER_REFERRAL_COPY,
   buildReferralPreviewBlocks,
   getStoredReferralLanguageCode,
   USER_REFERRAL_TRANSLATION_FIELDS,
@@ -67,28 +65,16 @@ const Referral = () => {
 
       const languageCode = getStoredReferralLanguageCode('user');
       const stored = readStoredUserInfo();
-      const fallbackUserSection = {
-        instant_referrer_user: '',
-        instant_referrer_user_and_new_user: '',
-        conditional_referrer_user_ride_count: '',
-        conditional_referrer_user_earnings: '',
-        dual_conditional_referrer_user_and_new_user_ride_count: '',
-        dual_conditional_referrer_user_and_new_user_earnings: '',
-        banner_text: '',
-      };
-
       try {
-        const [userResponse, translationResponse, settingsResponse] = await Promise.all([
+        const [userResponse, settingsResponse] = await Promise.all([
           userAuthService.getCurrentUser(),
-          getReferralTranslationContent(languageCode),
           getReferralSettingsContent('user'),
         ]);
 
         const user = userResponse?.data?.user || {};
-        const translationData = translationResponse?.data || {};
         const settingsData = settingsResponse?.data || {};
         const hydratedUserReferral = applyReferralSettingPlaceholders(
-          translationData.user_referral || fallbackUserSection,
+          DEFAULT_USER_REFERRAL_COPY,
           settingsData,
         );
 
@@ -97,7 +83,7 @@ const Referral = () => {
           referralCount: Number(user.referralCount || 0),
         });
         setTranslation({
-          language_code: translationData.language_code || languageCode,
+          language_code: languageCode,
           user_referral: hydratedUserReferral,
         });
 
@@ -111,14 +97,11 @@ const Referral = () => {
         );
       } catch {
         try {
-          const [translationResponse, settingsResponse] = await Promise.all([
-            getReferralTranslationContent(languageCode),
-            getReferralSettingsContent('user'),
-          ]);
+          const settingsResponse = await getReferralSettingsContent('user');
           setTranslation({
-            language_code: translationResponse?.data?.language_code || languageCode,
+            language_code: languageCode,
             user_referral: applyReferralSettingPlaceholders(
-              translationResponse?.data?.user_referral || fallbackUserSection,
+              DEFAULT_USER_REFERRAL_COPY,
               settingsResponse?.data || {},
             ),
           });

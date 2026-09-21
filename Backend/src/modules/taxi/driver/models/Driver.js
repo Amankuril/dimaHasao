@@ -190,18 +190,6 @@ const driverSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
-    acquiredByEmployeeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'TaxiEmployee',
-      default: null,
-      index: true,
-    },
-    acquiredByEmployeeCode: {
-      type: String,
-      default: '',
-      trim: true,
-      uppercase: true,
-    },
     referralCount: {
       type: Number,
       default: 0,
@@ -548,7 +536,6 @@ driverSchema.index({ deletedAt: 1, createdAt: -1 });
 driverSchema.index({ approve: 1, deletedAt: 1, createdAt: -1 });
 driverSchema.index({ status: 1, deletedAt: 1 });
 driverSchema.index({ phone: 1, deletedAt: 1 });
-driverSchema.index({ acquiredByEmployeeCode: 1 });
 
 driverSchema.index({ location: '2dsphere' });
 driverSchema.index({ 'routeBooking.anchorLocation': '2dsphere' });

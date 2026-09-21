@@ -13,7 +13,6 @@ import { AdminAppSetting } from '../models/AdminAppSetting.js';
 import { createDefaultBusinessSettings } from '../data/defaultBusinessSettings.js';
 import { createDefaultAppSettings } from '../data/defaultAppSettings.js';
 import { Airport } from '../models/Airport.js';
-import { Employee } from '../models/Employee.js';
 import { BusService } from '../models/BusService.js';
 import { DriverNeededDocument } from '../models/DriverNeededDocument.js';
 import { GoodsType } from '../models/GoodsType.js';
@@ -21,7 +20,6 @@ import { OwnerNeededDocument } from '../models/OwnerNeededDocument.js';
 import { OwnerBooking } from '../models/OwnerBooking.js';
 import { Owner } from '../models/Owner.js';
 import { FleetVehicle } from '../models/FleetVehicle.js';
-import { ReferralTranslation } from '../models/ReferralTranslation.js';
 import { AdminThirdPartySetting } from '../models/AdminThirdPartySetting.js';
 import { createDefaultThirdPartySettings } from '../data/defaultThirdPartySettings.js';
 import { RentalPackageType } from '../models/RentalPackageType.js';
@@ -39,7 +37,6 @@ import { BusDriver } from '../../driver/models/BusDriver.js';
 import { Zone } from '../../driver/models/Zone.js';
 import { Ride } from '../../user/models/Ride.js';
 import { UserSubscription } from '../../user/models/UserSubscription.js';
-import { AppLanguage } from '../models/AppLanguage.js';
 import { RideModule } from '../models/RideModule.js';
 import { SubscriptionPlan } from '../models/SubscriptionPlan.js';
 import { TaxiAppModule } from '../models/TaxiAppModule.js';
@@ -1607,36 +1604,6 @@ const computeRentalCommissionBreakdown = (snapshot = {}, grossAmount = 0) => {
   };
 };
 
-const normalizeEmployeePhone = (value = '') => {
-  const digits = String(value || '').replace(/\D/g, '').trim();
-  return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
-};
-
-const normalizeEmployeeCode = (value = '') =>
-  String(value || '')
-    .trim()
-    .toUpperCase();
-
-const serializeEmployee = (employee, stats = {}) => {
-  const totalUsers = Number(stats.totalUsers || 0);
-  const totalDrivers = Number(stats.totalDrivers || 0);
-
-  return {
-    _id: employee._id,
-    id: employee._id,
-    name: employee.name || '',
-    phone: employee.phone || '',
-    employeeCode: employee.employeeCode || '',
-    active: employee.active !== false,
-    notes: employee.notes || '',
-    totalUsersAcquired: totalUsers,
-    totalDriversAcquired: totalDrivers,
-    totalAcquired: totalUsers + totalDrivers,
-    createdAt: employee.createdAt || null,
-    updatedAt: employee.updatedAt || null,
-  };
-};
-
 const normalizeDeliveryServiceTax = (value, fallback = 0) =>
   Math.max(0, Number(value ?? fallback ?? 0));
 
@@ -2404,55 +2371,6 @@ const REFERRAL_TRANSLATION_DEFAULTS = {
   banner_text: '',
 };
 
-const normalizeReferralTranslationSection = (payload = {}) => ({
-  instant_referrer_user: String(payload.instant_referrer_user || ''),
-  instant_referrer_user_and_new_user: String(payload.instant_referrer_user_and_new_user || ''),
-  conditional_referrer_user_ride_count: String(payload.conditional_referrer_user_ride_count || ''),
-  conditional_referrer_user_earnings: String(payload.conditional_referrer_user_earnings || ''),
-  dual_conditional_referrer_user_and_new_user_ride_count: String(
-    payload.dual_conditional_referrer_user_and_new_user_ride_count || '',
-  ),
-  dual_conditional_referrer_user_and_new_user_earnings: String(
-    payload.dual_conditional_referrer_user_and_new_user_earnings || '',
-  ),
-  banner_text: String(payload.banner_text || ''),
-});
-
-const serializeReferralTranslation = ({ language, translation }) => ({
-  _id: translation?._id || null,
-  language_code: String(language?.code || translation?.language_code || '').toLowerCase(),
-  language_name: language?.name || translation?.language_name || '',
-  active: Number(language?.active ?? 1) === 1,
-  default_status: Number(language?.default_status ?? 0) === 1,
-  user_referral: {
-    ...REFERRAL_TRANSLATION_DEFAULTS,
-    ...normalizeReferralTranslationSection(translation?.user_referral),
-  },
-  driver_referral: {
-    ...REFERRAL_TRANSLATION_DEFAULTS,
-    ...normalizeReferralTranslationSection(translation?.driver_referral),
-  },
-  createdAt: translation?.createdAt || null,
-  updatedAt: translation?.updatedAt || null,
-});
-
-const resolveReferralTranslationLanguage = async (languageCode = '') => {
-  const normalizedLanguageCode = String(languageCode || '').trim().toLowerCase();
-  const languages = await AppLanguage.find().sort({ default_status: -1, code: 1 }).lean();
-
-  const preferredLanguage =
-    languages.find((item) => String(item.code || '').toLowerCase() === normalizedLanguageCode) ||
-    languages.find((item) => Number(item.default_status) === 1) ||
-    languages[0] ||
-    null;
-
-  return {
-    languages,
-    preferredLanguage,
-    normalizedLanguageCode,
-  };
-};
-
 const cleanupLegacySeededDriverNeededDocumentsFinal = async () => {
   const items = await DriverNeededDocument.find().lean();
 
@@ -2644,8 +2562,6 @@ const serializeDriver = (driver) => ({
   email: driver.email || '',
   driver_code: driver.referralCode || (driver.phone ? `DRV${String(driver.phone).slice(-4)}${String(driver._id || '').slice(-6).toUpperCase()}`.replace(/\W/g, '') : ''),
   referralCode: driver.referralCode || '',
-  acquiredByEmployeeId: driver.acquiredByEmployeeId || null,
-  acquiredByEmployeeCode: driver.acquiredByEmployeeCode || '',
   owner_id: driver.owner_id || null,
   service_location_id: driver.service_location_id || null,
   zoneId: driver.zoneId?._id || driver.zoneId || null,
@@ -2687,8 +2603,6 @@ const DRIVER_LIST_SELECT = [
   'phone',
   'email',
   'referralCode',
-  'acquiredByEmployeeId',
-  'acquiredByEmployeeCode',
   'owner_id',
   'service_location_id',
   'zoneId',
@@ -2720,8 +2634,6 @@ const serializeDriverListItem = (driver) => ({
   email: driver.email || '',
   driver_code: driver.referralCode || (driver.phone ? `DRV${String(driver.phone).slice(-4)}${String(driver._id || '').slice(-6).toUpperCase()}`.replace(/\W/g, '') : ''),
   referralCode: driver.referralCode || '',
-  acquiredByEmployeeId: driver.acquiredByEmployeeId || null,
-  acquiredByEmployeeCode: driver.acquiredByEmployeeCode || '',
   owner_id: driver.owner_id || null,
   service_location_id: driver.service_location_id || null,
   city: driver.city || '',
@@ -2774,8 +2686,6 @@ const serializeUser = (user) => ({
   },
   mobile: user.phone || user.mobile || '',
   phone: user.phone || user.mobile || '',
-  acquiredByEmployeeId: user.acquiredByEmployeeId || null,
-  acquiredByEmployeeCode: user.acquiredByEmployeeCode || '',
   wallet_balance: Number(user.wallet_balance || 0),
   active: user.active !== false && user.isActive !== false && !user.deletedAt,
   deletedAt: user.deletedAt || null,
@@ -2794,8 +2704,6 @@ const USER_LIST_SELECT = [
   'governmentIdProof',
   'phone',
   'mobile',
-  'acquiredByEmployeeId',
-  'acquiredByEmployeeCode',
   'wallet_balance',
   'active',
   'isActive',
@@ -2806,7 +2714,7 @@ const USER_LIST_SELECT = [
   'updatedAt',
 ].join(' ');
 
-const serializeUserListItem = (user, employee = null) => ({
+const serializeUserListItem = (user) => ({
   _id: user._id,
   id: user._id,
   name: user.name || '',
@@ -2821,9 +2729,6 @@ const serializeUserListItem = (user, employee = null) => ({
   },
   mobile: user.phone || user.mobile || '',
   phone: user.phone || user.mobile || '',
-  acquiredByEmployeeId: user.acquiredByEmployeeId || null,
-  acquiredByEmployeeCode: user.acquiredByEmployeeCode || '',
-  acquiredByEmployeeName: employee?.name || '',
   wallet_balance: Number(user.wallet_balance || 0),
   active:
     (user.active ?? user.isActive) !== false &&
@@ -3220,11 +3125,6 @@ const seedInitialData = async () => {
     await Driver.insertMany(defaults.drivers.map(d => ({ ...d, phone: d.mobile })));
   }
 
-  // Seed Languages
-  if (await AppLanguage.countDocuments() === 0) {
-    await AppLanguage.insertMany(defaults.languages);
-  }
-
   // Seed Ride Modules
   if (await RideModule.countDocuments() === 0) {
     await RideModule.insertMany(defaults.rideModules);
@@ -3616,20 +3516,12 @@ export const resetPassword = async ({ email, otp, password }) => {
   return { success: true, message: 'Password reset successful' };
 };
 
-export const listUsers = async ({
-  page = 1,
-  limit = 50,
-  search = '',
-  employeeId = '',
-  referralSource = 'all',
-}) => {
+export const listUsers = async ({ page = 1, limit = 50, search = '' }) => {
   const safePage = Math.max(1, Number(page) || 1);
   const safeLimit = Math.min(100, Math.max(1, Number(limit) || 50));
   const start = (safePage - 1) * safeLimit;
   const query = { deletedAt: null };
   const normalizedSearch = String(search || '').trim();
-  const normalizedEmployeeId = String(employeeId || '').trim();
-  const normalizedReferralSource = String(referralSource || 'all').trim().toLowerCase();
 
   if (normalizedSearch) {
     const escapedSearch = normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -3644,18 +3536,6 @@ export const listUsers = async ({
     }
   }
 
-  if (normalizedEmployeeId) {
-    query.acquiredByEmployeeId = normalizedEmployeeId;
-  }
-
-  if (normalizedReferralSource === 'employee') {
-    query.acquiredByEmployeeId = normalizedEmployeeId
-      ? normalizedEmployeeId
-      : { $ne: null };
-  } else if (normalizedReferralSource === 'organic') {
-    query.acquiredByEmployeeId = null;
-  }
-
   const [users, total] = await Promise.all([
     User.find(query)
       .select(USER_LIST_SELECT)
@@ -3666,31 +3546,8 @@ export const listUsers = async ({
     User.countDocuments(query),
   ]);
 
-  const employeeIds = [
-    ...new Set(
-      users
-        .map((user) => String(user.acquiredByEmployeeId || '').trim())
-        .filter(Boolean),
-    ),
-  ];
-
-  const employees = employeeIds.length
-    ? await Employee.find({ _id: { $in: employeeIds } })
-      .select('_id name employeeCode')
-      .lean()
-    : [];
-
-  const employeeMap = new Map(
-    employees.map((employee) => [String(employee._id), employee]),
-  );
-
   return {
-    results: users.map((user) =>
-      serializeUserListItem(
-        user,
-        employeeMap.get(String(user.acquiredByEmployeeId || '')) || null,
-      ),
-    ),
+    results: users.map((user) => serializeUserListItem(user)),
     paginator: {
       current_page: safePage,
       per_page: safeLimit,
@@ -5996,240 +5853,6 @@ const toAdminIntercityTripRow = (ride) => {
     routeLabel: [fromCity, toCity].filter(Boolean).join(' -> '),
     tripType: intercity.tripType || '',
     travelDate: intercity.travelDate || '',
-  };
-};
-
-export const listEmployees = async ({ page = 1, limit = 50, search = '' } = {}, currentAdmin = null) => {
-  if (currentAdmin) {
-    assertAdminPermission(currentAdmin, 'employees.view', 'employees');
-  }
-
-  const safePage = Math.max(1, Number(page) || 1);
-  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 50));
-  const start = (safePage - 1) * safeLimit;
-  const normalizedSearch = String(search || '').trim();
-  const query = {};
-
-  if (normalizedSearch) {
-    const escapedSearch = normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const digits = normalizedSearch.replace(/\D/g, '');
-    const regex = new RegExp(escapedSearch, 'i');
-    query.$or = [{ name: regex }, { employeeCode: regex }];
-
-    if (digits) {
-      query.$or.push({ phone: new RegExp(`^${digits}`) });
-    } else {
-      query.$or.push({ phone: regex });
-    }
-  }
-
-  const [employees, total] = await Promise.all([
-    Employee.find(query)
-      .sort({ createdAt: -1 })
-      .skip(start)
-      .limit(safeLimit)
-      .lean(),
-    Employee.countDocuments(query),
-  ]);
-
-  const employeeIds = employees.map((employee) => employee._id);
-  const [userCounts, driverCounts] = await Promise.all([
-    employeeIds.length
-      ? User.aggregate([
-        { $match: { acquiredByEmployeeId: { $in: employeeIds } } },
-        { $group: { _id: '$acquiredByEmployeeId', count: { $sum: 1 } } },
-      ])
-      : [],
-    employeeIds.length
-      ? Driver.aggregate([
-        { $match: { acquiredByEmployeeId: { $in: employeeIds } } },
-        { $group: { _id: '$acquiredByEmployeeId', count: { $sum: 1 } } },
-      ])
-      : [],
-  ]);
-
-  const userCountMap = new Map(userCounts.map((item) => [String(item._id), Number(item.count || 0)]));
-  const driverCountMap = new Map(driverCounts.map((item) => [String(item._id), Number(item.count || 0)]));
-
-  return {
-    results: employees.map((employee) =>
-      serializeEmployee(employee, {
-        totalUsers: userCountMap.get(String(employee._id)) || 0,
-        totalDrivers: driverCountMap.get(String(employee._id)) || 0,
-      })),
-    paginator: {
-      current_page: safePage,
-      per_page: safeLimit,
-      total,
-      last_page: Math.max(1, Math.ceil(total / safeLimit)),
-    },
-  };
-};
-
-export const createEmployee = async (payload = {}, currentAdmin = null) => {
-  if (currentAdmin) {
-    assertAdminPermission(currentAdmin, 'employees.view', 'employees');
-  }
-
-  const name = String(payload.name || '').trim();
-  const phone = normalizeEmployeePhone(payload.phone);
-  const employeeCode = normalizeEmployeeCode(payload.employeeCode);
-  const active = payload.active === undefined ? true : normalizeBoolean(payload.active);
-  const notes = String(payload.notes || '').trim();
-
-  if (!name || name.length < 2 || name.length > 80) {
-    throw new ApiError(400, 'Employee name must be between 2 and 80 characters');
-  }
-
-  if (!/^\d{10}$/.test(phone)) {
-    throw new ApiError(400, 'Employee phone must be a valid 10-digit number');
-  }
-
-  if (!/^[A-Z0-9-]{3,40}$/.test(employeeCode)) {
-    throw new ApiError(400, 'Employee code must be 3 to 40 characters using letters, numbers, or hyphens');
-  }
-
-  const existingPhone = await Employee.findOne({ phone }).select('_id').lean();
-  if (existingPhone) {
-    throw new ApiError(409, 'Employee phone is already in use');
-  }
-
-  const existingCode = await Employee.findOne({ employeeCode }).select('_id').lean();
-  if (existingCode) {
-    throw new ApiError(409, 'Employee code is already in use');
-  }
-
-  const employee = await Employee.create({
-    name,
-    phone,
-    employeeCode,
-    active,
-    notes,
-  });
-
-  return serializeEmployee(employee.toObject());
-};
-
-export const updateEmployee = async (id, payload = {}, currentAdmin = null) => {
-  if (currentAdmin) {
-    assertAdminPermission(currentAdmin, 'employees.view', 'employees');
-  }
-
-  const employee = await Employee.findById(id);
-  if (!employee) {
-    throw new ApiError(404, 'Employee not found');
-  }
-
-  if (payload.name !== undefined) {
-    const name = String(payload.name || '').trim();
-    if (!name || name.length < 2 || name.length > 80) {
-      throw new ApiError(400, 'Employee name must be between 2 and 80 characters');
-    }
-    employee.name = name;
-  }
-
-  if (payload.phone !== undefined) {
-    const phone = normalizeEmployeePhone(payload.phone);
-    if (!/^\d{10}$/.test(phone)) {
-      throw new ApiError(400, 'Employee phone must be a valid 10-digit number');
-    }
-    const conflict = await Employee.findOne({ phone, _id: { $ne: employee._id } }).select('_id').lean();
-    if (conflict) {
-      throw new ApiError(409, 'Employee phone is already in use');
-    }
-    employee.phone = phone;
-  }
-
-  let employeeCodeChanged = false;
-
-  if (payload.employeeCode !== undefined) {
-    const employeeCode = normalizeEmployeeCode(payload.employeeCode);
-    if (!/^[A-Z0-9-]{3,40}$/.test(employeeCode)) {
-      throw new ApiError(400, 'Employee code must be 3 to 40 characters using letters, numbers, or hyphens');
-    }
-    const conflict = await Employee.findOne({ employeeCode, _id: { $ne: employee._id } }).select('_id').lean();
-    if (conflict) {
-      throw new ApiError(409, 'Employee code is already in use');
-    }
-    employeeCodeChanged = employee.employeeCode !== employeeCode;
-    employee.employeeCode = employeeCode;
-  }
-
-  if (payload.active !== undefined) {
-    employee.active = normalizeBoolean(payload.active);
-  }
-
-  if (payload.notes !== undefined) {
-    employee.notes = String(payload.notes || '').trim();
-  }
-
-  await employee.save();
-
-  if (employeeCodeChanged) {
-    await Promise.all([
-      User.updateMany(
-        { acquiredByEmployeeId: employee._id },
-        { $set: { acquiredByEmployeeCode: employee.employeeCode } },
-      ),
-      Driver.updateMany(
-        { acquiredByEmployeeId: employee._id },
-        { $set: { acquiredByEmployeeCode: employee.employeeCode } },
-      ),
-    ]);
-  }
-
-  return serializeEmployee(employee.toObject());
-};
-
-export const getEmployeeById = async (id, currentAdmin = null) => {
-  if (currentAdmin) {
-    assertAdminPermission(currentAdmin, 'employees.view', 'employees');
-  }
-
-  const employee = await Employee.findById(id).lean();
-  if (!employee) {
-    throw new ApiError(404, 'Employee not found');
-  }
-
-  const [users, drivers, totalUsers, totalDrivers] = await Promise.all([
-    User.find({ acquiredByEmployeeId: employee._id })
-      .select('_id name phone email gender createdAt active isActive deletedAt acquiredByEmployeeCode')
-      .sort({ createdAt: -1 })
-      .lean(),
-    Driver.find({ acquiredByEmployeeId: employee._id })
-      .select('_id name phone email vehicleType registerFor status approve createdAt acquiredByEmployeeCode')
-      .sort({ createdAt: -1 })
-      .lean(),
-    User.countDocuments({ acquiredByEmployeeId: employee._id }),
-    Driver.countDocuments({ acquiredByEmployeeId: employee._id }),
-  ]);
-
-  return {
-    employee: serializeEmployee(employee, { totalUsers, totalDrivers }),
-    users: users.map((user) => ({
-      _id: user._id,
-      id: user._id,
-      name: user.name || '',
-      phone: user.phone || '',
-      email: user.email || '',
-      gender: user.gender || '',
-      active: (user.active ?? user.isActive) !== false && !user.deletedAt,
-      employeeCode: user.acquiredByEmployeeCode || '',
-      createdAt: user.createdAt || null,
-    })),
-    drivers: drivers.map((driver) => ({
-      _id: driver._id,
-      id: driver._id,
-      name: driver.name || '',
-      phone: driver.phone || '',
-      email: driver.email || '',
-      vehicleType: driver.vehicleType || '',
-      registerFor: driver.registerFor || '',
-      status: driver.status || '',
-      approve: Boolean(driver.approve),
-      employeeCode: driver.acquiredByEmployeeCode || '',
-      createdAt: driver.createdAt || null,
-    })),
   };
 };
 
@@ -10276,141 +9899,6 @@ export const updateOwnerNeededDocument = async (id, payload) => {
 export const deleteOwnerNeededDocument = async (id) => {
   const deleted = await OwnerNeededDocument.findByIdAndDelete(id);
   if (!deleted) throw new ApiError(404, 'Owner needed document not found');
-  return true;
-};
-
-export const listReferralTranslations = async () => {
-  const [languages, translations] = await Promise.all([
-    AppLanguage.find().sort({ default_status: -1, code: 1 }).lean(),
-    ReferralTranslation.find().sort({ language_code: 1 }).lean(),
-  ]);
-
-  const translationMap = new Map(
-    translations.map((item) => [String(item.language_code || '').toLowerCase(), item]),
-  );
-
-  const languageRows = languages.map((language) =>
-    serializeReferralTranslation({
-      language,
-      translation: translationMap.get(String(language.code || '').toLowerCase()) || null,
-    }),
-  );
-
-  const existingCodes = new Set(languageRows.map((item) => item.language_code));
-
-  const orphanRows = translations
-    .filter((item) => !existingCodes.has(String(item.language_code || '').toLowerCase()))
-    .map((item) =>
-      serializeReferralTranslation({
-        language: null,
-        translation: item,
-      }),
-    );
-
-  return [...languageRows, ...orphanRows];
-};
-
-export const updateReferralTranslation = async (languageCode, payload = {}) => {
-  const normalizedLanguageCode = String(languageCode || '').trim().toLowerCase();
-
-  if (!normalizedLanguageCode) {
-    throw new ApiError(400, 'languageCode is required');
-  }
-
-  const language = await AppLanguage.findOne({ code: normalizedLanguageCode }).lean();
-
-  const item = await ReferralTranslation.findOneAndUpdate(
-    { language_code: normalizedLanguageCode },
-    {
-      $set: {
-        language_code: normalizedLanguageCode,
-        language_name: language?.name || String(payload.language_name || ''),
-        user_referral: normalizeReferralTranslationSection(payload.user_referral),
-        driver_referral: normalizeReferralTranslationSection(payload.driver_referral),
-      },
-    },
-    {
-      returnDocument: 'after',
-      upsert: true,
-      setDefaultsOnInsert: true,
-    },
-  ).lean();
-
-  return serializeReferralTranslation({
-    language,
-    translation: item,
-  });
-};
-
-export const getReferralTranslationContent = async (languageCode = '') => {
-  const { languages, preferredLanguage, normalizedLanguageCode } =
-    await resolveReferralTranslationLanguage(languageCode);
-
-  const codesToTry = [
-    normalizedLanguageCode,
-    preferredLanguage?.code,
-    languages.find((item) => Number(item.default_status) === 1)?.code,
-    'en',
-  ]
-    .map((item) => String(item || '').trim().toLowerCase())
-    .filter(Boolean);
-
-  let translation = null;
-  let resolvedLanguage = preferredLanguage;
-
-  if (codesToTry.length > 0) {
-    translation = await ReferralTranslation.findOne({
-      language_code: { $in: codesToTry },
-    })
-      .sort({ updatedAt: -1 })
-      .lean();
-
-    if (translation) {
-      resolvedLanguage =
-        languages.find(
-          (item) =>
-            String(item.code || '').toLowerCase() === String(translation.language_code || '').toLowerCase(),
-        ) || resolvedLanguage;
-    }
-  }
-
-  return {
-    language_code: String(
-      resolvedLanguage?.code || translation?.language_code || normalizedLanguageCode || 'en',
-    )
-      .trim()
-      .toLowerCase(),
-    language_name: resolvedLanguage?.name || translation?.language_name || '',
-    user_referral: {
-      ...REFERRAL_TRANSLATION_DEFAULTS,
-      ...normalizeReferralTranslationSection(translation?.user_referral),
-    },
-    driver_referral: {
-      ...REFERRAL_TRANSLATION_DEFAULTS,
-      ...normalizeReferralTranslationSection(translation?.driver_referral),
-    },
-    available_languages: languages.map((item) => ({
-      code: String(item.code || '').toLowerCase(),
-      name: item.name || '',
-      active: Number(item.active ?? 1) === 1,
-      default_status: Number(item.default_status ?? 0) === 1,
-    })),
-  };
-};
-
-
-
-export const listLanguages = async () => AppLanguage.find().sort({ code: 1 }).lean();
-
-export const updateLanguageStatus = async (id, payload) => {
-  const language = await AppLanguage.findByIdAndUpdate(id, { active: Number(payload.active) }, { returnDocument: 'after' });
-  if (!language) throw new ApiError(404, 'Language not found');
-  return language.toObject();
-};
-
-export const deleteLanguage = async (id) => {
-  const deleted = await AppLanguage.findByIdAndDelete(id);
-  if (!deleted) throw new ApiError(404, 'Language not found');
   return true;
 };
 

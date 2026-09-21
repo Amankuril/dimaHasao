@@ -89,11 +89,6 @@ export const createDefaultAdminState = () => {
         createdAt: new Date('2026-03-01T09:15:00.000Z'),
       },
     ],
-    languages: [
-      { name: 'English', code: 'en', active: 1, default_status: 1 },
-      { name: 'Hindi', code: 'hi', active: 1, default_status: 0 },
-      { name: 'Arabic', code: 'ar', active: 0, default_status: 0 },
-    ],
     rideModules: [
       { transport_type: 'taxi' },
       { transport_type: 'delivery' },

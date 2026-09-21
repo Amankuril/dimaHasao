@@ -867,7 +867,6 @@ const AdminLayout = () => {
               { label: 'Referral Dashboard', path: '/taxi/admin/referrals/dashboard', permission: 'referrals.view' },
               { label: 'User Referral Settings', path: '/taxi/admin/referrals/user-settings', permission: 'referrals.view' },
               { label: 'Driver Referral Settings', path: '/taxi/admin/referrals/driver-settings', permission: 'referrals.view' },
-              { label: 'Referral Translation', path: '/taxi/admin/referrals/translation', permission: 'referrals.view' },
             ],
           },
           { icon: Briefcase, label: 'Owner Management', path: '/taxi/admin/owners/dashboard', permission: 'owners.view' },
@@ -891,14 +890,6 @@ const AdminLayout = () => {
               { label: 'Support Tickets', path: '/taxi/admin/support/tickets', permission: 'support.view' },
             ],
           },
-        ],
-      },
-      {
-        title: 'Masters',
-        items: [
-          { icon: Globe, label: 'Language', path: '/taxi/admin/masters/languages', permission: 'settings.view' },
-          // { icon: Star, label: 'Preferences', path: '/taxi/admin/masters/preferences' },
-          // { icon: ShieldCheck, label: 'Roles', path: '/taxi/admin/masters/roles' },
         ],
       },
       {

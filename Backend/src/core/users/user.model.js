@@ -181,8 +181,6 @@ const userSchema = new mongoose.Schema(
             backUploadedAt: { type: Date, default: null },
         },
         fcmTokenWeb: { type: mongoose.Schema.Types.Mixed },
-        acquiredByEmployeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'TaxiEmployee', default: null },
-        acquiredByEmployeeCode: { type: String, default: '' },
         referredRideCompletionCount: { type: Number, default: 0 },
         referralRewardGrantedAt: { type: Date, default: null },
         active: { type: Boolean, default: true },

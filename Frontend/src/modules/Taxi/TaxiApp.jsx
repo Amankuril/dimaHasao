@@ -217,7 +217,6 @@ const AdminDriverEdit = lazy(() => import('./modules/admin/pages/drivers/EditDri
 const AdminReferralDashboard = lazy(() => import('./modules/admin/pages/referrals/ReferralDashboard'));
 const AdminUserReferralSettings = lazy(() => import('./modules/admin/pages/referrals/UserReferralSettings'));
 const AdminDriverReferralSettings = lazy(() => import('./modules/admin/pages/referrals/DriverReferralSettings'));
-const AdminReferralTranslation = lazy(() => import('./modules/admin/pages/referrals/ReferralTranslation'));
 
 const AdminPromoCodes = lazy(() => import('./modules/admin/pages/promotions/PromoCodes'));
 const AdminSendNotification = lazy(() => import('./modules/admin/pages/promotions/SendNotification'));
@@ -316,7 +315,6 @@ const AdminFinanceReport = lazy(() => import('./modules/admin/pages/reports/Fina
 const AdminFleetFinanceReport = lazy(() => import('./modules/admin/pages/reports/FleetFinanceReport'));
 
 // Masters Management
-const AdminLanguages = lazy(() => import('./modules/admin/pages/masters/Languages'));
 const AdminPreferences = lazy(() => import('./modules/admin/pages/masters/Preferences'));
 
 // Admin Management
@@ -1286,10 +1284,6 @@ function TaxiApp() {
                   path="referrals/driver-settings"
                   element={<AdminDriverReferralSettings />}
                 />
-                <Route
-                  path="referrals/translation"
-                  element={<AdminReferralTranslation />}
-                />
                 {/* Promotions Management */}
                 <Route
                   path="promotions/promo-codes"
@@ -1608,7 +1602,6 @@ function TaxiApp() {
                 />
 
                 {/* Masters Management */}
-                <Route path="masters/languages" element={<AdminLanguages />} />
                 <Route
                   path="masters/countries"
                   element={<AdminCountryManagement />}
