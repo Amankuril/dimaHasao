@@ -6,8 +6,6 @@ import {
   otpVerifyRateLimit,
 } from '../../middlewares/rateLimitMiddleware.js';
 import {
-  approveServiceCenterStaffSignup,
-  approveServiceStoreSignup,
   createAirport,
   createAdminAccount,
   createAppModule,
@@ -20,9 +18,6 @@ import {
   createRole,
   createPaymentMethod,
   createServiceLocation,
-  createServiceStore,
-  createServiceStoreStaff,
-  createRentalVehicleType,
   createSetPrice,
   createUser,
   createZone,
@@ -38,10 +33,8 @@ import {
   deletePreference,
   deleteRole,
   deletePaymentMethod,
-  deleteRentalVehicleType,
   deleteSetPrice,
   deleteServiceLocation,
-  deleteServiceStore,
   deleteUser,
   deleteZone,
   downloadDriverDutyReport,
@@ -52,8 +45,6 @@ import {
   getAdminStatus,
   getAdminEarnings,
   getAirports,
-  getPendingServiceCenterStaffSignups,
-  getPendingServiceStoreSignups,
   getAppModules,
   getCancelChart,
   getCountries,
@@ -88,11 +79,7 @@ import {
   getPaymentGateways,
   getPaymentMethods,
   getPaymentSettings,
-  getRentalBookingRequests,
-  getRentalTrackingDashboard,
-  getRentalQuoteRequests,
   getPreferences,
-  getRentalVehicleTypes,
   getRideModules,
   getRoles,
   getReferralSettings,
@@ -101,7 +88,6 @@ import {
   getSetPriceById,
   getSetPrices,
   getServiceLocations,
-  getServiceStores,
   getSmsSettings,
   getTodayEarnings,
   getUserOnboarding,
@@ -116,8 +102,6 @@ import {
   getRideRequests,
   rejectUserDeletionRequest,
   rejectDriverDeletionRequest,
-  rejectServiceCenterStaffSignup,
-  rejectServiceStoreSignup,
   getUserRequests,
   getUserWalletHistory,
   getVehiclePreferenceOptions,
@@ -150,13 +134,9 @@ import {
   updateRechargeApiSettings,
   updatePaymentSettings,
   updatePaymentMethod,
-  updateRentalBookingRequest,
-  updateRentalQuoteRequest,
   updatePreferenceStatus,
-  updateRentalVehicleType,
   updateSetPrice,
   updateServiceLocation,
-  updateServiceStore,
   updateSmsSettings,
   updateUser,
   updateVehicleType,
@@ -171,6 +151,7 @@ import {
   getAdmins,
   getTransportTypes,
 } from "../controllers/adminController.js";
+
 
 
 
@@ -254,17 +235,6 @@ adminRouter.get('/admin/service-locations/nearby', getNearbyServiceLocations);
 adminRouter.post('/admin/service-locations', createServiceLocation);
 adminRouter.patch('/admin/service-locations/:id', updateServiceLocation);
 adminRouter.delete('/admin/service-locations/:id', deleteServiceLocation);
-adminRouter.get('/admin/service-stores', getServiceStores);
-adminRouter.get('/admin/service-stores/pending', getPendingServiceStoreSignups);
-adminRouter.get('/admin/service-stores/pending-staff', getPendingServiceCenterStaffSignups);
-adminRouter.post('/admin/service-stores', createServiceStore);
-adminRouter.patch('/admin/service-stores/:id', updateServiceStore);
-adminRouter.post('/admin/service-stores/:id/staff', createServiceStoreStaff);
-adminRouter.patch('/admin/service-stores/:id/approve', approveServiceStoreSignup);
-adminRouter.patch('/admin/service-stores/:id/reject', rejectServiceStoreSignup);
-adminRouter.patch('/admin/service-stores/staff/:id/approve', approveServiceCenterStaffSignup);
-adminRouter.patch('/admin/service-stores/staff/:id/reject', rejectServiceCenterStaffSignup);
-adminRouter.delete('/admin/service-stores/:id', deleteServiceStore);
 adminRouter.get('/common/ride_modules', getRideModules);
 adminRouter.get('/admin/types/vehicle-types/list', getVehicleTypes);
 adminRouter.get('/admin/types/vehicle-types', getVehicleTypeCatalog);
@@ -288,10 +258,6 @@ adminRouter.delete('/admin/airports/:id', deleteAirport);
 // only the pooling screens called. It now shares the one uploader every other
 // module uses, which writes WebP to disk.
 adminRouter.post('/admin/upload-image', uploadImage);
-adminRouter.get('/admin/types/rental-vehicles', getRentalVehicleTypes);
-adminRouter.post('/admin/types/rental-vehicles', createRentalVehicleType);
-adminRouter.patch('/admin/types/rental-vehicles/:id', updateRentalVehicleType);
-adminRouter.delete('/admin/types/rental-vehicles/:id', deleteRentalVehicleType);
 
 // Documents a driver must upload. These lived under /admin/owner-management
 // only because the fleet-owner panel happened to render them; drivers are in
@@ -302,11 +268,6 @@ adminRouter.post('/admin/drivers/needed-documents', createDriverNeededDocument);
 adminRouter.patch('/admin/drivers/needed-documents/:id', updateDriverNeededDocument);
 adminRouter.delete('/admin/drivers/needed-documents/:id', deleteDriverNeededDocument);
 
-adminRouter.get('/admin/rental-booking-requests', getRentalBookingRequests);
-adminRouter.get('/admin/rental-tracking', getRentalTrackingDashboard);
-adminRouter.patch('/admin/rental-booking-requests/:id', updateRentalBookingRequest);
-adminRouter.get('/admin/rental-quote-requests', getRentalQuoteRequests);
-adminRouter.patch('/admin/rental-quote-requests/:id', updateRentalQuoteRequest);
 adminRouter.get('/admin/types/rental-packages', getRentalPackageTypes);
 adminRouter.post('/admin/types/rental-packages', createRentalPackageType);
 adminRouter.patch('/admin/types/rental-packages/:id', updateRentalPackageType);

@@ -13,13 +13,11 @@ import { clearLocalUserSessionData } from '@/shared/utils/userSession.js';
 import { syncThemeForPath } from '@/shared/utils/theme.js';
 import { getLocalUserToken } from './modules/user/services/authService';
 import { clearCurrentRide } from './modules/user/services/currentRideService';
-import RentalLocationTracker from './modules/user/components/RentalLocationTracker';
 import { userService } from './modules/user/services/userService';
 import { syncUpcomingRideReminders } from './modules/user/utils/upcomingRideReminderService';
 import { getAuthenticatedDriverRole, getLocalDriverToken } from './modules/driver/services/registrationService';
 import { installBrowserFcmRegistration } from './shared/push/browserFcmRegistration';
 import { installNativeFcmBridge } from './shared/push/nativeFcmBridge';
-import { POOLING_ENABLED, RENTAL_ENABLED } from './shared/featureFlags';
 import UserMainTabKeepAlive from './modules/user/components/UserMainTabKeepAlive';
 import './App.css';
 import './index.css';
@@ -81,12 +79,6 @@ const IntercityConfirm = lazy(() => import('./modules/user/pages/intercity/Inter
 
 
 // New Feature Pages
-const BikeRentalHome = lazy(() => import('./modules/user/pages/rental/BikeRentalHome'));
-const RentalVehicleDetail = lazy(() => import('./modules/user/pages/rental/RentalVehicleDetail'));
-const RentalSchedule = lazy(() => import('./modules/user/pages/rental/RentalSchedule'));
-const RentalKYC = lazy(() => import('./modules/user/pages/rental/RentalKYC'));
-const RentalDeposit = lazy(() => import('./modules/user/pages/rental/RentalDeposit'));
-const RentalConfirmed = lazy(() => import('./modules/user/pages/rental/RentalConfirmed'));
 const IntercityHome = lazy(() => import('./modules/user/pages/intercity/IntercityHome'));
 const CabSharing = lazy(() => import('./modules/user/pages/cabsharing/CabSharing'));
 
@@ -105,7 +97,6 @@ const DriverWelcome = lazy(() => import('./modules/driver/pages/registration/Dri
 const PhoneRegistration = lazy(() => import('./modules/driver/pages/registration/PhoneRegistration'));
 const OTPVerification = lazy(() => import('./modules/driver/pages/registration/OTPVerification'));
 const RoleSelection = lazy(() => import('./modules/driver/pages/registration/RoleSelection'));
-const RoleSpecificOnboarding = lazy(() => import('./modules/driver/pages/registration/RoleSpecificOnboarding'));
 const RegistrationStatus = lazy(() => import('./modules/driver/pages/registration/RegistrationStatus'));
 const StepPersonal = lazy(() => import('./modules/driver/pages/registration/StepPersonal'));
 const StepReferral = lazy(() => import('./modules/driver/pages/registration/StepReferral'));
@@ -118,8 +109,6 @@ const DriverHome = lazy(() => import('./modules/driver/pages/DriverHome'));
 const ActiveTrip = lazy(() => import('./modules/driver/pages/ActiveTrip'));
 const DriverWallet = lazy(() => import('./modules/driver/pages/DriverWallet'));
 const DriverProfile = lazy(() => import('./modules/driver/pages/DriverProfile'));
-const ServiceCenterDashboard = lazy(() => import('./modules/driver/pages/ServiceCenterDashboard'));
-const ServiceCenterVehicleDetails = lazy(() => import('./modules/driver/pages/ServiceCenterVehicleDetails'));
 const RideRequests = lazy(() => import('./modules/driver/pages/RideRequests'));
 const DriverIncentives = lazy(() => import('./modules/driver/pages/DriverIncentives'));
 
@@ -181,7 +170,6 @@ const AdminBannerImage = lazy(() => import('./modules/admin/pages/promotions/Ban
 
 // Price Management
 const AdminServiceLocation = lazy(() => import('./modules/admin/pages/price-management/ServiceLocation'));
-const AdminServiceStores = lazy(() => import('./modules/admin/pages/price-management/ServiceStores'));
 const AdminZoneManagement = lazy(() => import('./modules/admin/pages/price-management/ZoneManagement'));
 const AdminAirportManagement = lazy(() => import('./modules/admin/pages/price-management/Airport'));
 const AdminSetPrices = lazy(() => import('./modules/admin/pages/price-management/SetPrices'));
@@ -190,11 +178,6 @@ const AdminCreatePackagePrice = lazy(() => import('./modules/admin/pages/price-m
 const AdminDriverIncentive = lazy(() => import('./modules/admin/pages/price-management/DriverIncentive'));
 const AdminSurgePricing = lazy(() => import('./modules/admin/pages/price-management/SurgePricing'));
 const AdminVehicleType = lazy(() => import('./modules/admin/pages/price-management/VehicleType'));
-const AdminRentalVehicleTypes = lazy(() => import('./modules/admin/pages/price-management/RentalVehicleTypes'));
-const AdminRentalTracking = lazy(() => import('./modules/admin/pages/price-management/RentalTracking'));
-const AdminRentalTrackingDetail = lazy(() => import('./modules/admin/pages/price-management/RentalTrackingDetail'));
-const AdminRentalBookingRequests = lazy(() => import('./modules/admin/pages/price-management/RentalBookingRequests'));
-const AdminRentalQuoteRequests = lazy(() => import('./modules/admin/pages/price-management/RentalQuoteRequests'));
 const AdminRentalPackageTypes = lazy(() => import('./modules/admin/pages/price-management/RentalPackageTypes'));
 const AdminPricingPlaceholder = ({ title }) => (
   <div className="flex flex-col items-center justify-center min-h-[500px] text-gray-400 bg-white rounded-[32px] border border-gray-100 shadow-sm p-10">
@@ -528,11 +511,7 @@ const DriverEntryRedirect = () => {
 
   return (
     <Navigate
-      to={
-        RENTAL_ENABLED && (role === 'service_center' || role === 'service_center_staff')
-          ? '/taxi/driver/service-center'
-          : '/taxi/driver/home'
-      }
+      to="/taxi/driver/home"
       replace
     />
   );
@@ -555,7 +534,6 @@ function TaxiApp() {
     <>
       <SettingsProvider>
         <UserThemeProvider>
-        {RENTAL_ENABLED ? <RentalLocationTracker /> : null}
         <AppAutoUpdater />
         <ScrollToTop />
         <UserAccountInvalidationListener />
@@ -590,16 +568,6 @@ function TaxiApp() {
                 <Route path="ride/detail/:id" element={<RideDetail />} />
 
                 {/* New Service Routes — Real pages replacing ComingSoon */}
-                {RENTAL_ENABLED ? (
-                  <>
-                    <Route path="rental" element={<BikeRentalHome />} />
-                    <Route path="rental/vehicle" element={<RentalVehicleDetail />} />
-                    <Route path="rental/schedule" element={<RentalSchedule />} />
-                    <Route path="rental/kyc" element={<RentalKYC />} />
-                    <Route path="rental/deposit" element={<RentalDeposit />} />
-                    <Route path="rental/confirmed" element={<RentalConfirmed />} />
-                  </>
-                ) : null}
                 <Route path="intercity" element={<IntercityHome />} />
                 <Route path="intercity/vehicle" element={<IntercityVehicle />} />
                 <Route path="intercity/details" element={<IntercityDetails />} />
@@ -667,28 +635,6 @@ function TaxiApp() {
                   element={<RideDetail />}
                 />
 
-                {RENTAL_ENABLED ? (
-                  <>
-                    <Route path="user/rental" element={<BikeRentalHome />} />
-                    <Route
-                      path="user/rental/vehicle"
-                      element={<RentalVehicleDetail />}
-                    />
-                    <Route
-                      path="user/rental/schedule"
-                      element={<RentalSchedule />}
-                    />
-                    <Route path="user/rental/kyc" element={<RentalKYC />} />
-                    <Route
-                      path="user/rental/deposit"
-                      element={<RentalDeposit />}
-                    />
-                    <Route
-                      path="user/rental/confirmed"
-                      element={<RentalConfirmed />}
-                    />
-                  </>
-                ) : null}
                 <Route path="user/intercity" element={<IntercityHome />} />
                 <Route
                   path="user/intercity/vehicle"
@@ -766,7 +712,6 @@ function TaxiApp() {
                 {/* Reached when one phone holds several portal roles; both
                     OTPVerification and StepPersonal navigate here. */}
                 <Route path="select-role" element={<RoleSelection />} />
-                <Route path="role-signup" element={<RoleSpecificOnboarding />} />
                 <Route path="step-personal" element={<StepPersonal />} />
                 <Route path="step-referral" element={<StepReferral />} />
                 <Route path="step-vehicle" element={<StepVehicle />} />
@@ -783,13 +728,6 @@ function TaxiApp() {
                 <Route path="chat" element={<Chat />} />
                 <Route path="wallet" element={<DriverWallet />} />
                 <Route path="profile" element={<DriverProfile />} />
-                {RENTAL_ENABLED ? (
-                  <>
-                    <Route path="service-center" element={<ServiceCenterDashboard />} />
-                    <Route path="service-center/vehicles/new" element={<ServiceCenterVehicleDetails />} />
-                    <Route path="service-center/vehicles/:vehicleId" element={<ServiceCenterVehicleDetails />} />
-                  </>
-                ) : null}
                 <Route path="history" element={<RideRequests />} />
                 <Route path="incentives" element={<DriverIncentives />} />
 
@@ -1005,22 +943,6 @@ function TaxiApp() {
                     path="service-location/edit/:id"
                     element={<AdminServiceLocation mode="edit" />}
                   />
-                  {RENTAL_ENABLED ? (
-                    <>
-                      <Route
-                        path="service-stores"
-                        element={<AdminServiceStores />}
-                      />
-                      <Route
-                        path="service-stores/add"
-                        element={<AdminServiceStores mode="create" />}
-                      />
-                      <Route
-                        path="service-stores/edit/:id"
-                        element={<AdminServiceStores mode="edit" />}
-                      />
-                    </>
-                  ) : null}
                   <Route path="app-modules" element={<AdminAppModules />} />
                   <Route
                     path="app-modules/create"
@@ -1069,42 +991,6 @@ function TaxiApp() {
                     path="rental-packages/edit/:id"
                     element={<AdminRentalPackageTypes mode="edit" />}
                   />
-                  {RENTAL_ENABLED ? (
-                    <>
-                      <Route
-                        path="rental-vehicles"
-                        element={<AdminRentalVehicleTypes />}
-                      />
-                      <Route
-                        path="rental-vehicles/create"
-                        element={<AdminRentalVehicleTypes mode="create" />}
-                      />
-                      <Route
-                        path="rental-vehicles/edit/:id"
-                        element={<AdminRentalVehicleTypes mode="edit" />}
-                      />
-                      <Route
-                        path="rental-vehicles/view/:id"
-                        element={<AdminRentalVehicleTypes mode="view" />}
-                      />
-                      <Route
-                        path="rental-tracking"
-                        element={<AdminRentalTracking />}
-                      />
-                      <Route
-                        path="rental-tracking/:id"
-                        element={<AdminRentalTrackingDetail />}
-                      />
-                      <Route
-                        path="rental-requests"
-                        element={<AdminRentalBookingRequests />}
-                      />
-                      <Route
-                        path="rental-quotes"
-                        element={<AdminRentalQuoteRequests />}
-                      />
-                    </>
-                  ) : null}
                   <Route path="set-price" element={<AdminSetPrices />} />
                   <Route
                     path="set-price/create"

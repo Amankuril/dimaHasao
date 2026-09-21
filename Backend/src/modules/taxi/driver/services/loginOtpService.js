@@ -1,6 +1,4 @@
 import { ApiError } from '../../../../utils/ApiError.js';
-import { ServiceStore } from '../../admin/models/ServiceStore.js';
-import { ServiceCenterStaff } from '../../admin/models/ServiceCenterStaff.js';
 import { Driver } from '../models/Driver.js';
 import { DriverLoginSession } from '../models/DriverLoginSession.js';
 import { signAccessToken } from './authService.js';
@@ -37,21 +35,6 @@ const buildPhoneCandidates = (phone) => {
 
 const normalizeRole = (role) => {
   const normalized = String(role || 'driver').toLowerCase();
-  if (
-    normalized === 'service_center' ||
-    normalized === 'service-center' ||
-    normalized === 'servicecenter'
-  ) {
-    return 'service_center';
-  }
-  if (
-    normalized === 'service_center_staff' ||
-    normalized === 'service-center-staff' ||
-    normalized === 'servicecenterstaff' ||
-    normalized === 'center_staff'
-  ) {
-    return 'service_center_staff';
-  }
   return 'driver';
 };
 
@@ -96,28 +79,7 @@ const publicDriverPayload = (driver) => ({
   isOnRide: driver.isOnRide,
 });
 
-const publicServiceCenterPayload = (center) => ({
-  id: center._id,
-  name: center.name || '',
-  owner_name: center.owner_name || '',
-  phone: center.owner_phone || '',
-  address: center.address || '',
-  status: center.status || 'active',
-});
-
-const publicServiceCenterStaffPayload = (staff) => ({
-  id: staff._id,
-  name: staff.name || '',
-  phone: staff.phone || '',
-  status: staff.status || 'active',
-  serviceCenterId: staff.serviceCenterId ? String(staff.serviceCenterId) : '',
-});
-
-const LOGIN_ROLE_PRIORITY = [
-  'service_center',
-  'service_center_staff',
-  'driver',
-];
+const LOGIN_ROLE_PRIORITY = ['driver'];
 
 export const findDriverPortalAccountByPhone = async ({ phone, role } = {}) => {
   const normalizedRole = normalizeRole(role);
@@ -127,25 +89,12 @@ export const findDriverPortalAccountByPhone = async ({ phone, role } = {}) => {
     return null;
   }
 
-  const account =
-    normalizedRole === 'service_center'
-      ? await ServiceStore.findOne({ owner_phone: { $in: phoneCandidates } })
-      : normalizedRole === 'service_center_staff'
-        ? await ServiceCenterStaff.findOne({ phone: { $in: phoneCandidates } })
-        : await Driver.findOne({ phone: { $in: phoneCandidates } });
+  const account = await Driver.findOne({ phone: { $in: phoneCandidates } });
 
   return account ? { role: normalizedRole, account } : null;
 };
 
 const buildDriverPortalExistenceQuery = (role, phoneCandidates) => {
-  if (role === 'service_center') {
-    return ServiceStore.findOne({ owner_phone: { $in: phoneCandidates } }).select('_id').lean();
-  }
-
-  if (role === 'service_center_staff') {
-    return ServiceCenterStaff.findOne({ phone: { $in: phoneCandidates } }).select('_id').lean();
-  }
-
   return Driver.findOne({ phone: { $in: phoneCandidates } }).select('_id').lean();
 };
 
@@ -202,13 +151,7 @@ export const startDriverLoginOtp = async ({ phone, role = 'driver' }) => {
   if (!account) {
     throw new ApiError(
       404,
-      `${
-        normalizedRole === 'service_center'
-          ? 'Service center'
-          : normalizedRole === 'service_center_staff'
-            ? 'Service center staff'
-            : 'Driver'
-      } account not found`,
+      'Driver account not found',
     );
   }
 
@@ -287,24 +230,13 @@ export const verifyDriverLoginOtp = async ({ phone, otp, role }) => {
       account = match.account;
     }
   } else {
-    account =
-      normalizedRole === 'service_center'
-        ? await ServiceStore.findById(session.driverId)
-        : normalizedRole === 'service_center_staff'
-          ? await ServiceCenterStaff.findById(session.driverId)
-          : await Driver.findById(session.driverId);
+    account = await Driver.findById(session.driverId);
   }
 
   if (!account) {
     throw new ApiError(
       404,
-      `${
-        normalizedRole === 'service_center'
-          ? 'Service center'
-          : normalizedRole === 'service_center_staff'
-            ? 'Service center staff'
-            : 'Driver'
-      } account not found`,
+      'Driver account not found',
     );
   }
 
@@ -318,11 +250,6 @@ export const verifyDriverLoginOtp = async ({ phone, otp, role }) => {
     message: 'OTP verified successfully',
     token: signAccessToken({ sub: String(account._id), role: normalizedRole }),
     role: normalizedRole,
-    driver:
-      normalizedRole === 'service_center'
-        ? publicServiceCenterPayload(account)
-        : normalizedRole === 'service_center_staff'
-          ? publicServiceCenterStaffPayload(account)
-          : publicDriverPayload(account),
+    driver: publicDriverPayload(account),
   };
 };

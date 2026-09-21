@@ -280,51 +280,17 @@ export const getReferralDashboard = asyncHandler(async (_req, res) =>
 export const getServiceLocations = asyncHandler(async (req, res) =>
   ok(res, await adminService.listServiceLocations(req.auth?.admin)),
 );
-export const getServiceStores = asyncHandler(async (req, res) =>
-  ok(res, { results: await adminService.listServiceStores(req.auth?.admin) }),
-);
-export const getPendingServiceStoreSignups = asyncHandler(async (req, res) =>
-  ok(res, { results: await adminService.listPendingServiceStoreSignups(req.auth?.admin) }),
-);
-export const getPendingServiceCenterStaffSignups = asyncHandler(async (req, res) =>
-  ok(res, { results: await adminService.listPendingServiceCenterStaffSignups(req.auth?.admin) }),
-);
 export const getCountries = asyncHandler(async (_req, res) =>
   ok(res, { results: await adminService.listCountries() }),
 );
 export const createServiceLocation = asyncHandler(async (req, res) =>
   ok(res, await adminService.createServiceLocation(req.body, req.auth?.admin)),
 );
-export const createServiceStore = asyncHandler(async (req, res) =>
-  ok(res, await adminService.createServiceStore(req.body, req.auth?.admin)),
-);
 export const updateServiceLocation = asyncHandler(async (req, res) =>
   ok(res, await adminService.updateServiceLocation(req.params.id, req.body, req.auth?.admin)),
 );
-export const updateServiceStore = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateServiceStore(req.params.id, req.body, req.auth?.admin)),
-);
-export const createServiceStoreStaff = asyncHandler(async (req, res) =>
-  ok(res, await adminService.createServiceStoreStaff(req.params.id, req.body, req.auth?.admin)),
-);
-export const approveServiceStoreSignup = asyncHandler(async (req, res) =>
-  ok(res, await adminService.approveServiceStoreSignup(req.params.id, req.auth?.admin)),
-);
-export const rejectServiceStoreSignup = asyncHandler(async (req, res) =>
-  ok(res, await adminService.rejectServiceStoreSignup(req.params.id, req.body, req.auth?.admin)),
-);
-export const approveServiceCenterStaffSignup = asyncHandler(async (req, res) =>
-  ok(res, await adminService.approveServiceCenterStaffSignup(req.params.id, req.auth?.admin)),
-);
-export const rejectServiceCenterStaffSignup = asyncHandler(async (req, res) =>
-  ok(res, await adminService.rejectServiceCenterStaffSignup(req.params.id, req.body, req.auth?.admin)),
-);
 export const deleteServiceLocation = asyncHandler(async (req, res) => {
   await adminService.deleteServiceLocation(req.params.id, req.auth?.admin);
-  ok(res, { deleted: true });
-});
-export const deleteServiceStore = asyncHandler(async (req, res) => {
-  await adminService.deleteServiceStore(req.params.id, req.auth?.admin);
   ok(res, { deleted: true });
 });
 export const getNearbyServiceLocations = asyncHandler(async (req, res) =>
@@ -358,9 +324,6 @@ export const getVehicleTypeById = asyncHandler(async (req, res) =>
 );
 export const getPublicVehicleTypeCatalog = asyncHandler(async (_req, res) =>
   ok(res, await adminService.listPublicVehicleCatalog()),
-);
-export const getPublicRentalVehicleCatalog = asyncHandler(async (_req, res) =>
-  ok(res, { results: await adminService.listPublicRentalVehicleCatalog() }),
 );
 export const getVehiclePreferenceOptions = asyncHandler(async (_req, res) =>
   ok(res, await adminService.listVehiclePreferences()),
@@ -443,36 +406,6 @@ export const deleteAirport = asyncHandler(async (req, res) => {
   await adminService.deleteAirport(req.params.id, req.auth?.admin);
   ok(res, { deleted: true });
 });
-
-export const getRentalVehicleTypes = asyncHandler(async (_req, res) =>
-  ok(res, { results: await adminService.listRentalVehicleTypes() }),
-);
-export const createRentalVehicleType = asyncHandler(async (req, res) =>
-  ok(res, await adminService.createRentalVehicleType(req.body)),
-);
-export const updateRentalVehicleType = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateRentalVehicleType(req.params.id, req.body)),
-);
-export const deleteRentalVehicleType = asyncHandler(async (req, res) => {
-  await adminService.deleteRentalVehicleType(req.params.id);
-  ok(res, { deleted: true });
-});
-
-export const getRentalQuoteRequests = asyncHandler(async (_req, res) =>
-  ok(res, { results: await adminService.listRentalQuoteRequests() }),
-);
-export const updateRentalQuoteRequest = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateRentalQuoteRequest(req.params.id, req.body, req.auth?.sub)),
-);
-export const getRentalBookingRequests = asyncHandler(async (_req, res) =>
-  ok(res, { results: await adminService.listRentalBookingRequests() }),
-);
-export const getRentalTrackingDashboard = asyncHandler(async (_req, res) =>
-  ok(res, await adminService.getRentalTrackingDashboard()),
-);
-export const updateRentalBookingRequest = asyncHandler(async (req, res) =>
-  ok(res, await adminService.updateRentalBookingRequest(req.params.id, req.body, req.auth?.sub)),
-);
 
 export const getRentalPackageTypes = asyncHandler(async (_req, res) =>
   ok(res, { rental_packages: await adminService.listRentalPackageTypes() }),

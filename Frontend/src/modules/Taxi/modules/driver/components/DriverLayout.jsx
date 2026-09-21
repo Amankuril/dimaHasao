@@ -44,7 +44,6 @@ const onboardingRoutes = new Set([
     '/taxi/driver/step-referral',
     '/taxi/driver/step-vehicle',
     '/taxi/driver/step-documents',
-    '/taxi/driver/role-signup',
     '/taxi/driver/registration-status',
     '/taxi/driver/status',
 ]);
@@ -64,16 +63,10 @@ const redirectToDriverLogin = (navigate) => {
 const getStoredRole = () => String(getStoredDriverRole() || 'driver').toLowerCase();
 const getAuthenticatedRole = () => String(getAuthenticatedDriverRole() || 'driver').toLowerCase();
 
-const getAuthenticatedDriverHome = (pathname = '', role = '') => {
-    const activeRole = String(role || getAuthenticatedRole() || 'driver').toLowerCase();
-    return ['service_center', 'service_center_staff'].includes(activeRole)
-        ? '/taxi/driver/service-center'
-        : '/taxi/driver/home';
-};
+const getAuthenticatedDriverHome = () => '/taxi/driver/home';
 
 const getPendingDriverRoute = () => '/taxi/driver/registration-status';
 const getPendingRouteForRole = () => getPendingDriverRoute();
-const isServiceCenterRoute = (pathname = '') => pathname.startsWith('/taxi/driver/service-center');
 const isPendingAllowedRoute = (pathname = '') =>
     [
         '/taxi/driver/documents',
@@ -122,15 +115,6 @@ const DriverLayout = () => {
             return;
         }
 
-        if (
-            isServiceCenterRoute(currentPath)
-            && !['service_center', 'service_center_staff'].includes(authenticatedRole)
-        ) {
-            setIsAllowed(false);
-            navigate(authenticatedHome, { replace: true });
-            return;
-        }
-
         if (verifiedTokenRef.current === token && verifiedApprovalRef.current && isAllowed) {
             setIsChecking(false);
             return;
@@ -171,18 +155,8 @@ const DriverLayout = () => {
                 verifiedTokenRef.current = token;
                 verifiedApprovalRef.current = true;
 
-                if (
-                    isServiceCenterRoute(currentPath)
-                    && !['service_center', 'service_center_staff'].includes(effectiveRole)
-                ) {
-                    navigate(getAuthenticatedDriverHome(currentPath, effectiveRole), { replace: true });
-                    return;
-                }
-
                 const isDriverConsoleRoute =
-                    currentPath.startsWith('/taxi/driver') &&
-                    !isServiceCenterRoute(currentPath) &&
-                    !isOnboardingRoute(currentPath);
+                    currentPath.startsWith('/taxi/driver') && !isOnboardingRoute(currentPath);
 
                 if (isDriverConsoleRoute && effectiveRole !== 'driver') {
                     navigate(getAuthenticatedDriverHome(currentPath, effectiveRole), { replace: true });
