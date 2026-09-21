@@ -1,5 +1,6 @@
 import express from 'express';
 import { authMiddleware, requireAdmin } from '../auth/auth.middleware.js';
+import { legalAdminRouter } from '../legal/legal.routes.js';
 import {
   loadAdmin,
   getMyAdminProfile,
@@ -30,6 +31,9 @@ const router = express.Router();
 // loadAdmin is what turns the token's { userId, role } into the real admin
 // document; every guard below depends on it.
 router.use(authMiddleware, requireAdmin, loadAdmin);
+
+// Privacy, terms and the rest — one copy for every app, edited here.
+router.use('/legal', legalAdminRouter);
 
 // Any admin may read and edit their own profile.
 router.get('/me', getMyAdminProfile);

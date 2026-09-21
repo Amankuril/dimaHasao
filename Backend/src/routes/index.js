@@ -9,6 +9,7 @@ import landingRoutes from '../modules/food/landing/routes/landing.routes.js';
 import { getPublicDiningCategories, getPublicDiningRestaurants } from '../modules/food/dining/controllers/diningPublic.controller.js';
 import uploadRoutes from '../modules/uploads/routes/upload.routes.js';
 import platformAdminRoutes from '../core/admin/admin.routes.js';
+import { legalPublicRouter } from '../core/legal/legal.routes.js';
 import { consumerSupportRouter } from '../core/support/support.routes.js';
 import { festivalsRouter } from '../modules/festivals/routes/index.js';
 import restaurantAdminRoutes from '../modules/food/admin/routes/admin.routes.js';
@@ -65,6 +66,8 @@ router.use('/v1/food/dining/bookings', diningBookingRoutes);
 router.use('/v1/uploads', uploadRoutes);
 // Platform-level administrator management (profile, administrators, RBAC meta).
 router.use('/v1/admin', platformAdminRoutes);
+// Public on purpose: a policy behind a login is not a policy.
+router.use('/v1/legal', legalPublicRouter);
 // One help desk for the consumer app; the customer picks the service.
 router.use('/v1/support', consumerSupportRouter);
 router.use('/v1/festivals', festivalsRouter);

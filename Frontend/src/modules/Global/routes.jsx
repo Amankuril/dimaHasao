@@ -7,6 +7,7 @@ const L = (loader) => lazy(loader);
 const AdminLayout = L(() => import('./app/admin/layouts/AdminLayout'));
 const Profile = L(() => import('./app/admin/pages/Profile'));
 const Administrators = L(() => import('./app/admin/pages/Administrators'));
+const LegalDocuments = L(() => import('./app/admin/pages/LegalDocuments'));
 const Support = L(() => import('./app/admin/pages/Support'));
 const Reports = L(() => import('./app/admin/pages/Reports'));
 
@@ -25,6 +26,7 @@ export default function GlobalRoutes() {
             <Route index element={<Profile />} />
             <Route path="profile" element={<Profile />} />
             <Route path="administrators" element={<Administrators />} />
+            <Route path="legal" element={<LegalDocuments />} />
             <Route path="support" element={<Support />} />
             <Route path="reports" element={<Reports />} />
           </Route>

@@ -46,6 +46,11 @@ const globalService = {
   createAdministrator: (payload) => request(api.post('/administrators', payload)),
   updateAdministrator: (id, payload) => request(api.patch(`/administrators/${id}`, payload)),
 
+  // Legal — privacy, terms and the rest, one copy for every app.
+  getLegalDocuments: () => request(api.get('/legal')),
+  saveLegalDocument: (payload) => request(api.put('/legal', payload)),
+  deleteLegalDocument: (id) => request(api.delete(`/legal/${id}`)),
+
   // Support — one desk for every module's tickets.
   getSupportTickets: (params = {}) => request(api.get('/support', { params })),
   getSupportStats: () => request(api.get('/support/stats')),
