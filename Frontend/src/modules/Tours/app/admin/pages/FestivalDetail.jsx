@@ -51,6 +51,7 @@ const FestivalDetail = ({ festivalId, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
+  const [cancellingId, setCancellingId] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -68,6 +69,27 @@ const FestivalDetail = ({ festivalId, onBack }) => {
   // Filtered in the browser: the list is one festival's bookings, so this is a
   // small array and a round trip per keystroke would be worse than useless.
   const query = search.trim().toLowerCase();
+  /*
+   * Cancelling a pass on the attendee's behalf — someone who cannot make it
+   * rings the office rather than using the app. The endpoint releases the
+   * seats it held, so the festival's remaining count corrects itself.
+   */
+  const cancelBooking = async (booking) => {
+    const reason = window.prompt(`Why is ${booking.bookingId} being cancelled?`);
+    if (!String(reason || '').trim()) return;
+
+    try {
+      setCancellingId(booking._id);
+      await festivalService.cancelFestivalBooking(booking._id, reason.trim());
+      toast.success('Pass cancelled and seats released');
+      await load();
+    } catch (error) {
+      toast.error(error.message || 'Could not cancel this pass');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   const bookings = (data?.bookings || []).filter((b) => {
     if (!query) return true;
     const user = b.userId || {};
@@ -216,7 +238,7 @@ const FestivalDetail = ({ festivalId, onBack }) => {
             <table className="w-full text-sm min-w-[880px]">
               <thead className="bg-gray-50 text-gray-500">
                 <tr>
-                  {['Booking ID', 'Attendee', 'Category', 'Seats', 'Amount', 'Status', 'Pass', 'Booked on'].map((h, i) => (
+                  {['Booking ID', 'Attendee', 'Category', 'Seats', 'Amount', 'Status', 'Pass', 'Booked on', ''].map((h, i) => (
                     <th key={h} className={`px-4 py-2.5 text-xs font-bold ${
                       ['Seats', 'Amount'].includes(h) ? 'text-right' : 'text-left'
                     }`}>{h}</th>
@@ -257,6 +279,20 @@ const FestivalDetail = ({ festivalId, onBack }) => {
                       </td>
                       <td className="px-4 py-3 font-mono text-[11px] text-gray-500">{b.qrCode || '—'}</td>
                       <td className="px-4 py-3 text-xs text-gray-500">{when(b.createdAt)}</td>
+                      <td className="px-4 py-3 text-right">
+                        {b.bookingStatus === 'cancelled' ? (
+                          <span className="text-[11px] text-gray-300">—</span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={cancellingId === b._id}
+                            onClick={() => cancelBooking(b)}
+                            className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

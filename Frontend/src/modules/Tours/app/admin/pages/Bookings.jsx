@@ -7,10 +7,32 @@ import toast from 'react-hot-toast';
 
 const FILTERS = ['all', 'pending', 'confirmed', 'ongoing', 'completed', 'cancelled'];
 
+/**
+ * Where a booking may go next, mirroring the server's own table. Kept here so
+ * the panel only offers transitions the API will accept, rather than showing
+ * buttons that fail.
+ */
+const NEXT_STATUS = {
+  pending: ['cancelled'],
+  confirmed: ['ongoing', 'no_show', 'cancelled'],
+  ongoing: ['completed'],
+  completed: [],
+  cancelled: [],
+  no_show: [],
+};
+
+const STATUS_LABEL = {
+  ongoing: 'Start trip',
+  completed: 'Complete',
+  no_show: 'No show',
+  cancelled: 'Cancel',
+};
+
 const Bookings = () => {
   const [params, setParams] = useSearchParams();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState('');
   const status = params.get('status') || 'all';
 
   const load = useCallback(async () => {
@@ -26,6 +48,36 @@ const Bookings = () => {
   }, [status]);
 
   useEffect(() => { load(); }, [load]);
+
+  /*
+   * Cancelling asks for a reason, because the traveller is told what it was and
+   * "Cancelled" on its own answers nothing. `window.confirm` is deliberately
+   * not used anywhere in these panels — it is suppressed in embedded browsers,
+   * where it silently returns false and the action looks broken.
+   */
+  const act = async (booking, next) => {
+    const reason =
+      next === 'cancelled'
+        ? window.prompt(`Why is ${booking.bookingId} being cancelled?`)
+        : undefined;
+    if (next === 'cancelled' && !String(reason || '').trim()) return;
+
+    try {
+      setBusyId(booking._id);
+      if (next === 'cancelled') {
+        await adminService.cancelBooking(booking._id, reason.trim());
+        toast.success('Booking cancelled');
+      } else {
+        await adminService.updateBookingStatus(booking._id, next);
+        toast.success(`Booking marked ${next.replace('_', ' ')}`);
+      }
+      await load();
+    } catch (error) {
+      toast.error(error.message || 'Could not update this booking');
+    } finally {
+      setBusyId('');
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -62,13 +114,14 @@ const Bookings = () => {
                 <th className="p-4 font-semibold text-right">Advance</th>
                 <th className="p-4 font-semibold text-right">Balance</th>
                 <th className="p-4 font-semibold">Status</th>
+                <th className="p-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan="7"><Spinner /></td></tr>
+                <tr><td colSpan="8"><Spinner /></td></tr>
               ) : bookings.length === 0 ? (
-                <tr><td colSpan="7"><EmptyState message="No bookings yet." /></td></tr>
+                <tr><td colSpan="8"><EmptyState message="No bookings yet." /></td></tr>
               ) : (
                 bookings.map((b) => (
                   <tr key={b._id} className="hover:bg-gray-50/60">
@@ -96,6 +149,28 @@ const Bookings = () => {
                     <td className="p-4">
                       <StatusPill status={b.bookingStatus} />
                       <span className="block mt-1"><StatusPill status={b.paymentStatus} /></span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        {(NEXT_STATUS[b.bookingStatus] || []).map((next) => (
+                          <button
+                            key={next}
+                            type="button"
+                            disabled={busyId === b._id}
+                            onClick={() => act(b, next)}
+                            className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:opacity-50 ${
+                              next === 'cancelled'
+                                ? 'border-red-200 text-red-700 hover:bg-red-50'
+                                : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            {STATUS_LABEL[next] || next}
+                          </button>
+                        ))}
+                        {!(NEXT_STATUS[b.bookingStatus] || []).length && (
+                          <span className="text-[11px] text-gray-300">—</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

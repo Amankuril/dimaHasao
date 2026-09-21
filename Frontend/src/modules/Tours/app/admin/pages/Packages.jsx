@@ -13,6 +13,7 @@ const Packages = () => {
   const [summary, setSummary] = useState({});
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
+  const [confirmingId, setConfirmingId] = useState(null);
 
   const status = params.get('status') || 'all';
 
@@ -47,6 +48,44 @@ const Packages = () => {
       toast.error(error.message || 'Could not update this package');
     } finally {
       setBusyId(null);
+    }
+  };
+
+  /** Hide a package from travellers without deleting it. */
+  const toggle = async (pkg) => {
+    try {
+      setBusyId(pkg._id);
+      await adminService.togglePackage(pkg._id, !pkg.isActive);
+      toast.success(pkg.isActive ? 'Package hidden' : 'Package is live');
+      await load();
+    } catch (error) {
+      toast.error(error.message || 'Could not update this package');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  /*
+   * The server refuses to delete a package that has bookings and says so, which
+   * is the message shown here — deleting one would orphan a traveller's trip.
+   * Two steps rather than `window.confirm`, which embedded browsers suppress.
+   */
+  const remove = async (pkg) => {
+    if (confirmingId !== pkg._id) {
+      setConfirmingId(pkg._id);
+      toast('Press delete again to confirm', { icon: '⚠️' });
+      return;
+    }
+    try {
+      setBusyId(pkg._id);
+      await adminService.deletePackage(pkg._id);
+      toast.success('Package deleted');
+      await load();
+    } catch (error) {
+      toast.error(error.message || 'Could not delete this package');
+    } finally {
+      setBusyId(null);
+      setConfirmingId(null);
     }
   };
 
@@ -133,6 +172,14 @@ const Packages = () => {
                             reject
                           </button>
                         )}
+                        <button type="button" disabled={busyId === pkg._id} onClick={() => toggle(pkg)}
+                          className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                          {pkg.isActive ? 'switch off' : 'switch on'}
+                        </button>
+                        <button type="button" disabled={busyId === pkg._id} onClick={() => remove(pkg)}
+                          className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-white border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50">
+                          delete
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -52,6 +52,27 @@ const Reviews = () => {
     }
   };
 
+  /*
+   * Answering a review publicly. The endpoint was there from the start with
+   * nothing calling it, so a traveller's complaint could be approved or hidden
+   * but never replied to.
+   */
+  const reply = async (review) => {
+    const text = window.prompt('Reply to this review', review.reply || '');
+    if (text === null) return;
+
+    try {
+      setBusyId(review._id);
+      await adminService.replyToReview(review._id, text.trim());
+      toast.success(text.trim() ? 'Reply posted' : 'Reply removed');
+      await load();
+    } catch (error) {
+      toast.error(error.message || 'Could not post the reply');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -114,6 +135,14 @@ const Reviews = () => {
               )}
 
               <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  disabled={busyId === review._id}
+                  onClick={() => reply(review)}
+                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {review.reply ? 'Edit reply' : 'Reply'}
+                </button>
                 {review.status !== 'approved' && (
                   <button
                     type="button"

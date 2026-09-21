@@ -50,6 +50,9 @@ const festivalService = {
   /** One festival: seat status per category, plus every booking behind it. */
   getFestivalSummary: (id, params = {}) => request(festivalApi.get(`/admin/${id}/bookings`, { params })),
   verifyFestivalPass: (qrCode) => request(festivalApi.post('/admin/bookings/verify', { qrCode })),
+  /** Cancel a pass on the attendee's behalf; releases the seats it held. */
+  cancelFestivalBooking: (id, reason) =>
+    request(festivalApi.post(`/admin/bookings/${id}/cancel`, { reason })),
 };
 
 export default festivalService;

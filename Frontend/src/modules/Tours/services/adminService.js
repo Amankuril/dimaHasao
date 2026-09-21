@@ -36,6 +36,13 @@ const adminService = {
   getBookings: (params = {}) => toursApi.get('/admin/bookings', { params }),
   updateBookingStatus: (id, status, reason) =>
     toursApi.patch(`/admin/bookings/${id}/status`, { status, reason }),
+  /**
+   * Cancel on the traveller's behalf. The endpoint existed from the start and
+   * had no caller, so a cancellation phoned in to the office could not be
+   * actioned from the panel at all.
+   */
+  cancelBooking: (id, reason) =>
+    toursApi.post(`/admin/bookings/${id}/cancel`, { reason }),
 
   // Settings
   getSettings: () => toursApi.get('/admin/settings'),
