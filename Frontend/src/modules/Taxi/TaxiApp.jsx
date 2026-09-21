@@ -45,14 +45,6 @@ const Wallet = lazy(() => import('./modules/user/pages/Wallet'));
 
 // Coming Soon placeholder (for /tours and any unbuilt routes)
 const ComingSoon = lazy(() => import('./modules/shared/pages/ComingSoon'));
-const LegalPage = lazy(() => import('./modules/shared/pages/LegalPage'));
-const LandingPage = lazy(() => import('./modules/shared/pages/LandingPage'));
-const AboutPage = lazy(() => import('./modules/shared/pages/AboutPage'));
-const ContactPage = lazy(() => import('./modules/shared/pages/ContactPage'));
-const FaqPage = lazy(() => import('./modules/shared/pages/FaqPage'));
-const ServicesPage = lazy(() => import('./modules/shared/pages/ServicesPage'));
-const BlogPage = lazy(() => import('./modules/shared/pages/BlogPage'));
-const LinksPage = lazy(() => import('./modules/shared/pages/LinksPage'));
 
 
 // Phase 2 — Core utility pages
@@ -192,8 +184,6 @@ const AdminGeoFencing = lazy(() => import('./modules/admin/pages/geo/GeoFencing'
 const AdminGodsEye = lazy(() => import('./modules/admin/pages/geo/GodsEye'));
 const AdminFinance = lazy(() => import('./modules/admin/pages/finance/Finance'));
 const AdminSafetyCenter = lazy(() => import('./modules/admin/pages/safety/SafetyCenter'));
-const AdminCMSBuilder = lazy(() => import('./modules/admin/pages/cms/CMSBuilder'));
-const AdminHeaderFooter = lazy(() => import('./modules/admin/pages/cms/HeaderFooter'));
 const AdminGeneralSettings = lazy(() => import('./modules/admin/pages/settings/GeneralSettings'));
 const AdminTransportRideSettings = lazy(() => import('./modules/admin/pages/settings/TransportRideSettings'));
 const AdminWalletSettings = lazy(() => import('./modules/admin/pages/settings/WalletSettings'));
@@ -270,8 +260,6 @@ const AdminSectionPlaceholder = () => {
 // A wrapper to handle conditional layouts (Mobile for User/Driver, Full for Admin)
 const MainLayout = ({ children }) => {
   const location = useLocation();
-  const staticPages = ['/taxi', '/taxi/about', '/taxi/contact', '/taxi/faq', '/taxi/services', '/taxi/privacy', '/taxi/terms', '/taxi/refund', '/taxi/cancellation', '/taxi/blog', '/taxi/links'];
-  const isStaticPath = staticPages.includes(location.pathname);
   const isAdminPath =
     location.pathname.startsWith('/taxi/admin') ||
     location.pathname.startsWith('/taxi/user-import') ||
@@ -279,14 +267,6 @@ const MainLayout = ({ children }) => {
 
   if (isAdminPath) {
     return <div className="redigo-admin-root h-screen bg-gray-50 overflow-hidden">{children}</div>;
-  }
-
-  if (isStaticPath) {
-    return (
-      <div className="redigo-landing-root min-h-screen bg-white">
-        <main className="min-h-screen">{children}</main>
-      </div>
-    );
   }
 
   return (
@@ -521,7 +501,7 @@ function TaxiApp() {
   const location = useLocation();
   // Mounted at both /taxi (public marketing site) and /taxi/user (already
   // gated by RequireUserAuth in src/app/routes.jsx) — the bare index route
-  // must not show the public LandingPage to an already-authenticated
+  // must not show a public marketing page to an already-authenticated
   // customer, or their only way "in" bounces them back to /login.
   const isAuthedUserMount = location.pathname.startsWith('/taxi/user');
 
@@ -543,19 +523,21 @@ function TaxiApp() {
             <Toaster position="top-right" closeButton />
             <Routes>
               {/* Static / Public routes */}
-              <Route index element={isAuthedUserMount ? <UserHomeRoute /> : <LandingPage />} />
-              <Route path="about" element={<AboutPage />} />
-              <Route path="contact" element={<ContactPage />} />
-              <Route path="faq" element={<FaqPage />} />
-              <Route path="services" element={<ServicesPage />} />
-              <Route path="blog" element={<BlogPage />} />
-              <Route path="links" element={<LinksPage />} />
-              <Route path="terms" element={<LegalPage />} />
-              <Route path="terms-and-conditions" element={<LegalPage />} />
-              <Route path="privacy" element={<LegalPage />} />
-              <Route path="privacy-policy" element={<LegalPage />} />
-              <Route path="refund" element={<LegalPage />} />
-              <Route path="cancellation" element={<LegalPage />} />
+              {/* The previous product's marketing site (about, services, blog,
+                  contact, FAQ, links) lived here and described a different
+                  company in a different state. An unauthenticated visitor now
+                  lands on sign-in like every other module.
+
+                  Policies come from Global Settings, so these legacy taxi paths
+                  redirect to the one viewer at /legal/:slug rather than
+                  rendering a second copy from a bundled text file. */}
+              <Route index element={isAuthedUserMount ? <UserHomeRoute /> : <Navigate to="/login" replace />} />
+              <Route path="terms" element={<Navigate to="/legal/terms?module=taxi" replace />} />
+              <Route path="terms-and-conditions" element={<Navigate to="/legal/terms?module=taxi" replace />} />
+              <Route path="privacy" element={<Navigate to="/legal/privacy?module=taxi" replace />} />
+              <Route path="privacy-policy" element={<Navigate to="/legal/privacy?module=taxi" replace />} />
+              <Route path="refund" element={<Navigate to="/legal/refund?module=taxi" replace />} />
+              <Route path="cancellation" element={<Navigate to="/legal/refund?module=taxi" replace />} />
 
               <Route element={<UserProtectedRoute />}>
                 <Route path="ride/select-location" element={<SelectLocation />} />
@@ -608,9 +590,9 @@ function TaxiApp() {
               </Route>
 
               {/* User Module Routes (Taxi-prefixed aliases to match Driver style) */}
-              <Route path="user/terms" element={<LegalPage />} />
-              <Route path="user/privacy" element={<LegalPage />} />
-              <Route path="user/refund" element={<LegalPage />} />
+              <Route path="user/terms" element={<Navigate to="/legal/terms?module=taxi" replace />} />
+              <Route path="user/privacy" element={<Navigate to="/legal/privacy?module=taxi" replace />} />
+              <Route path="user/refund" element={<Navigate to="/legal/refund?module=taxi" replace />} />
 
               <Route element={<UserProtectedRoute />}>
                 <Route path="user" element={<UserMainTabKeepAlive />} />
@@ -1034,11 +1016,6 @@ function TaxiApp() {
                   />
                 </Route>
                 <Route path="safety" element={<AdminSafetyCenter />} />
-                <Route path="cms" element={<AdminCMSBuilder />} />
-                <Route
-                  path="settings/cms/header-footer"
-                  element={<AdminHeaderFooter />}
-                />
                 <Route
                   path="support/ticket-title"
                   element={<AdminSupportTicketTitle />}
@@ -1138,10 +1115,6 @@ function TaxiApp() {
                 <Route
                   path="settings/addons/*"
                   element={<AdminReportPlaceholder title="Addons Management" />}
-                />
-                <Route
-                  path="settings/cms/*"
-                  element={<AdminReportPlaceholder title="CMS Management" />}
                 />
               </Route>
 

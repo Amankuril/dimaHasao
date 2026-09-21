@@ -88,7 +88,6 @@ const FoodUserShell = () => (
 const TAXI_NAV_EXTRAS = [
   { label: 'Book a Ride', icon: 'fa-solid fa-car-side', path: '/taxi/user' },
   { label: 'My Rides', icon: 'fa-solid fa-route', path: '/taxi/user/activity' },
-  { label: 'Bus', icon: 'fa-solid fa-bus', path: '/taxi/user/bus' },
   { label: 'Support', icon: 'fa-solid fa-headset', path: '/taxi/user/support' },
 ]
 
