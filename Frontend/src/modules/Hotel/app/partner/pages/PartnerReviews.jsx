@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import PartnerHeader from '../components/PartnerHeader';
 import { reviewService } from '../../../services/apiService';
 import toast from 'react-hot-toast';
+import { getPartnerUser } from '../../../utils/partnerAuth';
 
 const ReviewCard = ({ review, onReplySubmit, currentUser }) => {
     const [isReplying, setIsReplying] = useState(false);
@@ -161,7 +162,7 @@ const PartnerReviews = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const u = JSON.parse(localStorage.getItem('user'));
+        const u = getPartnerUser();
         setUser(u);
         fetchReviews();
     }, []);

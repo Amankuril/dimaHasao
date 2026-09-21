@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config/apiConfig';
 import { requestOtp, verifyOtp, completeSignup, AUDIENCE } from '../../../services/auth/otpAuthClient';
 import { cachedRead, keyFor, TTL } from '@/shared/utils/apiCache';
+import { setPartnerSession, getPartnerToken, clearPartnerSession } from '../utils/partnerAuth';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -40,19 +41,16 @@ const currentRoute = () => {
  * The legacy keys are still read so partners already signed in are not ejected
  * by this change; they move onto the namespaced ones at their next sign-in.
  */
-const PARTNER_TOKEN_KEY = 'partner_accessToken';
-const PARTNER_USER_KEY = 'partner_user';
-
 const isPartnerRoute = () => currentRoute().startsWith('/hotel/partner');
 
 const resolveToken = () => {
   const route = currentRoute();
   const adminToken = localStorage.getItem('admin_accessToken');
-  const partnerToken = localStorage.getItem(PARTNER_TOKEN_KEY);
+  const partnerToken = getPartnerToken();
   const genericToken = localStorage.getItem('token');
 
   if (route.includes('/admin')) return adminToken || genericToken;
-  if (isPartnerRoute()) return partnerToken || genericToken || adminToken;
+  if (isPartnerRoute()) return partnerToken || adminToken;
   return genericToken || partnerToken || adminToken;
 };
 
@@ -76,10 +74,7 @@ api.interceptors.response.use(
       // Admin sessions are owned by the platform shell — don't clear them here.
       if (!path.includes('/admin')) {
         if (path.startsWith('/hotel/partner')) {
-          // Only the partner's own session. Clearing the generic keys here
-          // would sign out a consumer who happens to be logged in too.
-          localStorage.removeItem(PARTNER_TOKEN_KEY);
-          localStorage.removeItem(PARTNER_USER_KEY);
+          clearPartnerSession();
         } else {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -138,13 +133,13 @@ export const authService = {
       if (token) {
         // Partners get their own keys; guests keep the shared consumer ones.
         // Writing a partner session into `token` is what let unrelated code
-        // sign them out — see PARTNER_TOKEN_KEY above.
-        const isPartner = PARTNER_ROLES.includes(String(role).toLowerCase());
-        localStorage.setItem(isPartner ? PARTNER_TOKEN_KEY : 'token', token);
-        localStorage.setItem(
-          isPartner ? PARTNER_USER_KEY : 'user',
-          JSON.stringify(result.user),
-        );
+        // sign them out — see utils/partnerAuth.js.
+        if (PARTNER_ROLES.includes(String(role).toLowerCase())) {
+          setPartnerSession(token, result.user, result.refreshToken);
+        } else {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(result.user));
+        }
       }
 
       return result;
@@ -240,8 +235,7 @@ export const authService = {
     // Signing out of the partner panel must not sign out a consumer session in
     // the same browser, and vice versa.
     if (isPartnerRoute()) {
-      localStorage.removeItem(PARTNER_TOKEN_KEY);
-      localStorage.removeItem(PARTNER_USER_KEY);
+      clearPartnerSession();
       return;
     }
     localStorage.removeItem('token');

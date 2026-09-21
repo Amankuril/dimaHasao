@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { isModuleAuthenticated } from '../../shared/utils/moduleAuth';
+import { isPartnerSignedIn } from './utils/partnerAuth';
 import './app/partner/partnerTheme.css';
 
 const L = (loader) => lazy(loader);
@@ -55,6 +56,17 @@ const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden=
 const RequireAdmin = () =>
   isModuleAuthenticated('admin') ? <Outlet /> : <Navigate to="/admin" replace />;
 
+/*
+ * The partner pages had no guard at all: they rendered, each fired a request,
+ * and a 401 bounced the person to the login screen. That works, but it means
+ * an expired session shows a dashboard first and the redirect arrives from an
+ * interceptor — and any code that cleared the wrong storage key looked exactly
+ * like being signed out. The check now happens up front, the same way the
+ * admin panel does it.
+ */
+const RequirePartner = () =>
+  isPartnerSignedIn() ? <Outlet /> : <Navigate to="/hotel/partner/login" replace />;
+
 /**
  * Paints the whole partner panel in the Dima Hasao palette.
  *
@@ -103,6 +115,8 @@ export default function HotelRoutes() {
         </Route>
 
         <Route path="partner" element={<PartnerThemeLayout />}>
+          {/* Login sits outside the guard, or signing in would be impossible. */}
+          <Route element={<RequirePartner />}>
           <Route index element={<PartnerDashboard />} />
           <Route path="dashboard" element={<PartnerDashboard />} />
           <Route path="join" element={<PartnerJoinPropertyType />} />
@@ -127,6 +141,7 @@ export default function HotelRoutes() {
           <Route path="notifications" element={<PartnerNotifications />} />
           <Route path="profile" element={<PartnerProfile />} />
           <Route path="settings" element={<PartnerSettings />} />
+          </Route>
         </Route>
 
         {/* This module was ported from a standalone app where the partner

@@ -5,6 +5,7 @@ import usePartnerStore from '../store/partnerStore';
 import { userService, authService, hotelService } from '../../../services/apiService';
 import PartnerHeader from '../components/PartnerHeader';
 import { isFlutterApp, openFlutterCamera, uploadBase64Image } from '../../../utils/flutterBridge';
+import { getPartnerUser } from '../../../utils/partnerAuth';
 
 const Field = ({ label, value, icon: Icon, isEditing, onChange }) => (
     <div className="mb-6 group">
@@ -127,7 +128,7 @@ const PartnerProfile = () => {
                 });
 
                 // Sync with localStorage
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const user = (getPartnerUser() || {});
                 const updatedUser = { ...user, ...updated };
                 localStorage.setItem('user', JSON.stringify(updatedUser));
 
@@ -204,7 +205,7 @@ const PartnerProfile = () => {
             }));
 
             // Sync with localStorage
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const user = (getPartnerUser() || {});
             const updatedUser = { ...user, profileImage: newUrl, profileImagePublicId: newPublicId };
             localStorage.setItem('user', JSON.stringify(updatedUser));
         }

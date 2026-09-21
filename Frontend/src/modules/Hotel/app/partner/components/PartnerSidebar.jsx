@@ -9,11 +9,12 @@ import {
     ChevronRight, Wallet, Bell, Settings, Edit3, Info, Phone, Calendar, TrendingUp
 } from 'lucide-react';
 import usePartnerStore from '../store/partnerStore';
+import { getPartnerUser } from '../../../utils/partnerAuth';
 
 const PartnerSidebar = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
     const { formData } = usePartnerStore();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = getPartnerUser() || {};
 
     // Disable body scroll when sidebar is open
     useEffect(() => {

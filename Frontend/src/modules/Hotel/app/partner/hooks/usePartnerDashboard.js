@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { hotelService, bookingService, reviewService } from '../../../services/apiService';
 import walletService from '../../../services/walletService';
 import toast from 'react-hot-toast';
+import { getPartnerUser } from '../../../utils/partnerAuth';
 
 const usePartnerDashboard = () => {
   const [stats, setStats] = useState({
@@ -25,7 +26,7 @@ const usePartnerDashboard = () => {
         setLoading(true);
 
         // Get User Info
-        const userData = JSON.parse(localStorage.getItem('user'));
+        const userData = getPartnerUser();
         setUser(userData);
 
         // Fetch Data in Parallel
