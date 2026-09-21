@@ -58,8 +58,18 @@ export const ModuleHeader = ({ title, subtitle, backTo = '/app' }) => {
  * `navExtras` is what that module offers beyond the five shared anchors; it
  * shows under More so nothing is lost.
  */
+/*
+ * How much room the floating nav needs at the bottom of the viewport: the pill
+ * sits 8px up and is 48px tall, and its raised centre button reaches 16px
+ * above that. `pb-16` below only moves normal-flow content; a screen's own
+ * `position: fixed` action bar escapes it and ends up underneath the nav, so
+ * those bars pad themselves by this variable instead — and fall back to 0
+ * wherever the module is mounted without the shell.
+ */
+const NAV_CLEARANCE = '72px';
+
 export const ModuleShell = ({ title, subtitle, children, navExtras = [], navExtrasTitle }) => (
-  <div className="dh-app min-h-screen flex flex-col bg-[#FAF6ED]">
+  <div className="dh-app min-h-screen flex flex-col bg-[#FAF6ED]" style={{ '--app-nav-clearance': NAV_CLEARANCE }}>
     <ModuleHeader title={title} subtitle={subtitle} />
     <PatternDivider variant="green-gold" />
     {/* Room for the floating nav so it never covers a module's last row. */}
