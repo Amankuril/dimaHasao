@@ -1,6 +1,5 @@
 import { ApiError } from '../../../../utils/ApiError.js';
 import { Admin } from '../../admin/models/Admin.js';
-import { Owner } from '../../admin/models/Owner.js';
 import { Driver } from '../../driver/models/Driver.js';
 import { User } from '../../user/models/User.js';
 import {
@@ -72,15 +71,7 @@ const buildRequesterSummary = async ({ role, id }) => {
     };
   }
 
-  const owner = await Owner.findById(requesterId).select('name owner_name mobile city');
-  if (!owner) throw new ApiError(404, 'Owner not found');
-  return {
-    requesterRole: 'owner',
-    requesterId: owner._id,
-    requesterName: owner.owner_name || owner.name || 'Owner',
-    requesterPhone: owner.mobile || '',
-    serviceLocation: owner.city || '',
-  };
+  throw new ApiError(400, 'Unsupported requester role');
 };
 
 const serializeTicket = (ticket) => ({

@@ -6,29 +6,20 @@ import {
   otpVerifyRateLimit,
 } from '../../middlewares/rateLimitMiddleware.js';
 import {
-  approveOwner,
-  approveOwnerSignupFromDriver,
-  approveBusDriverSignup,
   approveServiceCenterStaffSignup,
   approveServiceStoreSignup,
   createAirport,
   createAdminAccount,
-  createAdminBusBooking,
-  createBusService,
   createAppModule,
   createGoodsType,
   createDriver,
   createDriverNeededDocument,
   bulkImportDrivers,
   createRentalPackageType,
-  createOwner,
-  createOwnerBooking,
   createOnboardingScreen,
-  createOwnerNeededDocument,
   createPreference,
   createRole,
   createPaymentMethod,
-  createPoolingRoute,
   createServiceLocation,
   createServiceStore,
   createServiceStoreStaff,
@@ -42,20 +33,15 @@ import {
   approveUserDeletionRequest,
   approveDriverDeletionRequest,
   deleteAppModule,
-  deleteBusService,
   deleteDriver,
   deleteDriverNeededDocument,
   deleteGoodsType,
   deleteOnboardingScreen,
   deleteRentalPackageType,
   deleteOngoingRide,
-  deleteOwner,
-  deleteOwnerBooking,
-  deleteOwnerNeededDocument,
   deletePreference,
   deleteRole,
   deletePaymentMethod,
-  deletePoolingRoute,
   deleteRentalVehicleType,
   deleteSetPrice,
   deleteServiceLocation,
@@ -65,19 +51,13 @@ import {
   downloadDriverDutyReport,
   downloadDriverReport,
   downloadFinanceReport,
-  downloadFleetFinanceReport,
-  downloadOwnerReport,
   downloadUserReport,
   forgotPassword,
   getAdminStatus,
-  getAdminBusBookingCalendar,
-  getAdminBusBookings,
   getAdminEarnings,
   getAirports,
-  getPendingBusDriverSignups,
   getPendingServiceCenterStaffSignups,
   getPendingServiceStoreSignups,
-  getBusServices,
   getAppModules,
   getCancelChart,
   getCountries,
@@ -111,17 +91,9 @@ import {
   getNotificationChannels,
   getOngoingRides,
   getOverallEarnings,
-  getOwner,
-  getOwners,
-  getFleetVehicles,
-  getOwnerOnboarding,
-  getOwnerBookings,
-  getOwnerDashboardData,
-  getOwnerNeededDocuments,
   getPaymentGateways,
   getPaymentMethods,
   getPaymentSettings,
-  getPoolingRoutes,
   getRentalBookingRequests,
   getRentalTrackingDashboard,
   getRentalQuoteRequests,
@@ -155,7 +127,6 @@ import {
   getRideRequests,
   rejectUserDeletionRequest,
   rejectDriverDeletionRequest,
-  rejectBusDriverSignup,
   rejectServiceCenterStaffSignup,
   rejectServiceStoreSignup,
   getUserRequests,
@@ -175,12 +146,9 @@ import {
   adjustUserWallet,
   listDriverWalletHistory,
   adjustDriverWallet,
-  listOwnerWalletHistory,
-  adjustOwnerWallet,
   updateAppModule,
   updateAirport,
   updateAdminAccount,
-  updateBusService,
   updateDriver,
   updateDriverNeededDocument,
   updateDriverPassword,
@@ -192,13 +160,8 @@ import {
   updateMailSettings,
   updateMapSettings,
   updateRechargeApiSettings,
-  updateOwner,
-  updateOwnerBooking,
-  updateOwnerNeededDocument,
-  updateFleetVehicle,
   updatePaymentSettings,
   updatePaymentMethod,
-  updatePoolingRoute,
   updateRentalBookingRequest,
   updateRentalQuoteRequest,
   updatePreferenceStatus,
@@ -213,27 +176,17 @@ import {
   generateRechargeApiToken,
   runRechargeApiTest,
   createVehicleType,
-  createFleetVehicle,
-  cancelAdminBusBookingSeats,
   deleteAirport,
   deleteAdminAccount,
   deleteVehicleType,
   getAdminPermissions,
   getAdmins,
   getTransportTypes,
-  deleteFleetVehicle,
 } from "../controllers/adminController.js";
 
-import {
-  getPoolingVehicles,
-  createPoolingVehicle,
-  updatePoolingVehicle,
-  deletePoolingVehicle,
-  approvePoolingVehicle,
-  getPoolingBookings,
-  updatePoolingBookingStatus,
-  uploadImage,
-} from '../controllers/poolingController.js';
+
+
+import { uploadImage } from '../../common/controllers/commonController.js';
 import { promotionsRouter } from '../promotions/routes/index.js';
 import { listSafetyAlerts, resolveSafetyAlert } from '../../safety/controllers/safetyController.js';
 
@@ -293,8 +246,6 @@ adminRouter.get('/admin/wallet/users/:id/history', getUserWalletHistory);
 adminRouter.post('/admin/wallet/drivers/:id/adjust', adjustDriverWallet);
 adminRouter.get('/admin/wallet/drivers/:id/history', listDriverWalletHistory);
 
-adminRouter.post('/admin/wallet/owners/:id/adjust', adjustOwnerWallet);
-adminRouter.get('/admin/wallet/owners/:id/history', listOwnerWalletHistory);
 
 adminRouter.get('/admin/wallet/drivers/negative-balance', authenticate(['admin']), getNegativeBalanceDrivers);
 adminRouter.get('/admin/wallet/drivers/withdrawals', authenticate(['admin']), getDriverWithdrawalSummaries);
@@ -346,36 +297,27 @@ adminRouter.get('/admin/airports', getAirports);
 adminRouter.post('/admin/airports', createAirport);
 adminRouter.patch('/admin/airports/:id', updateAirport);
 adminRouter.delete('/admin/airports/:id', deleteAirport);
-adminRouter.get('/admin/bus-services', getBusServices);
-adminRouter.get('/admin/bus-services/pending-drivers', getPendingBusDriverSignups);
-adminRouter.post('/admin/bus-services', createBusService);
-adminRouter.patch('/admin/bus-services/:id', updateBusService);
-adminRouter.patch('/admin/bus-services/pending-drivers/:id/approve', approveBusDriverSignup);
-adminRouter.patch('/admin/bus-services/pending-drivers/:id/reject', rejectBusDriverSignup);
-adminRouter.delete('/admin/bus-services/:id', deleteBusService);
-adminRouter.get('/admin/bus-bookings', getAdminBusBookings);
-adminRouter.get('/admin/bus-bookings/calendar', getAdminBusBookingCalendar);
-adminRouter.post('/admin/bus-bookings/manual', createAdminBusBooking);
-adminRouter.post('/admin/bus-bookings/:id/cancel', cancelAdminBusBookingSeats);
+
+
+
+// The taxi admin uploader used to be a second, Cloudinary-backed path that
+// only the pooling screens called. It now shares the one uploader every other
+// module uses, which writes WebP to disk.
+adminRouter.post('/admin/upload-image', uploadImage);
 adminRouter.get('/admin/types/rental-vehicles', getRentalVehicleTypes);
 adminRouter.post('/admin/types/rental-vehicles', createRentalVehicleType);
 adminRouter.patch('/admin/types/rental-vehicles/:id', updateRentalVehicleType);
 adminRouter.delete('/admin/types/rental-vehicles/:id', deleteRentalVehicleType);
-adminRouter.get('/admin/pooling-routes', getPoolingRoutes);
-adminRouter.post('/admin/pooling-routes', createPoolingRoute);
-adminRouter.patch('/admin/pooling-routes/:id', updatePoolingRoute);
-adminRouter.delete('/admin/pooling-routes/:id', deletePoolingRoute);
 
-adminRouter.get('/admin/pooling-vehicles', getPoolingVehicles);
-adminRouter.post('/admin/pooling-vehicles', createPoolingVehicle);
-adminRouter.patch('/admin/pooling-vehicles/:id/approve', approvePoolingVehicle);
-adminRouter.patch('/admin/pooling-vehicles/:id', updatePoolingVehicle);
-adminRouter.delete('/admin/pooling-vehicles/:id', deletePoolingVehicle);
+// Documents a driver must upload. These lived under /admin/owner-management
+// only because the fleet-owner panel happened to render them; drivers are in
+// scope and owners are not, so the path now says what it is.
+adminRouter.get('/admin/drivers/needed-documents', getDriverNeededDocuments);
+adminRouter.get('/admin/drivers/needed-documents/:id', getDriverNeededDocument);
+adminRouter.post('/admin/drivers/needed-documents', createDriverNeededDocument);
+adminRouter.patch('/admin/drivers/needed-documents/:id', updateDriverNeededDocument);
+adminRouter.delete('/admin/drivers/needed-documents/:id', deleteDriverNeededDocument);
 
-adminRouter.get('/admin/pooling-bookings', getPoolingBookings);
-adminRouter.patch('/admin/pooling-bookings/:id/status', updatePoolingBookingStatus);
-
-adminRouter.post('/admin/upload-image', uploadImage);
 adminRouter.get('/admin/rental-booking-requests', getRentalBookingRequests);
 adminRouter.get('/admin/rental-tracking', getRentalTrackingDashboard);
 adminRouter.patch('/admin/rental-booking-requests/:id', updateRentalBookingRequest);
@@ -392,32 +334,7 @@ adminRouter.delete('/admin/types/rental-packages/:id', deleteRentalPackageType);
 adminRouter.get('/admin/types/transport-types', getTransportTypes);
 adminRouter.get('/admin/vehicle_preference', getVehiclePreferenceOptions);
 
-adminRouter.get('/admin/owner-management/manage-owners', getOwners);
-adminRouter.post('/admin/owner-management/manage-owners', createOwner);
-adminRouter.get('/admin/owner-management/manage-owners/:id', getOwner);
-adminRouter.patch('/admin/owner-management/manage-owners/:id', updateOwner);
-adminRouter.patch('/admin/owner-management/manage-owners/:id/approve', approveOwner);
-adminRouter.patch('/admin/owner-management/pending-owners/:driverId/approve', approveOwnerSignupFromDriver);
-adminRouter.delete('/admin/owner-management/manage-owners/:id', deleteOwner);
 
-adminRouter.get('/admin/owner-management/manage-fleet', getFleetVehicles);
-adminRouter.post('/admin/owner-management/manage-fleet', createFleetVehicle);
-adminRouter.patch('/admin/owner-management/manage-fleet/:id', updateFleetVehicle);
-adminRouter.delete('/admin/owner-management/manage-fleet/:id', deleteFleetVehicle);
-adminRouter.get('/admin/owner-management/dashboard', getOwnerDashboardData);
-adminRouter.get('/admin/owner-management/bookings', getOwnerBookings);
-adminRouter.post('/admin/owner-management/bookings', createOwnerBooking);
-adminRouter.patch('/admin/owner-management/bookings/:id', updateOwnerBooking);
-adminRouter.delete('/admin/owner-management/bookings/:id', deleteOwnerBooking);
-adminRouter.get('/admin/owner-management/owner-needed-document', getOwnerNeededDocuments);
-adminRouter.post('/admin/owner-management/owner-needed-document', createOwnerNeededDocument);
-adminRouter.patch('/admin/owner-management/owner-needed-document/:id', updateOwnerNeededDocument);
-adminRouter.delete('/admin/owner-management/owner-needed-document/:id', deleteOwnerNeededDocument);
-adminRouter.get('/admin/owner-management/driver-needed-document', getDriverNeededDocuments);
-adminRouter.get('/admin/owner-management/driver-needed-document/:id', getDriverNeededDocument);
-adminRouter.post('/admin/owner-management/driver-needed-document', createDriverNeededDocument);
-adminRouter.patch('/admin/owner-management/driver-needed-document/:id', updateDriverNeededDocument);
-adminRouter.delete('/admin/owner-management/driver-needed-document/:id', deleteDriverNeededDocument);
 adminRouter.get('/admin/referrals/settings/:type', getReferralSettings);
 adminRouter.patch('/admin/referrals/settings/:type', updateReferralSettings);
 adminRouter.get('/admin/referral/dashboard', getReferralDashboard);
@@ -493,13 +410,10 @@ adminRouter.post('/on-boarding', createOnboardingScreen);
 adminRouter.patch('/on-boarding/:id', updateOnboardingScreen);
 adminRouter.delete('/on-boarding/:id', deleteOnboardingScreen);
 adminRouter.get('/on-boarding-driver', getDriverOnboarding);
-adminRouter.get('/on-boarding-owner', getOwnerOnboarding);
 
 adminRouter.get('/admin/reports/user/download', downloadUserReport);
 adminRouter.get('/admin/reports/driver/download', downloadDriverReport);
 adminRouter.get('/admin/reports/driver-duty/download', downloadDriverDutyReport);
-adminRouter.get('/admin/reports/owner/download', downloadOwnerReport);
 adminRouter.get('/admin/reports/finance/download', downloadFinanceReport);
-adminRouter.get('/admin/reports/fleet-finance/download', downloadFleetFinanceReport);
 
 adminRouter.use('/', promotionsRouter);

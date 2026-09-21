@@ -61,9 +61,6 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-const ADMIN_MODE = 'admin';
-const OWNER_MODE = 'owner';
-const MODE_STORAGE_KEY = 'adminPanelMode';
 const SIDEBAR_EXPANSION_STORAGE_KEY = 'adminSidebarExpandedGroups';
 const NOTIFICATION_DISMISS_STORAGE_KEY = 'adminNotificationDismissals';
 
@@ -260,8 +257,6 @@ const resolvePageTitle = (pathname, sections, appName) => {
 
   const label = findLabel(flattenItems(sections));
   if (label) return label;
-  if (pathname.includes('/owners')) return 'Owner Management';
-  if (pathname.includes('/fleet')) return 'Fleet Management';
   if (pathname.includes('/settings')) return 'Settings';
   if (pathname.includes('/reports')) return 'Reports';
   return `${appName || 'App'} Admin`;
@@ -500,72 +495,6 @@ const NestedGroup = ({
   );
 };
 
-const ModeSwitcher = ({ mode, setMode }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const options = [
-    { id: ADMIN_MODE, label: 'Admin', subtitle: 'Core control panel' },
-    { id: OWNER_MODE, label: 'Owner', subtitle: 'Owner management modules' },
-  ];
-
-  const active = options.find((option) => option.id === mode) || options[0];
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen((current) => !current)}
-        className="group flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-2 shadow-sm transition-all hover:border-amber-400/30 hover:shadow-md active:scale-95"
-      >
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all">
-          <Briefcase size={16} />
-        </div>
-        <div className="text-left leading-tight">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Panel Mode</p>
-          <p className="text-[13px] font-extrabold text-neutral-900">{active.label}</p>
-        </div>
-        <ChevronDown size={14} className="text-neutral-300 transition-transform group-hover:text-amber-400" />
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-slate-100 bg-white p-2 shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2 duration-200">
-          {options.map((option) => {
-            const selected = option.id === mode;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => {
-                  setMode(option.id);
-                  setIsOpen(false);
-                }}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all ${
-                  selected ? 'bg-amber-600 text-white shadow-lg shadow-amber-200' : 'hover:bg-neutral-50'
-                }`}
-              >
-                <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    selected ? 'bg-white' : 'bg-neutral-300'
-                  }`}
-                />
-                <span className="flex-1">
-                  <span className={`block text-[13px] font-bold ${selected ? 'text-white' : 'text-neutral-900'}`}>
-                    {option.label}
-                  </span>
-                  <span className={`block text-[11px] ${selected ? 'text-amber-100' : 'text-neutral-500'}`}>
-                    {option.subtitle}
-                  </span>
-                </span>
-                {selected && <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
 const AdminContentSkeleton = () => (
   <div className="w-full flex-1 min-h-[500px] space-y-6 animate-in fade-in duration-300">
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200/60 relative">
@@ -787,29 +716,6 @@ const AdminLayout = () => {
             ],
           },
           {
-            icon: Bus,
-            label: 'Bus Service',
-            subItems: [
-              { label: 'Fleet Manager', path: '/taxi/admin/bus-service', permission: 'bus_service.view' },
-              { label: 'Bus Commission', path: '/taxi/admin/bus-service/commission', permission: 'bus_service.view' },
-              { label: 'Bus Bookings', path: '/taxi/admin/bus-service/bookings', permission: 'bus_service.view' },
-            ],
-          },
-          ...(POOLING_ENABLED
-            ? [
-                {
-                  icon: Share2,
-                  label: 'Car Pooling',
-                  subItems: [
-                    { label: 'Pooling Vehicles', path: '/taxi/admin/pooling/vehicles', permission: 'pooling.view' },
-                    { label: 'Pooling Commission', path: '/taxi/admin/pooling/commission', permission: 'pooling.view' },
-                    { label: 'Routes & Stops', path: '/taxi/admin/pooling/routes', permission: 'pooling.view' },
-                    { label: 'Pooling Bookings', path: '/taxi/admin/pooling/bookings', permission: 'pooling.view' },
-                  ],
-                },
-              ]
-            : []),
-          {
             icon: MapPin,
             label: 'Geofencing',
             subItems: [
@@ -869,7 +775,6 @@ const AdminLayout = () => {
               { label: 'Driver Referral Settings', path: '/taxi/admin/referrals/driver-settings', permission: 'referrals.view' },
             ],
           },
-          { icon: Briefcase, label: 'Owner Management', path: '/taxi/admin/owners/dashboard', permission: 'owners.view' },
           {
             icon: FileText,
             label: 'Report',
@@ -877,9 +782,7 @@ const AdminLayout = () => {
               { label: 'User Report', path: '/taxi/admin/reports/user', permission: 'reports.view' },
               { label: 'Driver Report', path: '/taxi/admin/reports/driver', permission: 'reports.view' },
               { label: 'Driver Duty Report', path: '/taxi/admin/reports/driver-duty', permission: 'reports.view' },
-              { label: 'Owner Report', path: '/taxi/admin/reports/owner', permission: 'reports.view' },
               { label: 'Finance Report', path: '/taxi/admin/reports/finance', permission: 'reports.view' },
-              { label: 'Fleet Finance Report', path: '/taxi/admin/reports/fleet-finance', permission: 'reports.view' },
             ],
           },
           {
@@ -901,7 +804,6 @@ const AdminLayout = () => {
             permission: 'settings.view',
             subItems: [
               { label: 'General Settings', path: '/taxi/admin/settings/business/general', permission: 'settings.view' },
-              { label: 'Customization Settings', path: '/taxi/admin/settings/business/customization', permission: 'settings.view' },
               { label: 'Transport Ride Settings', path: '/taxi/admin/settings/business/transport-ride', permission: 'settings.view' },
               { label: 'Bid Ride Settings', path: '/taxi/admin/settings/business/bid-ride', permission: 'settings.view' },
             ],
@@ -954,48 +856,10 @@ const AdminLayout = () => {
     []
   );
 
-  const ownerSections = useMemo(
-    () => [
-      {
-        title: 'Owner Mode',
-        items: [
-          {
-            icon: Briefcase,
-            label: 'Owner Management',
-            subItems: [
-              { label: 'Owner Dashboard', path: '/taxi/admin/owners/dashboard', permission: 'owners.view' },
-              { label: 'Pending Owners', path: '/taxi/admin/owners/pending', permission: 'owners.view' },
-              { label: 'Manage Owners', path: '/taxi/admin/owners', permission: 'owners.view' },
-              {
-                label: 'Owner Wallet',
-                subItems: [{ label: 'Withdrawal Requests', path: '/taxi/admin/owners/wallet/withdrawals', permission: 'wallet.view' }],
-              },
-              {
-                label: 'Fleet Management',
-                subItems: [
-                  { label: 'Fleet Drivers', path: '/taxi/admin/fleet/drivers', permission: 'owners.view' },
-                  { label: 'Pending Fleet Drivers', path: '/taxi/admin/fleet/blocked', permission: 'owners.view' },
-                  { label: 'Fleet Needed Document', path: '/taxi/admin/fleet/documents', permission: 'owners.view' },
-                  { label: 'Manage Fleet', path: '/taxi/admin/fleet/manage', permission: 'owners.view' },
-                ],
-              },
-              { label: 'Owner Needed Document', path: '/taxi/admin/owners/documents', permission: 'owners.view' },
-              { label: 'Deleted Owners', path: '/taxi/admin/owners/deleted', permission: 'owners.view' },
-              { label: 'Bookings', path: '/taxi/admin/owners/bookings', permission: 'owners.view' },
-            ],
-          },
-        ],
-      },
-    ],
-    []
-  );
-
-  const isOwnerRoute = location.pathname.startsWith('/taxi/admin/owners') || location.pathname.startsWith('/taxi/admin/fleet');
   const isAdminChatRoute = pathMatches(location.pathname, '/taxi/admin/chat');
-  const mode = isOwnerRoute ? OWNER_MODE : ADMIN_MODE;
   const sidebarSections = useMemo(
-    () => filterSidebarSectionsByAccess(mode === OWNER_MODE ? ownerSections : adminSections, adminProfile),
-    [adminProfile, adminSections, mode, ownerSections],
+    () => filterSidebarSectionsByAccess(adminSections, adminProfile),
+    [adminProfile, adminSections],
   );
   const unreadCountsByPath = useMemo(
     () => ({
@@ -1096,18 +960,6 @@ const AdminLayout = () => {
         ? pagedBookings.results.length
         : visibleChatNotifications.length;
 
-  const setMode = (nextMode) => {
-    localStorage.setItem(MODE_STORAGE_KEY, nextMode);
-
-    if (nextMode === OWNER_MODE && !isOwnerRoute) {
-      navigate('/taxi/admin/owners/dashboard');
-    }
-
-    if (nextMode === ADMIN_MODE && isOwnerRoute) {
-      navigate('/taxi/admin/dashboard');
-    }
-  };
-
   useEffect(() => {
     const handleDocumentClick = (event) => {
       if (!userMenuRef.current?.contains(event.target)) {
@@ -1134,7 +986,7 @@ const AdminLayout = () => {
   useEffect(() => {
     const { token } = syncAdminSessionBridge();
 
-    if (!token || mode !== ADMIN_MODE) {
+    if (!token) {
       setChatUnreadCount(0);
       return undefined;
     }
@@ -1190,7 +1042,7 @@ const AdminLayout = () => {
     return () => {
       active = false;
     };
-  }, [isAdminChatRoute, mode]);
+  }, [isAdminChatRoute]);
 
   useEffect(() => {
     if (!isNotificationsOpen) return undefined;
@@ -1222,10 +1074,11 @@ const AdminLayout = () => {
           return;
         }
 
-        const response = await adminService.getOwnerBookings();
+        // The "Bookings" feed came from the fleet-owner module, which this
+        // district does not run. Nothing else populates it.
         if (!isMounted) return;
 
-        setBookingsFeed(response?.data?.results || response?.results || []);
+        setBookingsFeed([]);
       } catch (error) {
         console.error('Failed to load admin notifications:', error);
 
@@ -1483,7 +1336,7 @@ const AdminLayout = () => {
                     <SidebarGroup
                       key={item.label}
                       {...item}
-                      forceOpen={mode === OWNER_MODE || Boolean(sidebarSearchQuery.trim())}
+                      forceOpen={Boolean(sidebarSearchQuery.trim())}
                       isCollapsed={isCollapsed}
                       pathname={location.pathname}
                       groupKey={`${section.title}:${item.label}`}
@@ -1517,7 +1370,6 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <ModeSwitcher mode={mode} setMode={setMode} />
 
             <div className="mr-1 flex items-center gap-1 border-r border-gray-100 pr-4 leading-none">
               <button
@@ -1583,20 +1435,6 @@ const AdminLayout = () => {
                         }`}
                       >
                         Ride Requests
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNotificationTab('bookings');
-                          setBookingPage(1);
-                        }}
-                        className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                          notificationTab === 'bookings'
-                            ? 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-900'
-                        }`}
-                      >
-                        Bookings
                       </button>
                       <button
                         type="button"
@@ -1691,10 +1529,7 @@ const AdminLayout = () => {
                           <button
                             key={item._id || item.id || item.booking_reference}
                             type="button"
-                            onClick={() => {
-                              navigate('/taxi/admin/owners/bookings');
-                              setIsNotificationsOpen(false);
-                            }}
+                            onClick={() => setIsNotificationsOpen(false)}
                             className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-all hover:border-indigo-200 hover:bg-indigo-50/40"
                           >
                             <div className="flex items-start justify-between gap-3">

@@ -59,7 +59,7 @@ const unwrap = (response) => response?.data?.data || response?.data || response;
 const RoleSelection = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
+  const routePrefix = '/taxi/driver';
   const session = getStoredDriverRegistrationSession();
   const phone = String(session.phone || '').replace(/\D/g, '').slice(-10);
   const registrationId = String(session.registrationId || '').trim();
@@ -124,7 +124,7 @@ const RoleSelection = () => {
         status: payload?.session?.status || session.status || 'otp_verified',
       });
 
-      const nextRoutePrefix = selectedRole === 'owner' ? '/taxi/owner' : '/taxi/driver';
+      const nextRoutePrefix = '/taxi/driver';
       navigate(`${nextRoutePrefix}/step-personal`, {
         replace: true,
         state: nextSession,

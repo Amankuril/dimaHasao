@@ -9,14 +9,6 @@ import {
 import DriverRideRequestListener from './DriverRideRequestListener';
 
 const unwrapDriver = (response) => response?.data?.data || response?.data || response;
-const getPortalPrefix = (pathname = '', role = '') => {
-    if (pathname.startsWith('/taxi/owner')) {
-        return '/taxi/owner';
-    }
-
-    return String(role || '').toLowerCase() === 'owner' ? '/taxi/owner' : '/taxi/driver';
-};
-
 const isDriverApproved = (driver) => {
     if (!driver) {
         return false;
@@ -52,37 +44,17 @@ const onboardingRoutes = new Set([
     '/taxi/driver/step-referral',
     '/taxi/driver/step-vehicle',
     '/taxi/driver/step-documents',
-    '/taxi/driver/pooling/onboarding',
     '/taxi/driver/role-signup',
     '/taxi/driver/registration-status',
     '/taxi/driver/status',
-    '/taxi/owner/lang-select',
-    '/taxi/owner/login',
-    '/taxi/owner/terms',
-    '/taxi/owner/privacy',
-    '/taxi/owner/support',
-    '/taxi/owner/reg-phone',
-    '/taxi/owner/otp-verify',
-    '/taxi/owner/select-role',
-    '/taxi/owner/step-personal',
-    '/taxi/owner/step-referral',
-    '/taxi/owner/step-vehicle',
-    '/taxi/owner/step-documents',
-    '/taxi/owner/role-signup',
-    '/taxi/owner/registration-status',
-    '/taxi/owner/status',
 ]);
 
-const isOnboardingRoute = (pathname = '') =>
-    onboardingRoutes.has(pathname) ||
-    pathname.startsWith('/taxi/driver/role-signup/bus-builder');
+const isOnboardingRoute = (pathname = '') => onboardingRoutes.has(pathname);
 
 const softEntryRoutes = new Set([
     '/taxi/driver/welcome',
     '/taxi/driver/login',
     '/taxi/driver/reg-phone',
-    '/taxi/owner/login',
-    '/taxi/owner/reg-phone',
 ]);
 
 const redirectToDriverLogin = (navigate) => {
@@ -94,40 +66,21 @@ const getAuthenticatedRole = () => String(getAuthenticatedDriverRole() || 'drive
 
 const getAuthenticatedDriverHome = (pathname = '', role = '') => {
     const activeRole = String(role || getAuthenticatedRole() || 'driver').toLowerCase();
-    return activeRole === 'owner'
-        ? `${getPortalPrefix(pathname, 'owner')}/dashboard`
-        : activeRole === 'service_center'
-            ? '/taxi/driver/service-center'
-        : activeRole === 'service_center_staff'
-            ? '/taxi/driver/service-center'
-        : activeRole === 'bus_driver'
-            ? '/taxi/driver/bus-home'
-        : activeRole === 'pooling_driver'
-            ? '/taxi/driver/pooling'
-            : '/taxi/driver/home';
+    return ['service_center', 'service_center_staff'].includes(activeRole)
+        ? '/taxi/driver/service-center'
+        : '/taxi/driver/home';
 };
 
-const getPendingDriverRoute = (pathname = '') => `${getPortalPrefix(pathname)}/registration-status`;
-const getPendingRouteForRole = (pathname = '', role = '') =>
-    String(role || '').toLowerCase() === 'pooling_driver'
-        ? '/taxi/driver/pooling/status'
-        : getPendingDriverRoute(pathname);
-const isBusConsoleRoute = (pathname = '') => pathname.startsWith('/taxi/driver/bus-home');
+const getPendingDriverRoute = () => '/taxi/driver/registration-status';
+const getPendingRouteForRole = () => getPendingDriverRoute();
 const isServiceCenterRoute = (pathname = '') => pathname.startsWith('/taxi/driver/service-center');
-const isPoolingConsoleRoute = (pathname = '') => pathname.startsWith('/taxi/driver/pooling');
 const isPendingAllowedRoute = (pathname = '') =>
     [
         '/taxi/driver/documents',
-        '/taxi/owner/documents',
         '/taxi/driver/support',
-        '/taxi/owner/support',
         '/taxi/driver/help-support',
-        '/taxi/owner/help-support',
         '/taxi/driver/support/chat',
-        '/taxi/owner/support/chat',
         '/taxi/driver/support/tickets',
-        '/taxi/owner/support/tickets',
-        '/taxi/driver/pooling/status',
     ].includes(pathname);
 
 const DriverLayout = () => {
@@ -149,7 +102,7 @@ const DriverLayout = () => {
             && (
                 softEntryRoutes.has(currentPath)
                 || (
-                    (currentPath === '/taxi/driver/lang-select' || currentPath === '/taxi/owner/lang-select')
+                    currentPath === '/taxi/driver/lang-select'
                     && !onboardingState.registrationFlow
                     && !onboardingState.allowAuthenticated
                 )
@@ -169,22 +122,10 @@ const DriverLayout = () => {
             return;
         }
 
-        if (isBusConsoleRoute(currentPath) && authenticatedRole !== 'bus_driver') {
-            setIsAllowed(false);
-            navigate(authenticatedHome, { replace: true });
-            return;
-        }
-
         if (
             isServiceCenterRoute(currentPath)
             && !['service_center', 'service_center_staff'].includes(authenticatedRole)
         ) {
-            setIsAllowed(false);
-            navigate(authenticatedHome, { replace: true });
-            return;
-        }
-
-        if (isPoolingConsoleRoute(currentPath) && authenticatedRole !== 'pooling_driver') {
             setIsAllowed(false);
             navigate(authenticatedHome, { replace: true });
             return;
@@ -230,11 +171,6 @@ const DriverLayout = () => {
                 verifiedTokenRef.current = token;
                 verifiedApprovalRef.current = true;
 
-                if (isBusConsoleRoute(currentPath) && effectiveRole !== 'bus_driver') {
-                    navigate(getAuthenticatedDriverHome(currentPath, effectiveRole), { replace: true });
-                    return;
-                }
-
                 if (
                     isServiceCenterRoute(currentPath)
                     && !['service_center', 'service_center_staff'].includes(effectiveRole)
@@ -243,24 +179,12 @@ const DriverLayout = () => {
                     return;
                 }
 
-                if (isPoolingConsoleRoute(currentPath) && effectiveRole !== 'pooling_driver') {
-                    navigate(getAuthenticatedDriverHome(currentPath, effectiveRole), { replace: true });
-                    return;
-                }
-
                 const isDriverConsoleRoute =
                     currentPath.startsWith('/taxi/driver') &&
-                    !isBusConsoleRoute(currentPath) &&
                     !isServiceCenterRoute(currentPath) &&
-                    !isPoolingConsoleRoute(currentPath) &&
                     !isOnboardingRoute(currentPath);
 
                 if (isDriverConsoleRoute && effectiveRole !== 'driver') {
-                    navigate(getAuthenticatedDriverHome(currentPath, effectiveRole), { replace: true });
-                    return;
-                }
-
-                if (currentPath.startsWith('/taxi/owner') && effectiveRole !== 'owner' && !isOnboardingRoute(currentPath)) {
                     navigate(getAuthenticatedDriverHome(currentPath, effectiveRole), { replace: true });
                     return;
                 }
@@ -271,7 +195,7 @@ const DriverLayout = () => {
                 }
 
                 if (
-                    (currentPath === '/taxi/driver/lang-select' || currentPath === '/taxi/owner/lang-select')
+                    currentPath === '/taxi/driver/lang-select'
                     && !onboardingState.registrationFlow
                     && !onboardingState.allowAuthenticated
                 ) {

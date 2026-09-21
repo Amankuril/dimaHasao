@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Briefcase, CheckCircle2, ChevronRight, Smartphone } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Smartphone } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -33,8 +33,7 @@ const PhoneRegistration = () => {
   // configured in taxi settings.
   const appLogo = DRIVER_BRAND_LOGO;
   const storedSession = getStoredDriverRegistrationSession();
-  const isOwnerPortal = location.pathname.startsWith('/taxi/owner');
-  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+    const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const sharedReferralCode = String(
     searchParams.get('ref') ||
     searchParams.get('referral') ||
@@ -63,11 +62,11 @@ const PhoneRegistration = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const routePrefix = isOwnerPortal ? '/taxi/owner' : '/taxi/driver';
+  const routePrefix = '/taxi/driver';
   const isLoginPage = location.pathname === `${routePrefix}/login` || location.pathname === `${routePrefix}/login/`;
   const entryPath = `${routePrefix}/login`;
-  const HeaderIcon = isOwnerPortal ? Briefcase : Smartphone;
-  const portalLabel = isOwnerPortal ? 'Owner' : 'Driver';
+  const HeaderIcon = Smartphone;
+  const portalLabel = 'Driver';
 
   useEffect(() => {
     let active = true;
@@ -154,11 +153,7 @@ const PhoneRegistration = () => {
     try {
       clearDriverRegistrationSession();
 
-      const response = await sendDriverOtp(
-        isOwnerPortal
-          ? { phone, role: 'owner' }
-          : { phone },
-      );
+      const response = await sendDriverOtp({ phone });
 
       const payload = response?.data?.data || response?.data || response;
       const sessionData = payload?.session || {};
@@ -171,9 +166,9 @@ const PhoneRegistration = () => {
       console.log('[PhoneRegistration] loginMode:', loginMode);
       const nextState = saveDriverRegistrationSession({
         phone,
-        role: sessionData.role || (isOwnerPortal ? 'owner' : ''),
-        roleConfirmed: sessionData.roleConfirmed ?? isOwnerPortal,
-        needsRoleSelection: !isOwnerPortal && sessionData.roleConfirmed === false,
+        role: sessionData.role || '',
+        roleConfirmed: sessionData.roleConfirmed ?? false,
+        needsRoleSelection: sessionData.roleConfirmed === false,
         registrationId: sessionData.registrationId || '',
         debugOtp: sessionData.debugOtp || '',
         loginMode,
@@ -240,11 +235,9 @@ const PhoneRegistration = () => {
               {isLoginPage ? 'Hello!' : 'Welcome'}
             </h1>
 
-            {!isOwnerPortal && (
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
-                Driver, owner, pooling, bus, and service center logins all start here
-              </p>
-            )}
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
+              Driver and service centre logins both start here
+            </p>
           </header>
 
           <motion.div

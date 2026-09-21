@@ -1,15 +1,9 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../../../utils/asyncHandler.js';
 import { authenticate } from '../../middlewares/authMiddleware.js';
+import { loginRateLimit, otpVerifyRateLimit, paymentOrderRateLimit } from "../../middlewares/rateLimitMiddleware.js";
+
 import {
-  loginRateLimit,
-  otpSendRateLimit,
-  otpVerifyRateLimit,
-  paymentOrderRateLimit,
-} from '../../middlewares/rateLimitMiddleware.js';
-import {
-  cancelMyBusBooking,
-  createBusBookingOrder,
   createRentalAdvancePaymentOrder,
   createPhonePeRentalAdvancePaymentOrder,
   payRentalAdvanceWithWallet,
@@ -18,10 +12,6 @@ import {
   createRazorpayWalletTopupOrder,
   createPhonePeWalletTopupOrder,
   handleUserRazorpayWalletTopupCallback,
-  getBusSeatLayout,
-  getBusRouteSuggestions,
-  getMyBusBookingById,
-  listMyBusBookings,
   getUserWallet,
   getCurrentUser,
   getUserNotifications,
@@ -37,16 +27,13 @@ import {
   registerUser,
   requestAccountDeletion,
   saveUserFcmToken,
-  searchBuses,
   signupUser,
-  submitMyBusBookingReview,
   topupUserWallet,
   transferUserWalletToDriver,
   transferUserWallet,
   updateMyActiveRentalLocation,
   updateCurrentUser,
   uploadUserProfileImage,
-  verifyBusBookingPayment,
   verifyRentalAdvancePayment,
   verifyPhonePeRentalAdvancePayment,
   verifyRazorpayWalletTopup,
@@ -57,15 +44,8 @@ import {
   buySubscription,
   getSetPrices,
   getZones,
-} from '../controllers/userController.js';
-import {
-  searchPoolingRoutes,
-  getPoolingRouteDetails,
-  createPoolingBookingOrder,
-  verifyPoolingBookingPayment,
-  createPoolingBooking,
-  getMyPoolingBookings
-} from '../controllers/poolingController.js';
+} from "../controllers/userController.js";
+
 import { getAppBootstrap, getAppModules, getGeneralSettingsCategory, getGoodsTypes, getPublicRentalVehicleCatalog, getPublicVehicleTypeCatalog } from '../../admin/controllers/adminController.js';
 import { triggerUserSosAlert } from '../../safety/controllers/safetyController.js';
 
@@ -121,19 +101,4 @@ userRouter.post('/rental-advance/razorpay/verify', authenticate(['user']), async
 userRouter.post('/rental-advance/phonepe/order', authenticate(['user']), paymentOrderRateLimit, asyncHandler(createPhonePeRentalAdvancePaymentOrder));
 userRouter.get('/rental-advance/phonepe/status/:merchantTransactionId', authenticate(['user']), asyncHandler(verifyPhonePeRentalAdvancePayment));
 userRouter.post('/rental-advance/wallet', authenticate(['user']), asyncHandler(payRentalAdvanceWithWallet));
-userRouter.get('/buses/routes', authenticate(['user']), asyncHandler(getBusRouteSuggestions));
-userRouter.get('/buses/search', authenticate(['user']), asyncHandler(searchBuses));
-userRouter.get('/buses/:id/seats', authenticate(['user']), asyncHandler(getBusSeatLayout));
-userRouter.get('/bus-bookings', authenticate(['user']), asyncHandler(listMyBusBookings));
-userRouter.get('/bus-bookings/:id', authenticate(['user']), asyncHandler(getMyBusBookingById));
-userRouter.post('/bus-bookings/:id/review', authenticate(['user']), asyncHandler(submitMyBusBookingReview));
-userRouter.post('/bus-bookings/order', authenticate(['user']), paymentOrderRateLimit, asyncHandler(createBusBookingOrder));
-userRouter.post('/bus-bookings/verify', authenticate(['user']), paymentOrderRateLimit, asyncHandler(verifyBusBookingPayment));
-userRouter.post('/bus-bookings/:id/cancel', authenticate(['user']), asyncHandler(cancelMyBusBooking));
 
-userRouter.get('/pooling/search', authenticate(['user']), asyncHandler(searchPoolingRoutes));
-userRouter.get('/pooling/routes/:id', authenticate(['user']), asyncHandler(getPoolingRouteDetails));
-userRouter.post('/pooling/bookings/order', authenticate(['user']), paymentOrderRateLimit, asyncHandler(createPoolingBookingOrder));
-userRouter.post('/pooling/bookings/verify', authenticate(['user']), paymentOrderRateLimit, asyncHandler(verifyPoolingBookingPayment));
-userRouter.post('/pooling/bookings', authenticate(['user']), asyncHandler(createPoolingBooking));
-userRouter.get('/pooling/bookings', authenticate(['user']), asyncHandler(getMyPoolingBookings));

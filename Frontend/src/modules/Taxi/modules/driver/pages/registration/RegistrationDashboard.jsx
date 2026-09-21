@@ -31,7 +31,7 @@ const RegistrationDashboard = () => {
     // apps are meant to look like the district's, not like whatever is left
     // configured in taxi settings.
     const appLogo = DRIVER_BRAND_LOGO;
-    const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
+    const routePrefix = '/taxi/driver';
     const storedSession = getStoredDriverRegistrationSession();
 
     const steps = [

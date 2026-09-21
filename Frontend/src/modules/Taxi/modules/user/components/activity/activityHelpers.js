@@ -7,7 +7,7 @@ import SuvIcon from '../../../../assets/icons/SUV.png';
 import busIcon from '../../../../assets/3d images/AutoCab/bus.png';
 
 export const PAGE_SIZE = 4;
-export const TABS = ['All', 'Rides', 'Parcels', 'Rental', 'Bus', 'Pooling', 'Outstation', 'Scheduled', 'Support'];
+export const TABS = ['All', 'Rides', 'Parcels', 'Rental', 'Outstation', 'Scheduled', 'Support'];
 
 export const pickFirstString = (...values) => {
   for (const value of values) {

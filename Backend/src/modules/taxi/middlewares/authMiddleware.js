@@ -1,11 +1,8 @@
 import { Admin } from '../admin/models/Admin.js';
-import { Owner } from '../admin/models/Owner.js';
 import { ServiceStore } from '../admin/models/ServiceStore.js';
 import { ServiceCenterStaff } from '../admin/models/ServiceCenterStaff.js';
 import { ApiError } from '../../../utils/ApiError.js';
 import { Driver } from '../driver/models/Driver.js';
-import { BusDriver } from '../driver/models/BusDriver.js';
-import { PoolingVehicle } from '../admin/models/PoolingVehicle.js';
 import { User } from '../user/models/User.js';
 import { verifyAccessToken } from '../services/tokenService.js';
 import {
@@ -17,9 +14,6 @@ const roleModelMap = {
   admin: Admin,
   'super-admin': Admin,
   driver: Driver,
-  pooling_driver: PoolingVehicle,
-  bus_driver: BusDriver,
-  owner: Owner,
   service_center: ServiceStore,
   service_center_staff: ServiceCenterStaff,
   user: User,

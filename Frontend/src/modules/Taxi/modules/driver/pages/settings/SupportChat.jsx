@@ -6,7 +6,7 @@ import UserSupportChatPanel from '../../../shared/components/UserSupportChatPane
 const SupportChat = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
+  const routePrefix = '/taxi/driver';
   const backPath = location.state?.backPath || `${routePrefix}/help-support`;
   const backState = location.state?.backState;
 

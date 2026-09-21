@@ -6,9 +6,8 @@ import { SUPPORT_INFO } from '../../shared/content/supportInfo';
 const PortalSupportPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isOwnerPortal = location.pathname.startsWith('/taxi/owner');
-  const routePrefix = isOwnerPortal ? '/taxi/owner' : '/taxi/driver';
-  const portalLabel = isOwnerPortal ? 'Owner' : 'Driver';
+  const routePrefix = '/taxi/driver';
+  const portalLabel = 'Driver';
 
   const quickCards = [
     {

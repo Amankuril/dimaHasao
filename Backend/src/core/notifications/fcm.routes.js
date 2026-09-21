@@ -25,8 +25,6 @@ const ROLE_TO_OWNER_TYPE = {
     ADMIN: 'ADMIN',
     admin: 'ADMIN',
     driver: 'DRIVER',
-    owner: 'OWNER',
-    bus_driver: 'BUS_DRIVER',
     service_center: 'SERVICE_CENTER',
     service_center_staff: 'SERVICE_CENTER_STAFF',
     // Hotel and tours sign with the same JWT_ACCESS_SECRET, so their tokens

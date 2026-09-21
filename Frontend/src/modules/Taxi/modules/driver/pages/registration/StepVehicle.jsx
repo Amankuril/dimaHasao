@@ -210,9 +210,7 @@ const defaultVehicleFieldConfigs = [
 const StepVehicle = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const routePrefix = location.pathname.startsWith('/taxi/owner')
-        ? '/taxi/owner'
-        : '/taxi/driver';
+    const routePrefix = '/taxi/driver';
     const session = getStoredDriverRegistrationSession();
     const isHandlingHistoryNavigationRef = useRef(false);
     const role = session.role || 'driver';

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  Building2,
   ChevronRight,
   Clock,
   History,
@@ -19,7 +18,6 @@ import { toast } from 'react-hot-toast';
 const roleOptions = [
   { id: 'user', label: 'User', icon: User },
   { id: 'driver', label: 'Driver', icon: Truck },
-  { id: 'owner', label: 'Owner', icon: Building2 },
 ];
 
 const inputClass =
@@ -57,7 +55,6 @@ const WalletPayment = () => {
       let res;
       if (role === 'user') res = await adminService.searchUsers(searchQuery);
       else if (role === 'driver') res = await adminService.searchDrivers(searchQuery);
-      else if (role === 'owner') res = await adminService.searchOwners(searchQuery);
       
       setSearchResults(res.data.results || []);
     } catch (err) {
@@ -73,7 +70,6 @@ const WalletPayment = () => {
       let res;
       if (role === 'user') res = await adminService.getUserWalletHistory(entity._id);
       else if (role === 'driver') res = await adminService.getDriverWalletHistory(entity._id);
-      else if (role === 'owner') res = await adminService.getOwnerWalletHistory(entity._id);
       
       setHistory(res.data.results || []);
       setBalance(res.data.balance || 0);
@@ -94,14 +90,13 @@ const WalletPayment = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!amount || amount <= 0) return toast.error('Enter valid amount');
-    if (!selectedEntity) return toast.error('Select a user/driver/owner');
+    if (!selectedEntity) return toast.error('Select a user or driver');
 
     setSubmitting(true);
     try {
       const data = { amount: Number(amount), operation, description };
       if (role === 'user') await adminService.adjustUserWallet(selectedEntity._id, data);
       else if (role === 'driver') await adminService.adjustDriverWallet(selectedEntity._id, data);
-      else if (role === 'owner') await adminService.adjustOwnerWallet(selectedEntity._id, data);
 
       toast.success(`Successfully ${operation}ed ₹${amount}`);
       setAmount('');

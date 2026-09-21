@@ -5,21 +5,13 @@ import { normalizePoint, toPoint } from '../../../../utils/geo.js';
 import { uploadDataUrlToCloudinary } from '../../../../utils/cloudinaryUpload.js';
 import { Driver } from '../models/Driver.js';
 import { DriverRegistrationSession } from '../models/DriverRegistrationSession.js';
-import { Owner } from '../../admin/models/Owner.js';
 import { ServiceStore } from '../../admin/models/ServiceStore.js';
 import { ServiceCenterStaff } from '../../admin/models/ServiceCenterStaff.js';
 import { ServiceLocation } from '../../admin/models/ServiceLocation.js';
-import { BusService } from '../../admin/models/BusService.js';
 import { Vehicle } from '../../admin/models/Vehicle.js';
 import { AdminBusinessSetting } from '../../admin/models/AdminBusinessSetting.js';
-import {
-  createBusService,
-  listDriverDocumentUploadFields,
-  listDriverNeededDocuments,
-  listDriverVehicleFieldTemplates,
-  listOwnerDocumentUploadFields,
-  listOwnerNeededDocuments,
-} from '../../admin/services/adminService.js';
+import { listDriverDocumentUploadFields, listDriverNeededDocuments, listDriverVehicleFieldTemplates } from "../../admin/services/adminService.js";
+
 import { hashPassword, signAccessToken } from './authService.js';
 import {
   findPreferredDriverPortalAccountByPhone,
@@ -32,7 +24,6 @@ import {
   verifyRcWithRecharge,
 } from '../../services/rechargeVerificationService.js';
 import { WalletTransaction } from '../models/WalletTransaction.js';
-import { BusDriver } from '../models/BusDriver.js';
 import { applyDriverWalletAdjustment } from './walletService.js';
 
 /** Driver OTPs share the 'taxi-driver' namespace in the core OTP store. */
@@ -61,11 +52,9 @@ const normalizePhone = (phone) => {
   return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
 };
 
-const SPECIAL_SIGNUP_ROLES = ['bus_driver', 'service_center', 'service_center_staff'];
+const SPECIAL_SIGNUP_ROLES = ['service_center', 'service_center_staff'];
 const normalizeRole = (role) => {
   const normalized = String(role || 'driver').trim().toLowerCase();
-  if (normalized === 'owner') return 'owner';
-  if (normalized === 'bus_driver' || normalized === 'bus-driver' || normalized === 'busdriver') return 'bus_driver';
   if (normalized === 'service_center' || normalized === 'service-center' || normalized === 'servicecenter') return 'service_center';
   if (
     normalized === 'service_center_staff' ||
@@ -79,7 +68,7 @@ const normalizeRole = (role) => {
 };
 const hasExplicitSignupRole = (role) =>
   Boolean(role) &&
-  ['driver', 'owner', 'bus_driver', 'service_center', 'service_center_staff'].includes(
+  ['driver', 'service_center', 'service_center_staff'].includes(
     normalizeRole(role),
   );
 const normalizeServiceCategories = (value, fallback = 'taxi') => {
@@ -416,17 +405,6 @@ const getValidatedServiceLocationCoordinates = (serviceLocation = {}) => {
 
 const isSpecialSignupRole = (role = '') => SPECIAL_SIGNUP_ROLES.includes(normalizeRole(role));
 
-const serializeSignupBusServiceOption = (busService = {}) => ({
-  id: busService._id,
-  operatorName: busService.operatorName || '',
-  busName: busService.busName || '',
-  serviceNumber: busService.serviceNumber || '',
-  routeName: busService.route?.routeName || '',
-  originCity: busService.route?.originCity || '',
-  destinationCity: busService.route?.destinationCity || '',
-  status: busService.status || 'draft',
-});
-
 const serializeSignupServiceCenterOption = (center = {}) => ({
   id: center._id,
   name: center.name || '',
@@ -646,13 +624,7 @@ export const startDriverOnboarding = async ({ phone, role }) => {
   let roleSpecificExistingAccount = null;
 
   if (roleProvided) {
-    if (normalizedRole === 'owner') {
-      roleSpecificExistingAccount = await Owner.findOne({
-        $or: [{ mobile: normalizedPhone }, { phone: normalizedPhone }],
-      }).lean();
-    } else if (normalizedRole === 'bus_driver') {
-      roleSpecificExistingAccount = await BusDriver.findOne({ phone: normalizedPhone }).lean();
-    } else if (normalizedRole === 'service_center') {
+    if (normalizedRole === 'service_center') {
       roleSpecificExistingAccount = await ServiceStore.findOne({ owner_phone: normalizedPhone }).lean();
     } else if (normalizedRole === 'service_center_staff') {
       roleSpecificExistingAccount = await ServiceCenterStaff.findOne({ phone: normalizedPhone }).lean();
@@ -762,7 +734,7 @@ export const setDriverOnboardingRole = async ({ registrationId, phone, role }) =
 };
 
 export const getDriverOnboardingSignupOptions = async () => {
-  const [serviceLocations, serviceCenters, busServices] = await Promise.all([
+  const [serviceLocations, serviceCenters] = await Promise.all([
     ServiceLocation.find({ active: { $ne: false } })
       .select('name service_location_name address country latitude longitude location')
       .sort({ service_location_name: 1, name: 1 })
@@ -773,12 +745,6 @@ export const getDriverOnboardingSignupOptions = async () => {
     })
       .populate('service_location_id', 'name service_location_name')
       .sort({ name: 1 })
-      .lean(),
-    BusService.find({
-      status: { $in: ['active', 'paused'] },
-    })
-      .select('operatorName busName serviceNumber route status')
-      .sort({ operatorName: 1, busName: 1 })
       .lean(),
   ]);
 
@@ -795,7 +761,6 @@ export const getDriverOnboardingSignupOptions = async () => {
       location: item.location || null,
     })),
     serviceCenters: (Array.isArray(serviceCenters) ? serviceCenters : []).map(serializeSignupServiceCenterOption),
-    busServices: (Array.isArray(busServices) ? busServices : []).map(serializeSignupBusServiceOption),
   };
 };
 
@@ -864,66 +829,6 @@ export const saveDriverRoleDetails = async ({ registrationId, phone, roleDetails
     };
   }
 
-  if (normalizedRole === 'bus_driver') {
-    const busServiceId = String(roleDetails.busServiceId || '').trim();
-    const requestNote = String(roleDetails.requestNote || '').trim().slice(0, 300);
-    const createNewBus = roleDetails.createNewBus === true;
-    const busDraft = roleDetails.busDraft && typeof roleDetails.busDraft === 'object' ? roleDetails.busDraft : null;
-    const draftBusDetails = {
-      operatorName: String(busDraft?.operatorName || roleDetails.operatorName || '').trim(),
-      busName: String(busDraft?.busName || roleDetails.busName || '').trim(),
-      serviceNumber: String(busDraft?.serviceNumber || roleDetails.serviceNumber || '').trim(),
-      originCity: String(busDraft?.route?.originCity || roleDetails.originCity || '').trim(),
-      destinationCity: String(busDraft?.route?.destinationCity || roleDetails.destinationCity || '').trim(),
-    };
-
-    if (createNewBus) {
-      if (!draftBusDetails.operatorName) {
-        throw new ApiError(400, 'Operator name is required');
-      }
-      if (!draftBusDetails.busName) {
-        throw new ApiError(400, 'Bus name is required');
-      }
-      if (!draftBusDetails.originCity) {
-        throw new ApiError(400, 'Origin city is required');
-      }
-      if (!draftBusDetails.destinationCity) {
-        throw new ApiError(400, 'Destination city is required');
-      }
-
-      session.roleDetails = {
-        createNewBus: true,
-        requestNote,
-        busDraft,
-        ...draftBusDetails,
-        busServiceSnapshot: {
-          operatorName: draftBusDetails.operatorName,
-          busName: draftBusDetails.busName,
-          serviceNumber: draftBusDetails.serviceNumber,
-          originCity: draftBusDetails.originCity,
-          destinationCity: draftBusDetails.destinationCity,
-          routeName: `${draftBusDetails.originCity} to ${draftBusDetails.destinationCity}`,
-        },
-      };
-    } else {
-      if (!busServiceId || !/^[a-f\d]{24}$/i.test(busServiceId)) {
-        throw new ApiError(400, 'Select a valid bus service');
-      }
-
-      const busService = await BusService.findById(busServiceId).lean();
-      if (!busService) {
-        throw new ApiError(404, 'Bus service not found');
-      }
-
-      session.roleDetails = {
-        createNewBus: false,
-        busServiceId,
-        requestNote,
-        busServiceSnapshot: serializeSignupBusServiceOption(busService),
-      };
-    }
-  }
-
   session.status = 'role_details_saved';
   await session.save();
 
@@ -936,7 +841,6 @@ export const saveDriverRoleDetails = async ({ registrationId, phone, roleDetails
 
 export const saveDriverPersonalDetails = async ({ registrationId, phone, fullName, email, gender, password }) => {
   const session = await getSession(registrationId, phone);
-  const isOwner = String(session.role || '').toLowerCase() === 'owner';
 
   if (!session.otpVerifiedAt) {
     throw new ApiError(400, 'Verify OTP before continuing');
@@ -954,7 +858,7 @@ export const saveDriverPersonalDetails = async ({ registrationId, phone, fullNam
   const normalizedEmail = String(email).trim().toLowerCase();
 
   if (!DRIVER_NAME_REGEX.test(normalizedName)) {
-    throw new ApiError(400, `${isOwner ? 'Owner' : 'Driver'} name should contain alphabets only`);
+    throw new ApiError(400, 'Driver name should contain alphabets only');
   }
 
   if (!EMAIL_REGEX.test(normalizedEmail)) {
@@ -966,9 +870,7 @@ export const saveDriverPersonalDetails = async ({ registrationId, phone, fullNam
     email: normalizedEmail,
     gender: String(gender).trim(),
     passwordHash: await hashPassword(
-      !isOwner && String(password || '').trim()
-        ? String(password)
-        : crypto.randomBytes(24).toString('hex'),
+      String(password || '').trim() || crypto.randomBytes(24).toString('hex'),
     ),
   };
   session.status = 'personal_saved';
@@ -1044,7 +946,6 @@ export const saveDriverVehicle = async ({
     throw new ApiError(400, 'A valid service location is required');
   }
 
-  const isOwner = String(session.role || '').toLowerCase() === 'owner';
   const requiredFieldMap = await getRequiredVehicleFieldMap(session.role);
   const normalizedYear = String(year || '').trim();
   const normalizedRcNumber = String(rcNumber || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
@@ -1075,17 +976,7 @@ export const saveDriverVehicle = async ({
 
   requireField('locationId', locationId, 'Operating city');
 
-  if (isOwner) {
-    requireField('companyName', companyName, 'Company name');
-    requireField('companyAddress', companyAddress, 'Company address');
-    requireField('city', city, 'City');
-    requireField('postalCode', normalizedPostalCode, 'Postal code');
-    requireField('taxNumber', taxNumber, 'Tax number');
-
-    if (normalizedPostalCode && !/^\d{6}$/.test(normalizedPostalCode)) {
-      throw new ApiError(400, 'Postal code must be a 6 digit number');
-    }
-  } else {
+  {
     const vehicleYear = Number(normalizedYear);
     const currentYear = new Date().getFullYear();
 
@@ -1376,93 +1267,6 @@ export const completeDriverOnboarding = async ({ registrationId, phone, document
       };
     }
 
-    if (normalizedRole === 'bus_driver') {
-      const existingBusDriver = await BusDriver.findOne({ phone: session.phone }).lean();
-      if (existingBusDriver) {
-        throw new ApiError(409, 'Bus driver already exists with this phone number');
-      }
-
-      let busService = null;
-      if (session.roleDetails?.createNewBus === true) {
-        const signupBusDraft =
-          session.roleDetails?.busDraft && typeof session.roleDetails.busDraft === 'object'
-            ? session.roleDetails.busDraft
-            : {
-                operatorName: session.roleDetails.operatorName,
-                busName: session.roleDetails.busName,
-                serviceNumber: session.roleDetails.serviceNumber,
-                status: 'draft',
-                route: {
-                  routeName:
-                    `${String(session.roleDetails.originCity || '').trim()} to ${String(session.roleDetails.destinationCity || '').trim()}`,
-                  originCity: session.roleDetails.originCity,
-                  destinationCity: session.roleDetails.destinationCity,
-                  stops: [],
-                },
-              };
-
-        busService = await createBusService({
-          ...signupBusDraft,
-          status: signupBusDraft.status || 'draft',
-        });
-      } else {
-        busService = await BusService.findById(session.roleDetails.busServiceId).lean();
-      }
-
-      if (!busService) {
-        throw new ApiError(404, 'Selected bus service is no longer available');
-      }
-
-      const busDriver = await BusDriver.create({
-        name: session.personal.fullName,
-        phone: session.phone,
-        email: session.personal.email,
-        approve: false,
-        active: true,
-        status: 'pending',
-        assignedBusServiceId: busService._id,
-        operatorName: busService.operatorName || '',
-        busName: busService.busName || '',
-        serviceNumber: busService.serviceNumber || '',
-        registrationNumber: busService.registrationNumber || '',
-        routeName: busService.route?.routeName || '',
-        originCity: busService.route?.originCity || '',
-        destinationCity: busService.route?.destinationCity || '',
-        signupSource: 'self_signup',
-        onboarding: {
-          registrationId: session.registrationId,
-          role: normalizedRole,
-          verifiedAt: session.otpVerifiedAt,
-          submittedAt,
-          personal: {
-            fullName: session.personal.fullName,
-            email: session.personal.email,
-            gender: session.personal.gender,
-          },
-          roleDetails: session.roleDetails,
-        },
-      });
-
-      session.finalEntityId = busDriver._id;
-      session.finalEntityRole = normalizedRole;
-      session.status = 'completed';
-      session.completedAt = submittedAt;
-      await session.save();
-      await DriverRegistrationSession.deleteOne({ _id: session._id });
-
-      return {
-        message: 'Bus driver signup submitted successfully',
-        busDriver: {
-          id: busDriver._id,
-          name: busDriver.name || '',
-          phone: busDriver.phone || '',
-          approve: busDriver.approve,
-          status: busDriver.status,
-        },
-        token: signAccessToken({ sub: String(busDriver._id), role: 'bus_driver' }),
-        session: publicSessionPayload(session),
-      };
-    }
   }
 
   if (!session.vehicle?.locationName) {
@@ -1475,14 +1279,8 @@ export const completeDriverOnboarding = async ({ registrationId, phone, document
     normalizedDocuments[documentKey] = normalizeStoredDocument(value);
   }
 
-  const configuredUploadFields =
-    String(session.role || '').toLowerCase() === 'owner'
-      ? await listOwnerDocumentUploadFields({ activeOnly: true })
-      : await listDriverDocumentUploadFields({ activeOnly: true });
-  const configuredTemplates =
-    String(session.role || '').toLowerCase() === 'owner'
-      ? (await listOwnerNeededDocuments()).filter((item) => item.active !== false)
-      : await listDriverNeededDocuments({ activeOnly: true, includeFields: true });
+  const configuredUploadFields = await listDriverDocumentUploadFields({ activeOnly: true });
+  const configuredTemplates = await listDriverNeededDocuments({ activeOnly: true, includeFields: true });
   const requiredDocuments = configuredUploadFields
     .filter((field) => Boolean(field.required) && matchesDocumentRole(field.account_type, session.role))
     .map((field) => field.key);
@@ -1531,9 +1329,7 @@ export const completeDriverOnboarding = async ({ registrationId, phone, document
   }
 
   const serviceLocationCoordinates = getValidatedServiceLocationCoordinates(resolvedServiceLocation || {});
-  const isOwnerRegistration = String(session.role || '').toLowerCase() === 'owner';
-
-  if (!serviceLocationCoordinates && !isOwnerRegistration) {
+  if (!serviceLocationCoordinates) {
     throw new ApiError(400, `Unsupported service location: ${session.vehicle.locationName}`);
   }
 
@@ -1545,80 +1341,6 @@ export const completeDriverOnboarding = async ({ registrationId, phone, document
   const vehicleType = selectedVehicle
     ? getGenericVehicleTypeFromCatalog(selectedVehicle)
     : getVehicleType(session.vehicle.vehicleTypeId, session.vehicle.registerFor);
-  if (isOwnerRegistration) {
-    const normalizedEmail = String(session.personal.email || '').trim().toLowerCase();
-    const normalizedMobile = String(session.phone || '').trim();
-    const serviceLocationId =
-      session.vehicle.locationId && /^[a-f\d]{24}$/i.test(String(session.vehicle.locationId))
-        ? session.vehicle.locationId
-        : null;
-
-    const duplicateOwner = await Owner.findOne({
-      $or: [
-        { email: normalizedEmail },
-        { mobile: normalizedMobile },
-      ],
-    }).lean();
-
-    if (duplicateOwner) {
-      throw new ApiError(409, 'Owner already exists with this phone or email');
-    }
-
-    const owner = await Owner.create({
-      company_name: String(session.vehicle.companyName || session.personal.fullName || '').trim(),
-      owner_name: String(session.personal.fullName || '').trim() || null,
-      name: String(session.personal.fullName || '').trim(),
-      mobile: normalizedMobile,
-      email: normalizedEmail,
-      password: session.personal.passwordHash,
-      service_location_id: serviceLocationId || null,
-      legacy_service_location_id: serviceLocationId ? '' : String(session.vehicle.locationId || '').trim(),
-      transport_type: String(session.vehicle.registerFor || 'taxi').trim().toLowerCase(),
-      phone: normalizedMobile,
-      address: String(session.vehicle.companyAddress || '').trim() || null,
-      postal_code: String(session.vehicle.postalCode || '').trim() || null,
-      city: String(session.vehicle.city || session.vehicle.locationName || '').trim() || null,
-      tax_number: String(session.vehicle.taxNumber || '').trim() || null,
-      active: true,
-      approve: false,
-      status: 'pending',
-      user_snapshot: {
-        source: 'owner_onboarding',
-        registrationId: session.registrationId,
-        verifiedAt: session.otpVerifiedAt,
-        submittedAt,
-        location: serviceLocationCoordinates ? toPoint(serviceLocationCoordinates, 'location') : null,
-        zoneId: zone?._id || null,
-        documents: normalizedDocuments,
-        onboardingVehicle: {
-          ...session.vehicle,
-        },
-      },
-      area_snapshot: resolvedServiceLocation || null,
-    });
-
-    session.status = 'completed';
-    session.completedAt = submittedAt;
-    await session.save();
-    await DriverRegistrationSession.deleteOne({ _id: session._id });
-
-    return {
-      message: 'Owner registration completed successfully',
-      owner: {
-        id: owner._id,
-        name: owner.owner_name || owner.name || owner.company_name || '',
-        company_name: owner.company_name || '',
-        phone: owner.mobile || owner.phone || '',
-        email: owner.email || '',
-        approve: owner.approve,
-        status: owner.status,
-      },
-      documents: normalizedDocuments,
-      token: signAccessToken({ sub: String(owner._id), role: 'owner' }),
-      session: publicSessionPayload(session),
-    };
-  }
-
   const normalizedReferralCode = normalizeReferralCode(session.referralCode);
   const referrer = normalizedReferralCode
     ? await findDriverByReferralCode(normalizedReferralCode)

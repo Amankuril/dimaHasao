@@ -95,9 +95,7 @@ const DriverProfile = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [routeBookingBusy, setRouteBookingBusy] = useState(false);
-    const role = localStorage.getItem('role') || 'driver';
-    const isOwner = role === 'owner';
-    const routePrefix = isOwner ? '/taxi/owner' : '/taxi/driver';
+    const routePrefix = '/taxi/driver';
 
     useEffect(() => {
         let active = true;
@@ -303,22 +301,13 @@ Processing Time: Refunds are typically credited back to the original payment met
     };
 
     const sections = [
-        ...(isOwner ? [{
-            title: 'Fleet Management',
-            items: [
-                { id: 'fleet', label: 'Manage Fleet', icon: <Car size={20} />, path: `${routePrefix}/vehicle-fleet` },
-                { id: 'drivers', label: 'Manage Drivers', icon: <UserPlus size={20} />, path: `${routePrefix}/manage-drivers` },
-            ]
-        }] : []),
         {
             title: 'Your Account',
             items: [
                 { id: 'personal', label: 'Personal Information', sub: driverPhone, icon: <User size={20} />, path: `${routePrefix}/edit-profile` },
                 { id: 'wallet', label: 'Wallet', icon: <Wallet size={20} />, path: `${routePrefix}/wallet` },
                 { id: 'bankDetails', label: 'Bank Details', sub: bankDetailsSubtitle, icon: <Landmark size={20} />, action: openBankDetails },
-                ...(!isOwner ? [
-                    { id: 'vehicle', label: 'My Vehicle', icon: <Car size={20} />, path: `${routePrefix}/vehicle-fleet` },
-                ] : []),
+                { id: 'vehicle', label: 'My Vehicle', icon: <Car size={20} />, path: `${routePrefix}/vehicle-fleet` },
                 { id: 'docs', label: 'Documents', icon: <FileText size={20} />, path: `${routePrefix}/documents` },
                 { id: 'history', label: 'Ride History', icon: <History size={20} />, path: `${routePrefix}/history` },
                 { id: 'notifications', label: 'Notifications', icon: <Bell size={20} />, path: `${routePrefix}/notifications` },

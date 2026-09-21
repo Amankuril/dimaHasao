@@ -56,11 +56,9 @@ const isDriverApproved = (driver) => {
 const getPostLoginRoute = (role, driver, routePrefix) => {
     const normalizedRole = normalizeDriverRole(role);
     if (normalizedRole === 'service_center' || normalizedRole === 'service_center_staff') return '/taxi/driver/service-center';
-    if (normalizedRole === 'bus_driver') return '/taxi/driver/bus-home';
-    if (normalizedRole === 'pooling_driver') return '/taxi/driver/pooling';
-    if (normalizedRole === 'owner' || normalizedRole === 'driver') {
+    if (normalizedRole === 'driver') {
         return isDriverApproved(driver)
-            ? normalizedRole === 'owner' ? '/taxi/owner/home' : '/taxi/driver/home'
+            ? '/taxi/driver/home'
             : `${routePrefix}/registration-status`;
     }
     return '/taxi/driver/home';
@@ -128,7 +126,7 @@ const OTPVerification = () => {
         ...getStoredDriverRegistrationSession(),
         ...(location.state || {}),
     };
-    const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
+    const routePrefix = '/taxi/driver';
     const phone = String(session.phone || '').replace(/\D/g, '').slice(-10);
     const role = session.role || 'driver';
     const roleConfirmed = session.roleConfirmed !== false;

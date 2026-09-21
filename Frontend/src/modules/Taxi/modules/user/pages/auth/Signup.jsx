@@ -218,7 +218,6 @@ const Signup = () => {
 
       sessionStorage.removeItem(PENDING_SIGNUP_PHONE_KEY);
       sessionStorage.removeItem(PENDING_SIGNUP_REFERRAL_CODE_KEY);
-      sessionStorage.removeItem(PENDING_SIGNUP_EMPLOYEE_CODE_KEY);
 
       // Success signup goes to permission sequence
       setTimeout(() => setShowPermissions(true), 800);

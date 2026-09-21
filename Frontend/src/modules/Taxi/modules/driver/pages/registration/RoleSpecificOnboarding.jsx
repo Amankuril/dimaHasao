@@ -89,7 +89,7 @@ const ROLE_STEPS = {
 const RoleSpecificOnboarding = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
+  const routePrefix = '/taxi/driver';
   const session = getStoredDriverRegistrationSession();
   const role = String(session.role || '').toLowerCase();
   const meta = ROLE_META[role];

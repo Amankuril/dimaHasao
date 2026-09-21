@@ -50,7 +50,7 @@ const extractUploadUrl = (payload) =>
 const DriverBankDetailsPage = () => {
   const navigate = useNavigate();
   const role = localStorage.getItem('role') || 'driver';
-  const routePrefix = role === 'owner' ? '/taxi/owner' : '/taxi/driver';
+  const routePrefix = '/taxi/driver';
 
   const [driver, setDriver] = useState(null);
   const [bankForm, setBankForm] = useState(() => normalizeBankDetails());

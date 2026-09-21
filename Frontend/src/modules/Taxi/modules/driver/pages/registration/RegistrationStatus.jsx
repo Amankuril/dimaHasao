@@ -89,7 +89,7 @@ const RegistrationStatus = () => {
   // configured in taxi settings.
   const appLogo = DRIVER_BRAND_LOGO;
   const isVehicleReapproval = location.state?.statusReason === "vehicle-update" || driver?.approve === false;
-  const routePrefix = location.pathname.startsWith('/taxi/owner') ? '/taxi/owner' : '/taxi/driver';
+  const routePrefix = '/taxi/driver';
 
   useEffect(() => {
     if (location.state?.role) {
@@ -164,15 +164,9 @@ const RegistrationStatus = () => {
             getStoredDriverRole() || location.state?.role || "driver",
           );
           const path =
-            normalizedRole === "owner"
-              ? "/taxi/owner/home"
-              : normalizedRole === "bus_driver"
-                ? "/taxi/driver/bus-home"
-              : normalizedRole === "pooling_driver"
-                ? "/taxi/driver/pooling"
-                : normalizedRole === "service_center" || normalizedRole === "service_center_staff"
-                  ? "/taxi/driver/service-center"
-                  : "/taxi/driver/home";
+            normalizedRole === "service_center" || normalizedRole === "service_center_staff"
+              ? "/taxi/driver/service-center"
+              : "/taxi/driver/home";
           
           navigate(path, { replace: true });
           requestInFlightRef.current = false;
