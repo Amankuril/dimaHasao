@@ -48,14 +48,54 @@ const HotelLogin = () => {
         }
     };
 
+    const focusOtpBox = (index) => {
+        document.getElementById(`otp-${index}`)?.focus();
+    };
+
+    /**
+     * Digits only.
+     *
+     * The boxes were plain text inputs that accepted anything a keyboard could
+     * produce, so a code could be typed as letters and only fail at the server.
+     * Everything non-numeric is dropped here rather than validated later.
+     *
+     * More than one digit means a paste or an SMS autofill landing in one box,
+     * so it is spread across the remaining boxes instead of being thrown away.
+     */
     const handleOTPChange = (index, value) => {
-        if (value.length > 1) return;
+        const digits = String(value).replace(/\D/g, '');
+        if (!digits) {
+            // A non-digit keystroke, or a genuine clear. Either way the box
+            // should end up empty rather than holding the rejected character.
+            const cleared = [...otp];
+            cleared[index] = '';
+            setOtp(cleared);
+            return;
+        }
+
         const newOtp = [...otp];
-        newOtp[index] = value;
+        let cursor = index;
+        for (const digit of digits) {
+            if (cursor >= otp.length) break;
+            newOtp[cursor] = digit;
+            cursor += 1;
+        }
         setOtp(newOtp);
 
-        if (value && index < otp.length - 1) {
-            document.getElementById(`otp-${index + 1}`)?.focus();
+        focusOtpBox(Math.min(cursor, otp.length - 1));
+    };
+
+    /**
+     * Backspace on an empty box steps back, so a typo two boxes ago can be
+     * corrected without reaching for the mouse.
+     */
+    const handleOTPKeyDown = (index, event) => {
+        if (event.key === 'Backspace' && !otp[index] && index > 0) {
+            event.preventDefault();
+            const newOtp = [...otp];
+            newOtp[index - 1] = '';
+            setOtp(newOtp);
+            focusOtpBox(index - 1);
         }
     };
 
@@ -196,10 +236,14 @@ const HotelLogin = () => {
                                     <input
                                         key={index}
                                         id={`otp-${index}`}
-                                        type="text"
+                                        type="tel"
+                                        inputMode="numeric"
+                                        autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                                        pattern="[0-9]*"
                                         maxLength={1}
                                         value={digit}
                                         onChange={(e) => handleOTPChange(index, e.target.value)}
+                                        onKeyDown={(e) => handleOTPKeyDown(index, e)}
                                         className="h-13 w-12 rounded-xl border border-[#caa83e]/35 bg-[#02130a] text-center text-xl font-black text-[#f4efe2] outline-none transition-colors focus:border-[#caa83e]"
                                     />
                                 ))}
