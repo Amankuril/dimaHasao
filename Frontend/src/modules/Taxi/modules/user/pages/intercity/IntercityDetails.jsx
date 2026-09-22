@@ -81,6 +81,7 @@ const IntercityDetails = () => {
   const [liveDriverCount, setLiveDriverCount] = useState(0);
   const [isFetchingDrivers, setIsFetchingDrivers] = useState(false);
   const [driverFetchError, setDriverFetchError] = useState('');
+  const [validationError, setValidationError] = useState('');
   const [isProceeding, setIsProceeding] = useState(false);
   const serviceLocationId = useMemo(
     () => state.serviceLocationId || state.selectedPackages?.[0]?.serviceLocationId || '',
@@ -171,10 +172,24 @@ const IntercityDetails = () => {
   }
 
   const handleContinue = async () => {
+    /*
+     * This refused with `alert()`, which a Flutter WebView silently swallows —
+     * so tapping Proceed did nothing at all, with no message and no request.
+     * The screen already renders an error banner directly above this button;
+     * say it there, and mark the field that is actually empty.
+     */
     if (!pickup.trim() || !drop.trim()) {
-      alert("Please enter both exact pickup and drop locations within the selected cities.");
+      setValidationError(
+        !pickup.trim() && !drop.trim()
+          ? 'Enter your exact pickup and drop addresses to continue.'
+          : !pickup.trim()
+            ? 'Enter your exact pickup address to continue.'
+            : 'Enter your exact drop address to continue.',
+      );
       return;
     }
+
+    setValidationError('');
 
     const nextPickupCoords = pickupCoords || getCityCoords(fromCity);
     const nextDropCoords = dropCoords || getCityCoords(toCity);
@@ -821,6 +836,7 @@ const IntercityDetails = () => {
                     onChange={e => {
                       setPickup(e.target.value);
                       setPickupCoords(null);
+                      setValidationError('');
                     }}
                     className="w-full h-14 bg-slate-50 border-2 border-transparent rounded-2xl px-5 text-[15px] font-bold text-slate-900 focus:outline-none focus:border-blue-100 focus:bg-white transition-all"
                   />
@@ -833,6 +849,7 @@ const IntercityDetails = () => {
                   onChange={e => {
                     setPickup(e.target.value);
                     setPickupCoords(null);
+                    setValidationError('');
                   }}
                   className="flex-1 h-14 bg-slate-50 border-2 border-transparent rounded-2xl px-5 text-[15px] font-bold text-slate-900 focus:outline-none focus:border-blue-100 focus:bg-white transition-all"
                 />
@@ -867,6 +884,7 @@ const IntercityDetails = () => {
                     onChange={e => {
                       setDrop(e.target.value);
                       setDropCoords(null);
+                      setValidationError('');
                     }}
                     className="w-full h-14 bg-slate-50 border-2 border-transparent rounded-2xl px-5 text-[15px] font-bold text-slate-900 focus:outline-none focus:border-indigo-100 focus:bg-white transition-all"
                   />
@@ -879,6 +897,7 @@ const IntercityDetails = () => {
                   onChange={e => {
                     setDrop(e.target.value);
                     setDropCoords(null);
+                    setValidationError('');
                   }}
                   className="flex-1 h-14 bg-slate-50 border-2 border-transparent rounded-2xl px-5 text-[15px] font-bold text-slate-900 focus:outline-none focus:border-indigo-100 focus:bg-white transition-all"
                 />
@@ -924,6 +943,11 @@ const IntercityDetails = () => {
             </div>
           )}
         </div>
+        {validationError ? (
+          <div className="mb-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[12px] font-bold text-rose-600">
+            {validationError}
+          </div>
+        ) : null}
         {driverFetchError ? (
           <div className="mb-3 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-[11px] font-bold text-rose-500">
             {driverFetchError}
