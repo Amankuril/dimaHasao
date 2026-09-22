@@ -85,9 +85,19 @@ const FoodUserShell = () => (
 
 /** Taxi's own destinations. "My Rides" stays because /app/bookings shows
     every module's bookings, while this is the ride-only view. */
+/*
+ * What taxi offers beyond the five shared anchors, shown under More.
+ *
+ * This is the list that actually renders: /taxi/user goes through
+ * TaxiUserShell -> ModuleShell -> AppBottomNav, so the near-identical
+ * TAXI_EXTRAS inside the module's own BottomNavbar never reaches the screen
+ * there. Outstation was only in that copy, which is why it had no entry here.
+ */
 const TAXI_NAV_EXTRAS = [
   { label: 'Book a Ride', icon: 'fa-solid fa-car-side', path: '/taxi/user' },
   { label: 'My Rides', icon: 'fa-solid fa-route', path: '/taxi/user/activity' },
+  { label: 'Outstation', icon: 'fa-solid fa-road', path: '/taxi/user/intercity' },
+  { label: 'Ride Wallet', icon: 'fa-solid fa-wallet', path: '/taxi/user/wallet' },
   { label: 'Support', icon: 'fa-solid fa-headset', path: '/taxi/user/support' },
 ]
 

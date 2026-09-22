@@ -39,16 +39,35 @@ const rideDate = (value) => {
 
 /** A short label for the vehicle, falling back through what the ride carries. */
 const vehicleLabel = (driver = {}, ride = {}) =>
+  [driver.vehicleMake, driver.vehicleModel].filter(Boolean).join(' ') ||
   driver.vehicleType ||
+  driver.vehicleIconType ||
   ride.vehicleIconType ||
   (ride.serviceType === 'parcel' ? 'Parcel' : 'Ride');
 
+/** Rides that can still be resumed — the card links back into the live trip. */
+const LIVE_RIDE_STATUSES = new Set([
+  'pending', 'searching', 'accepted', 'arrived', 'arriving', 'ongoing', 'in_progress', 'started', 'assigned', 'confirmed',
+]);
+
 /** Backend ride → the card the v1 bookings screen renders. */
 export const adaptRide = (ride = {}) => {
-  const driver = ride.driverId && typeof ride.driverId === 'object' ? ride.driverId : {};
+  // The list serializer nests the driver under `driver`; `driverId` is only
+  // ever the raw id. Reading `driverId` alone left an assigned ride showing
+  // "Awaiting driver" with no vehicle number and a dead Call button.
+  const driver =
+    (ride.driver && typeof ride.driver === 'object' ? ride.driver : null) ||
+    (ride.driverId && typeof ride.driverId === 'object' ? ride.driverId : null) ||
+    {};
+  const rawStatus = String(ride.liveStatus || ride.status || '').toLowerCase();
 
   return {
-    id: String(ride._id || ''),
+    // The ride serializer returns `rideId`; it has no `_id`. Reading only
+    // `_id` left every card with an empty id, so the row had nothing to
+    // link to and rendered "ID:" with nothing after it.
+    id: String(ride.rideId || ride._id || ''),
+    rawStatus,
+    isLive: LIVE_RIDE_STATUSES.has(rawStatus),
     date: rideDate(ride.createdAt),
     placeName: ride.dropAddress || ride.pickupAddress || 'Ride',
     pickup: ride.pickupAddress || '—',

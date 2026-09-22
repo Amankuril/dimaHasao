@@ -910,15 +910,41 @@ const Home = () => {
     };
 
     const syncCurrentRide = async (reason = 'timer') => {
-      if (cancelled || syncInFlight || document.visibilityState === 'hidden') {
+      if (cancelled || syncInFlight) {
         scheduleNextSync();
         return;
       }
 
+      /*
+       * Skip only the background *polling*. This used to skip every sync while
+       * the document was hidden, mount included — so a home screen that opened
+       * while the tab was backgrounded, or inside a WebView that reports
+       * hidden, never made its first request and showed no active ride until
+       * a timer happened to fire. An explicit mount or focus sync is the one
+       * that matters most; it runs regardless.
+       */
+      if (reason === 'timer' && document.visibilityState === 'hidden') {
+        scheduleNextSync();
+        return;
+      }
+
+      /*
+       * A focus or mount sync that lands inside the cooldown skips the
+       * request — but it must still leave the polling loop running. Returning
+       * outright killed it: no timer was scheduled, so after one early return
+       * the screen never synced again for the rest of the visit and an active
+       * ride simply never appeared.
+       */
+      // The cooldown exists to damp repeated focus events, so it applies to
+      // those only. A mount sync is the one request that has to go out: it is
+      // what puts an in-progress ride back on the screen when the rider
+      // returns to it, and `lastSyncAtRef` survives an effect re-run, so
+      // including mount here meant a remount could be silently skipped.
       if (
-        reason !== 'timer' &&
+        reason === 'focus' &&
         Date.now() - lastSyncAtRef.current < FORCED_SYNC_COOLDOWN_MS
       ) {
+        scheduleNextSync();
         return;
       }
 

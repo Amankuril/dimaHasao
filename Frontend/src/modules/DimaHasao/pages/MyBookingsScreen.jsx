@@ -23,6 +23,25 @@ export const MyBookingsScreen = () => {
   const navigate = useNavigate();
   const hostNavigate = useHostNavigate();
 
+  /**
+   * Open a ride from the bookings list.
+   *
+   * A ride that is still running goes back into the taxi module's live
+   * tracking screen, which resumes from the id alone; a finished one opens its
+   * receipt. The card carried no handler at all before, so a rider who left
+   * the trip screen could see "On the way" here and had no way back to it.
+   */
+  const openRide = (booking) => {
+    if (!booking?.id) return;
+
+    if (booking.isLive) {
+      hostNavigate('/taxi/user/ride/tracking', { state: { rideId: booking.id } });
+      return;
+    }
+
+    hostNavigate(`/taxi/user/ride/detail/${booking.id}`);
+  };
+
   return (
     <div className="bg-[#FAF6ED] text-gray-800 antialiased min-h-screen pb-28 relative font-poppins">
       <Header
@@ -102,7 +121,16 @@ export const MyBookingsScreen = () => {
                   key={b.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-2xl p-4 shadow-xs border border-[#E5DDC3] space-y-3"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openRide(b)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      openRide(b);
+                    }
+                  }}
+                  className="bg-white rounded-2xl p-4 shadow-xs border border-[#E5DDC3] space-y-3 cursor-pointer transition-shadow hover:shadow-md focus:outline-hidden focus:ring-2 focus:ring-[#06381e]/40"
                 >
                   <div className="flex justify-between items-start border-b border-gray-100 pb-2.5">
                     <div>
@@ -140,13 +168,30 @@ export const MyBookingsScreen = () => {
                       <span className="text-[10px] text-gray-500 uppercase">Total Fare:</span>
                       <span className="text-sm font-bold text-gray-900 ml-1.5 font-montserrat">₹{b.fare}</span>
                     </div>
-                    <button
-                      onClick={() => showToast(`Connecting to driver at ${b.driverPhone}`)}
-                      className="bg-[#06381e] text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <i className="fa-solid fa-phone text-[10px]"></i>
-                      <span>Call Driver</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {b.isLive ? (
+                        <span className="text-[11px] font-bold text-[#06381e] flex items-center gap-1">
+                          Track ride <i className="fa-solid fa-chevron-right text-[9px]"></i>
+                        </span>
+                      ) : null}
+                      <button
+                        onClick={(e) => {
+                          // Without this the card's own tap fires too and the
+                          // rider is navigated away mid-call.
+                          e.stopPropagation();
+                          if (b.driverPhone) {
+                            window.location.href = `tel:${b.driverPhone}`;
+                            return;
+                          }
+                          showToast('No driver assigned yet');
+                        }}
+                        disabled={!b.driverPhone}
+                        className="bg-[#06381e] disabled:opacity-40 disabled:cursor-not-allowed text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <i className="fa-solid fa-phone text-[10px]"></i>
+                        <span>Call Driver</span>
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))
