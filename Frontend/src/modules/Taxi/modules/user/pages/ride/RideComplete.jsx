@@ -10,6 +10,7 @@ import bikeIcon from '../../../../assets/icons/bike.png';
 import autoIcon from '../../../../assets/icons/auto.png';
 import deliveryIcon from '../../../../assets/icons/Delivery.png';
 import { useSettings } from '../../../../shared/context/SettingsContext';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const TIP_OPTIONS = [0, 20, 50, 100];
 const PAYMENT_OPTIONS = [
@@ -99,7 +100,7 @@ const RideComplete = () => {
     min_tip_amount: '10',
   });
 
-  const routeHome = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '/';
+  const routeHome = getTaxiUserRoutePrefix(location.pathname);
   const rideId = state.rideId || '';
   const fare = Number(state.fare || 22);
   const paymentMethod = state.paymentMethod || 'Cash';

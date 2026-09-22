@@ -13,11 +13,12 @@ const fallingCoins = [
 
 import { useSettings } from '../../../shared/context/SettingsContext';
 import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
+import { getTaxiUserRoutePrefix } from '../../../shared/utils/routePrefix';
 
 const HeaderGreeting = ({ floating = false, hideSearch = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const { theme } = useUserTheme();
 
   const { settings, loading, hasBootstrapSettings } = useSettings();

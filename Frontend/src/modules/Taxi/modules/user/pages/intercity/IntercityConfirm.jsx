@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, CheckCircle2, Clock3, LoaderCircle, Navigation } from 'lucide-react';
 import api from '../../../../shared/api/axiosInstance';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const generateIntercityBookingId = () =>
   'IC-' + Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6).padEnd(6, '0');
@@ -13,7 +14,7 @@ const generateSearchNonce = () =>
 const IntercityConfirm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const state = useMemo(() => location.state || {}, [location.state]);
   const [status, setStatus] = useState('saving');
   const [error, setError] = useState('');

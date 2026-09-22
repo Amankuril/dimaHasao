@@ -15,6 +15,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { isImmersiveRoute } from './immersiveRoutes'
 
 const EMBLEM =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDHxXjaqg_p2_vshVQlQARltQKITPTxRdxMMlP-3QyFF5y8e2b25l5rewGDv8hjTJT1mIeodoXkQyW5Q5DbamrNM5Wqkn9zC5hXH-uNiaqjmuWSf0eYIG090j8R2skAqbm4nCA9jzMl8Rca5t2ANsI31UQDQpgiAqnjiXgjeFcP5hsy0iTh8orLvaeTNhXhfOJY7K7F6qam7R85TVEaEb8naGgso3oEml2Ix6YFyN-Jua917AHlmZIs'
@@ -59,6 +60,9 @@ export default function AppBottomNav({ extras = [], extrasTitle = 'In this secti
     setIsMoreOpen(false)
     if (path) navigate(path)
   }
+
+  // Hooks above run unconditionally; only the render stands down.
+  if (isImmersiveRoute(currentPath)) return null
 
   return (
     <>

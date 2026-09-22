@@ -1,8 +1,9 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PatternDivider } from './PatternDivider';
 import AppBottomNav from '@/shared/components/app/AppBottomNav';
 import '../../dimahasao.css';
+import { isImmersiveRoute } from '@/shared/components/app/immersiveRoutes';
 
 // The v1 Dima Hasao header, for wrapping the Hello-Parth food/taxi/hotel
 // modules. Deliberately standalone: it uses the host router directly and takes
@@ -68,14 +69,25 @@ export const ModuleHeader = ({ title, subtitle, backTo = '/app' }) => {
  */
 const NAV_CLEARANCE = '72px';
 
-export const ModuleShell = ({ title, subtitle, children, navExtras = [], navExtrasTitle }) => (
-  <div className="dh-app min-h-screen flex flex-col bg-[#FAF6ED]" style={{ '--app-nav-clearance': NAV_CLEARANCE }}>
-    <ModuleHeader title={title} subtitle={subtitle} />
-    <PatternDivider variant="green-gold" />
-    {/* Room for the floating nav so it never covers a module's last row. */}
-    <div className="flex-1 min-h-0 pb-16">{children}</div>
-    <AppBottomNav extras={navExtras} extrasTitle={navExtrasTitle} />
-  </div>
-);
+export const ModuleShell = ({ title, subtitle, children, navExtras = [], navExtrasTitle }) => {
+  const { pathname } = useLocation();
+  // On a flow screen the nav hides itself, so the room reserved for it — both
+  // the padding here and the variable the fixed action bars pad by — has to go
+  // with it, or those screens gain a band of dead space.
+  const immersive = isImmersiveRoute(pathname);
+
+  return (
+    <div
+      className="dh-app min-h-screen flex flex-col bg-[#FAF6ED]"
+      style={{ '--app-nav-clearance': immersive ? '0px' : NAV_CLEARANCE }}
+    >
+      <ModuleHeader title={title} subtitle={subtitle} />
+      <PatternDivider variant="green-gold" />
+      {/* Room for the floating nav so it never covers a module's last row. */}
+      <div className={`flex-1 min-h-0 ${immersive ? '' : 'pb-16'}`}>{children}</div>
+      <AppBottomNav extras={navExtras} extrasTitle={navExtrasTitle} />
+    </div>
+  );
+};
 
 export default ModuleShell;

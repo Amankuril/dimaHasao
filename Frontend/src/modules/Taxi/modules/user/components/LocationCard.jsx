@@ -2,13 +2,14 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronRight, MapPin, Navigation, Search } from 'lucide-react';
+import { getTaxiUserRoutePrefix } from '../../../shared/utils/routePrefix';
 
 const quickPlaces = ['Home', 'Work', 'Recent'];
 
 const LocationCard = ({ location = 'Fetching location...' }) => {
   const navigate = useNavigate();
   const routeLocation = useLocation();
-  const routePrefix = routeLocation.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(routeLocation.pathname);
   const isFetchingLocation = location.trim().toLowerCase() === 'fetching location...';
   const locationLabel = isFetchingLocation ? 'Fetching location' : location;
 

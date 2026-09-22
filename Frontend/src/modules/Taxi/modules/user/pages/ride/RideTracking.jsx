@@ -16,6 +16,7 @@ import autoIcon from '../../../../assets/icons/auto.png';
 import deliveryIcon from '../../../../assets/icons/Delivery.png';
 import { useSettings } from '../../../../shared/context/SettingsContext';
 import { DEFAULT_COORDS, DEFAULT_PLACE } from '../../constants/districtPlaces';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 const DEFAULT_CENTER = { lat: 22.7196, lng: 75.8577 };
@@ -440,11 +441,12 @@ const RideTracking = () => {
   const storedRide = useMemo(() => getCurrentRide(), []);
   const state = useMemo(() => location.state || storedRide || {}, [location.state, storedRide]);
   const { isLoaded, loadError } = useBaseGoogleMapsLoader();
-  const routeHome = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '/';
-  const routeComplete = location.pathname.startsWith('/taxi/user') ? '/taxi/user/ride/complete' : '/ride/complete';
-  const routeChat = location.pathname.startsWith('/taxi/user') ? '/taxi/user/ride/chat' : '/ride/chat';
-  const routeSupport = location.pathname.startsWith('/taxi/user') ? '/taxi/user/support' : '/ride/support';
-  const routeSos = location.pathname.startsWith('/taxi/user') ? '/taxi/user/safety/sos' : '/safety/sos';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
+  const routeHome = routePrefix;
+  const routeComplete = `${routePrefix}/ride/complete`;
+  const routeChat = `${routePrefix}/ride/chat`;
+  const routeSupport = `${routePrefix}/support`;
+  const routeSos = `${routePrefix}/safety/sos`;
 
   const rideId = state.rideId || '';
   const scheduledAt = rideRealtime?.scheduledAt || state.scheduledAt || null;

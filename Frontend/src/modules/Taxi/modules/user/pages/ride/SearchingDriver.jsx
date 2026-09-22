@@ -42,6 +42,7 @@ import SuvIcon from '@/assets/icons/SUV.png';
 import BikeIcon from '@/assets/icons/bike.png';
 import CarIcon from '@/assets/icons/car.png';
 import AutoIcon from '@/assets/icons/auto.png';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const getVehicleIcon = (type = 'car') => {
   const val = String(type).toLowerCase();
@@ -237,7 +238,7 @@ const SearchingDriver = () => {
   const driverRef = useRef(driver);
   const cancellingRef = useRef(false);
   const routePrefix = useMemo(
-    () => (location.pathname.startsWith('/taxi/user') ? '/taxi/user' : ''),
+    () => (getTaxiUserRoutePrefix(location.pathname)),
     [location.pathname],
   );
   const userHomeRoute = routePrefix || '/taxi/user';

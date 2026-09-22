@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUserTheme } from '../../../shared/context/UserThemeContext';
 import bikeImg from '../../../assets/user-app/bike.png';
+import { getTaxiUserRoutePrefix } from '../../../shared/utils/routePrefix';
 
 const ActionCard = ({ title, description, image, surfaceClass, glowClass, buttonBgClass, path }) => {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ const ActionCard = ({ title, description, image, surfaceClass, glowClass, button
 
 const ActionsSection = () => {
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const { theme } = useUserTheme();
   const isDark = theme === 'dark';
 

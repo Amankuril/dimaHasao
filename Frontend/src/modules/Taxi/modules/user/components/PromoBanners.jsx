@@ -7,6 +7,7 @@ import { useUserTheme } from '../../../shared/context/UserThemeContext';
 import bannerTaxi from '../../../assets/user-app/banner-taxi.jpg';
 import taxiImg from '../../../assets/user-app/taxi.png';
 import bikeImg from '../../../assets/user-app/bike.png';
+import { getTaxiUserRoutePrefix } from '../../../shared/utils/routePrefix';
 
 const rotatingCards = [
   {
@@ -80,7 +81,7 @@ const PromoCard = ({ icon: Icon, iconClass, title, description, actionClass, pat
 const PromoBanners = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const { theme } = useUserTheme();
   const isDark = theme === 'dark';
 

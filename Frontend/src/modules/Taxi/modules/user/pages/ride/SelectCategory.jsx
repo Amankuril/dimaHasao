@@ -8,6 +8,7 @@ import api from '../../../../shared/api/axiosInstance';
 import carIcon from '../../../../assets/icons/premium_car.png';
 import bikeIcon from '../../../../assets/icons/premium_bike.png';
 import autoIcon from '../../../../assets/icons/premium_auto.png';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const CATEGORY_DETAILS = {
   car: {
@@ -51,7 +52,7 @@ const SelectCategory = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const routeState = location.state || {};
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
 
   const [loading, setLoading] = useState(true);
   const [activeCategories, setActiveCategories] = useState({ car: false, bike: false, auto: false });

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, ChevronRight, Clock3, Info, MapPin, Users } from 'lucide-react';
 import { useSettings } from '../../../../shared/context/SettingsContext';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const pad = (value) => String(value).padStart(2, '0');
 
@@ -121,7 +122,7 @@ const IntercityVehicle = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { settings } = useSettings();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const {
     fromCity,
     toCity,

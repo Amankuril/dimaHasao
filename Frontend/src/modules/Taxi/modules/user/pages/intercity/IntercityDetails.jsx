@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin, Navigation, ChevronRight, LoaderCircle, AlertTriangl
 import { GoogleMap, Autocomplete } from '@react-google-maps/api';
 import { HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER, useAppGoogleMapsLoader } from '../../../admin/utils/googleMaps';
 import api from '../../../../shared/api/axiosInstance';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 /*
  * Seeds the map and biases place search when a trip names a city. It held the
@@ -44,7 +45,7 @@ const generateSearchNonce = () =>
 const IntercityDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const state = location.state || {};
   const { fromCity, toCity, vehicle } = state;
 

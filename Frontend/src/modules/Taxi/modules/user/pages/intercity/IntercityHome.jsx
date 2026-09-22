@@ -29,6 +29,7 @@ import { GoogleMap } from '@react-google-maps/api';
 import { useAppGoogleMapsLoader, HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER } from '../../../admin/utils/googleMaps';
 import toast from 'react-hot-toast';
 import usePlatformSettings from '@/shared/hooks/usePlatformSettings';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const normalizeSearchValue = (value) => String(value || '').trim().toLowerCase();
 
@@ -85,7 +86,7 @@ const getLatLngCacheKey = (coords, precision = 5) =>
 const IntercityHome = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   // The district's own number, set once in Global Settings.
   const supportPhone = String(usePlatformSettings().supportPhone || '').trim();
 

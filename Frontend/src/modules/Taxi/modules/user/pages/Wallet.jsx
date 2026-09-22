@@ -7,6 +7,7 @@ import { useSettings } from '../../../shared/context/SettingsContext';
 import { useUserTheme } from '../../../shared/context/UserThemeContext';
 import { openExternalCheckout } from '../../../shared/utils/externalNavigation';
 import { rememberPendingPhonePeRedirect } from '../../../shared/utils/phonePeResume';
+import { getTaxiUserRoutePrefix } from '../../../shared/utils/routePrefix';
 
 const PHONEPE_USER_WALLET_FLOW_KEY = 'user-wallet-topup';
 
@@ -25,7 +26,7 @@ const Wallet = () => {
   const [wallet, setWallet] = React.useState({ balance: 0, currency: 'INR', recentTransactions: [] });
 
   const basePath = useMemo(
-    () => (window.location.pathname.startsWith('/taxi/user') ? '/taxi/user' : ''),
+    () => (getTaxiUserRoutePrefix()),
     [],
   );
 

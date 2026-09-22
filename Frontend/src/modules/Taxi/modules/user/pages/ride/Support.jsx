@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, MessageCircle, Phone, HelpCircle, AlertCircle, XCircle, ShieldCheck, ChevronRight, Siren } from 'lucide-react';
 // ... removed BottomNavbar import ...
 import { useSupportInfo } from '../../../shared/content/supportInfo';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const Support = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const SUPPORT_INFO = useSupportInfo();
 
   const helpTopics = [

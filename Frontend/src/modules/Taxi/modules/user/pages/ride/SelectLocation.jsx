@@ -7,6 +7,7 @@ import { useAppGoogleMapsLoader, DISTRICT_CENTER, HAS_VALID_GOOGLE_MAPS_KEY } fr
 import api from '../../../../shared/api/axiosInstance';
 import { getSavedLocation, getSavedLocationCoords, saveLocation } from '../../services/locationStore';
 import { coordsForPlace, DEFAULT_COORDS, DEFAULT_PLACE, DISTRICT_PLACES, DISTRICT_PLACE_COORDS } from '../../constants/districtPlaces';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const getCoords = coordsForPlace;
 const MAP_REVERSE_GEOCODE_DEBOUNCE_MS = 500;
@@ -213,7 +214,7 @@ const SelectLocation = () => {
   const reverseGeocodeCacheRef = useRef(new Map());
   const { isLoaded, loadError } = useAppGoogleMapsLoader();
   const navigate = useNavigate();
-  const routePrefix = window.location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const parcelReturnPath = routeState.returnTo || `${routePrefix}/parcel/details`;
 
   // All known locations â€” filtered live as user types

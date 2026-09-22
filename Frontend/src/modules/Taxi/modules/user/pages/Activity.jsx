@@ -28,6 +28,7 @@ import {
   isActiveCurrentRide,
 } from '../services/currentRideService';
 import { CalendarClock, Clock3, MapPin, ShieldCheck, User, ChevronRight } from 'lucide-react';
+import { getTaxiUserRoutePrefix } from '../../../shared/utils/routePrefix';
 
 const getCurrentRideIcon = (ride) => {
   const customIcon = String(
@@ -248,7 +249,7 @@ const Activity = () => {
   });
   const navigate = useNavigate();
   const location = useLocation();
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
 
   const [currentRide, setCurrentRide] = useState(() => {
     const ride = getCurrentRide();

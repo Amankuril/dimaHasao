@@ -4,6 +4,7 @@ import { ArrowLeft, User, Mail, Smartphone, Camera, CheckCircle2, Loader2, Image
 import { userAuthService } from '../../services/authService';
 import { useImageUpload } from '../../../../shared/hooks/useImageUpload';
 import toast from 'react-hot-toast';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const ProfileSettings = () => {
   const [name, setName] = useState('');
@@ -78,7 +79,7 @@ const ProfileSettings = () => {
       const user = response?.data?.user || {};
       localStorage.setItem('userInfo', JSON.stringify(user));
       toast.success('Profile updated successfully');
-      const basePath = window.location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+      const basePath = getTaxiUserRoutePrefix();
       navigate(`${basePath}/profile`);
     } catch (err) {
       setSaveError(err?.message || 'Save failed');

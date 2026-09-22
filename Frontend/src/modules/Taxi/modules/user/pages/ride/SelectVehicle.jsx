@@ -24,6 +24,7 @@ import HatchbackIcon from '../../../../assets/icons/Hatchback.png';
 import BusIcon from '../../../../assets/icons/bus.png';
 import MiniBusIcon from '../../../../assets/icons/mini_bus.png';
 import { DEFAULT_COORDS, DEFAULT_PLACE } from '../../constants/districtPlaces';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 const SELECT_VEHICLE_MAP_OPTIONS = {
@@ -1205,7 +1206,7 @@ const SelectVehicle = () => {
   const zoneId = hasCompleteRouteZoneContext
     ? (resolvedZoneId || routeZoneId || '')
     : resolvedZoneId;
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const pickupPosition = useMemo(() => toLatLng(pickupCoords), [pickupCoords]);
   const dropPosition = useMemo(() => toLatLng(dropCoords, null), [dropCoords]);
   const { isLoaded: isMapLoaded, loadError: mapLoadError } = useBaseGoogleMapsLoader();

@@ -181,6 +181,7 @@ const FooterBannerImage = ({ footerSettings, fallbackImage }) => {
 import { userService } from '../services/userService';
 import { getLocalUserToken, clearLocalUserSession } from '../services/authService';
 import { DISTRICT_PLACES } from '../constants/districtPlaces';
+import { getTaxiUserRoutePrefix } from '../../../shared/utils/routePrefix';
 import {
   CURRENT_RIDE_UPDATED_EVENT,
   getCurrentRide,
@@ -668,7 +669,7 @@ const Home = () => {
   const promoScrollRef = useRef(null);
   const isProgrammaticScrollRef = useRef(false);
   const programmaticScrollTimeoutRef = useRef(null);
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
   const currentRideRef = useRef(currentRide);
   const lastSyncAtRef = useRef(0);
   const consecutiveIdleMissesRef = useRef(0);

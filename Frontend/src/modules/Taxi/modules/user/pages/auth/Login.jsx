@@ -8,6 +8,7 @@ import { useUserTheme } from '../../../../shared/context/UserThemeContext';
 import yellowTaxiLoginBg from '../../../../assets/images/yellow_taxi_login_bg.png';
 import { toast } from 'react-hot-toast';
 import { DRIVER_BRAND_LOGO, logoFallback } from '@/shared/constants/brandLogo';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const extractLoginErrorMessage = (error) => {
   if (typeof error === 'string') {
@@ -75,7 +76,7 @@ const Login = () => {
   // configured in taxi settings.
   const appLogo = DRIVER_BRAND_LOGO;
   const userHomeRoute = useMemo(
-    () => (location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '/user'),
+    () => getTaxiUserRoutePrefix(location.pathname),
     [location.pathname],
   );
 

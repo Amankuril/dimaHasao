@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Bike, HelpCircle, Repeat, Share2, Star } from 'lucide-react';
 import api from '../../../../shared/api/axiosInstance';
 import { useSettings } from '../../../../shared/context/SettingsContext';
+import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
 
 const unwrap = (response) => response?.data || response;
 
@@ -50,7 +51,7 @@ const RideDetail = () => {
   const [ride, setRide] = useState(location.state?.ride || null);
   const [loading, setLoading] = useState(!location.state?.ride);
   const [error, setError] = useState('');
-  const routePrefix = location.pathname.startsWith('/taxi/user') ? '/taxi/user' : '';
+  const routePrefix = getTaxiUserRoutePrefix(location.pathname);
 
   useEffect(() => {
     if (ride || !id) return undefined;
