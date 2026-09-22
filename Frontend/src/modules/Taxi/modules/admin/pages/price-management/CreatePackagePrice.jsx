@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ChevronDown, ChevronRight, Loader2, Plus, Trash2, MapPin, X, Car } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { adminService } from '../../services/adminService';
 import { Autocomplete } from '@react-google-maps/api';
@@ -262,7 +262,13 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                   className={`${inputClass} appearance-none`}
                   required
                 >
-                  <option value="">Select package type</option>
+                  {/* The list is empty until someone creates a package type, and
+                      an empty dropdown with no explanation gives an admin
+                      nothing to act on — the prerequisite lives on a different
+                      screen entirely. Name it, and link to it. */}
+                  <option value="">
+                    {packageTypes.length ? 'Select package type' : 'No package types yet'}
+                  </option>
                   {packageTypes.map((item) => (
                     <option key={item._id || item.id} value={item._id || item.id}>
                       {item.name}
@@ -271,6 +277,18 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                 </select>
                 <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
+              {!packageTypes.length && (
+                <p className="mt-1 text-xs text-amber-700">
+                  Create one first under{' '}
+                  <Link
+                    to="/taxi/admin/pricing/rental-packages/create"
+                    className="font-semibold underline underline-offset-2"
+                  >
+                    Rental Package Types
+                  </Link>
+                  , then come back here.
+                </p>
+              )}
             </div>
 
             <div>
@@ -417,7 +435,9 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                         className={`${inputClass} appearance-none`}
                         required
                       >
-                        <option value="">Select vehicle type</option>
+                        <option value="">
+                          {vehicleTypes.length ? 'Select vehicle type' : 'No vehicle types yet'}
+                        </option>
                         {vehicleTypes.map((item) => (
                           <option key={item._id || item.id} value={item._id || item.id}>
                             {item.name}
@@ -426,6 +446,18 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                       </select>
                       <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     </div>
+                    {!vehicleTypes.length && (
+                      <p className="mt-1 text-xs text-amber-700">
+                        Add one under{' '}
+                        <Link
+                          to="/taxi/admin/pricing/vehicle-type/create"
+                          className="font-semibold underline underline-offset-2"
+                        >
+                          Vehicle Type
+                        </Link>
+                        .
+                      </p>
+                    )}
                   </div>
 
                   <div>
