@@ -6,6 +6,7 @@ import { GoogleMap, Autocomplete } from '@react-google-maps/api';
 import { HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER, useAppGoogleMapsLoader } from '../../../admin/utils/googleMaps';
 import api from '../../../../shared/api/axiosInstance';
 import { getTaxiUserRoutePrefix } from '../../../../shared/utils/routePrefix';
+import { toHistorySafeState } from '../../../../shared/utils/historyState';
 
 /*
  * Seeds the map and biases place search when a trip names a city. It held the
@@ -213,7 +214,17 @@ const IntercityDetails = () => {
             transport_type: 'intercity',
           },
         });
-        const availability = unwrapApiPayload(response);
+        /*
+         * The taxi axios instance hands back a Proxy (createCompatibleResponseView)
+         * so both `res.data.x` and `res.x` resolve, and every nested read is
+         * re-wrapped in another Proxy. A Proxy carries internal slots, so
+         * structuredClone rejects it outright -- at any depth, however plain its
+         * target. Spreading it copies the keys but keeps the proxied values, so
+         * this snapshot used to ride into history state and make pushState throw
+         * DataCloneError, which killed the navigate below with no visible error.
+         * Snapshot it into plain data here, where the Proxy enters.
+         */
+        const availability = toHistorySafeState(unwrapApiPayload(response)) || {};
 
         availabilitySnapshot = {
           ...availability,

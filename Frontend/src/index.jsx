@@ -5,6 +5,7 @@ import App from './app/App.jsx'
 import { isModuleAuthenticated } from './shared/utils/moduleAuth.js'
 import { syncThemeForPath } from './shared/utils/theme.js'
 import { NATIVE_LAST_ROUTE_KEY, modulePrefixFor, resolveAppColdStartRoute } from './shared/utils/activeModule.js'
+import { installHistoryStateSanitizer } from './shared/utils/historyState.js'
 /*
  * Font Awesome ships with the bundle rather than being fetched at runtime.
  *
@@ -138,6 +139,21 @@ function bootstrapNativeHashRoute() {
 
   window.history.replaceState(null, '', `#${targetPath}${search}`)
 }
+
+/*
+ * react-router puts whatever you pass as `navigate(path, { state })` straight
+ * into history.pushState, which structured-clones it. Anything carrying a
+ * Proxy, a function or a class instance throws DataCloneError, and because
+ * that throw comes back out of navigate(), the navigation simply does not
+ * happen -- no route change, no error on screen. The taxi axios instance
+ * returns Proxy-wrapped responses, so any screen that forwards an API payload
+ * as route state hits this.
+ *
+ * Call sites should still snapshot their own state; this is the net under
+ * them, retrying once with a sanitized copy rather than losing the navigation.
+ * It was written but never installed.
+ */
+installHistoryStateSanitizer()
 
 bootstrapNativeHashRoute()
 syncThemeForPath(getInitialPathname())
