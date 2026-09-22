@@ -183,10 +183,25 @@ const RideComplete = () => {
           return;
         }
 
+        /*
+         * Only adopt the server's copy once feedback has actually been
+         * submitted.
+         *
+         * This block ran on every poll, five seconds apart, and the ride
+         * carries an empty `feedback` object before anything is sent. So a
+         * rider who tapped four stars and started typing a note had both
+         * wiped back to 0 and '' a moment later — the screen looked like the
+         * rating simply would not take, and a note written just before
+         * pressing submit was saved as an empty string.
+         */
+        if (!feedback.submittedAt) {
+          return;
+        }
+
         setRating(Number(feedback.rating || 0));
         setComment(feedback.comment || '');
         setSelectedTip(Number(feedback.tipAmount || 0));
-        setIsSubmitted(Boolean(feedback.submittedAt));
+        setIsSubmitted(true);
       } catch (rideError) {
         console.error('Failed to refresh completed ride receipt:', rideError);
       }

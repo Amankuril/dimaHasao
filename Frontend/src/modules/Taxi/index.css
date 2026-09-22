@@ -367,15 +367,117 @@ body {
   -webkit-backdrop-filter: blur(12px) !important;
 }
 
-/* Text Primary overrides */
+
+/* Light-on-dark text sitting on a surface this theme flattened.
+ *
+ * The block above repaints every dark surface (.bg-slate-950, .bg-zinc-900,
+ * .bg-black/60 ...) to a light card colour. Text inside them is written as
+ * .text-white because the original surface was dark, so it has to darken
+ * with the surface or it turns white-on-white.
+ *
+ * This used to be done by darkening .text-white everywhere, which also hit
+ * white text over maps, photos and gradients — the home screen's location
+ * header among them, rendering near-black on near-black. Scoping it to the
+ * flattened surfaces fixes those without reintroducing the invisible
+ * avatar initials and card labels. */
+.user-app-theme .bg-white\/85 .text-white,
+.user-app-theme .bg-white\/85.text-white,
+.user-app-theme .bg-white\/85 .text-zinc-100,
+.user-app-theme .bg-white\/85.text-zinc-100,
+.user-app-theme .bg-white\/90 .text-white,
+.user-app-theme .bg-white\/90.text-white,
+.user-app-theme .bg-white\/90 .text-zinc-100,
+.user-app-theme .bg-white\/90.text-zinc-100,
+.user-app-theme .bg-white\/92 .text-white,
+.user-app-theme .bg-white\/92.text-white,
+.user-app-theme .bg-white\/92 .text-zinc-100,
+.user-app-theme .bg-white\/92.text-zinc-100,
+.user-app-theme .bg-white\/95 .text-white,
+.user-app-theme .bg-white\/95.text-white,
+.user-app-theme .bg-white\/95 .text-zinc-100,
+.user-app-theme .bg-white\/95.text-zinc-100,
+.user-app-theme .bg-slate-50 .text-white,
+.user-app-theme .bg-slate-50.text-white,
+.user-app-theme .bg-slate-50 .text-zinc-100,
+.user-app-theme .bg-slate-50.text-zinc-100,
+.user-app-theme .bg-gray-50 .text-white,
+.user-app-theme .bg-gray-50.text-white,
+.user-app-theme .bg-gray-50 .text-zinc-100,
+.user-app-theme .bg-gray-50.text-zinc-100,
+.user-app-theme .bg-gray-50\/50 .text-white,
+.user-app-theme .bg-gray-50\/50.text-white,
+.user-app-theme .bg-gray-50\/50 .text-zinc-100,
+.user-app-theme .bg-gray-50\/50.text-zinc-100,
+.user-app-theme .bg-slate-900 .text-white,
+.user-app-theme .bg-slate-900.text-white,
+.user-app-theme .bg-slate-900 .text-zinc-100,
+.user-app-theme .bg-slate-900.text-zinc-100,
+.user-app-theme .bg-slate-950 .text-white,
+.user-app-theme .bg-slate-950.text-white,
+.user-app-theme .bg-slate-950 .text-zinc-100,
+.user-app-theme .bg-slate-950.text-zinc-100,
+.user-app-theme .bg-zinc-950 .text-white,
+.user-app-theme .bg-zinc-950.text-white,
+.user-app-theme .bg-zinc-950 .text-zinc-100,
+.user-app-theme .bg-zinc-950.text-zinc-100,
+.user-app-theme .bg-neutral-950 .text-white,
+.user-app-theme .bg-neutral-950.text-white,
+.user-app-theme .bg-neutral-950 .text-zinc-100,
+.user-app-theme .bg-neutral-950.text-zinc-100,
+.user-app-theme .bg-slate-900\/90 .text-white,
+.user-app-theme .bg-slate-900\/90.text-white,
+.user-app-theme .bg-slate-900\/90 .text-zinc-100,
+.user-app-theme .bg-slate-900\/90.text-zinc-100,
+.user-app-theme .bg-slate-900\/95 .text-white,
+.user-app-theme .bg-slate-900\/95.text-white,
+.user-app-theme .bg-slate-900\/95 .text-zinc-100,
+.user-app-theme .bg-slate-900\/95.text-zinc-100,
+.user-app-theme .bg-slate-900\/80 .text-white,
+.user-app-theme .bg-slate-900\/80.text-white,
+.user-app-theme .bg-slate-900\/80 .text-zinc-100,
+.user-app-theme .bg-slate-900\/80.text-zinc-100,
+.user-app-theme .bg-black\/60 .text-white,
+.user-app-theme .bg-black\/60.text-white,
+.user-app-theme .bg-black\/60 .text-zinc-100,
+.user-app-theme .bg-black\/60.text-zinc-100,
+.user-app-theme .bg-slate-950\/70 .text-white,
+.user-app-theme .bg-slate-950\/70.text-white,
+.user-app-theme .bg-slate-950\/70 .text-zinc-100,
+.user-app-theme .bg-slate-950\/70.text-zinc-100,
+.user-app-theme .bg-slate-950\/85 .text-white,
+.user-app-theme .bg-slate-950\/85.text-white,
+.user-app-theme .bg-slate-950\/85 .text-zinc-100,
+.user-app-theme .bg-slate-950\/85.text-zinc-100,
+.user-app-theme .bg-slate-950\/80 .text-white,
+.user-app-theme .bg-slate-950\/80.text-white,
+.user-app-theme .bg-slate-950\/80 .text-zinc-100,
+.user-app-theme .bg-slate-950\/80.text-zinc-100,
+.user-app-theme .bg-zinc-900 .text-white,
+.user-app-theme .bg-zinc-900.text-white,
+.user-app-theme .bg-zinc-900 .text-zinc-100,
+.user-app-theme .bg-zinc-900.text-zinc-100,
+.user-app-theme .bg-zinc-900\/80 .text-white,
+.user-app-theme .bg-zinc-900\/80.text-white,
+.user-app-theme .bg-zinc-900\/80 .text-zinc-100,
+.user-app-theme .bg-zinc-900\/80.text-zinc-100 {
+  color: var(--user-text-primary) !important;
+}
+
+/* Text Primary overrides
+ *
+ * `.text-white` and `.text-zinc-100` used to be in this list, which forced
+ * them to --user-text-primary — #0b1220 in the light theme. Those two are the
+ * utilities a developer reaches for when the text sits on a dark surface, so
+ * re-theming them inverted the intent everywhere: the home screen's location
+ * header, white on the map strip, rendered near-black on near-black and the
+ * rider could not read where they were. The rest of this list is genuinely
+ * "dark text on a light surface" and is right to re-theme. */
 .user-app-theme .text-slate-950,
 .user-app-theme .text-slate-900,
 .user-app-theme .text-slate-800,
 .user-app-theme .text-gray-900,
 .user-app-theme .text-gray-800,
-.user-app-theme .text-black,
-.user-app-theme .text-white,
-.user-app-theme .text-zinc-100 {
+.user-app-theme .text-black {
   color: var(--user-text-primary) !important;
 }
 

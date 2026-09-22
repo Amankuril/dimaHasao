@@ -1131,7 +1131,10 @@ export default function AddressSelectorPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-10">
+      {/* The floating nav overlaps the end of this list; without its
+          clearance the last saved address sits under the pill and
+          cannot be tapped. */}
+      <div className="flex-1 overflow-y-auto pb-[calc(2.5rem+var(--app-nav-clearance,0px))]">
         {/* Search Bar */}
         <div className={uiTheme.searchSection}>
           <div className="relative group">

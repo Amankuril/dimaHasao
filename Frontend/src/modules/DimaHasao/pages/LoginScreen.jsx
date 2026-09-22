@@ -37,7 +37,7 @@ export const LoginScreen = () => {
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     const digits = String(phone).replace(/\D/g, '');
-    if (digits.length < 10) {
+    if (digits.length !== 10) {
       showToast('Enter a valid 10-digit phone number');
       return;
     }
@@ -281,7 +281,12 @@ export const LoginScreen = () => {
                   type="tel"
                   disabled={step === 'otp'}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={10}
+                  // The field took anything: letters, and as many digits as you
+                  // cared to type. An Indian mobile number is exactly ten.
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   placeholder="Phone Number"
                   className="block w-full pl-10 pr-3 h-11 border border-[#caa83e]/50 rounded-xl bg-[#02130a] text-gray-100 placeholder-[#5d7264] focus:outline-none focus:border-[#caa83e] focus:ring-1 focus:ring-[#caa83e] text-sm transition-all disabled:opacity-75"
                 />

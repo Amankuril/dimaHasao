@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useHostNavigate } from '../router';
-import { useBooking } from '../context/BookingContext';
 import { fetchDestinationById } from '../services/toursApi';
 import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
@@ -13,7 +12,6 @@ export const TouristPlaceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const hostNavigate = useHostNavigate();
-  const { setSelectedPlaceId, setSelectedTransportId } = useBooking();
 
   const [place, setPlace] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,10 +28,25 @@ export const TouristPlaceDetail = () => {
     return () => { cancelled = true; };
   }, [id]);
 
-  const handleBookDirect = (transportType = 'auto') => {
-    setSelectedPlaceId(place.id);
-    setSelectedTransportId(transportType);
-    hostNavigate('/taxi/user');
+  /**
+   * Take the visitor into the real ride flow with this place as the drop.
+   *
+   * It used to set two BookingContext values and land on the taxi home. Only
+   * RideBookingScreen — the v1 mock that now redirects into the taxi module —
+   * ever read those, so nothing carried through: the rider arrived at the taxi
+   * home with an empty destination and had to type the place in again.
+   *
+   * Places carry an address string but no coordinates, so the drop is seeded
+   * as a label and the rider confirms it from the suggestions.
+   */
+  const handleBookDirect = () => {
+    hostNavigate('/taxi/user/ride/select-location', {
+      state: {
+        flow: 'ride',
+        activeInput: 'drop',
+        drop: place.fullAddress || place.location || place.name || '',
+      },
+    });
   };
 
   if (loading) {
@@ -223,11 +236,14 @@ export const TouristPlaceDetail = () => {
           >
             <div>
               <p className="text-xs font-medium text-amber-300">Ready to visit {place.name}?</p>
-              <p className="text-sm font-bold">Book Auto or Cab from ₹100</p>
+              {/* "from ₹100" was a number nobody set. Fares come from the
+                  tariff the district configures, and the rider sees the real
+                  one on the vehicle screen. */}
+              <p className="text-sm font-bold">Book an auto or cab to get here</p>
             </div>
             <motion.button
               whileTap={{ scale: 0.92 }}
-              onClick={() => handleBookDirect('auto')}
+              onClick={handleBookDirect}
               className="bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold px-4 py-2 rounded-xl shadow cursor-pointer"
             >
               Book Ride →
