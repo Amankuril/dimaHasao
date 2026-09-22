@@ -48,6 +48,28 @@ export const getRazorpayClient = () => {
 };
 
 /**
+ * The same SDK client, built from credentials the caller resolved itself.
+ *
+ * Taxi keeps its own admin-configured gateway keys, so it cannot always use
+ * the platform pair above — but it should use the same client, not a
+ * hand-rolled fetch against api.razorpay.com. Passing no credentials (or an
+ * incomplete pair) returns the platform client, so a caller whose own config
+ * is empty still gets a working one.
+ *
+ * @returns {object|null} null when neither the given pair nor the platform
+ *   pair is usable, or when the SDK is not installed.
+ */
+export const createRazorpayClient = ({ keyId, keySecret } = {}) => {
+    const id = String(keyId || '').trim();
+    const secret = String(keySecret || '').trim();
+
+    if (!id || !secret) return getRazorpayClient();
+    if (!Razorpay) return null;
+
+    return new Razorpay({ key_id: id, key_secret: secret });
+};
+
+/**
  * Constant-time string compare.
  *
  * The hand-rolled copies all used `!==`, which leaks how much of a forged

@@ -17,6 +17,7 @@ import { Ride } from '../models/Ride.js';
 import { UserWallet } from '../models/UserWallet.js';
 import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
 import { quoteRideFare } from '../../services/fareService.js';
+import { taxiRazorpayRequest } from '../../services/razorpayClient.js';
 
 const EARTH_RADIUS_METERS = 6371000;
 const AVERAGE_CITY_SPEED_KMPH = 24;
@@ -258,24 +259,7 @@ const resolveRazorpayCredentials = async () => {
   return resolveConfiguredGatewayCredentials('razor_pay');
 };
 
-const razorpayRequest = async ({ method, path, body, keyId, keySecret }) => {
-  const response = await fetch(`https://api.razorpay.com/v1${path}`, {
-    method,
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`,
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new ApiError(response.status || 502, payload?.error?.description || payload?.error?.message || 'Razorpay request failed');
-  }
-
-  return payload;
-};
+const razorpayRequest = taxiRazorpayRequest;
 
 /**
  * @route POST /v1/taxi/rides/fare-estimate

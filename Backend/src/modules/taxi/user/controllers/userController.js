@@ -31,6 +31,7 @@ import {
 
 
 import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
+import { taxiRazorpayRequest } from '../../services/razorpayClient.js';
 import {
   buildPaymentRequestContext,
   logPaymentDiagnostic,
@@ -356,24 +357,7 @@ const phonePeRequest = async ({
   }
 };
 
-const razorpayRequest = async ({ method, path, body, keyId, keySecret }) => {
-  const credentials = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
-  const response = await fetch(`https://api.razorpay.com/v1${path}`, {
-    method,
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new ApiError(response.status || 502, payload?.error?.description || payload?.error?.message || 'Razorpay request failed');
-  }
-
-  return payload;
-};
+const razorpayRequest = taxiRazorpayRequest;
 
 export const getIntercityPackageCatalog = async (_req, res) => {
   const items = await SetPrice.find({
