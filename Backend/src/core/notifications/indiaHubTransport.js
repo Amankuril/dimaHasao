@@ -1,28 +1,28 @@
 /**
  * The one place that knows how to talk to SMS India Hub.
  *
- * There are two APIs on cloud.smsindiahub.in and they are not interchangeable:
+ * cloud.smsindiahub.in exposes two send APIs — /api/mt/SendSMS and
+ * /vendorsms/pushsms.aspx — and an account is provisioned for one of them.
+ * This account is on the /api/mt/SendSMS one, proven by a live send (ErrorCode
+ * 000, JobId returned). pushsms.aspx answers 006 for the same credentials
+ * and the same body, so it is not a fallback worth keeping.
  *
- *   /api/mt/SendSMS        — the JSON/REST surface. Takes `senderid`, `number`,
- *                            `text`, `TemplateId`, `channel`, `DCS`, `flashsms`.
- *   /vendorsms/pushsms.aspx — the GET surface these accounts are provisioned
- *                            for. Takes `sid`, `msisdn`, `msg`, `DLT_TE_ID`,
- *                            `gwid`, `fl`, `uname`.
+ * Getting here cost a long detour, so the trap is worth recording: with a
+ * stale API key this endpoint answers
+ * `{"ErrorCode":"15","ErrorMessage":"senderid not valid"}` — it blames the
+ * sender, not the key. That error sent us off replacing approved headers and
+ * eventually the whole endpoint, none of which was wrong. **If a send is
+ * rejected for the sender, check the API key before touching anything else.**
  *
- * Centralising the SMS senders consolidated everything onto /api/mt/SendSMS,
- * which is the one this account rejects: every send came back
- * `{"ErrorCode":"15","ErrorMessage":"senderid not valid"}` even for a header
- * the account owns, because that endpoint resolves sender IDs against a
- * different gateway. Hotel's original sender used pushsms.aspx, and so does
- * the Switcheats integration this is modelled on, which sends live traffic.
+ * Note the DLT parameter is `DLTTemplateId`. `TemplateId`, which this code
+ * used to send, is not the same field.
  *
- * Parameter names are case-sensitive; `gwid=2` selects the transactional
- * gateway. Errors arrive with HTTP 200 and an ErrorCode in the body, so the
- * status line tells you nothing — always read the body.
+ * Failures arrive with HTTP 200 and an ErrorCode in the body, so the status
+ * line never tells you anything — always read the body.
  */
 import { config } from '../../config/env.js';
 
-const PUSH_SMS_ENDPOINT = 'http://cloud.smsindiahub.in/vendorsms/pushsms.aspx';
+const SEND_SMS_ENDPOINT = 'http://cloud.smsindiahub.in/api/mt/SendSMS';
 
 /** 10-digit Indian mobile → 91XXXXXXXXXX, the form the gateway expects. */
 export const toIndiaHubMsisdn = (digits) => {
@@ -31,39 +31,32 @@ export const toIndiaHubMsisdn = (digits) => {
 };
 
 /**
- * Build a pushsms.aspx send URL.
+ * Build a send URL.
  *
  * @param {{ msisdn: string, message: string }} params
  * @returns {URL}
  */
 export const buildIndiaHubSendUrl = ({ msisdn, message }) => {
-    const url = new URL(PUSH_SMS_ENDPOINT);
+    const url = new URL(SEND_SMS_ENDPOINT);
 
     url.searchParams.append('APIKey', String(config.smsApiKey || '').trim());
-    url.searchParams.append('sid', String(config.smsSenderId || '').trim());
-    url.searchParams.append('msisdn', msisdn);
-    url.searchParams.append('msg', message);
-    url.searchParams.append('gwid', '2');
-    url.searchParams.append('fl', '0');
-
-    const username = String(config.smsIndiaHubUsername || '').trim();
-    if (username) {
-        url.searchParams.append('uname', username);
-    }
+    url.searchParams.append('senderid', String(config.smsSenderId || '').trim());
+    url.searchParams.append('channel', 'Trans');
+    url.searchParams.append('DCS', '0');
+    url.searchParams.append('flashsms', '0');
+    url.searchParams.append('number', msisdn);
+    url.searchParams.append('text', message);
 
     const templateId = String(config.smsDltTemplateId || '').trim();
     if (templateId) {
-        url.searchParams.append('DLT_TE_ID', templateId);
+        url.searchParams.append('DLTTemplateId', templateId);
     }
 
     return url;
 };
 
 /**
- * Read a pushsms.aspx response.
- *
- * The gateway answers 200 for failures too, so success is ErrorCode "000" (or
- * a plain-text body with no error wording).
+ * Read a send response. Success is ErrorCode "000".
  *
  * @param {string} body
  * @param {boolean} httpOk
@@ -87,21 +80,20 @@ export const readIndiaHubResponse = (body, httpOk) => {
 
     /*
      * The two failures that actually happen. Match on the text as well as the
-     * code: /api/mt/SendSMS answers JSON with an ErrorCode, but pushsms.aspx
-     * answers plain text ("Failed#senderid not valid"), so a code-only check
-     * silently drops the hint on the endpoint we actually use.
+     * code, since the other endpoint answers in plain text and a code-only
+     * check silently drops the hint.
      */
     const lowered = text.toLowerCase();
     let hint = '';
 
     if (code === '006' || lowered.includes('template')) {
         hint =
-            ' — DLT template mismatch: the message text must match the approved template character for character' +
-            ' (SMS_INDIA_HUB_DLT_TEMPLATE_ID, and the wording built in otp.service.js).';
+            ' — the message body does not match an approved DLT template for this sender.' +
+            ' It is compared character for character: see SMS_INDIA_HUB_OTP_TEMPLATE.';
     } else if (code === '15' || code === '015' || lowered.includes('senderid')) {
         hint =
-            ' — that sender ID is not approved on this account. Open the SMS India Hub portal, copy the approved' +
-            ' 6-character header, and set SMS_INDIA_HUB_SENDER_ID to it. Headers from another account do not carry over.';
+            ' — reported as a sender problem, but check SMS_INDIA_HUB_API_KEY first:' +
+            ' a stale key produces this exact error even when the sender is approved.';
     }
 
     return {
