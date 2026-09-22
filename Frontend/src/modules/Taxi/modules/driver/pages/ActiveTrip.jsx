@@ -2803,6 +2803,15 @@ const ActiveTrip = () => {
                             )}
                             {driverPaymentStatus === 'qr_generated' && (() => {
                                 const isInlineQrImage = String(paymentQr?.imageUrl || '').startsWith('data:image/');
+                                /*
+                                 * Only Razorpay's own QR Code product produces a UPI QR a payment
+                                 * app can read. That product, and UPI payment links, are live-mode
+                                 * only -- on test keys both are refused and we fall back to a
+                                 * standard payment link, whose QR encodes an https://rzp.io URL.
+                                 * Scanning that in GPay or PhonePe just fails, so say plainly that
+                                 * it opens a payment page instead of calling it a collection QR.
+                                 */
+                                const isUpiScannableQr = String(paymentQr?.providerMode || '') === 'razorpay_qr';
 
                                 return (
                                     <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-3xl p-5 mb-6 text-center shadow-2xl text-white" style={{ backgroundColor: routeStrokeColor }}>
@@ -2840,15 +2849,17 @@ const ActiveTrip = () => {
                                                 className="absolute left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_10px_#34d399] pointer-events-none"
                                             />
                                         </div>
-                                        <p className="text-white font-semibold text-sm uppercase tracking-wide">Scan to pay {displayFare}</p>
+                                        <p className="text-white font-semibold text-sm uppercase tracking-wide">
+                                            {isUpiScannableQr ? `Scan to pay ${displayFare}` : `Open to pay ${displayFare}`}
+                                        </p>
                                         <p
                                             className={`text-white/45 text-[10px] font-semibold mt-1 mb-4 uppercase tracking-wide transition-colors ${
                                                 !isInlineQrImage ? 'cursor-pointer hover:text-white/70 select-none' : ''
                                             }`}
                                             onClick={() => !isInlineQrImage && setQrZoomed(!qrZoomed)}
                                         >
-                                            {isInlineQrImage
-                                                ? 'Razorpay collection QR for this ride'
+                                            {!isUpiScannableQr
+                                                ? 'Payment page link — scan with the camera app, not a UPI app'
                                                 : qrZoomed
                                                     ? 'Tap QR to see full Razorpay receipt'
                                                     : 'Tap QR to zoom scan area'}
@@ -2858,7 +2869,11 @@ const ActiveTrip = () => {
                                                 href={paymentQr.linkUrl}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="mb-3 block text-[10px] font-semibold uppercase tracking-wide text-white/70 underline underline-offset-4"
+                                                className={
+                                                    isUpiScannableQr
+                                                        ? 'mb-3 block text-[10px] font-semibold uppercase tracking-wide text-white/70 underline underline-offset-4'
+                                                        : 'mb-3 block w-full rounded-xl border border-white/20 bg-white/15 py-3 text-[11px] font-bold uppercase tracking-wide text-white'
+                                                }
                                             >
                                                 Open payment link
                                             </a>

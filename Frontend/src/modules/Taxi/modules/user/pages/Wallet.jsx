@@ -8,6 +8,7 @@ import { useUserTheme } from '../../../shared/context/UserThemeContext';
 import { openExternalCheckout } from '../../../shared/utils/externalNavigation';
 import { rememberPendingPhonePeRedirect } from '../../../shared/utils/phonePeResume';
 import { getTaxiUserRoutePrefix } from '../../../shared/utils/routePrefix';
+import { getReferralSettingsContent } from '../../shared/services/referralTranslationService';
 
 const PHONEPE_USER_WALLET_FLOW_KEY = 'user-wallet-topup';
 
@@ -24,6 +25,38 @@ const Wallet = () => {
   const [walletLoading, setWalletLoading] = React.useState(true);
   const [walletError, setWalletError] = React.useState('');
   const [wallet, setWallet] = React.useState({ balance: 0, currency: 'INR', recentTransactions: [] });
+  /*
+   * The banner below advertised a flat "Refer & Earn ₹50". Nothing paid that:
+   * referral rewards are configured per install, and on this one they are
+   * still disabled at ₹0 — so the wallet promised ₹50 and the referral screen
+   * it opened offered nothing. Same residue as the ₹500 that used to sit in
+   * DriverIncentives. Read the real setting, and say nothing when there is no
+   * reward to offer.
+   */
+  const [referralReward, setReferralReward] = React.useState({ enabled: false, amount: 0 });
+
+  useEffect(() => {
+    let active = true;
+
+    getReferralSettingsContent('user')
+      .then((response) => {
+        if (!active) return;
+        const payload = response?.data?.data || response?.data || response || {};
+        setReferralReward({
+          enabled: Boolean(payload.enabled),
+          amount: Number(payload.amount || 0),
+        });
+      })
+      .catch(() => {
+        if (active) setReferralReward({ enabled: false, amount: 0 });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const showReferralBanner = referralReward.enabled && referralReward.amount > 0;
 
   const basePath = useMemo(
     () => (getTaxiUserRoutePrefix()),
@@ -350,6 +383,7 @@ const Wallet = () => {
         </Motion.div>
       </div>
 
+      {showReferralBanner && (
       <div className="px-5 mt-6">
         <Motion.button
           whileHover={{ scale: 1.02, y: -2 }}
@@ -363,13 +397,14 @@ const Wallet = () => {
           </div>
           <div className="flex-1 text-left">
             <h4 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Refer & Earn <span className="text-emerald-600 dark:text-emerald-400 font-extrabold ml-1">₹50</span>
+              Refer & Earn <span className="text-emerald-600 dark:text-emerald-400 font-extrabold ml-1">₹{referralReward.amount}</span>
             </h4>
             <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Invite friends to {appName}</p>
           </div>
           <ArrowLeft size={18} className={`rotate-180 transition-all duration-300 group-hover:translate-x-1 ${isDark ? 'text-slate-600 group-hover:text-white' : 'text-slate-900'}`} />
         </Motion.button>
       </div>
+      )}
 
       <div className="px-5 mt-10">
         <div className="flex items-center justify-between mb-4 px-1">
