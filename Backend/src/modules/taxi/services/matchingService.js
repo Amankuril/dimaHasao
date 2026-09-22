@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { ApiError } from '../../../utils/ApiError.js';
 import { normalizePoint } from '../../../utils/geo.js';
 import { DISPATCH_TOP_DRIVERS } from '../constants/index.js';
@@ -32,13 +33,34 @@ const normalizeVehicleTypeIds = (vehicleTypeIds = [], vehicleTypeId = null) => {
   return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))];
 };
 
+/**
+ * Both spellings of an id, for matching against data that stores either.
+ *
+ * Drivers carry `zoneId`, `vehicleTypeId` and `service_location_id` as
+ * ObjectIds, while callers hand this service strings pulled out of a ride or a
+ * query string. MongoDB does not coerce between the two, so comparing a string
+ * against a stored ObjectId matched nothing: dispatch found no driver for any
+ * ride, on any route, however correctly the driver was set up. Matching on
+ * both forms also covers documents written before the field was cast.
+ */
+const idCandidates = (value) => {
+  const raw = String(value ?? '').trim();
+  if (!raw) return [];
+  return mongoose.Types.ObjectId.isValid(raw)
+    ? [raw, new mongoose.Types.ObjectId(raw)]
+    : [raw];
+};
+
+/** Query fragment for a single id field holding either spelling. */
+const idMatch = (value) => ({ $in: idCandidates(value) });
+
 const buildDriverMatchFilters = ({ zoneId, serviceLocationId, vehicleTypeId, vehicleTypeIds, vehicleTypeKeys }) => {
   const normalizedVehicleTypeIds = normalizeVehicleTypeIds(vehicleTypeIds, vehicleTypeId);
   const normalizedVehicleTypeKeys = Array.isArray(vehicleTypeKeys)
     ? [...new Set(vehicleTypeKeys.map(normalizeVehicleKey).filter(Boolean))]
     : [];
   const vehicleTypeClauses = normalizedVehicleTypeIds.length
-    ? [{ vehicleTypeId: { $in: normalizedVehicleTypeIds } }]
+    ? [{ vehicleTypeId: { $in: normalizedVehicleTypeIds.flatMap(idCandidates) } }]
     : [
         ...(normalizedVehicleTypeKeys.length
           ? [
@@ -56,8 +78,16 @@ const buildDriverMatchFilters = ({ zoneId, serviceLocationId, vehicleTypeId, veh
     isOnline: true,
     isOnRide: false,
     'wallet.isBlocked': { $ne: true },
-    ...(zoneId ? { zoneId } : {}),
-    ...(serviceLocationId ? { service_location_id: serviceLocationId } : {}),
+    ...(zoneId ? { zoneId: idMatch(zoneId) } : {}),
+    /*
+     * A driver whose service location was never set still belongs to the zone
+     * above, and the zone carries the service location — so an unset field is
+     * "not yet recorded", not "serves nowhere". Excluding those drivers
+     * outright made every such driver unmatchable.
+     */
+    ...(serviceLocationId
+      ? { service_location_id: { $in: [...idCandidates(serviceLocationId), null] } }
+      : {}),
     ...vehicleTypeFilter,
   };
 };

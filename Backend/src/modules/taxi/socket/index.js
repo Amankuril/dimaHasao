@@ -77,7 +77,7 @@ const onAsync = (socket, handler) => async (payload = {}) => {
 };
 
 const registerTaxiSocketConnectionHandlers = (io) => {
-  io.on('connection', async (socket) => {
+  io.on('connection', (socket) => {
     const identity = socket.auth;
 
     addSocketSubscriptions(socket, { role: identity.role, entityId: identity.sub });
@@ -85,12 +85,28 @@ const registerTaxiSocketConnectionHandlers = (io) => {
     socket.join(getSupportParticipantRoom(identity.role, identity.sub));
     socket.join(getSupportRoleRoom(identity.role));
 
+    /*
+     * Nothing here may await before the `socket.on(...)` registrations below.
+     *
+     * This handler used to `await Driver.findByIdAndUpdate(...)` first, which
+     * yields the event loop — and Socket.IO drops events that arrive before a
+     * listener exists rather than buffering them. A driver whose app emitted
+     * `acceptRide` in the moment after connecting, which is what happens when
+     * the socket reconnects on app resume or a flaky network and the driver
+     * taps Accept straight away, had the event silently discarded: no error,
+     * no acceptance, the request just sat there.
+     *
+     * The bookkeeping does not gate anything below it, so it runs alongside.
+     */
     if (identity.role === 'driver') {
-      await Driver.findByIdAndUpdate(identity.sub, { socketId: socket.id });
       const previousDriverState = driverLocationState.get(identity.sub) || {};
       driverLocationState.set(identity.sub, {
         ...previousDriverState,
         socketId: socket.id,
+      });
+
+      Driver.findByIdAndUpdate(identity.sub, { socketId: socket.id }).catch((error) => {
+        console.error('Failed to record driver socket id on connect', error);
       });
       notifyLateAvailableDriver(identity.sub).catch((error) => {
         console.error('Failed to notify late-available driver on socket connect', error);
