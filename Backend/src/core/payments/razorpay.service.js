@@ -37,6 +37,10 @@ export const isRazorpayConfigured = () => Boolean(KEY_ID && KEY_SECRET && Razorp
 
 export const getRazorpayKeyId = () => KEY_ID;
 
+/** For server-side callers that sign their own Razorpay requests. Never send
+ *  this to a client. */
+export const getRazorpayKeySecret = () => KEY_SECRET;
+
 /** Shared SDK client, or null when unconfigured. */
 export const getRazorpayClient = () => {
     if (!isRazorpayConfigured()) return null;

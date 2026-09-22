@@ -1322,7 +1322,12 @@ export const createRazorpayWalletTopupOrder = async (req, res) => {
   const proto = req.get('x-forwarded-proto') || req.protocol || 'http';
   const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:5000';
   const backendOrigin = `${proto}://${host}`;
-  const callbackUrl = `${backendOrigin}/api/v1/users/wallet/razorpay/callback`;
+  /*
+   * The taxi module is mounted at /api/v1/taxi, so a callback path written
+   * without that segment resolves to nothing: Razorpay took the payment and
+   * then redirected the driver to a 404, leaving the wallet uncredited.
+   */
+  const callbackUrl = `${backendOrigin}/api/v1/taxi/users/wallet/razorpay/callback`;
 
   const order = await razorpayRequest({
     method: 'POST',

@@ -329,6 +329,9 @@ const getWalletAlertState = (wallet = {}, { ignoreRestrictions = false } = {}) =
     const balance = Number(wallet.balance || 0);
     const cashLimit = Math.max(0, Number(wallet.cashLimit || 0));
     const minimumBalanceForOrders = Number(wallet.minimumBalanceForOrders || 0);
+    // Two different admin settings, and the driver needs both: the balance
+    // that lets them go online, and the smallest single top-up allowed.
+    const minimumTopUpAmount = Math.max(0, Number(wallet.minimumTopUpAmount || 0));
     const cashLimitUsed = Math.max(0, balance < 0 ? Math.abs(balance) : 0);
     const remainingCashLimit = Math.max(0, cashLimit - cashLimitUsed);
     const warningThreshold = cashLimit > 0
@@ -344,6 +347,7 @@ const getWalletAlertState = (wallet = {}, { ignoreRestrictions = false } = {}) =
         balance,
         cashLimit,
         minimumBalanceForOrders,
+        minimumTopUpAmount,
         cashLimitUsed,
         remainingCashLimit,
         warningThreshold,
@@ -709,7 +713,16 @@ const DriverHome = () => {
             return {
                 title: walletAlertState.belowMinimumBalance ? 'Top up to go online' : 'Cash limit reached',
                 message: walletAlertState.belowMinimumBalance
-                    ? `Keep your wallet at or above Rs ${Math.max(0, walletAlertState.minimumBalanceForOrders)} to receive orders.`
+                    ? [
+                        `Keep your wallet at or above Rs ${Math.max(0, walletAlertState.minimumBalanceForOrders)} to receive orders.`,
+                        // The top-up minimum is a separate setting and is often
+                        // the larger of the two. Naming only the balance sent
+                        // drivers to the top-up screen to enter that figure and
+                        // be refused by the server for being under the minimum.
+                        walletAlertState.minimumTopUpAmount > 0
+                            ? `Top-ups start at Rs ${walletAlertState.minimumTopUpAmount}.`
+                            : '',
+                    ].filter(Boolean).join(' ')
                     : 'Add money to keep receiving ride requests.',
                 tone: 'danger',
             };

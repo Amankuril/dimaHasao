@@ -1,5 +1,10 @@
 import { ApiError } from '../../../utils/ApiError.js';
 import { ensureThirdPartySettings } from '../admin/services/adminService.js';
+import {
+  getRazorpayKeyId,
+  getRazorpayKeySecret,
+  isRazorpayConfigured,
+} from '../../../core/payments/razorpay.service.js';
 
 const PAYMENT_GATEWAY_SPECS = {
   razor_pay: {
@@ -202,12 +207,41 @@ export const resolveConfiguredGatewayCredentials = async (gatewayKey) => {
   if (gatewayKey === 'razor_pay') {
     const keyId = normalizeString(isLive ? validatedGateway.live_api_key : validatedGateway.test_api_key);
     const keySecret = normalizeString(isLive ? validatedGateway.live_secret_key : validatedGateway.test_secret_key);
+    const isPlaceholder =
+      !keyId ||
+      !keySecret ||
+      keyId.toLowerCase().includes('demo') ||
+      keySecret.toLowerCase().includes('demo');
 
-    if (keyId.toLowerCase().includes('demo') || keySecret.toLowerCase().includes('demo')) {
-      throw new ApiError(500, 'Razorpay keys are demo placeholders. Configure real keys in Admin > Payment Gateways');
+    /*
+     * Taxi keeps its own gateway settings, and they shipped holding the
+     * previous product's `rzp_test_demo…` placeholders. Every other module
+     * pays through the platform's Razorpay credentials, so a driver wallet
+     * top-up was the one payment on the platform that could not go through:
+     * it refused with "keys are demo placeholders" while working keys sat in
+     * the platform config the whole time.
+     *
+     * Taxi's own keys still win when they are real — an operator who sets a
+     * separate taxi merchant account gets it. The platform's are the fallback,
+     * not the override, and the error only stands when neither is usable.
+     */
+    if (isPlaceholder && isRazorpayConfigured()) {
+      return {
+        keyId: getRazorpayKeyId(),
+        keySecret: getRazorpayKeySecret(),
+        environment,
+        source: 'platform',
+      };
     }
 
-    return { keyId, keySecret, environment };
+    if (isPlaceholder) {
+      throw new ApiError(
+        500,
+        'Razorpay is not configured. Set keys in Admin > Payment Gateways, or platform-wide in the server environment.',
+      );
+    }
+
+    return { keyId, keySecret, environment, source: 'taxi' };
   }
 
   if (gatewayKey === 'phone_pay') {

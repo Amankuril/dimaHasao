@@ -2181,7 +2181,12 @@ export const createDriverWalletTopupOrder = async (req, res) => {
   const proto = req.get('x-forwarded-proto') || req.protocol || 'http';
   const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:5000';
   const backendOrigin = `${proto}://${host}`;
-  const callbackUrl = `${backendOrigin}/api/v1/drivers/wallet/top-up/razorpay/callback`;
+  /*
+   * The taxi module is mounted at /api/v1/taxi, so a callback path written
+   * without that segment resolves to nothing: Razorpay took the payment and
+   * then redirected the driver to a 404, leaving the wallet uncredited.
+   */
+  const callbackUrl = `${backendOrigin}/api/v1/taxi/drivers/wallet/top-up/razorpay/callback`;
 
   const userAgent = String(req.headers["user-agent"] || "");
   const isWebView = /; wv\)/i.test(userAgent) || /Version\/[\d.]+/i.test(userAgent) || req.body.usePaymentLink === true;
