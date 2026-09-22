@@ -125,17 +125,37 @@ const resolveActiveProvider = () => {
 };
 
 /**
- * The OTP text, in the exact shape of the registered DLT template. Both
- * variables and the sender tag are part of the approved text; changing the
- * wording here without re-registering the template makes every send fail
- * with ErrorCode 006.
+ * The OTP text, reproducing the approved DLT template exactly.
+ *
+ * Registered against sender BGADPL as "App Login":
+ *
+ *   Welcome to ##var##, powered by ##var##. Your OTP for registration
+ *   ##var##. This OTP is valid for 10 minutes. Please do not share it with
+ *   anyone.BGADPL
+ *
+ * The template is configuration, not copy: it is an artifact registered with
+ * the operator, and the gateway compares what we send against it character
+ * for character. Every space, the comma after the first slot, the absent
+ * "is" after "registration" and the sender tag running straight on from
+ * "anyone." are load-bearing — any drift earns ErrorCode 006. So it lives in
+ * SMS_INDIA_HUB_OTP_TEMPLATE, and re-registering the template is an env
+ * change rather than a code change.
+ *
+ * The three ##var## slots are filled in order: app name, brand, OTP.
  */
 const buildIndiaHubOtpMessage = (otp) => {
-    const appName = String(config.smsDltAppName || 'Dima Hasao').trim();
-    const brand = String(config.smsDltBrandName || 'Dima Hasao').trim();
-    const tag = String(config.smsSenderId || '').trim();
+    const values = [
+        String(config.smsDltAppName || 'Dima Hasao').trim(),
+        String(config.smsDltBrandName || 'Dima Hasao').trim(),
+        String(otp),
+    ];
 
-    return `Welcome to the ${appName} powered by ${brand}.Your OTP for registration is ${otp}.${tag}.`;
+    let index = 0;
+    return String(config.smsDltOtpTemplate || '').replace(/##var##/g, () => {
+        const value = values[index] ?? '';
+        index += 1;
+        return value;
+    });
 };
 
 const sendViaIndiaHub = async ({ phone, otp, purpose = 'otp' }) => {

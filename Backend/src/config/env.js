@@ -75,6 +75,12 @@ export const config = {
     // the registered text, so they are configuration, not copy.
     smsDltAppName: (process.env.SMS_INDIA_HUB_APP_NAME || 'Dima Hasao').trim(),
     smsDltBrandName: (process.env.SMS_INDIA_HUB_BRAND_NAME || 'Dima Hasao').trim(),
+    // The approved DLT template text, ##var## slots filled in order:
+    // app name, brand, OTP. Must match the registered template exactly.
+    smsDltOtpTemplate: (
+        process.env.SMS_INDIA_HUB_OTP_TEMPLATE ||
+        'Welcome to ##var##, powered by ##var##. Your OTP for registration ##var##. This OTP is valid for 10 minutes. Please do not share it with anyone.BGADPL'
+    ),
 
     // Rate limiting
     rateLimitWindowMinutes: Number(process.env.RATE_LIMIT_WINDOW || 15),
