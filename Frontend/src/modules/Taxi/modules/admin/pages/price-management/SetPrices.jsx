@@ -144,7 +144,6 @@ const collapseAllZonesSetPrices = (items = []) => {
 
 const NON_NEGATIVE_FORM_FIELDS = new Set([
   'admin_commission_from_driver',
-  'admin_commission_for_owner',
   'service_tax',
   'order_number',
   'base_price',
@@ -212,8 +211,6 @@ const initialFormState = {
   admin_commision: '',
   admin_commission_type_from_driver: '1',
   admin_commission_from_driver: '',
-  admin_commission_type_for_owner: '1',
-  admin_commission_for_owner: '',
   service_tax: '',
   order_number: '',
   base_price: '',
@@ -387,8 +384,6 @@ const SetPrices = ({ mode }) => {
           admin_commision_type: String(pData.admin_commision_type ?? 1),
           admin_commission_from_driver: pData.admin_commission_from_driver ?? pData.driver_commission ?? '',
           admin_commission_type_from_driver: String(pData.admin_commission_type_from_driver ?? 1),
-          admin_commission_for_owner: pData.admin_commission_for_owner ?? 0,
-          admin_commission_type_for_owner: String(pData.admin_commission_type_for_owner ?? 1),
           order_number: pData.order_number ?? pData.eta_sequence ?? '',
           payment_type: normalizePaymentTypes(pData.payment_type).length ? normalizePaymentTypes(pData.payment_type) : ['cash'],
           user_cancellation_fee_type: pData.user_cancellation_fee_type || 'percentage',
@@ -411,7 +406,6 @@ const SetPrices = ({ mode }) => {
     
     const numericFields = [
       { name: 'Admin Commission From Driver', val: formData.admin_commission_from_driver },
-      { name: 'Admin Commission From Owner', val: formData.admin_commission_for_owner },
       { name: 'Service Tax', val: formData.service_tax },
       { name: 'Base Price', val: formData.base_price },
       { name: 'Base Distance', val: formData.base_distance },
@@ -909,16 +903,6 @@ const SetPrices = ({ mode }) => {
                               <option value="2">Fixed</option>
                            </select>
                            <input type="number" min="0" required className={inputClass + " py-1"} value={formData.admin_commission_from_driver} onChange={e => setFormData(p=>({...p, admin_commission_from_driver: clampNonNegativeInput('admin_commission_from_driver', e.target.value)}))} />
-                        </div>
-                     </div>
-                     <div>
-                        <label className={labelClass}>Admin Comm. (Owner) <span className="text-rose-500">*</span></label>
-                        <div className="flex gap-1">
-                           <select className={inputClass + " w-20 py-1"} value={formData.admin_commission_type_for_owner} onChange={e => setFormData(p=>({...p, admin_commission_type_for_owner: e.target.value}))}>
-                              <option value="1">%</option>
-                              <option value="2">Fixed</option>
-                           </select>
-                           <input type="number" min="0" required className={inputClass + " py-1"} value={formData.admin_commission_for_owner} onChange={e => setFormData(p=>({...p, admin_commission_for_owner: clampNonNegativeInput('admin_commission_for_owner', e.target.value)}))} />
                         </div>
                      </div>
                      <div>

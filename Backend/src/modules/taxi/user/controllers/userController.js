@@ -404,8 +404,6 @@ export const getIntercityPackageCatalog = async (_req, res) => {
               adminCommision: Number(row.admin_commision ?? 0),
               adminCommissionTypeFromDriver: Number(row.admin_commission_type_from_driver ?? 1),
               adminCommissionFromDriver: Number(row.admin_commission_from_driver ?? 0),
-              adminCommissionTypeForOwner: Number(row.admin_commission_type_for_owner ?? 1),
-              adminCommissionForOwner: Number(row.admin_commission_for_owner ?? 0),
               serviceTax: Number(row.service_tax ?? 0),
               cancellationFee: Number(row.cancellation_fee ?? 0),
             }))

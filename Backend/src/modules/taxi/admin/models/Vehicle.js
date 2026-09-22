@@ -145,16 +145,6 @@ const vehicleSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
-    admin_commission_type_for_owner: {
-      type: Number,
-      enum: [1, 2],
-      default: 1,
-    },
-    admin_commission_for_owner: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
     image: {
       type: String,
       default: '',

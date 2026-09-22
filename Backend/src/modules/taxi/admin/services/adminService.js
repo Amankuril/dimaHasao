@@ -657,10 +657,6 @@ const serializeSetPrice = (item) => ({
   admin_commission_type_from_driver: item.admin_commission_type_from_driver ?? (item.driver_commission_type === 'percentage' ? 1 : 0),
   admin_commission_from_driver: item.admin_commission_from_driver ?? item.driver_commission,
 
-  owner_commission_type: item.owner_commission_type || 'percentage',
-  owner_commission: item.owner_commission,
-  admin_commission_type_for_owner: item.admin_commission_type_for_owner ?? (item.owner_commission_type === 'percentage' ? 1 : 0),
-  admin_commission_for_owner: item.admin_commission_for_owner ?? item.owner_commission,
 
   service_tax: item.service_tax,
   eta_sequence: item.eta_sequence,
@@ -729,8 +725,6 @@ const normalizePackageVehiclePriceItem = (item = {}) => ({
   admin_commision: Number(item.admin_commision ?? 0),
   admin_commission_type_from_driver: Number(item.admin_commission_type_from_driver ?? 1),
   admin_commission_from_driver: Number(item.admin_commission_from_driver ?? 0),
-  admin_commission_type_for_owner: Number(item.admin_commission_type_for_owner ?? 1),
-  admin_commission_for_owner: Number(item.admin_commission_for_owner ?? 0),
   service_tax: Number(item.service_tax ?? 0),
   cancellation_fee: Number(item.cancellation_fee ?? item.user_cancellation_fee ?? 0),
   active: Number(item.active ?? 1),
@@ -3860,7 +3854,7 @@ export const listVehicleTypes = async (queryParams = {}) => {
       : { $in: [normalizedTransportType, 'both'] };
   }
   const items = await Vehicle.find(query)
-    .select('name short_description description transport_type dispatch_type icon_types category delivery_category delivery_distance_pricing service_tax admin_commission_type_from_driver admin_commission_from_driver admin_commission_type_for_owner admin_commission_for_owner capacity image icon map_icon status active createdAt updatedAt')
+    .select('name short_description description transport_type dispatch_type icon_types category delivery_category delivery_distance_pricing service_tax admin_commission_type_from_driver admin_commission_from_driver capacity image icon map_icon status active createdAt updatedAt')
     .sort({ createdAt: -1 })
     .lean();
   const results = items.map((item) => ({
@@ -3943,8 +3937,6 @@ const buildDatabasePaginator = (results, page = 1, limit = 50, total = 0) => {
 const normalizeVehicleCommissionConfig = (item = {}) => ({
   admin_commission_type_from_driver: Number(item?.admin_commission_type_from_driver ?? 1),
   admin_commission_from_driver: Number(item?.admin_commission_from_driver ?? 0),
-  admin_commission_type_for_owner: Number(item?.admin_commission_type_for_owner ?? 1),
-  admin_commission_for_owner: Number(item?.admin_commission_for_owner ?? 0),
 });
 
 
@@ -3981,7 +3973,7 @@ export const listPublicVehicleCatalog = async () => {
   }
 
   const items = await Vehicle.find()
-    .select('name short_description description transport_type dispatch_type icon_types category delivery_category delivery_distance_pricing service_tax admin_commission_type_from_driver admin_commission_from_driver admin_commission_type_for_owner admin_commission_for_owner capacity image icon map_icon status active')
+    .select('name short_description description transport_type dispatch_type icon_types category delivery_category delivery_distance_pricing service_tax admin_commission_type_from_driver admin_commission_from_driver capacity image icon map_icon status active')
     .sort({ createdAt: -1 })
     .lean();
 
@@ -4066,8 +4058,6 @@ export const createVehicleType = async (payload) => {
       : 0,
     admin_commission_type_from_driver: Number(payload.admin_commission_type_from_driver ?? 1),
     admin_commission_from_driver: Number(payload.admin_commission_from_driver ?? 0),
-    admin_commission_type_for_owner: Number(payload.admin_commission_type_for_owner ?? 1),
-    admin_commission_for_owner: Number(payload.admin_commission_for_owner ?? 0),
     image: payload.image ?? mapIcon,
     icon: mapIcon,
     map_icon: mapIcon,
@@ -4153,12 +4143,6 @@ export const updateVehicleType = async (id, payload) => {
   }
   if (payload.admin_commission_from_driver !== undefined) {
     vehicle.admin_commission_from_driver = Number(payload.admin_commission_from_driver ?? 0);
-  }
-  if (payload.admin_commission_type_for_owner !== undefined) {
-    vehicle.admin_commission_type_for_owner = Number(payload.admin_commission_type_for_owner ?? 1);
-  }
-  if (payload.admin_commission_for_owner !== undefined) {
-    vehicle.admin_commission_for_owner = Number(payload.admin_commission_for_owner ?? 0);
   }
   if (payload.status !== undefined) {
     vehicle.status = Number(payload.status) ? 1 : 0;
@@ -4601,8 +4585,6 @@ export const createSetPrice = async (payload, currentAdmin = null) => {
 
     admin_commision_type: Number(payload.admin_commision_type ?? (payload.customer_commission_type === 'percentage' ? 1 : 0)),
     admin_commision: Number(payload.admin_commision ?? payload.customer_commission ?? 0),
-    admin_commission_type_for_owner: Number(payload.admin_commission_type_for_owner ?? 1),
-    admin_commission_for_owner: Number(payload.admin_commission_for_owner ?? 0),
     admin_commission_type_from_driver: Number(payload.admin_commission_type_from_driver ?? 1),
     admin_commission_from_driver: Number(payload.admin_commission_from_driver ?? 0),
 
@@ -4661,7 +4643,6 @@ export const updateSetPrice = async (id, payload, currentAdmin = null) => {
     'zone_id', 'vehicle_type', 'service_location_id', 'transport_type',
     'pricing_scope', 'package_type_id', 'package_destination', 'package_availability',
     'payment_type', 'active', 'admin_commision_type', 'admin_commision',
-    'admin_commission_type_for_owner', 'admin_commission_for_owner',
     'admin_commission_type_from_driver', 'admin_commission_from_driver',
     'service_tax', 'airport_surge', 'support_airport_fee', 'support_outstation',
     'enable_airport_ride', 'enable_outstation_ride',
@@ -4678,7 +4659,6 @@ export const updateSetPrice = async (id, payload, currentAdmin = null) => {
 
   const nonNegativeFields = new Set([
     'admin_commision',
-    'admin_commission_for_owner',
     'admin_commission_from_driver',
     'service_tax',
     'airport_surge',

@@ -181,8 +181,6 @@ const buildVehicleFormData = (selectedVehicle = {}) => ({
   service_tax: String(selectedVehicle.service_tax ?? 0),
   admin_commission_type_from_driver: String(selectedVehicle.admin_commission_type_from_driver ?? 1),
   admin_commission_from_driver: String(selectedVehicle.admin_commission_from_driver ?? 0),
-  admin_commission_type_for_owner: String(selectedVehicle.admin_commission_type_for_owner ?? 1),
-  admin_commission_for_owner: String(selectedVehicle.admin_commission_for_owner ?? 0),
   status: Number(selectedVehicle.status ?? (selectedVehicle.active !== false ? 1 : 0)),
   active: selectedVehicle.active !== false && Number(selectedVehicle.status ?? 1) !== 0,
   supported_other_vehicle_types: Array.isArray(selectedVehicle.supported_other_vehicle_types)
@@ -230,8 +228,6 @@ const defaultFormData = {
   service_tax: '0',
   admin_commission_type_from_driver: '1',
   admin_commission_from_driver: '0',
-  admin_commission_type_for_owner: '1',
-  admin_commission_for_owner: '0',
   status: 1,
   active: true,
   supported_other_vehicle_types: [],
@@ -615,8 +611,6 @@ const VehicleType = ({ mode: propMode }) => {
         service_tax: showsDeliveryCategorySelector ? Number(formData.service_tax || 0) : 0,
         admin_commission_type_from_driver: Number(formData.admin_commission_type_from_driver || 1),
         admin_commission_from_driver: Number(formData.admin_commission_from_driver || 0),
-        admin_commission_type_for_owner: Number(formData.admin_commission_type_for_owner || 1),
-        admin_commission_for_owner: Number(formData.admin_commission_for_owner || 0),
         status: formData.active ? 1 : 0,
         active: formData.active,
         supported_other_vehicle_types: sanitizeObjectIdList(formData.supported_other_vehicle_types),
@@ -1070,30 +1064,6 @@ const VehicleType = ({ mode: propMode }) => {
                     min="0"
                     value={formData.admin_commission_from_driver}
                     onChange={(e) => updateForm('admin_commission_from_driver', clampNonNegativeInput(e.target.value))}
-                    className={inputClass}
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Admin Commission Type From Owner</label>
-                  <select
-                    value={formData.admin_commission_type_for_owner}
-                    onChange={(e) => updateForm('admin_commission_type_for_owner', e.target.value)}
-                    className={inputClass}
-                  >
-                    <option value="1">Percentage</option>
-                    <option value="2">Fixed</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Admin Commission From Owner</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.admin_commission_for_owner}
-                    onChange={(e) => updateForm('admin_commission_for_owner', clampNonNegativeInput(e.target.value))}
                     className={inputClass}
                     placeholder="0"
                   />
