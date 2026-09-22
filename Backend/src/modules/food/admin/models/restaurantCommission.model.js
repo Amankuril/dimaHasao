@@ -15,7 +15,9 @@ const restaurantCommissionSchema = new mongoose.Schema(
                 enum: ['percentage', 'amount'],
                 default: 'percentage'
             },
-            value: { type: Number, default: 18 }
+            // No implied rate: a rule saved without a value takes nothing until
+            // someone enters what was actually agreed.
+            value: { type: Number, default: 0 }
         },
         notes: { type: String, trim: true, default: '' },
         status: { type: Boolean, default: true, index: true }

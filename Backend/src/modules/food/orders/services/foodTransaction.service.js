@@ -3,8 +3,22 @@ import { FoodRestaurantCommission } from '../../admin/models/restaurantCommissio
 import mongoose from 'mongoose';
 
 const RESTAURANT_COMMISSION_CACHE_MS = 60 * 1000;
-/** Platform fallback when a restaurant has no commission rule configured */
-export const DEFAULT_RESTAURANT_COMMISSION_PERCENT = 18.1;
+
+/**
+ * What the platform takes from a restaurant that has no commission rule.
+ *
+ * This was 18.1%, which is why a ₹720 order paid the restaurant ₹589.68 and
+ * the platform ₹130.32 on a system where no commission had ever been entered:
+ * the rate was not a configured business term, it was a constant in this file,
+ * and `food_restaurant_commissions` being empty was read as "use the built-in
+ * rate" rather than "nothing agreed yet".
+ *
+ * Zero is the only defensible default. A commission is a term between the
+ * district and each restaurant; the platform must not invent one and deduct it
+ * from money that is owed. Set real rates per restaurant in
+ * Admin → Restaurants → Commission, which writes the rules this reads.
+ */
+export const DEFAULT_RESTAURANT_COMMISSION_PERCENT = 0;
 let restaurantCommissionRulesCache = null;
 let restaurantCommissionRulesLoadedAt = 0;
 
