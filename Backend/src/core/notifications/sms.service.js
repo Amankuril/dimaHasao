@@ -2,13 +2,17 @@
  * Centralized SMS transport for every module (food, taxi, hotel, tours).
  *
  * Before this existed, each merged project shipped its own SMS sender:
- *   - core/otp/otp.service.js  → MSG91 + India Hub `api/mt/SendSMS`
+ *   - core/otp/otp.service.js  → MSG91 + India Hub
  *   - modules/taxi/services/smsService.js → India Hub, its own config reads
  *   - modules/hotel/utils/smsService.js  → India Hub `vendorsms/pushsms.aspx`
  *                                          (a different endpoint + template)
  * They read the same credentials but diverged on endpoint, message text and
  * phone normalization, so a number that worked in one module could silently
  * fail in another. Everything now routes through this module.
+ *
+ * The India Hub wire format itself lives in ./indiaHubTransport.js — hotel's
+ * pushsms.aspx endpoint turned out to be the one these accounts are
+ * provisioned for, and consolidating onto the other one is what broke sending.
  *
  * OTP delivery keeps living in core/otp/otp.service.js (it also owns the
  * static/test-OTP policy); this module re-exports it so callers only ever need
@@ -18,16 +22,8 @@ import { config } from '../../config/env.js';
 import { logger } from '../../utils/logger.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { normalizeOtpPhone, sendOtpSms as sendOtpSmsCore } from '../otp/otp.service.js';
+import { buildIndiaHubSendUrl, readIndiaHubResponse, toIndiaHubMsisdn } from './indiaHubTransport.js';
 
-const INDIA_HUB_ENDPOINT = 'http://cloud.smsindiahub.in/api/mt/SendSMS';
-
-const parseJsonSafe = (text) => {
-    try {
-        return JSON.parse(text);
-    } catch {
-        return null;
-    }
-};
 
 /** 10-digit Indian mobile → 91XXXXXXXXXX, the form every provider expects. */
 const toMsisdn = (phone) => {
@@ -63,34 +59,16 @@ export const sendSms = async ({ phone, message, purpose = 'notification' } = {})
         return { mode: 'skipped', provider: 'none', message: 'SMS provider not configured' };
     }
 
-    const senderId = String(config.smsSenderId || 'SMSHUB').trim();
-    const peId = String(config.smsPeId || '').trim();
-    const templateId = String(config.smsDltTemplateId || '').trim();
+    const sendUrl = buildIndiaHubSendUrl({ msisdn: toIndiaHubMsisdn(msisdn), message: text });
 
-    const sendUrl = new URL(INDIA_HUB_ENDPOINT);
-    sendUrl.searchParams.set('APIKey', apiKey);
-    sendUrl.searchParams.set('senderid', senderId);
-    sendUrl.searchParams.set('channel', 'Trans');
-    sendUrl.searchParams.set('DCS', '0');
-    sendUrl.searchParams.set('flashsms', '0');
-    sendUrl.searchParams.set('number', msisdn);
-    sendUrl.searchParams.set('text', text);
-    if (templateId) sendUrl.searchParams.set('TemplateId', templateId);
-    if (peId) sendUrl.searchParams.set('PEID', peId);
-
-    logger.info(`[SMS] India Hub ${purpose} → ${msisdn}`);
+    logger.info(`[SMS] India Hub ${purpose} -> ${msisdn}`);
 
     const res = await fetch(sendUrl.toString(), { signal: AbortSignal.timeout(15000) });
     const body = (await res.text()).trim();
-    const parsed = parseJsonSafe(body);
-    const ok =
-        res.ok &&
-        ((parsed && String(parsed.ErrorCode || '') === '000') ||
-            (!parsed && !/error(?!message)|invalid|failed|unauthor|reject/i.test(body)) ||
-            body.includes('"ErrorCode":"000"'));
+    const result = readIndiaHubResponse(body, res.ok);
 
-    if (!ok) {
-        throw new ApiError(502, `SMS India Hub rejected ${purpose}: ${body || res.status}`);
+    if (!result.ok) {
+        throw new ApiError(502, `SMS India Hub rejected ${purpose}: ${body || res.status}${result.hint}`);
     }
 
     return {
@@ -98,7 +76,7 @@ export const sendSms = async ({ phone, message, purpose = 'notification' } = {})
         provider: 'sms_hub',
         message: 'SMS sent successfully',
         providerResponse: body,
-        jobId: parsed?.JobId || null,
+        jobId: result.jobId,
     };
 };
 

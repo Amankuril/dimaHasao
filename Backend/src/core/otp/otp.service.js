@@ -1,11 +1,11 @@
 import ms from 'ms';
 import { FoodOtp } from './otp.model.js';
 import { config } from '../../config/env.js';
+import { buildIndiaHubSendUrl, readIndiaHubResponse, toIndiaHubMsisdn } from '../notifications/indiaHubTransport.js';
 import { logger } from '../../utils/logger.js';
 import { ValidationError } from '../auth/errors.js';
 import { ApiError } from '../../utils/ApiError.js';
 
-const INDIA_HUB_ENDPOINT = 'http://cloud.smsindiahub.in/api/mt/SendSMS';
 const MSG91_OTP_ENDPOINT = 'https://control.msg91.com/api/v5/otp';
 
 /**
@@ -124,41 +124,46 @@ const resolveActiveProvider = () => {
     return null;
 };
 
+/**
+ * The OTP text, in the exact shape of the registered DLT template. Both
+ * variables and the sender tag are part of the approved text; changing the
+ * wording here without re-registering the template makes every send fail
+ * with ErrorCode 006.
+ */
+const buildIndiaHubOtpMessage = (otp) => {
+    const appName = String(config.smsDltAppName || 'Dima Hasao').trim();
+    const brand = String(config.smsDltBrandName || 'Dima Hasao').trim();
+    const tag = String(config.smsSenderId || '').trim();
+
+    return `Welcome to the ${appName} powered by ${brand}.Your OTP for registration is ${otp}.${tag}.`;
+};
+
 const sendViaIndiaHub = async ({ phone, otp, purpose = 'otp' }) => {
-    const msisdn = toMsisdn(phone);
+    const msisdn = toIndiaHubMsisdn(toMsisdn(phone));
     const apiKey = String(config.smsApiKey || '').trim();
-    const senderId = String(config.smsSenderId || 'SMSHUB').trim();
-    const peId = String(config.smsPeId || '1001164203633432409').trim();
-    const templateId = String(config.smsDltTemplateId || '').trim();
-    const message = `Welcome to the Dima Hasao powered by Dima Hasao.Your OTP for registration is ${otp}.BGADEC`;
 
     if (!apiKey) {
         throw new ApiError(500, 'SMS India Hub API key is not configured');
     }
 
-    const sendUrl = new URL(INDIA_HUB_ENDPOINT);
-    sendUrl.searchParams.set('APIKey', apiKey);
-    sendUrl.searchParams.set('senderid', senderId);
-    sendUrl.searchParams.set('channel', 'Trans');
-    sendUrl.searchParams.set('DCS', '0');
-    sendUrl.searchParams.set('flashsms', '0');
-    sendUrl.searchParams.set('number', msisdn);
-    sendUrl.searchParams.set('text', message);
-    if (templateId) sendUrl.searchParams.set('TemplateId', templateId);
-    if (peId) sendUrl.searchParams.set('PEID', peId);
+    /*
+     * This has to match the approved DLT template character for character or
+     * the gateway answers ErrorCode 006. The trailing sender tag is part of
+     * the registered text, not decoration.
+     */
+    const message = buildIndiaHubOtpMessage(otp);
+    const sendUrl = buildIndiaHubSendUrl({ msisdn, message });
 
-    logger.info(`[SMS] India Hub ${purpose} → ${msisdn}`);
+    logger.info(`[SMS] India Hub ${purpose} -> ${msisdn}`);
     const res = await fetch(sendUrl.toString(), { signal: AbortSignal.timeout(15000) });
     const text = (await res.text()).trim();
-    const parsed = parseJsonSafe(text);
-    const ok =
-        res.ok &&
-        ((parsed && String(parsed.ErrorCode || '') === '000') ||
-            (!parsed && !/error(?!message)|invalid|failed|unauthor|reject/i.test(text)) ||
-            text.includes('"ErrorCode":"000"'));
+    const result = readIndiaHubResponse(text, res.ok);
 
-    if (!ok) {
-        throw new ApiError(502, `SMS India Hub rejected ${purpose}: ${text || res.status}`);
+    if (!result.ok) {
+        throw new ApiError(
+            502,
+            `SMS India Hub rejected ${purpose}: ${text || res.status}${result.hint}`,
+        );
     }
 
     return {
@@ -166,7 +171,7 @@ const sendViaIndiaHub = async ({ phone, otp, purpose = 'otp' }) => {
         provider: 'sms_hub',
         message: 'OTP sent successfully',
         providerResponse: text,
-        jobId: parsed?.JobId || null,
+        jobId: result.jobId,
     };
 };
 

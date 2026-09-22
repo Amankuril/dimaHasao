@@ -71,6 +71,10 @@ export const config = {
     smsSenderId: (process.env.SMS_INDIA_HUB_SENDER_ID || 'BGADEC').trim(),
     smsPeId: (process.env.SMS_INDIA_HUB_PE_ID || '1001164203633432409').trim(),
     smsDltTemplateId: (process.env.SMS_INDIA_HUB_DLT_TEMPLATE_ID || '1007282516644508833').trim(),
+    // The two ##var## slots in the approved DLT OTP template. They are part of
+    // the registered text, so they are configuration, not copy.
+    smsDltAppName: (process.env.SMS_INDIA_HUB_APP_NAME || 'Dima Hasao').trim(),
+    smsDltBrandName: (process.env.SMS_INDIA_HUB_BRAND_NAME || 'Dima Hasao').trim(),
 
     // Rate limiting
     rateLimitWindowMinutes: Number(process.env.RATE_LIMIT_WINDOW || 15),
