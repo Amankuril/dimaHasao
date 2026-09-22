@@ -234,7 +234,7 @@ export async function createOrder(userId, dto) {
     }
   }
 
-  assertRestaurantDeliversToZone(restaurant, {
+  await assertRestaurantDeliversToZone(restaurant, {
     zoneId: dto.zoneId,
     orderType,
     deliveryAddress: {

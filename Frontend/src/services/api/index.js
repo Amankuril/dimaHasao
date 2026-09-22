@@ -1093,6 +1093,8 @@ export const optimisticallyUpdateRestaurantOrderStatus = (orderId, targetStatus)
   }
 };
 
+const serviceabilityInflight = new Map()
+
 /** Restaurant API - OTP login via new backend; no email/password. */
 export const restaurantAPI = {
   sendOTP: (phone, _purpose = "login") => {
@@ -1595,6 +1597,34 @@ export const restaurantAPI = {
   /** Public: get single approved restaurant by id or slug */
   getRestaurantById: (id, config = {}) =>
     apiClient.get(`/food/restaurant/restaurants/${String(id)}`, { ...config }),
+  /**
+   * Public: does this restaurant deliver to this zone? Same rule as the list.
+   *
+   * Two places ask this for the same restaurant on the same screen — the cart
+   * guard in the layout and the checkout gate in the cart — and React's dev
+   * double-mount asks again. The answer cannot change between them, so an
+   * in-flight request is shared rather than repeated.
+   */
+  getRestaurantServiceability: (id, zoneId, config = {}) => {
+    const key = `${String(id)}:${String(zoneId || "")}`
+    const pending = serviceabilityInflight.get(key)
+    if (pending) return pending
+
+    const request = apiClient
+      .get(`/food/restaurant/restaurants/${String(id)}/serviceability`, {
+        params: { zoneId: String(zoneId || "") },
+        ...config,
+      })
+      .finally(() => {
+        // Cleared on settle: the callers mount together, so sharing the one
+        // round trip is enough — holding the answer longer would go stale when
+        // the customer switches address.
+        serviceabilityInflight.delete(key)
+      })
+
+    serviceabilityInflight.set(key, request)
+    return request
+  },
   /** Public: get approved menu by restaurant id or slug */
   getMenuByRestaurantId: (id, config = {}) =>
     getPublicRestaurantMenuOnce(id, config),

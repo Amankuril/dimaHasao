@@ -32,7 +32,24 @@ export function haversineKm(lat1, lon1, lat2, lon2) {
 
 const MAX_DELIVERY_DISTANCE_KM = 50;
 
-export function assertRestaurantDeliversToZone(
+/**
+ * Refuse an order the restaurant cannot serve.
+ *
+ * The zone test used to be "the restaurant's zone id equals the delivery
+ * zone's id", which disagreed with the rule the customer list is built from:
+ * the list also admits a restaurant whose coordinates fall inside the zone's
+ * polygon, for restaurants whose zone id is unset or stale after zones were
+ * redrawn. The disagreement was invisible until checkout — the restaurant was
+ * listed, its menu opened, and Place Order then failed with "this restaurant
+ * does not deliver to your selected location".
+ *
+ * Both arms are checked here now. The intent the id comparison was written for
+ * — never let an Indore customer order from a Punjab kitchen — is preserved by
+ * the geometry arm, which is strictly the stronger test: a restaurant in
+ * another state is in neither the zone nor its polygon. The distance ceiling
+ * below is unchanged.
+ */
+export async function assertRestaurantDeliversToZone(
   restaurant,
   { zoneId, orderType, deliveryAddress } = {},
 ) {
@@ -42,13 +59,23 @@ export function assertRestaurantDeliversToZone(
   const restaurantZoneId = restaurant?.zoneId ? String(restaurant.zoneId) : "";
   const deliveryZoneId = zoneId ? String(zoneId) : "";
 
-  // Same-zone only: never allow Indore user → Punjab restaurant (or missing zone).
   if (restaurantZoneId) {
     if (!deliveryZoneId) {
       throw new ValidationError("Delivery location is outside this restaurant's service zone");
     }
+
     if (restaurantZoneId !== deliveryZoneId) {
-      throw new ValidationError("This restaurant does not deliver to your selected location");
+      const { isRestaurantServiceableInZone } = await import(
+        '../../restaurant/services/restaurant.service.js'
+      );
+      const { serviceable } = await isRestaurantServiceableInZone({
+        restaurantId: restaurant?._id,
+        zoneId: deliveryZoneId,
+      });
+
+      if (!serviceable) {
+        throw new ValidationError("This restaurant does not deliver to your selected location");
+      }
     }
   }
 

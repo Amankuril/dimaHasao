@@ -13,7 +13,8 @@ import {
     uploadRestaurantMenuImages,
     listPublicOffers,
     getRestaurantComplaints,
-    listRestaurantsUnderPriceLimit
+    listRestaurantsUnderPriceLimit,
+    isRestaurantServiceableInZone
 } from '../services/restaurant.service.js';
 import {
     createDiningRequest,
@@ -36,6 +37,22 @@ export const listApprovedRestaurantsController = async (req, res, next) => {
     try {
         const data = await listApprovedRestaurants(req.query);
         return sendResponse(res, 200, 'Restaurants fetched successfully', data);
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Does this restaurant deliver to this zone? Answered by the same rule the
+ * customer list uses to decide what to show, so the two can never disagree.
+ */
+export const getRestaurantServiceabilityController = async (req, res, next) => {
+    try {
+        const result = await isRestaurantServiceableInZone({
+            restaurantId: req.params.id,
+            zoneId: req.query?.zoneId
+        });
+        return sendResponse(res, 200, 'Serviceability resolved', result);
     } catch (error) {
         next(error);
     }

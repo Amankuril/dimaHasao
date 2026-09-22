@@ -691,14 +691,55 @@ export default function Cart() {
   const { zoneId, zoneStatus } = useZone(zoneLocation) // Prefer selected/saved address zone
   const defaultPayment = getDefaultPaymentMethod()
 
-  const isCartZoneMismatch = useMemo(() => {
-    if (orderType !== "delivery" || !cart.length || !zoneId || zoneStatus === "loading") {
-      return false
+  /*
+   * Whether this restaurant delivers to the selected address.
+   *
+   * This compared the restaurant's zone id against the active zone's id and
+   * called any difference a mismatch — but the customer list admits a
+   * restaurant whose zone id matches *or* whose coordinates fall inside the
+   * zone polygon. A restaurant admitted on that second arm showed up in the
+   * list, opened its menu, and then arrived here with Place Order disabled and
+   * "does not deliver to your selected location" under it.
+   *
+   * The server answers it now, using the same rule it builds the list from.
+   * It stays false until told otherwise, so a slow or failed check never
+   * disables checkout on its own; the order endpoint validates again.
+   */
+  const [isCartZoneMismatch, setIsCartZoneMismatch] = useState(false)
+
+  // Depend on the ids, not on `cart` itself: the array gets a new identity on
+  // every render, and the answer only changes when the restaurant or the zone
+  // does. Without this the check re-fires several times per visit.
+  const cartRestaurantIdForZone = String(
+    cart[0]?.restaurantId || cart[0]?.restaurant || restaurantData?.id || ""
+  )
+  const normalizedZoneId = String(zoneId || "").trim()
+
+  useEffect(() => {
+    if (orderType !== "delivery" || !cartRestaurantIdForZone || !normalizedZoneId || zoneStatus === "loading") {
+      setIsCartZoneMismatch(false)
+      return
     }
-    const restaurantZoneId = cart[0]?.restaurantZoneId || restaurantData?.zoneId
-    if (!restaurantZoneId) return false
-    return String(restaurantZoneId).trim() !== String(zoneId).trim()
-  }, [orderType, cart, zoneId, zoneStatus, restaurantData?.zoneId])
+
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        const response = await restaurantAPI.getRestaurantServiceability(
+          cartRestaurantIdForZone,
+          normalizedZoneId
+        )
+        const payload = response?.data?.data ?? response?.data ?? response
+        if (!cancelled) setIsCartZoneMismatch(payload?.serviceable === false)
+      } catch {
+        if (!cancelled) setIsCartZoneMismatch(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [orderType, cartRestaurantIdForZone, normalizedZoneId, zoneStatus])
 
   useEffect(() => {
     // Sync delivery mode from overlay/localStorage changes.

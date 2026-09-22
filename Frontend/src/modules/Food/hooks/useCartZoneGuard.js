@@ -4,27 +4,42 @@ import { useCart } from "@food/context/CartContext"
 import { useProfile } from "@food/context/ProfileContext"
 import { restaurantAPI } from "@food/api"
 
-const normalizeZoneId = (value) => String(value || "").trim()
+/**
+ * Empties the cart when the restaurant in it cannot deliver to the address the
+ * customer has selected.
+ *
+ * This used to compare the restaurant's `zoneId` against the active zone's id
+ * and clear the cart on any difference. The customer list is more generous
+ * than that: it admits a restaurant whose zone id matches *or* whose
+ * coordinates fall inside the zone's polygon. So a restaurant admitted on the
+ * geometry arm — zone id unset, or stale after zones were redrawn — was
+ * browsable, its menu opened, and then the cart emptied itself the instant an
+ * item was added. Nothing in the UI explained why, because by the app's own
+ * listing rule the restaurant did deliver there.
+ *
+ * The question now goes to the server, which answers it with the same rule the
+ * list is built from, so the two cannot drift apart again.
+ */
+const readServiceable = (response) => {
+  const payload = response?.data?.data ?? response?.data ?? response
+  return payload?.serviceable
+}
 
-const resolveRestaurantZoneId = async (cartItem) => {
-  const cachedZoneId = cartItem?.restaurantZoneId
-  if (cachedZoneId) return normalizeZoneId(cachedZoneId)
-
-  const restaurantId = cartItem?.restaurantId
-  if (!restaurantId) return ""
+const isDeliverable = async (cartItem, zoneId) => {
+  const restaurantId = cartItem?.restaurantId || cartItem?.restaurant
+  if (!restaurantId) return true
 
   try {
-    const response = await restaurantAPI.getRestaurantById(restaurantId)
-    const restaurant = response?.data?.data?.restaurant || response?.data?.restaurant
-    return normalizeZoneId(restaurant?.zoneId)
+    const response = await restaurantAPI.getRestaurantServiceability(restaurantId, zoneId)
+    const serviceable = readServiceable(response)
+    // An unreadable answer is not a "no". Checkout validates serviceability
+    // again, so letting the order through beats emptying a cart on a glitch.
+    return serviceable !== false
   } catch {
-    return ""
+    return true
   }
 }
 
-/**
- * Clears cart when the active delivery zone no longer matches the restaurant's zone.
- */
 export function useCartZoneGuard(zoneId, zoneStatus) {
   const { cart, clearCart } = useCart()
   const { orderType } = useProfile()
@@ -39,7 +54,7 @@ export function useCartZoneGuard(zoneId, zoneStatus) {
     }
     if (zoneStatus === "loading" || !zoneId) return
 
-    const checkKey = `${normalizeZoneId(zoneId)}:${cart[0]?.restaurantId || cart[0]?.restaurant || ""}:${cart.length}`
+    const checkKey = `${String(zoneId).trim()}:${cart[0]?.restaurantId || cart[0]?.restaurant || ""}:${cart.length}`
     if (lastCheckedKeyRef.current === checkKey || validatingRef.current) return
 
     let cancelled = false
@@ -47,10 +62,10 @@ export function useCartZoneGuard(zoneId, zoneStatus) {
     const validateCartZone = async () => {
       validatingRef.current = true
       try {
-        const restaurantZoneId = await resolveRestaurantZoneId(cart[0])
-        if (cancelled || !restaurantZoneId) return
+        const deliverable = await isDeliverable(cart[0], zoneId)
+        if (cancelled) return
 
-        if (restaurantZoneId !== normalizeZoneId(zoneId)) {
+        if (!deliverable) {
           clearCart()
           toast.error("Cart cleared — this restaurant does not deliver to your selected location.")
           lastCheckedKeyRef.current = ""

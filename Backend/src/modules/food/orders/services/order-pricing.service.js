@@ -29,7 +29,7 @@ export async function calculateOrderPricing(userId, dto) {
   if (restaurant.status !== "approved")
     throw new ValidationError("Restaurant not available");
 
-  assertRestaurantDeliversToZone(restaurant, {
+  await assertRestaurantDeliversToZone(restaurant, {
     zoneId: dto.zoneId,
     orderType: dto.orderType,
     deliveryAddress: dto.deliveryAddress,

@@ -302,6 +302,65 @@ const zoneToPolygon = (zoneDoc) => {
     return { type: 'Polygon', coordinates: [ring] };
 };
 
+/**
+ * The one definition of "this restaurant delivers to this zone".
+ *
+ * A restaurant qualifies either by carrying the zone's id or by physically
+ * standing inside the zone's polygon. The second arm matters because a
+ * restaurant's `zoneId` can be unset, or stale after zones are redrawn, while
+ * its coordinates still put it squarely in the area.
+ *
+ * It lives here because the customer list and the cart's serviceability check
+ * have to agree. They did not: the list admitted a restaurant on the geometry
+ * arm, and the cart compared zone ids alone, so any restaurant admitted that
+ * way could be browsed and its menu opened but never ordered from — the cart
+ * emptied itself the moment an item went in.
+ *
+ * @returns {Promise<Array|null>} an `$or` array to spread into a query, or
+ *   null when no usable zone was given (the caller then applies no zone filter).
+ */
+const buildZoneVisibilityOr = async (zoneIdRaw) => {
+    const zoneId = String(zoneIdRaw || '').trim();
+    if (!zoneId || !mongoose.Types.ObjectId.isValid(zoneId)) return null;
+
+    const clauses = [{ zoneId: new mongoose.Types.ObjectId(zoneId) }];
+    const zoneDoc = await FoodZone.findById(zoneId).select('isActive coordinates location').lean();
+
+    if (zoneDoc && zoneDoc.isActive) {
+        const polygon = zoneToPolygon(zoneDoc);
+        if (polygon) {
+            clauses.push({ location: { $geoWithin: { $geometry: polygon } } });
+        }
+    }
+
+    return clauses;
+};
+
+/**
+ * Whether one restaurant is orderable from one zone, by the rule above.
+ *
+ * Unknown zone means "do not block": the cart guard calls this, and emptying
+ * someone's cart because a zone lookup failed is worse than letting the order
+ * reach checkout, which validates serviceability again anyway.
+ */
+export const isRestaurantServiceableInZone = async ({ restaurantId, zoneId }) => {
+    if (!restaurantId || !mongoose.Types.ObjectId.isValid(String(restaurantId))) {
+        return { serviceable: true, reason: 'unknown_restaurant' };
+    }
+
+    const zoneVisibilityOr = await buildZoneVisibilityOr(zoneId);
+    if (!zoneVisibilityOr) {
+        return { serviceable: true, reason: 'unknown_zone' };
+    }
+
+    const match = await FoodRestaurant.findOne({
+        _id: new mongoose.Types.ObjectId(String(restaurantId)),
+        $or: zoneVisibilityOr
+    }).select('_id').lean();
+
+    return { serviceable: Boolean(match), reason: match ? 'in_zone' : 'out_of_zone' };
+};
+
 const notifyAdminsAboutRestaurantProfileReview = async (restaurantId, restaurantName) => {
     try {
         const { notifyAdminsSafely } = await import('../../../../core/notifications/firebase.service.js');
@@ -1472,15 +1531,9 @@ export const listApprovedRestaurants = async (query = {}) => {
     }
 
     const zoneIdRaw = String(query.zoneId || '').trim();
-    if (zoneIdRaw && mongoose.Types.ObjectId.isValid(zoneIdRaw)) {
-        filter.$or = [{ zoneId: new mongoose.Types.ObjectId(zoneIdRaw) }];
-        const zoneDoc = await FoodZone.findById(zoneIdRaw).select('isActive coordinates location').lean();
-        if (zoneDoc && zoneDoc.isActive) {
-            const polygon = zoneToPolygon(zoneDoc);
-            if (polygon) {
-                filter.$or.push({ location: { $geoWithin: { $geometry: polygon } } });
-            }
-        }
+    const zoneVisibilityOr = await buildZoneVisibilityOr(zoneIdRaw);
+    if (zoneVisibilityOr) {
+        filter.$or = zoneVisibilityOr;
     }
 
     const lat = toFiniteNumber(query.lat);
