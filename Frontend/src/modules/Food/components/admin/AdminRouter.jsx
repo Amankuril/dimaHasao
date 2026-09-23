@@ -96,8 +96,6 @@ const WithdrawMethod = lazy(() => import("@food/pages/admin/transactions/Withdra
 const EmployeeRole = lazy(() => import("@food/pages/admin/employees/EmployeeRole"));
 const AddEmployee = lazy(() => import("@food/pages/admin/employees/AddEmployee"));
 const EmployeeList = lazy(() => import("@food/pages/admin/employees/EmployeeList"));
-const SubAdminList = lazy(() => import("@food/pages/admin/sub-admins/SubAdminList"));
-const SubAdminPermissions = lazy(() => import("@food/pages/admin/sub-admins/SubAdminPermissions"));
 // Business Settings
 const BusinessSetup = lazy(() => import("@food/pages/admin/settings/BusinessSetup"));
 const EmailTemplate = lazy(() => import("@food/pages/admin/settings/EmailTemplate"));
@@ -280,23 +278,8 @@ export default function AdminRouter() {
             <Route path="employees" element={<EmployeeList />} />
             <Route path="employees/add" element={<AddEmployee />} />
 
-            {/* SUB ADMIN MANAGEMENT (full ADMIN only) */}
-            <Route
-              path="sub-admins"
-              element={
-                <PermissionRoute requireFullAdmin>
-                  <SubAdminList />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="sub-admins/:id/permissions"
-              element={
-                <PermissionRoute requireFullAdmin>
-                  <SubAdminPermissions />
-                </PermissionRoute>
-              }
-            />
+            {/* Sub-admins are managed platform-wide in Global admin, which can
+                grant several modules at once — this panel only ever knew food. */}
 
             {/* SYSTEM & BUSINESS SETTINGS */}
             <Route path="business-setup" element={<BusinessSetup />} />
