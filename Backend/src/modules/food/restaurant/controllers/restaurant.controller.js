@@ -1,3 +1,4 @@
+import { issueRestaurantSession } from '../../auth/audiences.js';
 import {
     registerRestaurant,
     listApprovedRestaurants,
@@ -27,7 +28,36 @@ export const registerRestaurantController = async (req, res, next) => {
     try {
         const validated = validateRestaurantRegisterDto(req.body);
         const restaurant = await registerRestaurant(validated, req.files);
-        return sendResponse(res, 201, 'Restaurant registered successfully', restaurant);
+
+        /*
+         * Hand back a session for the restaurant that was just created.
+         *
+         * Onboarding used to end with no token at all, so a brand-new partner
+         * was effectively signed out the moment they finished and had to sign
+         * in again. It also left the combined partner signup with nowhere to
+         * go: adding the hotel business needs an authenticated call, and the
+         * ten-minute signup ticket is long gone by the time a three-step
+         * wizard is submitted.
+         *
+         * The restaurant is `pending` at this point, and
+         * requireApprovedRestaurant refuses every restaurant route except
+         * reading and updating this same record — so the token can do nothing
+         * but finish the onboarding it came from.
+         */
+        const session = await issueRestaurantSession(restaurant, {
+            fcmToken: validated.fcmToken,
+            platform: validated.platform,
+        });
+
+        const payload = restaurant.toObject?.() ?? restaurant;
+
+        return sendResponse(res, 201, 'Restaurant registered successfully', {
+            ...payload,
+            session: {
+                accessToken: session.accessToken,
+                refreshToken: session.refreshToken,
+            },
+        });
     } catch (error) {
         next(error);
     }

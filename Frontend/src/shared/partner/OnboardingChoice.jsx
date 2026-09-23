@@ -34,7 +34,7 @@ const CHOICES = [
   {
     id: 'both',
     label: 'Both',
-    hint: 'Set up the restaurant first, then the stay',
+    hint: 'Restaurant first, then your stay',
     Icon: Layers,
   },
 ];
@@ -54,14 +54,13 @@ export default function OnboardingChoice({ phone, signupToken }) {
   };
 
   /**
-   * Create the hotel account now, while the signup ticket from verify is still
-   * valid.
+   * Hotel on its own: there is no session yet, so the account is created with
+   * the signup ticket from verify, then straight on to listing a property.
    *
-   * It only lasts ten minutes and restaurant onboarding takes longer, and
-   * POST /food/restaurant/register hands back no session — so on the "both"
-   * path this is the only moment a token can be obtained without asking for a
-   * second OTP. The partner still experiences the order they chose: restaurant
-   * onboarding, then the stay.
+   * The "both" path does not come through here. It runs the restaurant wizard
+   * first and creates the hotel account afterwards, with the session that
+   * registration now hands back — otherwise the hotel half would be over
+   * before the restaurant half began.
    */
   const startHotel = async () => {
     if (!name.trim()) {
@@ -79,14 +78,6 @@ export default function OnboardingChoice({ phone, signupToken }) {
       const data = response?.data?.data || response?.data || {};
 
       storePartnerSession(data);
-
-      if (choice === 'both') {
-        setOnboardingIntent('both');
-        setActiveWorkspace(WORKSPACE.RESTAURANT);
-        window.location.replace('/food/restaurant/onboarding');
-        return;
-      }
-
       setActiveWorkspace(WORKSPACE.HOTEL);
       setOnboardingIntent('');
       navigate('/hotel/partner/join', { replace: true });
@@ -102,18 +93,17 @@ export default function OnboardingChoice({ phone, signupToken }) {
 
   const handlePick = (id) => {
     if (id === 'restaurant') return startRestaurant('restaurant');
-    return setChoice(id); // 'hotel' or 'both' — both need a name first
+    if (id === 'both') return startRestaurant('both');
+    return setChoice('hotel'); // hotel alone needs a name before anything else
   };
 
-  if (choice === 'hotel' || choice === 'both') {
+  if (choice === 'hotel') {
     return (
       <div className="space-y-4">
         <div>
           <h2 className="dh-playfair text-[22px] font-black tracking-wide text-[#f4efe2]">A few details</h2>
           <p className="mt-2 text-[13px] leading-relaxed text-[#9fb3a4]">
-            {choice === 'both'
-              ? 'We will set up your restaurant first, then your stay.'
-              : 'So guests know who they are booking with.'}
+            So guests know who they are booking with.
           </p>
         </div>
 

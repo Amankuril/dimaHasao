@@ -6,7 +6,7 @@
  * their session instead, through POST /partner/profiles/hotel.
  */
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Building2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createHotelProfile } from './partnerApi';
@@ -21,8 +21,18 @@ import { setPartnerSession } from '@/modules/Hotel/utils/partnerAuth';
 
 export default function AddHotelBusiness() {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const location = useLocation();
+
+  /*
+   * Arriving from the "both" signup, the owner details were just collected by
+   * the restaurant wizard — asking for the same name a second time would be a
+   * poor welcome. Coming from settings there is no state and these start empty.
+   */
+  const prefill = location.state || {};
+  const continuingSignup = Boolean(prefill.name || prefill.email);
+
+  const [name, setName] = useState(prefill.name || '');
+  const [email, setEmail] = useState(prefill.email || '');
   const [loading, setLoading] = useState(false);
 
   const submit = async (event) => {
@@ -83,11 +93,15 @@ export default function AddHotelBusiness() {
     <div className="mx-auto max-w-md px-5 py-6">
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() =>
+          continuingSignup
+            ? navigate('/food/restaurant/pending-verification', { replace: true })
+            : navigate(-1)
+        }
         className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500"
       >
         <ArrowLeft size={14} />
-        Back
+        {continuingSignup ? 'Skip for now' : 'Back'}
       </button>
 
       <div className="mb-6 flex items-center gap-3">
@@ -95,9 +109,13 @@ export default function AddHotelBusiness() {
           <Building2 size={22} />
         </span>
         <div>
-          <h1 className="text-lg font-bold text-slate-900">List a hotel or stay</h1>
+          <h1 className="text-lg font-bold text-slate-900">
+            {continuingSignup ? 'Now your stay' : 'List a hotel or stay'}
+          </h1>
           <p className="text-xs text-slate-500">
-            Runs alongside your restaurant on the same sign-in.
+            {continuingSignup
+              ? 'Your restaurant is in for review. Next, set up your stay.'
+              : 'Runs alongside your restaurant on the same sign-in.'}
           </p>
         </div>
       </div>
@@ -134,7 +152,7 @@ export default function AddHotelBusiness() {
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white disabled:opacity-60"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-          {loading ? 'Adding' : 'Continue'}
+          {loading ? 'Setting up' : 'Continue'}
         </button>
       </form>
     </div>

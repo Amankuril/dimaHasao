@@ -30,6 +30,7 @@ import { OnboardingSkeleton } from "@food/components/ui/loading-skeletons"
 import OnboardingExitModal from "@/shared/components/OnboardingExitModal"
 import useOnboardingExitGuard from "@/shared/hooks/useOnboardingExitGuard"
 import { collectFcmTokenForSignup, persistModuleFcmToken, syncPendingPartnerFcmQuick, clearOnboardingFcmLocal, prefetchModuleFcmToken } from "@food/utils/firebaseMessaging"
+import { setAuthData } from "@food/utils/auth"
 import {
   getOnboardingIntent,
   clearOnboardingIntent,
@@ -75,15 +76,31 @@ async function finalizeRestaurantPendingSubmission(navigate, phone, fcmOptions =
 
   /*
    * A partner who chose "both" carries on into the stay half rather than
-   * stopping at the pending screen. The hotel account was already created on
-   * the chooser — the signup ticket only lives ten minutes and this wizard
-   * takes longer — so the session for it is already in hand.
+   * stopping at the pending screen, in the order they picked: the restaurant
+   * is done, so the hotel onboarding starts now. Its details are prefilled
+   * from the owner details just collected, and the session registration
+   * returned is what authenticates creating it.
+   */
+  /*
+   * The stay's own details come first; listing a property follows from there.
+   *
+   * That screen sits behind the restaurant route guard, so it is only reachable
+   * with the session registration hands back. Without one the guard would
+   * bounce a partner who just finished onboarding out to the login screen, so
+   * fall through to the pending screen instead — the stay can still be added
+   * from settings.
    */
   if (getOnboardingIntent() === "both") {
     clearOnboardingIntent()
-    setActiveWorkspace("hotel")
-    navigate("/hotel/partner/join", { replace: true })
-    return
+
+    if (localStorage.getItem("restaurant_accessToken")) {
+      setActiveWorkspace("hotel")
+      navigate("/food/restaurant/add-hotel", {
+        replace: true,
+        state: { name: fcmOptions.ownerName || "", email: fcmOptions.ownerEmail || "" },
+      })
+      return
+    }
   }
 
   navigate("/food/restaurant/pending-verification", {
@@ -1608,7 +1625,17 @@ export default function RestaurantOnboarding() {
           formData.append("platform", platform)
         }
 
-        await restaurantAPI.register(formData)
+        const registerResponse = await restaurantAPI.register(formData)
+        const registered = registerResponse?.data?.data || registerResponse?.data || {}
+
+        /*
+         * Registration hands back a session now. On the "both" path that token
+         * is what lets the hotel half be created straight afterwards, without
+         * sending the partner back through another OTP.
+         */
+        if (registered?.session?.accessToken) {
+          setAuthData("restaurant", registered.session.accessToken, registered, registered.session.refreshToken)
+        }
 
         // Clear localStorage when onboarding is complete
         clearOnboardingFromLocalStorage()
@@ -1618,7 +1645,12 @@ export default function RestaurantOnboarding() {
         } catch {}
 
         toast.success("Registration submitted. Awaiting admin approval.", { duration: 4000 })
-        await finalizeRestaurantPendingSubmission(navigate, step1.ownerPhone, { fcmToken, platform })
+        await finalizeRestaurantPendingSubmission(navigate, step1.ownerPhone, {
+          fcmToken,
+          platform,
+          ownerName: step1.ownerName,
+          ownerEmail: step1.ownerEmail,
+        })
       }
     } catch (err) {
       const msg =
