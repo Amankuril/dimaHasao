@@ -2,9 +2,12 @@
  * Hop between the two businesses one partner runs.
  *
  * A tab bar sat at the top of both dashboards and took a strip of layout from
- * screens that are already tight on a phone. This is a floating pill instead:
- * it costs no layout, and because it hovers over content it can be dragged out
- * of the way of whatever it happens to cover.
+ * screens that are already tight on a phone. This is a floating circle in the
+ * bottom corner instead: it costs no layout, and because it hovers over content
+ * it can be dragged out of the way of whatever it happens to cover.
+ *
+ * Icon only, so it stays small. Which dashboard it leads to is in the label and
+ * the tooltip rather than on the face of it.
  *
  * Tap to switch, drag to move. Those are the same gesture until the pointer
  * travels far enough, so a drag is only a drag past DRAG_THRESHOLD — below
@@ -15,7 +18,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Store, Building2, GripVertical } from 'lucide-react';
+import { ArrowLeftRight } from 'lucide-react';
 import {
   hasBothProfiles,
   setActiveWorkspace,
@@ -60,8 +63,8 @@ export default function PartnerWorkspaceSwitcher() {
   /** Keep the pill fully on screen, whatever the viewport does. */
   const clamp = useCallback((x, y) => {
     const node = nodeRef.current;
-    const width = node?.offsetWidth || 160;
-    const height = node?.offsetHeight || 44;
+    const width = node?.offsetWidth || 56;
+    const height = node?.offsetHeight || 56;
 
     return {
       x: Math.min(Math.max(x, EDGE_MARGIN), window.innerWidth - width - EDGE_MARGIN),
@@ -105,7 +108,6 @@ export default function PartnerWorkspaceSwitcher() {
     : WORKSPACE.RESTAURANT;
 
   const target = active === WORKSPACE.HOTEL ? WORKSPACE.RESTAURANT : WORKSPACE.HOTEL;
-  const TargetIcon = target === WORKSPACE.HOTEL ? Building2 : Store;
   const label = target === WORKSPACE.HOTEL ? 'Switch to Hotel' : 'Switch to Restaurant';
 
   const handlePointerDown = (event) => {
@@ -192,13 +194,9 @@ export default function PartnerWorkspaceSwitcher() {
         transition: dragging ? 'none' : 'transform 120ms ease',
         transform: dragging ? 'scale(1.04)' : 'scale(1)',
       }}
-      className="flex select-none items-center gap-2 rounded-full bg-slate-900 py-2.5 pl-3 pr-4 text-white shadow-xl shadow-slate-900/25 ring-1 ring-white/10"
+      className="flex h-14 w-14 select-none items-center justify-center rounded-full bg-slate-900 text-white shadow-xl shadow-slate-900/30 ring-1 ring-white/10"
     >
-      <GripVertical size={14} className="shrink-0 opacity-40" />
-      <TargetIcon size={15} className="shrink-0" />
-      <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide">
-        {label}
-      </span>
+      <ArrowLeftRight size={20} strokeWidth={2.25} />
     </button>
   );
 }
