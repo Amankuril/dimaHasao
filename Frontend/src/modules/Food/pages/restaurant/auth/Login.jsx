@@ -18,6 +18,14 @@ import DimaHasaoAuthShell, {
 } from "@/shared/components/auth/DimaHasaoAuthShell"
 import { RESTAURANT_BRAND_LOGO } from "@/shared/constants/brandLogo"
 import AuthLegalLinks from "@/shared/components/auth/AuthLegalLinks"
+import { requestPartnerOtp, verifyPartnerOtp } from "@/services/api/auth"
+import {
+  storePartnerSession,
+  resolvePartnerHome,
+  setActiveWorkspace,
+  clearOnboardingIntent,
+} from "@/shared/partner/partnerSession"
+import OnboardingChoice from "@/shared/partner/OnboardingChoice"
 
 const DEFAULT_COUNTRY_CODE = "+91"
 
@@ -34,6 +42,9 @@ export default function RestaurantLogin() {
 
   // Step 1 States
   const phoneInputRef = useRef(null)
+  // Set when a verified number owns neither business, which puts the
+  // restaurant/hotel/both chooser on screen instead of a dashboard.
+  const [signupToken, setSignupToken] = useState("")
   const defaultTestPhone =
     import.meta.env.VITE_USE_DEFAULT_TEST_PHONE === "true"
       ? String(import.meta.env.VITE_DEFAULT_TEST_PHONE || "").replace(/\D/g, "").slice(0, 10)
@@ -229,7 +240,7 @@ export default function RestaurantLogin() {
     const fullPhone = `${DEFAULT_COUNTRY_CODE} ${phone}`.trim()
 
     try {
-      await restaurantAPI.sendOTP(fullPhone, "login")
+      await requestPartnerOtp(fullPhone)
       const authData = {
         method: "phone",
         phone: fullPhone,
@@ -300,111 +311,87 @@ export default function RestaurantLogin() {
 
       const { fcmToken, platform } = await collectFcmTokenFast("restaurant")
 
-      const response = await restaurantAPI.verifyOTP(
-        phoneVal,
-        code,
-        purpose,
-        null,
-        authData.email,
-        fcmToken,
-        platform,
-        confirmAction,
-      )
-      const data = response?.data?.data || response?.data
+      const response = await verifyPartnerOtp(phoneVal, code, fcmToken, platform)
+      const data = response?.data?.data || response?.data || {}
 
-      if (data.deletedAccountFound) {
-        setDeletedAccountData(data)
-        setShowRestorePopup(true)
-        setLoading(false)
-      } else if (data.pendingApproval === true) {
-        isSuccessRef.current = true
+      const clearOtpSession = () => {
         sessionStorage.removeItem("restaurantAuthData")
         sessionStorage.removeItem(getBlockKey(phoneVal))
         sessionStorage.removeItem(getResendKey(phoneVal))
-        setRestaurantPendingPhone(phoneVal)
-        const isRejected = Boolean(data.isRejected)
-        const statusVal = isRejected ? "rejected" : "pending"
-        localStorage.setItem("restaurant_pendingStatus", statusVal)
-        localStorage.setItem("restaurant_pendingMessage", data.message || "")
         setShowRestorePopup(false)
+      }
+
+      /*
+       * A number that owns neither business gets the chooser, not a dashboard.
+       * Nothing is created yet: the restaurant path runs its own wizard, and
+       * the hotel path spends the signup ticket returned here.
+       */
+      if (data.nextStep === "onboarding" || !(data.profiles || []).length) {
+        isSuccessRef.current = true
+        setRestaurantPendingPhone(phoneVal)
+        clearOtpSession()
+        setSignupToken(data.signupToken || "")
+        setLoading(false)
+        return
+      }
+
+      isSuccessRef.current = true
+      const profiles = storePartnerSession(data)
+      clearOnboardingIntent()
+      window.dispatchEvent(new Event("restaurantAuthChanged"))
+
+      try {
+        await persistModuleFcmToken("restaurant", { fcmToken, platform })
+      } catch {}
+
+      clearOtpSession()
+
+      /*
+       * Approval is per business now. A pending restaurant still gets a
+       * session, because refusing it would also lock the partner out of an
+       * approved hotel; ProtectedRoute sends it to pending-verification, and
+       * the server still refuses every restaurant route behind
+       * requireApprovedRestaurant.
+       */
+      const restaurantStatus = String(data.restaurant?.status || "").toLowerCase()
+
+      if (profiles.length === 1 && profiles[0] === "restaurant" && restaurantStatus && restaurantStatus !== "approved") {
+        setRestaurantPendingPhone(phoneVal)
+        const isRejected = restaurantStatus === "rejected"
+        const isDisabled = restaurantStatus === "banned" || restaurantStatus === "deleted"
+        localStorage.setItem(
+          "restaurant_pendingStatus",
+          isDisabled ? "banned" : isRejected ? "rejected" : "pending",
+        )
+        localStorage.setItem(
+          "restaurant_pendingMessage",
+          isRejected
+            ? "Your restaurant registration has been rejected. Please contact support."
+            : "Your restaurant registration is pending approval.",
+        )
         setLoading(false)
         navigate("/food/restaurant/pending-verification", {
           replace: true,
-          state: {
-            phone: phoneVal || "",
-            isRejected,
-            isDisabled: false,
-            message: data.message,
-          },
+          state: { phone: phoneVal || "", isRejected, isDisabled },
         })
-      } else if (data.nextStep === 'onboarding') {
-        isSuccessRef.current = true
-        setRestaurantPendingPhone(phoneVal)
-        sessionStorage.removeItem("restaurantAuthData")
-        sessionStorage.removeItem(getBlockKey(phoneVal))
-        sessionStorage.removeItem(getResendKey(phoneVal))
-        setShowRestorePopup(false)
-        window.location.replace("/food/restaurant/onboarding")
-      } else {
-        isSuccessRef.current = true
-        const accessToken = data.accessToken
-        const restaurant = data.restaurant || data.user
-        const status = String(restaurant?.status || "").toLowerCase()
+        return
+      }
 
-        if (status && status !== "approved") {
-          sessionStorage.removeItem("restaurantAuthData")
-          sessionStorage.removeItem(getBlockKey(phoneVal))
-          sessionStorage.removeItem(getResendKey(phoneVal))
-          setRestaurantPendingPhone(phoneVal)
-          const isRejected = status === "rejected"
-          const isDisabled = status === "banned" || status === "deleted"
-          const statusVal = isDisabled ? "banned" : (isRejected ? "rejected" : "pending")
-          localStorage.setItem("restaurant_pendingStatus", statusVal)
-          localStorage.setItem(
-            "restaurant_pendingMessage",
-            isRejected
-              ? (restaurant?.rejectionReason
-                  ? `Your restaurant registration has been rejected. Reason: ${restaurant.rejectionReason}`
-                  : "Your restaurant registration has been rejected. Please contact support.")
-              : "Your restaurant registration is pending approval.",
-          )
-          setShowRestorePopup(false)
-          setLoading(false)
-          navigate("/food/restaurant/pending-verification", {
-            replace: true,
-            state: {
-              phone: phoneVal || "",
-              isRejected,
-              isDisabled,
-            },
-          })
-          return
-        }
+      const home = resolvePartnerHome(profiles)
+      setActiveWorkspace(home.startsWith("/hotel") ? "hotel" : "restaurant")
 
-        setRestaurantAuthData("restaurant", accessToken, restaurant, data?.refreshToken)
-        window.dispatchEvent(new Event("restaurantAuthChanged"))
-        try {
-          await persistModuleFcmToken("restaurant", { fcmToken, platform })
-        } catch {}
-        sessionStorage.removeItem("restaurantAuthData")
-        sessionStorage.removeItem(getBlockKey(phoneVal))
-        sessionStorage.removeItem(getResendKey(phoneVal))
-        setShowRestorePopup(false)
-
-        if (authData?.isSignUp) {
-          window.location.replace("/food/restaurant/onboarding")
-        } else {
-          const onboardingComplete = isRestaurantOnboardingComplete(restaurant)
-          if (!onboardingComplete) {
-            const incompleteStep = await checkOnboardingStatus()
-            if (incompleteStep) {
-              window.location.replace(`/food/restaurant/onboarding?step=${incompleteStep}`)
-              return
-            }
+      if (profiles.includes("restaurant") && home.startsWith("/food")) {
+        const restaurant = data.restaurant?.user
+        if (!isRestaurantOnboardingComplete(restaurant)) {
+          const incompleteStep = await checkOnboardingStatus()
+          if (incompleteStep) {
+            window.location.replace(`/food/restaurant/onboarding?step=${incompleteStep}`)
+            return
           }
-          window.location.replace("/food/restaurant")
         }
       }
+
+      window.location.replace(home)
     } catch (err) {
       const message = err?.response?.data?.error || err?.response?.data?.message || "Invalid OTP. Please try again."
       setOtp(["", "", "", ""])
@@ -466,7 +453,7 @@ export default function RestaurantLogin() {
     setLoading(true)
     try {
       const purpose = authData.isSignUp ? "register" : "login"
-      await restaurantAPI.sendOTP(authData.phone, purpose, authData.email)
+      await requestPartnerOtp(authData.phone)
       setResendTimer(59)
       sessionStorage.setItem(getResendKey(authData.phone), (Date.now() + (59 * 1000)).toString())
       toast.success("OTP resent successfully.")
@@ -585,9 +572,14 @@ export default function RestaurantLogin() {
         className="absolute opacity-0 w-px h-px -z-10 pointer-events-none"
       />
 
+      {/* A verified number with no business yet picks what it is opening. */}
+      {signupToken ? (
+        <OnboardingChoice phone={contactInfo} signupToken={signupToken} />
+      ) : (
+      <>
       <div className="mb-7 text-center md:text-left">
         <h2 className="dh-playfair text-[26px] font-black tracking-wide text-[#f4efe2]">
-          Restaurant Partner
+          Partner Sign In
         </h2>
         <div className="mt-2 flex items-center justify-center gap-2 md:justify-start">
           <span className="h-px w-6 bg-[#caa83e]" />
@@ -598,7 +590,7 @@ export default function RestaurantLogin() {
 
         {!isOtpStep ? (
           <p className="mt-4 text-[13px] leading-relaxed text-[#9fb3a4]">
-            Enter your registered mobile number to manage your restaurant.
+            Enter your mobile number to manage your restaurant or your stay.
           </p>
         ) : (
           <div className="mt-4 flex items-center justify-center gap-2 text-[13px] text-[#9fb3a4] md:justify-start">
@@ -821,6 +813,8 @@ export default function RestaurantLogin() {
         className="dh-montserrat mt-8 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5d7264]"
         linkClassName="transition-colors hover:text-[#caa83e]"
       />
+      </>
+      )}
     </DimaHasaoAuthShell>
   )
 }

@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { isModuleAuthenticated } from '../../shared/utils/moduleAuth';
 import { isPartnerSignedIn } from './utils/partnerAuth';
+import PartnerWorkspaceSwitcher from '@/shared/partner/PartnerWorkspaceSwitcher';
 import './app/partner/partnerTheme.css';
 
 const L = (loader) => lazy(loader);
@@ -47,7 +48,6 @@ const PartnerJoinPropertyType = L(() => import('./app/partner/pages/PartnerJoinP
 const AddHotelWizard = L(() => import('./app/partner/pages/AddHotelWizard'));
 const AddResortWizard = L(() => import('./app/partner/pages/AddResortWizard'));
 const AddHomestayWizard = L(() => import('./app/partner/pages/AddHomestayWizard'));
-const HotelLogin = L(() => import('./app/partner/pages/HotelLogin'));
 
 const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden="true" />;
 
@@ -65,7 +65,7 @@ const RequireAdmin = () =>
  * admin panel does it.
  */
 const RequirePartner = () =>
-  isPartnerSignedIn() ? <Outlet /> : <Navigate to="/hotel/partner/login" replace />;
+  isPartnerSignedIn() ? <Outlet /> : <Navigate to="/food/restaurant/login" replace />;
 
 /**
  * Paints the whole partner panel in the Dima Hasao palette.
@@ -77,6 +77,8 @@ const RequirePartner = () =>
  */
 const PartnerThemeLayout = () => (
   <div className="hotel-partner-theme min-h-screen">
+    {/* Renders only for partners who run both businesses. */}
+    <PartnerWorkspaceSwitcher />
     <Outlet />
   </div>
 );
@@ -85,10 +87,12 @@ export default function HotelRoutes() {
   return (
     <Suspense fallback={<Fallback />}>
       <Routes>
-        {/* Outside the partner block below, so it needs the theme wrapper of its own. */}
-        <Route path="partner/login" element={<PartnerThemeLayout />}>
-          <Route index element={<HotelLogin />} />
-        </Route>
+        {/*
+          * One sign-in now serves both partner businesses, so this redirects to
+          * it rather than keeping a second screen that knows only about hotels.
+          * The route stays because the partner APK deep-links to it.
+          */}
+        <Route path="partner/login" element={<Navigate to="/food/restaurant/login" replace />} />
 
         <Route element={<RequireAdmin />}>
           <Route path="admin" element={<AdminLayout />}>

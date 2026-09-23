@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { User, Mail, Phone, MapPin, Edit, Save, Camera, CreditCard } from 'lucide-react';
+import { hasRestaurantProfile, setActiveWorkspace } from '@/shared/partner/partnerSession';
+import { User, Mail, Phone, MapPin, Edit, Save, Camera, CreditCard , Store } from 'lucide-react';
 import gsap from 'gsap';
 import usePartnerStore from '../store/partnerStore';
 import { userService, authService, hotelService } from '../../../services/apiService';
@@ -214,6 +215,19 @@ const PartnerProfile = () => {
     const statusLabel = approvalStatus === 'approved' ? 'Verified Partner' : approvalStatus === 'rejected' ? 'Rejected' : 'Pending Approval';
     const statusClass = approvalStatus === 'approved' ? 'text-green-600 bg-green-50' : approvalStatus === 'rejected' ? 'text-red-600 bg-red-50' : 'text-orange-600 bg-orange-50';
 
+    /*
+     * The restaurant wizard prefills its owner phone from the pending-phone
+     * entry, which a hotel-only partner has never had set. Seed it from the
+     * signed-in partner so they are not asked to retype the number they just
+     * verified.
+     */
+    const startRestaurantOnboarding = () => {
+        const phone = String(profile?.phone || getPartnerUser()?.phone || '').replace(/\D/g, '').slice(-10);
+        if (phone) localStorage.setItem('restaurant_pendingPhone', phone);
+        setActiveWorkspace('restaurant');
+        window.location.assign('/food/restaurant/onboarding');
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
             {/* Custom Header */}
@@ -265,6 +279,26 @@ const PartnerProfile = () => {
                         </div>
                     </div>
                 </div>
+
+                {/*
+                  * One sign-in covers both partner businesses, so offer the
+                  * other one to a partner who does not run it yet.
+                  */}
+                {!hasRestaurantProfile() && (
+                    <button
+                        type="button"
+                        onClick={startRestaurantOnboarding}
+                        className="w-full mb-6 flex items-center gap-4 bg-white p-5 rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 text-left active:scale-[0.99] transition-all"
+                    >
+                        <span className="w-12 h-12 shrink-0 rounded-2xl bg-[#005CA8]/10 text-[#005CA8] flex items-center justify-center">
+                            <Store size={22} />
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block text-sm font-black text-slate-900">Also list a restaurant</span>
+                            <span className="block text-xs text-gray-500">Run it from this same sign-in</span>
+                        </span>
+                    </button>
+                )}
 
                 {/* Details Form Card */}
                 <div className="bg-white p-6 pb-10 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 mb-6 transition-all duration-500">

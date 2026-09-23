@@ -17,6 +17,9 @@ export const AUDIENCE = {
   USER: "user",
   RESTAURANT: "restaurant",
   DELIVERY: "delivery",
+  // One login for both partner businesses. RESTAURANT stays for the
+  // single-app sign-in, which is stricter about approval.
+  PARTNER: "partner",
 };
 
 const AUTH = {
@@ -322,6 +325,55 @@ export function verifyRestaurantOtp(phone, otp, fcmToken = null, platform = "web
     otp: otpStr,
     ...(fcmToken ? { fcmToken, platform } : {}),
     ...(confirmAction ? { confirmAction } : {}),
+  });
+}
+
+/**
+ * Partner OTP auth — answers for the restaurant and the hotel at once.
+ *
+ * Verify returns whichever halves the number owns: `restaurant` (access +
+ * refresh), `hotel` (a 30-day token), or neither plus `nextStep: 'onboarding'`
+ * and a signup ticket, which is what puts the business chooser on screen.
+ */
+export function requestPartnerOtp(phone) {
+  const normalized = normalizePhone(phone);
+  if (normalized.length < 8) {
+    return Promise.reject(new Error("Phone must be at least 8 digits"));
+  }
+  return apiClient.post(OTP_REQUEST, { audience: AUDIENCE.PARTNER, phone: normalized });
+}
+
+export function verifyPartnerOtp(phone, otp, fcmToken = null, platform = "web") {
+  const normalized = normalizePhone(phone);
+  const otpStr = String(otp).replace(/\D/g, "").slice(0, 6);
+  if (!normalized || otpStr.length < 4) {
+    return Promise.reject(new Error("Phone and 4-digit OTP are required"));
+  }
+  return apiClient.post(OTP_VERIFY, {
+    audience: AUDIENCE.PARTNER,
+    phone: normalized,
+    otp: otpStr,
+    ...(fcmToken ? { fcmToken, platform } : {}),
+  });
+}
+
+/**
+ * Finish a brand-new partner signup with the ticket handed out by verify.
+ *
+ * Only the hotel half can be created this way — a restaurant is built by its
+ * own onboarding wizard. An existing partner adding a second business uses
+ * POST /partner/profiles/hotel instead, because the ticket expires in ten
+ * minutes and onboarding takes longer than that.
+ */
+export function completePartnerSignup(signupToken, { name, email } = {}) {
+  if (!signupToken) {
+    return Promise.reject(new Error("Signup session expired. Please sign in again."));
+  }
+  return apiClient.post(OTP_COMPLETE, {
+    audience: AUDIENCE.PARTNER,
+    signupToken,
+    name,
+    ...(email ? { email } : {}),
   });
 }
 

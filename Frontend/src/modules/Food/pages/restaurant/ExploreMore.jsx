@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react"
+import { hasHotelProfile } from '@/shared/partner/partnerSession';
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import Lenis from "lenis"
@@ -766,6 +767,11 @@ export default function ExploreMore() {
   const settingsItems = [
     { id: 3, label: "Delivery settings", icon: Truck, route: "/food/restaurant/delivery-settings" },
     { id: 4, label: "Zone Setup", icon: MapPin, route: "/food/restaurant/zone-setup" },
+    // One sign-in covers both partner businesses, so offer the other one to
+    // anyone who does not have it yet.
+    ...(hasHotelProfile()
+      ? []
+      : [{ id: "add-hotel", label: "List a hotel or stay", icon: Building2, route: "/food/restaurant/add-hotel" }]),
   ]
 
   const ordersItems = [

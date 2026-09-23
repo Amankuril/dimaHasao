@@ -1,5 +1,7 @@
 import React, { Suspense, lazy } from "react"
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom"
+import PartnerWorkspaceSwitcher from '@/shared/partner/PartnerWorkspaceSwitcher';
+import AddHotelBusiness from '@/shared/partner/AddHotelBusiness';
 import ProtectedRoute from "@food/components/ProtectedRoute"
 import AuthRedirect from "@food/components/AuthRedirect"
 import Loader from "@food/components/Loader"
@@ -85,6 +87,8 @@ export default function RestaurantRouter() {
 
   return (
     <div className="restaurant-theme">
+      {/* Renders only for partners who run both businesses. */}
+      <PartnerWorkspaceSwitcher />
       <Suspense fallback={
         isOnboarding ? (
           <OnboardingSkeleton />
@@ -117,6 +121,7 @@ export default function RestaurantRouter() {
           <Route path="orders/:id" element={<OrderDetails />} />
           <Route path="notifications" element={<RestaurantNotifications />} />
           <Route path="delivery-settings" element={<DeliverySettings />} />
+          <Route path="add-hotel" element={<AddHotelBusiness />} />
           <Route path="rush-hour" element={<RushHour />} />
           <Route path="menu-categories" element={<MenuCategoriesPage />} />
           <Route path="status" element={<RestaurantStatus />} />

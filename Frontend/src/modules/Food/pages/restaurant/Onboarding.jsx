@@ -30,6 +30,11 @@ import { OnboardingSkeleton } from "@food/components/ui/loading-skeletons"
 import OnboardingExitModal from "@/shared/components/OnboardingExitModal"
 import useOnboardingExitGuard from "@/shared/hooks/useOnboardingExitGuard"
 import { collectFcmTokenForSignup, persistModuleFcmToken, syncPendingPartnerFcmQuick, clearOnboardingFcmLocal, prefetchModuleFcmToken } from "@food/utils/firebaseMessaging"
+import {
+  getOnboardingIntent,
+  clearOnboardingIntent,
+  setActiveWorkspace,
+} from "@/shared/partner/partnerSession"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -66,6 +71,19 @@ async function finalizeRestaurantPendingSubmission(navigate, phone, fcmOptions =
     try {
       persistModuleFcmToken("restaurant", { fcmToken, platform }).catch(() => {})
     } catch {}
+  }
+
+  /*
+   * A partner who chose "both" carries on into the stay half rather than
+   * stopping at the pending screen. The hotel account was already created on
+   * the chooser — the signup ticket only lives ten minutes and this wizard
+   * takes longer — so the session for it is already in hand.
+   */
+  if (getOnboardingIntent() === "both") {
+    clearOnboardingIntent()
+    setActiveWorkspace("hotel")
+    navigate("/hotel/partner/join", { replace: true })
+    return
   }
 
   navigate("/food/restaurant/pending-verification", {
