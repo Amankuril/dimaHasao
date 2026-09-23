@@ -70,6 +70,32 @@ const hasUsableName = (account) => {
     return Boolean(name) && name !== 'null';
 };
 
+/*
+ * The restaurant pieces below are exported because the combined partner login
+ * (modules/partner) issues a restaurant session alongside a hotel one. Food
+ * keeps owning the lookup and the token shape; the other module borrows them
+ * rather than growing a second copy that can drift.
+ *
+ * Note the phone match is deliberately loose: ownerPhone is stored digits-only
+ * but older rows carry a country code, hence the trailing-digits regex.
+ */
+export const findRestaurantByOwnerPhone = (phone) =>
+    FoodRestaurant.findOne({
+        $or: [{ ownerPhone: phone }, { ownerPhone: { $regex: new RegExp(`${phone}$`) } }],
+    });
+
+/** The restaurant half of a session: access + refresh tokens and the document. */
+export const issueRestaurantSession = async (restaurant, ctx) => {
+    await saveFcmToken(FoodRestaurant, restaurant, ctx);
+
+    const payload = { userId: restaurant._id.toString(), role: ROLES.RESTAURANT };
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+    await persistRefreshToken(restaurant._id, refreshToken);
+
+    return { accessToken, refreshToken, user: restaurant };
+};
+
 export const registerFoodAuthAudiences = () => {
     // ── Consumer super-app ────────────────────────────────────────────────
     registerAuthAudience({
@@ -145,11 +171,14 @@ export const registerFoodAuthAudiences = () => {
         otpScope: 'restaurant',
         onNewAccount: NEXT_STEP.ONBOARDING,
 
-        findAccount: (phone) =>
-            FoodRestaurant.findOne({
-                $or: [{ ownerPhone: phone }, { ownerPhone: { $regex: new RegExp(`${phone}$`) } }],
-            }),
+        findAccount: findRestaurantByOwnerPhone,
 
+        /*
+         * Strict on purpose: this single-app audience refuses anything but an
+         * approved restaurant. The combined partner login applies a looser rule
+         * of its own, because a pending restaurant must not lock its owner out
+         * of an approved hotel.
+         */
         assertCanLogin: (restaurant) => {
             if (restaurant.status && restaurant.status !== 'approved') {
                 throw new AuthError(
@@ -160,16 +189,7 @@ export const registerFoodAuthAudiences = () => {
             }
         },
 
-        issueSession: async (restaurant, ctx) => {
-            await saveFcmToken(FoodRestaurant, restaurant, ctx);
-
-            const payload = { userId: restaurant._id.toString(), role: ROLES.RESTAURANT };
-            const accessToken = signAccessToken(payload);
-            const refreshToken = signRefreshToken(payload);
-            await persistRefreshToken(restaurant._id, refreshToken);
-
-            return { accessToken, refreshToken, user: restaurant };
-        },
+        issueSession: issueRestaurantSession,
     });
 
     // ── Delivery partner app ──────────────────────────────────────────────

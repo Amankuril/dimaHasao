@@ -1,6 +1,7 @@
 import express from 'express';
 import authRoutes from '../core/auth/auth.routes.js';
 import otpAuthRoutes from '../core/auth/otpAuth/otpAuth.routes.js';
+import partnerRoutes from '../modules/partner/routes/partner.routes.js';
 import { registerAllAuthAudiences } from '../core/auth/otpAuth/registerAudiences.js';
 import { registerHotelNotificationOwners } from '../modules/hotel/notifications/owners.js';
 import deliveryRoutes from '../modules/food/delivery/routes/delivery.routes.js';
@@ -57,6 +58,7 @@ registerAllAuthAudiences();
 // for its operators — single-vendor tours have no owner to notify.
 registerHotelNotificationOwners();
 router.use('/v1/auth/otp', otpAuthRoutes);
+router.use('/v1/partner', partnerRoutes);
 router.use('/v1/food/delivery', deliveryRoutes);
 router.use('/v1/food/restaurant', restaurantRoutes);
 router.use('/v1/food', landingRoutes);
