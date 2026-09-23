@@ -1,5 +1,5 @@
 import express from 'express';
-import { upload } from '../../../../middleware/upload.js';
+import { uploadDocuments } from '../../../../middleware/upload.js';
 import { authMiddleware } from '../../../../core/auth/auth.middleware.js';
 import { requireRoles } from '../../../../core/roles/role.middleware.js';
 import * as orderController from '../../orders/controllers/order.controller.js';
@@ -7,7 +7,7 @@ import { registerDeliveryPartnerController, updateDeliveryPartnerProfileControll
 
 const router = express.Router();
 
-const uploadFields = upload.fields([
+const uploadFields = uploadDocuments.fields([
     { name: 'profilePhoto', maxCount: 1 },
     { name: 'aadharPhoto', maxCount: 1 },
     { name: 'panPhoto', maxCount: 1 },

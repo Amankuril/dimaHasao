@@ -1,5 +1,5 @@
 import express from 'express';
-import { upload } from '../../../../middleware/upload.js';
+import { upload, uploadGallery } from '../../../../middleware/upload.js';
 import {
     listHeroBannersController,
     uploadHeroBannersController,
@@ -71,7 +71,7 @@ router.get('/referral-settings', getPublicReferralSettingsController);
 router.get('/hero-banners', listHeroBannersController);
 router.post(
     '/hero-banners/multiple',
-    upload.array('files'),
+    uploadGallery.array('files'),
     uploadHeroBannersController
 );
 router.delete('/hero-banners/:id', deleteHeroBannerController);
@@ -83,7 +83,7 @@ router.patch('/hero-banners/:id/link-restaurants', linkRestaurantsToHeroBannerCo
 router.get('/hero-banners/under-250', listUnder250BannersController);
 router.post(
     '/hero-banners/under-250/multiple',
-    upload.array('files'),
+    uploadGallery.array('files'),
     uploadUnder250BannersController
 );
 router.delete('/hero-banners/under-250/:id', deleteUnder250BannerController);
@@ -94,7 +94,7 @@ router.patch('/hero-banners/under-250/:id/status', toggleUnder250BannerStatusCon
 router.get('/hero-banners/dining', listDiningBannersController);
 router.post(
     '/hero-banners/dining/multiple',
-    upload.array('files'),
+    uploadGallery.array('files'),
     uploadDiningBannersController
 );
 router.delete('/hero-banners/dining/:id', deleteDiningBannerController);

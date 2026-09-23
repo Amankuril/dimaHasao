@@ -1,5 +1,5 @@
 import express from 'express';
-import { upload } from '../../../../middleware/upload.js';
+import { upload, uploadGallery, uploadOnboarding } from '../../../../middleware/upload.js';
 import { FoodRestaurant } from '../models/restaurant.model.js';
 import {
     registerRestaurantController,
@@ -93,7 +93,7 @@ const requireApprovedRestaurant = async (req, res, next) => {
     }
 };
 
-const uploadFields = upload.fields([
+const uploadFields = uploadOnboarding.fields([
     { name: 'profileImage', maxCount: 1 },
     { name: 'panImage', maxCount: 1 },
     { name: 'gstImage', maxCount: 1 },
@@ -176,7 +176,7 @@ router.post(
     '/profile/cover-images',
     authMiddleware,
     requireApprovedRestaurant,
-    upload.array('files', 20),
+    uploadGallery.array('files', 20),
     async (req, res, next) => {
         await invalidateCache('restaurant_detail:*');
         next();
@@ -187,7 +187,7 @@ router.post(
     '/profile/menu-images',
     authMiddleware,
     requireApprovedRestaurant,
-    upload.array('files', 20),
+    uploadGallery.array('files', 20),
     async (req, res, next) => {
         await invalidateCache('restaurant_menu:*');
         next();
