@@ -26,6 +26,28 @@ import {
   WORKSPACE_HOME,
 } from './partnerSession';
 
+/*
+ * Screens this has no business appearing on.
+ *
+ * Signing in, verifying a code or working through an onboarding wizard is a
+ * single-purpose flow: there is either no session to switch with yet, or
+ * jumping to the other dashboard mid-wizard would throw away what has been
+ * filled in. The control belongs on the dashboards and the pages under them.
+ */
+const FLOW_SCREENS = [
+  '/login',
+  '/otp',
+  '/signup',
+  '/forgot-password',
+  '/pending-verification',
+  '/onboarding',
+  '/add-hotel',
+  '/partner/join',
+];
+
+const isFlowScreen = (pathname = '') =>
+  FLOW_SCREENS.some((fragment) => String(pathname).includes(fragment));
+
 const POSITION_KEY = 'partner_switcher_position';
 
 /** Below this, the pointer never left the button and it counts as a tap. */
@@ -59,6 +81,7 @@ export default function PartnerWorkspaceSwitcher() {
   const [dragging, setDragging] = useState(false);
 
   const both = hasBothProfiles();
+  const show = both && !isFlowScreen(location.pathname);
 
   /** Keep the pill fully on screen, whatever the viewport does. */
   const clamp = useCallback((x, y) => {
@@ -79,7 +102,7 @@ export default function PartnerWorkspaceSwitcher() {
 
   // Place it once the button has a measurable size: stored spot, else bottom right.
   useEffect(() => {
-    if (!both) return undefined;
+    if (!show) return undefined;
 
     const place = () => {
       const node = nodeRef.current;
@@ -99,9 +122,9 @@ export default function PartnerWorkspaceSwitcher() {
     window.addEventListener('resize', place);
 
     return () => window.removeEventListener('resize', place);
-  }, [both, clamp, applyPosition]);
+  }, [show, clamp, applyPosition]);
 
-  if (!both) return null;
+  if (!show) return null;
 
   const active = location.pathname.startsWith('/hotel')
     ? WORKSPACE.HOTEL

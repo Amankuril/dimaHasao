@@ -1,6 +1,9 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { isModuleAuthenticated } from "@food/utils/auth";
 
+/** Screens a restaurant may reach before an admin has approved it. */
+const ALLOWED_BEFORE_APPROVAL = ["/food/restaurant/add-hotel"];
+
 /**
  * Role-based Protected Route Component
  * Only allows access if user is authenticated for the specific module
@@ -22,12 +25,23 @@ export default function ProtectedRoute({ children, requiredRole, loginPath = "/l
 
   // Intercept restaurant status
   if (requiredRole === "restaurant") {
+    /*
+     * Setting up the stay is reachable before approval. The combined "both"
+     * signup lands there straight after registering, when the restaurant
+     * cannot be anything but pending — bouncing it to the pending screen would
+     * end the signup halfway through. Banned and deleted accounts are still
+     * stopped below; those are account problems, not review states.
+     */
+    const allowedBeforeApproval = ALLOWED_BEFORE_APPROVAL.some((route) =>
+      location.pathname.startsWith(route),
+    );
+
     const userStr = localStorage.getItem("restaurant_user");
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
         const status = String(user?.status || "").toLowerCase();
-        if (status === "pending" || status === "rejected") {
+        if ((status === "pending" || status === "rejected") && !allowedBeforeApproval) {
           if (status === "rejected") {
             const msg = user.rejectionReason
               ? `Your restaurant registration has been rejected. Reason: ${user.rejectionReason}`
