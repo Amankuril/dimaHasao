@@ -3,6 +3,7 @@ import authRoutes from '../core/auth/auth.routes.js';
 import otpAuthRoutes from '../core/auth/otpAuth/otpAuth.routes.js';
 import partnerRoutes from '../modules/partner/routes/partner.routes.js';
 import { registerAllAuthAudiences } from '../core/auth/otpAuth/registerAudiences.js';
+import { enforceAdminFeatureAccess } from '../core/admin/adminFeatureAccess.middleware.js';
 import { registerHotelNotificationOwners } from '../modules/hotel/notifications/owners.js';
 import deliveryRoutes from '../modules/food/delivery/routes/delivery.routes.js';
 import restaurantRoutes from '../modules/food/restaurant/routes/restaurant.routes.js';
@@ -77,7 +78,7 @@ router.use('/v1/platform', platformPublicRouter);
 router.use('/v1/support', consumerSupportRouter);
 router.use('/v1/festivals', festivalsRouter);
 
-router.use('/v1/food/admin', authMiddleware, requireRoles('ADMIN', 'SUB_ADMIN'), restaurantAdminRoutes);
+router.use('/v1/food/admin', authMiddleware, requireRoles('ADMIN', 'SUB_ADMIN'), enforceAdminFeatureAccess('food'), restaurantAdminRoutes);
 router.use('/v1/food/user', authMiddleware, requireRoles('USER'), userRoutes);
 router.use('/v1/food/cart', authMiddleware, requireRoles('USER'), foodCartRoutes);
 router.use('/v1/food/notifications', authMiddleware, requireRoles('USER', 'RESTAURANT', 'DELIVERY_PARTNER'), notificationRoutes);

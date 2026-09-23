@@ -8,6 +8,7 @@ import supportRoutes from './supportRoutes.js';
 import reviewRoutes from './reviewRoutes.js';
 import paymentRoutes from './paymentRoutes.js';
 import adminRoutes from './adminRoutes.js';
+import { enforceAdminFeatureAccess } from '../../../core/admin/adminFeatureAccess.middleware.js';
 
 /**
  * Tours & Travels.
@@ -28,6 +29,6 @@ toursRouter.use('/offers', offerRoutes);
 toursRouter.use('/support', supportRoutes);
 toursRouter.use('/reviews', reviewRoutes);
 toursRouter.use('/payments', paymentRoutes);
-toursRouter.use('/admin', adminRoutes);
+toursRouter.use('/admin', enforceAdminFeatureAccess('tours'), adminRoutes);
 
 export default toursRouter;

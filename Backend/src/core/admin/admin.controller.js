@@ -9,6 +9,12 @@
  */
 import { FoodAdmin } from './admin.model.js';
 import {
+  FEATURE_ACTIONS,
+  deriveLegacyPermissions,
+  listAdminFeatures,
+  normalizeFeaturePermissions,
+} from './adminFeatures.js';
+import {
   ADMIN_LEVELS,
   ADMIN_MODULES,
   ALL_ADMIN_MODULES,
@@ -85,6 +91,10 @@ export const getAdminMeta = async (_req, res) => {
     levels: Object.values(ADMIN_LEVELS),
     modules: ALL_ADMIN_MODULES,
     moduleSuperadminLevels: MODULE_SUPERADMIN_LEVELS,
+    // The permission checkboxes come from here rather than a second list in
+    // the frontend that would drift the first time a feature is added.
+    features: listAdminFeatures(),
+    featureActions: FEATURE_ACTIONS,
   });
 };
 
@@ -121,11 +131,20 @@ const readScope = (body = {}) => {
   if (module && !ALL_ADMIN_MODULES.includes(module)) {
     return { error: 'Unknown module' };
   }
-  if (level === ADMIN_LEVELS.SUBADMIN && !module) {
-    return { error: 'A subadmin needs a module' };
+  /*
+   * A subadmin is scoped by servicesAccess, which is a list — one admin can
+   * hold taxi and hotel at once. `module` stays for the single-module case the
+   * hierarchy still reads (resolveAdminModule), and is left null otherwise.
+   */
+  if (level === ADMIN_LEVELS.SUBADMIN && !module && services.length === 0) {
+    return { error: 'A subadmin needs at least one module' };
   }
 
-  return { level, services, module: module || null };
+  return {
+    level,
+    services,
+    module: module || (services.length === 1 ? services[0] : null),
+  };
 };
 
 /** @route POST /v1/admin/administrators */
@@ -145,6 +164,8 @@ export const createAdministrator = async (req, res) => {
     const scope = readScope(req.body);
     if (scope.error) return res.status(400).json({ success: false, message: scope.error });
 
+    const grants = normalizeFeaturePermissions(req.body.featurePermissions);
+
     const admin = await FoodAdmin.create({
       email,
       password, // hashed by the schema's pre-save hook
@@ -155,6 +176,12 @@ export const createAdministrator = async (req, res) => {
       module: scope.module,
       servicesAccess: scope.services.length ? scope.services : [ADMIN_MODULES.FOOD],
       admin_type: scope.level === ADMIN_LEVELS.SUBADMIN ? 'subadmin' : 'superadmin',
+      // Without this a subadmin was created with a module and no features —
+      // able to reach the panel and nothing inside it.
+      featurePermissions: grants,
+      // Taxi's admin services still read the older string permissions, so the
+      // same access is written in both vocabularies from one source.
+      permissions: deriveLegacyPermissions(grants),
       parentAdminId: req.admin._id,
       isActive: true,
       active: true,
@@ -198,6 +225,14 @@ export const updateAdministrator = async (req, res) => {
       }
       if (req.body.module !== undefined) admin.module = scope.module;
       if (req.body.servicesAccess !== undefined) admin.servicesAccess = scope.services;
+    }
+
+    if (req.body.featurePermissions !== undefined) {
+      const grants = normalizeFeaturePermissions(req.body.featurePermissions);
+      admin.featurePermissions = grants;
+      admin.permissions = deriveLegacyPermissions(grants);
+      // Mixed paths are not tracked by Mongoose unless it is told.
+      admin.markModified('featurePermissions');
     }
 
     if (req.body.isActive !== undefined) {

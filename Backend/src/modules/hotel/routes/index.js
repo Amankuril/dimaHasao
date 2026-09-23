@@ -3,6 +3,7 @@ import { Router } from 'express';
 import authRoutes from './authRoutes.js';
 import userRoutes from './userRoutes.js';
 import adminRoutes from './adminRoutes.js';
+import { enforceAdminFeatureAccess } from '../../../core/admin/adminFeatureAccess.middleware.js';
 import offerRoutes from './offerRoutes.js';
 import walletRoutes from './walletRoutes.js';
 import propertyRoutes from './propertyRoutes.js';
@@ -23,7 +24,7 @@ export const hotelRouter = Router();
 // have their own OTP login, separate from the consumer login.
 hotelRouter.use('/auth', authRoutes);
 hotelRouter.use('/users', userRoutes);
-hotelRouter.use('/admin', adminRoutes);
+hotelRouter.use('/admin', enforceAdminFeatureAccess('hotel'), adminRoutes);
 hotelRouter.use('/offers', offerRoutes);
 hotelRouter.use('/wallet', walletRoutes);
 hotelRouter.use('/properties', propertyRoutes);

@@ -65,6 +65,21 @@ const adminSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
+        /*
+         * Per-module, per-feature grants:
+         *   { 'food.orders': { view: true, edit: true } }
+         *
+         * Deliberately a second field rather than a richer `permissions`.
+         * That one is an array of strings and the whole hierarchy reads it as
+         * one — expandLegacyPermissions, permissionsIncludeAll,
+         * hasResourcePermission and so canManageAdmins. The food sub-admin
+         * feature tried to write a nested object into it and every create threw
+         * `Cast to [string] failed`, which is why it never worked.
+         */
+        featurePermissions: {
+            type: mongoose.Schema.Types.Mixed,
+            default: () => ({}),
+        },
         isActive: {
             type: Boolean,
             default: true
