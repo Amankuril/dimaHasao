@@ -710,18 +710,45 @@ export const cancelBooking = async (req, res) => {
 
     // 1. Refund User (If paid)
     if (booking.paymentStatus === 'paid') {
-      let userWallet = await Wallet.findOne({ partnerId: booking.userId, role: 'user' });
+      // A Razorpay-paid booking only had its commission reversed here — the
+      // guest's money never actually came back, because nothing called the
+      // real refund (POST /api/payments/refund/:bookingId, processRefund in
+      // paymentController.js). Wallet-credit refunds are only correct when
+      // the booking was paid FROM the wallet in the first place, since then
+      // the money never left the platform.
+      const isGatewayPayment = ['razorpay', 'online'].includes(String(booking.paymentMethod || '').toLowerCase())
+        && booking.paymentId;
 
-      // Auto-create wallet if it doesn't exist
-      if (!userWallet) {
-        userWallet = await Wallet.create({
-          partnerId: booking.userId,
-          role: 'user',
-          balance: 0
-        });
+      let refundedViaGateway = false;
+      if (isGatewayPayment) {
+        try {
+          const instance = getRazorpayClient();
+          await instance.payments.refund(booking.paymentId, {
+            amount: Math.round(booking.totalAmount * 100),
+            notes: { reason: booking.cancellationReason, bookingId: booking._id.toString() },
+          });
+          booking.paymentStatus = 'refunded';
+          await booking.save();
+          refundedViaGateway = true;
+        } catch (err) {
+          console.error('Razorpay refund failed during booking cancellation:', err.message);
+        }
       }
 
-      await userWallet.credit(booking.totalAmount, `Refund for Booking #${booking.bookingId}`, booking.bookingId, 'refund');
+      if (!refundedViaGateway) {
+        let userWallet = await Wallet.findOne({ partnerId: booking.userId, role: 'user' });
+
+        // Auto-create wallet if it doesn't exist
+        if (!userWallet) {
+          userWallet = await Wallet.create({
+            partnerId: booking.userId,
+            role: 'user',
+            balance: 0
+          });
+        }
+
+        await userWallet.credit(booking.totalAmount, `Refund for Booking #${booking.bookingId}`, booking.bookingId, 'refund');
+      }
     }
 
     // 2. Deduct Partner (If payout was credited)

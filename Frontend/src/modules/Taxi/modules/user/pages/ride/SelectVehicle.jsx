@@ -1392,12 +1392,17 @@ const SelectVehicle = () => {
         );
 
         do {
+          // No zone_id filter here: the backend's zone_id filter excludes any
+          // service-location-scoped price row (zone_id: null), which is how
+          // every real tariff in this DB is set up. findBestPricingRule()
+          // below already does zone > service-location > generic matching
+          // client-side, so filtering server-side by zone just drops the
+          // correct row and pushes every fare onto the ₹22/₹40/... fallback.
           const response = await api.get('/users/set-prices', {
             params: {
               scope: 'ride',
               page,
               limit: 100,
-              ...(zoneId ? { zone_id: zoneId } : {}),
               ...(pricingTransportType ? { transport_type: pricingTransportType } : {}),
             },
           });

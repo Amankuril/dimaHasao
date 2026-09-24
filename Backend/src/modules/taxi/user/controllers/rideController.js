@@ -447,6 +447,41 @@ export const updateRideStatus = async (req, res) => {
     console.error('Failed to emit status update socket event from controller:', socketError);
   }
 
+  // Ride completion settles commission/earnings into the driver's wallet
+  // (settleCompletedRideWallet), but nothing ever told the driver it happened.
+  // A cash ride's commission deduction can push the wallet below the minimum
+  // balance and flip wallet.isBlocked to true server-side, silently dropping
+  // the driver from dispatch with no client-visible signal. Emit the same
+  // driver:wallet:updated event other wallet-affecting flows already use so
+  // DriverHome's wallet banner and low-balance modal pick it up immediately.
+  const walletUpdate = ride?.$locals?.walletUpdate;
+  if (walletUpdate?.transaction) {
+    const { transaction, wallet } = walletUpdate;
+    const isCommissionDeduction = transaction.type === 'commission_deduction';
+    const title = isCommissionDeduction ? 'Commission deducted' : 'Ride earning credited';
+    const amountLabel = Math.abs(Number(transaction.amount || 0)).toFixed(2);
+    const bodyParts = [
+      isCommissionDeduction
+        ? `Rs ${amountLabel} commission deducted for this ride.`
+        : `Rs ${amountLabel} credited for this ride.`,
+    ];
+
+    if (wallet?.isBlocked) {
+      bodyParts.push(`Wallet balance is Rs ${Number(wallet.balance || 0).toFixed(2)}, below the Rs ${Number(wallet.minimumBalanceForOrders || 0).toFixed(2)} minimum. Top up to keep receiving ride requests.`);
+    }
+
+    emitToDriver(ride.driverId, 'driver:wallet:updated', {
+      wallet,
+      transaction,
+      notification: {
+        id: `ride-complete-wallet-${String(ride._id)}`,
+        title,
+        body: bodyParts.join(' '),
+        sentAt: new Date().toISOString(),
+      },
+    });
+  }
+
   res.json({
     success: true,
     data: serializeRideRealtime(ride),
