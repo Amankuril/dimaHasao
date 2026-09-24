@@ -18,11 +18,26 @@ import {
  * superadmin, and to a subadmin scoped to it. A profile with no adminLevel at
  * all is a legacy session — show everything rather than locking it out.
  */
-export const canSeeAdminModule = (profile = {}, moduleKey) =>
-  profile.adminLevel === 'platform_superadmin' ||
-  profile.adminLevel === `${moduleKey}_superadmin` ||
-  (profile.adminLevel === 'subadmin' && profile.module === moduleKey) ||
-  !profile.adminLevel
+export const canSeeAdminModule = (profile = {}, moduleKey) => {
+  if (!profile.adminLevel) return true
+  if (profile.adminLevel === 'platform_superadmin') return true
+  if (profile.adminLevel === `${moduleKey}_superadmin`) return true
+
+  if (profile.adminLevel === 'subadmin') {
+    /*
+     * A subadmin can hold several modules at once, and then `module` is null —
+     * servicesAccess is the list. Matching on `module` alone showed a
+     * multi-module subadmin no module tabs at all, so they could be granted
+     * food and tours and still have nowhere to go but their own profile.
+     * `module` is still honoured for one scoped to a single module.
+     */
+    const services = Array.isArray(profile.servicesAccess) ? profile.servicesAccess : []
+    if (services.length) return services.includes(moduleKey)
+    return profile.module === moduleKey
+  }
+
+  return false
+}
 
 /** In the order the sidebar lists them, so the landing page matches the first tab. */
 const MODULE_HOMES = [
