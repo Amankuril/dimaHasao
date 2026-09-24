@@ -1,6 +1,13 @@
 import express from 'express';
 import DistrictSettings from './platformSettings.model.js';
 import LegalDocument from '../legal/legalDocument.model.js';
+import {
+    readModuleToggles,
+    writeModuleToggles,
+    TOGGLEABLE_MODULES,
+    MODULE_LABELS,
+    DEFAULT_MAINTENANCE_MESSAGE,
+} from './moduleToggles.service.js';
 
 /**
  * Reading is public. Sign-in screens show the brand and the policy links
@@ -104,3 +111,49 @@ platformAdminRouter.put('/', async (req, res) => {
 });
 
 export default { platformPublicRouter, platformAdminRouter };
+
+
+/**
+ * @route GET /v1/platform/module-toggles
+ *
+ * Public on purpose: the consumer app has to know a module is closed before
+ * anyone signs in, and the maintenance screen is shown to signed-out visitors
+ * too.
+ */
+platformPublicRouter.get('/module-toggles', async (_req, res) => {
+    const toggles = await readModuleToggles();
+
+    res.json({
+        success: true,
+        modules: TOGGLEABLE_MODULES,
+        labels: MODULE_LABELS,
+        defaultMessage: DEFAULT_MAINTENANCE_MESSAGE,
+        toggles,
+    });
+});
+
+/** @route GET /v1/admin/platform/module-toggles */
+platformAdminRouter.get('/module-toggles', async (_req, res) => {
+    const toggles = await readModuleToggles();
+
+    res.json({
+        success: true,
+        modules: TOGGLEABLE_MODULES,
+        labels: MODULE_LABELS,
+        defaultMessage: DEFAULT_MAINTENANCE_MESSAGE,
+        toggles,
+    });
+});
+
+/** @route PATCH /v1/admin/platform/module-toggles  { updates: [{module, enabled, message}] } */
+platformAdminRouter.patch('/module-toggles', async (req, res) => {
+    const updates = Array.isArray(req.body?.updates) ? req.body.updates : [];
+
+    if (!updates.length) {
+        return res.status(400).json({ success: false, message: 'Nothing to update' });
+    }
+
+    const toggles = await writeModuleToggles(updates, req.admin?._id || null);
+
+    return res.json({ success: true, message: 'Toggles updated', toggles });
+});

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { enforceModuleAvailability } from '../../../core/platform/moduleAvailability.middleware.js';
 
 import destinationRoutes from './destinationRoutes.js';
 import packageRoutes from './packageRoutes.js';
@@ -22,6 +23,7 @@ export const toursRouter = Router();
 
 toursRouter.get('/health', (_req, res) => res.json({ success: true, module: 'tours' }));
 
+toursRouter.use(enforceModuleAvailability('tours'));
 toursRouter.use('/destinations', destinationRoutes);
 toursRouter.use('/packages', packageRoutes);
 toursRouter.use('/bookings', bookingRoutes);

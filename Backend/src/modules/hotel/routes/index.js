@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { enforceModuleAvailability } from '../../../core/platform/moduleAvailability.middleware.js';
 
 import authRoutes from './authRoutes.js';
 import userRoutes from './userRoutes.js';
@@ -22,6 +23,7 @@ export const hotelRouter = Router();
 
 // Partner (hotel vendor) auth — mirrors how food's restaurant/delivery vendors
 // have their own OTP login, separate from the consumer login.
+hotelRouter.use(enforceModuleAvailability('hotel'));
 hotelRouter.use('/auth', authRoutes);
 hotelRouter.use('/users', userRoutes);
 hotelRouter.use('/admin', enforceAdminFeatureAccess('hotel'), adminRoutes);

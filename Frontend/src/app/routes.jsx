@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import ModuleAvailabilityGate from '@/shared/components/ModuleAvailabilityGate';
 import { Suspense, lazy, useEffect } from 'react'
 import {
   NATIVE_LAST_ROUTE_KEY,
@@ -202,6 +203,10 @@ const AppRoutes = () => {
       {/* Food ↔ Taxi admin: keep both shells mounted after first visit (instant hide/show). */}
       <AdminModulesKeepAlive />
 
+      {/* A module switched off in Toggle Management shows the maintenance
+          screen for its whole route tree. Wrapping the router rather than each
+          module means a path nobody thought to gate is covered too. */}
+      <ModuleAvailabilityGate>
       <Routes>
         {/* Root lands on the client-approved Dima Hasao customer app. The
             Hello-Parth consumer shells stay reachable at /food/* and /taxi/*. */}
@@ -236,6 +241,7 @@ const AppRoutes = () => {
         <Route path="/orders/*" element={<RedirectToFood />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </ModuleAvailabilityGate>
     </>
   )
 }
