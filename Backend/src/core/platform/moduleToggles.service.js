@@ -27,7 +27,7 @@ export const MODULE_LABELS = {
     food: 'Food',
     taxi: 'Taxi & Auto',
     hotel: 'Hotels & Stays',
-    tours: 'Tourism & Travels',
+    tours: 'Tour Packages',
     places: 'Places',
 };
 

@@ -33,7 +33,16 @@ const MODULE_PATHS = [
   ['food', ['/food', '/app/food']],
   ['taxi', ['/taxi', '/app/book-ride']],
   ['hotel', ['/hotel', '/app/hotels']],
-  ['tours', ['/tours', '/app/packages', '/app/festivals']],
+  /*
+   * Packages are the tours module's own consumer surface — /app/packages reads
+   * /v1/tours/packages — so closing tours has to close them, or the screen
+   * stays up over an API that is already refusing.
+   *
+   * Festivals are deliberately NOT here. They look adjacent and share an admin
+   * section, but they are their own module on /v1/festivals: closing tours left
+   * that API serving while the screen claimed maintenance.
+   */
+  ['tours', ['/tours', '/app/packages']],
   ['places', ['/app/places']],
 ];
 
