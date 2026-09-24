@@ -174,19 +174,19 @@ export const HomeScreen = () => {
       <main className="space-y-4 pt-3" data-purpose="main-content">
         {/* Primary 4 Categories Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 px-3" data-purpose="primary-categories">
-          {/* Swapped with the Travel Packages quick-link on 2026-09-15: tour
-              packages are the bookable product, so they take the prime slot
-              and the destination directory moves to the quick-link row. */}
+          {/* Swapped back with the quick-link row on 2026-09-24: the district's
+              places are what a visitor comes looking for first, so they take
+              the prime slot and packages move to the quick links. */}
           <CategoryCard
-            title="TOUR PACKAGES"
-            subtitle={`Guided Treks &\nCurated Journeys`}
-            icon="fa-solid fa-suitcase-rolling"
+            title="TOURIST PLACES"
+            subtitle={`Scenic Spots &\nHidden Trails`}
+            icon="fa-solid fa-location-dot"
             image="https://lh3.googleusercontent.com/aida-public/AB6AXuDNCBOtk-v5CpAuzZ1kd7mndMkJZKKwMy00a2zicQ0HpEEfpw427eAibYCSi2nD2wHFUkrbD1pzwIzejGOFn5WqC6zu_oE1z2PO5Z2B1LMuzEvrGDcapXZ2xU8jST_VXGR9TxKd25HsrNfffLqEY_Xm1289lDT9d4F7I68sPPhKOmC33cLzcrcIo7RfCXTsf-KCLrE92u-ebldONSuUSfat64_5N4AFn8Z0bfjeYXSmC8Y2I5u8t3g1"
-            buttonText="View Packages"
+            buttonText="Explore Places"
             buttonBg="bg-[#044e29]"
             gradientClass="bg-gradient-to-b from-[#10b981] via-[#059669] to-[#044e29]"
             topOverlayColor="from-[#059669]"
-            onClick={() => navigate('/packages')}
+            onClick={() => navigate('/places')}
           />
 
           <CategoryCard

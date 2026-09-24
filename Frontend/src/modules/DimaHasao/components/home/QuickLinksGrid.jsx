@@ -25,10 +25,12 @@ export const QuickLinksGrid = () => {
       bg: 'bg-[#F97316]'
     },
     {
-      // Swapped with the big TOUR PACKAGES category card on 2026-09-15.
-      id: 'places',
-      label: 'Tourist\nPlaces',
-      icon: 'fa-solid fa-location-dot',
+      // Swapped back with the big category card on 2026-09-24: tourist places
+      // took the prime slot, so packages sit here. The slot keeps its colour;
+      // only what it points at changed.
+      id: 'packages',
+      label: 'Tour\nPackages',
+      icon: 'fa-solid fa-suitcase-rolling',
       color: 'text-white',
       bg: 'bg-[#3B82F6]'
     },
@@ -89,8 +91,8 @@ export const QuickLinksGrid = () => {
               onClick={() => {
                 if (item.id === 'events') {
                   navigate('/festivals');
-                } else if (item.id === 'places') {
-                  navigate('/places');
+                } else if (item.id === 'packages') {
+                  navigate('/packages');
                 } else if (item.id === 'food') {
                   hostNavigate('/food/user');
                 } else {
