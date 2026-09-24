@@ -36,8 +36,32 @@ const legalHref = (slug, module) =>
  * @param {string}  [props.className] wrapper classes, so each screen keeps its
  *                                    own palette
  * @param {string}  [props.linkClassName]
+ * @param {'text'|'icons'} [props.variant] 'text' (default) renders the
+ *                                    Privacy • Terms • Support line; 'icons'
+ *                                    renders the same three, gated the same
+ *                                    way, as icon buttons for a footer row.
+ * @param {string}  [props.iconWrapClassName] icon-variant only: classes for
+ *                                    the circle behind each icon
+ * @param {string}  [props.iconClassName]     icon-variant only: classes for
+ *                                    the <i> icon itself
+ * @param {string}  [props.labelClassName]    icon-variant only: classes for
+ *                                    the label under each icon
  */
-export default function AuthLegalLinks({ module = 'platform', className = '', linkClassName = '' }) {
+const ICON_BY_KEY = {
+  privacy: 'fa-solid fa-lock',
+  terms: 'fa-solid fa-file-contract',
+  support: 'fa-solid fa-headset',
+};
+
+export default function AuthLegalLinks({
+  module = 'platform',
+  className = '',
+  linkClassName = '',
+  variant = 'text',
+  iconWrapClassName = '',
+  iconClassName = '',
+  labelClassName = '',
+}) {
   const [state, setState] = useState({ legal: { privacy: false, terms: false }, settings: null });
 
   useEffect(() => {
@@ -73,6 +97,27 @@ export default function AuthLegalLinks({ module = 'platform', className = '', li
   ].filter(Boolean);
 
   if (!items.length) return null;
+
+  if (variant === 'icons') {
+    return (
+      <div className={className}>
+        {items.map((item) => (
+          <a
+            key={item.key}
+            href={item.href}
+            target={item.href.startsWith('/legal/') ? '_blank' : undefined}
+            rel="noreferrer"
+            className={linkClassName}
+          >
+            <span className={iconWrapClassName}>
+              <i className={`${ICON_BY_KEY[item.key]} ${iconClassName}`}></i>
+            </span>
+            <span className={labelClassName}>{item.label}</span>
+          </a>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <p className={className}>

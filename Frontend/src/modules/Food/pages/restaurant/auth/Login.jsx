@@ -45,24 +45,17 @@ export default function RestaurantLogin() {
   // Set when a verified number owns neither business, which puts the
   // restaurant/hotel/both chooser on screen instead of a dashboard.
   const [signupToken, setSignupToken] = useState("")
-  const defaultTestPhone =
-    import.meta.env.VITE_USE_DEFAULT_TEST_PHONE === "true"
-      ? String(import.meta.env.VITE_DEFAULT_TEST_PHONE || "").replace(/\D/g, "").slice(0, 10)
-      : ""
 
   const [phone, setPhone] = useState(() => {
     try {
       if (sessionStorage.getItem("restaurantClearLoginPhone") === "1") {
         sessionStorage.removeItem("restaurantClearLoginPhone")
         sessionStorage.removeItem("restaurantLoginPhone")
-        // return ""
-        return defaultTestPhone
+        return ""
       }
-      // return sessionStorage.getItem("restaurantLoginPhone") || ""
-      return sessionStorage.getItem("restaurantLoginPhone") || defaultTestPhone
+      return sessionStorage.getItem("restaurantLoginPhone") || ""
     } catch {
-      // return ""
-      return defaultTestPhone
+      return ""
     }
   })
   const [loading, setLoading] = useState(false)

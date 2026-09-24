@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from '../router';
 import { useBooking } from '../context/BookingContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,18 +7,14 @@ import { setUnifiedAuthData } from '../../../shared/utils/moduleAuth';
 import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo";
 import AuthLegalLinks from '@/shared/components/auth/AuthLegalLinks';
 
-const TEST_PHONE =
-  String(import.meta.env?.VITE_USE_DEFAULT_TEST_PHONE) === 'true'
-    ? String(import.meta.env?.VITE_DEFAULT_TEST_PHONE || '')
-    : '';
-
 const readApiError = (err, fallback) =>
   err?.response?.data?.message || err?.message || fallback;
 
 export const LoginScreen = () => {
-  const [phone, setPhone] = useState(TEST_PHONE);
+  const [phone, setPhone] = useState('');
   const [fullName, setFullName] = useState('');
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '']);
+  const otpInputRefs = useRef([]);
   // 'phone' → 'otp' → 'name' (name step only for unregistered numbers).
   const [step, setStep] = useState('phone');
   const [needsName, setNeedsName] = useState(false);
@@ -27,6 +23,69 @@ export const LoginScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, showToast } = useBooking();
   const navigate = useNavigate();
+
+  // The OTP boxes only exist in the DOM once step becomes 'otp', so autoFocus
+  // on the first box normally covers it — this is the belt-and-braces fallback
+  // for when the card's enter animation delays the box past React's mount.
+  useEffect(() => {
+    if (step !== 'otp') return;
+    const timer = setTimeout(() => otpInputRefs.current[0]?.focus(), 60);
+    return () => clearTimeout(timer);
+  }, [step]);
+
+  const handleOtpChange = (index, value) => {
+    if (value.length > 1) {
+      const digits = value.replace(/\D/g, '').slice(0, 4 - index).split('');
+      if (digits.length > 0) {
+        setOtp((prev) => {
+          const next = [...prev];
+          digits.forEach((digit, i) => {
+            if (index + i < 4) next[index + i] = digit;
+          });
+          return next;
+        });
+        otpInputRefs.current[Math.min(3, index + digits.length)]?.focus();
+      }
+      return;
+    }
+
+    if (value && !/^\d$/.test(value)) return;
+
+    setOtp((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+
+    if (value && index < 3) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+      setOtp((prev) => {
+        const next = [...prev];
+        next[index - 1] = '';
+        return next;
+      });
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4).split('');
+    if (!digits.length) return;
+    setOtp((prev) => {
+      const next = [...prev];
+      digits.forEach((digit, i) => {
+        if (i < 4) next[i] = digit;
+      });
+      return next;
+    });
+    otpInputRefs.current[Math.min(digits.length, 3)]?.focus();
+  };
 
   const finishLogin = (digits, user, message) => {
     login(digits, user);
@@ -56,7 +115,7 @@ export const LoginScreen = () => {
        * one step this screen exists to test is never exercised. The code still
        * arrives by SMS, and in dev it is the fixed one.
        */
-      setOtp('');
+      setOtp(['', '', '', '']);
       setStep('otp');
       showToast('OTP sent to your phone 📱');
     } catch (err) {
@@ -69,7 +128,7 @@ export const LoginScreen = () => {
   const handleVerifyOtp = async (e) => {
     if (e) e.preventDefault();
     const digits = String(phone).replace(/\D/g, '');
-    const code = String(otp).replace(/\D/g, '');
+    const code = otp.join('');
     if (code.length !== 4) {
       showToast('Please enter the 4-digit OTP');
       return;
@@ -128,12 +187,6 @@ export const LoginScreen = () => {
     if (step === 'phone') return handleSendOtp(e);
     if (step === 'otp') return handleVerifyOtp(e);
     return handleCompleteRegistration(e);
-  };
-
-  const handleGuestLogin = () => {
-    login('Guest Explorer');
-    showToast('🌿 Exploring Dima Hasao as Guest');
-    navigate('/');
   };
 
   return (
@@ -295,38 +348,41 @@ export const LoginScreen = () => {
                     type="button"
                     onClick={() => {
                       setStep('phone');
-                      setOtp('');
-                      setDevOtp('');
+                      setOtp(['', '', '', '']);
                     }}
-                    className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[#caa83e] text-[10px] hover:underline cursor-pointer"
+                    aria-label="Edit phone number"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#caa83e] hover:text-[#efc04c] transition-colors cursor-pointer"
                   >
-                    Edit
+                    <i className="fa-solid fa-pen text-[11px]"></i>
                   </button>
                 )}
               </div>
             )}
 
-            {/* OTP Input */}
+            {/* OTP Input — four boxes, first one auto-focused as soon as this
+                step mounts so the digits can be typed straight away. */}
             {step === 'otp' && (
               <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="space-y-1"
+                className="space-y-2"
               >
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <i className="fa-solid fa-shield-halved text-[#caa83e] text-[13px]"></i>
-                  </div>
-                  <input
-                    id="otp"
-                    name="otp"
-                    type="text"
-                    maxLength={4}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter 4-Digit OTP"
-                    className="block w-full pl-10 pr-3 h-12 border border-[#caa83e] rounded-xl bg-[#02130a] text-amber-300 font-mono font-black tracking-[0.45em] text-center focus:outline-none focus:ring-1 focus:ring-[#caa83e] text-lg transition-all"
-                  />
+                <div className="flex items-center justify-center gap-2.5">
+                  {[0, 1, 2, 3].map((index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (otpInputRefs.current[index] = el)}
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={1}
+                      autoFocus={index === 0}
+                      value={otp[index]}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={index === 0 ? handleOtpPaste : undefined}
+                      className="h-12 w-12 rounded-xl border border-[#caa83e] bg-[#02130a] text-center text-lg font-mono font-black text-amber-300 outline-none transition-all focus:ring-1 focus:ring-[#caa83e]"
+                    />
+                  ))}
                 </div>
                 <div className="flex justify-between items-center text-[11px] px-1 pt-0.5">
                   <span className="text-amber-200/80">Sent to your phone</span>
@@ -363,23 +419,22 @@ export const LoginScreen = () => {
             </motion.button>
           </form>
 
-          <div className="mt-2.5 relative z-10">
-            {/* Quick Guest Bypass */}
-            <div className="mt-0.5 text-center">
-              <motion.button
-                whileHover={{ x: 2 }}
-                whileTap={{ scale: 0.96 }}
-                type="button"
-                onClick={handleGuestLogin}
-                className="text-[11px] text-emerald-300 hover:text-[#caa83e] transition-colors cursor-pointer font-semibold inline-flex items-center gap-1"
-              >
-                <span>Continue as Guest Explorer →</span>
-              </motion.button>
+          <div className="mt-3.5 relative z-10">
+            {/* Leaf-flanked divider, echoing the card's top border, to give
+                the footer its own space now that it's just the three links. */}
+            <div className="flex items-center justify-center gap-2 opacity-60">
+              <div className="h-px flex-1 max-w-[72px] bg-gradient-to-r from-transparent to-[#caa83e]/70"></div>
+              <i className="fa-solid fa-leaf text-[#caa83e] text-[9px] transform -scale-x-100"></i>
+              <div className="h-px flex-1 max-w-[72px] bg-gradient-to-l from-transparent to-[#caa83e]/70"></div>
             </div>
             <AuthLegalLinks
               module="platform"
-              className="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200/60"
-              linkClassName="transition-colors hover:text-[#caa83e]"
+              variant="icons"
+              className="mt-2.5 flex items-center justify-center gap-6"
+              linkClassName="group flex flex-col items-center gap-1 cursor-pointer"
+              iconWrapClassName="w-9 h-9 rounded-full border border-[#caa83e]/50 bg-[#02130a] flex items-center justify-center text-[#caa83e] transition-all group-hover:bg-[#caa83e]/15 group-hover:border-[#caa83e]"
+              iconClassName="text-[13px]"
+              labelClassName="text-[9px] font-semibold uppercase tracking-[0.1em] text-emerald-200/70 transition-colors group-hover:text-[#caa83e]"
             />
           </div>
         </motion.div>

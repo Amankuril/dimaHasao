@@ -1629,10 +1629,11 @@ const Home = () => {
               <div className={`h-full w-full animate-pulse ${isDark ? 'bg-[#0f172a]' : 'bg-slate-200'}`} />
             )}
 
-            {/* Floating Greeting on Map */}
+            {/* Floating Greeting on Map — SuperAppHomeHeader already carries
+                the wallet button and location pill here; HeaderGreeting's own
+                copies of both (used to render on top of these) are gone. */}
             <div className="absolute top-4 left-0 right-0 z-20">
               <SuperAppHomeHeader activeVertical="taxi" />
-              <HeaderGreeting floating={true} hideSearch={true} />
             </div>
 
             {/* Pickup Address Pill: positioned absolute overlaying map bottom */}
