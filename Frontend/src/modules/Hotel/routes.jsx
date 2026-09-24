@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { isModuleAuthenticated } from '../../shared/utils/moduleAuth';
-import { isPartnerSignedIn } from './utils/partnerAuth';
+import { isPartnerSignedIn, getPartnerUser } from './utils/partnerAuth';
 import PartnerWorkspaceSwitcher from '@/shared/partner/PartnerWorkspaceSwitcher';
 import './app/partner/partnerTheme.css';
 
@@ -48,6 +48,8 @@ const PartnerJoinPropertyType = L(() => import('./app/partner/pages/PartnerJoinP
 const AddHotelWizard = L(() => import('./app/partner/pages/AddHotelWizard'));
 const AddResortWizard = L(() => import('./app/partner/pages/AddResortWizard'));
 const AddHomestayWizard = L(() => import('./app/partner/pages/AddHomestayWizard'));
+const HotelOnboarding = L(() => import('./app/partner/pages/HotelOnboarding'));
+const HotelUnderReview = L(() => import('./app/partner/pages/HotelUnderReview'));
 
 const Fallback = () => <div className="min-h-screen bg-transparent" aria-hidden="true" />;
 
@@ -64,8 +66,25 @@ const RequireAdmin = () =>
  * like being signed out. The check now happens up front, the same way the
  * admin panel does it.
  */
-const RequirePartner = () =>
-  isPartnerSignedIn() ? <Outlet /> : <Navigate to="/food/restaurant/login" replace />;
+/*
+ * A partner who finished the owner-details/KYC step (onboardingComplete)
+ * stays out of the dashboard until an admin approves them, same as
+ * restaurant. Partners created before that step existed have
+ * onboardingComplete unset, so this leaves them exactly as unblocked as they
+ * already were — no retroactive lockout.
+ */
+const RequirePartner = () => {
+  if (!isPartnerSignedIn()) {
+    return <Navigate to="/food/restaurant/login" replace />;
+  }
+
+  const user = getPartnerUser();
+  if (user?.onboardingComplete && user?.partnerApprovalStatus !== 'approved') {
+    return <Navigate to="/hotel/partner/under-review" replace />;
+  }
+
+  return <Outlet />;
+};
 
 /**
  * Paints the whole partner panel in the Dima Hasao palette.
@@ -93,6 +112,10 @@ export default function HotelRoutes() {
           * The route stays because the partner APK deep-links to it.
           */}
         <Route path="partner/login" element={<Navigate to="/food/restaurant/login" replace />} />
+
+        {/* No session yet (fresh signup) or a deliberately unapproved one — both outside the guard, same as restaurant's onboarding/pending-verification pair. */}
+        <Route path="partner/onboarding" element={<HotelOnboarding />} />
+        <Route path="partner/under-review" element={<HotelUnderReview />} />
 
         <Route element={<RequireAdmin />}>
           <Route path="admin" element={<AdminLayout />}>

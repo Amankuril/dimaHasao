@@ -35,7 +35,20 @@ import {
   getOnboardingIntent,
   clearOnboardingIntent,
   setActiveWorkspace,
+  setPartnerProfiles,
+  WORKSPACE,
 } from "@/shared/partner/partnerSession"
+import { setPartnerSession } from "@/modules/Hotel/utils/partnerAuth"
+import { createHotelProfile, submitHotelKyc, fetchPartnerProfiles } from "@/shared/partner/partnerApi"
+import {
+  HotelBusinessFields,
+  HotelDocumentsFields,
+  HOTEL_BUSINESS_DEFAULTS,
+  HOTEL_DOCUMENTS_DEFAULTS,
+  validateHotelBusinessFields,
+  validateHotelDocumentFields,
+  buildHotelKycFormData,
+} from "@/shared/partner/hotelOnboardingFields"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -75,33 +88,14 @@ async function finalizeRestaurantPendingSubmission(navigate, phone, fcmOptions =
   }
 
   /*
-   * A partner who chose "both" carries on into the stay half rather than
-   * stopping at the pending screen, in the order they picked: the restaurant
-   * is done, so the hotel onboarding starts now. Its details are prefilled
-   * from the owner details just collected, and the session registration
-   * returned is what authenticates creating it.
+   * A "both" signup never reaches this function while still "both" — the
+   * wizard's own step 3 branch (handleNext) intercepts it, runs steps 4-5
+   * inline, and clears the intent itself once the hotel half is submitted
+   * too. Getting here with the intent still set to "both" would only happen
+   * if that flow was interrupted, so treat it the same as restaurant-only
+   * rather than dropping the partner onto a stale hotel prompt.
    */
-  /*
-   * The stay's own details come first; listing a property follows from there.
-   *
-   * That screen sits behind the restaurant route guard, so it is only reachable
-   * with the session registration hands back. Without one the guard would
-   * bounce a partner who just finished onboarding out to the login screen, so
-   * fall through to the pending screen instead — the stay can still be added
-   * from settings.
-   */
-  if (getOnboardingIntent() === "both") {
-    clearOnboardingIntent()
-
-    if (localStorage.getItem("restaurant_accessToken")) {
-      setActiveWorkspace("hotel")
-      navigate("/food/restaurant/add-hotel", {
-        replace: true,
-        state: { name: fcmOptions.ownerName || "", email: fcmOptions.ownerEmail || "" },
-      })
-      return
-    }
-  }
+  clearOnboardingIntent()
 
   navigate("/food/restaurant/pending-verification", {
     replace: true,
@@ -706,6 +700,13 @@ export default function RestaurantOnboarding() {
     accountType: "",
   })
 
+  // Steps 4-5, only reached when onboarding intent is "both" — see
+  // handleNext's step === 3 branch, which advances here instead of
+  // submitting once the restaurant half is in.
+  const [hotelStep1, setHotelStep1] = useState(HOTEL_BUSINESS_DEFAULTS)
+  const [hotelStep2, setHotelStep2] = useState(HOTEL_DOCUMENTS_DEFAULTS)
+  const totalSteps = getOnboardingIntent() === "both" ? 5 : 3
+
   const hasStep1UnsavedProgress = useCallback(
     () => hasRestaurantStep1Progress(step1),
     [step1],
@@ -967,6 +968,22 @@ export default function RestaurantOnboarding() {
 
         // 2. Hydrate from API if exists
         if (apiData) {
+          /*
+           * A reload here means the restaurant half already submitted (it has
+           * a token and a profile now) but "both" hadn't reached the hotel
+           * steps' own submit yet — those two steps live only in this
+           * component's state, not localStorage, so they can't be resumed in
+           * place. Sending the partner to the equivalent settings screen
+           * finishes the hotel half rather than dropping them into "edit my
+           * already-submitted restaurant" mode, which is what the fall-through
+           * below would otherwise do.
+           */
+          if (getOnboardingIntent() === "both") {
+            clearOnboardingIntent()
+            navigate("/food/restaurant/add-hotel", { replace: true })
+            return
+          }
+
           setHasExistingRestaurantProfile(true)
           const onboarding = apiData.onboarding || {}
           const s1 = onboarding.step1 || {}
@@ -1441,6 +1458,10 @@ export default function RestaurantOnboarding() {
       validationErrors = validateStep2()
     } else if (step === 3) {
       validationErrors = validateStep3()
+    } else if (step === 4) {
+      validationErrors = validateHotelBusinessFields(hotelStep1)
+    } else if (step === 5) {
+      validationErrors = validateHotelDocumentFields(hotelStep2)
     }
 
     if (validationErrors.length > 0) {
@@ -1644,6 +1665,28 @@ export default function RestaurantOnboarding() {
           await clearAllFilesFromDB()
         } catch {}
 
+        /*
+         * "Both" doesn't stop here — steps 4-5 (the hotel half: owner details,
+         * then Aadhaar/PAN) run next inside this same wizard, using the
+         * session registration just issued. finalizeRestaurantPendingSubmission
+         * only runs once all five steps are done, or immediately for a
+         * restaurant-only signup.
+         */
+        if (getOnboardingIntent() === "both") {
+          toast.success("Restaurant submitted. Now let's add your stay.", { duration: 4000 })
+          // The owner's name/email were just typed into step 1 — no reason
+          // to ask again here.
+          setHotelStep1((prev) => ({
+            ...prev,
+            businessName: prev.businessName || step1.ownerName || "",
+            ownerName: prev.ownerName || step1.ownerName || "",
+            email: prev.email || step1.ownerEmail || "",
+          }))
+          setStep(4)
+          window.scrollTo({ top: 0, behavior: "instant" })
+          return
+        }
+
         toast.success("Registration submitted. Awaiting admin approval.", { duration: 4000 })
         await finalizeRestaurantPendingSubmission(navigate, step1.ownerPhone, {
           fcmToken,
@@ -1651,6 +1694,35 @@ export default function RestaurantOnboarding() {
           ownerName: step1.ownerName,
           ownerEmail: step1.ownerEmail,
         })
+      } else if (step === 4) {
+        setStep(5)
+        window.scrollTo({ top: 0, behavior: "instant" })
+      } else if (step === 5) {
+        const session = await createHotelProfile({
+          name: hotelStep1.businessName.trim(),
+          email: hotelStep1.email.trim(),
+        })
+
+        if (session?.token) {
+          setPartnerSession(session.token, session.user)
+        }
+
+        await submitHotelKyc(buildHotelKycFormData(hotelStep1, hotelStep2))
+
+        // Re-read from the server rather than assuming, so the switcher
+        // matches what actually exists.
+        try {
+          const profiles = await fetchPartnerProfiles()
+          setPartnerProfiles(profiles?.profiles || [])
+        } catch {
+          setPartnerProfiles([WORKSPACE.RESTAURANT, WORKSPACE.HOTEL])
+        }
+
+        setActiveWorkspace(WORKSPACE.HOTEL)
+        clearOnboardingIntent()
+
+        toast.success("Submitted for review.", { duration: 4000 })
+        navigate("/hotel/partner/under-review", { replace: true })
       }
     } catch (err) {
       const msg =
@@ -2970,10 +3042,37 @@ export default function RestaurantOnboarding() {
     </div>
   )
 
+  // Steps 4-5, only shown when onboarding intent is "both" (see totalSteps).
+  const renderHotelStep1 = () => (
+    <div className="space-y-6">
+      <section className="bg-white p-4 sm:p-6 rounded-md">
+        <h2 className="text-lg font-semibold text-black mb-1">Your stay — business details</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          You picked "Both" — these last two steps set up your hotel or stay alongside the restaurant above.
+        </p>
+        <HotelBusinessFields values={hotelStep1} onChange={setHotelStep1} />
+      </section>
+    </div>
+  )
+
+  const renderHotelStep2 = () => (
+    <div className="space-y-6">
+      <section className="bg-white p-4 sm:p-6 rounded-md">
+        <h2 className="text-lg font-semibold text-black mb-1">Your stay — identity documents</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Required before your stay listing can be reviewed.
+        </p>
+        <HotelDocumentsFields values={hotelStep2} onChange={setHotelStep2} />
+      </section>
+    </div>
+  )
+
   const renderStep = () => {
     if (step === 1) return renderStep1()
     if (step === 2) return renderStep2()
-    return renderStep3()
+    if (step === 3) return renderStep3()
+    if (step === 4) return renderHotelStep1()
+    return renderHotelStep2()
   }
 
   return (
@@ -3092,7 +3191,9 @@ export default function RestaurantOnboarding() {
                   <ArrowLeft className="w-[18px] h-[18px] text-gray-700 stroke-[2.5]" />
                 </button>
               )}
-              <div className="text-sm font-semibold text-black">Restaurant onboarding</div>
+              <div className="text-sm font-semibold text-black">
+                {step <= 3 ? "Restaurant onboarding" : "Hotel onboarding"}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               {!isEditing && (
@@ -3109,7 +3210,7 @@ export default function RestaurantOnboarding() {
               )}
               <div className="flex items-center gap-3">
                 <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-right">
-                  Step {step} of 3
+                  Step {step} of {totalSteps}
                 </div>
                 <Button
                   onClick={handleLogout}
@@ -3179,10 +3280,10 @@ export default function RestaurantOnboarding() {
             )}
             <Button
               onClick={handleNext}
-              disabled={saving || (step === 3 && !isEditing)}
-              className={`text-base font-bold h-11 bg-gradient-to-br from-[#B80B3D] to-[#66001D] hover:from-[#c90f49] hover:to-[#7a0024] text-white px-6 shadow-md shadow-[#B80B3D]/20 transition-all active:scale-[0.98] ${step === 1 ? "w-full" : "flex-1"} ${(step === 3 && !isEditing) ? "opacity-50 cursor-not-allowed" : ""}`}
+              disabled={saving || (step === totalSteps && !isEditing)}
+              className={`text-base font-bold h-11 bg-gradient-to-br from-[#B80B3D] to-[#66001D] hover:from-[#c90f49] hover:to-[#7a0024] text-white px-6 shadow-md shadow-[#B80B3D]/20 transition-all active:scale-[0.98] ${step === 1 ? "w-full" : "flex-1"} ${(step === totalSteps && !isEditing) ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              {step === 3 ? (saving ? "Saving..." : "Finish") : saving ? "Saving..." : "Continue"}
+              {step === totalSteps ? (saving ? "Saving..." : "Finish") : saving ? "Saving..." : "Continue"}
             </Button>
           </div>
         </footer>

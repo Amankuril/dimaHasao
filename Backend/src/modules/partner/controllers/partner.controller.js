@@ -6,6 +6,8 @@ import {
     resolveCallerPhone,
 } from '../services/partnerIdentity.js';
 import { createHotelPartnerAccount, issueHotelPartnerSession } from '../../hotel/auth/audiences.js';
+import Partner from '../../hotel/models/Partner.js';
+import { uploadImageBuffer } from '../../../services/storage.service.js';
 
 /** The phone behind whichever token was presented, or 401. */
 const requireCallerPhone = async (req) => {
@@ -43,6 +45,7 @@ export const getMyProfiles = async (req, res) => {
                   id: String(accounts.hotelPartner._id),
                   name: accounts.hotelPartner.name || '',
                   partnerApprovalStatus: accounts.hotelPartner.partnerApprovalStatus || 'pending',
+                  onboardingComplete: Boolean(accounts.hotelPartner.onboardingComplete),
               }
             : null,
     });
@@ -83,4 +86,78 @@ export const addHotelProfile = async (req, res) => {
     const session = await issueHotelPartnerSession(hotelPartner);
 
     return sendResponse(res, 201, 'Hotel profile created', session);
+};
+
+/**
+ * PATCH /v1/partner/profiles/hotel/kyc  (multipart)
+ *   ownerName, street, city, state, zipCode, aadhaarNumber, panNumber
+ *   + files: aadhaarFront, aadhaarBack, panCardImage
+ *
+ * Second half of hotel onboarding, run right after addHotelProfile with
+ * whichever session that call (or restaurant registration, on the "both"
+ * path) just returned. Marks onboardingComplete so the dashboard guard starts
+ * enforcing partnerApprovalStatus for this partner — accounts that never took
+ * this step stay ungated.
+ */
+export const submitHotelKyc = async (req, res) => {
+    const phone = await requireCallerPhone(req);
+    const { ownerName, street, city, state, zipCode, aadhaarNumber, panNumber } = req.body || {};
+
+    if (!String(ownerName || '').trim()) {
+        throw new ApiError(400, "Owner's full name is required.");
+    }
+    if (!String(street || '').trim() || !String(city || '').trim() || !String(state || '').trim() || !String(zipCode || '').trim()) {
+        throw new ApiError(400, 'A complete address is required.');
+    }
+    if (!/^\d{12}$/.test(String(aadhaarNumber || '').trim())) {
+        throw new ApiError(400, 'A valid 12-digit Aadhaar number is required.');
+    }
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(String(panNumber || '').trim().toUpperCase())) {
+        throw new ApiError(400, 'A valid PAN number is required.');
+    }
+
+    const partner = await Partner.findOne({ phone });
+
+    if (!partner) {
+        throw new ApiError(404, 'No hotel profile found for this account.');
+    }
+
+    const files = req.files || {};
+
+    if (files.aadhaarFront?.[0]) {
+        partner.aadhaarFront = await uploadImageBuffer(files.aadhaarFront[0].buffer, 'hotel/partners/aadhaar');
+    }
+    if (files.aadhaarBack?.[0]) {
+        partner.aadhaarBack = await uploadImageBuffer(files.aadhaarBack[0].buffer, 'hotel/partners/aadhaar');
+    }
+    if (files.panCardImage?.[0]) {
+        partner.panCardImage = await uploadImageBuffer(files.panCardImage[0].buffer, 'hotel/partners/pan');
+    }
+
+    if (!partner.aadhaarFront || !partner.aadhaarBack) {
+        throw new ApiError(400, 'Aadhaar front and back photos are required.');
+    }
+    if (!partner.panCardImage) {
+        throw new ApiError(400, 'A PAN card photo is required.');
+    }
+
+    partner.ownerName = String(ownerName).trim();
+    partner.aadhaarNumber = String(aadhaarNumber).trim();
+    partner.panNumber = String(panNumber).trim().toUpperCase();
+    partner.address = {
+        ...partner.address,
+        street: String(street).trim(),
+        city: String(city).trim(),
+        state: String(state).trim(),
+        zipCode: String(zipCode).trim(),
+        country: partner.address?.country || 'India',
+    };
+    partner.onboardingComplete = true;
+
+    await partner.save();
+
+    return sendResponse(res, 200, 'KYC submitted', {
+        partnerApprovalStatus: partner.partnerApprovalStatus,
+        onboardingComplete: partner.onboardingComplete,
+    });
 };

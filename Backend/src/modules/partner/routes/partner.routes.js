@@ -8,9 +8,16 @@
 import express from 'express';
 import { verifyAccessToken } from '../../../core/auth/token.util.js';
 import { asyncHandler } from '../../../utils/asyncHandler.js';
-import { getMyProfiles, addHotelProfile } from '../controllers/partner.controller.js';
+import { getMyProfiles, addHotelProfile, submitHotelKyc } from '../controllers/partner.controller.js';
+import { uploadDocuments } from '../../../middleware/upload.js';
 
 const router = express.Router();
+
+const uploadHotelKycFiles = uploadDocuments.fields([
+    { name: 'aadhaarFront', maxCount: 1 },
+    { name: 'aadhaarBack', maxCount: 1 },
+    { name: 'panCardImage', maxCount: 1 },
+]);
 
 /**
  * Accept a restaurant token or a hotel partner token.
@@ -45,5 +52,6 @@ export const authenticatePartner = (req, res, next) => {
 
 router.get('/profiles', authenticatePartner, asyncHandler(getMyProfiles));
 router.post('/profiles/hotel', authenticatePartner, asyncHandler(addHotelProfile));
+router.patch('/profiles/hotel/kyc', authenticatePartner, uploadHotelKycFiles, asyncHandler(submitHotelKyc));
 
 export default router;

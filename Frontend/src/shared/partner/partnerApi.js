@@ -39,3 +39,18 @@ export const fetchPartnerProfiles = async () =>
  */
 export const createHotelProfile = async ({ name, email } = {}) =>
   unwrap(await client.post('/partner/profiles/hotel', { name, email }, { headers: authHeader() }));
+
+/**
+ * Owner details + address + Aadhaar/PAN, for whichever hotel account the
+ * caller's token resolves to. Called right after createHotelProfile, with
+ * whichever session that call (or restaurant registration, on the "both"
+ * path) just established.
+ *
+ * @param {FormData} formData — see buildHotelKycFormData in hotelOnboardingFields.jsx
+ */
+export const submitHotelKyc = async (formData) =>
+  unwrap(
+    await client.patch('/partner/profiles/hotel/kyc', formData, {
+      headers: { ...authHeader(), 'Content-Type': 'multipart/form-data' },
+    }),
+  );

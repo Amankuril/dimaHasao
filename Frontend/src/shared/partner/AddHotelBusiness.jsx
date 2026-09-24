@@ -1,16 +1,17 @@
 /**
  * Add the stay business to a partner who already runs a restaurant.
  *
- * The other way in — choosing "both" at sign-up — spends the signup ticket from
- * verify. Here the partner is already signed in, so the account is created with
- * their session instead, through POST /partner/profiles/hotel.
+ * The other way in — choosing "both" at sign-up — runs these same two steps
+ * inline as steps 4-5 of the restaurant wizard (see Onboarding.jsx). Here the
+ * partner already has a session, so there's no signup ticket to spend: step 1
+ * goes straight to POST /partner/profiles/hotel, then step 2 to the KYC
+ * endpoint, both with the live session.
  */
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Building2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { createHotelProfile } from './partnerApi';
-import { fetchPartnerProfiles } from './partnerApi';
+import { createHotelProfile, submitHotelKyc, fetchPartnerProfiles } from './partnerApi';
 import {
   setPartnerProfiles,
   setActiveWorkspace,
@@ -18,6 +19,15 @@ import {
   hasHotelProfile,
 } from './partnerSession';
 import { setPartnerSession } from '@/modules/Hotel/utils/partnerAuth';
+import {
+  HotelBusinessFields,
+  HotelDocumentsFields,
+  HOTEL_BUSINESS_DEFAULTS,
+  HOTEL_DOCUMENTS_DEFAULTS,
+  validateHotelBusinessFields,
+  validateHotelDocumentFields,
+  buildHotelKycFormData,
+} from './hotelOnboardingFields';
 
 export default function AddHotelBusiness() {
   const navigate = useNavigate();
@@ -31,26 +41,43 @@ export default function AddHotelBusiness() {
   const prefill = location.state || {};
   const continuingSignup = Boolean(prefill.name || prefill.email);
 
-  const [name, setName] = useState(prefill.name || '');
-  const [email, setEmail] = useState(prefill.email || '');
+  const [step, setStep] = useState(1);
+  const [business, setBusiness] = useState({
+    ...HOTEL_BUSINESS_DEFAULTS,
+    businessName: prefill.name || '',
+    ownerName: prefill.name || '',
+    email: prefill.email || '',
+  });
+  const [documents, setDocuments] = useState(HOTEL_DOCUMENTS_DEFAULTS);
   const [loading, setLoading] = useState(false);
 
-  const submit = async (event) => {
-    event.preventDefault();
+  const goNext = () => {
+    const errors = validateHotelBusinessFields(business);
+    if (errors.length) {
+      toast.error(errors[0]);
+      return;
+    }
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
 
-    if (!name.trim()) {
-      toast.error('Please enter a contact name');
+  const submit = async () => {
+    const errors = validateHotelDocumentFields(documents);
+    if (errors.length) {
+      toast.error(errors[0]);
       return;
     }
 
     setLoading(true);
 
     try {
-      const session = await createHotelProfile({ name: name.trim(), email: email.trim() });
+      const session = await createHotelProfile({ name: business.businessName.trim(), email: business.email.trim() });
 
       if (session?.token) {
         setPartnerSession(session.token, session.user);
       }
+
+      await submitHotelKyc(buildHotelKycFormData(business, documents));
 
       // Re-read from the server rather than assuming, so the switcher matches
       // what actually exists.
@@ -62,8 +89,8 @@ export default function AddHotelBusiness() {
       }
 
       setActiveWorkspace(WORKSPACE.HOTEL);
-      toast.success('Stay business added');
-      navigate('/hotel/partner/join', { replace: true });
+      toast.success('Submitted for review');
+      navigate('/hotel/partner/under-review', { replace: true });
     } catch (error) {
       const message =
         error?.response?.data?.error ||
@@ -93,15 +120,19 @@ export default function AddHotelBusiness() {
     <div className="mx-auto max-w-md px-5 py-6">
       <button
         type="button"
-        onClick={() =>
+        onClick={() => {
+          if (step === 2) {
+            setStep(1);
+            return;
+          }
           continuingSignup
             ? navigate('/food/restaurant/pending-verification', { replace: true })
-            : navigate(-1)
-        }
+            : navigate(-1);
+        }}
         className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500"
       >
         <ArrowLeft size={14} />
-        {continuingSignup ? 'Skip for now' : 'Back'}
+        {step === 1 && continuingSignup ? 'Skip for now' : 'Back'}
       </button>
 
       <div className="mb-6 flex items-center gap-3">
@@ -110,51 +141,33 @@ export default function AddHotelBusiness() {
         </span>
         <div>
           <h1 className="text-lg font-bold text-slate-900">
-            {continuingSignup ? 'Now your stay' : 'List a hotel or stay'}
+            {step === 1 ? (continuingSignup ? 'Now your stay' : 'List a hotel or stay') : 'Verify your identity'}
           </h1>
           <p className="text-xs text-slate-500">
-            {continuingSignup
-              ? 'Your restaurant is in for review. Next, set up your stay.'
-              : 'Runs alongside your restaurant on the same sign-in.'}
+            {step === 1
+              ? continuingSignup
+                ? 'Your restaurant is in for review. Next, set up your stay.'
+                : 'Runs alongside your restaurant on the same sign-in.'
+              : 'Required before you can list a property.'}
           </p>
         </div>
       </div>
 
-      <form onSubmit={submit} className="space-y-4">
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Contact name
-          </label>
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Full name"
-            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-900"
-          />
-        </div>
+      {step === 1 ? (
+        <HotelBusinessFields values={business} onChange={setBusiness} />
+      ) : (
+        <HotelDocumentsFields values={documents} onChange={setDocuments} />
+      )}
 
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Email <span className="font-normal normal-case text-slate-400">(optional)</span>
-          </label>
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            type="email"
-            placeholder="you@example.com"
-            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-900"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white disabled:opacity-60"
-        >
-          {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-          {loading ? 'Setting up' : 'Continue'}
-        </button>
-      </form>
+      <button
+        type="button"
+        onClick={step === 1 ? goNext : submit}
+        disabled={loading}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3.5 text-sm font-bold text-white disabled:opacity-60"
+      >
+        {loading ? <Loader2 size={16} className="animate-spin" /> : null}
+        {loading ? 'Submitting' : step === 1 ? 'Continue' : 'Submit for review'}
+      </button>
     </div>
   );
 }

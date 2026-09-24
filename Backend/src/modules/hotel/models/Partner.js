@@ -30,6 +30,10 @@ const partnerSchema = new mongoose.Schema({
   isPartner: { type: Boolean, default: true },
   isBlocked: { type: Boolean, default: false },
   partnerApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  // Set once the owner-details + KYC step is submitted. Only partners with
+  // this true are gated on partnerApprovalStatus for dashboard access —
+  // accounts created before this step existed keep working unblocked.
+  onboardingComplete: { type: Boolean, default: false },
   partnerSince: {
     type: Date,
     default: Date.now

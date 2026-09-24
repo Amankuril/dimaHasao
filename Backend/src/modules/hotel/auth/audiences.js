@@ -94,6 +94,8 @@ export const issueHotelPartnerSession = async (partner) => {
             email: partner.email || '',
             role: partner.role || 'partner',
             isVerified: partner.isVerified,
+            partnerApprovalStatus: partner.partnerApprovalStatus,
+            onboardingComplete: Boolean(partner.onboardingComplete),
         },
     };
 };
