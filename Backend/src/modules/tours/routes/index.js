@@ -23,8 +23,14 @@ export const toursRouter = Router();
 
 toursRouter.get('/health', (_req, res) => res.json({ success: true, module: 'tours' }));
 
-toursRouter.use(enforceModuleAvailability('tours'));
-toursRouter.use('/destinations', destinationRoutes);
+/*
+ * Destinations live in this module's API but they are the Places directory the
+ * consumer app browses at /app/places, not part of the packages business.
+ * Closing tour packages was taking Tourist Places down with it, so they follow
+ * the places switch instead.
+ */
+toursRouter.use(enforceModuleAvailability('tours', { exempt: ['/destinations'] }));
+toursRouter.use('/destinations', enforceModuleAvailability('places'), destinationRoutes);
 toursRouter.use('/packages', packageRoutes);
 toursRouter.use('/bookings', bookingRoutes);
 toursRouter.use('/offers', offerRoutes);

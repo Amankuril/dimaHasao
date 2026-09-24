@@ -17,10 +17,21 @@ const isAdminPath = (path = '') => {
     return normalized === '/admin' || normalized.startsWith('/admin/');
 };
 
-export const enforceModuleAvailability = (module) =>
+/**
+ * @param {string} module
+ * @param {{ exempt?: string[] }} [options] - paths under this router that
+ *   belong to a different module and must not be closed with this one.
+ */
+export const enforceModuleAvailability = (module, { exempt = [] } = {}) =>
     async function moduleAvailability(req, res, next) {
         try {
             if (isAdminPath(req.path)) return next();
+
+            const path = String(req.path || '');
+            const isExempt = exempt.some(
+                (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+            );
+            if (isExempt) return next();
 
             const { enabled, message } = await readModuleToggle(module);
             if (enabled) return next();
