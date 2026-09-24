@@ -11,8 +11,12 @@
  * partner was last looking at, so the workspace switcher can render without
  * another round trip.
  */
-import { setAuthData, clearModuleAuth } from '@/shared/utils/moduleAuth';
-import { setPartnerSession, clearPartnerSession } from '@/modules/Hotel/utils/partnerAuth';
+import { setAuthData, clearModuleAuth, isModuleAuthenticated } from '@/shared/utils/moduleAuth';
+import {
+  setPartnerSession,
+  clearPartnerSession,
+  isPartnerSignedIn,
+} from '@/modules/Hotel/utils/partnerAuth';
 
 const PROFILES_KEY = 'partner_profiles';
 const WORKSPACE_KEY = 'partner_active_workspace';
@@ -40,8 +44,19 @@ export const getPartnerProfiles = () => {
   return Array.isArray(profiles) ? profiles : [];
 };
 
-export const hasRestaurantProfile = () => getPartnerProfiles().includes(WORKSPACE.RESTAURANT);
-export const hasHotelProfile = () => getPartnerProfiles().includes(WORKSPACE.HOTEL);
+/*
+ * Having a business means holding a live session for it, not merely having it
+ * listed. The list is written at sign-in and survives a sign-out from the
+ * other side, an expired token, or a browser that kept storage from an older
+ * visit — and on its own it offered "Switch to Hotel" to someone with no hotel
+ * session at all, who then landed on the dashboard and was bounced to login.
+ */
+export const hasRestaurantProfile = () =>
+  getPartnerProfiles().includes(WORKSPACE.RESTAURANT) && isModuleAuthenticated('restaurant');
+
+export const hasHotelProfile = () =>
+  getPartnerProfiles().includes(WORKSPACE.HOTEL) && isPartnerSignedIn();
+
 export const hasBothProfiles = () => hasRestaurantProfile() && hasHotelProfile();
 
 export const setPartnerProfiles = (profiles = []) => {
