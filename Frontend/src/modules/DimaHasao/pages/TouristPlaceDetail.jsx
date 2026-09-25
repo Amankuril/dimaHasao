@@ -5,7 +5,6 @@ import { Header } from '../components/layout/Header';
 import { PatternDivider } from '../components/layout/PatternDivider';
 import { GalleryViewer } from '../components/places/GalleryViewer';
 import { TransportSelector } from '../components/places/TransportSelector';
-import { RecommendationGrids } from '../components/places/RecommendationGrids';
 import { motion } from 'framer-motion';
 
 export const TouristPlaceDetail = () => {
@@ -193,9 +192,6 @@ export const TouristPlaceDetail = () => {
               </div>
             </section>
           )}
-
-          {/* Recommended Hotels & Restaurants */}
-          <RecommendationGrids />
 
           {/* Local Guide Advice Section */}
           <section className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">

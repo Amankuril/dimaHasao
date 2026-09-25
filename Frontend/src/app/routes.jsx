@@ -7,8 +7,6 @@ import {
   syncActiveModule,
   prefetchFoodUser,
   prefetchTaxiUser,
-  prefetchFoodAdmin,
-  prefetchTaxiAdmin,
 } from '../shared/utils/activeModule.js'
 import AdminModulesKeepAlive, { AdminKeepAliveSlot } from './AdminModulesKeepAlive.jsx'
 import { isModuleAuthenticated } from '../shared/utils/moduleAuth.js'
@@ -128,7 +126,9 @@ const AppRoutes = () => {
     rememberLoginReturnTo(location.pathname)
   }, [location.pathname])
 
-  // Warm sibling modules on idle so Food ↔ Taxi (user + admin) switches stay smooth.
+  // Warm sibling modules on idle so Food ↔ Taxi (user) switches stay smooth.
+  // Admin ↔ admin warming (all five modules, not just Food/Taxi) is handled
+  // by AdminModulesKeepAlive's own prefetch effect instead.
   useEffect(() => {
     const path = location.pathname || ''
     const warm = () => {
@@ -136,10 +136,6 @@ const AppRoutes = () => {
         prefetchTaxiUser()
       } else if (path.startsWith('/taxi/user')) {
         prefetchFoodUser()
-      } else if (path.startsWith('/admin')) {
-        prefetchTaxiAdmin()
-      } else if (path.startsWith('/taxi/admin')) {
-        prefetchFoodAdmin()
       }
     }
 
@@ -200,7 +196,9 @@ const AppRoutes = () => {
 
   return (
     <>
-      {/* Food ↔ Taxi admin: keep both shells mounted after first visit (instant hide/show). */}
+      {/* Every admin module (Food, Taxi, Hotel, Tours, Global): keep each shell
+          mounted after its first visit, so switching between any of them is
+          an instant hide/show instead of a full unmount/remount. */}
       <AdminModulesKeepAlive />
 
       {/* A module switched off in Toggle Management shows the maintenance
@@ -223,12 +221,22 @@ const AppRoutes = () => {
         <Route path="/taxi/admin/*" element={<AdminKeepAliveSlot />} />
         <Route path="/taxi/user/*" element={<TaxiUserShell />} />
         <Route path="/taxi/*" element={<TaxiAppWrapper />} />
+        {/* More specific than /hotel/* — UI comes from AdminModulesKeepAlive.
+            Hotel also serves real consumer/partner content at this same
+            prefix, so (unlike Tours/Global below) only the admin sub-path is
+            carved out; everything else still falls through to HotelApp. */}
+        <Route path="/hotel/admin/*" element={<AdminKeepAliveSlot />} />
         <Route path="/hotel/*" element={<Suspense fallback={<SoftFallback />}><HotelApp /></Suspense>} />
+        {/* Tours is admin-only end to end, but the split still mirrors Hotel's
+            for consistency — and so the /tours/* catch-all redirect below
+            (in Tours/routes.jsx) keeps handling bare /tours visits. */}
+        <Route path="/tours/admin/*" element={<AdminKeepAliveSlot />} />
         <Route path="/tours/*" element={<Suspense fallback={<SoftFallback />}><ToursApp /></Suspense>} />
         {/* Policies published in Global Settings, readable without a session
             because sign-in screens link to them. */}
         <Route path="/legal/:slug" element={<Suspense fallback={<SoftFallback />}><LegalDocumentPage /></Suspense>} />
         {/* Platform-wide admin: administrators and cross-module settings. */}
+        <Route path="/global/admin/*" element={<AdminKeepAliveSlot />} />
         <Route path="/global/*" element={<Suspense fallback={<SoftFallback />}><GlobalApp /></Suspense>} />
         {/* UI comes from AdminModulesKeepAlive. */}
         <Route path="/admin/*" element={<AdminKeepAliveSlot />} />

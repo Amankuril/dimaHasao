@@ -1,6 +1,6 @@
 /** Small shared pieces for the tours admin pages. */
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 
 export const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
@@ -47,7 +47,50 @@ const STATUS_TONES = {
   failed: 'bg-red-100 text-red-700',
   advance_paid: 'bg-amber-100 text-amber-700',
   paid: 'bg-emerald-100 text-emerald-700',
+  // Festival life-cycle, from festivalStatus() on the backend.
+  live: 'bg-emerald-100 text-emerald-700',
+  upcoming: 'bg-blue-100 text-blue-700',
+  ended: 'bg-gray-100 text-gray-600',
+  scheduled: 'bg-amber-100 text-amber-700',
 };
+
+/** A numbered progress rail for a multi-step admin form. `steps` is `[{key,label,icon}]`. */
+export const StepIndicator = ({ steps, current }) => (
+  <div className="flex items-center mb-1">
+    {steps.map((s, i) => {
+      const done = i < current;
+      const active = i === current;
+      const Icon = s.icon;
+      return (
+        <React.Fragment key={s.key}>
+          <div className="flex flex-col items-center gap-1.5 shrink-0">
+            <div
+              className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-colors ${
+                done
+                  ? 'bg-[#0a4d2b] border-[#0a4d2b] text-white'
+                  : active
+                  ? 'border-[#0a4d2b] text-[#0a4d2b] bg-white'
+                  : 'border-gray-200 text-gray-300 bg-white'
+              }`}
+            >
+              {done ? <Check size={16} /> : Icon ? <Icon size={15} /> : <span className="text-xs font-bold">{i + 1}</span>}
+            </div>
+            <span
+              className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-center leading-tight w-16 ${
+                active ? 'text-[#0a4d2b]' : done ? 'text-gray-500' : 'text-gray-300'
+              }`}
+            >
+              {s.label}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <div className={`flex-1 h-0.5 rounded mb-4 mx-1 ${i < current ? 'bg-[#0a4d2b]' : 'bg-gray-200'}`} />
+          )}
+        </React.Fragment>
+      );
+    })}
+  </div>
+);
 
 export const StatusPill = ({ status }) => (
   <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${STATUS_TONES[status] || 'bg-gray-100 text-gray-600'}`}>

@@ -22,6 +22,9 @@ import {
   GLOBAL_ADMIN_HOME,
   prefetchFoodAdmin,
   prefetchTaxiAdmin,
+  prefetchHotelAdmin,
+  prefetchToursAdmin,
+  prefetchGlobalAdmin,
 } from '../../utils/activeModule.js'
 import { getCurrentUser } from '../../utils/moduleAuth.js'
 // The same rule the login screen uses to pick where to land, so the tab an
@@ -46,16 +49,23 @@ export default function AdminModuleSwitcher({ isCollapsed = false, className }) 
   if (isCollapsed) return null
   if (!showFoodTab && !showTaxiTab && !showHotelTab && !showToursTab && !showGlobalTab) return null
 
+  const PREFETCH_BY_HOME = {
+    [FOOD_ADMIN_HOME]: prefetchFoodAdmin,
+    [TAXI_ADMIN_HOME]: prefetchTaxiAdmin,
+    [HOTEL_ADMIN_HOME]: prefetchHotelAdmin,
+    [TOURS_ADMIN_HOME]: prefetchToursAdmin,
+    [GLOBAL_ADMIN_HOME]: prefetchGlobalAdmin,
+  }
+
   const switchAdminModule = (path) => {
     const go = () => startTransition(() => navigate(path))
 
-    // Wait for the sibling chunk so the first switch has no blank flash.
-    if (path === FOOD_ADMIN_HOME) {
-      Promise.resolve(prefetchFoodAdmin()).finally(go)
-      return
-    }
-    if (path === TAXI_ADMIN_HOME) {
-      Promise.resolve(prefetchTaxiAdmin()).finally(go)
+    // Wait for the chunk so the first switch into a module has no blank
+    // flash. A hover/focus on the button (below) usually already started
+    // this, so most of the time it resolves instantly.
+    const prefetch = PREFETCH_BY_HOME[path]
+    if (prefetch) {
+      Promise.resolve(prefetch()).finally(go)
       return
     }
     go()
@@ -101,19 +111,19 @@ export default function AdminModuleSwitcher({ isCollapsed = false, className }) 
         </button>
       )}
       {showHotelTab && (
-        <button type="button" onClick={() => switchAdminModule(HOTEL_ADMIN_HOME)} className={tabClass(isHotelActive)}>
+        <button type="button" onClick={() => switchAdminModule(HOTEL_ADMIN_HOME)} onMouseEnter={prefetchHotelAdmin} onFocus={prefetchHotelAdmin} className={tabClass(isHotelActive)}>
           <Hotel className={iconClass(isHotelActive)} />
           Hotel
         </button>
       )}
       {showToursTab && (
-        <button type="button" onClick={() => switchAdminModule(TOURS_ADMIN_HOME)} className={tabClass(isToursActive)}>
+        <button type="button" onClick={() => switchAdminModule(TOURS_ADMIN_HOME)} onMouseEnter={prefetchToursAdmin} onFocus={prefetchToursAdmin} className={tabClass(isToursActive)}>
           <Compass className={iconClass(isToursActive)} />
           Tours &amp; Festivals
         </button>
       )}
       {showGlobalTab && (
-        <button type="button" onClick={() => switchAdminModule(GLOBAL_ADMIN_HOME)} className={cn(tabClass(isGlobalActive), 'col-span-2')}>
+        <button type="button" onClick={() => switchAdminModule(GLOBAL_ADMIN_HOME)} onMouseEnter={prefetchGlobalAdmin} onFocus={prefetchGlobalAdmin} className={cn(tabClass(isGlobalActive), 'col-span-2')}>
           <Globe className={iconClass(isGlobalActive)} />
           Global
         </button>

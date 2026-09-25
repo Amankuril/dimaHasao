@@ -140,6 +140,33 @@ export function prefetchTaxiAdmin() {
   ]).catch(() => {})
 }
 
+/** Warm Hotel admin chunks so switching into it from another admin tab stays SPA-smooth. */
+export function prefetchHotelAdmin() {
+  return Promise.all([
+    import('../../modules/Hotel/routes.jsx'),
+    import('../../modules/Hotel/app/admin/layouts/AdminLayout.jsx'),
+    import('../../modules/Hotel/app/admin/pages/AdminDashboard.jsx'),
+  ]).catch(() => {})
+}
+
+/** Warm Tours admin chunks so switching into it from another admin tab stays SPA-smooth. */
+export function prefetchToursAdmin() {
+  return Promise.all([
+    import('../../modules/Tours/routes.jsx'),
+    import('../../modules/Tours/app/admin/layouts/AdminLayout.jsx'),
+    import('../../modules/Tours/app/admin/pages/Dashboard.jsx'),
+  ]).catch(() => {})
+}
+
+/** Warm Global admin chunks so switching into it from another admin tab stays SPA-smooth. */
+export function prefetchGlobalAdmin() {
+  return Promise.all([
+    import('../../modules/Global/routes.jsx'),
+    import('../../modules/Global/app/admin/layouts/AdminLayout.jsx'),
+    import('../../modules/Global/app/admin/pages/Profile.jsx'),
+  ]).catch(() => {})
+}
+
 /** Warm Food user shell so Food ↔ Taxi user tab switches stay SPA-smooth. */
 export function prefetchFoodUser() {
   return Promise.all([
