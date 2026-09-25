@@ -6,7 +6,7 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatusPill, shortDate } from '../components/ui';
+import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, shortDate } from '../components/ui';
 import toast from 'react-hot-toast';
 
 const FILTERS = ['all', 'approved', 'pending', 'rejected'];
@@ -79,6 +79,22 @@ const Reviews = () => {
         title="Reviews"
         subtitle="Rejecting a review also removes it from the package's rating."
       />
+
+      {!loading && reviews.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <StatCard label="Showing" value={reviews.length} />
+          <StatCard
+            label="Pending moderation"
+            value={reviews.filter((r) => r.status === 'pending').length}
+            tone={reviews.some((r) => r.status === 'pending') ? 'text-amber-600' : 'text-gray-900'}
+          />
+          <StatCard
+            label="Average rating"
+            value={`${(reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)} ★`}
+            tone="text-[#0a4d2b]"
+          />
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((value) => (

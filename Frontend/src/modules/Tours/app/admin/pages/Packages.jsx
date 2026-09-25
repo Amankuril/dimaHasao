@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { PlusCircle, RefreshCw } from 'lucide-react';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatusPill, currency, shortDate } from '../components/ui';
+import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, currency, shortDate } from '../components/ui';
 import toast from 'react-hot-toast';
 
 const FILTERS = ['all', 'pending', 'approved', 'rejected', 'draft'];
@@ -89,6 +89,8 @@ const Packages = () => {
     }
   };
 
+  const total = Object.values(summary).reduce((a, b) => a + (b || 0), 0);
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -98,16 +100,25 @@ const Packages = () => {
           <div className="flex items-center gap-2">
             <Link
               to="/tours/admin/packages/new"
-              className="flex items-center gap-2 px-4 py-2 bg-neutral-950 text-white rounded-lg text-xs font-bold hover:bg-neutral-800"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#06381e]"
             >
               <PlusCircle size={14} /> Create a package
             </Link>
-            <button type="button" onClick={load} className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" aria-label="Refresh">
+            <button type="button" onClick={load} className="p-2.5 rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" aria-label="Refresh">
               <RefreshCw size={14} />
             </button>
           </div>
         }
       />
+
+      {total > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label="Total packages" value={total} />
+          <StatCard label="Pending review" value={summary.pending || 0} tone={summary.pending ? 'text-amber-600' : 'text-gray-900'} />
+          <StatCard label="Approved" value={summary.approved || 0} tone="text-[#0a4d2b]" />
+          <StatCard label="Rejected" value={summary.rejected || 0} />
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((value) => (
@@ -116,7 +127,7 @@ const Packages = () => {
             type="button"
             onClick={() => setParams(value === 'all' ? {} : { status: value })}
             className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${
-              status === value ? 'bg-neutral-950 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              status === value ? 'bg-[#0a4d2b] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
             }`}
           >
             {value}{value !== 'all' && summary[value] ? ` (${summary[value]})` : ''}

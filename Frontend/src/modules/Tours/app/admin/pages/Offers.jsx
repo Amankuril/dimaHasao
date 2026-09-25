@@ -6,14 +6,24 @@
  * the figure shown at checkout and the figure charged in one place.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2, Plus, Save, Tag } from 'lucide-react';
+import {
+  ChevronLeft, ChevronRight, Clock, IndianRupee,
+  Loader2, Package, Plus, Save, Tag,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState } from '../components/ui';
+import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator } from '../components/ui';
 
 const field = 'w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] focus:ring-4 focus:ring-[#0a4d2b]/10 transition';
 const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
+
+const STEPS = [
+  { key: 'code', label: 'The code', icon: Tag },
+  { key: 'worth', label: "What it's worth", icon: IndianRupee },
+  { key: 'window', label: 'When & how often', icon: Clock },
+  { key: 'scope', label: 'Where it applies', icon: Package },
+];
 
 const BLANK = {
   code: '', title: '', description: '',
@@ -49,6 +59,7 @@ const Offers = () => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null = list, {} = new, {...} = edit
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState(BLANK);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
@@ -76,14 +87,20 @@ const Offers = () => {
       .catch(() => setPackages([]));
   }, []);
 
-  const openNew = () => { setForm(BLANK); setEditing({}); };
-  const openEdit = (o) => { setForm(fromOffer(o)); setEditing(o); };
+  const openNew = () => { setForm(BLANK); setStep(0); setEditing({}); };
+  const openEdit = (o) => { setForm(fromOffer(o)); setStep(0); setEditing(o); };
   const closeForm = () => { setEditing(null); setConfirmingId(null); };
 
   const set = (key) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     setForm((current) => ({ ...current, [key]: value }));
   };
+
+  const goNext = () => {
+    if (step === 0 && !form.code.trim()) return toast.error('Give the offer a code first');
+    setStep((s) => Math.min(STEPS.length - 1, s + 1));
+  };
+  const goBack = () => setStep((s) => Math.max(0, s - 1));
 
   const toggleScope = (key, id) => setForm((current) => ({
     ...current,
@@ -163,6 +180,8 @@ const Offers = () => {
 
   /* ----------------------------- form ----------------------------- */
   if (editing) {
+    const isLastStep = step === STEPS.length - 1;
+
     return (
       <form onSubmit={submit} className="space-y-6 max-w-4xl">
         <PageHeader
@@ -170,113 +189,146 @@ const Offers = () => {
           subtitle="Travellers enter this code on the tour booking screen."
         />
 
-        <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-          <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100">The code</h3>
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+          <StepIndicator steps={STEPS} current={step} />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className={label}>Code <span className="text-red-500">*</span></label>
-              <input className={`${field} uppercase tracking-wide font-bold`} value={form.code}
-                onChange={(e) => setForm((c) => ({ ...c, code: e.target.value.toUpperCase() }))}
-                placeholder="MONSOON20" /></div>
-            <div><label className={label}>Title <span className="text-red-500">*</span></label>
-              <input className={field} value={form.title} onChange={set('title')}
-                placeholder="Monsoon 20% off" /></div>
-          </div>
+        {step === 0 && (
+          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+              <Tag size={15} className="text-[#0a4d2b]" /> The code
+            </h3>
 
-          <div><label className={label}>Description</label>
-            <input className={field} value={form.description} onChange={set('description')}
-              placeholder="Shown under the code on the booking screen" /></div>
-        </section>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label className={label}>Code <span className="text-red-500">*</span></label>
+                <input className={`${field} uppercase tracking-wide font-bold`} value={form.code}
+                  onChange={(e) => setForm((c) => ({ ...c, code: e.target.value.toUpperCase() }))}
+                  placeholder="MONSOON20" /></div>
+              <div><label className={label}>Title <span className="text-red-500">*</span></label>
+                <input className={field} value={form.title} onChange={set('title')}
+                  placeholder="Monsoon 20% off" /></div>
+            </div>
 
-        <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-          <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100">What it is worth</h3>
+            <div><label className={label}>Description</label>
+              <input className={field} value={form.description} onChange={set('description')}
+                placeholder="Shown under the code on the booking screen" /></div>
+          </section>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className={label}>Discount type</label>
-              <select className={field} value={form.discountType} onChange={set('discountType')}>
-                <option value="percentage">Percentage of the fare</option>
-                <option value="flat">Flat amount</option>
-              </select></div>
-            <div><label className={label}>
-              {form.discountType === 'flat' ? 'Amount off (₹)' : 'Percent off (%)'} <span className="text-red-500">*</span>
-            </label>
-              <input className={field} type="number" min="0" value={form.discountValue}
-                onChange={set('discountValue')} /></div>
-            {form.discountType === 'percentage' && (
-              <div><label className={label}>Cap the discount at (₹)</label>
-                <input className={field} type="number" min="0" value={form.maxDiscount}
-                  onChange={set('maxDiscount')} placeholder="Leave blank for no cap" /></div>
+        {step === 1 && (
+          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+              <IndianRupee size={15} className="text-[#0a4d2b]" /> What it is worth
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label className={label}>Discount type</label>
+                <select className={field} value={form.discountType} onChange={set('discountType')}>
+                  <option value="percentage">Percentage of the fare</option>
+                  <option value="flat">Flat amount</option>
+                </select></div>
+              <div><label className={label}>
+                {form.discountType === 'flat' ? 'Amount off (₹)' : 'Percent off (%)'} <span className="text-red-500">*</span>
+              </label>
+                <input className={field} type="number" min="0" value={form.discountValue}
+                  onChange={set('discountValue')} /></div>
+              {form.discountType === 'percentage' && (
+                <div><label className={label}>Cap the discount at (₹)</label>
+                  <input className={field} type="number" min="0" value={form.maxDiscount}
+                    onChange={set('maxDiscount')} placeholder="Leave blank for no cap" /></div>
+              )}
+              <div><label className={label}>Minimum fare (₹)</label>
+                <input className={field} type="number" min="0" value={form.minBookingAmount}
+                  onChange={set('minBookingAmount')} />
+                <p className="text-xs text-gray-400 mt-1.5">Below this the code is refused.</p></div>
+            </div>
+
+            {preview && (
+              <p className="text-sm font-semibold text-[#0a4d2b] bg-[#0a4d2b]/5 rounded-xl px-3 py-2.5">
+                Travellers will see: <strong>{preview}</strong>
+              </p>
             )}
-            <div><label className={label}>Minimum fare (₹)</label>
-              <input className={field} type="number" min="0" value={form.minBookingAmount}
-                onChange={set('minBookingAmount')} />
-              <p className="text-xs text-gray-400 mt-1.5">Below this the code is refused.</p></div>
-          </div>
-
-          {preview && (
-            <p className="text-sm font-semibold text-[#0a4d2b] bg-[#0a4d2b]/5 rounded-xl px-3 py-2.5">
-              Travellers will see: <strong>{preview}</strong>
+            <p className="text-xs text-gray-400">
+              The discount comes off the fare. Tax and the platform commission are still
+              charged on the undiscounted fare.
             </p>
-          )}
-          <p className="text-xs text-gray-400">
-            The discount comes off the fare. Tax and the platform commission are still
-            charged on the undiscounted fare.
-          </p>
-        </section>
+          </section>
+        )}
 
-        <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-          <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100">When and how often</h3>
+        {step === 2 && (
+          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+              <Clock size={15} className="text-[#0a4d2b]" /> When and how often
+            </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className={label}>Starts</label>
-              <input className={field} type="date" value={form.startDate} onChange={set('startDate')} />
-              <p className="text-xs text-gray-400 mt-1.5">Blank means immediately.</p></div>
-            <div><label className={label}>Ends</label>
-              <input className={field} type="date" value={form.endDate} onChange={set('endDate')} />
-              <p className="text-xs text-gray-400 mt-1.5">Blank means it never expires.</p></div>
-            <div><label className={label}>Total redemptions</label>
-              <input className={field} type="number" min="0" value={form.usageLimit} onChange={set('usageLimit')} />
-              <p className="text-xs text-gray-400 mt-1.5">0 means unlimited.</p></div>
-            <div><label className={label}>Per traveller</label>
-              <input className={field} type="number" min="1" value={form.userLimit} onChange={set('userLimit')} /></div>
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label className={label}>Starts</label>
+                <input className={field} type="date" value={form.startDate} onChange={set('startDate')} />
+                <p className="text-xs text-gray-400 mt-1.5">Blank means immediately.</p></div>
+              <div><label className={label}>Ends</label>
+                <input className={field} type="date" value={form.endDate} onChange={set('endDate')} />
+                <p className="text-xs text-gray-400 mt-1.5">Blank means it never expires.</p></div>
+              <div><label className={label}>Total redemptions</label>
+                <input className={field} type="number" min="0" value={form.usageLimit} onChange={set('usageLimit')} />
+                <p className="text-xs text-gray-400 mt-1.5">0 means unlimited.</p></div>
+              <div><label className={label}>Per traveller</label>
+                <input className={field} type="number" min="1" value={form.userLimit} onChange={set('userLimit')} /></div>
+            </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" checked={form.isActive} onChange={set('isActive')} />
-            <span><strong>Live</strong> — travellers can use it</span>
-          </label>
-        </section>
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" checked={form.isActive} onChange={set('isActive')} />
+              <span><strong>Live</strong> — travellers can use it</span>
+            </label>
+          </section>
+        )}
 
-        <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-          <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100">Where it applies</h3>
-          <p className="text-xs text-gray-500">Select nothing to let the code work on every tour.</p>
+        {step === 3 && (
+          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+              <Package size={15} className="text-[#0a4d2b]" /> Where it applies
+            </h3>
+            <p className="text-xs text-gray-500">Select nothing to let the code work on every tour.</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className={label}>Packages</label>
-              <div className="border border-gray-200 rounded-xl max-h-52 overflow-y-auto divide-y divide-gray-100">
-                {packages.length === 0 ? (
-                  <p className="text-xs text-gray-400 p-3">No approved packages.</p>
-                ) : packages.map((p) => (
-                  <label key={p._id} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50">
-                    <input type="checkbox" checked={form.packageIds.includes(String(p._id))}
-                      onChange={() => toggleScope('packageIds', String(p._id))} />
-                    <span className="truncate">{p.title}</span>
-                  </label>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className={label}>Packages</label>
+                <div className="border border-gray-200 rounded-xl max-h-52 overflow-y-auto divide-y divide-gray-100">
+                  {packages.length === 0 ? (
+                    <p className="text-xs text-gray-400 p-3">No approved packages.</p>
+                  ) : packages.map((p) => (
+                    <label key={p._id} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50">
+                      <input type="checkbox" checked={form.packageIds.includes(String(p._id))}
+                        onChange={() => toggleScope('packageIds', String(p._id))} />
+                      <span className="truncate">{p.title}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <div className="flex items-center gap-3 pb-8">
-          <button type="submit" disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60">
-            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            {editing._id ? 'Save changes' : 'Create offer'}
-          </button>
+          {step > 0 && (
+            <button type="button" onClick={goBack}
+              className="flex items-center gap-1.5 px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">
+              <ChevronLeft size={16} /> Back
+            </button>
+          )}
+          {!isLastStep ? (
+            <button type="button" onClick={goNext}
+              className="flex items-center gap-1.5 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]">
+              Next <ChevronRight size={16} />
+            </button>
+          ) : (
+            <button type="submit" disabled={saving}
+              className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60">
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              {editing._id ? 'Save changes' : 'Create offer'}
+            </button>
+          )}
           <button type="button" onClick={closeForm}
-            className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">
+            className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 ml-auto">
             Cancel
           </button>
         </div>
@@ -297,6 +349,14 @@ const Offers = () => {
           </button>
         }
       />
+
+      {!loading && offers.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <StatCard label="Total offers" value={offers.length} />
+          <StatCard label="Live" value={offers.filter((o) => o.isActive).length} tone="text-[#0a4d2b]" />
+          <StatCard label="Total redemptions" value={offers.reduce((n, o) => n + (o.usageCount || 0), 0)} />
+        </div>
+      )}
 
       {loading ? (
         <Spinner />

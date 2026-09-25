@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatusPill, currency, shortDate } from '../components/ui';
+import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, currency, shortDate } from '../components/ui';
 import toast from 'react-hot-toast';
 
 const FILTERS = ['all', 'pending', 'confirmed', 'ongoing', 'completed', 'cancelled'];
@@ -79,23 +79,36 @@ const Bookings = () => {
     }
   };
 
+  const revenue = bookings.reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
+  const pendingCount = bookings.filter((b) => b.bookingStatus === 'pending').length;
+  const balanceDue = bookings.reduce((sum, b) => sum + (Number(b.balanceDue) || 0), 0);
+
   return (
     <div className="space-y-4">
       <PageHeader
         title="Bookings"
         subtitle="Every trip booked across the district."
         action={
-          <button type="button" onClick={load} className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" aria-label="Refresh">
+          <button type="button" onClick={load} className="p-2.5 rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" aria-label="Refresh">
             <RefreshCw size={14} />
           </button>
         }
       />
 
+      {!loading && bookings.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label={`${status === 'all' ? 'Total' : status} bookings`} value={bookings.length} />
+          <StatCard label="Pending" value={pendingCount} tone={pendingCount ? 'text-amber-600' : 'text-gray-900'} />
+          <StatCard label="Total value" value={currency(revenue)} tone="text-[#0a4d2b]" />
+          <StatCard label="Balance still due" value={currency(balanceDue)} />
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((value) => (
           <button key={value} type="button" onClick={() => setParams(value === 'all' ? {} : { status: value })}
             className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${
-              status === value ? 'bg-neutral-950 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              status === value ? 'bg-[#0a4d2b] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
             }`}>
             {value}
           </button>
