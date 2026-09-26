@@ -652,7 +652,12 @@ const SearchingDriver = () => {
       } catch (error) {
         console.error('[searching-driver] Ride creation error:', error);
         if (!disposed) {
-          const errorMessage = error?.response?.data?.message || error?.message || 'Network error or server down';
+          const errorMessage =
+            error?.error ||
+            error?.message ||
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            'Network error or server down';
           const isNoDrivers = errorMessage.toLowerCase().includes('no driver') || errorMessage.toLowerCase().includes('not available');
 
           if (isScheduledRide) {

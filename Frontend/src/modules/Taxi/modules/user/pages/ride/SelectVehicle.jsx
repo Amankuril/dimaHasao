@@ -830,9 +830,20 @@ const findBestPricingRule = ({ rules, vehicleTypeId, zoneId, serviceLocationId, 
     return genericBoth;
   }
 
-  // Never borrow another zone's location-scoped price for this ride.
-  if (normalizedServiceLocationId) {
-    return null;
+  /*
+   * No unscoped row exists for this vehicle type, and none of its scoped rows
+   * matched this ride's zone or service location exactly. The server's own
+   * resolver (resolveSetPriceForRide) has no such veto — its last filter is
+   * `{ vehicle_type, transport_type }` alone, so it will price this ride
+   * against a scoped row from a different zone/location rather than leave it
+   * unpriced. Refusing here just means the rider is quoted the flat fallback
+   * while the server bills the real tariff, and the mismatch gets the ride
+   * rejected at booking. Matching the server's own fallback keeps the two in
+   * agreement.
+   */
+  const anyExactTransportMatch = candidates.find((rule) => exactTransportMatch(rule));
+  if (anyExactTransportMatch) {
+    return anyExactTransportMatch;
   }
 
   return candidates[0] || null;
