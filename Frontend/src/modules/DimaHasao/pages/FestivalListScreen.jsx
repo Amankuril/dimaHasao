@@ -22,9 +22,9 @@ export const FestivalListScreen = () => {
   const loadError = error ? error?.response?.data?.message || 'We could not load festivals just now.' : '';
 
 
-  // The banner spotlights whichever festival an admin sorted first, rather
-  // than a hard-coded index into a fixture file.
-  const featured = festivals[0] || null;
+  // The banner spotlights the festival an admin marked "Featured" — optional,
+  // so no festival is picked as a fallback and the banner just doesn't render.
+  const featured = festivals.find((f) => f.isFeatured) || null;
 
   /** Cheapest live pass, so "From ₹x" cannot quote a sold-out tier. */
   const cheapestPrice = (fest) => {
@@ -84,43 +84,47 @@ export const FestivalListScreen = () => {
       <PatternDivider variant="green-gold" />
 
       <main className="p-3.5 space-y-4">
-        {/* Featured Falcon Festival Top Banner */}
-        <div
-          onClick={() => navigate(`/festivals/${featured.id}`)}
-          className="relative rounded-3xl overflow-hidden shadow-md bg-black cursor-pointer group"
-        >
-          <img
-            src={featured.heroImage}
-            alt={featured.name}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+        {/* Featured Festival Top Banner — only when an admin has marked one "Featured" */}
+        {featured && (
+          <div
+            onClick={() => navigate(`/festivals/${featured.id}`)}
+            className="relative rounded-3xl overflow-hidden shadow-md bg-black cursor-pointer group"
+          >
+            <img
+              src={featured.heroImage}
+              alt={featured.name}
+              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-          <div className="absolute top-3 left-3 flex items-center gap-1.5">
-            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs animate-pulse">
-              <i className="fa-solid fa-fire-flame-curved"></i>
-              <span>Official Tourism Mega Event</span>
-            </span>
-          </div>
-
-          <div className="absolute bottom-3 left-3.5 right-3.5 text-white space-y-1">
-            <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
-              <i className="fa-regular fa-calendar text-xs"></i>
-              {featured.dates}
-            </span>
-            <h2 className="font-montserrat font-bold text-base text-white leading-tight">
-              {featured.name}
-            </h2>
-            <p className="text-xs text-gray-200 line-clamp-1">{featured.venue}</p>
-
-            <div className="pt-2 flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-400">Passes from ₹250</span>
-              <span className="bg-amber-400 text-emerald-950 font-black text-xs px-3 py-1 rounded-xl shadow-xs">
-                Book Tickets →
+            <div className="absolute top-3 left-3 flex items-center gap-1.5">
+              <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs animate-pulse">
+                <i className="fa-solid fa-fire-flame-curved"></i>
+                <span>Official Tourism Mega Event</span>
               </span>
             </div>
+
+            <div className="absolute bottom-3 left-3.5 right-3.5 text-white space-y-1">
+              <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+                <i className="fa-regular fa-calendar text-xs"></i>
+                {featured.dates}
+              </span>
+              <h2 className="font-montserrat font-bold text-base text-white leading-tight">
+                {featured.name}
+              </h2>
+              <p className="text-xs text-gray-200 line-clamp-1">{featured.venue}</p>
+
+              <div className="pt-2 flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-400">
+                  From ₹{cheapestPrice(featured).toLocaleString('en-IN')}
+                </span>
+                <span className="bg-amber-400 text-emerald-950 font-black text-xs px-3 py-1 rounded-xl shadow-xs">
+                  Book Now →
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* All Festivals List */}
         <div className="space-y-3">

@@ -7,10 +7,14 @@ export const ADMIN_LEVELS = {
   SUBADMIN: 'subadmin',
 };
 
+// Only modules with a real admin panel and a feature catalogue belong here —
+// this list is what the Global admin renders as grantable modules. Quick
+// commerce was never built (Food's admin has only a "Coming Soon" placeholder
+// route for it), so it showed up as a module a subadmin could be granted with
+// nothing underneath it to actually grant.
 export const ADMIN_MODULES = {
   FOOD: 'food',
   TAXI: 'taxi',
-  QUICK_COMMERCE: 'quickCommerce',
   TOURS: 'tours',
   HOTEL: 'hotel',
 };

@@ -26,6 +26,10 @@ export const FEATURE_ACTIONS = ['view', 'create', 'edit', 'delete'];
 export const ALWAYS_ALLOWED_PATHS = [
   '/sidebar-badges',
   '/dashboard-stats',
+  // Taxi and tours name their landing dashboard '/dashboard' rather than
+  // '/dashboard-stats' — without this a subadmin granted either module could
+  // never open the panel's own home screen, no matter what else they hold.
+  '/dashboard',
   '/global-search',
   '/business-settings',
   '/customization-settings',
@@ -96,6 +100,13 @@ export const ADMIN_FEATURES = {
     feature('integration_settings', 'Integration settings', ['/integration-settings'], ['settings.view']),
     feature('notification_channels', 'Notification channels', ['/notification-channels']),
     feature('admin_management', 'Admin management', ['/admin-management', '/roles'], ['subadmins.manage']),
+    // Both nav items the taxi panel shows for this area — Promo Code and Push
+    // Notifications — are gated client-side on the single legacy string
+    // 'promotions.view' (Frontend/.../AdminLayout.jsx), so either feature has
+    // to emit it or the grant here would produce a sidebar that never shows up.
+    feature('promo_codes', 'Promo codes', ['/promos', '/promotions'], ['promotions.view']),
+    feature('banners', 'Banners & push notifications', ['/banners', '/push-notifications'], ['promotions.view']),
+    feature('onboarding', 'Onboarding screens', ['/on-boarding', '/on-boarding-driver']),
   ],
 
   [ADMIN_MODULES.HOTEL]: [

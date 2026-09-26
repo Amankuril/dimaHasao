@@ -54,6 +54,8 @@ export const adaptFestival = (f = {}) => {
     bookingClosedReason: f.bookingClosedReason || '',
     bookingClosesAt: f.bookingWindow?.closesAt || null,
     seats: f.seats || { total: 0, booked: 0, available: 0 },
+    // Admin-picked spotlight for the list screen's top banner.
+    isFeatured: Boolean(f.isFeatured),
   };
 };
 

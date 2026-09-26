@@ -147,6 +147,20 @@ adminSchema.index({ servicesAccess: 1 });
 adminSchema.index({ adminLevel: 1, module: 1 });
 adminSchema.index({ parentAdminId: 1, module: 1 });
 
+// Runs before validation (not pre-save, which fires after) so a module that
+// gets retired from ADMIN_MODULES cannot strand an admin already holding it —
+// full-document validation on the next unrelated save would otherwise 500 on
+// the stale enum value forever, since nothing else ever touches this field.
+adminSchema.pre('validate', function (next) {
+    if (Array.isArray(this.servicesAccess)) {
+        this.servicesAccess = this.servicesAccess.filter((s) => ALL_ADMIN_MODULES.includes(s));
+    }
+    if (this.module && !ALL_ADMIN_MODULES.includes(this.module)) {
+        this.module = null;
+    }
+    next();
+});
+
 adminSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
         return next();

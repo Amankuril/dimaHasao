@@ -385,16 +385,19 @@ const Festivals = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div><label className={label}>Sort order</label>
                 <input className={field} type="number" value={form.sortOrder} onChange={set('sortOrder')} />
-                <p className="text-xs text-gray-400 mt-1.5">Lower shows first, and leads the banner.</p></div>
+                <p className="text-xs text-gray-400 mt-1.5">Lower shows first in the list.</p></div>
               <label className="flex items-center gap-2 text-sm text-gray-700 pb-2">
                 <input type="checkbox" checked={form.isActive} onChange={set('isActive')} />
                 <span><strong>Visible</strong> in the app</span>
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-700 pb-2">
                 <input type="checkbox" checked={form.isFeatured} onChange={set('isFeatured')} />
-                <span><strong>Featured</strong></span>
+                <span><strong>Featured</strong> — shows this festival as the top banner on the Festivals page</span>
               </label>
             </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Only one festival should be marked Featured at a time. Leave all unchecked to hide the banner entirely.
+            </p>
           </section>
         )}
 
