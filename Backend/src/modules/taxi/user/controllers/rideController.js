@@ -953,6 +953,43 @@ export const verifyRazorpayRideTip = async (req, res) => {
     throw new ApiError(409, 'This tip payment was already processed');
   }
 
+  /*
+   * Two concurrent verify calls for the same tip (double-tap, client retry
+   * on timeout) both read feedback.submittedAt as empty above. Only one may
+   * actually claim the "submit feedback" slot — this atomic update is the
+   * serialization point, so the loser is treated as a replay instead of
+   * crediting the driver's wallet a second time for one real payment.
+   */
+  const claimedRide = await Ride.findOneAndUpdate(
+    {
+      _id: ride._id,
+      'feedback.submittedAt': { $exists: false },
+    },
+    {
+      $set: {
+        feedback: {
+          rating,
+          comment: comment.trim(),
+          tipAmount: verifiedTipAmount,
+          tipPaymentId: paymentId,
+          tipOrderId: orderId,
+          tipPaidAt: new Date(),
+          submittedAt: new Date(),
+        },
+      },
+    },
+    { new: true },
+  );
+
+  if (!claimedRide) {
+    const settledRide = await Ride.findById(ride._id).select('feedback').lean();
+    if (String(settledRide?.feedback?.tipPaymentId || '') === paymentId) {
+      res.json({ success: true, data: await getRideDetails(rideId) });
+      return;
+    }
+    throw new ApiError(409, 'Feedback already submitted for this ride');
+  }
+
   const walletResult = existingWalletCredit
     ? {
         wallet: await serializeDriverWallet(driver),
@@ -974,21 +1011,11 @@ export const verifyRazorpayRideTip = async (req, res) => {
         },
       });
 
-  ride.feedback = {
-    rating,
-    comment: comment.trim(),
-    tipAmount: verifiedTipAmount,
-    tipPaymentId: paymentId,
-    tipOrderId: orderId,
-    tipPaidAt: new Date(),
-    submittedAt: new Date(),
-  };
-
   driver.ratingCount = Number(driver.ratingCount || 0) + 1;
   driver.totalRatingScore = Number(driver.totalRatingScore || 0) + rating;
   driver.rating = Number((driver.totalRatingScore / driver.ratingCount).toFixed(1));
 
-  await Promise.all([ride.save(), driver.save()]);
+  await driver.save();
 
   if (walletResult.transaction) {
     emitToDriver(ride.driverId, 'driver:wallet:updated', {

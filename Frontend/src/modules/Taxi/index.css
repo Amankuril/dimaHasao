@@ -1012,7 +1012,13 @@ html, body, #root {
   position: absolute !important;
   left: 16px !important;
   right: 16px !important;
-  bottom: 18px !important;
+  /*
+   * Google's own map attribution ("Report a map error") renders at the true
+   * bottom of the map element underneath this pill; at bottom:18px it sat
+   * squarely under the pill, clipped except for a stray sliver poking out
+   * past the pill's right edge. This clears above it instead of covering it.
+   */
+  bottom: 36px !important;
   z-index: 20 !important;
 }
 

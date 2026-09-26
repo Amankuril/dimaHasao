@@ -79,6 +79,19 @@ const normalizeRidePaymentMethod = (paymentMethod) => (
   !paymentMethod || String(paymentMethod).trim().toLowerCase() === 'cash' ? 'cash' : 'online'
 );
 
+const PAYMENT_PAID_STATUSES = new Set(['paid', 'captured', 'completed']);
+
+/*
+ * Whether this ride has server-verified proof an online payment was
+ * collected — set only by the QR-payment verify webhook/poll
+ * (driverController.js) or the rider's own Razorpay completion verify
+ * (rideController.js), never by the client-supplied status-update body.
+ */
+const hasVerifiedOnlinePaymentCollection = (ride) => (
+  Boolean(ride?.driverPaymentCollection?.paidAt)
+  || PAYMENT_PAID_STATUSES.has(String(ride?.driverPaymentCollection?.status || '').trim().toLowerCase())
+);
+
 const normalizeServiceType = (serviceType) => {
   const normalized = String(serviceType || 'ride').trim().toLowerCase();
   return normalized === 'intercity' ? 'intercity' : 'ride';
@@ -1277,7 +1290,20 @@ export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymen
   }
 
   if (paymentMethod !== undefined && paymentMethod !== null && String(paymentMethod).trim()) {
-    ride.paymentMethod = normalizeRidePaymentMethod(paymentMethod);
+    const requestedPaymentMethod = normalizeRidePaymentMethod(paymentMethod);
+
+    /*
+     * Wallet settlement below reads ride.paymentMethod alone to decide
+     * whether to credit the driver the full fare ('online') or just deduct
+     * commission ('cash') — it has no other signal that money actually
+     * moved. A driver claiming 'online' with no verified collection would
+     * self-credit the fare for free on top of any cash already pocketed, so
+     * that claim is only honoured when it was already the ride's booked
+     * method or a QR/Razorpay collection has actually been verified paid.
+     */
+    if (requestedPaymentMethod !== 'online' || ride.paymentMethod === 'online' || hasVerifiedOnlinePaymentCollection(ride)) {
+      ride.paymentMethod = requestedPaymentMethod;
+    }
   }
 
   if (nextStatus === RIDE_LIVE_STATUS.COMPLETED) {

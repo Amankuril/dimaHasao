@@ -98,7 +98,7 @@ const ProfileSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white max-w-lg mx-auto flex flex-col font-sans relative">
+    <div className="min-h-screen bg-white max-w-lg mx-auto font-sans relative">
       <header className="bg-white px-5 py-8 flex items-center gap-6 border-b border-gray-50 shadow-sm sticky top-0 z-20">
          <button onClick={() => navigate('/taxi/user/profile')} className="p-2 -ml-2 active:scale-95 transition-all">
             <ArrowLeft size={24} className="text-slate-900" strokeWidth={3} />
@@ -109,7 +109,7 @@ const ProfileSettings = () => {
          </div>
       </header>
 
-      <div className="flex-1 p-5 space-y-10 overflow-y-auto no-scrollbar">
+      <div className="p-5 space-y-10">
          {/* AVATAR EDIT AREA */}
          <div className="flex flex-col items-center gap-4 py-4">
             <div className="relative">
@@ -216,8 +216,10 @@ const ProfileSettings = () => {
          {saveError && <p className="text-sm font-bold text-rose-500 text-center">{saveError}</p>}
       </div>
 
-      <div className="p-6 bg-white border-t border-gray-50 pb-12">
-         <button 
+      {/* pb-28 (not pb-12) so the button clears the fixed bottom nav bar
+          that this page's shared layout renders on top of it. */}
+      <div className="p-6 bg-white border-t border-gray-50 pb-28">
+         <button
             onClick={handleSave}
             disabled={photoUploading || saving}
             className="w-full bg-slate-900 h-15 rounded-[28px] text-[15px] font-bold text-white shadow-xl shadow-slate-900/10 active:scale-98 transition-all disabled:opacity-50"

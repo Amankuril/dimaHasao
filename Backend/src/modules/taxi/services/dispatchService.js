@@ -846,10 +846,9 @@ export const cancelRideByAdmin = async (rideId) => {
 };
 
 export const cancelRideByUser = async ({ rideId, userId }) => {
-  const dispatchState = getDispatchState(rideId);
-  stopDispatchFlow(rideId, { releaseLease: false });
   const session = await mongoose.startSession();
   let ride = null;
+  let dispatchState = null;
   let cancellationSettlement = null;
 
   try {
@@ -859,9 +858,18 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
 
     if (!ride) {
       await session.abortTransaction();
-      stopDispatchFlow(rideId);
       return null;
     }
+
+    /*
+     * Ownership is confirmed above — only now is it safe to touch this
+     * ride's dispatch state. Doing this before the ownership check let any
+     * authenticated user tear down (and, on the not-found path, release the
+     * distributed lease for) an arbitrary ride ID they don't own, stalling
+     * driver matching for someone else's ride.
+     */
+    dispatchState = getDispatchState(rideId);
+    stopDispatchFlow(rideId, { releaseLease: false });
 
     if (ride.status === RIDE_STATUS.COMPLETED || ride.liveStatus === RIDE_LIVE_STATUS.COMPLETED) {
       throw new Error('Completed rides cannot be cancelled');
@@ -887,7 +895,9 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
     await session.commitTransaction();
   } catch (error) {
     await session.abortTransaction();
-    stopDispatchFlow(rideId);
+    if (ride) {
+      stopDispatchFlow(rideId);
+    }
     throw error;
   } finally {
     session.endSession();
@@ -952,10 +962,9 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
 };
 
 export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
-  const dispatchState = getDispatchState(rideId);
-  stopDispatchFlow(rideId, { releaseLease: false });
   const session = await mongoose.startSession();
   let ride = null;
+  let dispatchState = null;
   let cancellationSettlement = null;
 
   try {
@@ -965,9 +974,12 @@ export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
 
     if (!ride) {
       await session.abortTransaction();
-      stopDispatchFlow(rideId);
       return null;
     }
+
+    // Ownership confirmed above — see cancelRideByUser for why this must come after.
+    dispatchState = getDispatchState(rideId);
+    stopDispatchFlow(rideId, { releaseLease: false });
 
     const scheduledAt = ride?.scheduledAt ? new Date(ride.scheduledAt) : null;
     const isScheduledRide = scheduledAt && Number.isFinite(scheduledAt.getTime()) && scheduledAt.getTime() > Date.now();
@@ -1000,7 +1012,9 @@ export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
     await session.commitTransaction();
   } catch (error) {
     await session.abortTransaction();
-    stopDispatchFlow(rideId);
+    if (ride) {
+      stopDispatchFlow(rideId);
+    }
     throw error;
   } finally {
     session.endSession();

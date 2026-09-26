@@ -20,9 +20,7 @@ import {
   User,
   Pencil,
   ArrowUpDown,
-  PhoneCall,
-  Briefcase,
-  Compass
+  PhoneCall
 } from 'lucide-react';
 import { userService } from '../../services/userService';
 import { GoogleMap } from '@react-google-maps/api';
@@ -986,37 +984,6 @@ const IntercityHome = () => {
           </div>
         </div>
       )}
-
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-white border-t border-slate-200 grid grid-cols-2 h-16 items-center z-40 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
-
-        {/* ONE WAY */}
-        <button
-          onClick={() => {
-            setTripType('One Way');
-          }}
-          className={`flex flex-col items-center justify-center h-full border-r border-slate-100 transition-colors ${tripType === 'One Way' ? 'bg-[#1E90FF] text-white font-extrabold' : 'text-slate-500 hover:bg-slate-50'
-            }`}
-        >
-          <Compass size={18} strokeWidth={2.5} className="mb-0.5" />
-          <span className="text-[9px] tracking-wide uppercase font-extrabold">One Way</span>
-        </button>
-
-        {/* ROUND TRIP */}
-        <button
-          onClick={() => {
-            setTripType('Round Trip');
-          }}
-          className={`flex flex-col items-center justify-center h-full border-r border-slate-100 transition-colors ${tripType === 'Round Trip' ? 'bg-[#1E90FF] text-white font-extrabold' : 'text-slate-500 hover:bg-slate-50'
-            }`}
-        >
-          <Briefcase size={18} strokeWidth={2.5} className="mb-0.5" />
-          <span className="text-[9px] tracking-wide uppercase font-extrabold">Round Trip</span>
-        </button>
-
-
-
-      </nav>
     </div>
   );
 };
