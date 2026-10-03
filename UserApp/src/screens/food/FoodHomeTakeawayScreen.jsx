@@ -1,6 +1,6 @@
 import React from 'react';
-import Placeholder from '../../components/Placeholder';
+import FoodHomeScreen from './FoodHomeScreen';
 
 export default function FoodHomeTakeawayScreen() {
-  return <Placeholder title="Takeaway" note="Ported in Food 9b" />;
+  return <FoodHomeScreen mode="takeaway" />;
 }
