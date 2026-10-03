@@ -17,7 +17,7 @@ import SupportScreen from '../screens/SupportScreen';
 import ReviewScreen from '../screens/ReviewScreen';
 import MoreScreen from '../screens/MoreScreen';
 import TaxiStack from './TaxiStack';
-import FoodHomeScreen from '../screens/FoodHomeScreen';
+import FoodStack from './FoodStack';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,8 +28,8 @@ const Stack = createNativeStackNavigator();
  * stack screen pushed over MainTabs here instead of a route inside it.
  *
  * Taxi and Food are their own modules on the web (redirected to from here,
- * not rendered here) — same split on RN: "Taxi" renders its own nested
- * stack (TaxiStack), FoodHomeScreen is the entry point for task #9's stack.
+ * not rendered here) — same split on RN: "Taxi" and "FoodHome" each render
+ * their own nested stack (TaxiStack, FoodStack).
  */
 export default function RootNavigator() {
   const {user, isHydrated} = useBooking();
@@ -57,7 +57,7 @@ export default function RootNavigator() {
             <Stack.Screen name="Review" component={ReviewScreen} />
             <Stack.Screen name="More" component={MoreScreen} />
             <Stack.Screen name="Taxi" component={TaxiStack} />
-            <Stack.Screen name="FoodHome" component={FoodHomeScreen} />
+            <Stack.Screen name="FoodHome" component={FoodStack} />
           </>
         )}
       </Stack.Navigator>

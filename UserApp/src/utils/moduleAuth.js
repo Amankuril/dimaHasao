@@ -9,6 +9,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {base64Decode} from './base64';
+import {authEvents} from '../services/api/axios';
 
 export function decodeToken(token) {
   if (!token) return null;
@@ -87,6 +88,7 @@ export async function clearModuleAuth(module) {
     keys.push('userToken', 'token', 'userInfo', 'role', 'chatRole');
   }
   await AsyncStorage.multiRemove(keys);
+  authEvents.emit('authChanged', {module, authenticated: false});
 }
 
 export async function clearAuthData() {
@@ -119,6 +121,7 @@ export async function setAuthData(module, token, user, refreshToken = null) {
   }
 
   await AsyncStorage.multiSet(pairs);
+  authEvents.emit('authChanged', {module, authenticated: true});
 }
 
 /**

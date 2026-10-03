@@ -12,6 +12,9 @@ import './global.css';
 import {queryClient} from './src/app/queryClient';
 import {BookingProvider} from './src/context/BookingContext';
 import {SettingsProvider} from './src/context/SettingsContext';
+import {FoodCartProvider} from './src/context/FoodCartContext';
+import {FoodOrdersProvider} from './src/context/FoodOrdersContext';
+import {FoodProfileProvider} from './src/context/FoodProfileContext';
 import RootNavigator from './src/navigation/RootNavigator';
 
 function App() {
@@ -21,8 +24,14 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <BookingProvider>
             <SettingsProvider>
-              <RootNavigator />
-              <Toast />
+              <FoodProfileProvider>
+                <FoodCartProvider>
+                  <FoodOrdersProvider>
+                    <RootNavigator />
+                    <Toast />
+                  </FoodOrdersProvider>
+                </FoodCartProvider>
+              </FoodProfileProvider>
             </SettingsProvider>
           </BookingProvider>
         </QueryClientProvider>
