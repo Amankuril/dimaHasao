@@ -28,7 +28,7 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ChevronRight, MapPin, Search, Wallet, X} from 'lucide-react-native';
+import {ChevronRight, MapPin, Search, User, Wallet, X} from 'lucide-react-native';
 
 import {useSettings} from '../../context/SettingsContext';
 import {userService} from '../../services/taxi/userService';
@@ -333,9 +333,22 @@ export default function TaxiHomeScreen() {
             <Pressable onPress={() => navigation.navigate('More')} className="w-10 h-10 rounded-full bg-[#06381e]/90 items-center justify-center">
               <MapPin size={18} color="#fff" />
             </Pressable>
-            <Pressable onPress={() => navigation.navigate('Wallet')} className="w-10 h-10 rounded-full bg-[#06381e]/90 items-center justify-center">
-              <Wallet size={18} color="#fff" />
-            </Pressable>
+            <View className="flex-row gap-2">
+              <Pressable onPress={() => navigation.navigate('Wallet')} className="w-10 h-10 rounded-full bg-[#06381e]/90 items-center justify-center">
+                <Wallet size={18} color="#fff" />
+              </Pressable>
+              {/*
+               * The web's own Taxi bottom nav was retired in favor of the
+               * platform-wide one, whose Profile tab is the yet-to-be-built
+               * top-level DimaHasao Profile (task #12) — not this Taxi-specific
+               * one. Until that lands, this is this app's only way into
+               * TaxiProfileScreen and everything under it (settings, SOS,
+               * notifications, promo codes, referral).
+               */}
+              <Pressable onPress={() => navigation.navigate('TaxiProfile')} className="w-10 h-10 rounded-full bg-[#06381e]/90 items-center justify-center">
+                <User size={18} color="#fff" />
+              </Pressable>
+            </View>
           </View>
 
           <Pressable
