@@ -1,0 +1,125 @@
+{
+  "project_info": {
+    "project_number": "488274393057",
+    "firebase_url": "https://dimahasao-0011-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "dimahasao-0011",
+    "storage_bucket": "dimahasao-0011.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488274393057:android:84445c9879b675f09644a0",
+        "android_client_info": {
+          "package_name": "com.dimahsao.delivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOUxnW3LjiJHRvb2Am_lAP_-o-O163ly4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488274393057:android:02b15e4dc339f57e9644a0",
+        "android_client_info": {
+          "package_name": "com.dimahsao.hotelpartner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOUxnW3LjiJHRvb2Am_lAP_-o-O163ly4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488274393057:android:b2b03cd875949e179644a0",
+        "android_client_info": {
+          "package_name": "com.dimahsao.restaurant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOUxnW3LjiJHRvb2Am_lAP_-o-O163ly4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488274393057:android:88897ad6e71fa3059644a0",
+        "android_client_info": {
+          "package_name": "com.dimahsao.taxidriver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOUxnW3LjiJHRvb2Am_lAP_-o-O163ly4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488274393057:android:2394ee5e9c024cea9644a0",
+        "android_client_info": {
+          "package_name": "com.dimahsao.toursoperator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOUxnW3LjiJHRvb2Am_lAP_-o-O163ly4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:488274393057:android:63bef553d2d76c399644a0",
+        "android_client_info": {
+          "package_name": "com.dimahsao.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOUxnW3LjiJHRvb2Am_lAP_-o-O163ly4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
