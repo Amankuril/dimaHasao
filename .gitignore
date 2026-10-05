@@ -2,7 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
-
+.
 # ─── Environment / secrets ───────────────────────────────────────────────────
 # Applies at every depth (Backend/.env, Frontend/.env, ...). Keep examples.
 .env
