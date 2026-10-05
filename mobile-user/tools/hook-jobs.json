@@ -1,0 +1,60 @@
+[
+  {
+    "from": "modules/Food/pages/user/restaurants/RestaurantDetails.jsx",
+    "to": "food/hooks/pages/useRestaurantDetails.js",
+    "component": "RestaurantDetailsContent",
+    "hook": "useRestaurantDetails"
+  },
+  {
+    "from": "modules/Food/pages/user/cart/Cart.jsx",
+    "to": "food/hooks/pages/useCartPage.js",
+    "component": "Cart",
+    "hook": "useCartPage",
+    "patches": [
+      {
+        "find": "  let cartContext;\n",
+        "replace": "  const cartContext = useCart();\n"
+      }
+    ]
+  },
+  {
+    "from": "modules/Food/pages/user/CategoryPage.jsx",
+    "to": "food/hooks/pages/useCategoryPage.js",
+    "component": "CategoryPage",
+    "hook": "useCategoryPage"
+  },
+  {
+    "from": "modules/Taxi/modules/user/pages/Activity.jsx",
+    "to": "taxi/hooks/useActivity.js",
+    "component": "Activity",
+    "hook": "useActivity"
+  },
+  {
+    "from": "modules/Taxi/modules/user/pages/intercity/IntercityVehicle.jsx",
+    "to": "taxi/hooks/useIntercityVehicle.js",
+    "component": "IntercityVehicle",
+    "hook": "useIntercityVehicle"
+  },
+  {
+    "from": "modules/Taxi/modules/user/pages/intercity/IntercityDetails.jsx",
+    "to": "taxi/hooks/useIntercityDetails.js",
+    "component": "IntercityDetails",
+    "hook": "useIntercityDetails",
+    "patches": [
+      {
+        "find": "  if (!fromCity || !vehicle) {\n    return { __guard: true }\n  }\n",
+        "replace": "  // The web returns null here, above two more effects. A hook cannot return early\n  // between hooks, so the guard is reported in the result instead.\n"
+      },
+      {
+        "find": "  return {\n    navigate,",
+        "replace": "  return {\n    __guard: !fromCity || !vehicle,\n    navigate,"
+      }
+    ]
+  },
+  {
+    "from": "modules/Taxi/modules/user/pages/intercity/IntercityConfirm.jsx",
+    "to": "taxi/hooks/useIntercityConfirm.js",
+    "component": "IntercityConfirm",
+    "hook": "useIntercityConfirm"
+  }
+]

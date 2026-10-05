@@ -1,0 +1,60 @@
+import api from '../api/client';
+
+/*
+ * The app-module list is shared, and ServiceGrid is rendered twice on the taxi
+ * home screen (once in the grid, once behind the all-services modal). Each
+ * instance mounts and fetches, so the same list was requested twice on every
+ * visit.
+ *
+ * Deduping here rather than in the component keeps it fixed however many
+ * ServiceGrids exist, and leaves the rendering structure — which is deliberate
+ * — alone. The window is short on purpose: it collapses one screen's duplicate
+ * mounts without holding a stale list across navigations.
+ */
+const APP_MODULES_DEDUPE_MS = 3000;
+let appModulesInflight = null;
+
+export const userService = {
+  getAppModules: async (params) => {
+    const key = JSON.stringify(params ?? null);
+    if (appModulesInflight && appModulesInflight.key === key) {
+      return appModulesInflight.promise;
+    }
+
+    const promise = api.get('/users/app-modules', { params });
+    appModulesInflight = { key, promise };
+    // Cleared on a timer, not on settle: two components mounting a few
+    // hundred milliseconds apart are not concurrent, and clearing on settle
+    // would let the second one through — which is exactly the bug.
+    setTimeout(() => {
+      if (appModulesInflight?.promise === promise) appModulesInflight = null;
+    }, APP_MODULES_DEDUPE_MS);
+
+    try {
+      return await promise;
+    } catch (error) {
+      if (appModulesInflight?.promise === promise) appModulesInflight = null;
+      throw error;
+    }
+  },
+  getIntercityPackages: async () => {
+    const response = await api.get('/users/intercity-packages');
+    return response;
+  },
+  getServiceLocations: async () => {
+    const response = await api.get('/users/service-locations');
+    return response;
+  },
+  getServiceStores: async () => {
+    const response = await api.get('/users/service-stores');
+    return response;
+  },
+  getAvailablePromos: async (params) => {
+    const response = await api.get('/promos/available', { params });
+    return response;
+  },
+  validatePromo: async (payload) => {
+    const response = await api.post('/promos/validate', payload);
+    return response;
+  },
+};

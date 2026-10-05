@@ -1,0 +1,5 @@
+[
+  { "from": "modules/Food/pages/user/CategoryPage.jsx", "to": "food/hooks/pages/useCategoryPage.js", "component": "CategoryPage", "hook": "useCategoryPage" },
+  { "from": "modules/Food/pages/user/Under250.jsx", "to": "food/hooks/pages/useUnder250Page.js", "component": "Under250", "hook": "useUnder250Page" },
+  { "from": "modules/Food/pages/user/search/ProfessionalSearch.jsx", "to": "food/hooks/pages/useProfessionalSearch.js", "component": "ProfessionalSearch", "hook": "useProfessionalSearch" }
+]
