@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Component, Fragment, useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Image from '../Img';
 import { router } from 'expo-router';
@@ -117,8 +117,35 @@ const haversineKm = (from, to) => {
 };
 const googleDirectionsUrl = (lat, lng) => `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
-/** A pinned, non-interactive map (web: the OpenStreetMap embed iframe). */
-export function PinMap({ lat, lng, delta = 0.012, style, interactive = false }) {
+class MapBoundary extends Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={[this.props.style, { alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray100 }]}>
+          <Text style={{ fontSize: 12, color: tw.gray500, ...poppins(500) }}>Map unavailable</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/** A pinned, non-interactive map (web: the OpenStreetMap embed iframe). A map failure must not crash the page. */
+export function PinMap(props) {
+  return (
+    <MapBoundary style={props.style}>
+      <PinMapView {...props} />
+    </MapBoundary>
+  );
+}
+
+function PinMapView({ lat, lng, delta = 0.012, style, interactive = false }) {
   return (
     <MapView
       provider={PROVIDER_GOOGLE}

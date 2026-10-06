@@ -48,14 +48,6 @@ export default function TouristPlaceDetail() {
     };
   }, [id]);
 
-  // Take the visitor into the real ride flow with this place as the drop.
-  const handleBookDirect = () => {
-    router.push({
-      pathname: '/taxi/user/ride/select-location',
-      params: { flow: 'ride', activeInput: 'drop', drop: place.fullAddress || place.location || place.name || '' },
-    });
-  };
-
   if (loading) {
     return (
       <View style={styles.page}>
@@ -90,6 +82,14 @@ export default function TouristPlaceDetail() {
       </View>
     );
   }
+
+  // Take the visitor into the real ride flow with this place as the drop.
+  const handleBookDirect = () => {
+    router.push({
+      pathname: '/taxi/user/ride/select-location',
+      params: { flow: 'ride', activeInput: 'drop', drop: place.fullAddress || place.location || place.name || '' },
+    });
+  };
 
   return (
     <View style={styles.page}>

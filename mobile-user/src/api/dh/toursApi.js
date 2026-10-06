@@ -321,22 +321,25 @@ export const adaptDestination = (d = {}, index = 0) => ({
   idealFor: d.idealFor || '',
 
   description: d.description || '',
-  aboutDetails: asArray(d.aboutDetails),
-  guideTips: asArray(d.guideTips),
+  aboutDetails: asArray(d.aboutDetails).map(String),
+  guideTips: asArray(d.guideTips).map(String),
 
   mainImage: d.mainImage || PLACEHOLDER_IMAGE,
   heroImage: d.heroImage || d.mainImage || PLACEHOLDER_IMAGE,
   insetImage: d.insetImage || d.mainImage || PLACEHOLDER_IMAGE,
   guideSunsetImage: d.guideSunsetImage || '',
-  gallery: asArray(d.gallery),
+  gallery: asArray(d.gallery).filter(Boolean),
 
-  tags: asArray(d.tags).map((t) => ({
+  tags: asArray(d.tags).filter(Boolean).map((t) => ({
     icon: t.icon || 'fa-solid fa-location-dot',
     text: t.text || '',
     color: t.color || 'text-emerald-600',
   })),
 
-  coordinates: d.coordinates || null,
+  coordinates:
+    Number.isFinite(Number(d.coordinates?.lat)) && Number.isFinite(Number(d.coordinates?.lng)) && d.coordinates?.lat != null && d.coordinates?.lng != null
+      ? { lat: Number(d.coordinates.lat), lng: Number(d.coordinates.lng) }
+      : null,
 });
 
 /** The published destination directory. */

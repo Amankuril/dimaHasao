@@ -712,6 +712,7 @@ export default function SelectLocation() {
                   value={pickup}
                   onChangeText={(v) => setPickup(sanitizeLocationInput(v))}
                   onFocus={() => setActiveInput('pickup')}
+                  selection={activeInput === 'pickup' ? undefined : { start: 0, end: 0 }}
                   placeholder="Your pickup location"
                   placeholderTextColor={tw.slate300}
                   style={styles.input}
@@ -769,6 +770,7 @@ export default function SelectLocation() {
                   placeholder="Enter drop location..."
                   placeholderTextColor={tw.slate300}
                   onFocus={() => setActiveInput('drop')}
+                  selection={activeInput === 'drop' ? undefined : { start: 0, end: 0 }}
                   onChangeText={(v) => setDrop(sanitizeLocationInput(v))}
                   style={styles.input}
                 />

@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Bike, HelpCircle, Repeat, Share2, Star } from 'lucide-react-native';
 import Image from '../../components/Img';
+import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { Press } from '../../components/ui';
 import { useLocation, useNavigate, useParams } from '../../lib/webRouter';
 import { shadow, tw } from '../../theme';
@@ -153,7 +154,7 @@ export default function RideDetail() {
         ) : null}
 
         <View style={styles.map}>
-          <Image source={{ uri: '/map%20image.avif' }} style={{ width: '100%', height: '100%', opacity: 0.6 }} resizeMode="cover" accessibilityLabel="Map view" />
+          <Image source={require('../../../assets/taxi/map_image.png')} style={{ width: '100%', height: '100%', opacity: 0.6 }} resizeMode="cover" accessibilityLabel="Map view" />
           <LinearGradient colors={['transparent', 'rgba(255,255,255,0.8)']} style={StyleSheet.absoluteFill} />
         </View>
 
@@ -190,7 +191,7 @@ export default function RideDetail() {
               <Text style={styles.rowValue}>Rs {details.baseFare}.00</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.rowLabel}>Taxes & Fees</Text>
+              <Text style={styles.rowLabel} numberOfLines={1}>{'Taxes & Fees'}</Text>
               <Text style={styles.rowValue}>Rs {details.taxes}.00</Text>
             </View>
             <View style={[styles.row, { borderTopWidth: 1, borderTopColor: tw.gray50, paddingTop: 12 }]}>
@@ -221,7 +222,7 @@ export default function RideDetail() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: 24 + insets.bottom }]}>
+      <View style={[styles.footer, { paddingBottom: 24 + NAV_CLEARANCE + insets.bottom }]}>
         <Press scale={0.97} onPress={rebook} accessibilityLabel="Rebook this ride" style={styles.rebook}>
           <Repeat size={18} color="#fff" />
           <Text style={[styles.footText, { color: '#fff' }]}>REBOOK RIDE</Text>
@@ -253,8 +254,8 @@ const styles = StyleSheet.create({
   vehicleName: { fontSize: 15, lineHeight: 20, color: tw.gray900, textTransform: 'capitalize', ...fo(900) },
   payBy: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, color: tw.gray400, ...fo(700) },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rowLabel: { fontSize: 13, lineHeight: 18, color: tw.gray500, ...fo(700) },
-  rowValue: { fontSize: 13, lineHeight: 18, color: tw.gray900, ...fo(700) },
+  rowLabel: { flex: 1, marginRight: 12, fontSize: 13, lineHeight: 18, color: tw.gray500, ...fo(700) },
+  rowValue: { textAlign: 'right', fontSize: 13, lineHeight: 18, color: tw.gray900, ...fo(700) },
   total: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...fo(900) },
   driver: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 20, backgroundColor: 'rgba(255,247,237,0.5)', borderRadius: 28, borderWidth: 1, borderColor: tw.orange50 },
   avatar: { width: 44, height: 44, borderRadius: 16, backgroundColor: '#f0f0f0', borderWidth: 1, borderColor: tw.orange100, alignItems: 'center', justifyContent: 'center' },
