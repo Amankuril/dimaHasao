@@ -154,7 +154,7 @@ export default function RideDetail() {
         ) : null}
 
         <View style={styles.map}>
-          <Image source={require('../../../assets/taxi/map_image.png')} style={{ width: '100%', height: '100%', opacity: 0.6 }} resizeMode="cover" accessibilityLabel="Map view" />
+          <Image source={require('../../../assets/taxi/map_image.jpg')} style={{ width: '100%', height: '100%', opacity: 0.6 }} resizeMode="cover" accessibilityLabel="Map view" />
           <LinearGradient colors={['transparent', 'rgba(255,255,255,0.8)']} style={StyleSheet.absoluteFill} />
         </View>
 
