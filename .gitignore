@@ -77,3 +77,7 @@ notes.txt
 
 # Local DB exports taken before destructive migrations — contain customer PII.
 backups/
+
+# Signing keystores
+*.jks
+*.keystore
