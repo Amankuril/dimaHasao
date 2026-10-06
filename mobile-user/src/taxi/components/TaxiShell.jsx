@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
-import { Redirect, Stack, usePathname } from 'expo-router';
+import { useEffect, useMemo } from 'react';
+import { Redirect, Stack, router, usePathname } from 'expo-router';
 import { View } from 'react-native';
+import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Header, PatternDivider } from '../../components/dh/Header';
 import { useAuth } from '../../context/AuthContext';
 import { SettingsProvider, useSettings } from '../context/SettingsContext';
 import { UserThemeProvider } from '../context/UserThemeContext';
@@ -90,6 +92,9 @@ function Listeners() {
 export default function TaxiShell() {
   const { signedIn, booting } = useAuth();
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
+  // The module header already sits below the status bar, so the screens under it must not pad for it again.
+  const innerInsets = useMemo(() => ({ ...insets, top: 0 }), [insets]);
   if (booting) return null;
   // Guests cannot browse taxi: the shared login, returning to where they were.
   if (!signedIn) return <Redirect href={{ pathname: '/app/login', params: { from: pathname } }} />;
@@ -97,8 +102,15 @@ export default function TaxiShell() {
     <SettingsProvider>
       <UserThemeProvider>
         <Listeners />
+        {/* Web: routes.jsx TaxiUserShell -> ModuleShell (module header + divider above every taxi screen). */}
         <View style={{ flex: 1, backgroundColor: '#EFF5FD' }}>
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#EFF5FD' }, animation: 'fade', animationDuration: 120 }} />
+          <Header title="TAXI / AUTO" subtitle="Book your ride, travel with ease" rightAction="none" onBack={() => router.navigate('/app')} />
+          <PatternDivider variant="green-gold" />
+          <SafeAreaInsetsContext.Provider value={innerInsets}>
+            <View style={{ flex: 1 }}>
+              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#EFF5FD' }, animation: 'fade', animationDuration: 120 }} />
+            </View>
+          </SafeAreaInsetsContext.Provider>
         </View>
       </UserThemeProvider>
     </SettingsProvider>

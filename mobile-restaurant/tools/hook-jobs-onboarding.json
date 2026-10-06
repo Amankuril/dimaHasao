@@ -1,0 +1,170 @@
+[
+  {
+    "from": "modules/Food/pages/restaurant/Onboarding.jsx",
+    "to": "restaurant/hooks/pages/useOnboarding.js",
+    "component": "RestaurantOnboarding",
+    "hook": "useOnboarding",
+    "patches": [
+      {
+        "find": "import { Upload } from 'lucide-react-native'\n",
+        "replace": ""
+      },
+      {
+        "find": "import { Select } from '../../components/ui/select'\n",
+        "replace": ""
+      },
+      {
+        "find": "import { prepareUploadFile, prepareUploadFiles } from '../../../shared/utils/imageCompressor'\n",
+        "replace": "import { prepareUploadFile } from '../../../lib/images'\nimport { geocodeAPI } from '../../../api/geocode'\nimport { BackHandler, Keyboard } from 'react-native'\n"
+      },
+      {
+        "find": "import { EMAIL_REGEX } from '../../../shared/utils/emailValidation'\n",
+        "replace": ""
+      },
+      {
+        "find": "import useOnboardingExitGuard from '../../../shared/hooks/useOnboardingExitGuard'\n",
+        "replace": ""
+      },
+      {
+        "find": "clearOnboardingFcmLocal, prefetchModuleFcmToken } from",
+        "replace": "clearOnboardingFcmLocalState } from"
+      },
+      {
+        "find": "import { getOnboardingIntent, clearOnboardingIntent, setActiveWorkspace, setPartnerProfiles, WORKSPACE } from",
+        "replace": "import { clearOnboardingIntent } from"
+      },
+      {
+        "find": "import { setPartnerSession } from '@/modules/Hotel/utils/partnerAuth'\n",
+        "replace": ""
+      },
+      {
+        "find": "import { createHotelProfile, submitHotelKyc, fetchPartnerProfiles } from '../../../shared/partner/partnerApi'\n",
+        "replace": ""
+      },
+      {
+        "cutFrom": "import { HOTEL_BUSINESS_DEFAULTS",
+        "cutTo": "import { localStore }",
+        "replace": ""
+      },
+      {
+        "find": "import { window, document } from '../../../lib/webShim'\n",
+        "replace": ""
+      },
+      {
+        "find": "hasRestaurantStep1Progress } from",
+        "replace": "hasRestaurantStep1Progress, ONBOARDING_FILE_KEY_PREFIX } from"
+      },
+      {
+        "find": "const debugError = (...args) => {}\n",
+        "replace": "const debugError = (...args) => {}\n\n// shared/utils/emailValidation.js\nconst EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/i\n\n/*\n * shared/hooks/useOnboardingExitGuard.js. The web pushes a history entry and\n * catches \"popstate\"; the app catches the hardware back button the same way:\n * first step -> ask before leaving, later steps -> previous step.\n */\nfunction useOnboardingExitGuard({ isFirstStep, onPreviousStep, onExit, hasUnsavedProgress = () => true }) {\n  const [showExitModal, setShowExitModal] = useState(false)\n\n  const handleStay = useCallback(() => {\n    setShowExitModal(false)\n  }, [])\n\n  const handleExit = useCallback(() => {\n    setShowExitModal(false)\n    onExit?.()\n  }, [onExit])\n\n  const requestExit = useCallback(() => {\n    if (hasUnsavedProgress()) {\n      setShowExitModal(true)\n      return\n    }\n    onExit?.()\n  }, [hasUnsavedProgress, onExit])\n\n  const handleBack = useCallback(() => {\n    if (isFirstStep) {\n      requestExit()\n      return\n    }\n    onPreviousStep?.()\n  }, [isFirstStep, onPreviousStep, requestExit])\n\n  useEffect(() => {\n    const sub = BackHandler.addEventListener(\"hardwareBackPress\", () => {\n      if (isFirstStep) {\n        requestExit()\n        return true\n      }\n      onPreviousStep?.()\n      return true\n    })\n    return () => sub.remove()\n  }, [isFirstStep, onPreviousStep, requestExit])\n\n  return { showExitModal, handleBack, handleStay, handleExit, requestExit }\n}\n"
+      },
+      {
+        "cutFrom": "const ONBOARDING_FILES_DB =",
+        "cutTo": "const getUploadableMenuFiles",
+        "replace": "const saveFileToDB = async (key, file) => {\n  if (!file || !isUploadableFile(file)) return\n  try {\n    const { uri, name, type, size, width, height } = file\n    localStore.setItem(ONBOARDING_FILE_KEY_PREFIX + key, JSON.stringify({ uri, name, type, size, width, height }))\n  } catch (err) {\n    debugError(\"Saving picked file failed:\", err)\n  }\n}\n\nconst getFileFromDB = async (key) => {\n  try {\n    const raw = localStore.getItem(ONBOARDING_FILE_KEY_PREFIX + key)\n    const file = raw ? JSON.parse(raw) : null\n    return isUploadableFile(file) ? file : null\n  } catch (err) {\n    debugError(\"Loading picked file failed:\", err)\n    return null\n  }\n}\n\nconst deleteFileFromDB = async (key) => {\n  try {\n    localStore.removeItem(ONBOARDING_FILE_KEY_PREFIX + key)\n  } catch (err) {\n    debugError(\"Deleting picked file failed:\", err)\n  }\n}\n\n"
+      },
+      {
+        "cutFrom": "const isUploadableFile = (value) => {",
+        "cutTo": "const normalizePincode",
+        "replace": "const isUploadableFile = (value) =>\n  Boolean(value) && typeof value === \"object\" && typeof value.uri === \"string\" && value.uri.length > 0 && !value.url\n\n"
+      },
+      {
+        "find": "  const [step, setStep] = useState(1)\n",
+        "replace": "  const [step, setStep] = useState(1)\n  const scrollRef = useRef(null)\n  const scrollToTop = () => scrollRef.current?.scrollTo?.({ y: 0, animated: false })\n"
+      },
+      {
+        "find": "  useEffect(() => {\n    prefetchModuleFcmToken(\"restaurant\")\n  }, [])\n",
+        "replace": ""
+      },
+      {
+        "cutFrom": "  const handleExitAnyway = useCallback(() => {",
+        "cutTo": "  const goToPreviousOnboardingStep",
+        "replace": "  const handleExitAnyway = useCallback(() => {\n    void (async () => {\n      try {\n        clearOnboardingFcmLocalState()\n        clearOnboardingFromLocalStorage()\n        clearOnboardingFileCache()\n        await clearAllFilesFromDB()\n\n        const hasSession = Boolean(localStore.getItem(\"restaurant_refreshToken\"))\n        if (hasSession) {\n          await restaurantAPI.logout().catch(() => {})\n        }\n        clearModuleAuth(\"restaurant\")\n        clearAuthData()\n        events.emit(\"restaurantAuthChanged\")\n      } catch (e) {\n        debugError(\"Error clearing onboarding data on exit:\", e)\n      }\n      navigate(\"/food/restaurant/login\", { replace: true })\n    })()\n  }, [navigate])\n\n"
+      },
+      {
+        "cutFrom": "  // Steps 4-5, only reached when onboarding intent",
+        "cutTo": "  const hasStep1UnsavedProgress",
+        "replace": "  const totalSteps = 3\n\n"
+      },
+      {
+        "find": "    hotelStep1,\n    setHotelStep1,\n    hotelStep2,\n    setHotelStep2,\n",
+        "replace": ""
+      },
+      {
+        "cutFrom": "          /*\n           * A reload here means",
+        "cutTo": "          setHasExistingRestaurantProfile(true)",
+        "replace": ""
+      },
+      {
+        "cutFrom": "    } else if (step === 4) {\n      validationErrors = validateHotelBusinessFields",
+        "cutTo": "    }\n\n    if (validationErrors.length > 0) {",
+        "replace": ""
+      },
+      {
+        "cutFrom": "        /*\n         * \"Both\" doesn't stop here",
+        "cutTo": "        toast.success(\"Registration submitted. Awaiting admin approval.\", { duration: 4000 })\n        await finalizeRestaurantPendingSubmission(navigate, step1.ownerPhone, {\n",
+        "replace": ""
+      },
+      {
+        "cutFrom": "      } else if (step === 4) {\n        setStep(5)",
+        "cutTo": "    } catch (err) {\n      const msg =",
+        "replace": "      }\n"
+      },
+      {
+        "find": "new URLSearchParams(window.location.search).get(\"step\")",
+        "replace": "searchParams.get(\"step\")"
+      },
+      {
+        "find": "window.scrollTo({ top: 0, behavior: \"instant\" })",
+        "replace": "scrollToTop()"
+      },
+      {
+        "find": "window.scrollTo({ top: 0, behavior: \"instant\" })",
+        "replace": "scrollToTop()"
+      },
+      {
+        "find": "window.scrollTo({ top: 0, behavior: \"instant\" })",
+        "replace": "scrollToTop()"
+      },
+      {
+        "cutFrom": "  useEffect(() => {\n    if (!window.visualViewport) return undefined",
+        "cutTo": "  // Save to localStore whenever step data changes",
+        "replace": ""
+      },
+      {
+        "find": "await prepareUploadFiles(menuFiles)",
+        "replace": "await Promise.all(menuFiles.map((file) => prepareUploadFile(file)))"
+      },
+      {
+        "cutFrom": "  useEffect(() => {\n    if (step !== 1) return\n\n    let cancelled = false\n    let autocomplete = null",
+        "cutTo": "  // Load zones for onboarding dropdown",
+        "replace": "  /*\n   * Location search. The web attaches the Google Places widget to the input (strictly inside the chosen\n   * zone) and falls back to Nominatim suggestions; the app has no widget, so it asks the geocode proxy's\n   * text search (biased to the chosen zone) and fills the same fields from the picked place.\n   */\n  const skipSearchRef = useRef(\"\")\n\n  const zoneCenter = (zone) => {\n    const points = (Array.isArray(zone?.coordinates) ? zone.coordinates : [])\n      .map((c) => ({ lat: parseFloat(c.latitude ?? c.lat), lng: parseFloat(c.longitude ?? c.lng) }))\n      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))\n    if (!points.length) return null\n    return {\n      latitude: points.reduce((sum, p) => sum + p.lat, 0) / points.length,\n      longitude: points.reduce((sum, p) => sum + p.lng, 0) / points.length,\n    }\n  }\n\n  useEffect(() => {\n    if (step !== 1) return\n    const q = String(locationSearchValue || \"\").trim()\n\n    if (skipSearchRef.current && skipSearchRef.current === q) return\n    skipSearchRef.current = \"\"\n\n    if (q.length < 3) {\n      setLocationSuggestions([])\n      setIsSearchingLocation(false)\n      return\n    }\n\n    const selectedZone = zones.find(z => String(z?._id || z?.id) === String(step1.zoneId))\n    const zoneName = selectedZone?.name || selectedZone?.zoneName || selectedZone?.serviceLocation || \"\"\n    let cancelled = false\n\n    const t = setTimeout(async () => {\n      try {\n        setIsSearchingLocation(true)\n        const queryWithZone = zoneName ? `${q}, ${zoneName}` : q\n        const res = await geocodeAPI.textSearch({ textQuery: queryWithZone, maxResultCount: 8, ...(zoneCenter(selectedZone) || {}) })\n        const places = res?.data?.data?.places\n        const mapped = (Array.isArray(places) ? places : []).map((p) => ({\n          id: p.id,\n          display: [p.displayName?.text, p.formattedAddress].filter(Boolean).join(\", \") || p.formattedAddress || \"\",\n          formattedAddress: p.formattedAddress || \"\",\n          lat: Number(p.location?.latitude),\n          lng: Number(p.location?.longitude),\n        }))\n        if (!cancelled) setLocationSuggestions(mapped)\n      } catch (e) {\n        debugError(\"Location search failed:\", e)\n      } finally {\n        if (!cancelled) setIsSearchingLocation(false)\n      }\n    }, 400)\n\n    return () => {\n      cancelled = true\n      clearTimeout(t)\n    }\n  }, [locationSearchValue, step, step1.zoneId, zones])\n\n  const selectLocationSuggestion = async (s) => {\n    skipSearchRef.current = s.display\n    setLocationSearchValue(s.display)\n    setLocationSuggestions([])\n    Keyboard.dismiss()\n\n    // parsePlace() of the web's autocomplete handler, on the geocoded place's address components\n    let parsed = { area: \"\", city: \"\", state: \"\", pincode: \"\" }\n    try {\n      const res = await geocodeAPI.place(s.id)\n      const comps = res?.data?.data?.results?.[0]?.address_components\n      if (Array.isArray(comps)) {\n        const get = (types) => comps.find((c) => types.some((t) => c.types?.includes(t)))?.long_name || \"\"\n        parsed = {\n          area: get([\"sublocality_level_1\", \"sublocality\", \"neighborhood\"]) || get([\"locality\"]),\n          city: get([\"locality\"]) || get([\"administrative_area_level_2\"]),\n          state: get([\"administrative_area_level_1\"]) || get([\"administrative_area_level_2\"]),\n          pincode: get([\"postal_code\"]),\n        }\n      }\n    } catch (e) {\n      debugError(\"Place details failed:\", e)\n    }\n\n    setStep1((prev) => ({\n      ...prev,\n      location: {\n        ...prev.location,\n        formattedAddress: s.formattedAddress || s.display || prev.location.formattedAddress,\n        addressLine1: s.formattedAddress || s.display || prev.location.addressLine1 || \"\",\n        area: parsed.area || prev.location.area,\n        city: parsed.city || prev.location.city,\n        state: parsed.state || prev.location.state,\n        pincode: parsed.pincode || prev.location.pincode,\n        latitude: Number.isFinite(s.lat) ? Number(s.lat.toFixed(6)) : prev.location.latitude,\n        longitude: Number.isFinite(s.lng) ? Number(s.lng.toFixed(6)) : prev.location.longitude,\n      },\n    }))\n  }\n\n"
+      },
+      {
+        "cutFrom": "  const renderStep = () => {",
+        "cutTo": "  return {\n    companyName,",
+        "replace": ""
+      },
+      {
+        "find": "    renderStep,\n",
+        "replace": ""
+      },
+      {
+        "find": "    ONBOARDING_FILES_DB,\n",
+        "replace": ""
+      },
+      {
+        "find": "    FILES_STORE,\n",
+        "replace": ""
+      },
+      {
+        "find": "    openOnboardingFilesDB,\n",
+        "replace": ""
+      },
+      {
+        "find": "    totalSteps,\n",
+        "replace": "    totalSteps,\n    scrollRef,\n    selectLocationSuggestion,\n"
+      }
+    ]
+  }
+]

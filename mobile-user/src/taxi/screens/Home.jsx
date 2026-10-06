@@ -16,6 +16,7 @@ import { normalizeAssetUrl } from '../context/SettingsContext';
 import { userService } from '../services/userService';
 import { DISTRICT_PLACES } from '../constants/districtPlaces';
 import LocationMapSection from '../components/home/LocationMapSection';
+import { useSettings } from '../context/SettingsContext';
 import SuperAppHomeHeader from '../components/home/SuperAppHomeHeader';
 import {
   SafeImage, airplaneIcon, bikeFallback, busFallback, busStationIcon, calculateDistanceKm, defaultSettings, deliveryFallback, fallbackCar, getDynamicImageSrc,
@@ -146,6 +147,13 @@ const rememberVehicleType = (title) => {
   else localStore.removeItem('selectedVehicleType');
 };
 
+/* The grid has its own defaults on the web (ServiceGrid.jsx), different from the page's: three tiles, Bike Taxi first. */
+const GRID_DEFAULT_EVERYTHING = [
+  { id: '1', title: 'Bike Taxi', subtitle: 'Beat the traffic', image: '', route: '/taxi/user/ride/select-location', order: 1, status: 'active' },
+  { id: '2', title: 'Book now', subtitle: 'Your everyday rides', image: '', route: '/taxi/user/ride/select-location', order: 2, status: 'active' },
+  { id: '4', title: 'All Services', subtitle: 'All Services', image: '', route: '', order: 4, status: 'active' },
+];
+
 /** The dark "Everything In Minutes" tile: text on the left, artwork bleeding off the right. */
 function EverythingCard({ item, fallbackIcon, onPress }) {
   const title = item.title;
@@ -174,19 +182,22 @@ function EverythingCard({ item, fallbackIcon, onPress }) {
         </View>
       ) : (
         <View style={styles.everythingImageWrap}>
-          <Image source={toSource(src)} onError={() => setFailed(true)} style={{ width: '100%', height: '100%' }} resizeMode={typeof src === 'string' ? 'cover' : 'contain'} />
+          <Image source={toSource(src)} onError={() => setFailed(true)} style={{ width: '190%', height: '100%' }} resizeMode="cover" />
         </View>
       )}
       <LinearGradient pointerEvents="none" colors={['#121821', '#121821', 'rgba(18,24,33,0)']} locations={[0, 0.52, 0.72]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
       <View pointerEvents="none" style={styles.everythingText}>
-        {lower(item.subtitle) !== lower(title) ? <Text style={styles.everythingSub} numberOfLines={1}>{item.subtitle}</Text> : null}
+        {lower(item.subtitle) !== lower(title) ? <Text style={styles.everythingSub}>{item.subtitle}</Text> : null}
         <Text style={styles.everythingTitle} numberOfLines={2}>{title}</Text>
       </View>
     </Press>
   );
 }
 
-function ServiceGrid({ uiSettings, navigate, onOpenAll, onLoadServices }) {
+function ServiceGrid({ navigate, onOpenAll, onLoadServices }) {
+  const { settings } = useSettings();
+  const saved = settings?.userHomeSettings;
+  const uiSettings = saved && Object.keys(saved).length > 0 ? saved : null;
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -248,7 +259,7 @@ function ServiceGrid({ uiSettings, navigate, onOpenAll, onLoadServices }) {
     onLoadServices?.(services);
   }, [services, onLoadServices]);
 
-  const items = (uiSettings?.everything || defaultSettings.everything).filter(active).sort(byOrder);
+  const items = (uiSettings?.everything || GRID_DEFAULT_EVERYTHING).filter(active).sort(byOrder);
   const moduleIcon = (m, fallback) => (m ? normalizeAssetUrl(m.mobile_menu_icon) || fallback : fallback);
 
   return (
@@ -448,7 +459,7 @@ export default function TaxiHome() {
           ) : null}
 
           {!sections || sections.enableEverything !== false ? (
-            <ServiceGrid uiSettings={uiSettings} navigate={navigate} onOpenAll={() => setIsAllServicesOpen(true)} onLoadServices={setActiveServices} />
+            <ServiceGrid navigate={navigate} onOpenAll={() => setIsAllServicesOpen(true)} onLoadServices={setActiveServices} />
           ) : null}
 
           {settingsLoading ? (
@@ -609,7 +620,7 @@ const styles = StyleSheet.create({
   h2: { fontSize: 19, lineHeight: 24, letterSpacing: -0.475, color: tw.slate900, marginBottom: 10, ...fo(900) },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   everything: { height: 108, borderRadius: 22, overflow: 'hidden', backgroundColor: '#121821', borderWidth: 1, borderColor: 'rgba(63,63,70,0.4)' },
-  everythingImageWrap: { position: 'absolute', right: 0, bottom: 0, width: '70%', height: '100%' },
+  everythingImageWrap: { position: 'absolute', right: 0, bottom: 0, width: '70%', height: '100%', overflow: 'hidden' },
   everythingIconWrap: { position: 'absolute', right: 8, bottom: 8, width: 72, height: 72, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
   allIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(226,232,240,0.5)', borderWidth: 1, borderColor: 'rgba(203,213,225,0.3)' },
   everythingText: { width: '65%', padding: 11 },

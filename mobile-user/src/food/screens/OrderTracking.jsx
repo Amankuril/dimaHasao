@@ -100,10 +100,10 @@ function Pulse({ children, style }) {
 function PickupPanel({ dining, ready }) {
   return (
     <LinearGradient colors={dining ? ['#0f172a', '#1e293b'] : ['#06381e', '#0a4d2b']} style={styles.pickupPanel}>
-      <Text style={styles.pickupKicker}>{dining ? 'DINE-IN' : 'TAKEAWAY · SELF PICKUP'}</Text>
+      <Text style={styles.pickupKicker}>{dining ? 'DINING - TABLE SERVICE' : 'ORDER, EAT, ENJOY!'}</Text>
       <Pulse style={styles.pickupIcon}>{dining ? <UtensilsCrossed size={44} color="#fff" /> : <ShoppingBag size={44} color="#fff" />}</Pulse>
-      <Text style={styles.pickupTitle}>{dining ? 'Your table order is on its way' : ready ? 'Ready for pickup' : 'Preparing your order'}</Text>
-      <Text style={styles.pickupSub}>{dining ? 'Sit back and relax, we will serve you shortly' : ready ? 'Please collect your order from the counter' : 'We will let you know when it is ready'}</Text>
+      <Text style={styles.pickupTitle}>{dining ? 'Food will be served at your table' : 'With Takeaway Self PickUp'}</Text>
+      <Text style={styles.pickupSub}>{dining ? 'Sit back and relax. Our server will bring your fresh hot meal directly to you shortly.' : ready ? 'Please collect your order from the counter' : 'We will let you know when it is ready'}</Text>
     </LinearGradient>
   );
 }

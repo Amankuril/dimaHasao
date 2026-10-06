@@ -25,10 +25,10 @@ const LcvIcon = require('../../../assets/taxi/icons/LCV.png')
 const McvIcon = require('../../../assets/taxi/icons/mcv.png')
 const HcvIcon = require('../../../assets/taxi/icons/hcv.png')
 const EhcvIcon = require('../../../assets/taxi/icons/ehcv.png')
-const ScootyIcon = require('../../../assets/taxi/icons/scooty.png')
+const ScootyIcon = require('../../../assets/taxi/icons/bike.png') // scooty.png is damaged in the web repo
 const HatchbackIcon = require('../../../assets/taxi/icons/Hatchback.png')
-const BusIcon = require('../../../assets/taxi/icons/bus.png')
-const MiniBusIcon = require('../../../assets/taxi/icons/mini_bus.png')
+const BusIcon = require('../../../assets/taxi/icons/car.png') // bus.png is damaged in the web repo
+const MiniBusIcon = require('../../../assets/taxi/icons/car.png') // mini_bus.png is damaged in the web repo
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 
 const SELECT_VEHICLE_MAP_OPTIONS = {

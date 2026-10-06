@@ -257,6 +257,7 @@ All returned 200 with the shape the app's adapters read:
 - Taxi date inputs (`<input type="date">`, `datetime-local`) open the Android date picker, then the time picker, clamped to the web's min / max.
 - Taxi delete-account: after the request succeeds the app clears the session and returns to the login screen.
 - Taxi intercity details: Google's Autocomplete widget on the two address boxes is replaced by a suggestion list under the focused box (text search biased to the trip's city); the map picker reverse-geocodes the pin with the same debounce and cache as the web. The web page returns `null` above two of its effects when the route state is missing; the hook reports that as `__guard` and the screen renders nothing while it redirects.
+- Taxi images: 11 PNGs under `assets/taxi` were damaged copies from the web repo (the live site serves the same broken files, so the web shows broken images there). Android refuses to package them, so they were removed. Stand-ins for the five in use: scooty → bike icon, bus and mini bus → car icon, bus fallback → fallback car, home footer highway background → yellow-taxi photo. Replace with proper artwork when the owner has the originals.
 - Deep links: the web has no app links / universal links and the wrapper declared none, so none are added. The `dimahasao://` scheme is kept only because Expo Router requires one.
 - Push: a notification whose `data.link` is not a user-app path opens the app without navigating.
 - Console output: only error messages from failed requests remain; the web's "TEMPORARY DEBUG LOG" lines were removed. Nothing logs tokens, OTPs or personal data.
@@ -264,6 +265,9 @@ All returned 200 with the shape the app's adapters read:
 ## Device test list
 
 Nothing below has been run: the build machine has no Android SDK / emulator. Use the test login recorded above (OTP is read out by the owner).
+
+**Known from the first phone run (2026-10-06)**
+0. Maps show blank tiles until "Maps SDK for Android" is enabled for the Maps key in Google Cloud (or an Android key for `com.dimahsao.user` is supplied). Re-check every map screen after that: taxi home, select-location, select-vehicle, tracking, intercity picker, food address selector, food order tracking.
 
 **Start-up and session**
 1. Cold start: splash → home; fonts and icons render; no blank frame.

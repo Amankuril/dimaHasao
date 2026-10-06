@@ -1,0 +1,303 @@
+[
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/useOrdersMain.js",
+    "component": "OrdersMainInner",
+    "hook": "useOrdersMain",
+    "patches": [
+      {
+        "find": "import { jsPDF } from 'jspdf'\nimport autoTable from 'jspdf-autotable'\n",
+        "replace": "import { printOrderReceipt } from '../../utils/printReceipt'\n"
+      },
+      {
+        "cutFrom": "  const handlePrint = async () => {",
+        "cutTo": "  // Handle swipe gestures with smooth animations",
+        "replace": "  // The web builds this PDF with jsPDF but reads an undefined variable and always fails; see utils/printReceipt.\n  const handlePrint = async () => printOrderReceipt(newOrder);\n\n"
+      },
+      {
+        "find": "            window.location.href = \"/food/restaurant/login\";",
+        "replace": "            navigate(\"/food/restaurant/login\", { replace: true });"
+      }
+    ]
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/orders/useCompletedOrders.js",
+    "component": "CompletedOrders",
+    "hook": "useCompletedOrders"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/orders/useCancelledOrders.js",
+    "component": "CancelledOrders",
+    "hook": "useCancelledOrders"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/orders/useTableBookings.js",
+    "component": "TableBookings",
+    "hook": "useTableBookings"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/orders/useAllOrders.js",
+    "component": "AllOrders",
+    "hook": "useAllOrders"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/orders/useTakeawayOrders.js",
+    "component": "TakeawayOrders",
+    "hook": "useTakeawayOrders"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/orders/usePreparingOrders.js",
+    "component": "PreparingOrders",
+    "hook": "usePreparingOrders"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/orders/useReadyOrders.js",
+    "component": "ReadyOrders",
+    "hook": "useReadyOrders"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrdersMain.jsx",
+    "to": "restaurant/hooks/pages/orders/useOutForDeliveryOrders.js",
+    "component": "OutForDeliveryOrders",
+    "hook": "useOutForDeliveryOrders"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/RestaurantStatus.jsx",
+    "to": "restaurant/hooks/pages/useRestaurantStatus.js",
+    "component": "RestaurantStatus",
+    "hook": "useRestaurantStatus"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/Notifications.jsx",
+    "to": "restaurant/hooks/pages/useNotifications.js",
+    "component": "Notifications",
+    "hook": "useNotifications"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/RushHour.jsx",
+    "to": "restaurant/hooks/pages/useRushHour.js",
+    "component": "RushHour",
+    "hook": "useRushHour"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/AllOrdersPage.jsx",
+    "to": "restaurant/hooks/pages/useAllOrdersPage.js",
+    "component": "AllOrdersPage",
+    "hook": "useAllOrdersPage"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OrderDetails.jsx",
+    "to": "restaurant/hooks/pages/useOrderDetails.js",
+    "component": "OrderDetails",
+    "hook": "useOrderDetails"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/DeliverySettings.jsx",
+    "to": "restaurant/hooks/pages/useDeliverySettings.js",
+    "component": "DeliverySettings",
+    "hook": "useDeliverySettings"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/MenuCategoriesPage.jsx",
+    "to": "restaurant/hooks/pages/useMenuCategoriesPage.js",
+    "component": "MenuCategoriesPage",
+    "hook": "useMenuCategoriesPage"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/ExploreMore.jsx",
+    "to": "restaurant/hooks/pages/useExploreMore.js",
+    "component": "ExploreMore",
+    "hook": "useExploreMore",
+    "patches": [
+      {
+        "find": "import { firebaseAuth, ensureFirebaseInitialized } from '../../utils/firebaseAuth'\n",
+        "replace": ""
+      },
+      {
+        "cutFrom": "      // Sign out from Firebase if restaurant logged in via Google",
+        "cutTo": "      // Clear restaurant module authentication data",
+        "replace": "      // (Web: also signs out of Firebase for Google sign-ins. This app signs in by OTP only.)\n\n"
+      },
+      {
+        "cutFrom": "      // Sign out from Firebase if restaurant logged in via Google",
+        "cutTo": "      // Clear auth for all modules",
+        "replace": "      // (Web: also signs out of Firebase for Google sign-ins. This app signs in by OTP only.)\n\n"
+      }
+    ]
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OutletTimings.jsx",
+    "to": "restaurant/hooks/pages/useOutletTimings.js",
+    "component": "OutletTimings",
+    "hook": "useOutletTimings"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/DaySlots.jsx",
+    "to": "restaurant/hooks/pages/useDaySlots.js",
+    "component": "DaySlots",
+    "hook": "useDaySlots"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/OutletInfo.jsx",
+    "to": "restaurant/hooks/pages/useOutletInfo.js",
+    "component": "OutletInfo",
+    "hook": "useOutletInfo"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/RatingsReviews.jsx",
+    "to": "restaurant/hooks/pages/useRatingsReviews.js",
+    "component": "RatingsReviews",
+    "hook": "useRatingsReviews"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/EditOwner.jsx",
+    "to": "restaurant/hooks/pages/useEditOwner.js",
+    "component": "EditOwner",
+    "hook": "useEditOwner"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/EditCuisines.jsx",
+    "to": "restaurant/hooks/pages/useEditCuisines.js",
+    "component": "EditCuisines",
+    "hook": "useEditCuisines"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/EditRestaurantAddress.jsx",
+    "to": "restaurant/hooks/pages/useEditRestaurantAddress.js",
+    "component": "EditRestaurantAddress",
+    "hook": "useEditRestaurantAddress"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/Inventory.jsx",
+    "to": "restaurant/hooks/pages/useInventory.js",
+    "component": "Inventory",
+    "hook": "useInventory"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/Feedback.jsx",
+    "to": "restaurant/hooks/pages/useFeedback.js",
+    "component": "Feedback",
+    "hook": "useFeedback",
+    "patches": [
+      {
+        "find": "sortBy: \"newest\", reviewType: [] }); setIsFilterApply() }",
+        "replace": "sortBy: \"newest\", reviewType: [] }) } // the web also calls an undefined setIsFilterApply() here"
+      }
+    ]
+  },
+  {
+    "from": "modules/Food/pages/restaurant/ShareFeedback.jsx",
+    "to": "restaurant/hooks/pages/useShareFeedback.js",
+    "component": "ShareFeedback",
+    "hook": "useShareFeedback"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/DishRatings.jsx",
+    "to": "restaurant/hooks/pages/useDishRatings.js",
+    "component": "DishRatings",
+    "hook": "useDishRatings"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/FssaiDetails.jsx",
+    "to": "restaurant/hooks/pages/useFssaiDetails.js",
+    "component": "FssaiDetails",
+    "hook": "useFssaiDetails"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/FssaiUpdate.jsx",
+    "to": "restaurant/hooks/pages/useFssaiUpdate.js",
+    "component": "FssaiUpdate",
+    "hook": "useFssaiUpdate"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/ItemDetailsPage.jsx",
+    "to": "restaurant/hooks/pages/useItemDetailsPage.js",
+    "component": "ItemDetailsPage",
+    "hook": "useItemDetailsPage",
+    "patches": [
+      {
+        "find": "  const handleImageDelete = (index) => {",
+        "replace": "  const handleImageDelete = async (index) => {"
+      }
+    ]
+  },
+  {
+    "from": "modules/Food/pages/restaurant/HubFinance.jsx",
+    "to": "restaurant/hooks/pages/useHubFinance.js",
+    "component": "HubFinance",
+    "hook": "useHubFinance"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/WithdrawalHistoryPage.jsx",
+    "to": "restaurant/hooks/pages/useWithdrawalHistoryPage.js",
+    "component": "WithdrawalHistoryPage",
+    "hook": "useWithdrawalHistoryPage"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/FinanceDetailsPage.jsx",
+    "to": "restaurant/hooks/pages/useFinanceDetailsPage.js",
+    "component": "FinanceDetailsPage",
+    "hook": "useFinanceDetailsPage",
+    "patches": [
+      {
+        "find": "import { useState, useRef, useEffect } from 'react'",
+        "replace": "// The web page uses useMemo without importing it (the page throws there); imported here so it renders.\nimport { useMemo, useState, useRef, useEffect } from 'react'"
+      }
+    ]
+  },
+  {
+    "from": "modules/Food/pages/restaurant/PhoneNumbersPage.jsx",
+    "to": "restaurant/hooks/pages/usePhoneNumbersPage.js",
+    "component": "PhoneNumbersPage",
+    "hook": "usePhoneNumbersPage"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/DownloadReport.jsx",
+    "to": "restaurant/hooks/pages/useDownloadReport.js",
+    "component": "DownloadReport",
+    "hook": "useDownloadReport"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/ManageOutlets.jsx",
+    "to": "restaurant/hooks/pages/useManageOutlets.js",
+    "component": "ManageOutlets",
+    "hook": "useManageOutlets"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/UpdateBankDetails.jsx",
+    "to": "restaurant/hooks/pages/useUpdateBankDetails.js",
+    "component": "UpdateBankDetails",
+    "hook": "useUpdateBankDetails"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/DiningReservations.jsx",
+    "to": "restaurant/hooks/pages/useDiningReservations.js",
+    "component": "DiningReservations",
+    "hook": "useDiningReservations"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/ZoneSetup.jsx",
+    "to": "restaurant/hooks/pages/useZoneSetup.js",
+    "component": "ZoneSetup",
+    "hook": "useZoneSetup"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/RestaurantSupport.jsx",
+    "to": "restaurant/hooks/pages/useRestaurantSupport.js",
+    "component": "RestaurantSupport",
+    "hook": "useRestaurantSupport"
+  },
+  {
+    "from": "modules/Food/pages/restaurant/Onboarding.jsx",
+    "to": "restaurant/hooks/pages/useOnboarding.js",
+    "component": "Onboarding",
+    "hook": "useOnboarding"
+  }
+]

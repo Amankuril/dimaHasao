@@ -46,11 +46,16 @@ export default function SearchScreen() {
             autoFocus
             value={query}
             onChangeText={setQuery}
-            placeholder={isTakeawaySearch ? 'Search takeaway restaurants...' : 'Search dishes or restaurants'}
-            placeholderTextColor={tw.gray400}
+            accessibilityLabel={isTakeawaySearch ? 'Search takeaway restaurants' : 'Search dishes or restaurants'}
             returnKeyType="search"
             style={styles.input}
           />
+          {/* Android wraps a long hint onto a second line; the web truncates it. */}
+          {query ? null : (
+            <Text pointerEvents="none" numberOfLines={1} style={styles.placeholder}>
+              {isTakeawaySearch ? 'Search takeaway restaurants...' : 'Search dishes or restaurants'}
+            </Text>
+          )}
           <View style={styles.rightBox}>
             {query ? (
               <Press scale={0.9} onPress={handleClear} accessibilityLabel="Clear search" style={{ padding: 6 }}>
@@ -273,7 +278,8 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 12, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.8)', borderBottomWidth: 1, borderBottomColor: tw.gray100 },
   back: { padding: 6, borderRadius: 20 },
   sIcon: { position: 'absolute', left: 14, top: 12, zIndex: 1 },
-  input: { height: 40, paddingLeft: 40, paddingRight: 80, backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray100, borderRadius: 16, fontSize: 14, color: tw.gray900, ...poppins(400) },
+  placeholder: { position: 'absolute', left: 40, right: 80, top: 0, height: 40, lineHeight: 40, fontSize: 14, color: tw.gray400, ...poppins(400) },
+  input: { height: 40, paddingVertical: 0, paddingLeft: 40, paddingRight: 80, backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray100, borderRadius: 16, fontSize: 14, color: tw.gray900, ...poppins(400) },
   rightBox: { position: 'absolute', right: 6, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 4 },
   catHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingHorizontal: 4 },
   catTitle: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, color: tw.gray400, ...poppins(900) },

@@ -89,7 +89,7 @@ export function PatternDivider({ variant = 'native', style }) {
   return (
     <Image
       source={{ uri: PATTERNS[variant] || PATTERNS.native }}
-      resizeMode="repeat"
+      resizeMode="cover"
       style={[{ height, width: '100%', opacity: variant === 'green-gold' ? 0.9 : 1 }, style]}
     />
   );

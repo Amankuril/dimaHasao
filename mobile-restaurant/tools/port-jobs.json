@@ -1,0 +1,6 @@
+[
+ {"from":"modules/Food/utils/restaurantOrderPricing.js","to":"restaurant/utils/restaurantOrderPricing.js"},
+ {"from":"modules/Food/utils/restaurantManagement.js","to":"restaurant/utils/restaurantManagement.js"},
+ {"from":"modules/Food/hooks/useRestaurantBackNavigation.js","to":"restaurant/hooks/useRestaurantBackNavigation.js"},
+ {"from":"modules/Food/hooks/useRestaurantNotifications.js","to":"restaurant/hooks/useRestaurantNotifications.js"}
+]

@@ -100,6 +100,7 @@ export default function Help() {
                 placeholderTextColor={HELP.muted}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
+                numberOfLines={1}
                 style={styles.input}
               />
             </View>
@@ -241,7 +242,7 @@ export default function Help() {
 }
 
 const styles = StyleSheet.create({
-  input: { height: 48, borderWidth: 1, borderColor: HELP.border, borderRadius: 8, paddingLeft: 40, paddingRight: 12, fontSize: 16, color: HELP.fg, backgroundColor: 'transparent', ...poppins(400) },
+  input: { height: 48, paddingVertical: 0, borderWidth: 1, borderColor: HELP.border, borderRadius: 8, paddingLeft: 40, paddingRight: 12, fontSize: 16, color: HELP.fg, backgroundColor: 'transparent', ...poppins(400) },
   topic: { borderWidth: 1, borderColor: HELP.border, borderRadius: 8, overflow: 'hidden' },
   contact: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 16, backgroundColor: '#fff', borderRadius: 8 },
   contactIcon: { padding: 8, backgroundColor: tw.orange100, borderRadius: 8 },
