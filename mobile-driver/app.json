@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Dima Hasao Tourism - driver",
+    "slug": "dima-hasao-taxi-driver",
+    "scheme": "dimahasaotaxidriver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.dimahsao.taxidriver",
+      "versionCode": 2,
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "backgroundImage": "./assets/android-icon-background.png",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "POST_NOTIFICATIONS",
+        "VIBRATE"
+      ]
+    },
+    "web": { "bundler": "metro" },
+    "plugins": [
+      "expo-router",
+      ["expo-splash-screen", { "image": "./assets/images/splashLogo.png", "imageWidth": 220, "backgroundColor": "#FFFFFF" }],
+      "expo-secure-store",
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      ["expo-image-picker", { "photosPermission": "Photos are used for your profile picture, vehicle and documents.", "cameraPermission": "The camera is used to take photos of your documents and vehicle." }],
+      ["expo-location", { "locationWhenInUsePermission": "Your location is used to show you on the map, find nearby ride requests and navigate trips." }],
+      ["expo-notifications", { "icon": "./assets/android-icon-monochrome.png", "color": "#6366F1", "defaultChannel": "default" }]
+    ],
+    "experiments": { "typedRoutes": false, "reactCompiler": true }
+  }
+}

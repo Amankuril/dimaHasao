@@ -1,0 +1,81 @@
+{
+  "expo": {
+    "name": "Dima Hasao - Delivery Partner",
+    "slug": "dima-hasao-delivery",
+    "scheme": "dimahasaodelivery",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dimahsao.delivery",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Your location is shared with the dispatch system while you are online so nearby orders can reach you.",
+        "NSCameraUsageDescription": "The camera is used to photograph documents and order bills.",
+        "NSPhotoLibraryUsageDescription": "Photos are used for your profile picture and documents."
+      }
+    },
+    "android": {
+      "package": "com.dimahsao.delivery",
+      "versionCode": 2,
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "backgroundImage": "./assets/android-icon-background.png",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "POST_NOTIFICATIONS",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splashLogo.png",
+          "imageWidth": 200,
+          "backgroundColor": "#FFFFFF"
+        }
+      ],
+      "expo-secure-store",
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Photos are used for your profile picture and documents.",
+          "cameraPermission": "The camera is used to photograph documents and order bills."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Your location is shared with the dispatch system while you are online so nearby orders can reach you.",
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#0A4D2B",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false,
+      "reactCompiler": true
+    }
+  }
+}
