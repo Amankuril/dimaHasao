@@ -1,4 +1,4 @@
-import { localStore, sessionStore } from '../../lib/storage';
+import { localStore, sessionStore } from '../../../lib/storage';
 const decodeBase64Url = (value) => {
   const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
   const padding = (4 - (normalized.length % 4)) % 4;

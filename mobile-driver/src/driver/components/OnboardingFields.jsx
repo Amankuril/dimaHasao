@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Check } from 'lucide-react-native';
+import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Press } from '../../components/ui';
 import { SelectField as KitSelect } from '../../components/kit';
 import { OB, jk, obLabel } from './onboardingTheme';
@@ -13,7 +14,7 @@ import { OB, jk, obLabel } from './onboardingTheme';
 
 /** animate-spin wrapper (Loader2). */
 export function Spin({ children }) {
-  const rot = useRef(new Animated.Value(0)).current;
+  const rot = useAnimatedValue(0);
   useEffect(() => {
     const loop = Animated.loop(Animated.timing(rot, { toValue: 1, duration: 1000, easing: Easing.linear, useNativeDriver: true }));
     loop.start();
