@@ -8,6 +8,19 @@
  * administrator is not a food thing.
  */
 import { FoodAdmin } from './admin.model.js';
+import { verifyAccessToken } from '../auth/token.util.js';
+import { isIssuedBeforePasswordChange } from '../auth/tokenRevocation.js';
+
+/** `iat` of the bearer token on this request, or null. */
+const bearerIssuedAt = (req) => {
+  const header = String(req.headers?.authorization || '');
+  if (!header.startsWith('Bearer ')) return null;
+  try {
+    return verifyAccessToken(header.slice(7).trim())?.iat ?? null;
+  } catch {
+    return null;
+  }
+};
 import {
   FEATURE_ACTIONS,
   deriveLegacyPermissions,
@@ -271,6 +284,9 @@ export const loadAdmin = async (req, res, next) => {
     if (!admin) return res.status(401).json({ success: false, message: 'Admin account not found' });
     if (admin.isActive === false) {
       return res.status(403).json({ success: false, message: 'This admin account is deactivated' });
+    }
+    if (isIssuedBeforePasswordChange(admin, bearerIssuedAt(req))) {
+      return res.status(401).json({ success: false, message: 'Session expired after a password change. Please sign in again.' });
     }
     req.admin = admin;
     next();

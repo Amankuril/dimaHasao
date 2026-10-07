@@ -18,6 +18,11 @@ import {
   verifyWebhookSignature,
 } from '../../../core/payments/razorpay.service.js';
 import { findPlatformAdmin } from '../models/Admin.js';
+import {
+  settleBookingPayment,
+  populateForConfirmation,
+  handleCapturedPayment,
+} from '../services/paymentSettlement.service.js';
 
 // Initialize Razorpay
 let razorpay;
@@ -49,13 +54,8 @@ const isAdminCaller = (user) => ['admin', 'superadmin'].includes(String(user?.ro
 const canActOnBooking = (user, booking) =>
   Boolean(user) && (String(booking.userId) === String(user._id) || isAdminCaller(user));
 
-/** Statuses in which a captured payment may still confirm the stay. */
-const PAYABLE_BOOKING_STATUSES = ['pending', 'awaiting_payment', 'confirmed'];
-
-const populateForConfirmation = (id) => Booking.findById(id)
-  .populate('propertyId')
-  .populate('roomTypeId')
-  .populate('userId', 'name email phone');
+// PAYABLE_BOOKING_STATUSES and populateForConfirmation live in
+// services/paymentSettlement.service.js with the settlement they belong to.
 
 /**
  * @desc    Create Razorpay order for booking payment
@@ -176,150 +176,21 @@ export const verifyPayment = async (req, res) => {
      * money again. A booking that was cancelled while the guest was paying is
      * not resurrected — its room has already been released.
      */
-    const claimed = await Booking.findOneAndUpdate(
-      {
-        _id: existing._id,
-        paymentStatus: { $nin: ['paid', 'refunded'] },
-        bookingStatus: { $in: PAYABLE_BOOKING_STATUSES },
-      },
-      { $set: { paymentStatus: 'paid', bookingStatus: 'confirmed', paymentId: razorpay_payment_id, paymentMethod: 'razorpay' } },
-      { new: true }
-    );
+    const { outcome, booking } = await settleBookingPayment({
+      bookingId: existing._id,
+      paymentId: razorpay_payment_id,
+    });
 
-    if (!claimed) {
-      const current = await Booking.findById(existing._id).select('paymentStatus paymentId bookingStatus');
-      if (current?.paymentStatus === 'paid' && current.paymentId === razorpay_payment_id) {
-        return res.json({
-          success: true,
-          message: 'Payment verified successfully',
-          booking: await populateForConfirmation(existing._id),
-        });
-      }
-      if (current?.paymentStatus === 'paid') {
-        return res.status(409).json({ message: 'This booking is already paid' });
-      }
-      console.error(`[Payment] Captured ${razorpay_payment_id} for booking ${existing._id} in status ${current?.bookingStatus}; needs a refund`);
+    if (outcome === 'paid_other') {
+      return res.status(409).json({ message: 'This booking is already paid' });
+    }
+    if (outcome === 'not_payable' || outcome === 'not_found') {
       return res.status(409).json({ message: 'This booking can no longer be confirmed. Your payment will be refunded — please contact support.' });
     }
 
-    const booking = claimed;
-
-    // Coupons on online bookings were never counted (createBooking only counts
-    // them for bookings confirmed at creation), so count it on confirmation.
-    if (booking.couponCode) {
-      await Offer.findOneAndUpdate({ code: booking.couponCode }, { $inc: { usageCount: 1 } }).catch((e) => console.error('Offer usage update failed:', e.message));
-    }
-
-    const paymentMeta = {
-      partnerPayout: booking.partnerPayout,
-      adminCommission: booking.adminCommission,
-      taxes: booking.taxes,
-    };
-
-    // --- PARTNER WALLET CREDIT LOGIC (Common) ---
-    try {
-      const fullBooking = await Booking.findById(booking._id).populate('propertyId');
-      const partnerId = fullBooking.propertyId?.partnerId;
-
-      if (partnerId) {
-        let partnerWallet = await Wallet.findOne({ partnerId: partnerId, role: 'partner' });
-        if (!partnerWallet) {
-          partnerWallet = await Wallet.create({
-            partnerId: partnerId,
-            role: 'partner',
-            balance: 0
-          });
-        }
-
-        const payout = paymentMeta.partnerPayout || 0;
-
-        if (payout > 0) {
-          await partnerWallet.credit(payout, `Payment for Booking #${booking.bookingId}`, booking.bookingId, 'booking_payment');
-          console.log(`[Payment] Credited ₹${payout} to Partner ${partnerId}`);
-        }
-      }
-    } catch (err) { console.error("Wallet Credit Failed", err); }
-
-    // --- ADMIN WALLET CREDIT LOGIC ---
-    try {
-      const commission = paymentMeta.adminCommission || 0;
-      const taxes = paymentMeta.taxes || 0;
-      const totalAdminCredit = commission + taxes;
-
-      if (totalAdminCredit > 0) {
-        // The wallet needs an owner id. This looked for an admin among hotel
-        // *users*, whose role is 'user', so it never matched — the admin wallet
-        // was never created and commission + tax went uncredited.
-        const adminUser = await findPlatformAdmin();
-
-        if (adminUser) {
-          let adminWallet = await Wallet.findOne({ role: 'admin' });
-
-          if (!adminWallet) {
-            adminWallet = await Wallet.create({
-              partnerId: adminUser._id,
-              role: 'admin',
-              balance: 0
-            });
-          }
-
-          // Credit the wallet (Commission + Tax)
-          await adminWallet.credit(totalAdminCredit, `Commission (₹${commission}) & Tax (₹${taxes}) for Booking #${booking.bookingId}`, booking.bookingId, 'commission_tax');
-          console.log(`[Payment] Credited ₹${totalAdminCredit} (Comm: ${commission}, Tax: ${taxes}) to Admin Wallet`);
-        } else {
-          console.warn("⚠️ No Admin user found. Cannot credit commission/tax.");
-        }
-      }
-    } catch (err) { console.error("Admin Wallet Credit Failed", err); }
-
-    // Return full populated booking for confirmation page
-    const populatedBooking = await populateForConfirmation(booking._id);
-
-    // TRIGGER NOTIFICATIONS (ONLINE PAYMENT SUCCESS)
-    try {
-      const user = populatedBooking.userId;
-      const property = populatedBooking.propertyId;
-
-      // 1. User Email
-      if (user && user.email) {
-        emailService.sendBookingConfirmationEmail(user, populatedBooking).catch(err => console.error('Email trigger failed:', err));
-      }
-
-      // 2. User Push
-      if (user) {
-        notificationService.sendToUser(user._id, {
-          title: 'Booking Confirmed!',
-          body: `You are going to ${property.name || 'Hotel'}.`
-        }, { type: 'booking', bookingId: populatedBooking._id }, 'user').catch(err => console.error('User Push failed:', err));
-      }
-
-      // 3. Partner Notifications
-      if (property && property.partnerId) {
-        // Push
-        notificationService.sendToUser(property.partnerId, {
-          title: 'New Booking Alert!',
-          body: `1 Night, ${populatedBooking.guests.adults} Guests. Check App.`
-        }, { type: 'new_booking', bookingId: populatedBooking._id }, 'partner').catch(err => console.error('Partner Push failed:', err));
-
-        // SMS
-        // Fetch partner user to get phone
-        const PartnerModel = mongoose.model('Partner');
-        const partnerUser = await PartnerModel.findById(property.partnerId);
-        if (partnerUser && partnerUser.phone) {
-          smsService.sendSMS(partnerUser.phone, `New Booking Alert! Booking #${populatedBooking.bookingId} at ${property.name}. Check App for details.`)
-            .catch(err => console.error('Partner SMS failed:', err));
-        }
-      }
-    } catch (notifErr) {
-      console.error('Notification Trigger Custom Error:', notifErr);
-    }
-
-    // REFERRAL: Trigger Referral Reward
-    if (populatedBooking.userId) {
-      // userId might be an object or ID depending on population. Since we used populate('userId', 'name...'), it is an object.
-      const uId = populatedBooking.userId._id || populatedBooking.userId;
-      referralService.processBookingCompletion(uId, populatedBooking._id).catch(e => console.error('Referral Trigger Error (Online):', e));
-    }
+    // 'confirmed' (this call settled it) or 'already_paid' (a replay, or the
+    // webhook got there first) — the guest sees the same confirmation.
+    const populatedBooking = booking;
 
     res.json({
       success: true,
@@ -338,48 +209,37 @@ export const verifyPayment = async (req, res) => {
  * @access  Public (Razorpay)
  */
 export const handleWebhook = async (req, res) => {
+  /*
+   * Razorpay calls this when a payment is captured — including when the guest
+   * paid and closed the app before the checkout callback ran. It used to
+   * verify a re-serialised body (not what Razorpay signed) against the API key
+   * secret as a fallback, then only log the event. It now checks the raw bytes
+   * against the webhook secret alone and settles through the same code as
+   * /verify, so a booking or top-up confirms once whichever arrives first.
+   */
+  const signature = req.headers['x-razorpay-signature'];
+  if (!verifyWebhookSignature({
+    body: req.rawBody,
+    signature,
+    secret: process.env.RAZORPAY_WEBHOOK_SECRET,
+  })) {
+    return res.status(400).json({ message: 'Invalid webhook signature' });
+  }
+
+  const event = req.body?.event;
   try {
-    const signature = req.headers['x-razorpay-signature'];
-
-    // Shared, constant-time. Keeps hashing the re-serialised body as before;
-    // a raw-body verifier would be stricter but changes request handling.
-    if (!verifyWebhookSignature({
-      body: JSON.stringify(req.body),
-      signature,
-      secret: process.env.RAZORPAY_WEBHOOK_SECRET || PaymentConfig.razorpayKeySecret,
-    })) {
-      return res.status(400).json({ message: 'Invalid webhook signature' });
+    if (event === 'payment.captured' || event === 'order.paid') {
+      const payment = req.body?.payload?.payment?.entity;
+      const handled = await handleCapturedPayment(payment);
+      if (!handled) console.log(`📨 Webhook ${event}: not a hotel order (${payment?.order_id})`);
+    } else if (event === 'payment.failed') {
+      console.log('Payment failed:', req.body?.payload?.payment?.entity?.id);
+    } else {
+      console.log('Unhandled event:', event);
     }
-
-    const event = req.body.event;
-    const payload = req.body.payload;
-
-    console.log(`📨 Webhook received: ${event}`);
-
-    // Handle different events
-    switch (event) {
-      case 'payment.captured':
-        // Payment successful
-        console.log('Payment captured:', payload.payment.entity.id);
-        break;
-
-      case 'payment.failed':
-        // Payment failed
-        console.log('Payment failed:', payload.payment.entity.id);
-        break;
-
-      case 'order.paid':
-        // Order paid
-        console.log('Order paid:', payload.order.entity.id);
-        break;
-
-      default:
-        console.log('Unhandled event:', event);
-    }
-
     res.json({ status: 'ok' });
-
   } catch (error) {
+    // 500 so Razorpay retries; settlement is idempotent.
     console.error('Webhook Error:', error);
     res.status(500).json({ message: 'Webhook processing failed' });
   }

@@ -1,4 +1,5 @@
 import Wallet from '../models/Wallet.js';
+import { creditTopupOnce } from '../services/paymentSettlement.service.js';
 import mongoose from 'mongoose';
 import Transaction from '../models/Transaction.js';
 import Withdrawal from '../models/Withdrawal.js';
@@ -76,7 +77,10 @@ const getWalletRole = (userRole, viewAs) => {
   if (viewAs === 'partner') return 'partner';
   if (viewAs === 'admin') return 'admin';
 
-  // Default based on current authenticated user role
+  // Default based on current authenticated user role. A platform superadmin
+  // reaches hotel as role 'superadmin', which is not a wallet role — creating
+  // its wallet failed validation and the endpoint returned 500.
+  if (userRole === 'superadmin') return 'admin';
   return userRole || 'user';
 };
 
@@ -858,43 +862,19 @@ export const verifyAddMoneyPayment = async (req, res) => {
     }
     const amount = paidPaise / 100;
 
-    // Find correct wallet based on ROLE
-    let wallet = await Wallet.findOne({ partnerId: req.user._id, role });
-    if (!wallet) {
-      wallet = await Wallet.create({
-        partnerId: req.user._id,
-        role,
-        balance: 0
-      });
-    }
-
-    const alreadyCredited = () => Transaction.exists({ category: 'topup', reference: razorpay_payment_id });
-    if (await alreadyCredited()) {
-      return res.json({ success: true, message: 'Wallet credited successfully', newBalance: wallet.balance });
-    }
-
-    // Credit wallet
-    try {
-      await wallet.credit(
-        amount,
-        `Wallet Top-up`,
-        razorpay_payment_id,
-        'topup'
-      );
-    } catch (err) {
-      // Lost a race to a concurrent verify of the same payment: the unique
-      // index refused our ledger row and credit() already reversed the $inc.
-      if (err?.code === 11000) {
-        const fresh = await Wallet.findById(wallet._id).select('balance');
-        return res.json({ success: true, message: 'Wallet credited successfully', newBalance: fresh?.balance ?? wallet.balance });
-      }
-      throw err;
-    }
+    // Shared with the webhook (services/paymentSettlement.service.js), so
+    // whichever of the two arrives first credits and the other is a no-op.
+    const { balance } = await creditTopupOnce({
+      ownerId: req.user._id,
+      role,
+      paymentId: razorpay_payment_id,
+      amount,
+    });
 
     res.json({
       success: true,
       message: 'Wallet credited successfully',
-      newBalance: wallet.balance
+      newBalance: balance
     });
 
   } catch (error) {

@@ -25,6 +25,15 @@ const refreshTokenSchema = new mongoose.Schema(
         expiresAt: {
             type: Date,
             required: true
+        },
+        // Rotation: set when this token was exchanged for `replacedBy`.
+        rotatedAt: {
+            type: Date,
+            default: null
+        },
+        replacedBy: {
+            type: String,
+            default: null
         }
     },
     {

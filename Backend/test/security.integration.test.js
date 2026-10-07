@@ -150,3 +150,42 @@ test('replaceUrl cannot delete a file the caller did not upload', opts, async ()
   assert.equal(own.status, 200);
   assert.equal((await call('GET', victimUrl)).status, 404);
 });
+
+test('refresh rotates the token; old token still works in compat mode', opts, async () => {
+  const login = await call('POST', '/auth/admin/login', { body: { email: 'admin@gmail.com', password: 'admin123' } });
+  const R1 = login.body.data.refreshToken;
+  const first = await call('POST', '/food/auth/refresh-token', { body: { refreshToken: R1 } });
+  assert.equal(first.status, 200);
+  assert.ok(first.body.data.refreshToken && first.body.data.refreshToken !== R1, 'refresh token was not rotated');
+  if (process.env.REFRESH_TOKEN_ROTATION !== 'enforce') {
+    const again = await call('POST', '/food/auth/refresh-token', { body: { refreshToken: R1 } });
+    assert.equal(again.status, 200);
+    assert.equal(again.body.data.refreshToken, first.body.data.refreshToken, 'old token should map to its successor');
+  }
+});
+
+test('changing an admin password revokes older sessions but keeps the changer signed in', opts, async () => {
+  const login = await call('POST', '/auth/admin/login', { body: { email: 'admin@gmail.com', password: 'admin123' } });
+  const oldAccess = login.body.data.accessToken;
+  const oldRefresh = login.body.data.refreshToken;
+  await new Promise((r) => setTimeout(r, 1500)); // iat is whole seconds
+
+  const changed = await call('POST', '/auth/admin/change-password', {
+    token: oldAccess, body: { currentPassword: 'admin123', newPassword: 'admin123-rotated' },
+  });
+  assert.equal(changed.status, 200);
+  const { accessToken, refreshToken } = changed.body.data;
+  try {
+    assert.ok(accessToken && refreshToken, 'change-password must hand back a fresh pair');
+    assert.equal((await call('GET', '/admin/meta', { token: oldAccess })).status, 401);
+    assert.equal((await call('GET', '/food/admin/sidebar-badges', { token: oldAccess })).status, 401);
+    assert.equal((await call('POST', '/food/auth/refresh-token', { body: { refreshToken: oldRefresh } })).status, 401);
+    assert.equal((await call('GET', '/admin/meta', { token: accessToken })).status, 200);
+  } finally {
+    await new Promise((r) => setTimeout(r, 1100));
+    const restore = await call('POST', '/auth/admin/change-password', {
+      token: accessToken, body: { currentPassword: 'admin123-rotated', newPassword: 'admin123' },
+    });
+    assert.equal(restore.status, 200, 'could not restore the seeded admin password');
+  }
+});

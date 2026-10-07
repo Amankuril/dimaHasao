@@ -177,9 +177,14 @@ export const changeAdminPasswordController = async (req, res, next) => {
     const { currentPassword, newPassword } = validateAdminChangePasswordDto(
       req.body,
     );
-    await changeAdminPassword(userId, currentPassword, newPassword);
+    const session = await changeAdminPassword(userId, currentPassword, newPassword);
+    // The old password's sessions are revoked; this one continues on the fresh
+    // pair (additive fields — callers that ignore them keep working until
+    // their next request, then re-authenticate).
     return sendResponse(res, 200, "Password changed successfully", {
       success: true,
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
     });
   } catch (error) {
     next(error);

@@ -115,14 +115,16 @@ export const ADMIN_FEATURES = {
   ],
 
   [ADMIN_MODULES.HOTEL]: [
-    feature('properties', 'Properties', ['/properties', '/hotels', '/hotel-details', '/hotel-status', '/update-hotel-status', '/delete-hotel']),
+    // '/categories' and the mounts below are hotel routes outside /admin that
+    // admins also use; hotel's authorizedRoles checks sub-admins against them.
+    feature('properties', 'Properties', ['/properties', '/hotels', '/hotel-details', '/hotel-status', '/update-hotel-status', '/delete-hotel', '/categories']),
     feature('property_requests', 'Property requests', ['/property-requests', '/verify-documents']),
     feature('room_types', 'Room types', ['/room-types']),
     feature('bookings', 'Bookings', ['/bookings', '/booking-details', '/booking-status', '/update-booking-status']),
     feature('partners', 'Partners', ['/partners', '/partner-details', '/update-partner-approval', '/update-partner-status', '/delete-partner']),
     feature('users', 'Users', ['/users', '/user-details', '/update-user-status', '/delete-user']),
     feature('reviews', 'Reviews', ['/reviews', '/delete-review', '/update-review-status']),
-    feature('finance', 'Finance', ['/finance', '/wallets', '/withdrawals']),
+    feature('finance', 'Finance', ['/finance', '/wallets', '/withdrawals', '/wallet', '/payments']),
     feature('offers', 'Offers', ['/offers']),
     feature('legal_pages', 'Legal pages', ['/legal-pages']),
     feature('contact_messages', 'Contact messages', ['/contact-messages']),

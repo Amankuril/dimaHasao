@@ -43,22 +43,24 @@ const imageFilter = (req, file, cb) => {
 
 // File filter for documents (images only)
 //
-// PDFs used to pass this filter, but every upload is re-encoded to WebP by the
-// storage service, which cannot read a PDF — so a PDF was accepted, failed
-// mid-request with a 500, and left its temp file behind. The partner screens
-// only offer images, so refuse PDFs up front with a clear message.
+// PDFs are accepted here and stored without conversion; uploadDocs passes
+// allowPdf so the uploader takes the PDF path. Every other hotel upload route
+// uses imageFilter and stays image-only.
 const documentFilter = (req, file, cb) => {
   const allowedMimes = [
     'image/jpeg',
     'image/jpg',
     'image/png',
-    'image/webp'
+    'image/webp',
+    // Stored as-is after a signature and active-content check
+    // (utils/cloudinary.js storePdf); images are still re-encoded to WebP.
+    'application/pdf'
   ];
 
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only JPG, PNG or WebP images are allowed'), false);
+    cb(new Error('Only JPG, PNG, WebP images or PDF documents are allowed'), false);
   }
 };
 

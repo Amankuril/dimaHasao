@@ -11,6 +11,7 @@
  * only ever an account resolved from the admin collection.
  */
 import jwt from 'jsonwebtoken';
+import { isIssuedBeforePasswordChange } from '../../../core/auth/tokenRevocation.js';
 import FoodAdmin from '../../../core/admin/admin.model.js';
 import { FoodUser } from '../../../core/users/user.model.js';
 
@@ -62,7 +63,8 @@ export const protect = async (req, res, next) => {
     const token = readToken(req);
     if (!token) return res.status(401).json({ message: 'Not authorized, no token' });
 
-    const resolved = await resolveAccount(verifyToken(token));
+    const decoded = verifyToken(token);
+    const resolved = await resolveAccount(decoded);
     if (!resolved) {
       return res.status(401).json({ message: 'The account for this token no longer exists.' });
     }
@@ -78,6 +80,11 @@ export const protect = async (req, res, next) => {
     // isBlocked was checked, so they kept tours admin access. Users unaffected.
     if (isDeactivatedAdmin(resolved)) {
       return res.status(403).json({ message: 'This admin account has been deactivated.' });
+    }
+
+    // An admin token issued before the password last changed is revoked.
+    if (resolved.account?.passwordChangedAt && isIssuedBeforePasswordChange(resolved.account, decoded?.iat)) {
+      return res.status(401).json({ message: 'Session expired after a password change. Please sign in again.' });
     }
 
     req.user = resolved.account;

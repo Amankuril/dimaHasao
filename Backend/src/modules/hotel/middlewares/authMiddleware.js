@@ -1,9 +1,16 @@
 import jwt from 'jsonwebtoken';
+import { isIssuedBeforePasswordChange } from '../../../core/auth/tokenRevocation.js';
 import User from '../models/User.js';
 import Partner from '../models/Partner.js';
 import Admin from '../models/Admin.js';
 import { FoodUser } from '../../../core/users/user.model.js';
-import { hasModuleAccess } from '../../../core/admin/adminHierarchy.service.js';
+import { hasModuleAccess, isSuperAdminLike } from '../../../core/admin/adminHierarchy.service.js';
+import {
+  actionForMethod,
+  findFeatureForPath,
+  hasFeatureAction,
+  isAlwaysAllowedRequest,
+} from '../../../core/admin/adminFeatures.js';
 
 // This module arrived from a standalone service that signed tokens with
 // JWT_SECRET and put the subject in `id`. The platform signs with
@@ -143,6 +150,11 @@ export const protect = async (req, res, next) => {
       return res.status(403).json({ message: 'This admin account has been deactivated.' });
     }
 
+    // An admin token issued before the password last changed is revoked.
+    if (user.passwordChangedAt && isIssuedBeforePasswordChange(user, decoded?.iat)) {
+      return res.status(401).json({ message: 'Session expired after a password change. Please sign in again.' });
+    }
+
     req.user = user;
     next();
   } catch (error) {
@@ -159,10 +171,41 @@ export const protect = async (req, res, next) => {
   }
 };
 
+/*
+ * Sub-admin grants outside the /admin panel.
+ *
+ * Properties, bookings, offers, wallet, payments and categories routes accept
+ * role 'admin' directly, and hotel maps every platform admin with hotel access
+ * to that role — so a sub-admin granted only, say, hotel reviews could edit or
+ * delete any property, mark bookings paid or refund them. The /admin mount
+ * runs the shared feature gate; these routes never did. A platform sub-admin
+ * is now checked against the same catalogue (core/admin/adminFeatures.js) by
+ * the request's path under /hotel. Superadmins and partners are unaffected.
+ */
+const hotelSubpath = (req) => {
+  const full = `${req.baseUrl || ''}${req.path || ''}`;
+  const at = full.indexOf('/hotel/');
+  return at === -1 ? (req.path || '/') : full.slice(at + '/hotel'.length);
+};
+
+const subAdminMayAccess = (req) => {
+  const user = req.user;
+  if (!user?.isPlatformAdmin || isSuperAdminLike(user)) return true;
+  const path = hotelSubpath(req);
+  // The panel mount is already gated by enforceAdminFeatureAccess('hotel').
+  if (path === '/admin' || path.startsWith('/admin/')) return true;
+  if (isAlwaysAllowedRequest(req.method, path.replace(/^\/(hotels|partners)(?=\/notifications)/, ''))) return true;
+  const permission = findFeatureForPath('hotel', path);
+  return Boolean(permission) && hasFeatureAction(user.featurePermissions || {}, permission, actionForMethod(req.method));
+};
+
 export const authorizedRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ message: `User role ${req.user.role} is not authorized to access this route` });
+    }
+    if (!subAdminMayAccess(req)) {
+      return res.status(403).json({ message: 'You do not have permission for this hotel area' });
     }
     next();
   };

@@ -1094,7 +1094,7 @@
       "title": "a signed-in caller can upload an image",
       "status": "PASS",
       "expected": "200 with a url",
-      "actual": "200 /uploads/qa_d86b5c36f0ed0ea74559.webp",
+      "actual": "200 /uploads/qa_e7f2769b3cf1e2627366.webp",
       "severity": "Info",
       "evidence": ""
     },
@@ -1164,7 +1164,7 @@
       "title": "a traversing folder name cannot escape the storage root",
       "status": "PASS",
       "expected": "refused or flattened",
-      "actual": "/uploads/tmp_qa-escape_af480a274f2f90e08e87.webp",
+      "actual": "/uploads/tmp_qa-escape_5bc5abd4dc74d8cc0e71.webp",
       "severity": "Info",
       "evidence": ""
     },
