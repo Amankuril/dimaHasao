@@ -357,14 +357,15 @@ export default function ExploreMore() {
       </Dialog>
 
       {/* Balance warning before deleting */}
-      <Dialog visible={showBalanceWarning} onClose={() => setShowBalanceWarning(false)} backdrop="rgba(0,0,0,0.5)" panelStyle={[styles.warnPanel, { borderColor: tw.orange100 }]}>
-        <View style={[styles.warnIcon, { backgroundColor: RT.primarySoft }]}>
+      <Dialog visible={showBalanceWarning} onClose={() => setShowBalanceWarning(false)} backdrop="rgba(0,0,0,0.5)" panelStyle={[styles.warnPanel, { borderColor: RT.accentBorder }]}>
+        <View style={[styles.warnIcon, { backgroundColor: tw.orange100 }]}>
           <AlertTriangle size={32} color={RT.accent} />
         </View>
         <Text style={[styles.dialogTitle, { textAlign: 'center', marginBottom: 8 }]}>Wait! Balance Found</Text>
         <View style={{ backgroundColor: tw.gray50, borderRadius: 16, padding: 16, marginBottom: 20, alignItems: 'center' }}>
-          <Text style={{ fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.gray500, textTransform: 'uppercase', marginBottom: 4, ...poppins(900) }}>{balanceData.type}</Text>
-          <Text style={{ fontSize: 16, lineHeight: 24, color: '#000', ...poppins(900) }}>₹{Number(balanceData.balance || 0).toLocaleString('en-IN')}</Text>
+          <Text style={{ fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.gray500, marginBottom: 4, minWidth: 40, ...poppins(900) }}>{String(balanceData.type || '').toUpperCase()}</Text>
+          {/* web class `text-[#B80B3D]xl font-black text-black`: the theme's [class*="text-[#B80B3D]"] rule repaints it green */}
+          <Text style={{ fontSize: 16, lineHeight: 24, color: RT.primary, ...poppins(900) }}>₹{Number(balanceData.balance || 0).toLocaleString('en-IN')}</Text>
         </View>
         <Text style={{ fontSize: 14, lineHeight: 22.75, color: tw.gray500, textAlign: 'center', marginBottom: 24, ...poppins(400) }}>
           You still have unsettled payout available to withdraw. Continue deleting your account or go to Payout to withdraw first.
@@ -404,7 +405,7 @@ export default function ExploreMore() {
           <View style={styles.warning}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <AlertTriangle size={16} color={RT.primary} />
-              <Text style={{ fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.red700, textTransform: 'uppercase', ...poppins(700) }}>Warning</Text>
+              <Text style={{ fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.red700, minWidth: 56, ...poppins(700) }}>WARNING</Text>
             </View>
             <Text style={{ fontSize: 11, lineHeight: 13.75, color: tw.red800, ...poppins(500) }}>Your account will be Deleted. Admin will keep your historical records for revenue reporting.</Text>
           </View>

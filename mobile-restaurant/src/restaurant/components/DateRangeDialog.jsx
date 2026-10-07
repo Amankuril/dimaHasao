@@ -21,7 +21,6 @@ export default function DateRangeDialog({ visible, onClose, startDate, endDate, 
     DateTimePickerAndroid.open({
       value: current ? new Date(current) : new Date(),
       mode: 'date',
-      maximumDate: new Date(),
       ...(which === 'end' && startDate ? { minimumDate: new Date(startDate) } : {}),
       onChange: (event, date) => {
         if (event.type !== 'set' || !date) return;

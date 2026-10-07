@@ -14,9 +14,9 @@ const dishFallbackImage = require('../assets/dish_fallback.webp');
 
 const STATUS_BG = { REJECTED: tw.red700, CANCELLED: tw.red700, DELIVERED: tw.green600 };
 const TYPE_CHIP = {
-  takeaway: { bg: tw.orange100, fg: tw.orange700, label: 'Takeaway' },
+  takeaway: { bg: tw.orange100, fg: RT.primaryStrong, label: 'Takeaway' },
   dining: { bg: tw.blue100, fg: tw.blue700, label: 'Dining' },
-  delivery: { bg: tw.green100, fg: tw.green700, label: 'Delivery' },
+  delivery: { bg: tw.green100, fg: RT.primaryStrong, label: 'Delivery' },
 };
 
 const grad = { colors: RT_GRADIENT, start: { x: 0, y: 0 }, end: { x: 1, y: 1 } };
@@ -38,8 +38,8 @@ function Skeleton({ style }) {
 function BillRow({ label, value, green }) {
   return (
     <View style={styles.billRow}>
-      <Text style={[styles.billLabel, green ? { color: tw.green700 } : null]}>{label}</Text>
-      <Text style={[styles.billValue, green ? { color: tw.green700 } : null]}>{value}</Text>
+      <Text style={[styles.billLabel, green ? { color: RT.primaryStrong } : null]}>{label}</Text>
+      <Text style={[styles.billValue, green ? { color: RT.primaryStrong } : null]}>{value}</Text>
     </View>
   );
 }
@@ -80,7 +80,7 @@ function OrderDetailsScreen({ onReload }) {
             </View>
           </View>
           <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-            <ActivityIndicator size="large" color={tw.primary} style={{ marginBottom: 16 }} />
+            <ActivityIndicator size="large" color={RT.text} style={{ marginBottom: 16 }} />
             <Text style={styles.fetching}>Fetching order details...</Text>
           </View>
         </View>

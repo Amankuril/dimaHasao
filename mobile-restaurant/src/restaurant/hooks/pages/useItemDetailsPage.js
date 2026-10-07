@@ -179,7 +179,7 @@ export function useItemDetailsPage() {
     setBasePrice(itemVariants.length === 0 ? (restaurantBase != null ? String(restaurantBase) : "") : "")
     setPreparationTime(item.preparationTime || "")
     setGst(item.gst?.toString() || "5.0")
-    setIsRecommended(item.isRecommended)
+    setIsRecommended(item.isRecommended || false)
     setIsInStock(item.isAvailable !== false)
     setSelectedTags(item.tags || [])
 

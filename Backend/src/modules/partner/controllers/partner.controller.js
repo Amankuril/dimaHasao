@@ -144,14 +144,14 @@ export const submitHotelKyc = async (req, res) => {
     partner.ownerName = String(ownerName).trim();
     partner.aadhaarNumber = String(aadhaarNumber).trim();
     partner.panNumber = String(panNumber).trim().toUpperCase();
-    partner.address = {
-        ...partner.address,
-        street: String(street).trim(),
-        city: String(city).trim(),
-        state: String(state).trim(),
-        zipCode: String(zipCode).trim(),
-        country: partner.address?.country || 'India',
-    };
+    // Set the fields one by one. Spreading `partner.address` copies the nested path's getters, including
+    // `coordinates: undefined`, and saving that fails with "Cast to Object failed for value undefined
+    // at path address.coordinates", so the KYC step could never be submitted.
+    partner.set('address.street', String(street).trim());
+    partner.set('address.city', String(city).trim());
+    partner.set('address.state', String(state).trim());
+    partner.set('address.zipCode', String(zipCode).trim());
+    partner.set('address.country', partner.address?.country || 'India');
     partner.onboardingComplete = true;
 
     await partner.save();

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +22,7 @@ function Row({ name, selected, onPress, borderColor, style }) {
 /** Port of Food/pages/restaurant/EditCuisines.jsx (/food/restaurant/edit-cuisines). */
 export default function EditCuisines() {
   const insets = useSafeAreaInsets();
+  const [focused, setFocused] = useState(false);
   const { navigate, search, setSearch, selected, error, handleToggle, handleUpdate, filtered, recommendedSet } = useEditCuisines();
   const recommended = filtered.filter((name) => recommendedSet.has(name));
   const others = filtered.filter((name) => !recommendedSet.has(name));
@@ -36,9 +38,9 @@ export default function EditCuisines() {
       </View>
 
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16, paddingBottom: 110 + insets.bottom, gap: 16 }}>
-        <View style={styles.search}>
+        <View style={[styles.search, focused ? { borderColor: '#789d8a' } : null]}>
           <Search size={16} color={tw.gray400} />
-          <TextInput value={search} onChangeText={setSearch} placeholder="Search cuisines" placeholderTextColor={tw.gray400} accessibilityLabel="Search cuisines" style={styles.searchInput} />
+          <TextInput value={search} onChangeText={setSearch} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="Search cuisines" placeholderTextColor={tw.gray400} accessibilityLabel="Search cuisines" style={styles.searchInput} />
         </View>
 
         <View style={styles.recommended}>

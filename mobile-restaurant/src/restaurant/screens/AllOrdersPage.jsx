@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Calendar, Check, ChevronDown, ChevronRight, Copy, Filter, HelpCircle, Search, X } from 'lucide-react-native';
@@ -10,7 +10,7 @@ import { PageHeader } from '../components/ui';
 import { useAllOrdersPage } from '../hooks/pages/useAllOrdersPage';
 import { RT, RT_GRADIENT } from '../theme';
 
-const BADGE = { TAKEAWAY: tw.orange600, DINING: tw.blue600, 'HOME DELIVERY': tw.slate600 };
+const BADGE = { TAKEAWAY: RT.accent, DINING: tw.blue600, 'HOME DELIVERY': tw.slate600 };
 const STATUS_BG = { REJECTED: tw.red700, CANCELLED: tw.red700, DELIVERED: tw.green600, PREPARING: tw.yellow600, 'OUT FOR DELIVERY': tw.purple600 };
 const noop = { stopPropagation() {} };
 
@@ -209,7 +209,7 @@ export default function AllOrdersPage() {
             <X size={20} color={tw.gray900} />
           </Press>
         </View>
-        <View style={{ padding: 8, gap: 4 }}>
+        <ScrollView contentContainerStyle={{ padding: 8, gap: 4 }}>
           {h.dateRangeOptions.map((option) => {
             const selected = h.selectedDateRange?.label?.toLowerCase() === option.label.toLowerCase();
             let dates = '';
@@ -234,7 +234,7 @@ export default function AllOrdersPage() {
               </Press>
             );
           })}
-        </View>
+        </ScrollView>
       </Dialog>
 
       <DateRangeDialog
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   sheetTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
   sidebar: { width: 112, backgroundColor: tw.gray50, borderRightWidth: 1, borderRightColor: tw.gray200 },
   cat: { paddingHorizontal: 8, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  catOn: { backgroundColor: '#fff', borderLeftWidth: 2, borderLeftColor: '#000' },
+  catOn: { backgroundColor: '#fff', borderWidth: 2, borderColor: tw.gray200, borderLeftColor: '#000' },
   catText: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
   catTextOn: { color: tw.gray900, ...poppins(600) },
   optSearchWrap: { padding: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200, justifyContent: 'center' },

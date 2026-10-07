@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, Info, Leaf } from 'lucide-react-native';
+import { ArrowLeft, ChevronRight, Info, Leaf } from 'lucide-react-native';
 import CMSPage from '../../components/CMSPage';
 import { Press } from '../../components/ui';
 import { poppins, shadow, tw } from '../../theme';
@@ -18,7 +18,7 @@ export function DishRatings() {
   const { goBack } = useDishRatings();
   return (
     <View style={{ flex: 1, backgroundColor: tw.gray100 }}>
-      <PageHeader title="Dish Ratings" onBack={goBack} />
+      <PageHeader title="Dish Ratings" onBack={goBack} border={false} />
       <Text style={styles.headerNote}>Ratings will appear here when customers review dishes.</Text>
       <View style={styles.center}>
         <Text style={styles.centerText}>You haven&apos;t received any dish rating yet</Text>
@@ -47,7 +47,13 @@ export function ManageOutlets() {
   const { goBack, showToast, options, handleOptionClick } = useManageOutlets();
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <PageHeader title="Restaurant" onBack={goBack} backLabel="Back" />
+      {/* px-4 pt-4 pb-3, round p-2 back button with a 20px arrow, text-lg bold title */}
+      <View style={[styles.manageHeader, { paddingTop: 16 + insets.top }]}>
+        <Press onPress={goBack} accessibilityLabel="Back" hitSlop={6} style={{ padding: 8, borderRadius: 999 }}>
+          <ArrowLeft size={20} color={tw.gray900} />
+        </Press>
+        <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) }} accessibilityRole="header">Restaurant</Text>
+      </View>
       <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         <View style={styles.options}>
           <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: tw.gray50 }}>
@@ -88,6 +94,7 @@ export const TermsAndConditionsPage = cmsPage('Terms of Service', '/food/pages/t
 export const HelpContentPage = cmsPage('Help & Support', '/food/pages/support_restaurant');
 
 const styles = StyleSheet.create({
+  manageHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200, backgroundColor: '#fff' },
   headerNote: { backgroundColor: '#fff', paddingLeft: 58, paddingRight: 16, paddingBottom: 12, marginTop: -12, fontSize: 12, lineHeight: 16, color: tw.gray500, borderBottomWidth: 1, borderBottomColor: tw.gray200, ...poppins(400) },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   centerText: { fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', ...poppins(400) },

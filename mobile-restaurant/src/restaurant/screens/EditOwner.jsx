@@ -1,15 +1,15 @@
+import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Calendar as CalendarIcon, Check, Clock, Image as ImageIcon, MapPin, Upload, User, X } from 'lucide-react-native';
+import { ArrowLeft, Calendar as CalendarIcon, Check, Clock, Image as ImageIcon, MapPin, Upload, User, X } from 'lucide-react-native';
 import Img from '../../components/Img';
 import { SelectField } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { poppins, shadow, tw } from '../../theme';
 import LocationSearchInput from '../components/LocationSearchInput';
 import { ImageSourcePicker } from '../components/ImageSourcePicker';
-import { PageHeader } from '../components/ui';
 import { useEditOwner } from '../hooks/pages/useEditOwner';
 import { RT, RT_GRADIENT } from '../theme';
 import { toast } from '../../lib/notify';
@@ -30,6 +30,7 @@ function Card({ title, right, children, gap = 16 }) {
 }
 
 function Field({ label, value, onChangeText, placeholder, keyboardType, secureTextEntry, maxLength, editable = true, autoCapitalize = 'none', style }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View>
       <Text style={styles.label}>{label}</Text>
@@ -44,7 +45,9 @@ function Field({ label, value, onChangeText, placeholder, keyboardType, secureTe
         editable={editable}
         autoCapitalize={autoCapitalize}
         accessibilityLabel={label}
-        style={[styles.input, !editable ? { backgroundColor: tw.gray50, color: tw.gray500 } : null, style]}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={[styles.input, focused ? styles.inputFocus : null, !editable ? { backgroundColor: tw.gray50, color: tw.gray500, opacity: 0.5 } : null, style]}
       />
     </View>
   );
@@ -107,7 +110,7 @@ function TimeBox({ label, value, onChange }) {
         if (event.type === 'set' && date) onChange(date);
       },
     });
-  const display = value ? value.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase() : '';
+  const display = value ? value.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }): '';
   return (
     <View style={styles.timeWrap}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -201,7 +204,15 @@ export default function EditOwner() {
 
   return (
     <View style={{ flex: 1, backgroundColor: tw.gray50 }}>
-      <PageHeader title="Edit Profile & Contact Details" subtitle="RESTAURANT CONTROL PANEL" onBack={handleBack} large={false} />
+      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
+        <Press onPress={handleBack} accessibilityLabel="Go back" hitSlop={8} style={{ padding: 6 }}>
+          <ArrowLeft size={24} color={tw.gray900} />
+        </Press>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.headerTitle} numberOfLines={1} accessibilityRole="header">Edit Profile & Contact Details</Text>
+          <Text style={styles.headerSub}>RESTAURANT CONTROL PANEL</Text>
+        </View>
+      </View>
       <View style={styles.tabsWrap}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 20 }}>
           {TABS.map((tab) => {
@@ -221,7 +232,7 @@ export default function EditOwner() {
         {activeTab === 'owner' ? (
           <>
             <View style={[styles.card, { alignItems: 'center', gap: 12 }]}>
-              <Text style={[styles.label, { alignSelf: 'flex-start', marginBottom: 0 }]}>OWNER PROFILE PHOTO</Text>
+              <Text style={[styles.label, { alignSelf: 'flex-start', marginBottom: 0, color: tw.gray800 }]}>OWNER PROFILE PHOTO</Text>
               <View style={{ marginTop: 8 }}>
                 <View style={styles.avatar}>
                   {formData.profileImage ? (
@@ -277,7 +288,7 @@ export default function EditOwner() {
               right={
                 <Press scale={0.97} onPress={goToMap} accessibilityLabel="Select from map" style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4 }}>
                   <MapPin size={14} color={RT.primary} />
-                  <Text style={{ fontSize: 10, lineHeight: 16, letterSpacing: 0.8, color: RT.primary, ...poppins(700) }}>SELECT FROM MAP</Text>
+                  <Text style={{ fontSize: 10, lineHeight: 16, letterSpacing: 0.5, minWidth: 100, color: RT.primary, ...poppins(700) }}>SELECT FROM MAP</Text>
                 </Press>
               }
             >
@@ -331,7 +342,7 @@ export default function EditOwner() {
                   {ALL_CUISINES.map((cuisine) => {
                     const selected = formData.cuisines.includes(cuisine);
                     return (
-                      <Press key={cuisine} scale={1} onPress={() => handleCuisineToggle(cuisine)} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} style={[styles.cuisine, selected ? { borderColor: RT.primary, backgroundColor: RT.primarySoft } : null]}>
+                      <Press key={cuisine} scale={1} onPress={() => handleCuisineToggle(cuisine)} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} style={[styles.cuisine, selected ? { borderColor: RT.primary, backgroundColor: 'rgba(254,242,242,0.5)' } : null]}>
                         <Text style={{ flexShrink: 1, fontSize: 12, lineHeight: 16, color: selected ? RT.primary : tw.gray700, ...poppins(600) }}>{cuisine}</Text>
                         {selected ? <Check size={14} color={RT.primary} /> : null}
                       </Press>
@@ -391,14 +402,14 @@ export default function EditOwner() {
               <Field label="FSSAI LICENSE NUMBER" value={formData.fssaiNumber} onChangeText={(t) => handleInputChange('fssaiNumber', t.replace(/\D/g, ''))} placeholder="Enter 14-digit license number" maxLength={14} keyboardType="number-pad" />
               <View>
                 <Text style={styles.label}>LICENSE EXPIRY DATE</Text>
-                <Press scale={1} onPress={openExpiry} accessibilityLabel={`License expiry date ${formData.fssaiExpiry || 'not set'}`} style={styles.input}>
+                <Press scale={1} onPress={openExpiry} accessibilityLabel={`License expiry date ${formData.fssaiExpiry || 'not set'}`} style={[styles.input, { borderRadius: 8 }]}>
                   <Text style={{ fontSize: 14, color: formData.fssaiExpiry ? tw.gray900 : tw.gray400, ...poppins(400) }}>{formData.fssaiExpiry || 'yyyy-mm-dd'}</Text>
                 </Press>
               </View>
               <DocUpload title="FSSAI Copy Upload" value={formData.fssaiImage} getPreviewUrl={getPreviewUrl} onRemove={() => handleRemoveImage('fssaiImage')} onPick={() => handlePhotoClick('fssaiImage')} button="Upload FSSAI License" />
             </Card>
 
-            <Card title="Menu & Photos" right={<Text style={styles.badge}>{formData.menuImages.length} / 10 PHOTOS</Text>}>
+            <Card title="Menu & Photos" right={<Text style={[styles.badge, { backgroundColor: tw.blue50 }]}>{formData.menuImages.length} / 10 PHOTOS</Text>}>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
                 {formData.menuImages.map((img, idx) => (
                   <View key={idx} style={styles.menuCell}>
@@ -449,13 +460,18 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#fff', padding: 20, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, gap: 16, ...shadow('sm') },
   cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: tw.gray200, paddingBottom: 8 },
   cardTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  label: { fontSize: 12, lineHeight: 16, color: tw.gray700, marginBottom: 6, letterSpacing: 0.6, ...poppins(700) },
-  input: { height: 44, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 0, fontSize: 14, color: tw.gray900, borderWidth: 1, borderColor: tw.gray200, borderRadius: 8, backgroundColor: '#fff', ...poppins(400) },
+  label: { fontSize: 12, lineHeight: 16, color: tw.gray700, marginBottom: 6, letterSpacing: 0.3, ...poppins(700) },
+  input: { height: 44, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 0, fontSize: 14, color: tw.gray900, borderWidth: 1, borderColor: tw.gray200, borderRadius: 6, backgroundColor: '#fff', ...poppins(400) },
+  // restaurantTheme.css: input:focus border = primary 55 % over white
+  inputFocus: { borderColor: '#789d8a' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
+  headerTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
+  headerSub: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, minWidth: 160, color: tw.gray500, ...poppins(600) },
   select: { height: 44, paddingHorizontal: 12, borderWidth: 1, borderColor: tw.gray200, borderRadius: 6, backgroundColor: '#fff' },
   avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200 },
   avatarRemove: { position: 'absolute', top: -4, right: -4, ...shadow('md') },
   avatarRemoveFill: { borderRadius: 999, padding: 4 },
-  choose: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, height: 36, borderWidth: 1, borderColor: RT.primary, borderRadius: 6 },
+  choose: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, height: 32, borderWidth: 1, borderColor: RT.primary, borderRadius: 6 },
   pill: { flex: 1, alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff' },
   pillText: { fontSize: 12, lineHeight: 16, ...poppins(600) },
   timeWrap: { borderWidth: 1, borderColor: tw.gray200, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(249,250,251,0.6)' },
@@ -467,7 +483,7 @@ const styles = StyleSheet.create({
   docTitle: { alignSelf: 'flex-start', fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(600) },
   docPreview: { width: '100%', maxWidth: 200, aspectRatio: 4 / 3, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200 },
   docRemove: { position: 'absolute', top: 6, right: 6, backgroundColor: RT.primary, borderRadius: 999, padding: 4, ...shadow('md') },
-  docBtn: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 36, borderWidth: 1, borderColor: tw.gray300, borderRadius: 6, backgroundColor: '#fff' },
+  docBtn: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 32, borderWidth: 1, borderColor: tw.gray300, borderRadius: 6, backgroundColor: '#fff' },
   switch: { width: 44, height: 24, borderRadius: 12, padding: 2, justifyContent: 'center' },
   thumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff', ...shadow('sm') },
   menuCell: { width: '48%', aspectRatio: 4 / 3, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200 },

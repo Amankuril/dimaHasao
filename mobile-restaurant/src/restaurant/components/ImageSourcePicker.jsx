@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Camera, Upload } from 'lucide-react-native';
-import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { poppins, tw } from '../../theme';
 import { RT } from '../theme';
+import { ShadDialog } from './ShadDialog';
 import { openCamera, openGallery } from '../utils/imageUploadUtils';
 
 /** Port of Food/components/ImageSourcePicker.jsx: "Use Camera" / "Upload from Device". */
@@ -14,7 +14,7 @@ export function ImageSourcePicker({ isOpen, onClose, onFileSelect, title = 'Upda
     await open({ onSelectFile: onFileSelect, fileNamePrefix });
   };
   return (
-    <Dialog visible={Boolean(isOpen)} onClose={onClose} panelStyle={styles.panel}>
+    <ShadDialog visible={Boolean(isOpen)} onClose={onClose} style={styles.panel}>
       <View style={{ padding: 20, paddingBottom: 12 }}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.body}>{description}</Text>
@@ -34,16 +34,16 @@ export function ImageSourcePicker({ isOpen, onClose, onFileSelect, title = 'Upda
           </View>
         </Press>
       </View>
-    </Dialog>
+    </ShadDialog>
   );
 }
 
 export default ImageSourcePicker;
 
 const styles = StyleSheet.create({
-  panel: { width: '100%', maxWidth: 384, alignSelf: 'center', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', ...shadow('xl') },
+  panel: { width: '92%', maxWidth: 384, padding: 0, overflow: 'hidden' },
   title: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  body: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
+  body: { marginTop: 8, fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
   option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderRadius: 12, borderWidth: 2, borderColor: tw.gray200, backgroundColor: '#fff' },
   optionText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
   optionIcon: { padding: 8, borderRadius: 8 },

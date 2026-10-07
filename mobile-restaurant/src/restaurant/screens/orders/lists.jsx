@@ -331,7 +331,7 @@ export function SearchResults({ query, results, isLoading, onSelectOrder, onVeri
   if (isLoading) {
     return (
       <View style={{ alignItems: 'center', justifyContent: 'center', padding: 80 }}>
-        <ActivityIndicator size="large" color={RT.accent} style={{ marginBottom: 16 }} />
+        <ActivityIndicator size="large" color="#dc2626" style={{ marginBottom: 16 }} />
         <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', ...poppins(400) }}>Searching for &quot;{query}&quot;...</Text>
       </View>
     );
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   historyReason: { fontSize: 10, lineHeight: 15, color: BRAND, marginTop: 4, ...poppins(400) },
   historyMeta: { fontSize: 11, lineHeight: 16, color: tw.gray500, ...poppins(400) },
   historyAmount: { fontSize: 12, lineHeight: 16, color: '#000', ...poppins(500) },
-  refresh: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: RT.accent, ...poppins(800) },
+  refresh: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: '#dc2626', ...poppins(800) },
   bookingEmpty: { alignItems: 'center', paddingVertical: 48, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.gray200 },
   booking: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.gray200, ...shadow('sm') },
   bookingName: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },

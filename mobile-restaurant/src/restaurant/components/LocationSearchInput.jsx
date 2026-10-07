@@ -29,6 +29,7 @@ export default function LocationSearchInput({
   const [isSearching, setIsSearching] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   useEffect(() => {
     biasLocationRef.current = biasLocation;
@@ -117,7 +118,7 @@ export default function LocationSearchInput({
 
   return (
     <View style={[{ zIndex: 20 }, style]}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? <Text style={styles.label}>{String(label).toUpperCase()}</Text> : null}
       <View style={styles.inputWrap}>
         <View style={styles.searchIcon} pointerEvents="none">
           <Search size={16} color={tw.gray400} />
@@ -126,14 +127,16 @@ export default function LocationSearchInput({
           ref={inputRef}
           value={query}
           onChangeText={handleQueryChange}
+          onBlur={() => setFocused(false)}
           onFocus={() => {
+            setFocused(true);
             if (!selectionLockRef.current && suggestions.length > 0 && !isResolving) setDropdownOpen(true);
           }}
           placeholder={placeholder}
           placeholderTextColor={tw.gray400}
           editable={!isResolving}
           accessibilityLabel={label}
-          style={[styles.input, isResolving ? { opacity: 0.6 } : null]}
+          style={[styles.input, focused ? styles.inputFocus : null, isResolving ? { opacity: 0.6 } : null]}
         />
         {query && !isSearching && !isResolving ? (
           <Press scale={1} onPress={handleClear} accessibilityLabel="Clear search" style={styles.right}>
@@ -175,13 +178,15 @@ export default function LocationSearchInput({
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 12, lineHeight: 16, color: tw.gray700, marginBottom: 6, letterSpacing: 0.6, ...poppins(700) },
+  label: { fontSize: 12, lineHeight: 16, color: tw.gray700, marginBottom: 6, letterSpacing: 0.3, minWidth: 64, ...poppins(700) },
   inputWrap: { justifyContent: 'center', ...shadow('sm') },
   searchIcon: { position: 'absolute', left: 12, zIndex: 10 },
   input: { paddingLeft: 40, paddingRight: 40, paddingVertical: 12, fontSize: 14, color: tw.gray900, borderWidth: 1, borderColor: tw.gray200, borderRadius: 12, backgroundColor: '#fff', ...poppins(400) },
+  // restaurantTheme.css: input:focus border = primary 55 % over white
+  inputFocus: { borderColor: '#789d8a' },
   right: { position: 'absolute', right: 12, padding: 4 },
   dropdown: { marginTop: 8, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray100, overflow: 'hidden', ...shadow('xl') },
-  dropHead: { paddingHorizontal: 16, paddingVertical: 8, fontSize: 10, lineHeight: 16, letterSpacing: 0.8, color: tw.gray400, backgroundColor: tw.gray50, ...poppins(700) },
+  dropHead: { paddingHorizontal: 16, paddingVertical: 8, fontSize: 10, lineHeight: 16, letterSpacing: 0.5, color: tw.gray400, backgroundColor: tw.gray50, ...poppins(700) },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   main: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
   second: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },

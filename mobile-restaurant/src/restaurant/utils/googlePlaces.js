@@ -1,11 +1,14 @@
 import { geocodeGooglePlaceId } from './googleGeocoding'
 import { geocodeAPI } from '../../api/restaurant'
+import { getGoogleMapsApiKey } from './googleMapsApiKey'
 
 /*
  * Food/utils/googlePlaces.js. The web mixes three sources (the Maps JS
  * AutocompleteService, the new AutocompleteSuggestion and the backend
- * text-search proxy). The two JS-SDK sources do not exist in a native app, so
- * suggestions come from the text-search proxy, ranked and merged the same way.
+ * text-search proxy). The JS-SDK sources do not exist in a native app: the new
+ * Places autocomplete is called through its REST endpoint with the app's Maps
+ * key, the legacy SDK service is covered by it, and the text-search proxy is
+ * unchanged. All are ranked and merged the same way.
  */
 
 const normalizePlaceId = (placeId = '') => {
@@ -137,12 +140,62 @@ async function fetchTextSearchPredictions(query, options = {}) {
   }
 }
 
+/** AutocompleteSuggestion.fetchAutocompleteSuggestions, through the Places (New) REST endpoint. */
+async function fetchNewAutocompletePredictions(query, options = {}) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 7000)
+  try {
+    const apiKey = await getGoogleMapsApiKey()
+    if (!apiKey) return []
+
+    const body = { input: query, includedRegionCodes: ['in'] }
+    const lat = Number(options.latitude)
+    const lng = Number(options.longitude)
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      body.locationBias = { circle: { center: { latitude: lat, longitude: lng }, radius: 50000 } }
+    }
+
+    const response = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': apiKey },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+    if (!response.ok) return []
+    const data = await response.json()
+
+    return (data?.suggestions || [])
+      .map((item) => item.placePrediction)
+      .filter(Boolean)
+      .map((prediction) => {
+        const mainText = prediction.structuredFormat?.mainText?.text || prediction.text?.text || ''
+        const secondaryText = prediction.structuredFormat?.secondaryText?.text || ''
+        return {
+          id: normalizePlaceId(prediction.placeId),
+          placeId: normalizePlaceId(prediction.placeId),
+          display: prediction.text?.text || `${mainText}${secondaryText ? `, ${secondaryText}` : ''}`,
+          mainText,
+          secondaryText,
+          source: 'autocomplete_new',
+        }
+      })
+  } catch {
+    return []
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 export async function fetchPlaceSuggestions(input, options = {}) {
   const query = String(input || '').trim()
   if (query.length < 3) return []
 
-  const textResults = await fetchTextSearchPredictions(query, options)
-  return mergeSuggestions(query, [textResults])
+  const [newResults, textResults] = await Promise.all([
+    fetchNewAutocompletePredictions(query, options),
+    fetchTextSearchPredictions(query, options),
+  ])
+
+  return mergeSuggestions(query, [textResults, [], newResults])
 }
 
 export async function resolvePlaceSuggestion(suggestion) {
@@ -184,5 +237,5 @@ export function formatLocationPreview(location) {
   if (location.area) parts.push(location.area.trim())
   if (location.city) parts.push(location.city.trim())
   if (location.pincode) parts.push(location.pincode.trim())
-  return parts.filter(Boolean).join(',')
+  return parts.filter(Boolean).join(', ')
 }

@@ -72,7 +72,7 @@ export default function SimpleCalendar({ selectedDate, onDateSelect, isOpen, onC
                     onDateSelect(new Date(date));
                     onClose();
                   }}
-                  style={{ height: 40, borderRadius: 4, overflow: 'hidden', backgroundColor: inMonth && isToday && !isSel ? RT.primarySoft : 'transparent' }}
+                  style={{ height: 40, borderRadius: 4, overflow: 'hidden', backgroundColor: inMonth && isToday && !isSel ? '#f9f0f7' : 'transparent' }}
                 >
                   {inMonth && isSel ? (
                     <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fill}>{label}</LinearGradient>

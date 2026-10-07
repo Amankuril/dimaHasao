@@ -36,7 +36,7 @@ function ScopeBadge({ scope, selected }) {
   if (scope === 'Veg' || scope === 'Non-Veg') {
     const veg = scope === 'Veg';
     const border = selected ? (veg ? tw.green400 : '#fff') : veg ? tw.green600 : tw.red600;
-    const box = selected ? (veg ? { borderColor: tw.green400, backgroundColor: 'rgba(20,83,45,0.4)', color: tw.green300 } : { borderColor: 'rgba(255,255,255,0.4)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }) : veg ? { borderColor: tw.green300, backgroundColor: tw.green50, color: tw.green700 } : { borderColor: tw.red300, backgroundColor: tw.red50, color: tw.red700 };
+    const box = selected ? (veg ? { borderColor: tw.green400, backgroundColor: 'rgba(20,83,45,0.4)', color: tw.green300 } : { borderColor: 'rgba(255,255,255,0.4)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }) : veg ? { borderColor: RT.softBorder, backgroundColor: tw.green50, color: RT.primaryStrong } : { borderColor: tw.red300, backgroundColor: tw.red50, color: tw.red700 };
     return (
       <View style={[styles.badge, { borderColor: box.borderColor, backgroundColor: box.backgroundColor }]}>
         <View style={[styles.badgeBox, { borderColor: border }]}>
@@ -87,7 +87,7 @@ export default function ItemDetailsPage() {
             <View style={styles.rejected}>
               <Text style={{ fontSize: 14, lineHeight: 20, color: tw.red700, ...poppins(600) }}>Approval rejected</Text>
               <Text style={{ marginTop: 4, fontSize: 14, lineHeight: 20, color: RT.primary, ...poppins(400) }}>Reason: {currentRejectionReason}</Text>
-              <Text style={{ marginTop: 8, fontSize: 12, lineHeight: 16, letterSpacing: 2.2, textTransform: 'uppercase', color: RT.primary, ...poppins(500) }}>Update the dish and save to send it for approval again</Text>
+              <Text style={{ marginTop: 8, fontSize: 12, lineHeight: 16, letterSpacing: 2.2, color: RT.primary, ...poppins(500) }}>UPDATE THE DISH AND SAVE TO SEND IT FOR APPROVAL AGAIN</Text>
             </View>
           </View>
         ) : null}

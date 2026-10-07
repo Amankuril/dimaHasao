@@ -95,7 +95,7 @@ export default function ShareFeedback() {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 },
   title: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(600) },
-  scale: { flexDirection: 'row', borderRadius: 12, borderWidth: 1, borderColor: tw.gray300, backgroundColor: '#fff', overflow: 'hidden' },
+  scale: { flexDirection: 'row', gap: 4, borderRadius: 12, borderWidth: 1, borderColor: tw.gray300, backgroundColor: '#fff', overflow: 'hidden' },
   art: { marginTop: 40, alignSelf: 'center', width: '100%', maxWidth: 320, height: 192, borderRadius: 24, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 24, paddingBottom: 24 },
   pill: { paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
   thanks: { width: '100%', maxWidth: 384, alignSelf: 'center', borderRadius: 24, backgroundColor: '#fff', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24, ...shadow('xl') },

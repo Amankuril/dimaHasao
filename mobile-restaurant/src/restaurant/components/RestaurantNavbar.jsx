@@ -121,6 +121,7 @@ export default function RestaurantNavbar({
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
             {showOfflineOnlineTag ? (
               <Press onPress={() => navigate('/food/restaurant/status', from)} accessibilityLabel={`Restaurant is ${status}. Change status`} style={[styles.tag, online ? styles.tagOn : styles.tagOff]} hitSlop={6}>
+                {online ? null : <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />}
                 <View style={[styles.tagDot, { backgroundColor: online ? tw.emerald400 : 'rgba(255,255,255,0.3)' }]} />
                 <Text style={[styles.tagText, { color: online ? '#fff' : 'rgba(255,255,255,0.7)' }]}>{status}</Text>
               </Press>
@@ -204,9 +205,9 @@ const styles = StyleSheet.create({
   name: { fontSize: 17, lineHeight: 19, letterSpacing: -0.4, color: '#fff', ...poppins(700) },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, opacity: 0.9 },
   address: { flex: 1, fontSize: 11, lineHeight: 16, color: 'rgba(255,255,255,0.9)', ...poppins(500) },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, borderWidth: 1, ...shadow('sm') },
+  tag: { overflow: 'hidden', flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, borderWidth: 1, ...shadow('sm') },
   tagOn: { backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.2)' },
-  tagOff: { backgroundColor: 'rgba(6,56,30,0.2)', borderColor: 'rgba(255,255,255,0.1)' },
+  tagOff: { borderColor: 'rgba(255,255,255,0.1)' },
   tagDot: { width: 6, height: 6, borderRadius: 3 },
   tagText: { fontSize: 11, lineHeight: 16, letterSpacing: -0.3, paddingHorizontal: 2, ...poppins(700) },
   bellDot: { position: 'absolute', top: 8, right: 10, width: 10, height: 10, borderRadius: 5, backgroundColor: tw.emerald400, borderWidth: 2, borderColor: RT.primary },

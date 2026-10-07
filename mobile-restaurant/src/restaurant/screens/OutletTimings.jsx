@@ -1,11 +1,12 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { ChevronDown, ChevronUp, Clock } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { poppins, tw } from '../../theme';
 import { PageHeader, Toggle } from '../components/ui';
 import { useOutletTimings } from '../hooks/pages/useOutletTimings';
-import { RT } from '../theme';
+import { RT, RT_GRADIENT } from '../theme';
 
 /** MUI MobileTimePicker ("hh:mm a") -> the field opens the Android time picker. */
 function TimeField({ label, value, display, onChange }) {
@@ -52,7 +53,7 @@ export default function OutletTimings() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}>
         <View style={{ marginBottom: 24 }}>
           <Text style={styles.section}>{companyName} delivery</Text>
-          <View style={{ height: 2, backgroundColor: RT.primary }} />
+          <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 2 }} />
         </View>
 
         <View style={{ gap: 8 }}>

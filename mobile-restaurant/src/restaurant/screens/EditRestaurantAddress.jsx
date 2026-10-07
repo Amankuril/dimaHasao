@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView from 'react-native-maps';
@@ -44,6 +45,13 @@ export default function EditRestaurantAddress() {
     zoomToDelta, MAP_ZOOM, handleSearchLocationSelect, handleUpdateClick, handleProceedUpdate, previewText, simplifiedAddress,
   } = useEditRestaurantAddress();
 
+  const [pinH, setPinH] = useState(88);
+  // BottomPopup: tapping the handle collapses the sheet to its header
+  const [popupCollapsed, setPopupCollapsed] = useState(false);
+  const closePopup = () => {
+    setShowSelectOptionDialog(false);
+    setPopupCollapsed(false);
+  };
   const updateOff = loading || mapLoading || geocoding;
   const delta = zoomToDelta(MAP_ZOOM);
 
@@ -91,7 +99,7 @@ export default function EditRestaurantAddress() {
           ) : null}
 
           {/* Fixed pin: its tip sits at 36% of the map height, as on the web. */}
-          <View pointerEvents="none" style={styles.pinWrap}>
+          <View pointerEvents="none" style={[styles.pinWrap, { transform: [{ translateY: -pinH }] }]} onLayout={(e) => setPinH(e.nativeEvent.layout.height)}>
             <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.pinTip}>
               <Text style={{ fontSize: 12, lineHeight: 16, color: '#fff', textAlign: 'center', ...poppins(600) }}>Your outlet location</Text>
               <Text style={{ fontSize: 10, lineHeight: 16, color: 'rgba(255,255,255,0.8)', textAlign: 'center', ...poppins(400) }}>Drag map or search above</Text>
@@ -140,22 +148,28 @@ export default function EditRestaurantAddress() {
         </View>
       </View>
 
-      <BottomSheet visible={showSelectOptionDialog} onClose={() => setShowSelectOptionDialog(false)} panelStyle={styles.popup}>
+      <BottomSheet visible={showSelectOptionDialog} onClose={closePopup} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.popup}>
+        <Press scale={1} onPress={() => setPopupCollapsed((v) => !v)} accessibilityLabel={popupCollapsed ? 'Expand' : 'Collapse'} style={styles.popupHandle}>
+          <ChevronDown size={24} color={tw.gray400} style={{ marginBottom: 4 }} />
+          <View style={{ width: 48, height: 6, borderRadius: 3, backgroundColor: tw.gray300 }} />
+        </Press>
         <View style={styles.popupHead}>
           <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(600) }}>Select an option</Text>
-          <Press onPress={() => setShowSelectOptionDialog(false)} accessibilityLabel="Close" style={{ padding: 8, borderRadius: 999 }}>
+          <Press onPress={closePopup} accessibilityLabel="Close" style={{ padding: 8, borderRadius: 999, marginLeft: 'auto' }}>
             <ChevronDown size={24} color={tw.gray600} />
           </Press>
         </View>
-        <View style={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 12 + insets.bottom }}>
-          <OptionRow dashed title="Update outlet address (FSSAI required)" body={previewText} selected={selectedOption === 'update_address'} onPress={() => setSelectedOption('update_address')} />
-          <OptionRow title="Make a minor correction to the location pin" body="If location pin on the map is slightly misplaced" selected={selectedOption === 'minor_correction'} onPress={() => setSelectedOption('minor_correction')} />
-          <Press scale={0.98} onPress={handleProceedUpdate} style={{ marginTop: 24 }}>
-            <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.cta, shadow('lg')]}>
-              <Text style={{ fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) }}>Proceed to update</Text>
-            </LinearGradient>
-          </Press>
-        </View>
+        {popupCollapsed ? null : (
+          <View style={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 12 + insets.bottom }}>
+            <OptionRow dashed title="Update outlet address (FSSAI required)" body={previewText} selected={selectedOption === 'update_address'} onPress={() => setSelectedOption('update_address')} />
+            <OptionRow title="Make a minor correction to the location pin" body="If location pin on the map is slightly misplaced" selected={selectedOption === 'minor_correction'} onPress={() => setSelectedOption('minor_correction')} />
+            <Press scale={0.98} onPress={handleProceedUpdate} style={{ marginTop: 24 }}>
+              <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.cta, shadow('lg')]}>
+                <Text style={{ fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) }}>Proceed to update</Text>
+              </LinearGradient>
+            </Press>
+          </View>
+        )}
       </BottomSheet>
     </View>
   );
@@ -165,7 +179,7 @@ const styles = StyleSheet.create({
   header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray200, paddingHorizontal: 16, paddingBottom: 12, zIndex: 100 },
   title: { flexShrink: 1, fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
   mapLoading: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', zIndex: 30 },
-  pinWrap: { position: 'absolute', top: '36%', left: 0, right: 0, alignItems: 'center', transform: [{ translateY: -100 }], zIndex: 10 },
+  pinWrap: { position: 'absolute', top: '36%', left: 0, right: 0, alignItems: 'center', zIndex: 10 },
   pinTip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginBottom: 8, maxWidth: 220, ...shadow('lg') },
   pinDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: RT.primary, borderWidth: 3, borderColor: '#fff', ...shadow('lg') },
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 16, paddingTop: 20, zIndex: 20, elevation: 12, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 30, shadowOffset: { width: 0, height: -8 } },
@@ -175,7 +189,8 @@ const styles = StyleSheet.create({
   infoBig: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) },
   cta: { paddingVertical: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   popup: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  popupHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 20, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
+  popupHandle: { alignItems: 'center', paddingTop: 12, paddingBottom: 8 },
+  popupHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
   option: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingVertical: 16 },
   radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginLeft: 16 },
 });

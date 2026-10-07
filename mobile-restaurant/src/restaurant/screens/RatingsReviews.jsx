@@ -1,4 +1,5 @@
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronDown, ChevronRight, Star, ThumbsDown, ThumbsUp } from 'lucide-react-native';
 import { BottomSheet } from '../../components/kit';
 import { Press } from '../../components/ui';
@@ -6,6 +7,27 @@ import { poppins, tw } from '../../theme';
 import { PageHeader, PrimaryButton } from '../components/ui';
 import { useRatingsReviews } from '../hooks/pages/useRatingsReviews';
 import { RT } from '../theme';
+
+/** The web's delivery BottomPopup (handle, close chevron header, padded body), bg-black/50 backdrop. */
+function Popup({ visible, onClose, children }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <BottomSheet visible={visible} onClose={onClose} backdrop="rgba(0,0,0,0.5)">
+      <View style={[styles.popupSheet, { paddingBottom: insets.bottom }]}>
+        <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 8 }}>
+          <ChevronDown size={24} color={tw.gray400} style={{ marginBottom: 4 }} />
+          <View style={{ width: 48, height: 6, borderRadius: 3, backgroundColor: tw.gray300 }} />
+        </View>
+        <View style={styles.popupHeader}>
+          <Press onPress={onClose} accessibilityLabel="Close" hitSlop={8} style={{ padding: 8, marginLeft: 'auto' }}>
+            <ChevronDown size={24} color={tw.gray600} />
+          </Press>
+        </View>
+        <View style={{ paddingHorizontal: 16, paddingVertical: 16 }}>{children}</View>
+      </View>
+    </BottomSheet>
+  );
+}
 
 /** Port of Food/pages/restaurant/RatingsReviews.jsx (/food/restaurant/ratings-reviews). */
 export default function RatingsReviews() {
@@ -73,7 +95,7 @@ export default function RatingsReviews() {
         ) : null}
       </ScrollView>
 
-      <BottomSheet visible={showThankYouPopup} onClose={handleThankYouPopupClose}>
+      <Popup visible={showThankYouPopup} onClose={handleThankYouPopupClose}>
         <View style={styles.popup}>
           <View style={[styles.popupIcon, { backgroundColor: tw.green100 }]}>
             <ThumbsUp size={32} color={tw.green600} />
@@ -81,9 +103,9 @@ export default function RatingsReviews() {
           <Text style={styles.popupTitle}>Thank you!</Text>
           <Text style={styles.popupBody}>We&apos;re glad we could help resolve your query.</Text>
         </View>
-      </BottomSheet>
+      </Popup>
 
-      <BottomSheet visible={showNotHelpfulPopup} onClose={handleNotHelpfulPopupClose}>
+      <Popup visible={showNotHelpfulPopup} onClose={handleNotHelpfulPopupClose}>
         <View style={styles.popup}>
           <View style={[styles.popupIcon, { backgroundColor: tw.gray100 }]}>
             <ThumbsDown size={32} color={tw.gray600} />
@@ -93,7 +115,7 @@ export default function RatingsReviews() {
           {/* As on the web, this only closes the popup. */}
           <PrimaryButton title="Contact Support" onPress={() => setShowNotHelpfulPopup(false)} style={{ alignSelf: 'stretch' }} textStyle={{ fontSize: 16, lineHeight: 24 }} />
         </View>
-      </BottomSheet>
+      </Popup>
     </View>
   );
 }
@@ -104,9 +126,11 @@ const styles = StyleSheet.create({
   question: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 },
   questionText: { flex: 1, paddingRight: 16, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(400) },
   answer: { paddingBottom: 12, paddingTop: 4, fontSize: 14, lineHeight: 23, color: tw.gray700, ...poppins(400) },
-  vote: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 2, backgroundColor: '#fff', borderRadius: 8, paddingVertical: 12, paddingHorizontal: 8 },
+  vote: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 2, backgroundColor: '#fff', borderRadius: 8, paddingVertical: 12, paddingHorizontal: 16 },
   voteText: { fontSize: 14, lineHeight: 20, ...poppins(600) },
-  popup: { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 16, backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  popup: { alignItems: 'center', paddingVertical: 24 },
+  popupSheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' },
+  popupHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
   popupIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   popupTitle: { fontSize: 20, lineHeight: 28, color: tw.gray900, marginBottom: 8, ...poppins(700) },
   popupBody: { fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', ...poppins(400) },

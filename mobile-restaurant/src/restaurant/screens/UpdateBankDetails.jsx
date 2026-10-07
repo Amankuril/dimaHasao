@@ -1,13 +1,14 @@
 import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AlertCircle, Upload } from 'lucide-react-native';
 import Img from '../../components/Img';
 import { Press } from '../../components/ui';
 import { poppins, tw } from '../../theme';
 import ImageSourcePicker from '../components/ImageSourcePicker';
-import { PageHeader, PrimaryButton } from '../components/ui';
+import { PageHeader } from '../components/ui';
 import { useUpdateBankDetails } from '../hooks/pages/useUpdateBankDetails';
-import { RT } from '../theme';
+import { RT, RT_GRADIENT } from '../theme';
 
 /** Port of Food/pages/restaurant/UpdateBankDetails.jsx (/food/restaurant/update-bank-details). */
 export default function UpdateBankDetails() {
@@ -78,7 +79,11 @@ export default function UpdateBankDetails() {
                 </View>
               </View>
 
-              <PrimaryButton title={saving ? 'Saving...' : 'Submit'} onPress={() => handleSubmit({ preventDefault() {} })} disabled={saving || uploadingQr} textStyle={{ fontSize: 16, lineHeight: 24, ...poppins(700) }} />
+              <Press scale={0.98} onPress={() => handleSubmit({ preventDefault() {} })} disabled={saving || uploadingQr} accessibilityRole="button" accessibilityState={{ disabled: saving || uploadingQr }} style={saving || uploadingQr ? { opacity: 0.6 } : null}>
+                <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 16, borderRadius: 8, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) }}>{saving ? 'Saving...' : 'Submit'}</Text>
+                </LinearGradient>
+              </Press>
             </View>
           )}
         </ScrollView>
@@ -93,7 +98,7 @@ const styles = StyleSheet.create({
   loading: { paddingVertical: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   h2: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
   label: { fontSize: 14, lineHeight: 20, color: tw.gray700, marginBottom: 8, ...poppins(500) },
-  input: { borderWidth: 1, borderColor: tw.gray300, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: tw.gray900, ...poppins(400) },
+  input: { borderWidth: 1, borderColor: tw.gray300, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: tw.gray900, ...poppins(400) },
   error: { marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 4 },
   errorText: { flex: 1, fontSize: 12, lineHeight: 16, color: RT.primary, ...poppins(400) },
   qr: { width: 160, height: 160, borderWidth: 1, borderColor: tw.gray200, borderRadius: 8, backgroundColor: '#fff' },

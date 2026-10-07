@@ -29,7 +29,7 @@ export default function OutletInfo() {
           <Text style={styles.title} accessibilityRole="header">Outlet Information</Text>
         </View>
         <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.idPill}>
-          <Text style={styles.idText}>ID: {shortId}</Text>
+          <Text style={styles.idText}>{`ID: ${shortId}`.toUpperCase()}</Text>
         </LinearGradient>
       </View>
 
@@ -52,7 +52,7 @@ export default function OutletInfo() {
                   <Text style={{ fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(900) }}>{restaurantData?.rating?.toFixed(1) || '0.0'}</Text>
                   <Star size={12} color="#fff" fill="#fff" />
                 </View>
-                <Text style={styles.reviews}>{restaurantData?.totalRatings || 0} Reviews</Text>
+                <Text style={styles.reviews}>{`${restaurantData?.totalRatings || 0} Reviews`.toUpperCase()}</Text>
               </View>
 
               <Press
@@ -72,7 +72,7 @@ export default function OutletInfo() {
           <LinearGradient colors={['rgba(239,246,255,0.4)', 'rgba(239,246,255,0.8)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.card, { borderColor: 'rgba(219,234,254,0.5)' }]}>
             <View style={styles.captionRow}>
               <LinearGradient colors={RT_GRADIENT} style={styles.dot} />
-              <Text style={[styles.caption, { color: RT.primary }]}>Restaurant Name</Text>
+              <Text style={[styles.caption, { color: RT.primary }]}>RESTAURANT NAME</Text>
             </View>
             <Text style={{ marginTop: 6, fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(900) }}>{loading ? 'Loading...' : restaurantName || 'N/A'}</Text>
           </LinearGradient>
@@ -80,7 +80,7 @@ export default function OutletInfo() {
           <LinearGradient colors={[tw.gray50, 'rgba(243,244,246,0.5)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.card, { borderColor: 'rgba(229,231,235,0.5)' }]}>
             <View style={styles.captionRow}>
               <View style={[styles.dot, { backgroundColor: tw.gray500 }]} />
-              <Text style={[styles.caption, { color: tw.gray500 }]}>Location Address</Text>
+              <Text style={[styles.caption, { color: tw.gray500 }]}>LOCATION ADDRESS</Text>
             </View>
             <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
               <View style={styles.pin}>
@@ -101,16 +101,16 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray100, paddingHorizontal: 16, paddingBottom: 12, ...shadow('sm') },
   title: { fontSize: 17, lineHeight: 24, letterSpacing: -0.4, color: tw.gray900, ...poppins(700) },
   idPill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
-  idText: { fontSize: 11, lineHeight: 16, letterSpacing: 0.55, color: '#fff', textTransform: 'uppercase', ...poppins(900) },
+  idText: { fontSize: 11, lineHeight: 16, letterSpacing: 0.55, color: '#fff', minWidth: 48, ...poppins(900) },
   banner: { width: '100%', height: 180, borderRadius: 32, overflow: 'hidden', backgroundColor: tw.gray100, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)' },
   thumbWrap: { marginTop: -48, width: 96, height: 96, borderRadius: 32, backgroundColor: '#fff', padding: 6, ...shadow('2xl') },
   name: { fontSize: 24, lineHeight: 30, color: tw.gray900, ...poppins(900) },
   rating: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: tw.green600, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  reviews: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, color: tw.gray400, textTransform: 'uppercase', ...poppins(700) },
+  reviews: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, color: tw.gray400, minWidth: 64, ...poppins(700) },
   edit: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
   card: { borderRadius: 24, padding: 20, borderWidth: 1 },
   captionRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { width: 6, height: 6, borderRadius: 3 },
-  caption: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', ...poppins(900) },
+  caption: { fontSize: 10, lineHeight: 15, letterSpacing: 1, minWidth: 80, ...poppins(900) },
   pin: { backgroundColor: '#fff', padding: 8, borderRadius: 12, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
 });

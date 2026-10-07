@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
     CANCELLATION_PUBLIC: '/food/pages/cancellation',
     SUPPORT_USER_PUBLIC: '/food/pages/support_user',
     SAFETY_EMERGENCY_CREATE: '/food/user/safety-emergency-reports',
+    FEEDBACK_EXPERIENCE_CREATE: '/food/restaurant/feedback-experience',
     BUSINESS_SETTINGS_PUBLIC: '/food/admin/business-settings/public',
   },
   // Empty on the web too: page code only reads these for debug output.

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,7 +12,7 @@ import { RT, RT_GRADIENT } from '../theme';
 function Sheet({ visible, onClose, title, children, footer, maxHeight = '70%' }) {
   const insets = useSafeAreaInsets();
   return (
-    <BottomSheet visible={visible} onClose={onClose}>
+    <BottomSheet visible={visible} onClose={onClose} backdrop="rgba(0,0,0,0.5)">
       <View style={[styles.sheet, { maxHeight }]}>
         <View style={styles.sheetHead}>
           <Text style={styles.sheetTitle}>{title}</Text>
@@ -50,6 +50,8 @@ export default function PhoneNumbersPage() {
     handleEditClick, handleSaveEdit, handleCancelEdit, handleOtpChange, handleOtpKeyDown, handleVerifyOtp, handleResendOtp, handleCancelOtp, getDisplayNumber,
   } = usePhoneNumbersPage();
   const otpRefs = useRef([]);
+  const [phoneFocused, setPhoneFocused] = useState(false);
+  const [otpFocus, setOtpFocus] = useState(-1);
 
   const numberRow = (key, label, top) => (
     <View style={[styles.numberRow, top ? { borderTopWidth: 1, borderTopColor: tw.gray100 } : null]}>
@@ -87,7 +89,7 @@ export default function PhoneNumbersPage() {
         <Text style={{ fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) }} accessibilityRole="header">Important contacts</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 48 + insets.bottom, gap: 16 }}>
         {section(
           Users,
           'Order reminder numbers',
@@ -101,7 +103,7 @@ export default function PhoneNumbersPage() {
       </ScrollView>
 
       <Sheet
-        visible={Boolean(editingNumber) && !isCountryCodeOpen}
+        visible={Boolean(editingNumber)}
         onClose={handleCancelEdit}
         title="Edit phone number"
         footer={<Actions onCancel={handleCancelEdit} onConfirm={handleSaveEdit} confirmLabel="Save" enabled={Boolean(phoneNumber.trim())} />}
@@ -119,7 +121,7 @@ export default function PhoneNumbersPage() {
           </View>
           <View>
             <Text style={styles.label}>Phone number</Text>
-            <TextInput value={phoneNumber} onChangeText={(text) => setPhoneNumber(text.replace(/\D/g, ''))} placeholder="Enter phone number" placeholderTextColor={tw.gray400} keyboardType="phone-pad" accessibilityLabel="Phone number" style={styles.input} />
+            <TextInput value={phoneNumber} onChangeText={(text) => setPhoneNumber(text.replace(/\D/g, ''))} placeholder="Enter phone number" placeholderTextColor={tw.gray400} keyboardType="phone-pad" accessibilityLabel="Phone number" onFocus={() => setPhoneFocused(true)} onBlur={() => setPhoneFocused(false)} style={[styles.input, phoneFocused ? styles.focus : null]} />
           </View>
         </View>
       </Sheet>
@@ -182,7 +184,9 @@ export default function PhoneNumbersPage() {
                 maxLength={1}
                 autoFocus={index === 0}
                 accessibilityLabel={`Digit ${index + 1}`}
-                style={styles.otp}
+                onFocus={() => setOtpFocus(index)}
+                onBlur={() => setOtpFocus((cur) => (cur === index ? -1 : cur))}
+                style={[styles.otp, otpFocus === index ? styles.focus : null]}
               />
             ))}
           </View>
@@ -196,6 +200,8 @@ export default function PhoneNumbersPage() {
 }
 
 const styles = StyleSheet.create({
+  // restaurantTheme.css: input:focus border = primary 55 % over white
+  focus: { borderColor: '#789d8a' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray200, paddingHorizontal: 16, paddingBottom: 12 },
   card: { backgroundColor: '#fff', borderRadius: 8, padding: 16 },
   cardIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },

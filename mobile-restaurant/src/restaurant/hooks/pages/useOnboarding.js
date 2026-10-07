@@ -1037,6 +1037,16 @@ export function useOnboarding() {
     loadData()
   }, [])
 
+  // The web tracks window.visualViewport: when the keyboard is up the footer is hidden and the page padded.
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) => setKeyboardInset(Math.round(e?.endCoordinates?.height || 0) > 120 ? Math.round(e.endCoordinates.height) : 0))
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardInset(0))
+    return () => {
+      show.remove()
+      hide.remove()
+    }
+  }, [])
+
   useEffect(() => {
     if (!verifiedPhoneNumber) return
     setStep1((prev) => ({

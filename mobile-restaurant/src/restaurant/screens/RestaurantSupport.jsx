@@ -1,18 +1,37 @@
+import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, Send } from 'lucide-react-native';
 import { SelectField } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { poppins, shadow, tw } from '../../theme';
-import { PrimaryButton } from '../components/ui';
 import { useRestaurantSupport } from '../hooks/pages/useRestaurantSupport';
+import { RT, RT_GRADIENT } from '../theme';
 
-/* getStatusStyle() answers with class names; these are the same three looks. */
+/*
+ * getStatusStyle() answers with class names; these are the same three looks.
+ * restaurantTheme.css repaints text-emerald-700 and text-amber-700 as the primary-strong green.
+ */
 const STATUS = {
-  resolved: { bg: tw.emerald100, fg: tw.emerald700, border: tw.emerald200 },
+  resolved: { bg: tw.emerald100, fg: RT.primaryStrong, border: tw.emerald200 },
   'in-progress': { bg: tw.blue100, fg: tw.blue700, border: tw.blue200 },
-  open: { bg: tw.amber100, fg: tw.amber700, border: tw.amber200 },
+  open: { bg: tw.amber100, fg: RT.primaryStrong, border: tw.amber200 },
 };
+
+/** A text input with the theme's focus border (input:focus = primary 55 % over white). */
+function Input({ style, ...props }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <TextInput
+      {...props}
+      placeholderTextColor={tw.slate400}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={[style, focused ? { borderColor: '#789d8a' } : null]}
+    />
+  );
+}
 
 /** Port of Food/pages/restaurant/RestaurantSupport.jsx (/food/restaurant/help-centre/support). */
 export default function RestaurantSupport() {
@@ -43,28 +62,25 @@ export default function RestaurantSupport() {
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 112, gap: 16 }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {stat('Total', stats.total, { border: tw.slate200, bg: '#fff', label: tw.slate500, value: tw.slate900 })}
-            {stat('Open', stats.open, { border: tw.amber200, bg: tw.amber50, label: tw.amber700, value: tw.amber800 })}
+            {stat('Open', stats.open, { border: tw.amber200, bg: RT.primarySoft, label: RT.primaryStrong, value: tw.amber800 })}
             {stat('In progress', stats.inProgress, { border: tw.blue200, bg: tw.blue50, label: tw.blue700, value: tw.blue800 })}
-            {stat('Resolved', stats.resolved, { border: tw.emerald200, bg: tw.emerald50, label: tw.emerald700, value: tw.emerald800 })}
+            {stat('Resolved', stats.resolved, { border: tw.emerald200, bg: tw.emerald50, label: RT.primaryStrong, value: tw.emerald800 })}
           </View>
 
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Raise support ticket</Text>
             <SelectField value={form.category} options={CATEGORY_OPTIONS} onChange={set('category')} accessibilityLabel="Category" style={styles.select} textStyle={styles.selectText} />
             <SelectField value={form.priority} options={PRIORITY_OPTIONS} onChange={set('priority')} accessibilityLabel="Priority" style={styles.select} textStyle={styles.selectText} />
-            <TextInput value={form.issueType} onChangeText={set('issueType')} placeholder="Issue type (required)" placeholderTextColor={tw.slate400} maxLength={120} style={styles.input} />
-            <TextInput value={form.subject} onChangeText={set('subject')} placeholder="Short subject" placeholderTextColor={tw.slate400} maxLength={180} style={styles.input} />
-            <TextInput value={form.orderRef} onChangeText={set('orderRef')} placeholder="Order ID (optional)" placeholderTextColor={tw.slate400} maxLength={80} style={styles.input} />
-            <TextInput value={form.description} onChangeText={set('description')} placeholder="Describe your issue" placeholderTextColor={tw.slate400} maxLength={1000} multiline textAlignVertical="top" style={[styles.input, { minHeight: 96 }]} />
-            <PrimaryButton
-              title="Submit Ticket"
-              onPress={() => handleSubmit({ preventDefault() {} })}
-              loading={submitting}
-              style={{ borderRadius: 12, overflow: 'hidden', ...shadow('lg') }}
-              textStyle={poppins(700)}
-            >
-              {submitting ? null : <Send size={16} color="#fff" />}
-            </PrimaryButton>
+            <Input value={form.issueType} onChangeText={set('issueType')} placeholder="Issue type (required)" maxLength={120} style={styles.input} />
+            <Input value={form.subject} onChangeText={set('subject')} placeholder="Short subject" maxLength={180} style={styles.input} />
+            <Input value={form.orderRef} onChangeText={set('orderRef')} placeholder="Order ID (optional)" maxLength={80} style={styles.input} />
+            <Input value={form.description} onChangeText={set('description')} placeholder="Describe your issue" maxLength={1000} multiline textAlignVertical="top" style={[styles.input, { minHeight: 96 }]} />
+            <Press scale={0.98} onPress={() => handleSubmit({ preventDefault() {} })} disabled={submitting} accessibilityState={{ disabled: submitting, busy: submitting }} style={[{ borderRadius: 12, ...shadow('lg') }, submitting ? { opacity: 0.6 } : null]}>
+              <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.submit}>
+                {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Send size={16} color="#fff" />}
+                <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) }}>Submit Ticket</Text>
+              </LinearGradient>
+            </Press>
           </View>
 
           <View style={styles.card}>
@@ -120,6 +136,7 @@ export default function RestaurantSupport() {
 }
 
 const styles = StyleSheet.create({
+  submit: { borderRadius: 12, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.slate200, paddingHorizontal: 16, paddingBottom: 12 },
   stat: { width: '48.8%', borderRadius: 12, borderWidth: 1, padding: 12 },
   card: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, padding: 16, gap: 12 },

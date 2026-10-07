@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AlertTriangle, Check, ChevronDown, Clock, Pencil, Trash2 } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeft, Check, ChevronDown, Clock, Pencil, Trash2 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { poppins, shadow, tw } from '../../theme';
-import { InfoDialog, OutlineButton, PageHeader, PrimaryButton } from '../components/ui';
+import { ShadButton, ShadDialog } from '../components/ShadDialog';
 import { useDaySlots } from '../hooks/pages/useDaySlots';
 import { RT } from '../theme';
 
@@ -86,6 +87,7 @@ function TimePickerWheel({ initialHour, initialMinute, initialPeriod, onClose, o
 
 /** Port of Food/pages/restaurant/DaySlots.jsx (/food/restaurant/outlet-timings/:day). */
 export default function DaySlots() {
+  const insets = useSafeAreaInsets();
   const {
     companyName, navigate, dayName, dayData, copyToAllDays, setCopyToAllDays, deleteDialogOpen, setDeleteDialogOpen, setSlotToDelete,
     timePickerOpen, setTimePickerOpen, getTimeParts, handleCustomTimeChange, calculateSlotDuration, calculateTotalDuration,
@@ -121,7 +123,15 @@ export default function DaySlots() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <PageHeader title={dayName} subtitle={`${companyName} delivery`} onBack={() => navigate('/food/restaurant/outlet-timings')} />
+      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
+        <Press onPress={() => navigate('/food/restaurant/outlet-timings')} accessibilityLabel="Go back" hitSlop={8} style={{ padding: 6 }}>
+          <ArrowLeft size={24} color={tw.gray900} />
+        </Press>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.headerTitle} numberOfLines={1} accessibilityRole="header">{dayName}</Text>
+          <Text style={styles.headerSub} numberOfLines={1}>{companyName} delivery</Text>
+        </View>
+      </View>
       <View style={{ backgroundColor: tw.gray50, padding: 8 }}>
         <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) }}>
           Add or modify your restaurant timings here. You can create maximum up to 3 time slots in a day.
@@ -177,16 +187,22 @@ export default function DaySlots() {
         />
       ) : null}
 
-      <InfoDialog
-        visible={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        icon={<AlertTriangle size={24} color={RT.primary} />}
-        title="Delete Time Slot"
-        description="Are you sure you want to delete this time slot? This action cannot be undone."
-      >
-        <OutlineButton title="Cancel" onPress={() => { setDeleteDialogOpen(false); setSlotToDelete(null); }} />
-        <PrimaryButton title="Delete" onPress={confirmDelete} />
-      </InfoDialog>
+      <ShadDialog visible={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} style={styles.deleteDialog}>
+        <View style={{ gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8, paddingRight: 40 }}>
+            <View style={styles.deleteIcon}>
+              <AlertTriangle size={24} color={RT.primary} />
+            </View>
+            <Text style={styles.deleteTitle}>Delete Time Slot</Text>
+          </View>
+          <Text style={styles.deleteDesc}>Are you sure you want to delete this time slot? This action cannot be undone.</Text>
+        </View>
+        {/* DialogFooter is flex-col-reverse on a phone: the primary action sits on top */}
+        <View style={{ gap: 8, marginTop: 8 }}>
+          <ShadButton title="Delete" onPress={confirmDelete} />
+          <ShadButton variant="outline" title="Cancel" onPress={() => { setDeleteDialogOpen(false); setSlotToDelete(null); }} />
+        </View>
+      </ShadDialog>
     </View>
   );
 }
@@ -209,5 +225,12 @@ const styles = StyleSheet.create({
   periodText: { fontSize: 14, color: tw.gray900, ...poppins(500) },
   footer: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 16, paddingVertical: 16, gap: 16, ...shadow('lg') },
   check: { width: 20, height: 20, borderWidth: 2, borderColor: tw.gray300, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
-  save: { backgroundColor: tw.gray800, borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
+  save: { backgroundColor: tw.gray800, borderRadius: 8, height: 36, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
+  headerTitle: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
+  headerSub: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
+  deleteDialog: { width: '94%', maxWidth: 425, padding: 16, gap: 8 },
+  deleteIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: tw.red100, alignItems: 'center', justifyContent: 'center' },
+  deleteTitle: { flex: 1, fontSize: 18, lineHeight: 24, color: tw.gray900, ...poppins(600) },
+  deleteDesc: { paddingTop: 8, fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
 });

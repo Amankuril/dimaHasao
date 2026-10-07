@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MapPin } from 'lucide-react-native';
 import { Press } from '../../../components/ui';
 import { poppins, shadow, tw } from '../../../theme';
@@ -12,7 +12,7 @@ const CITIES = ['Indore', 'Bhopal', 'Gwalior', 'Jabalpur', 'Mumbai', 'Pune', 'De
 export default function Step1({ o }) {
   const {
     step1, setStep1, isEditing, verifiedPhoneNumber, companyName, zones, zonesLoading,
-    locationSearchValue, setLocationSearchValue, locationSuggestions, isSearchingLocation, selectLocationSuggestion,
+    locationSearchValue, setLocationSearchValue, setIsLocationSearchFocused, isLocationSearchFocused, locationSuggestions, isSearchingLocation, selectLocationSuggestion,
     normalizeEmail, normalizePincode, formatNameToCapital,
   } = o;
   const loc = step1.location || {};
@@ -87,7 +87,8 @@ export default function Step1({ o }) {
               style={{ marginTop: 4 }}
               placeholder="10 digit mobile number"
               keyboardType="number-pad"
-              editable={isEditing && !verifiedPhoneNumber}
+              readOnly={Boolean(verifiedPhoneNumber)}
+              editable={isEditing}
               accessibilityLabel="Phone number"
             />
           </View>
@@ -133,7 +134,9 @@ export default function Step1({ o }) {
               <Field
                 value={locationSearchValue}
                 onChangeText={setLocationSearchValue}
-                placeholder="Start typing your restaurant address..."
+                placeholder={isLocationSearchFocused ? '' : 'Start typing your restaurant address...'}
+                onFocus={() => setIsLocationSearchFocused(true)}
+                onBlur={() => setIsLocationSearchFocused(false)}
                 autoCorrect={false}
                 accessibilityLabel="Search location"
                 style={{ color: '#000', paddingRight: 36 }}
@@ -141,7 +144,7 @@ export default function Step1({ o }) {
               {isSearchingLocation ? <ActivityIndicator size="small" color={RT.accent} style={{ position: 'absolute', right: 12 }} /> : null}
             </View>
             {locationSuggestions.length > 0 ? (
-              <View style={styles.suggestions}>
+              <ScrollView style={styles.suggestions} nestedScrollEnabled keyboardShouldPersistTaps="handled">
                 {locationSuggestions.map((s, index) => (
                   <Press
                     key={s.id || index}
@@ -154,7 +157,7 @@ export default function Step1({ o }) {
                     <Text numberOfLines={2} style={styles.suggestionText}>{s.display}</Text>
                   </Press>
                 ))}
-              </View>
+              </ScrollView>
             ) : null}
             <Hint style={{ marginTop: 4 }}>Select a suggestion to auto-fill area/city/state/pincode and coordinates.</Hint>
           </View>

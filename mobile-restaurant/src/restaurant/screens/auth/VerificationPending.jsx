@@ -6,7 +6,7 @@ import { AlertTriangle, Clock3, ShieldCheck, X } from 'lucide-react-native';
 import { Press } from '../../../components/ui';
 import { restaurantAPI } from '../../../api/restaurant';
 import { useAuth } from '../../../context/AuthContext';
-import { persistModuleFcmToken } from '../../../lib/push';
+import { persistModuleFcmToken, syncPendingPartnerFcmQuick } from '../../../lib/push';
 import { localStore } from '../../../lib/storage';
 import { useLocation, useNavigate } from '../../../lib/webRouter';
 import { poppins, shadow } from '../../../theme';
@@ -24,7 +24,7 @@ export default function VerificationPending() {
   const insets = useSafeAreaInsets();
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, updateUser } = useAuth();
+  const { clearSession, updateUser } = useAuth();
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [localStatus, setLocalStatus] = useState(() => {
     if (location.state?.isDisabled) return 'banned';
@@ -49,8 +49,10 @@ export default function VerificationPending() {
 
   // The approval is announced by push: make sure this device's token is on file.
   useEffect(() => {
+    const phone = pendingPhone || localStore.getItem('restaurant_pendingPhone') || '';
+    if (phone) syncPendingPartnerFcmQuick('restaurant', phone);
     if (getModuleToken('restaurant')) persistModuleFcmToken('restaurant').catch(() => {});
-  }, []);
+  }, [pendingPhone]);
 
   const checkApprovalStatus = useCallback(async () => {
     if (!getModuleToken('restaurant')) {
@@ -104,10 +106,14 @@ export default function VerificationPending() {
     return () => sub.remove();
   }, [checkApprovalStatus]);
 
+  // The web leaves the server session (and this device's push token) alone: only the local sign-in is
+  // cleared, so the approval push still reaches this phone. The token is synced first, as the web does.
   const backToLogin = async () => {
+    const phone = pendingPhone || localStore.getItem('restaurant_pendingPhone') || '';
+    if (phone) await Promise.race([Promise.resolve(syncPendingPartnerFcmQuick('restaurant', phone)).catch(() => {}), new Promise((resolve) => setTimeout(resolve, 2000))]);
+    await clearSession();
     localStore.removeItem('restaurant_pendingPhone');
     clearPending();
-    await logout();
     navigate('/food/restaurant/login', { replace: true });
   };
 
@@ -208,7 +214,7 @@ const RED = '#E51A21';
 const styles = StyleSheet.create({
   card: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(202,168,62,0.3)', backgroundColor: AUTH.card, padding: 20, ...shadow('0 28px 80px rgba(0,0,0,0.65)') },
   banner: { height: 36, marginVertical: 8, marginLeft: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: RED, borderTopLeftRadius: 6, borderBottomLeftRadius: 6, paddingLeft: 32, paddingRight: 12 },
-  bannerText: { fontSize: 13, lineHeight: 15, letterSpacing: 2.6, color: '#fff', ...poppins(800) },
+  bannerText: { flexShrink: 0, paddingRight: 3, fontSize: 13, lineHeight: 15, letterSpacing: 2.6, color: '#fff', ...poppins(800) },
   bannerTip: { position: 'absolute', right: -13, top: 5, width: 26, height: 26, backgroundColor: RED, transform: [{ rotate: '45deg' }] },
   diamond: { position: 'absolute', left: -16, top: 2, width: 32, height: 32, backgroundColor: RED, borderWidth: 3, borderColor: AUTH.card, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '45deg' }], zIndex: 2 },
   clock: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(202,168,62,0.15)', alignItems: 'center', justifyContent: 'center' },

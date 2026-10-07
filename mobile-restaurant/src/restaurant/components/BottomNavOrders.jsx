@@ -69,7 +69,7 @@ export default function BottomNavOrders({ activeTabOverride }) {
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 8, zIndex: 40 },
-  bar: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', gap: 4, borderRadius: 30, paddingVertical: 8, paddingLeft: 12, paddingRight: 8, ...shadow('0 16px 40px rgba(126,56,102,0.35)') },
+  bar: { width: '100%', maxWidth: 448, alignSelf: 'center', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', gap: 4, borderRadius: 30, paddingVertical: 8, paddingLeft: 12, paddingRight: 8, ...shadow('0 16px 40px rgba(126,56,102,0.35)') },
   tab: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 8 },
   tabActive: { backgroundColor: 'rgba(255,255,255,0.22)' },
   label: { fontSize: 11, lineHeight: 12, ...poppins(400) },

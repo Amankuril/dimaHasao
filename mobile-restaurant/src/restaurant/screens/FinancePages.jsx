@@ -5,7 +5,7 @@ import { CheckCircle, Mail, Wallet } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { poppins, shadow, tw } from '../../theme';
 import BottomNavOrders, { BOTTOM_NAV_HEIGHT } from '../components/BottomNavOrders';
-import { PageHeader, PrimaryButton, RadioRow } from '../components/ui';
+import { PageHeader, RadioRow } from '../components/ui';
 import { useDownloadReport } from '../hooks/pages/useDownloadReport';
 import { useWithdrawalHistoryPage } from '../hooks/pages/useWithdrawalHistoryPage';
 import { RT_GRADIENT } from '../theme';
@@ -108,9 +108,12 @@ export function DownloadReport() {
       </ScrollView>
 
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 + insets.bottom }}>
-        <PrimaryButton title="Send an email" onPress={handleSend} style={null} textStyle={{ fontSize: 14 }}>
-          <Mail size={20} color="#fff" />
-        </PrimaryButton>
+        <Press scale={0.98} onPress={handleSend} accessibilityRole="button">
+          <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 12 }}>
+            <Mail size={20} color="#fff" />
+            <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) }}>Send an email</Text>
+          </LinearGradient>
+        </Press>
       </View>
 
       {showSuccess ? (
@@ -128,7 +131,7 @@ export function DownloadReport() {
 
 const styles = StyleSheet.create({
   tabs: { backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 1, borderBottomWidth: 1, borderBottomColor: tw.gray200, flexDirection: 'row', gap: 8 },
-  tab: { paddingHorizontal: 12, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+  tab: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
   tabText: { fontSize: 14, lineHeight: 20, ...poppins(500) },
   loading: { paddingVertical: 32, textAlign: 'center', fontSize: 16, color: tw.gray500, ...poppins(400) },
   emptyText: { fontSize: 18, lineHeight: 28, color: tw.gray500, textAlign: 'center', ...poppins(500) },

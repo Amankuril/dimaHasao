@@ -2,7 +2,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AlertTriangle, ChevronRight, Settings } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { poppins, shadow, tw } from '../../theme';
-import { InfoDialog, OutlineButton, PageHeader, PrimaryButton, Toggle } from '../components/ui';
+import { PageHeader, Toggle } from '../components/ui';
+import { ShadButton, ShadDialog } from '../components/ShadDialog';
 import { useRestaurantStatus } from '../hooks/pages/useRestaurantStatus';
 import { RT, RT_GRADIENT } from '../theme';
 
@@ -43,7 +44,7 @@ export default function RestaurantStatus() {
     <View style={{ flex: 1, backgroundColor: tw.gray100 }}>
       <PageHeader title="Restaurant status" subtitle="You are mapped to 1 restaurant" onBack={goBack} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}>
-        <View style={[styles.card, warning ? null : { borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }]}>
+        <View style={styles.card}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={[styles.rowTitle, { marginBottom: 4 }]}>{loading ? 'Loading...' : restaurantData?.name || 'Restaurant'}</Text>
@@ -81,32 +82,44 @@ export default function RestaurantStatus() {
         ) : null}
       </ScrollView>
 
-      <InfoDialog visible={showOutletClosedDialog} onClose={() => setShowOutletClosedDialog(false)} icon={dialogIcon} title="Outlet Timings Closed">
-        <OutlineButton title="Cancel" onPress={() => setShowOutletClosedDialog(false)} />
-        <PrimaryButton title="Go to Outlet Timings" onPress={handleGoToOutletTimings} />
-      </InfoDialog>
+      <ShadDialog visible={showOutletClosedDialog} onClose={() => setShowOutletClosedDialog(false)} style={styles.dialog}>
+        <View style={styles.dialogHeader}>
+          <View style={styles.dialogIcon}>{dialogIcon}</View>
+          <Text style={styles.dialogTitle}>Outlet Timings Closed</Text>
+        </View>
+        <View style={{ gap: 8 }}>
+          <ShadButton variant="outline" title="Cancel" onPress={() => setShowOutletClosedDialog(false)} />
+          <ShadButton title="Go to Outlet Timings" onPress={handleGoToOutletTimings} />
+        </View>
+      </ShadDialog>
 
-      <InfoDialog
-        visible={showOutsideTimingsDialog}
-        onClose={() => setShowOutsideTimingsDialog(false)}
-        icon={dialogIcon}
-        title="Outside Delivery Timings"
-        description="You are currently outside your scheduled delivery timings. Please change outlet timings to enable delivery status."
-      >
-        <OutlineButton title="Cancel" onPress={() => setShowOutsideTimingsDialog(false)} />
-        <PrimaryButton
-          title="Change Outlet Timings"
-          onPress={() => {
-            setShowOutsideTimingsDialog(false);
-            navigate('/food/restaurant/outlet-timings', from);
-          }}
-        />
-      </InfoDialog>
+      <ShadDialog visible={showOutsideTimingsDialog} onClose={() => setShowOutsideTimingsDialog(false)} style={styles.dialog}>
+        <View style={styles.dialogHeader}>
+          <View style={styles.dialogIcon}>{dialogIcon}</View>
+          <Text style={styles.dialogTitle}>Outside Delivery Timings</Text>
+          <Text style={styles.dialogDesc}>You are currently outside your scheduled delivery timings. Please change outlet timings to enable delivery status.</Text>
+        </View>
+        <View style={{ gap: 8 }}>
+          <ShadButton variant="outline" title="Cancel" onPress={() => setShowOutsideTimingsDialog(false)} />
+          <ShadButton
+            title="Change Outlet Timings"
+            onPress={() => {
+              setShowOutsideTimingsDialog(false);
+              navigate('/food/restaurant/outlet-timings', from);
+            }}
+          />
+        </View>
+      </ShadDialog>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  dialog: { width: '90%', maxWidth: 448, padding: 16, gap: 8 },
+  dialogHeader: { gap: 8, alignItems: 'center' },
+  dialogIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.orange100, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  dialogTitle: { fontSize: 18, lineHeight: 24, color: tw.gray900, textAlign: 'center', ...poppins(600) },
+  dialogDesc: { marginTop: 8, fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', ...poppins(400) },
   card: { backgroundColor: tw.gray50, borderTopLeftRadius: 8, borderTopRightRadius: 8, padding: 16, gap: 24, ...shadow('sm') },
   rowTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 6, ...poppins(700) },
   muted: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },

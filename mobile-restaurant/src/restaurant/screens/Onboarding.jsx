@@ -35,7 +35,7 @@ export default function Onboarding() {
   const insets = useSafeAreaInsets();
   const o = useOnboarding();
   const {
-    step, loading, saving, error, isLoggingOut, isEditing, setIsEditing, totalSteps, scrollRef,
+    step, keyboardInset, loading, saving, error, isLoggingOut, isEditing, setIsEditing, totalSteps, scrollRef,
     handleLogout, handleNext, handleBack, requestExit, showExitModal, handleStay, handleExit,
     sourcePicker, closeImageSourcePicker, hotelStep1, setHotelStep1, hotelStep2, setHotelStep2,
   } = o;
@@ -66,7 +66,7 @@ export default function Onboarding() {
               <Text style={styles.editText}>Edit Details</Text>
             </Press>
           ) : null}
-          <Text style={styles.stepText}>Step {step} of {totalSteps}</Text>
+          <Text style={styles.stepText}>{`STEP ${step} OF ${totalSteps}`}</Text>
           <Press onPress={handleLogout} disabled={isLoggingOut} accessibilityLabel="Logout" style={[styles.logout, isLoggingOut ? { opacity: 0.5 } : null]}>
             <LogOut size={16} color={RT.primary} />
           </Press>
@@ -97,10 +97,12 @@ export default function Onboarding() {
       <OnboardingExitModal open={showExitModal} onStay={handleStay} onExit={handleExit} />
 
       {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
-      <View style={[styles.footer, { paddingBottom: 12 + insets.bottom }]}>
-        {step > 1 ? <GradientButton title="Back" onPress={handleBack} disabled={saving} style={{ flex: 1 }} /> : null}
-        <GradientButton title={saving ? 'Saving...' : step === totalSteps ? 'Finish' : 'Continue'} onPress={handleNext} disabled={finishDisabled} style={{ flex: 1 }} />
-      </View>
+      {keyboardInset ? null : (
+        <View style={[styles.footer, { paddingBottom: 12 + insets.bottom }]}>
+          {step > 1 ? <GradientButton title="Back" onPress={handleBack} disabled={saving} style={{ flex: 1 }} /> : null}
+          <GradientButton title={saving ? 'Saving...' : step === totalSteps ? 'Finish' : 'Continue'} onPress={handleNext} disabled={finishDisabled} style={{ flex: 1 }} />
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -109,7 +111,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingHorizontal: 16, paddingBottom: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray200 },
   round: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: RT.onboardingSoft, borderWidth: 1, borderColor: 'rgba(229,231,235,0.8)', ...shadow('sm') },
   title: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: '#000', ...poppins(600) },
-  stepText: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.gray500, textTransform: 'uppercase', textAlign: 'right', ...poppins(700) },
+  stepText: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.gray500, textAlign: 'right', minWidth: 64, flexShrink: 0, ...poppins(700) },
   logout: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   edit: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, height: 32, borderRadius: 6, borderWidth: 1, borderColor: tw.blue300, backgroundColor: tw.blue50 },
   editText: { fontSize: 12, lineHeight: 16, color: tw.blue700, ...poppins(500) },

@@ -1,4 +1,5 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Bell, Calendar, ChevronDown, Download, FileText, Menu, Wallet, X } from 'lucide-react-native';
@@ -7,7 +8,7 @@ import { Press } from '../../components/ui';
 import { restaurantAPI } from '../../api/restaurant';
 import { alert } from '../../lib/webShim';
 import { poppins, shadow, tw } from '../../theme';
-import BottomNavOrders, { BOTTOM_NAV_HEIGHT } from '../components/BottomNavOrders';
+import BottomNavOrders from '../components/BottomNavOrders';
 import DateRangeDialog from '../components/DateRangeDialog';
 import { useHubFinance } from '../hooks/pages/useHubFinance';
 import { RT, RT_GRADIENT } from '../theme';
@@ -63,9 +64,10 @@ const getDateOptions = () => {
 };
 
 const STATUS_STYLE = {
-  green: { backgroundColor: tw.green100, color: tw.green700 },
+  // text-green-700 / text-amber-700 are repainted to the theme's strong green; red is left alone.
+  green: { backgroundColor: tw.green100, color: RT.primaryStrong },
   red: { backgroundColor: tw.red100, color: tw.red700 },
-  amber: { backgroundColor: tw.amber100, color: tw.amber700 },
+  amber: { backgroundColor: tw.amber100, color: RT.primaryStrong },
 };
 
 function OrderRow({ order, formatDateTime, last }) {
@@ -87,6 +89,9 @@ function OrderRow({ order, formatDateTime, last }) {
 /** Port of Food/pages/restaurant/HubFinance.jsx (/food/restaurant/hub-finance). */
 export default function HubFinance() {
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const reportBtnRef = useRef(null);
+  const [menuPos, setMenuPos] = useState(null);
   const h = useHubFinance();
   const {
     navigate, location, goBack, showBack, activeTab, setActiveTab, selectedDateRange, setSelectedDateRange, showDownloadMenu, setShowDownloadMenu,
@@ -95,6 +100,19 @@ export default function HubFinance() {
     submittingWithdrawal, setSubmittingWithdrawal, withdrawalRequests, setWithdrawalRequests, loadingWithdrawals, formatRestaurantId, invoiceOrders,
     invoiceSummary, getWithdrawalStatusClass, formatWithdrawalStatus, formatDateTime, fetchPastCyclesData, downloadPDF,
   } = h;
+
+  // The web's menu is an absolutely positioned dropdown that closes on an outside tap. Android does not deliver
+  // touches to a child drawn outside its parent, so it is shown in a transparent Modal under the button instead.
+  const toggleReportMenu = () => {
+    if (showDownloadMenu) {
+      setShowDownloadMenu(false);
+      return;
+    }
+    reportBtnRef.current?.measureInWindow((x, y, w, hgt) => {
+      setMenuPos({ top: y + hgt + 8, right: Math.max(0, windowWidth - (x + w)) });
+      setShowDownloadMenu(true);
+    });
+  };
 
   const payout = financeData?.currentCycle?.estimatedPayout || 0;
   const canWithdraw = payout > 0;
@@ -196,7 +214,7 @@ export default function HubFinance() {
         })}
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 28 + BOTTOM_NAV_HEIGHT + insets.bottom }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 112 + insets.bottom }} keyboardShouldPersistTaps="handled">
         {activeTab === 'payouts' ? (
           <View style={{ gap: 24 }}>
             <View>
@@ -269,24 +287,14 @@ export default function HubFinance() {
                     </View>
                     <ChevronDown size={16} color={tw.gray600} style={showDateRangePicker ? { transform: [{ rotate: '180deg' }] } : null} />
                   </Press>
-                  <View>
-                    <Press scale={0.98} onPress={() => setShowDownloadMenu(!showDownloadMenu)} accessibilityLabel="Get report">
+                  <View ref={reportBtnRef} collapsable={false}>
+                    <Press scale={0.98} onPress={toggleReportMenu} accessibilityLabel="Get report">
                       <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.report}>
                         <Download size={16} color="#fff" />
                         <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) }}>Get report</Text>
                         <ChevronDown size={16} color="#fff" />
                       </LinearGradient>
                     </Press>
-                    {showDownloadMenu ? (
-                      <View style={styles.menu}>
-                        <Press scale={1} onPress={downloadPDF} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 8 }}>
-                          <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center' }}>
-                            <FileText size={16} color={RT.primary} />
-                          </View>
-                          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) }}>Download PDF</Text>
-                        </Press>
-                      </View>
-                    ) : null}
                   </View>
                 </View>
 
@@ -380,6 +388,18 @@ export default function HubFinance() {
           </View>
         ) : null}
       </ScrollView>
+
+      <Modal visible={showDownloadMenu && Boolean(menuPos)} transparent animationType="fade" onRequestClose={() => setShowDownloadMenu(false)} statusBarTranslucent>
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowDownloadMenu(false)} accessibilityLabel="Close menu" />
+        <View style={[styles.menu, { top: menuPos?.top || 0, right: menuPos?.right || 0 }]}>
+          <Press scale={1} onPress={downloadPDF} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 8 }}>
+            <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center' }}>
+              <FileText size={16} color={RT.primary} />
+            </View>
+            <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) }}>Download PDF</Text>
+          </Press>
+        </View>
+      </Modal>
 
       <Dialog visible={showDateRangePicker} onClose={() => setShowDateRangePicker(false)} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.rangePanel}>
         <View style={styles.rangeHead}>
@@ -494,7 +514,7 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 12, lineHeight: 16, ...poppins(600) },
   rangeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, paddingHorizontal: 16, paddingVertical: 12 },
   report: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8 },
-  menu: { position: 'absolute', top: '100%', right: 0, marginTop: 8, minWidth: 180, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, paddingVertical: 8, zIndex: 50, ...shadow('2xl') },
+  menu: { position: 'absolute', minWidth: 180, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, paddingVertical: 8, zIndex: 50, ...shadow('2xl') },
   orderId: { fontSize: 14, lineHeight: 20, color: tw.gray900, marginBottom: 4, ...poppins(600) },
   orderDate: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginBottom: 4, ...poppins(400) },
   orderFood: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },

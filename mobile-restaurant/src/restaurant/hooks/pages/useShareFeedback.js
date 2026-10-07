@@ -9,6 +9,9 @@ import api from '../../../api/restaurant'
 import { toast } from '../../../lib/notify'
 import { useCompanyName } from '../useCompanyName'
 
+// api/config.js has no ADMIN.FEEDBACK_EXPERIENCE_CREATE entry; the web's value is /food/restaurant/feedback-experience.
+const FEEDBACK_EXPERIENCE_CREATE = API_ENDPOINTS.ADMIN.FEEDBACK_EXPERIENCE_CREATE || '/food/restaurant/feedback-experience'
+
 const debugLog = (...args) => {}
 
 const debugWarn = (...args) => {}
@@ -35,7 +38,7 @@ export function useShareFeedback() {
     try {
       setIsSubmitting(true)
       // Save feedback experience to backend
-      const response = await api.post(API_ENDPOINTS.ADMIN.FEEDBACK_EXPERIENCE_CREATE, {
+      const response = await api.post(FEEDBACK_EXPERIENCE_CREATE, {
         rating: Math.ceil(rating / 2) || 1, // Convert 0-10 to 1-5 for backend
         module: 'restaurant',
         comment: `User rated ${rating}/10 overall experience`

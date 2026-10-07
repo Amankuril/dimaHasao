@@ -19,9 +19,10 @@ const ACTIVE = ['pending', 'confirmed', 'accepted', 'checked-in'];
 /** The web `Badge` colours for a booking status (mobile card variant). */
 function statusBadge(status) {
   const key = String(status || '').toLowerCase();
-  if (key === 'pending') return { bg: tw.amber50, fg: tw.amber600, border: tw.amber200, label: 'WAITING' };
+  // restaurantTheme.css: bg-amber-50 -> primary-soft, text-amber-600 -> accent, text-orange-700 -> primary-strong
+  if (key === 'pending') return { bg: RT.primarySoft, fg: RT.accent, border: tw.amber200, label: 'WAITING' };
   if (key === 'accepted' || key === 'confirmed') return { bg: '#DCFCE7', fg: '#15803D', border: '#BBF7D0', label: 'CONFIRMED' };
-  if (key === 'checked-in') return { bg: tw.orange100, fg: tw.orange700, label: status };
+  if (key === 'checked-in') return { bg: tw.orange100, fg: RT.primaryStrong, label: status };
   if (key === 'completed') return { bg: tw.blue100, fg: tw.blue700, label: status };
   return { bg: '#FEE2E2', fg: '#B91C1C', border: '#FCA5A5', label: status };
 }
@@ -134,7 +135,7 @@ function BookingCard({ booking, h }) {
           </Press>
         ) : null}
         {booking.status === 'accepted' ? (
-          <Press onPress={() => h.handleStatusUpdate(booking._id, 'checked-in')} accessibilityLabel="Check-in" style={[styles.action, { flex: 1, backgroundColor: tw.orange600 }]}>
+          <Press onPress={() => h.handleStatusUpdate(booking._id, 'checked-in')} accessibilityLabel="Check-in" style={[styles.action, { flex: 1, backgroundColor: RT.accent }]}>
             <Text style={[styles.actionText, { color: '#fff' }]}>CHECK-IN</Text>
           </Press>
         ) : null}
@@ -241,7 +242,7 @@ export default function DiningReservations() {
         <View style={{ gap: 16, marginBottom: 32 }}>
           <Stat gradient icon={Users} tint="rgba(239,246,255,0.5)" label="Total Bookings" value={bookings.length} />
           <Stat icon={CheckCircle2} color={tw.emerald600} tint="rgba(240,253,244,0.5)" label="Active" value={bookings.filter((b) => ACTIVE.includes(String(b.status || '').toLowerCase())).length} />
-          <Stat icon={Clock4} color={tw.orange600} tint="rgba(255,247,237,0.5)" label="Today's Bookings" value={bookings.filter((b) => new Date(b.date).toDateString() === new Date().toDateString()).length} />
+          <Stat icon={Clock4} color={RT.accent} tint="rgba(255,247,237,0.5)" label="Today's Bookings" value={bookings.filter((b) => new Date(b.date).toDateString() === new Date().toDateString()).length} />
         </View>
 
         <View style={styles.sections}>
@@ -289,9 +290,9 @@ export default function DiningReservations() {
                       <View key={`${photo.url}-${index}`} style={styles.cell3}>
                         <Press scale={1} onPress={() => h.setRestaurantPhoto(photo.url)} accessibilityLabel={`Restaurant photo ${index + 1}`} style={[styles.thumb, main ? { borderColor: tw.slate900, borderWidth: 2 } : null]}>
                           <Img source={{ uri: photo.url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                          <View style={styles.thumbTag}>
+                          <LinearGradient {...grad} style={styles.thumbTag}>
                             <Text style={styles.thumbTagText}>{main ? 'Main' : `Photo ${index + 1}`}</Text>
-                          </View>
+                          </LinearGradient>
                         </Press>
                         <Press onPress={() => h.handleRemoveRestaurantPhoto(photo.url)} accessibilityLabel="Remove photo" hitSlop={6} style={styles.remove}>
                           <X size={14} color={tw.rose600} />
@@ -448,7 +449,7 @@ export default function DiningReservations() {
 
             {h.diningSettingsMessage || h.diningSettingsError ? (
               <View style={[styles.msg, h.diningSettingsError ? styles.msgErr : styles.msgOk]}>
-                <Text style={[styles.msgText, { color: h.diningSettingsError ? tw.rose700 : tw.emerald700 }]}>{h.diningSettingsError || h.diningSettingsMessage}</Text>
+                <Text style={[styles.msgText, { color: h.diningSettingsError ? tw.rose700 : RT.primaryStrong }]}>{h.diningSettingsError || h.diningSettingsMessage}</Text>
               </View>
             ) : null}
           </View>
@@ -456,7 +457,7 @@ export default function DiningReservations() {
 
         {h.uploadMessage || h.uploadError ? (
           <View style={[styles.msg, { marginTop: 0, marginBottom: 24 }, h.uploadError ? { backgroundColor: tw.red50, borderColor: tw.red200 } : { backgroundColor: tw.green50, borderColor: tw.green200 }]}>
-            <Text style={[styles.msgText, { color: h.uploadError ? tw.red700 : tw.green700 }]}>{h.uploadError || h.uploadMessage}</Text>
+            <Text style={[styles.msgText, { color: h.uploadError ? tw.red700 : RT.primaryStrong }]}>{h.uploadError || h.uploadMessage}</Text>
           </View>
         ) : null}
 
@@ -541,7 +542,7 @@ const styles = StyleSheet.create({
   grid3: { marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
   cell3: { width: '33.333%', padding: 6 },
   thumb: { height: 80, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50 },
-  thumbTag: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(6,56,30,0.45)', paddingHorizontal: 4, paddingVertical: 2 },
+  thumbTag: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 4, paddingVertical: 2 },
   thumbTagText: { fontSize: 10, lineHeight: 15, color: '#fff', ...poppins(600) },
   remove: { position: 'absolute', right: 10, top: 10, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.95)', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
   grid2: { marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
@@ -582,7 +583,7 @@ const styles = StyleSheet.create({
   save: { borderRadius: 999, paddingHorizontal: 40, paddingVertical: 16, alignItems: 'center', ...shadow('xl') },
   saveText: { fontSize: 14, lineHeight: 20, letterSpacing: 0.7, color: '#fff', ...poppins(800) },
 
-  pending: { marginTop: 24, flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 12, borderWidth: 1, borderColor: tw.amber200, backgroundColor: tw.amber50, paddingHorizontal: 16, paddingVertical: 12 },
+  pending: { marginTop: 24, flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 12, borderWidth: 1, borderColor: tw.amber200, backgroundColor: RT.primarySoft, paddingHorizontal: 16, paddingVertical: 12 },
   pendingText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.amber800, ...poppins(600) },
   msg: { marginTop: 16, borderRadius: 12, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12 },
   msgErr: { borderColor: tw.rose200, backgroundColor: tw.rose50 },
@@ -591,7 +592,7 @@ const styles = StyleSheet.create({
 
   queueTitle: { flexShrink: 1, fontSize: 16, lineHeight: 24, color: tw.slate800, ...poppins(700) },
   views: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate200, padding: 4 },
-  newBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 16, borderWidth: 1, borderColor: tw.amber200, backgroundColor: tw.amber50, paddingHorizontal: 16, paddingVertical: 12 },
+  newBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 16, borderWidth: 1, borderColor: tw.amber200, backgroundColor: RT.primarySoft, paddingHorizontal: 16, paddingVertical: 12 },
   newBannerText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.amber800, ...poppins(600) },
 
   booking: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.slate100, ...shadow('sm') },

@@ -4,6 +4,7 @@ import Img from '../../../components/Img';
 import { Press } from '../../../components/ui';
 import { poppins, shadow, tw } from '../../../theme';
 import { PrimaryButton, Toggle } from '../../components/ui';
+import { RT } from '../../theme';
 
 /** The "Add ons" tab body: the add-on form (when open), then the add-on cards. */
 export default function AddonsPanel({
@@ -79,7 +80,7 @@ export default function AddonsPanel({
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                       <Text style={{ fontSize: 16, lineHeight: 24, color: tw.slate950, ...poppins(600) }}>{addon.name}</Text>
-                      <Chip bg={live ? tw.emerald50 : tw.slate100} fg={live ? tw.emerald700 : tw.slate600} label={live ? 'Live' : 'Paused'} />
+                      <Chip bg={live ? tw.emerald50 : tw.slate100} fg={live ? RT.primaryStrong : tw.slate600} label={live ? 'Live' : 'Paused'} />
                       {addon.approvalStatus === 'approved' ? <Chip bg={tw.green100} fg={tw.green800} label="Approved" /> : null}
                       {addon.approvalStatus === 'pending' ? <Chip bg={tw.yellow100} fg={tw.yellow800} label="Pending" /> : null}
                       {addon.approvalStatus === 'rejected' ? <Chip bg={tw.red100} fg={tw.red800} label="Rejected" /> : null}

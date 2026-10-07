@@ -1,14 +1,30 @@
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Download } from 'lucide-react-native';
+import { ArrowLeft, Download } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { poppins, shadow, tw } from '../../theme';
 import ImageSourcePicker from '../components/ImageSourcePicker';
-import { PageHeader } from '../components/ui';
 import { useFssaiDetails } from '../hooks/pages/useFssaiDetails';
 import { useFssaiUpdate } from '../hooks/pages/useFssaiUpdate';
 import { RT, RT_GRADIENT } from '../theme';
+
+/** The pages' own header: px-4 pt-4 pb-3, round back button, 16px semibold title and an optional 12px caption. */
+function Header({ title, subtitle, onBack }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.header, { paddingTop: 16 + insets.top }]}>
+      <Press onPress={onBack} accessibilityLabel="Back" hitSlop={6} style={{ padding: 8, borderRadius: 999 }}>
+        <ArrowLeft size={20} color={tw.gray900} />
+      </Press>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={{ fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) }} numberOfLines={1} accessibilityRole="header">{title}</Text>
+        {subtitle ? <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>{subtitle}</Text> : null}
+      </View>
+    </View>
+  );
+}
 
 /** Port of Food/pages/restaurant/FssaiDetails.jsx (/food/restaurant/fssai). The web page shows no live licence data either. */
 export function FssaiDetails() {
@@ -17,7 +33,7 @@ export function FssaiDetails() {
   const toUpdate = () => navigate('/food/restaurant/fssai/update');
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <PageHeader title="FSSAI Details" subtitle="No live restaurant license data available." large={false} onBack={goBack} backLabel="Back" />
+      <Header title="FSSAI Details" subtitle="No live restaurant license data available." onBack={goBack} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 112, gap: 16 }}>
         <View style={styles.notice}>
           <View style={styles.i}>
@@ -71,19 +87,20 @@ export function FssaiDetails() {
 /** Port of Food/pages/restaurant/FssaiUpdate.jsx (/food/restaurant/fssai/update). */
 export function FssaiUpdate() {
   const insets = useSafeAreaInsets();
+  const [focus, setFocus] = useState('');
   const { goBack, uploadedFile, isPhotoPickerOpen, setIsPhotoPickerOpen, handleFileSelect, handleFileClick, handleSubmit } = useFssaiUpdate();
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <PageHeader title="Update FSSAI" large={false} onBack={goBack} backLabel="Back" />
+      <Header title="Update FSSAI" onBack={goBack} />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 112, gap: 16 }}>
         {/* As on the web, these two fields are not bound to anything: only the upload is checked. */}
         <View>
           <Text style={styles.fieldLabel}>FSSAI registration number</Text>
-          <TextInput placeholder="eg. 19138110019201" placeholderTextColor={tw.gray400} keyboardType="number-pad" accessibilityLabel="FSSAI registration number" style={styles.input} />
+          <TextInput placeholder="eg. 19138110019201" placeholderTextColor={tw.gray400} keyboardType="number-pad" accessibilityLabel="FSSAI registration number" onFocus={() => setFocus('number')} onBlur={() => setFocus('')} style={[styles.input, focus === 'number' ? styles.inputFocus : null]} />
         </View>
         <View>
           <Text style={styles.fieldLabel}>Valid up to</Text>
-          <TextInput placeholder="DD-MM-YYYY" placeholderTextColor={tw.gray400} accessibilityLabel="Valid up to" style={styles.input} />
+          <TextInput placeholder="DD-MM-YYYY" placeholderTextColor={tw.gray400} accessibilityLabel="Valid up to" onFocus={() => setFocus('date')} onBlur={() => setFocus('')} style={[styles.input, focus === 'date' ? styles.inputFocus : null]} />
         </View>
         <View style={{ gap: 8 }}>
           <Text style={[styles.fieldLabel, { marginBottom: 0 }]}>Upload your FSSAI license</Text>
@@ -117,6 +134,9 @@ export function FssaiUpdate() {
 }
 
 const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200, backgroundColor: '#fff' },
+  // restaurantTheme.css: input:focus border = primary 55 % over white
+  inputFocus: { borderColor: '#789d8a' },
   notice: { borderRadius: 16, backgroundColor: '#ffe9b3', paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   i: { marginTop: 4, width: 24, height: 24, borderRadius: 12, backgroundColor: RT.primary, alignItems: 'center', justifyContent: 'center' },
   card: { borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, padding: 16, gap: 12, ...shadow('sm') },

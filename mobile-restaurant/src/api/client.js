@@ -116,6 +116,9 @@ function resolveAuth(path, opts) {
   if (opts.auth !== undefined) return opts.auth;
   const mod = opts.contextModule || moduleFromUrl(path);
   if (mod === 'hotel') return 'hotel';
+  // This app's own role is the restaurant: its session token is the default token (restaurant.js relies on that).
+  // Only the admin and delivery panels' routes go out without one, as the web's user screens send them.
+  if (mod === 'restaurant') return undefined;
   return mod === 'user' ? undefined : false;
 }
 
@@ -144,6 +147,24 @@ function linkSignals(outer, inner) {
   else outer.addEventListener('abort', () => inner.abort(), { once: true });
 }
 
+/** A multipart request over XHR, answering with the slice of the fetch Response that rawFetch reads. */
+function xhrSend(url, { method, headers, body, signal }) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+    const abort = () => xhr.abort();
+    if (signal) {
+      if (signal.aborted) abort();
+      else signal.addEventListener('abort', abort, { once: true });
+    }
+    xhr.onload = () => resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, text: async () => xhr.responseText });
+    xhr.onabort = () => reject(new Error('Request aborted'));
+    xhr.onerror = () => reject(new Error('Network Error'));
+    xhr.send(body);
+  });
+}
+
 async function rawFetch(path, opts) {
   const { method = 'GET', body, params, headers, signal, timeout = TIMEOUT_MS } = opts;
   const auth = resolveAuth(path, opts);
@@ -157,12 +178,16 @@ async function rawFetch(path, opts) {
   }, timeout);
   let res;
   try {
-    res = await fetch(buildUrl(path, params), {
-      method,
-      headers: baseHeaders(headers, isForm, auth),
-      body: body == null ? undefined : isForm ? body : JSON.stringify(body),
-      signal: ctrl.signal,
-    });
+    // Expo's fetch only takes File/Blob parts: it throws "Unsupported FormDataPart implementation" on React
+    // Native's { uri, name, type } file objects. XHR is the transport that understands them.
+    res = isForm
+      ? await xhrSend(buildUrl(path, params), { method, headers: baseHeaders(headers, true, auth), body, signal: ctrl.signal })
+      : await fetch(buildUrl(path, params), {
+          method,
+          headers: baseHeaders(headers, false, auth),
+          body: body == null ? undefined : JSON.stringify(body),
+          signal: ctrl.signal,
+        });
   } catch (e) {
     if (timedOut) throw new ApiError('Request timed out', null, 'TIMEOUT');
     if (signal?.aborted) throw new ApiError('Request cancelled', null, 'ABORTED');

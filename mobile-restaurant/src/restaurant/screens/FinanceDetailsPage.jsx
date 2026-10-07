@@ -13,7 +13,7 @@ const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { mini
 
 function Line({ label, value, first }) {
   return (
-    <View style={[styles.line, first ? null : styles.dashed]}>
+    <View style={[styles.line, first ? null : styles.dashed, first ? { marginTop: 0 } : { marginTop: 8 }]}>
       <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <Text style={styles.lineLabel}>{label}</Text>
         <Info size={14} color={tw.gray400} />
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   sectionTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
   sectionBody: { paddingHorizontal: 16, paddingBottom: 12, borderTopWidth: 1, borderStyle: 'dashed', borderTopColor: tw.gray200 },
-  line: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 12 },
+  line: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 8 },
   dashed: { borderTopWidth: 1, borderStyle: 'dashed', borderTopColor: tw.gray200 },
   lineLabel: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) },
   lineValue: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },

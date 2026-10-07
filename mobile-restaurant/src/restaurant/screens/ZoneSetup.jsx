@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Marker } from 'react-native-maps';
@@ -18,6 +19,9 @@ export default function ZoneSetup() {
     markerCoord, markerTitle, handleSaveLocation, selectedAddress,
   } = useZoneSetup();
 
+  const [searchFocused, setSearchFocused] = useState(false);
+  // the web map's roadmap / satellite control (top right)
+  const [mapType, setMapType] = useState('standard');
   const saveOff = !selectedLocation || saving;
 
   return (
@@ -47,12 +51,18 @@ export default function ZoneSetup() {
                 <TextInput
                   value={locationSearch}
                   onChangeText={handleSearchChange}
-                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onFocus={() => {
+                    setSearchFocused(true);
+                    if (suggestions.length > 0) setShowSuggestions(true);
+                  }}
+                  onBlur={() => {
+                    setSearchFocused(false);
+                    setTimeout(() => setShowSuggestions(false), 150);
+                  }}
                   placeholder="Search for your restaurant location..."
                   placeholderTextColor={tw.gray400}
                   accessibilityLabel="Search for your restaurant location"
-                  style={styles.search}
+                  style={[styles.search, searchFocused ? { borderColor: '#789d8a' } : null]}
                 />
               </View>
               {showSuggestions && suggestions.length > 0 ? (
@@ -77,7 +87,8 @@ export default function ZoneSetup() {
             </View>
 
             <Press scale={0.98} disabled={saveOff} onPress={handleSaveLocation} accessibilityState={{ disabled: saveOff, busy: saving }}>
-              <LinearGradient colors={saveOff ? [tw.gray400, tw.gray400] : RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.save}>
+              {/* disabled:bg-gray-400 sits under the gradient image on the web, so the button keeps the gradient */}
+              <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.save}>
                 {saving ? <ActivityIndicator size="small" color="#fff" /> : <Save size={20} color="#fff" />}
                 <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) }}>{saving ? 'Saving...' : 'Save Location'}</Text>
               </LinearGradient>
@@ -120,12 +131,20 @@ export default function ZoneSetup() {
             onMapReady={handleMapReady}
             onPress={handleMapPress}
             toolbarEnabled={false}
+            mapType={mapType}
             accessibilityLabel="Restaurant location map"
           >
             {markerCoord ? (
               <Marker coordinate={markerCoord} draggable onDragEnd={handleMarkerDragEnd} title="Restaurant Location" description={markerTitle} />
             ) : null}
           </MapView>
+          <View style={styles.mapTypes}>
+            {[['standard', 'Map'], ['satellite', 'Satellite']].map(([type, caption], i) => (
+              <Press key={type} scale={1} onPress={() => setMapType(type)} accessibilityRole="button" accessibilityState={{ selected: mapType === type }} style={[styles.mapTypeBtn, i === 0 ? { borderRightWidth: 1, borderRightColor: tw.gray200 } : null]}>
+                <Text style={{ fontSize: 14, lineHeight: 20, color: mapType === type ? tw.gray900 : tw.gray600, ...poppins(mapType === type ? 500 : 400) }}>{caption}</Text>
+              </Press>
+            ))}
+          </View>
           {mapLoading ? (
             <View style={styles.mapLoading}>
               <ActivityIndicator size="large" color={RT.primary} />
@@ -149,5 +168,7 @@ const styles = StyleSheet.create({
   save: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 8 },
   selected: { marginTop: 12, padding: 12, backgroundColor: tw.green50, borderWidth: 1, borderColor: tw.green200, borderRadius: 8 },
   info: { backgroundColor: tw.blue50, borderWidth: 1, borderColor: tw.blue200, borderRadius: 8, padding: 16, marginBottom: 24 },
+  mapTypes: { position: 'absolute', top: 10, right: 10, flexDirection: 'row', backgroundColor: '#fff', borderRadius: 2, overflow: 'hidden', ...shadow('md') },
+  mapTypeBtn: { paddingHorizontal: 12, paddingVertical: 8 },
   mapLoading: { ...StyleSheet.absoluteFill, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', zIndex: 10 },
 });

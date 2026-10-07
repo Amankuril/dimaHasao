@@ -1,4 +1,5 @@
 import { Redirect, Stack, usePathname } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { usePushNotifications } from '../../lib/push';
@@ -17,6 +18,8 @@ const HOME = '/food/restaurant';
 /** Web ProtectedRoute ALLOWED_BEFORE_APPROVAL: the stay can be set up while the restaurant is still pending (the "both" signup lands here). */
 const ALLOWED_BEFORE_APPROVAL = ['add-hotel'];
 const PUBLIC = new Set(['login', 'otp', 'signup', 'forgot-password', 'pending-verification', 'onboarding', 'privacy', 'terms', 'help-centre/support', 'help-content']);
+/** Screens whose header is the green RestaurantNavbar run under the status bar; every other screen is white. */
+const GREEN_HEADER = new Set(['', 'inventory', 'zone-setup']);
 
 export default function RestaurantShell() {
   // `signedIn` is true for either half of a partner sign-in; this shell guards the restaurant half.
@@ -56,6 +59,8 @@ export default function RestaurantShell() {
   }
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      {/* A screen that stays mounted under the stack keeps its own light bar; set it per route so a white screen never inherits it. */}
+      {isPublic ? null : <StatusBar style={GREEN_HEADER.has(sub) ? 'light' : 'dark'} />}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fff' }, animation: 'fade', animationDuration: 120 }} />
     </View>
   );

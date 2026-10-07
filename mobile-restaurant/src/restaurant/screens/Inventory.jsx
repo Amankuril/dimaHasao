@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Search, SlidersHorizontal, Utensils, X } from 'lucide-react-native';
@@ -43,6 +43,7 @@ function TabButton({ label, count, active, onPress }) {
 /** Port of Food/pages/restaurant/Inventory.jsx (/food/restaurant/inventory). */
 export default function Inventory() {
   const insets = useSafeAreaInsets();
+  const { width: winW, height: winH } = useWindowDimensions();
   const inv = useInventory();
   const {
     navigate, activeTab, setActiveTab, searchQuery, setSearchQuery, setFilterOpen, selectedFilter, setSelectedFilter, isLoading, loadingInventory, categories, expandedCategories, isMenuOpen, setIsMenuOpen,
@@ -231,41 +232,41 @@ export default function Inventory() {
 
       {!isAddons ? (
         <>
-          {isMenuOpen ? <Press scale={1} onPress={() => setIsMenuOpen(false)} accessibilityLabel="Close menu" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.2)' }]} /> : null}
-          <View pointerEvents="box-none" style={[styles.fab, { bottom: 96 + insets.bottom }]}>
-            {isMenuOpen ? (
-              <View style={styles.menu}>
-                <View style={{ backgroundColor: '#f9eef4', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: RT.primaryStrong, ...poppins(600) }}>Jump to category</Text>
-                </View>
-                <View style={{ marginHorizontal: 16, height: 1, backgroundColor: tw.slate200 }} />
-                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-                  {categories.map((category, index) => {
-                    const itemCount = category.itemCount || category.items?.length || 0;
-                    const isLast = index === categories.length - 1;
-                    return (
-                      <Press
-                        key={category.id}
-                        scale={1}
-                        onPress={() => {
-                          setIsMenuOpen(false);
-                          setTimeout(() => scrollToCategory(category.id), 200);
-                        }}
-                        style={{ paddingVertical: 12 }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                          <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(500) }}>{category.name}</Text>
-                          <View style={styles.menuCount}>
-                            <Text style={{ fontSize: 12, lineHeight: 16, color: tw.slate700, ...poppins(600) }}>{itemCount}</Text>
-                          </View>
+          {isMenuOpen ? <Press scale={1} onPress={() => setIsMenuOpen(false)} accessibilityLabel="Close menu" style={StyleSheet.absoluteFill} /> : null}
+          {isMenuOpen ? (
+            <View style={[styles.menu, { width: Math.min(winW * 0.6, 384), height: winH * 0.45 }]}>
+              <LinearGradient colors={['#fcf4f9', '#f6e8f1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}>
+                <Text style={{ fontSize: 14, lineHeight: 20, color: RT.primaryStrong, ...poppins(600) }}>Jump to category</Text>
+              </LinearGradient>
+              <View style={{ marginHorizontal: 16, height: 1, backgroundColor: tw.slate200 }} />
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+                {categories.map((category, index) => {
+                  const itemCount = category.itemCount || category.items?.length || 0;
+                  const isLast = index === categories.length - 1;
+                  return (
+                    <Press
+                      key={category.id}
+                      scale={1}
+                      onPress={() => {
+                        setIsMenuOpen(false);
+                        setTimeout(() => scrollToCategory(category.id), 200);
+                      }}
+                      style={{ paddingVertical: 12 }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(500) }}>{category.name}</Text>
+                        <View style={styles.menuCount}>
+                          <Text style={{ fontSize: 12, lineHeight: 16, color: tw.slate700, ...poppins(600) }}>{itemCount}</Text>
                         </View>
-                        {!isLast ? <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: tw.slate200, borderStyle: 'dashed' }} /> : null}
-                      </Press>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            ) : null}
+                      </View>
+                      {!isLast ? <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: tw.slate200, borderStyle: 'dashed' }} /> : null}
+                    </Press>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : null}
+          <View pointerEvents="box-none" style={[styles.fab, { bottom: 96 + insets.bottom }]}>
             <Press scale={0.96} onPress={() => navigate('/food/restaurant/hub-menu/item/new', { state: { backTo: '/food/restaurant/inventory' } })} style={[{ borderRadius: 999, overflow: 'hidden' }, shadow('xl')]}>
               <LinearGradient {...GRADIENT_PROPS} style={{ paddingHorizontal: 20, paddingVertical: 12 }}>
                 <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) }}>+ Add item</Text>
@@ -297,6 +298,6 @@ const styles = StyleSheet.create({
   overlay: { borderRadius: 30, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
   fab: { position: 'absolute', right: 16, alignItems: 'flex-end', gap: 8 },
   menuBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, borderWidth: 1, borderColor: RT.border, backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 16, paddingVertical: 12, ...shadow('lg') },
-  menu: { position: 'absolute', right: 0, bottom: 112, width: 240, height: 340, overflow: 'hidden', borderRadius: 28, borderWidth: 1, borderColor: RT.border, backgroundColor: '#fff', ...shadow('xl') },
+  menu: { position: 'absolute', right: 16, bottom: 144, overflow: 'hidden', borderRadius: 28, borderWidth: 1, borderColor: RT.border, backgroundColor: '#fff', ...shadow('xl') },
   menuCount: { minWidth: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, alignItems: 'center', justifyContent: 'center' },
 });

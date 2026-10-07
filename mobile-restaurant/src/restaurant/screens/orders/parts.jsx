@@ -8,7 +8,7 @@ import { Press } from '../../../components/ui';
 import { navigateTo } from '../../../lib/webRouter';
 import { poppins, shadow, tw } from '../../../theme';
 import ResendNotificationButton from '../../components/ResendNotificationButton';
-import { RT_GRADIENT } from '../../theme';
+import { RT, RT_GRADIENT } from '../../theme';
 
 /* Shared pieces of Food/pages/restaurant/OrdersMain.jsx: the order card every list draws and the closed-store empty state. */
 
@@ -16,7 +16,7 @@ export const BRAND = '#0A4D2B';
 
 const BADGE = {
   done: { bg: tw.emerald50, fg: tw.emerald600, border: tw.emerald100 },
-  wait: { bg: tw.amber50, fg: tw.amber600, border: tw.amber100 },
+  wait: { bg: RT.primarySoft, fg: RT.accent, border: tw.amber100 }, // bg-amber-50 / text-amber-600 are repainted by the restaurant theme
   stop: { bg: tw.rose50, fg: tw.rose600, border: tw.rose100 },
   idle: { bg: tw.slate50, fg: tw.slate500, border: tw.slate100 },
 };
@@ -59,7 +59,7 @@ export const OrderCard = memo(function OrderCard({
         : isWaitingAcceptance
           ? 'Pending'
           : String(status || '')
-              .replace(/_/g, '')
+              .replace(/_/g, ' ')
               .replace(/\b\w/g, (c) => c.toUpperCase());
 
   const badge =
@@ -75,7 +75,7 @@ export const OrderCard = memo(function OrderCard({
   const isDeliveryType = normalizedType !== 'takeaway' && normalizedType !== 'dining';
   const typeTone =
     normalizedType === 'takeaway'
-      ? { bg: tw.amber50, fg: '#D97706', border: 'rgba(253,230,138,0.5)', label: 'Takeaway' }
+      ? { bg: RT.primarySoft, fg: '#D97706', border: 'rgba(253,230,138,0.5)', label: 'Takeaway' }
       : normalizedType === 'dining'
         ? { bg: tw.blue50, fg: tw.blue600, border: 'rgba(191,219,254,0.5)', label: 'Dining' }
         : { bg: tw.slate50, fg: tw.slate500, border: 'rgba(226,232,240,0.5)', label: type };

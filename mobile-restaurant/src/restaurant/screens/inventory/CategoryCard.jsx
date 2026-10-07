@@ -16,10 +16,11 @@ const APPROVAL_PILL = {
   Approved: { fg: RT.primaryStrong, border: tw.emerald200 },
 };
 
+/* Labels are upper-cased in JS: textTransform + letterSpacing can clip the last letter on Android. */
 function Pill({ children, style, textStyle }) {
   return (
-    <View style={[styles.pill, style]}>
-      <Text style={[styles.pillText, textStyle]}>{children}</Text>
+    <View style={[styles.pill, style, { minWidth: 28 }]}>
+      <Text style={[styles.pillText, textStyle]}>{String(children).toUpperCase()}</Text>
     </View>
   );
 }
@@ -47,24 +48,24 @@ function ItemRow({ category, item, getApprovalDisplayMeta, getRuleStatusLabel, h
                 <View style={{ width: 10, height: 10, borderRadius: 2, borderWidth: 1, borderColor: vegColor, alignItems: 'center', justifyContent: 'center' }}>
                   {item.isVeg ? <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: vegColor }} /> : <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 4, height: 4, borderRadius: 2 }} />}
                 </View>
-                <Text style={[styles.pillText, { color: item.isVeg ? tw.green600 : RT.primary }]}>{item.isVeg ? 'Veg' : 'Non-veg'}</Text>
+                <Text style={[styles.pillText, { color: item.isVeg ? tw.green600 : RT.primary }]}>{item.isVeg ? 'VEG' : 'NON-VEG'}</Text>
               </View>
               <Pill style={{ backgroundColor: '#fff', borderColor: approval.border }} textStyle={{ color: approval.fg }}>{approvalMeta.label}</Pill>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
-              <Text style={{ flexShrink: 1, fontSize: 9, lineHeight: 14, letterSpacing: 1.4, textTransform: 'uppercase', color: item.inStock ? tw.green500 : tw.rose500, ...poppins(700) }}>
-                {item.inStock ? '● Live' : `● ${getRuleStatusLabel(item.stockRule)}`}
+              <Text style={{ flexShrink: 1, minWidth: 56, fontSize: 9, lineHeight: 14, letterSpacing: 1.4, color: item.inStock ? tw.green500 : tw.rose500, ...poppins(700) }}>
+                {(item.inStock ? '● Live' : `● ${getRuleStatusLabel(item.stockRule)}`).toUpperCase()}
               </Text>
               <Press scale={1} onPress={() => handleEditItem(category, item)} accessibilityLabel={isRejectedItem ? 'Fix item' : 'Edit item'} style={{ borderRadius: 8, overflow: 'hidden', ...shadow('sm') }}>
                 {isRejectedItem ? (
                   <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.edit}>
                     <Pencil size={12} color="#fff" />
-                    <Text style={[styles.editText, { color: '#fff' }]}>Fix</Text>
+                    <Text style={[styles.editText, { color: '#fff' }]}>FIX</Text>
                   </LinearGradient>
                 ) : (
                   <View style={[styles.edit, { backgroundColor: tw.slate100 }]}>
                     <Pencil size={12} color={tw.slate800} />
-                    <Text style={[styles.editText, { color: tw.slate800 }]}>Edit</Text>
+                    <Text style={[styles.editText, { color: tw.slate800 }]}>EDIT</Text>
                   </View>
                 )}
               </Press>
@@ -98,12 +99,12 @@ export default function CategoryCard({ category, isExpanded, isLoading, toggleCa
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 8 }}>
               <Text style={{ fontSize: 20, lineHeight: 28, color: tw.slate950, letterSpacing: -0.5, ...poppins(700) }}>{category.name}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Pill style={{ backgroundColor: tw.slate100, paddingHorizontal: 12, paddingVertical: 4 }} textStyle={{ color: tw.slate500, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                <Pill style={{ backgroundColor: tw.slate100, paddingHorizontal: 12, paddingVertical: 4 }} textStyle={{ color: tw.slate500, fontSize: 10, letterSpacing: 0.5 }}>
                   {category.items?.length || category.itemCount || 0} items
                 </Pill>
                 <Pill
                   style={{ paddingHorizontal: 12, paddingVertical: 4, backgroundColor: category.inStock ? tw.green50 : RT.primarySoft, borderColor: category.inStock ? tw.green100 : tw.amber100 }}
-                  textStyle={{ color: category.inStock ? tw.green700 : RT.primaryStrong, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase' }}
+                  textStyle={{ color: RT.primaryStrong, fontSize: 10, letterSpacing: 0.5 }}
                 >
                   {category.inStock ? 'Healthy' : 'Needs attention'}
                 </Pill>
@@ -113,7 +114,7 @@ export default function CategoryCard({ category, isExpanded, isLoading, toggleCa
               {category.inStock ? (
                 <View style={[styles.stat, { backgroundColor: 'rgba(240,253,244,0.5)', borderColor: 'rgba(220,252,231,0.5)' }]}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tw.green500 }} />
-                  <Text style={[styles.statText, { color: tw.green700 }]}>All items live</Text>
+                  <Text style={[styles.statText, { color: RT.primaryStrong }]}>All items live</Text>
                 </View>
               ) : (
                 <View style={[styles.stat, { backgroundColor: 'rgba(255,241,242,0.5)', borderColor: 'rgba(255,228,230,0.5)' }]}>
@@ -153,12 +154,12 @@ export default function CategoryCard({ category, isExpanded, isLoading, toggleCa
 const styles = StyleSheet.create({
   card: { overflow: 'hidden', borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: '#fff', ...shadow('xl') },
   pill: { borderRadius: 999, borderWidth: 1, borderColor: 'transparent', paddingHorizontal: 8, paddingVertical: 2 },
-  pillText: { fontSize: 9, lineHeight: 14, letterSpacing: 0.9, textTransform: 'uppercase', ...poppins(700) },
+  pillText: { fontSize: 9, lineHeight: 14, letterSpacing: 0.9, ...poppins(700) },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1 },
   statText: { fontSize: 10, lineHeight: 15, ...poppins(700) },
   chev: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   item: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(241,245,249,0.8)', backgroundColor: '#fff', padding: 12, ...shadow('sm') },
   thumb: { width: 64, height: 64, borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: '#fff', backgroundColor: tw.slate100, ...shadow('md') },
   edit: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
-  editText: { fontSize: 9, lineHeight: 14, letterSpacing: 1.4, textTransform: 'uppercase', ...poppins(700) },
+  editText: { fontSize: 9, lineHeight: 14, letterSpacing: 1.4, ...poppins(700) },
 });

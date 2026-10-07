@@ -55,7 +55,7 @@ function OrderTypeBanner({ order }) {
     );
   }
   const addr = order.customerAddress || order.deliveryAddress || order.address;
-  const display = !addr ? '' : typeof addr === 'string' ? addr : [addr.street || addr.addressLine1 || addr.label, addr.addressLine2, addr.city, addr.pincode || addr.zipCode].filter(Boolean).join(',');
+  const display = !addr ? '' : typeof addr === 'string' ? addr : [addr.street || addr.addressLine1 || addr.label, addr.addressLine2, addr.city, addr.pincode || addr.zipCode].filter(Boolean).join(', ');
   return (
     <View style={[styles.banner, { backgroundColor: tw.green50, borderColor: tw.green200 }]}>
       <View style={[styles.bannerIcon, { backgroundColor: tw.green100 }]}>
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
   verifyCustomer: { fontSize: 14, lineHeight: 20, color: tw.slate700, marginTop: 2, ...poppins(700) },
   verifyItems: { fontSize: 12, lineHeight: 16, color: tw.slate400, fontStyle: 'italic', ...poppins(400) },
   otpLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.slate400, marginBottom: 12, textAlign: 'center', ...poppins(800) },
-  otp: { textAlign: 'center', fontSize: 44, letterSpacing: 20, paddingVertical: 12, borderWidth: 2, borderColor: tw.slate200, borderRadius: 16, backgroundColor: tw.slate50, color: tw.slate800, ...poppins(800) },
+  otp: { textAlign: 'center', fontSize: 48, letterSpacing: 24, paddingLeft: 12, paddingVertical: 12, borderWidth: 2, borderColor: tw.slate200, borderRadius: 16, backgroundColor: tw.slate50, color: tw.slate800, ...poppins(800) },
   verifyCancel: { flex: 1, backgroundColor: '#fff', borderWidth: 2, borderColor: tw.slate200, paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
   verifyConfirm: { paddingVertical: 16, borderRadius: 16, alignItems: 'center' },
   verifyButtonText: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, ...poppins(800) },
