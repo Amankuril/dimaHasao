@@ -731,7 +731,7 @@ export const uploadDocs = async (req, res) => {
     }
 
     const uploadPromises = req.files.map(file =>
-      uploadToCloudinary(file.path, 'partner-documents')
+      uploadToCloudinary(file.path, 'partner-documents', null, { allowPdf: true })
     );
 
     const results = await Promise.all(uploadPromises);
@@ -746,7 +746,9 @@ export const uploadDocs = async (req, res) => {
     res.json({ success: true, files });
   } catch (error) {
     console.error('Upload Docs Error:', error);
-    res.status(500).json({ message: error.message || 'Upload failed' });
+    // A rejected file (not a real PDF/image, active content) is the caller's
+    // problem, not a server fault.
+    res.status(error.statusCode || 500).json({ message: error.message || 'Upload failed' });
   } finally {
     // The uploader removes multer's temp copy only after a successful store;
     // a failed or rejected file used to stay in the temp dir for good.
@@ -825,7 +827,7 @@ export const uploadDocsBase64 = async (req, res) => {
         ? `${Date.now()}-${img.fileName.replace(/\.[^/.]+$/, '')}`
         : null;
 
-      return uploadBase64ToCloudinary(img.base64, 'partner-documents', publicId);
+      return uploadBase64ToCloudinary(img.base64, 'partner-documents', publicId, { allowPdf: true });
     });
 
     const results = await Promise.all(uploadPromises);
@@ -840,6 +842,6 @@ export const uploadDocsBase64 = async (req, res) => {
     res.json({ success: true, files });
   } catch (error) {
     console.error('Upload Docs Base64 Error:', error);
-    res.status(500).json({ message: error.message || 'Upload failed' });
+    res.status(error.statusCode || 500).json({ message: error.message || 'Upload failed' });
   }
 };

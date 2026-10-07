@@ -169,7 +169,9 @@ async function refreshAccessToken() {
         });
         const token = res.data?.data?.accessToken || res.data?.accessToken;
         if (!token) return null;
-        session = { ...session, accessToken: token };
+        // The endpoint also returns a fresh refresh token; keep it when it does.
+        const nextRefresh = res.data?.data?.refreshToken || res.data?.refreshToken;
+        session = { ...session, accessToken: token, refreshToken: typeof nextRefresh === "string" && nextRefresh ? nextRefresh : session.refreshToken };
         onTokensRefreshed?.(session);
         return token;
       } catch (err) {

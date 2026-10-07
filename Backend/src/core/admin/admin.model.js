@@ -142,6 +142,14 @@ const adminSchema = new mongoose.Schema(
             default: 0,
             select: false,
         },
+        // When the password last changed. Access tokens issued before it are
+        // refused (see core/auth/tokenRevocation.js): access tokens live as long
+        // as JWT_ACCESS_EXPIRES, so without this a stolen admin token outlived
+        // any password reset.
+        passwordChangedAt: {
+            type: Date,
+            default: null,
+        },
     },
     {
         collection: 'admins',
@@ -174,6 +182,7 @@ adminSchema.pre('save', async function (next) {
 
     const salt = await bcrypt.genSalt(config.bcryptSaltRounds);
     this.password = await bcrypt.hash(this.password, salt);
+    if (!this.isNew) this.passwordChangedAt = new Date();
     next();
 });
 

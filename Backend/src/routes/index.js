@@ -6,6 +6,8 @@ import { registerAllAuthAudiences } from '../core/auth/otpAuth/registerAudiences
 import { enforceAdminFeatureAccess } from '../core/admin/adminFeatureAccess.middleware.js';
 import { enforceModuleAvailability } from '../core/platform/moduleAvailability.middleware.js';
 import { registerHotelNotificationOwners } from '../modules/hotel/notifications/owners.js';
+import { registerCapturedPaymentHandler } from '../core/payments/capturedPaymentHandlers.js';
+import { handleCapturedPayment as handleHotelCapturedPayment } from '../modules/hotel/services/paymentSettlement.service.js';
 import deliveryRoutes from '../modules/food/delivery/routes/delivery.routes.js';
 import restaurantRoutes from '../modules/food/restaurant/routes/restaurant.routes.js';
 import landingRoutes from '../modules/food/landing/routes/landing.routes.js';
@@ -59,6 +61,8 @@ registerAllAuthAudiences();
 // models); food and taxi types are built into core/notifications. Tours had one
 // for its operators — single-vendor tours have no owner to notify.
 registerHotelNotificationOwners();
+// Hotel settles its own bookings and top-ups from the shared Razorpay webhook.
+registerCapturedPaymentHandler(handleHotelCapturedPayment);
 router.use('/v1/auth/otp', otpAuthRoutes);
 router.use('/v1/partner', partnerRoutes);
 router.use('/v1/food', enforceModuleAvailability('food'));

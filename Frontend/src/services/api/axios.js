@@ -207,6 +207,14 @@ apiClient.interceptors.response.use(
       if (newAccessToken) {
         try {
           localStorage.setItem(`${module}_accessToken`, newAccessToken);
+          // The server rotates refresh tokens; keep the new one, in whichever
+          // slot the old one came from, or the next refresh would present a
+          // token the server has already exchanged.
+          const nextRefresh = data?.data?.refreshToken || data?.refreshToken;
+          if (typeof nextRefresh === "string" && nextRefresh && nextRefresh !== refreshToken) {
+            const slot = localStorage.getItem(`${module}_refreshToken`) ? `${module}_refreshToken` : "refreshToken";
+            localStorage.setItem(slot, nextRefresh);
+          }
           // Dispatch a custom event specifically for the module that refreshed
           window.dispatchEvent(new CustomEvent("authRefreshed", { 
             detail: { module, token: newAccessToken } 

@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { isIssuedBeforePasswordChange } from "./tokenRevocation.js";
 import ms from "ms";
 import { FoodUser } from "../users/user.model.js";
 import { FoodAdmin } from "../admin/admin.model.js";
@@ -795,6 +796,20 @@ export const changeAdminPassword = async (
   admin.password = newPassword;
   await admin.save();
 
+  // Every session made with the old password ends here: the access tokens by
+  // passwordChangedAt (set in the model's pre-save), the refresh tokens now.
+  // The admin who made the change keeps working on the fresh pair returned
+  // below, which the panel stores.
+  await FoodRefreshToken.deleteMany({ userId: admin._id });
+  const sessionPayload = { userId: admin._id.toString(), role: "ADMIN" };
+  const accessToken = signAccessToken(sessionPayload);
+  const refreshToken = signRefreshToken(sessionPayload);
+  await FoodRefreshToken.create({
+    userId: admin._id,
+    token: refreshToken,
+    expiresAt: new Date(Date.now() + ms(config.jwtRefreshExpiresIn || "7d")),
+  });
+
   try {
     const { notifyAdminsSafely } = await import("../../core/notifications/firebase.service.js");
     void notifyAdminsSafely({
@@ -810,7 +825,7 @@ export const changeAdminPassword = async (
     console.error("Failed to notify admins of password change:", e);
   }
 
-  return { success: true };
+  return { success: true, accessToken, refreshToken };
 };
 
 /** Admin forgot password: request OTP. Only accepts email that is registered as admin. */
@@ -903,6 +918,8 @@ export const resetAdminPasswordWithOtp = async (email, otp, newPassword) => {
   admin.password = newPassword;
   await admin.save();
   await record.deleteOne();
+  // A reset is how a compromised account is recovered: end every session.
+  await FoodRefreshToken.deleteMany({ userId: admin._id });
 
   try {
     const { notifyAdminsSafely } = await import("../../core/notifications/firebase.service.js");
@@ -920,6 +937,53 @@ export const resetAdminPasswordWithOtp = async (email, otp, newPassword) => {
   }
 
   return { success: true, message: "Password reset successfully." };
+};
+
+/*
+ * Refresh-token rotation.
+ *
+ * Every refresh now issues a new refresh token and marks the old one rotated.
+ * REFRESH_TOKEN_ROTATION decides what a rotated token is still good for:
+ *
+ *   compat (default) — it keeps working until it expires, exactly as before.
+ *     Needed while installed apps still ignore the new token the response
+ *     carries (the web app and mobile-delivery did, until this change).
+ *   enforce — it works for a 60s grace window (two tabs refreshing at once),
+ *     after which presenting it again is treated as theft: every refresh token
+ *     the account holds is revoked.
+ *
+ * Flip to enforce once the app builds that store the rotated token are out.
+ */
+const ROTATION_GRACE_MS = 60 * 1000;
+const rotationEnforced = () =>
+  String(process.env.REFRESH_TOKEN_ROTATION || "compat").trim().toLowerCase() === "enforce";
+
+/** The account behind a refresh token must still exist and be allowed in. */
+const assertRefreshSubjectActive = async (payload, stored) => {
+  const role = String(payload?.role || "").toUpperCase();
+  if (role === "USER") {
+    const u = await FoodUser.findById(payload.userId).select("isActive").lean();
+    if (!u || u.isActive === false) throw new AuthError("User account is deactivated");
+  } else if (role === "ADMIN") {
+    // A deleted or disabled admin kept minting fresh ADMIN tokens from a
+    // still-valid refresh token; and a refresh token from before a password
+    // change must die with the old password.
+    const a = await FoodAdmin.findById(payload.userId).select("isActive passwordChangedAt").lean();
+    if (!a || a.isActive === false) throw new AuthError("Admin account is deactivated");
+    if (isIssuedBeforePasswordChange(a, stored.createdAt)) {
+      throw new AuthError("Session expired after a password change. Please sign in again.");
+    }
+  } else if (role === "RESTAURANT") {
+    const r = await FoodRestaurant.findById(payload.userId).select("status").lean();
+    if (!r || ["deleted", "banned"].includes(String(r.status || "").toLowerCase())) {
+      throw new AuthError("Restaurant account is not active");
+    }
+  } else if (role === "DELIVERY_PARTNER") {
+    const d = await FoodDeliveryPartner.findById(payload.userId).select("status isActive").lean();
+    if (!d || d.isActive === false || String(d.status || "").toLowerCase() === "deleted") {
+      throw new AuthError("Delivery partner account is not active");
+    }
+  }
 };
 
 export const refreshAccessToken = async (token) => {
@@ -940,26 +1004,44 @@ export const refreshAccessToken = async (token) => {
     throw new AuthError("Invalid refresh token");
   }
 
-  // If deactivated user, do not issue fresh access tokens (forces logout on client)
-  if (payload?.role === "USER") {
-    const u = await FoodUser.findById(payload.userId).select("isActive").lean();
-    if (!u || u.isActive === false) {
-      throw new AuthError("User account is deactivated");
-    }
-  }
-  // Same for admins: a deleted or disabled admin kept minting fresh ADMIN
-  // tokens from a still-valid refresh token.
-  if (payload?.role === "ADMIN") {
-    const a = await FoodAdmin.findById(payload.userId).select("isActive").lean();
-    if (!a || a.isActive === false) {
-      throw new AuthError("Admin account is deactivated");
-    }
-  }
+  await assertRefreshSubjectActive(payload, stored);
 
-  const newAccessToken = signAccessToken({
+  const accessToken = signAccessToken({
     userId: payload.userId,
     role: payload.role,
   });
 
-  return { accessToken: newAccessToken, refreshToken: token };
+  // Already exchanged once.
+  if (stored.rotatedAt) {
+    if (rotationEnforced() && Date.now() - new Date(stored.rotatedAt).getTime() > ROTATION_GRACE_MS) {
+      await FoodRefreshToken.deleteMany({ userId: stored.userId });
+      logger.warn(`[auth] Rotated refresh token reused for ${payload.role}:${payload.userId}; all sessions revoked`);
+      throw new AuthError("Session expired. Please sign in again.");
+    }
+    return { accessToken, refreshToken: stored.replacedBy || token };
+  }
+
+  // Exchange it. The claim is conditional so two concurrent refreshes with the
+  // same token agree on one successor instead of minting two.
+  const nextToken = signRefreshToken({ userId: payload.userId, role: payload.role });
+  const ttlMs = ms(config.jwtRefreshExpiresIn || "7d");
+  await FoodRefreshToken.create({
+    userId: stored.userId,
+    token: nextToken,
+    device: stored.device || null,
+    ipAddress: stored.ipAddress || null,
+    expiresAt: new Date(Date.now() + ttlMs),
+  });
+  const claimed = await FoodRefreshToken.findOneAndUpdate(
+    { _id: stored._id, rotatedAt: null },
+    { $set: { rotatedAt: new Date(), replacedBy: nextToken } },
+    { new: true },
+  ).lean();
+  if (!claimed) {
+    await FoodRefreshToken.deleteOne({ token: nextToken });
+    const winner = await FoodRefreshToken.findById(stored._id).select("replacedBy").lean();
+    return { accessToken, refreshToken: winner?.replacedBy || token };
+  }
+
+  return { accessToken, refreshToken: nextToken };
 };

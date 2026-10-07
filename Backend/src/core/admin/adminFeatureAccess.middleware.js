@@ -14,6 +14,7 @@
  */
 import { FoodAdmin } from './admin.model.js';
 import { verifyAccessToken } from '../auth/token.util.js';
+import { isIssuedBeforePasswordChange } from '../auth/tokenRevocation.js';
 import { isSuperAdminLike, hasModuleAccess } from './adminHierarchy.service.js';
 import {
   actionForMethod,
@@ -23,7 +24,7 @@ import {
 } from './adminFeatures.js';
 
 const ADMIN_FIELDS =
-  'role adminLevel admin_type module servicesAccess permissions featurePermissions isActive active';
+  'role adminLevel admin_type module servicesAccess permissions featurePermissions isActive active passwordChangedAt';
 
 /**
  * The subject of whatever bearer token came with this request.
@@ -114,6 +115,19 @@ export const enforceAdminFeatureAccess = (module, { stripPrefix = '', addPrefix 
 
       if (admin.isActive === false) {
         return deny(res, 'This admin account is deactivated');
+      }
+
+      // A token minted before the password changed is revoked. A candidate
+      // taken from req.* may not carry the field, so this reads it from the
+      // database when missing.
+      const issuedAt = decodeBearer(req)?.iat;
+      if (issuedAt != null) {
+        const changedAt = admin.passwordChangedAt !== undefined
+          ? admin
+          : await FoodAdmin.findById(admin._id).select('passwordChangedAt').lean().catch(() => null);
+        if (isIssuedBeforePasswordChange(changedAt, issuedAt)) {
+          return res.status(401).json({ success: false, message: 'Session expired after a password change. Please sign in again.' });
+        }
       }
 
       if (isSuperAdminLike(admin)) return next();

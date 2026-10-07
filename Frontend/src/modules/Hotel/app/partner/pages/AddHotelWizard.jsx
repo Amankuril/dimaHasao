@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { propertyService, hotelService } from '../../../services/apiService';
+import { propertyService, hotelService, authService } from '../../../services/apiService';
 import toast from 'react-hot-toast';
 import '../wizard.css';
 import useLocationSearch from '../hooks/useLocationSearch';
@@ -505,6 +505,22 @@ const AddHotelWizard = () => {
     } catch (err) {
       console.error('[Camera] Error:', err);
       setError(err.message || 'Camera capture failed');
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const uploadDocument = async (files, type, onDone) => {
+    try {
+      setUploading(type);
+      const fd = new FormData();
+      Array.from(files).forEach(f => fd.append('files', f));
+      const res = await authService.uploadDocs(fd);
+      const urls = (res?.files || []).map(f => f.url).filter(Boolean);
+      if (!urls.length) throw new Error('Upload failed');
+      onDone(urls);
+    } catch (err) {
+      setError(err?.message || 'Document upload failed');
     } finally {
       setUploading(null);
     }
@@ -1691,12 +1707,17 @@ const AddHotelWizard = () => {
 
                       <input
                         type="file"
+                        accept="image/*,application/pdf"
                         className="hidden"
                         ref={el => (documentInputRefs.current[idx] = el)}
                         onChange={e => {
                           const file = e.target.files[0];
                           if (!file) return;
-                          uploadImages([file], `doc_${idx}`, urls => {
+                          // PDFs go to the document upload route, which stores
+                          // them as-is; the image route converts to WebP and
+                          // cannot read a PDF.
+                          const upload = file.type === 'application/pdf' ? uploadDocument : uploadImages;
+                          upload([file], `doc_${idx}`, urls => {
                             if (urls[0]) {
                               const updated = [...propertyForm.documents];
                               updated[idx] = { ...updated[idx], fileUrl: urls[0] };

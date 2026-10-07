@@ -96,8 +96,14 @@ const buildDriverMatchFilters = ({ zoneId, serviceLocationId, vehicleTypeId, veh
      * above, and the zone carries the service location — so an unset field is
      * "not yet recorded", not "serves nowhere". Excluding those drivers
      * outright made every such driver unmatchable.
+     *
+     * When a zone matched, the zone alone decides: it already belongs to one
+     * service location, and a driver's own field is only what they picked at
+     * signup. A driver registered under Haflong but working in an Indore zone
+     * was otherwise skipped whenever any other driver matched, because the
+     * caller only retries without the service location on an empty result.
      */
-    ...(serviceLocationId
+    ...(serviceLocationId && !zoneId
       ? { service_location_id: { $in: [...idCandidates(serviceLocationId), null] } }
       : {}),
     ...vehicleTypeFilter,

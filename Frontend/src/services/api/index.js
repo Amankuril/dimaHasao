@@ -228,11 +228,22 @@ export const adminAPI = {
     }),
   /** POST /auth/admin/change-password */
   changePassword: (currentPassword, newPassword) =>
-    apiClient.post(
-      "/auth/admin/change-password",
-      { currentPassword, newPassword },
-      { contextModule: "admin" },
-    ),
+    apiClient
+      .post(
+        "/auth/admin/change-password",
+        { currentPassword, newPassword },
+        { contextModule: "admin" },
+      )
+      .then((response) => {
+        // Changing the password ends every other session; the server hands
+        // this one a fresh pair so it carries on without a re-login.
+        const data = response?.data?.data || {};
+        try {
+          if (data.accessToken) localStorage.setItem("admin_accessToken", data.accessToken);
+          if (data.refreshToken) localStorage.setItem("admin_refreshToken", data.refreshToken);
+        } catch (_) {}
+        return response;
+      }),
   logout: (refreshToken) => {
     const token =
       refreshToken ||
