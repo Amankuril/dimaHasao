@@ -22,7 +22,8 @@ export const API_URL = (RAW || 'http://localhost:5000/api/v1').replace(/\/+$/, '
 /** Origin that serves /uploads/* and the CMS, e.g. https://tourismdimahasao.in */
 export const API_ORIGIN = API_URL.replace(/\/api\/v1$/, '');
 
-const TIMEOUT_MS = 20000;
+// Same as the web client's axios timeout (30 s).
+const TIMEOUT_MS = 30000;
 const UPLOAD_TIMEOUT_MS = 120000;
 
 let session = { accessToken: null, refreshToken: null, taxiToken: null };
@@ -42,7 +43,24 @@ export function setAuthToken(token) {
 }
 export const getAuthToken = () => session.accessToken;
 export const getRefreshToken = () => session.refreshToken;
-export const getTaxiToken = () => session.taxiToken || session.accessToken;
+/* True when a JWT's exp is in the past (an unreadable token counts as live, the server decides). */
+function jwtExpired(token) {
+  try {
+    const part = String(token).split('.')[1];
+    if (!part) return false;
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+    const json = JSON.parse(globalThis.atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4)));
+    return typeof json?.exp === 'number' && Date.now() / 1000 >= json.exp;
+  } catch {
+    return false;
+  }
+}
+/* The taxi token, unless it expired while the (refreshed) food access token is live: both are the same USER JWT. */
+export const getTaxiToken = () => {
+  const t = session.taxiToken;
+  if (t && !(jwtExpired(t) && session.accessToken && !jwtExpired(session.accessToken))) return t;
+  return session.accessToken || t || null;
+};
 export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
 }
@@ -65,9 +83,11 @@ export class ApiError extends Error {
 function buildUrl(path, params) {
   const url = /^https?:\/\//.test(path) ? path : `${API_URL}${path.startsWith('/') ? '' : '/'}${path}`;
   if (!params) return url;
+  // axios' serializer: null/undefined are dropped, '' is kept ("k="), arrays become k[]=a&k[]=b.
+  const enc = (v) => encodeURIComponent(v instanceof Date ? v.toISOString() : v !== null && typeof v === 'object' ? JSON.stringify(v) : String(v));
   const qs = Object.entries(params)
-    .filter(([, v]) => v !== undefined && v !== null && v !== '')
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .flatMap(([k, v]) => (Array.isArray(v) ? v.filter((x) => x !== undefined && x !== null).map((x) => `${encodeURIComponent(k)}[]=${enc(x)}`) : [`${encodeURIComponent(k)}=${enc(v)}`]))
     .join('&');
   return qs ? `${url}${url.includes('?') ? '&' : '?'}${qs}` : url;
 }
@@ -110,7 +130,7 @@ function baseHeaders(extra, isForm, auth) {
   const h = { Accept: 'application/json', ...(isForm ? {} : { 'Content-Type': 'application/json' }) };
   // The web marks local dev builds so the backend's maintenance gate stays open.
   if (__DEV__) h['X-HelloParth-Client'] = 'local-dev';
-  const token = auth === false ? null : auth === 'taxi' ? session.taxiToken || session.accessToken : session.accessToken;
+  const token = auth === false ? null : auth === 'taxi' ? getTaxiToken() : session.accessToken;
   if (token) h.Authorization = `Bearer ${token}`;
   return { ...h, ...(extra || {}) };
 }
@@ -199,13 +219,21 @@ async function refreshAccessToken() {
         const res = await rawFetch('/food/auth/refresh-token', {
           method: 'POST',
           body: { refreshToken: session.refreshToken },
+          // The web posts this with a bare axios call: no (expired) Authorization header.
+          auth: false,
           timeout: 10000,
         });
         const token = res.data?.data?.accessToken || res.data?.accessToken;
         if (!token) return null;
         // The endpoint also returns a fresh refresh token; keep it when it does.
         const nextRefresh = res.data?.data?.refreshToken || res.data?.refreshToken;
-        session = { ...session, accessToken: token, refreshToken: typeof nextRefresh === "string" && nextRefresh ? nextRefresh : session.refreshToken };
+        session = {
+          ...session,
+          accessToken: token,
+          refreshToken: typeof nextRefresh === "string" && nextRefresh ? nextRefresh : session.refreshToken,
+          // The taxi token is the same USER JWT; an expired copy would keep every taxi call at 401 after a refresh.
+          taxiToken: session.taxiToken && jwtExpired(session.taxiToken) ? token : session.taxiToken,
+        };
         onTokensRefreshed?.(session);
         return token;
       } catch (err) {
@@ -233,7 +261,9 @@ async function withAuthRetry(path, opts) {
   } catch (err) {
     if (err.status !== 401 || opts._retried || !session.accessToken) throw err;
     // A request that carried no user token cannot be fixed by refreshing it.
-    if (resolveAuth(path, opts) !== undefined) throw err;
+    // Taxi calls carry the same USER JWT, so they refresh and retry like user calls.
+    const sent = resolveAuth(path, opts);
+    if (sent !== undefined && sent !== 'taxi') throw err;
     if (!session.refreshToken) {
       onUnauthorized?.();
       throw err;

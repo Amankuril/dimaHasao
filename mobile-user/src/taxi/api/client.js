@@ -54,6 +54,8 @@ const ADMIN_ROUTE = /^\/(admin(\/|$)|countries|common\/ride_modules|types\/|on-b
 
 const authFor = (path) => {
   const p = String(path || '').split('?')[0];
+  // The web lists /users/profile-image as public, but the backend runs authenticate(['user']) on it.
+  if (/^\/users\/profile-image(\/|$)/.test(p)) return 'taxi';
   if (PUBLIC_USER.test(p) || ADMIN_ROUTE.test(p)) return false;
   return 'taxi';
 };

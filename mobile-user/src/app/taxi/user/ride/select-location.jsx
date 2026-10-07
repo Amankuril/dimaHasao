@@ -233,14 +233,13 @@ export default function SelectLocation() {
   useEffect(() => {
     let active = true;
     const loadZoneData = async () => {
-      if (!serviceLocationId) {
-        setZones([]);
-        setZonePaths([]);
-        setServiceStores([]);
-        return;
-      }
       try {
-        const [zonesResponse, storesResponse] = await Promise.all([api.get('/admin/zones'), api.get('/users/service-stores')]);
+        // /admin/zones needs an admin token (the rider has none); /users/zones is the public list with the same rows.
+        // /users/service-stores is not mounted on the backend, so its failure must not drop the zones.
+        const [zonesResponse, storesResponse] = await Promise.all([
+          api.get('/users/zones'),
+          api.get('/users/service-stores').catch(() => ({ results: [] })),
+        ]);
         if (!active) return;
         const matchingZones = unwrapResults(zonesResponse).filter((zone) => isZoneActive(zone));
         const matchingPaths = matchingZones.map(normalizeZonePath).filter((path) => path.length >= 3);

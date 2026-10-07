@@ -8,10 +8,17 @@ import { events } from '../../../lib/events';
 import { geocodeAPI } from '../../../api/food';
 import { HAS_VALID_GOOGLE_MAPS_KEY } from '../../utils/googleMaps';
 import { getSavedLocation, saveLocation, LOCATION_UPDATED_EVENT } from '../../services/locationStore';
+import { DEFAULT_COORDS } from '../../constants/districtPlaces';
 import { poppins, tw } from '../../../theme';
 
 /* Port of components/LocationMapSection.jsx (mobile branch: 220px map with centre pin, locator button, "Use my location"). */
-const DEFAULT_CENTER = { lat: 17.385, lon: 78.4867 };
+// The district headquarters (Haflong), like every other default in this app. The web template defaults to Hyderabad,
+// which sits outside every Dima Hasao taxi zone, so a pickup left on that default can never be matched to a zone.
+const DEFAULT_CENTER = { lat: DEFAULT_COORDS[1], lon: DEFAULT_COORDS[0] };
+const savedCenter = () => {
+  const saved = getSavedLocation();
+  return typeof saved?.lat === 'number' && typeof saved?.lon === 'number' ? { lat: saved.lat, lon: saved.lon } : DEFAULT_CENTER;
+};
 const LAT_DELTA = 0.005;
 const LNG_DELTA = 0.0085;
 const AUTO_REFRESH_INTERVAL_MS = 2 * 60 * 1000;
@@ -43,14 +50,15 @@ const LocatorIcon = ({ color }) => (
 
 export default function LocationMapSection({ onGestureChange }) {
   const [coords, setCoords] = useState(null);
-  const [centerCoords, setCenterCoords] = useState(DEFAULT_CENTER);
+  // initialRegion is read once at mount, so start from the saved location instead of the default.
+  const [centerCoords, setCenterCoords] = useState(savedCenter);
   const [status, setStatusState] = useState('idle');
   const [isDragging, setIsDragging] = useState(false);
   const mapRef = useRef(null);
   const isDraggingRef = useRef(false);
   const requestedLocationRef = useRef(false);
   const statusRef = useRef('idle');
-  const centerRef = useRef(DEFAULT_CENTER);
+  const centerRef = useRef(centerCoords);
 
   const setStatus = (newStatus) => {
     statusRef.current = newStatus;
@@ -161,7 +169,9 @@ export default function LocationMapSection({ onGestureChange }) {
     const next = { lat: region.latitude, lon: region.longitude };
     if (areCentersNearlyEqual(centerRef.current, next)) return;
     setCenter(next);
-    if (statusRef.current === 'ready') saveLocation(next);
+    // Not saved here: a region that settles without a gesture is the map's own start/animation (initially the default
+    // centre), and saving it overwrote the real saved coordinates (Indore) while the saved address label stayed.
+    // The user dragging the map is saved above; GPS fixes are saved by persistCoords.
   };
 
   return (
