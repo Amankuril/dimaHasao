@@ -9,7 +9,7 @@ import { DT } from '../ui/dt';
 import { Alert, CtaButton, Spin } from './OnboardingFields';
 import { jk, obCard, up } from './onboardingTheme';
 
-export const DRIVER_BRAND_LOGO = require('../../../assets/images/driver-logo.png');
+export const DRIVER_BRAND_LOGO = require('../../../assets/images/driver-logo.webp');
 
 /*
  * The frame every driver onboarding step sits in: a deep-green hero (logo or back button, step pills,

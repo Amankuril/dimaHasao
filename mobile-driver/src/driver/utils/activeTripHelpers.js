@@ -4,9 +4,9 @@ import { BACKEND_ORIGIN } from '../api/runtimeConfig';
 
 // Web: the helper block at the top of Taxi/modules/driver/pages/ActiveTrip.jsx (storage keys, phase and
 // snapshot persistence, route maths, formatters, commission and payment-collection builders).
-export const autoIcon = require('../../../assets/images/auto.png');
-export const bikeIcon = require('../../../assets/images/bike.png');
-export const carIcon = require('../../../assets/images/car.png');
+export const autoIcon = require('../../../assets/images/auto.webp');
+export const bikeIcon = require('../../../assets/images/bike.webp');
+export const carIcon = require('../../../assets/images/car.webp');
 
 export const DEFAULT_CENTER = { lat: 22.7196, lng: 75.8577 };
 export const DEFAULT_DRIVER_COORDS = [75.8577, 22.7196];

@@ -32,7 +32,7 @@ const MAP_STYLE = [
 
 const MARKER_OVERLAP_HIDE_METERS = 40;
 const DEFAULT_CENTER = { lat: 22.7196, lng: 75.8577 };
-const RIDER_IMG = require('../../../../assets/images/MapRider.png');
+const RIDER_IMG = require('../../../../assets/images/MapRider.webp');
 const CUTLERY_IMG = require('../../../../assets/images/cutlery_icon.webp');
 
 const useGoogle = Platform.OS === 'android' || Constants.expoConfig?.extra?.iosGoogleMaps;

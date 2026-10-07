@@ -53,9 +53,9 @@ import { color, elevation, radii, space, tone, type } from '../../../theme';
  */
 
 const DEFAULT_COUNTRY_CODE = '+91';
-const DRIVER_LOGO = require('../../../../assets/images/driver-logo.png');
-const FLOAT_1 = require('../../../../assets/images/Driver_logo_1.png');
-const FLOAT_2 = require('../../../../assets/images/Driver_logo_2.png');
+const DRIVER_LOGO = require('../../../../assets/images/driver-logo.webp');
+const FLOAT_1 = require('../../../../assets/images/Driver_logo_1.webp');
+const FLOAT_2 = require('../../../../assets/images/Driver_logo_2.webp');
 
 const defaultTestPhone =
   process.env.EXPO_PUBLIC_USE_DEFAULT_TEST_PHONE === 'true'

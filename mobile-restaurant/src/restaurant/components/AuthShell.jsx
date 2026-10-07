@@ -32,7 +32,7 @@ function Weave() {
   );
 }
 
-export default function AuthShell({ logo = require('../../../assets/images/restaurant-logo.png'), children }) {
+export default function AuthShell({ logo = require('../../../assets/images/restaurant-logo.webp'), children }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.page}>

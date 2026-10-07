@@ -9,17 +9,17 @@ import { BACKEND_ORIGIN } from '../api/runtimeConfig';
  * clickableIcons:false}> with one 40x40 vehicle <Marker>). `panTo({ lat, lng })` is exposed through the ref.
  */
 const ICONS = {
-  bike: require('../../../assets/taxi/icons/bike.png'),
-  car: require('../../../assets/taxi/icons/car.png'),
-  auto: require('../../../assets/taxi/icons/auto.png'),
-  truck: require('../../../assets/taxi/icons/truck.png'),
-  ehcv: require('../../../assets/taxi/icons/ehcv.png'),
-  hcv: require('../../../assets/taxi/icons/hcv.png'),
-  lcv: require('../../../assets/taxi/icons/LCV.png'),
-  mcv: require('../../../assets/taxi/icons/mcv.png'),
-  luxury: require('../../../assets/taxi/icons/Luxury.png'),
-  premium: require('../../../assets/taxi/icons/Premium.png'),
-  suv: require('../../../assets/taxi/icons/SUV.png'),
+  bike: require('../../../assets/taxi/icons/bike.webp'),
+  car: require('../../../assets/taxi/icons/car.webp'),
+  auto: require('../../../assets/taxi/icons/auto.webp'),
+  truck: require('../../../assets/taxi/icons/truck.webp'),
+  ehcv: require('../../../assets/taxi/icons/ehcv.webp'),
+  hcv: require('../../../assets/taxi/icons/hcv.webp'),
+  lcv: require('../../../assets/taxi/icons/LCV.webp'),
+  mcv: require('../../../assets/taxi/icons/mcv.webp'),
+  luxury: require('../../../assets/taxi/icons/Luxury.webp'),
+  premium: require('../../../assets/taxi/icons/Premium.webp'),
+  suv: require('../../../assets/taxi/icons/SUV.webp'),
 };
 
 /** Web getMapIconForVehicle: an uploaded icon URL, else the bundled icon for the vehicle type. Returns an Image source. */

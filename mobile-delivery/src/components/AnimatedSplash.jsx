@@ -22,7 +22,7 @@ export default function AnimatedSplash({ ready, children }) {
       {ready ? children : null}
       {!gone ? (
         <Animated.View pointerEvents="none" style={[styles.cover, { opacity: fade }]}>
-          <Image source={require('../../assets/images/driver-logo.png')} style={styles.logo} resizeMode="contain" />
+          <Image source={require('../../assets/images/driver-logo.webp')} style={styles.logo} resizeMode="contain" />
         </Animated.View>
       ) : null}
     </View>

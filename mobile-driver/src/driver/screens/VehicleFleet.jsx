@@ -21,21 +21,21 @@ import {
   updateDriverVehicle,
 } from '../services/registrationService';
 
-const CarIcon = require('../../../assets/taxi/icons/car.png');
-const BikeIcon = require('../../../assets/taxi/icons/bike.png');
-const AutoIcon = require('../../../assets/taxi/icons/auto.png');
-const TruckIcon = require('../../../assets/taxi/icons/truck.png');
-const EhcvIcon = require('../../../assets/taxi/icons/ehcv.png');
-const HcvIcon = require('../../../assets/taxi/icons/hcv.png');
-const LcvIcon = require('../../../assets/taxi/icons/LCV.png');
-const McvIcon = require('../../../assets/taxi/icons/mcv.png');
-const LuxuryIcon = require('../../../assets/taxi/icons/Luxury.png');
-const PremiumIcon = require('../../../assets/taxi/icons/Premium.png');
-const SuvIcon = require('../../../assets/taxi/icons/SUV.png');
-const ScootyIcon = require('../../../assets/taxi/icons/scooty.png');
-const HatchbackIcon = require('../../../assets/taxi/icons/Hatchback.png');
-const BusIcon = require('../../../assets/taxi/icons/bus.png');
-const MiniBusIcon = require('../../../assets/taxi/icons/mini_bus.png');
+const CarIcon = require('../../../assets/taxi/icons/car.webp');
+const BikeIcon = require('../../../assets/taxi/icons/bike.webp');
+const AutoIcon = require('../../../assets/taxi/icons/auto.webp');
+const TruckIcon = require('../../../assets/taxi/icons/truck.webp');
+const EhcvIcon = require('../../../assets/taxi/icons/ehcv.webp');
+const HcvIcon = require('../../../assets/taxi/icons/hcv.webp');
+const LcvIcon = require('../../../assets/taxi/icons/LCV.webp');
+const McvIcon = require('../../../assets/taxi/icons/mcv.webp');
+const LuxuryIcon = require('../../../assets/taxi/icons/Luxury.webp');
+const PremiumIcon = require('../../../assets/taxi/icons/Premium.webp');
+const SuvIcon = require('../../../assets/taxi/icons/SUV.webp');
+const ScootyIcon = require('../../../assets/taxi/icons/scooty.webp');
+const HatchbackIcon = require('../../../assets/taxi/icons/Hatchback.webp');
+const BusIcon = require('../../../assets/taxi/icons/bus.webp');
+const MiniBusIcon = require('../../../assets/taxi/icons/mini_bus.webp');
 
 const unwrap = (response) => response?.data?.data || response?.data || response;
 const VEHICLE_FLEET_DRAFT_KEY = 'driver_vehicle_fleet_draft';
