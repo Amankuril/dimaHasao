@@ -4,20 +4,21 @@ import { router } from 'expo-router';
 import Fa from '../../components/Fa';
 import { Press } from '../../components/ui';
 import { SelectField } from '../../components/kit';
+import { StatusBadge } from '../../components/ds';
 import { Header, PatternDivider } from '../../components/dh/Header';
 import { Field, FormScroll, GreenButton, Panel, PanelTitle, dhs } from '../../components/dh/ui';
 import { useBooking } from '../../context/BookingContext';
 import { fetchMySupportTickets, raiseSupportTicket } from '../../api/dh/supportApi';
 import { openExternal } from '../../lib/links';
-import { dh, poppins, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 
 // Web: DimaHasao/pages/HelpSupportScreen.jsx (/app/support)
 
 const HELPLINES = [
-  { title: 'Police Control Room', number: '112', icon: 'fa-solid fa-shield', bg: tw.red600 },
-  { title: 'Haflong Civil Hospital', number: '03673-236222', icon: 'fa-solid fa-hospital', bg: tw.emerald700 },
-  { title: 'Tourist Police Helpline', number: '+91 94350 99999', icon: 'fa-solid fa-person-military-pointing', bg: tw.blue600 },
-  { title: 'Disaster Emergency (DDMA)', number: '1077', icon: 'fa-solid fa-triangle-exclamation', bg: tw.amber600 },
+  { title: 'Police Control Room', number: '112', icon: 'fa-solid fa-shield' },
+  { title: 'Haflong Civil Hospital', number: '03673-236222', icon: 'fa-solid fa-hospital' },
+  { title: 'Tourist Police Helpline', number: '+91 94350 99999', icon: 'fa-solid fa-person-military-pointing' },
+  { title: 'Disaster Emergency (DDMA)', number: '1077', icon: 'fa-solid fa-triangle-exclamation' },
 ];
 
 const CATEGORIES = [
@@ -92,54 +93,52 @@ export default function HelpSupportScreen() {
       <Header title="HELP & SUPPORT" subtitle="24/7 Tourist assistance, FAQs & SOS emergency" showBack rightAction="none" />
       <PatternDivider variant="green-gold" />
 
-      <FormScroll contentContainerStyle={{ padding: 14, gap: 16 }} bottomSpace={40}>
-        <Panel style={{ gap: 12, borderColor: tw.red200 }}>
-          <View style={[dhs.row, { justifyContent: 'space-between', gap: 8 }]}>
-            <View style={[dhs.row, { gap: 6, flexShrink: 1 }]}>
-              <Fa name="fa-solid fa-phone-volume" size={14} color={tw.red600} />
-              <Text style={[dhs.h3, { color: tw.red700 }]}>Emergency Hotlines (1-Tap Call)</Text>
+      <FormScroll contentContainerStyle={{ padding: space.lg, gap: space.lg }} bottomSpace={space.xxl}>
+        <View style={styles.emergency}>
+          <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm, flexWrap: 'wrap' }]}>
+            <View style={[dhs.row, { gap: space.sm, flexShrink: 1 }]}>
+              <Fa name="fa-solid fa-phone-volume" size={16} color={color.danger} />
+              <Text style={styles.emergencyTitle} accessibilityRole="header">
+                Emergency hotlines
+              </Text>
             </View>
-            <Text style={styles.active}>24×7 Active</Text>
+            <StatusBadge label="24×7 active" tone="danger" />
           </View>
-          <View style={styles.grid}>
+          <Text style={styles.emergencyHint}>Tap a number to call.</Text>
+          <View style={{ gap: space.sm }}>
             {HELPLINES.map((item) => (
-              <View key={item.title} style={styles.cell}>
-                <Press scale={0.97} onPress={() => openExternal(`tel:${item.number.replace(/\s+/g, '')}`)} style={styles.helpline} accessibilityRole="link" accessibilityLabel={`Call ${item.title}, ${item.number}`}>
-                  <View style={[styles.helplineIcon, { backgroundColor: item.bg }]}>
-                    <Fa name={item.icon} size={12} color="#fff" />
-                  </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.helplineTitle} numberOfLines={1}>{item.title}</Text>
-                    <Text style={styles.helplineNumber}>{item.number}</Text>
-                  </View>
-                </Press>
-              </View>
+              <Press key={item.title} scale={0.98} onPress={() => openExternal(`tel:${item.number.replace(/\s+/g, '')}`)} style={styles.helpline} accessibilityRole="link" accessibilityLabel={`Call ${item.title}, ${item.number}`}>
+                <View style={styles.helplineIcon}>
+                  <Fa name={item.icon} size={16} color={color.danger} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.helplineTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.helplineNumber}>{item.number}</Text>
+                </View>
+                <Fa name="fa-solid fa-phone" size={16} color={color.danger} />
+              </Press>
             ))}
           </View>
-        </Panel>
+        </View>
 
-        <Panel style={{ gap: 12 }}>
-          <PanelTitle icon="fa-solid fa-headset">Submit a Support Ticket</PanelTitle>
+        <Panel style={{ gap: space.md }}>
+          <PanelTitle icon="fa-solid fa-headset">Submit a support ticket</PanelTitle>
           <View>
             <Text style={dhs.label}>Category</Text>
-            <SelectField value={ticketCategory} options={CATEGORIES} onChange={setTicketCategory} accessibilityLabel="Category" style={[dhs.input, { gap: 8 }]} textStyle={styles.selectText} />
+            <SelectField value={ticketCategory} options={CATEGORIES} onChange={setTicketCategory} accessibilityLabel="Category" style={[dhs.input, { gap: space.sm }]} textStyle={styles.selectText} chevronColor={color.text} />
           </View>
-          <Field
-            label="Describe your concern"
-            multiline
-            numberOfLines={3}
-            placeholder="Explain the issue or booking ID details..."
-            value={complaintText}
-            onChangeText={setComplaintText}
-            inputStyle={{ padding: 12, paddingTop: 12, ...poppins(400) }}
-          />
-          <GreenButton title="Submit Ticket" loadingTitle="Sending…" loading={submitting} onPress={handleCreateTicket} />
+          <Field label="Describe your concern" multiline numberOfLines={3} placeholder="Explain the issue or booking ID details..." value={complaintText} onChangeText={setComplaintText} />
+          <GreenButton title="Submit ticket" loadingTitle="Sending…" loading={submitting} onPress={handleCreateTicket} />
 
           {isTicketSubmitted ? (
             <View style={styles.done}>
-              <View style={[dhs.row, { gap: 4 }]}>
-                <Fa name="fa-solid fa-circle-check" size={12} color={tw.emerald600} />
-                <Text style={styles.doneTitle}>Ticket Generated: {generatedTicketId}</Text>
+              <View style={[dhs.row, { gap: space.sm }]}>
+                <Fa name="fa-solid fa-circle-check" size={16} color={color.success} />
+                <Text style={styles.doneTitle} selectable>
+                  Ticket generated: {generatedTicketId}
+                </Text>
               </View>
               <Text style={styles.doneText}>Our support team can see this now. Quote the reference above if you call us.</Text>
             </View>
@@ -147,22 +146,26 @@ export default function HelpSupportScreen() {
         </Panel>
 
         {myTickets.length > 0 ? (
-          <Panel style={{ gap: 12 }}>
-            <PanelTitle icon="fa-solid fa-clock-rotate-left">Your Tickets</PanelTitle>
-            <View style={{ gap: 8 }}>
+          <Panel style={{ gap: space.md }}>
+            <PanelTitle icon="fa-solid fa-clock-rotate-left">Your tickets</PanelTitle>
+            <View style={{ gap: space.sm }}>
               {myTickets.map((ticket) => {
                 const done = ['resolved', 'closed'].includes(ticket.status);
                 const reply = [...(ticket.messages || [])].reverse().find((m) => m.senderRole === 'admin');
                 return (
                   <View key={ticket._id} style={styles.ticket}>
-                    <View style={[dhs.row, { justifyContent: 'space-between', gap: 8 }]}>
-                      <Text style={styles.ticketCode}>{ticket.ticketCode}</Text>
-                      <Text style={[styles.ticketStatus, done ? { backgroundColor: tw.emerald100, color: tw.emerald700 } : null]}>{done ? 'RESOLVED' : 'IN PROGRESS'}</Text>
+                    <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm }]}>
+                      <Text style={styles.ticketCode} selectable>
+                        {ticket.ticketCode}
+                      </Text>
+                      <StatusBadge label={done ? 'Resolved' : 'In progress'} tone={done ? 'success' : 'warning'} />
                     </View>
-                    <Text style={styles.ticketText} numberOfLines={2}>{ticket.description}</Text>
+                    <Text style={styles.ticketText} numberOfLines={2}>
+                      {ticket.description}
+                    </Text>
                     {reply ? (
                       <Text style={styles.reply}>
-                        <Text style={poppins(700)}>Support: </Text>
+                        <Text style={{ ...type.label, color: color.primary }}>Support: </Text>
                         {reply.message}
                       </Text>
                     ) : null}
@@ -173,9 +176,9 @@ export default function HelpSupportScreen() {
           </Panel>
         ) : null}
 
-        <Panel style={{ gap: 12 }}>
-          <PanelTitle icon="fa-solid fa-circle-question">Frequently Asked Questions</PanelTitle>
-          <View style={{ gap: 8 }}>
+        <Panel style={{ gap: space.md }}>
+          <PanelTitle icon="fa-solid fa-circle-question">Frequently asked questions</PanelTitle>
+          <View style={{ gap: space.sm }}>
             {FAQS.map((faq, idx) => {
               const isOpen = activeFaq === idx;
               return (
@@ -187,10 +190,11 @@ export default function HelpSupportScreen() {
                       setActiveFaq(isOpen ? null : idx);
                     }}
                     accessibilityState={{ expanded: isOpen }}
+                    accessibilityLabel={faq.q}
                     style={styles.faqHead}
                   >
                     <Text style={styles.faqQ}>{faq.q}</Text>
-                    <Fa name="fa-solid fa-chevron-down" size={10} color={isOpen ? tw.emerald800 : tw.gray500} style={isOpen ? { transform: [{ rotate: '180deg' }] } : null} />
+                    <Fa name="fa-solid fa-chevron-down" size={14} color={isOpen ? color.primary : color.textMuted} style={isOpen ? { transform: [{ rotate: '180deg' }] } : null} />
                   </Press>
                   {isOpen ? <Text style={styles.faqA}>{faq.a}</Text> : null}
                 </View>
@@ -204,24 +208,23 @@ export default function HelpSupportScreen() {
 }
 
 const styles = StyleSheet.create({
-  active: { fontSize: 10, lineHeight: 15, color: tw.red800, backgroundColor: tw.red100, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden', ...poppins(700) },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', margin: -4 },
-  cell: { width: '50%', padding: 4 },
-  helpline: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, backgroundColor: dh.cream, borderRadius: 12, borderWidth: 1, borderColor: dh.border },
-  helplineIcon: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  helplineTitle: { fontSize: 11, lineHeight: 13.75, color: tw.gray900, ...poppins(700) },
-  helplineNumber: { fontSize: 10, lineHeight: 15, color: tw.emerald800, ...poppins(700) },
-  selectText: { fontSize: 12, color: tw.gray900, ...poppins(600) },
-  done: { padding: 12, backgroundColor: tw.emerald50, borderWidth: 1, borderColor: tw.emerald200, borderRadius: 12, gap: 4 },
-  doneTitle: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.emerald900, ...poppins(700) },
-  doneText: { fontSize: 11, lineHeight: 16.5, color: tw.gray600, ...poppins(400) },
-  ticket: { borderRadius: 12, borderWidth: 1, borderColor: 'rgba(229,221,195,0.8)', backgroundColor: 'rgba(250,246,237,0.4)', padding: 12, gap: 4 },
-  ticketCode: { fontSize: 11, lineHeight: 16.5, letterSpacing: 0.275, color: tw.emerald950, ...poppins(900) },
-  ticketStatus: { fontSize: 9, lineHeight: 13.5, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden', backgroundColor: tw.amber100, color: tw.amber700, ...poppins(700) },
-  ticketText: { fontSize: 11, lineHeight: 15, color: tw.gray600, ...poppins(400) },
-  reply: { fontSize: 11, lineHeight: 15, color: tw.emerald900, backgroundColor: tw.emerald50, borderRadius: 8, padding: 8, ...poppins(400) },
-  faq: { borderRadius: 12, borderWidth: 1, borderColor: 'rgba(229,221,195,0.8)', backgroundColor: 'rgba(250,246,237,0.4)', overflow: 'hidden' },
-  faqHead: { padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  faqQ: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
-  faqA: { paddingHorizontal: 12, paddingBottom: 12, paddingTop: 8, fontSize: 12, lineHeight: 19.5, color: tw.gray600, borderTopWidth: 1, borderTopColor: tw.gray100, ...poppins(400) },
+  emergency: { backgroundColor: color.dangerSoft, borderRadius: radii.lg, padding: space.lg, gap: space.sm },
+  emergencyTitle: { ...type.subheading, color: color.danger, flexShrink: 1 },
+  emergencyHint: { ...type.caption, color: color.textSecondary, marginBottom: space.xs },
+  helpline: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.md, paddingVertical: space.sm, backgroundColor: color.surface, borderRadius: radii.md },
+  helplineIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center' },
+  helplineTitle: { ...type.bodyStrong, color: color.text },
+  helplineNumber: { ...type.label, color: color.danger },
+  selectText: { flex: 1, ...type.bodyStrong, color: color.text },
+  done: { padding: space.md, backgroundColor: color.successSoft, borderRadius: radii.md, gap: space.xs },
+  doneTitle: { flex: 1, ...type.bodyStrong, color: color.text },
+  doneText: { ...type.small, color: color.textSecondary },
+  ticket: { borderRadius: radii.md, backgroundColor: color.surfaceMuted, padding: space.md, gap: space.xs + 2 },
+  ticketCode: { ...type.bodyStrong, letterSpacing: 0.3, color: color.text, flexShrink: 1 },
+  ticketText: { ...type.small, color: color.textSecondary },
+  reply: { ...type.small, color: color.text, backgroundColor: color.surface, borderRadius: radii.sm, padding: space.sm + 2 },
+  faq: { borderRadius: radii.md, backgroundColor: color.surfaceMuted, overflow: 'hidden' },
+  faqHead: { minHeight: 52, paddingHorizontal: space.md, paddingVertical: space.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
+  faqQ: { flex: 1, ...type.bodyStrong, color: color.text },
+  faqA: { paddingHorizontal: space.md, paddingBottom: space.md, paddingTop: space.sm, ...type.small, color: color.textSecondary, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
 });

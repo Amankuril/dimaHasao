@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Text as SvgText } from 'react-native-svg';
-import { AlertCircle, Bookmark, Clock, Flame, Star, Zap } from 'lucide-react-native';
+import { AlertCircle, Bookmark, Clock, Flame, Star } from 'lucide-react-native';
 import Image from '../../components/Img';
 import { Press } from '../../components/ui';
 import { useProfile } from '../context/ProfileContext';
@@ -10,7 +10,8 @@ import { isVegMenuItem } from '../utils/vegMode';
 import { getRestaurantRouteId } from '../utils/mainTabRoutes';
 import { navigateTo } from '../../lib/webRouter';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 
 const DISH_FALLBACK = require('../../../assets/food/dish_fallback.webp');
 
@@ -46,10 +47,10 @@ export const formatRatingCount = (value) => {
 const SCALLOP =
   'M 86.29 42.78 Q 95.00 50.00 86.29 57.22 Q 91.57 67.22 80.76 70.56 Q 81.82 81.82 70.56 80.76 Q 67.22 91.57 57.22 86.29 Q 50.00 95.00 42.78 86.29 Q 32.78 91.57 29.44 80.76 Q 18.18 81.82 19.24 70.56 Q 8.43 67.22 13.71 57.22 Q 5.00 50.00 13.71 42.78 Q 8.43 32.78 19.24 29.44 Q 18.18 18.18 29.44 19.24 Q 32.78 8.43 42.78 13.71 Q 50.00 5.00 57.22 13.71 Q 67.22 8.43 70.56 19.24 Q 81.82 18.18 80.76 29.44 Q 91.57 32.78 86.29 42.78 Z';
 
-export function ScallopBadge({ size = 20, color = '#2563EB' }) {
+export function ScallopBadge({ size = 20, color: fill = '#2563EB' }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
-      <Path d={SCALLOP} fill={color} />
+      <Path d={SCALLOP} fill={fill} />
       <SvgText x="50" y="63" textAnchor="middle" fontSize="42" fontWeight="900" fill="#fff">
         %
       </SvgText>
@@ -86,6 +87,10 @@ export function couponsForRestaurant(publicOffers, restaurant, isTakeaway) {
   });
 }
 
+
+// Dark pill / scrim behind text that sits on a photo.
+const ON_PHOTO = 'rgba(17,17,17,0.78)';
+
 export const RestaurantCardOfferCarousel = memo(function RestaurantCardOfferCarousel({ coupons }) {
   const uniqueCoupons = useMemo(() => {
     if (!coupons || coupons.length === 0) return [];
@@ -121,8 +126,8 @@ export const RestaurantCardOfferCarousel = memo(function RestaurantCardOfferCaro
   const current = uniqueCoupons[currentIndex] || uniqueCoupons[0];
   return (
     <View style={styles.offer}>
-      <ScallopBadge size={20} />
-      <View style={{ flex: 1, height: 20, overflow: 'hidden', justifyContent: 'center' }}>
+      <ScallopBadge size={18} color={color.goldText} />
+      <View style={styles.offerTextBox}>
         <Animated.Text numberOfLines={1} style={[styles.offerText, { opacity: fade, transform: [{ translateY: y }] }]}>
           {formatCouponText(current)}
         </Animated.Text>
@@ -143,6 +148,7 @@ export const RestaurantImageCarousel = memo(function RestaurantImageCarousel({
   backFrom = '',
   categoryFallbackImage = null,
   active = true,
+  compact = false,
 }) {
   const { vegMode } = useProfile();
   const [width, setWidth] = useState(0);
@@ -198,7 +204,7 @@ export const RestaurantImageCarousel = memo(function RestaurantImageCarousel({
   );
 
   return (
-    <View style={{ height, borderTopLeftRadius: radius, borderTopRightRadius: radius, overflow: 'hidden', backgroundColor: tw.gray100 }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+    <View style={{ height, borderTopLeftRadius: radius, borderTopRightRadius: radius, overflow: 'hidden', backgroundColor: color.surfaceMuted }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       <ScrollView
         ref={scroller}
         horizontal
@@ -229,25 +235,21 @@ export const RestaurantImageCarousel = memo(function RestaurantImageCarousel({
         ))}
       </ScrollView>
 
-      {current?.dish ? (
+      {current?.dish && !compact ? (
         <>
           <LinearGradient pointerEvents="none" colors={['rgba(0,0,0,0.45)', 'transparent']} style={styles.scrim} />
           <View pointerEvents="none" style={styles.dishBadge}>
-            {!vegMode ? (
-              <View style={[styles.dietBox, { borderColor: isDishVeg ? tw.green600 : tw.red600 }]}>
-                <View style={[styles.dietDot, { backgroundColor: isDishVeg ? tw.green600 : tw.red600 }]} />
-              </View>
-            ) : null}
+            {!vegMode ? <DietMark veg={isDishVeg} /> : null}
             <Text style={[styles.dishText, { flexShrink: 1 }]} numberOfLines={1}>{current.dish.name}</Text>
-            <Text style={[styles.dishText, { color: 'rgba(255,255,255,0.7)' }]}>•</Text>
-            <Text style={[styles.dishText, poppins(900)]}>₹{current.dish.price}</Text>
+            <Text style={[styles.dishText, styles.dishSep]}>·</Text>
+            <Text style={styles.dishText}>₹{current.dish.price}</Text>
           </View>
         </>
       ) : null}
 
       {failed ? (
         <View style={styles.unavailable}>
-          <Text style={{ fontSize: 12, color: tw.gray500, ...poppins(400) }}>Image unavailable</Text>
+          <Text style={[type.caption, { color: color.textMuted }]}>Image unavailable</Text>
         </View>
       ) : null}
 
@@ -261,6 +263,27 @@ export const RestaurantImageCarousel = memo(function RestaurantImageCarousel({
     </View>
   );
 });
+
+/** FSSAI veg / non-veg mark: square outline with a filled dot. */
+function DietMark({ veg }) {
+  const c = veg ? color.veg : color.nonVeg;
+  return (
+    <View accessibilityLabel={veg ? 'Veg' : 'Non-veg'} style={[styles.dietBox, { borderColor: c }]}>
+      <View style={[styles.dietDot, { backgroundColor: c }]} />
+    </View>
+  );
+}
+
+/** Rating as a gold badge ("New" when unrated). */
+function RatingBadge({ rating }) {
+  const rated = Number(rating) > 0;
+  return (
+    <View style={styles.rating} accessibilityLabel={rated ? `Rated ${Number(rating).toFixed(1)}` : 'New'}>
+      <Star size={13} color={color.goldText} fill={rated ? color.gold : 'none'} strokeWidth={rated ? 0 : 2} />
+      <Text style={styles.ratingText}>{rated ? Number(rating).toFixed(1) : 'New'}</Text>
+    </View>
+  );
+}
 
 /** The large restaurant card of the Home / Takeaway list. */
 export const RestaurantCard = memo(function RestaurantCard({
@@ -282,137 +305,135 @@ export const RestaurantCard = memo(function RestaurantCard({
     Animated.timing(enter, { toValue: 1, duration: 500, delay: index * 50, useNativeDriver: true }).start();
   }, [enter, index]);
 
+  const rated = Number(restaurant.rating) > 0;
+  const meta = [restaurant.deliveryTime, restaurant.distance].filter(Boolean).join('  ·  ');
+  const open = () => openRestaurant(restaurant, { from: backFrom });
+
+  // The card is a View (not a button) so the photo slides and the bookmark are
+  // not buttons nested inside a button; the body and each slide open the page.
   return (
     <Animated.View style={{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [15, 0] }) }] }}>
-      <Press scale={0.99} onPress={() => openRestaurant(restaurant, { from: backFrom })} accessibilityLabel={`${restaurant.name}. ${Number(restaurant.rating) > 0 ? `Rated ${Number(restaurant.rating).toFixed(1)}` : 'New'}`} style={[styles.card, dimmed || closed ? { opacity: 0.75 } : null]}>
+      <View style={[styles.card, dimmed || closed ? { opacity: 0.8 } : null]}>
         <View>
-          <RestaurantImageCarousel restaurant={restaurant} backFrom={backFrom} radius={28} categoryFallbackImage={categoryFallbackImage} />
+          <RestaurantImageCarousel restaurant={restaurant} backFrom={backFrom} height={196} radius={radii.lg} categoryFallbackImage={categoryFallbackImage} />
           {dimmed || closed ? <View pointerEvents="none" style={styles.greyWash} /> : null}
           <Press
             scale={0.9}
             onPress={onToggleFavorite}
+            accessibilityRole="button"
+            accessibilityState={{ selected: !!favorite }}
             accessibilityLabel={favorite ? 'Remove from favorites' : 'Add to favorites'}
-            style={[styles.bookmark, favorite ? { backgroundColor: tw.red500 } : null]}
+            style={[styles.bookmark, favorite ? styles.bookmarkOn : null]}
           >
-            <Bookmark size={20} color={favorite ? '#fff' : tw.gray800} fill={favorite ? '#fff' : 'none'} />
+            <Bookmark size={20} color={favorite ? color.onPrimary : color.text} fill={favorite ? color.onPrimary : 'none'} />
           </Press>
         </View>
 
-        <View style={styles.body}>
+        <Press
+          scale={0.99}
+          onPress={open}
+          accessibilityRole="button"
+          accessibilityLabel={`${restaurant.name}. ${rated ? `Rated ${Number(restaurant.rating).toFixed(1)}` : 'New'}${meta ? `. ${meta}` : ''}`}
+          style={styles.body}
+        >
           <View style={styles.headRow}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.name} numberOfLines={2}>{restaurant.name}</Text>
-              <View style={styles.meta}>
-                <Zap size={16} color="#257d3c" fill="#257d3c" strokeWidth={2.5} />
-                <Text style={styles.metaText}>{restaurant.deliveryTime}</Text>
-                <Text style={[styles.metaText, { marginHorizontal: 4, ...poppins(700) }]}>|</Text>
-                <Text style={styles.metaText}>{restaurant.distance}</Text>
-              </View>
-              <RestaurantCardOfferCarousel coupons={coupons} />
+              {meta ? (
+                <View style={styles.meta}>
+                  <Clock size={14} color={color.textSecondary} />
+                  <Text style={styles.metaText} numberOfLines={1}>{meta}</Text>
+                </View>
+              ) : null}
             </View>
-            <View style={{ alignItems: 'flex-end', gap: 2 }}>
-              <View style={styles.rating}>
-                <Star size={14} color="#fff" fill="#fff" strokeWidth={0} />
-                <Text style={styles.ratingText}>{Number(restaurant.rating) > 0 ? Number(restaurant.rating).toFixed(1) : 'NEW'}</Text>
-              </View>
-              {Number(restaurant.rating) > 0 ? <Text style={styles.ratingCount}>{formatRatingCount(restaurant.totalRatings)}</Text> : null}
+            <View style={{ alignItems: 'flex-end', gap: space.xxs }}>
+              <RatingBadge rating={restaurant.rating} />
+              {rated ? <Text style={styles.ratingCount}>{formatRatingCount(restaurant.totalRatings)}</Text> : null}
             </View>
           </View>
+          <RestaurantCardOfferCarousel coupons={coupons} />
 
           {closed ? (
-            <View style={{ flexDirection: 'row', marginTop: 8 }}>
-              <View style={[styles.status, offline ? styles.statusOffline : null]}>
-                {offline ? (
-                  <>
-                    <AlertCircle size={12} color={tw.red500} strokeWidth={2.5} />
-                    <Text style={[styles.statusText, { color: tw.red600 }]}>OFFLINE</Text>
-                  </>
-                ) : availability.openingTime ? (
-                  <>
-                    <Clock size={12} color={tw.gray500} strokeWidth={2.5} />
-                    <Text style={styles.statusText}>OPENS AT {String(availability.openingTime).toUpperCase()}</Text>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle size={12} color={tw.gray500} strokeWidth={2.5} />
-                    <Text style={styles.statusText}>CLOSED</Text>
-                  </>
-                )}
-              </View>
-            </View>
+            offline ? (
+              <StatusBadge label="Offline" tone="warning" icon={AlertCircle} style={{ marginTop: space.sm }} />
+            ) : availability.openingTime ? (
+              <StatusBadge label={`Opens at ${availability.openingTime}`} tone="neutral" icon={Clock} style={{ marginTop: space.sm }} />
+            ) : (
+              <StatusBadge label="Closed" tone="neutral" icon={AlertCircle} style={{ marginTop: space.sm }} />
+            )
           ) : null}
-        </View>
-      </Press>
+        </Press>
+      </View>
     </Animated.View>
   );
 });
 
-/** The 150px card of the "Recommended For You" row. */
+/** The compact card of the "Recommended for you" row. */
 export const RecommendedCard = memo(function RecommendedCard({ restaurant, backFrom }) {
   const rated = Number(restaurant.rating) > 0;
   return (
-    <Press scale={0.98} onPress={() => openRestaurant(restaurant, { from: backFrom })} accessibilityLabel={restaurant.name} style={styles.rec}>
-      <View style={{ height: 96, backgroundColor: tw.gray50 }}>
-        <RestaurantImageCarousel restaurant={restaurant} height={96} radius={20} backFrom={backFrom} />
-        <View style={[styles.recRating, rated ? null : { backgroundColor: 'rgba(229,231,235,0.9)' }]}>
-          <Text style={[styles.recRatingText, rated ? null : { color: tw.gray600 }]}>{rated ? Number(restaurant.rating).toFixed(1) : 'NEW'}</Text>
+    <View style={styles.rec}>
+      <View style={{ height: 104, backgroundColor: color.surfaceMuted }}>
+        <RestaurantImageCarousel restaurant={restaurant} height={104} radius={radii.lg} backFrom={backFrom} compact />
+        <View pointerEvents="none" style={styles.recRating}>
+          <Star size={12} color={color.gold} fill={rated ? color.gold : 'none'} strokeWidth={rated ? 0 : 2} />
+          <Text style={styles.recRatingText}>{rated ? Number(restaurant.rating).toFixed(1) : 'New'}</Text>
         </View>
       </View>
-      <View style={{ padding: 10 }}>
+      <Press scale={0.98} onPress={() => openRestaurant(restaurant, { from: backFrom })} accessibilityRole="button" accessibilityLabel={restaurant.name} style={styles.recBody}>
         <Text style={styles.recName} numberOfLines={1}>{restaurant.name}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-          <Flame size={14} color="#0a4d2b" fill="#0a4d2b" />
-          <Text style={styles.recTag}>NEAR & FAST</Text>
+        <View style={styles.recTagRow}>
+          <Flame size={14} color={color.goldText} />
+          <Text style={styles.recTag}>Near & fast</Text>
         </View>
-      </View>
-    </Press>
+      </Press>
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
-  offer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, height: 20, overflow: 'hidden' },
-  offerText: { fontSize: 11, lineHeight: 16, letterSpacing: 0.275, color: tw.slate700 || '#314158', ...poppins(700) },
+  offer: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', maxWidth: '100%', gap: space.xs + 2, marginTop: space.sm, height: 28, paddingLeft: space.xs + 2, paddingRight: space.md, borderRadius: radii.pill, backgroundColor: color.goldSoft },
+  offerTextBox: { flexShrink: 1, height: 18, overflow: 'hidden', justifyContent: 'center' },
+  offerText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
 
   scrim: { position: 'absolute', top: 0, left: 0, right: 0, height: 64 },
   dishBadge: {
-    position: 'absolute', top: 12, left: 12, maxWidth: '78%', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12,
-    paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.92)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+    position: 'absolute', top: space.md, left: space.md, maxWidth: '76%', flexDirection: 'row', alignItems: 'center', gap: space.xs + 2,
+    paddingHorizontal: space.md - 2, height: 30, borderRadius: radii.pill, backgroundColor: ON_PHOTO,
   },
-  dietBox: { width: 14, height: 14, borderWidth: 1.5, borderRadius: 2, backgroundColor: '#fff', padding: 1.5 },
-  dietDot: { flex: 1, borderRadius: 999 },
-  dishText: { fontSize: 12, lineHeight: 16, letterSpacing: -0.3, color: '#fff', ...poppins(700) },
-  unavailable: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray100 },
-  dots: { position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' },
-  dotActive: { width: 16, backgroundColor: '#fff' },
+  dietBox: { width: 14, height: 14, borderWidth: 1.5, borderRadius: 2, backgroundColor: color.surface, padding: 2 },
+  dietDot: { flex: 1, borderRadius: radii.pill },
+  dishText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.textInverse },
+  dishSep: { color: color.textOnDarkMuted },
+  unavailable: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: color.surfaceMuted },
+  dots: { position: 'absolute', bottom: space.md, right: space.md, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.55)' },
+  dotActive: { width: 16, backgroundColor: color.surface },
 
-  card: { backgroundColor: '#fff', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(229,231,235,0.7)', overflow: 'hidden', ...shadow('md') },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.card },
   greyWash: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(120,120,120,0.35)' },
   bookmark: {
-    position: 'absolute', top: 16, right: 16, width: 44, height: 44, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)',
-    alignItems: 'center', justifyContent: 'center', ...shadow('xl'),
+    position: 'absolute', top: space.md, right: space.md, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center', justifyContent: 'center', ...elevation.card,
   },
-  body: { padding: 12 },
-  headRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
-  name: { fontSize: 24, lineHeight: 30, letterSpacing: -0.6, color: '#1c1c1c', ...poppins(700) },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' },
-  metaText: { fontSize: 14, lineHeight: 20, color: '#257d3c', ...poppins(600) },
-  rating: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#257d3c', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  ratingText: { fontSize: 14, lineHeight: 20, letterSpacing: -0.35, color: '#fff', ...poppins(700) },
-  ratingCount: { fontSize: 10, lineHeight: 14, color: tw.gray500, marginTop: 2, ...poppins(500) },
-  status: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: tw.gray100,
-    borderWidth: 1, borderColor: tw.gray200,
-  },
-  statusOffline: { backgroundColor: tw.red50, borderColor: tw.red100 },
-  statusText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.25, color: tw.gray600, ...poppins(700) },
+  bookmarkOn: { backgroundColor: color.primary },
+  body: { padding: space.lg, paddingTop: space.md },
+  headRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  name: { ...type.heading, color: color.text },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, marginTop: space.xs },
+  metaText: { ...type.caption, color: color.textSecondary, flexShrink: 1 },
+  rating: { flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 26, paddingHorizontal: space.sm, borderRadius: radii.pill, backgroundColor: color.goldSoft, borderWidth: 1, borderColor: color.border },
+  ratingText: { ...type.label, color: color.goldText },
+  ratingCount: { ...type.caption, color: color.textMuted },
 
-  rec: { width: 150, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(229,231,235,0.7)', backgroundColor: '#fff', ...shadow('md') },
+  rec: { width: 164, borderRadius: radii.lg, overflow: 'hidden', borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, ...elevation.card },
   recRating: {
-    position: 'absolute', bottom: 8, left: 8, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.8)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    position: 'absolute', bottom: space.sm, left: space.sm, flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 24, paddingHorizontal: space.sm,
+    borderRadius: radii.pill, backgroundColor: ON_PHOTO,
   },
-  recRatingText: { fontSize: 10, lineHeight: 15, color: '#fff', ...poppins(500) },
-  recName: { fontSize: 14, lineHeight: 20, letterSpacing: -0.35, color: tw.gray900, ...poppins(600) },
-  recTag: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, color: '#0a4d2b', ...poppins(700) },
+  recRatingText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.textInverse },
+  recBody: { paddingHorizontal: space.md, paddingVertical: space.sm + 2, minHeight: 64 },
+  recName: { ...type.bodyStrong, color: color.text },
+  recTagRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: space.xxs },
+  recTag: { ...type.caption, color: color.goldText },
 });

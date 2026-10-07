@@ -5,11 +5,11 @@ import { ArrowLeft } from 'lucide-react-native';
 import api, { API_ENDPOINTS } from '../../../api/food';
 import HtmlContent from '../../../components/HtmlContent';
 import { Spinner } from '../../../components/Loader';
-import { Press } from '../../../components/ui';
+import { Card, IconButton } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
 import { navigateTo, useLocation } from '../../../lib/webRouter';
 import useAppBackNavigation from '../../hooks/useAppBackNavigation';
-import { F } from '../shell';
-import { poppins, shadow, tw } from '../../../theme';
+import { color, space, type } from '../../../theme';
 
 /*
  * Shared body of pages/user/profile/{Refund,Shipping,Cancellation}.jsx: they differ
@@ -49,8 +49,8 @@ export default function PolicyPage({ endpointKey, defaultTitle, EmptyIcon, honou
 
   if (loading) {
     return (
-      <View style={styles.loading}>
-        <Spinner size={40} color={F.green} />
+      <View style={styles.loading} accessibilityRole="progressbar" accessibilityLabel="Loading">
+        <Spinner size={40} color={color.primary} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -59,31 +59,31 @@ export default function PolicyPage({ endpointKey, defaultTitle, EmptyIcon, honou
   const now = new Date();
   return (
     <View style={styles.page}>
-      <ScrollView stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 40 + insets.bottom }}>
+      <ScrollView stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom }}>
         <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <Press onPress={handleBack} accessibilityLabel="Back" style={styles.back}>
-              <ArrowLeft size={24} color={tw.gray900} />
-            </Press>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>{data.title || defaultTitle}</Text>
-              <Text style={styles.subtitle}>Dima Hasao Food Ecosystem</Text>
-            </View>
+          <IconButton icon={ArrowLeft} label="Back" variant="soft" onPress={handleBack} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
+              {data.title || defaultTitle}
+            </Text>
+            <Text style={styles.subtitle}>Dima Hasao Food Ecosystem</Text>
           </View>
         </View>
         <View style={styles.body}>
-          <View style={[styles.card, shadow('sm')]}>
+          <Card style={{ padding: space.xl }}>
             {data.content ? (
-              <HtmlContent html={data.content} font="poppins" soraHeadings color="#4A5565" />
+              <HtmlContent html={data.content} font="poppins" soraHeadings color={color.textSecondary} />
             ) : (
               <View style={styles.empty}>
-                <EmptyIcon size={64} color={tw.gray100} style={{ marginBottom: 16 }} />
+                <View style={styles.emptyIcon}>
+                  <EmptyIcon size={28} color={color.primary} />
+                </View>
                 <Text style={styles.emptyText}>No content available at the moment.</Text>
               </View>
             )}
-          </View>
+          </Card>
           <Text style={styles.footer}>
-            {`Last updated: ${now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} \n© ${now.getFullYear()} Dima Hasao Food. All Rights Reserved.`}
+            {`Last updated: ${now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n© ${now.getFullYear()} Dima Hasao Food. All Rights Reserved.`}
           </Text>
         </View>
       </ScrollView>
@@ -92,17 +92,15 @@ export default function PolicyPage({ endpointKey, defaultTitle, EmptyIcon, honou
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#fff', gap: 16 },
-  loadingText: { fontSize: 12, lineHeight: 16, color: tw.gray500, letterSpacing: 1.2, textTransform: 'uppercase', ...poppins(700) },
-  header: { backgroundColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  headerRow: { height: 64, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  back: { height: 40, width: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 20, lineHeight: 20, color: tw.gray900, letterSpacing: -0.5, ...poppins(900) },
-  subtitle: { marginTop: 4, fontSize: 10, lineHeight: 15, color: tw.gray400, letterSpacing: 1, textTransform: 'uppercase', ...poppins(700) },
-  body: { paddingHorizontal: 16, paddingVertical: 32 },
-  card: { backgroundColor: '#fff', borderRadius: 32, padding: 24, borderWidth: 1, borderColor: tw.gray50 },
-  empty: { alignItems: 'center', paddingVertical: 80 },
-  emptyText: { color: tw.gray400, fontSize: 16, lineHeight: 24, textAlign: 'center', ...poppins(500) },
-  footer: { marginTop: 40, textAlign: 'center', fontSize: 10, lineHeight: 16.25, color: tw.gray400, textTransform: 'uppercase', letterSpacing: 2, ...poppins(900) },
+  page: { flex: 1, backgroundColor: color.bg },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xxl, backgroundColor: color.bg, gap: space.lg },
+  loadingText: { ...type.small, color: color.textMuted },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.sm, backgroundColor: color.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  title: { ...type.heading, color: color.text },
+  subtitle: { ...type.caption, color: color.textMuted },
+  body: { padding: space.lg },
+  empty: { alignItems: 'center', paddingVertical: space.xxxl * 2, gap: space.lg },
+  emptyIcon: { width: 60, height: 60, borderRadius: 16, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  emptyText: { ...type.body, color: color.textMuted, textAlign: 'center' },
+  footer: { marginTop: space.xxl, textAlign: 'center', ...type.caption, color: color.textMuted },
 });

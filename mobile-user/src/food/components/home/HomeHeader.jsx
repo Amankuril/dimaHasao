@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { router, usePathname } from 'expo-router';
-import { Bell, ChevronDown, MapPin, Mic, Search, Soup, Utensils, Wallet } from 'lucide-react-native';
+import { Bell, ChevronDown, MapPin, Mic, Search, Wallet } from 'lucide-react-native';
 import Image from '../../../components/Img';
 import { Press } from '../../../components/ui';
 import { useProfile } from '../../context/ProfileContext';
@@ -10,8 +10,7 @@ import { isModuleAuthenticated } from '../../utils/auth';
 import { events } from '../../../lib/events';
 import { localStore } from '../../../lib/storage';
 import { useAnimatedValue } from '../../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../../theme';
-import { F } from '../shell';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 const bannerImages = {
   nonVeg: [
@@ -95,7 +94,13 @@ export function ProfileAvatar({ size = 36, style }) {
   const [failed, setFailed] = useState(false);
   const uri = !failed && userProfile?.profileImage ? userProfile.profileImage : null;
   return (
-    <Press scale={0.95} onPress={() => goIfSignedIn('/food/user/profile')} accessibilityLabel="Profile" style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }, style]}>
+    <Press
+      scale={0.95}
+      onPress={() => goIfSignedIn('/food/user/profile')}
+      accessibilityLabel="Profile"
+      hitSlop={size < 44 ? (44 - size) / 2 : 0}
+      style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }, style]}
+    >
       <Image source={uri ? { uri } : PROFILE_AVATAR} onError={() => setFailed(true)} style={{ width: '100%', height: '100%' }} />
     </Press>
   );
@@ -108,23 +113,24 @@ export const VegModeToggle = forwardRef(function VegModeToggle({ vegMode, onChan
     Animated.spring(x, { toValue: vegMode ? 1 : 0, stiffness: 500, damping: 30, mass: 1, useNativeDriver: true }).start();
   }, [vegMode, x]);
   const w = compact ? 40 : 44;
-  const h = compact ? 18 : 20;
-  const knob = compact ? 14 : 16;
+  const h = compact ? 22 : 24;
+  const knob = h - 6;
   return (
     <View ref={ref} collapsable={false} style={styles.veg}>
-      <Text style={[styles.vegLabel, compact ? { fontSize: 8 } : null, dark ? styles.vegLabelDark : { color: tw.gray500 }]}>VEG MODE</Text>
+      <Text style={[styles.vegLabel, { color: dark ? color.textInverse : color.textSecondary }]}>Veg mode</Text>
       <Press
         scale={1}
         onPress={() => onChange?.(!vegMode)}
         accessibilityRole="switch"
         accessibilityState={{ checked: !!vegMode }}
         accessibilityLabel="Veg mode"
-        hitSlop={10}
+        hitSlop={12}
         style={[
           styles.vegTrack,
           { width: w, height: h, borderRadius: h / 2 },
-          dark ? { borderColor: 'rgba(255,255,255,0.2)' } : { borderColor: tw.gray200 },
-          { backgroundColor: vegMode ? '#48c479' : dark ? 'rgba(106,114,130,0.6)' : tw.gray300 },
+          { borderColor: dark ? 'rgba(255,255,255,0.35)' : color.borderStrong },
+          // Veg green is the FSSAI veg colour: the switch means "veg only".
+          { backgroundColor: vegMode ? color.veg : dark ? 'rgba(255,255,255,0.18)' : color.surfaceMuted },
         ]}
       >
         <Animated.View
@@ -154,14 +160,14 @@ export function SearchPill({ onPress, placeholder, style, staticText }) {
   }, [placeholder, staticText, y, fade]);
   return (
     <Press scale={0.98} onPress={onPress} accessibilityRole="search" accessibilityLabel="Search restaurants and dishes" style={[styles.search, style]}>
-      <Search size={20} color={F.green} strokeWidth={3} style={{ marginRight: 8 }} />
+      <Search size={20} color={color.primary} strokeWidth={2.5} />
       <View style={styles.searchTextBox}>
         <Animated.Text numberOfLines={1} style={[styles.searchText, { opacity: fade, transform: [{ translateY: y }] }]}>
           {placeholder || 'Search'}
         </Animated.Text>
       </View>
       <View style={styles.searchMic}>
-        <Mic size={20} color={tw.gray400} />
+        <Mic size={18} color={color.textMuted} />
       </View>
     </Press>
   );
@@ -190,19 +196,20 @@ function FloatingDish({ uri, size, radius, border, rotate, delay = 0, duration =
         width: size,
         height: size,
         opacity: enter,
-        transform: [{ translateY: float.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }) }, { scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }, { rotate }],
+        transform: [{ translateY: float.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) }, { scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }, { rotate }],
       }}
     >
-      <Image source={{ uri }} style={[{ width: size, height: size, borderRadius: radius, borderWidth: border, borderColor: '#fff', backgroundColor: '#fff' }]} />
+      <Image source={{ uri }} style={[{ width: size, height: size, borderRadius: radius, borderWidth: border, borderColor: color.gold, backgroundColor: color.surface }]} />
     </Animated.View>
   );
 }
 
 /**
  * Port of components/user/home/HomeHeader.jsx: location row, bell / wallet /
- * profile, search + veg toggle and the "Flavour Fest" promo that fills the
- * rest of the 255px hero. The Food / Taxi tabs row is switched off on the web
- * (SHOW_VERTICAL_TABS = false), so it is not drawn here either.
+ * profile, search + veg toggle and the "Flavour Fest" promo, drawn in the
+ * heritage look (deep green, gold Cinzel title, Playfair tagline). The Food /
+ * Taxi tabs row is switched off on the web (SHOW_VERTICAL_TABS = false), so it
+ * is not drawn here either.
  */
 export default function HomeHeader({
   location,
@@ -243,7 +250,7 @@ export default function HomeHeader({
   const displayImages = [currentPool[imgIndex % currentPool.length], currentPool[(imgIndex + 1) % currentPool.length], currentPool[(imgIndex + 2) % currentPool.length]];
 
   return (
-    <View style={{ paddingBottom: 8 }}>
+    <View style={{ paddingBottom: space.lg }}>
       <View style={styles.topRow}>
         <Press
           scale={0.98}
@@ -252,53 +259,53 @@ export default function HomeHeader({
           style={styles.loc}
         >
           <View style={styles.locIcon}>
-            <MapPin size={16} color="rgba(255,255,255,0.9)" fill="rgba(255,255,255,0.2)" />
+            <MapPin size={18} color={color.gold} />
           </View>
-          <View style={{ flexShrink: 1 }}>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
             <View style={styles.row}>
               <Text style={styles.locTitle} numberOfLines={1}>{locationTitle(location)}</Text>
-              <ChevronDown size={12} color="rgba(255,255,255,0.7)" style={{ marginLeft: 4 }} />
+              <ChevronDown size={16} color={color.textOnDarkMuted} style={{ marginLeft: space.xs }} />
             </View>
             <Text style={styles.locSub} numberOfLines={1}>{locationSubtitle(location)}</Text>
           </View>
         </Press>
 
-        <View style={[styles.row, { gap: 12 }]}>
-          <Press scale={0.9} onPress={() => goIfSignedIn('/food/user/notifications')} accessibilityLabel={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`} style={styles.iconBtn} hitSlop={6}>
-            <Bell size={24} color="#fff" strokeWidth={2} />
+        <View style={[styles.row, { gap: space.xs }]}>
+          <Press scale={0.9} onPress={() => goIfSignedIn('/food/user/notifications')} accessibilityLabel={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`} style={styles.iconBtn}>
+            <Bell size={22} color={color.textInverse} strokeWidth={2} />
             {unreadCount > 0 ? (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
             ) : null}
           </Press>
-          <Press scale={0.9} onPress={() => goIfSignedIn('/food/user/wallet')} accessibilityLabel="Wallet" style={styles.iconBtn} hitSlop={6}>
-            <Wallet size={26} color="#fff" strokeWidth={2.2} />
+          <Press scale={0.9} onPress={() => goIfSignedIn('/food/user/wallet')} accessibilityLabel="Wallet" style={styles.iconBtn}>
+            <Wallet size={22} color={color.textInverse} strokeWidth={2} />
           </Press>
-          <ProfileAvatar size={36} />
+          <ProfileAvatar size={40} />
         </View>
       </View>
 
       <View style={styles.hero}>
-        <View style={[styles.row, { gap: 12 }]}>
+        <View style={[styles.row, { gap: space.md }]}>
           <SearchPill onPress={handleSearchFocus} placeholder={placeholders?.[placeholderIndex]} style={{ flex: 1 }} />
           <VegModeToggle ref={vegModeToggleRef} vegMode={vegMode} onChange={handleVegModeChange} />
         </View>
 
         {showBanner ? (
-          <View style={styles.promo}>
+          <View style={[styles.promo, hideFoodImages ? styles.promoBare : null]}>
             {!hideFoodImages ? (
               <>
-                <Text style={styles.promoTitle}>{vegMode ? 'VEGGIE DELIGHT' : 'FLAVOUR FEST'}</Text>
-                <View style={styles.promoPill}>
-                  <Utensils size={20} color="#fff200" />
-                  <Text style={styles.promoPillText}>{vegMode ? 'Pure Veg Magic!' : 'Good Food, Great Mood!'}</Text>
-                  <Soup size={24} color="#fff200" />
+                <View style={styles.promoText}>
+                  <Text style={styles.promoTitle} accessibilityRole="header" numberOfLines={1}>
+                    {vegMode ? 'VEGGIE DELIGHT' : 'FLAVOUR FEST'}
+                  </Text>
+                  <Text style={styles.promoTag} numberOfLines={1}>{vegMode ? 'Pure veg magic' : 'Good food, great mood'}</Text>
                 </View>
                 <View style={styles.dishes}>
-                  <FloatingDish uri={displayImages[0]} size={52} radius={16} border={3} rotate="-3deg" />
-                  <FloatingDish uri={displayImages[1]} size={72} radius={36} border={4} rotate="0deg" duration={6000} />
-                  <FloatingDish uri={displayImages[2]} size={52} radius={16} border={3} rotate="3deg" delay={400} duration={4000} />
+                  <FloatingDish uri={displayImages[0]} size={52} radius={radii.md} border={2} rotate="-3deg" />
+                  <FloatingDish uri={displayImages[1]} size={72} radius={36} border={2} rotate="0deg" duration={6000} />
+                  <FloatingDish uri={displayImages[2]} size={52} radius={radii.md} border={2} rotate="3deg" delay={400} duration={4000} />
                 </View>
               </>
             ) : null}
@@ -311,43 +318,37 @@ export default function HomeHeader({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
-  topRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
-  loc: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },
-  locIcon: { backgroundColor: 'rgba(255,255,255,0.1)', padding: 6, borderRadius: 12 },
-  locTitle: { flexShrink: 1, fontSize: 15, lineHeight: 20, color: '#fff', ...poppins(900) },
-  locSub: { fontSize: 10, lineHeight: 12.5, color: 'rgba(255,255,255,0.8)', marginTop: 2, ...poppins(500) },
-  iconBtn: { padding: 6, alignItems: 'center', justifyContent: 'center' },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.lg, paddingRight: space.md, paddingTop: space.md, paddingBottom: space.sm },
+  loc: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm, minWidth: 0, minHeight: 44 },
+  locIcon: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  locTitle: { ...type.subheading, color: color.textInverse, flexShrink: 1 },
+  locSub: { ...type.caption, color: color.textOnDarkMuted },
+  iconBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   badge: {
-    position: 'absolute', top: -4, right: -4, minWidth: 15, height: 15, borderRadius: 8, backgroundColor: tw.green400, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
+    position: 'absolute', top: 4, right: 2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: color.goldBright,
+    borderWidth: 1.5, borderColor: color.primaryDeep, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
   },
-  badgeText: { fontSize: 8, lineHeight: 10, color: '#fff', ...poppins(600) },
-  avatar: { borderWidth: 1.5, borderColor: '#fff', overflow: 'hidden', backgroundColor: '#FFF5E6' },
+  badgeText: { ...type.caption, fontSize: 12, lineHeight: 14, fontFamily: 'Poppins_700Bold', color: color.onGold },
+  avatar: { borderWidth: 2, borderColor: color.gold, overflow: 'hidden', backgroundColor: color.goldSoft },
 
-  hero: { height: 255, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, overflow: 'hidden' },
+  hero: { paddingHorizontal: space.lg, paddingTop: space.sm },
   search: {
-    backgroundColor: '#fff', borderRadius: 16, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)', ...shadow('xl'),
+    height: 48, backgroundColor: color.surface, borderRadius: radii.md, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md + 2,
+    borderWidth: 1, borderColor: color.border, ...elevation.card,
   },
-  searchTextBox: { flex: 1, height: 20, overflow: 'hidden', justifyContent: 'center' },
-  searchText: { fontSize: 15, lineHeight: 20, color: tw.gray400, ...poppins(700) },
-  searchMic: { paddingLeft: 12, marginLeft: 4, borderLeftWidth: 1, borderLeftColor: tw.gray100 },
+  searchTextBox: { flex: 1, height: 22, overflow: 'hidden', justifyContent: 'center' },
+  searchText: { ...type.body, color: color.textMuted },
+  searchMic: { paddingLeft: space.md, borderLeftWidth: 1, borderLeftColor: color.border },
 
-  veg: { alignItems: 'center', gap: 4 },
-  vegLabel: { fontSize: 9, lineHeight: 9, letterSpacing: 0.9, ...poppins(900) },
-  vegLabelDark: { color: '#fff', textShadowColor: 'rgba(0,0,0,0.25)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 3 },
+  veg: { alignItems: 'center', gap: space.xs },
+  vegLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold' },
   vegTrack: { borderWidth: 1, justifyContent: 'center' },
-  vegKnob: { backgroundColor: '#fff', ...shadow('md') },
+  vegKnob: { backgroundColor: color.surface, ...elevation.card },
 
-  promo: { flex: 1, alignItems: 'center', justifyContent: 'space-between', paddingTop: 20, overflow: 'hidden' },
-  promoTitle: {
-    fontSize: 24, lineHeight: 24, color: '#fff200', fontStyle: 'italic', textShadowColor: '#5a0000', textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1, ...poppins(900),
-  },
-  promoPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 4, borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
-  },
-  promoPillText: { fontSize: 14, lineHeight: 20, color: '#fff', fontStyle: 'italic', paddingHorizontal: 8, ...poppins(700) },
-  dishes: { height: 72, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 12, alignSelf: 'stretch' },
+  promo: { marginTop: space.lg, alignItems: 'center', gap: space.md, paddingVertical: space.lg, paddingHorizontal: space.lg, borderRadius: radii.lg, borderWidth: 1, borderColor: 'rgba(202,168,62,0.45)', backgroundColor: 'rgba(255,255,255,0.06)' },
+  promoBare: { minHeight: 170, borderWidth: 0, backgroundColor: 'transparent' },
+  promoText: { alignItems: 'center', gap: space.xxs, alignSelf: 'stretch' },
+  promoTitle: { ...type.heroSerif, color: color.goldOnDark, textAlign: 'center' },
+  promoTag: { ...type.tagline, fontSize: 14, color: color.textOnDarkMuted, textAlign: 'center' },
+  dishes: { height: 76, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: space.md },
 });

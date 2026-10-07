@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Send } from 'lucide-react-native';
+import { AlertCircle, Send } from 'lucide-react-native';
+import { StatusBadge } from '../../components/ds';
 import { Press } from '../../components/ui';
 import { useLocation, useNavigate, useParams } from '../../lib/webRouter';
-import { shadow, tw } from '../../theme';
-import { fo } from '../account/ui';
+import { color, radii, space, type } from '../../theme';
+import { LoadingState, PageTitle, sentence, useNavPad } from '../account/ui';
 import { supportTicketService } from '../services/supportTicketService';
 import { STATUS_STYLES } from './SupportTickets';
 
@@ -15,7 +14,7 @@ const toMessages = (ticket) =>
 
 /** Port of Taxi/modules/user/pages/support/SupportTicketDetail.jsx (/taxi/user/support/ticket/:id). */
 export default function SupportTicketDetail() {
-  const insets = useSafeAreaInsets();
+  const replyPad = useNavPad(0);
   const navigate = useNavigate();
   const location = useLocation();
   const { id: ticketCode } = useParams();
@@ -63,72 +62,61 @@ export default function SupportTicketDetail() {
     }
   };
 
-  const tone = STATUS_STYLES[ticket?.status] || STATUS_STYLES.pending;
+  const st = STATUS_STYLES[ticket?.status] || STATUS_STYLES.pending;
   const canSend = !!reply.trim() && !sending;
 
   return (
-    <LinearGradient colors={['#F8FAFC', '#F3F4F6']} style={{ flex: 1 }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-        <View style={[styles.header, { paddingTop: 40 + insets.top }]}>
-          <Press scale={0.95} onPress={() => navigate(-1)} accessibilityLabel="Go back" style={styles.back} hitSlop={6}>
-            <ArrowLeft size={18} color={tw.slate900} strokeWidth={2.5} />
-          </Press>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.kicker}>{String(ticket?.supportType || 'support').toUpperCase()}</Text>
-            <Text style={styles.title} numberOfLines={1} accessibilityRole="header">{ticket?.title || 'Support Ticket'}</Text>
+    <KeyboardAvoidingView style={styles.flex} behavior="padding">
+      <PageTitle
+        title={ticket?.title || 'Support ticket'}
+        titleLines={2}
+        subtitle={sentence(ticket?.supportType || 'support')}
+        onBack={() => navigate(-1)}
+        right={<StatusBadge label={STATUS_STYLES[ticket?.status] ? st.label : sentence(ticket?.status || 'pending')} tone={st.tone} style={{ alignSelf: 'center' }} />}
+      />
+
+      <ScrollView ref={scroller} onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.thread}>
+        {loading ? <LoadingState label="Loading ticket" style={{ paddingVertical: space.xxl }} /> : null}
+        {error ? (
+          <View style={styles.error} accessibilityRole="alert">
+            <AlertCircle size={18} color={color.danger} />
+            <Text style={[type.small, { color: color.danger, flex: 1 }]}>{error}</Text>
           </View>
-          <Text style={[styles.status, { backgroundColor: tone.bg, color: tone.fg, borderColor: tone.border }]}>{ticket?.status || 'pending'}</Text>
-        </View>
-
-        <ScrollView ref={scroller} onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 16, gap: 12 }}>
-          {loading ? (
-            <View style={{ paddingVertical: 40, alignItems: 'center' }} accessibilityRole="progressbar" accessibilityLabel="Loading ticket">
-              <ActivityIndicator size="small" color={tw.slate400} />
-            </View>
-          ) : null}
-          {error ? (
-            <View style={styles.error}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
-          {messages.map((m, i) => {
-            const mine = m.senderRole === 'user';
-            return (
-              <View key={m.id || i} style={{ flexDirection: 'row', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
-                <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
-                  <Text style={[styles.message, mine ? { color: '#fff' } : null]}>{m.message}</Text>
-                  <Text style={[styles.time, mine ? { color: 'rgba(255,255,255,0.5)', textAlign: 'right' } : null]}>{new Date(m.createdAt).toLocaleString('en-IN')}</Text>
-                </View>
+        ) : null}
+        {messages.map((m, i) => {
+          const mine = m.senderRole === 'user';
+          return (
+            <View key={m.id || i} style={[styles.msgRow, { justifyContent: mine ? 'flex-end' : 'flex-start' }]}>
+              <View style={[styles.bubble, mine ? styles.mine : styles.theirs]} accessible accessibilityLabel={`${mine ? 'You' : m.senderName || 'Support'}: ${m.message}`}>
+                {!mine ? <Text style={[type.caption, { color: color.primary }]}>{m.senderName || 'Support'}</Text> : null}
+                <Text style={[type.body, { color: mine ? color.onPrimary : color.text }]}>{m.message}</Text>
+                <Text style={[type.caption, { color: mine ? color.textOnDarkMuted : color.textMuted, textAlign: mine ? 'right' : 'left' }]}>{new Date(m.createdAt).toLocaleString('en-IN')}</Text>
               </View>
-            );
-          })}
-        </ScrollView>
+            </View>
+          );
+        })}
+      </ScrollView>
 
-        <View style={[styles.replyBar, { paddingBottom: 12 + insets.bottom }]}>
-          <TextInput value={reply} onChangeText={setReply} placeholder="Type your reply..." placeholderTextColor={tw.slate300} multiline accessibilityLabel="Reply" style={styles.input} />
-          <Press scale={0.9} disabled={!canSend} onPress={handleSend} accessibilityLabel="Send reply" accessibilityState={{ disabled: !canSend, busy: sending }} style={[styles.send, reply.trim() ? null : { backgroundColor: tw.slate200 }]}>
-            {sending ? <ActivityIndicator size="small" color="#fff" /> : <Send size={16} color={reply.trim() ? '#fff' : tw.slate400} strokeWidth={2.5} />}
-          </Press>
-        </View>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+      <View style={[styles.replyBar, { paddingBottom: space.md + replyPad }]}>
+        <TextInput value={reply} onChangeText={setReply} placeholder="Type your reply..." placeholderTextColor={color.textDisabled} multiline numberOfLines={1} accessibilityLabel="Reply" style={styles.input} />
+        <Press scale={0.9} disabled={!canSend} onPress={handleSend} accessibilityLabel="Send reply" accessibilityState={{ disabled: !canSend, busy: sending }} style={[styles.send, reply.trim() ? null : styles.sendOff]}>
+          {sending ? <ActivityIndicator size="small" color={color.onPrimary} /> : <Send size={20} color={reply.trim() ? color.onPrimary : color.textMuted} />}
+        </Press>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 20, paddingBottom: 16, backgroundColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.8)', ...shadow('0 4px 20px rgba(15,23,42,0.05)') },
-  back: { width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', marginTop: 2, ...shadow('sm') },
-  kicker: { fontSize: 9, lineHeight: 14, letterSpacing: 2.3, color: tw.slate400, ...fo(900) },
-  title: { fontSize: 16, lineHeight: 20, letterSpacing: -0.4, color: tw.slate900, ...fo(900) },
-  status: { fontSize: 9, lineHeight: 14, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1, overflow: 'hidden', marginTop: 4, ...fo(900) },
-  error: { borderRadius: 12, borderWidth: 1, borderColor: tw.red100, backgroundColor: tw.red50, paddingHorizontal: 16, paddingVertical: 12 },
-  errorText: { fontSize: 12, lineHeight: 16, color: tw.red600, ...fo(700) },
-  bubble: { maxWidth: '78%', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  mine: { backgroundColor: tw.slate900, borderBottomRightRadius: 4 },
-  theirs: { backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', borderBottomLeftRadius: 4, ...shadow('0 2px 8px rgba(15,23,42,0.06)') },
-  message: { fontSize: 13, lineHeight: 21, color: tw.slate800, ...fo(700) },
-  time: { fontSize: 9, lineHeight: 14, color: tw.slate400, marginTop: 4, ...fo(700) },
-  replyBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, backgroundColor: 'rgba(255,255,255,0.97)', borderTopWidth: 1, borderTopColor: tw.slate100, paddingHorizontal: 16, paddingTop: 12 },
-  input: { flex: 1, maxHeight: 120, backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate100, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: tw.slate900, ...fo(700) },
-  send: { width: 44, height: 44, borderRadius: 14, backgroundColor: tw.slate900, alignItems: 'center', justifyContent: 'center' },
+  flex: { flex: 1, backgroundColor: color.bg },
+  thread: { paddingHorizontal: space.lg, paddingVertical: space.md, gap: space.md },
+  error: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderRadius: radii.md, backgroundColor: color.dangerSoft, padding: space.md },
+  msgRow: { flexDirection: 'row' },
+  bubble: { maxWidth: '80%', borderRadius: radii.lg, paddingHorizontal: space.lg, paddingVertical: space.md, gap: space.xxs },
+  mine: { backgroundColor: color.primary, borderBottomRightRadius: space.xs },
+  theirs: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderBottomLeftRadius: space.xs },
+  replyBar: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm, backgroundColor: color.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.md },
+  input: { flex: 1, minHeight: 48, maxHeight: 120, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, paddingHorizontal: space.md, paddingVertical: space.md, ...type.body, color: color.text, outlineStyle: 'none' },
+  send: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
+  sendOff: { backgroundColor: color.surfaceMuted },
 });

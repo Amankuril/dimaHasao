@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2, ChevronRight, MessageSquare, Receipt, Share2, Star } from 'lucide-react-native';
+import { CheckCircle2, ChevronRight, Clock3, Receipt, Share2, Star } from 'lucide-react-native';
 import { Press } from '../../components/ui';
-import { shadow, tw } from '../../theme';
-import { fo } from '../account/ui';
+import { Button, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import { useRideComplete } from '../hooks/useRideComplete';
 import { clearCurrentRide } from '../services/currentRideService';
 import { toSrc } from '../components/live/parts';
 import { fallbackCar } from '../components/home/homeShared';
 
-const EMERALD = '#00BC7D';
-const ORANGE = '#FF6900';
+/** Pickup = brand green, drop = red, everywhere in the ride flow. */
+const PICKUP = color.primary;
+const DROP = color.danger;
 
 function Photo({ src, style, resizeMode = 'cover', onError }) {
   const [failed, setFailed] = useState(false);
@@ -43,14 +43,17 @@ export default function RideComplete() {
   const submitLabel = isSubmitting ? 'Saving your feedback...' : isSubmitted ? 'Feedback already saved' : !isRideFinalized ? 'Waiting for driver to finalize trip' : 'Submit rating';
 
   return (
-    <LinearGradient colors={['#f8fafc', '#eef2f7']} style={{ flex: 1 }}>
-      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 40 + insets.top, paddingBottom: 32 + insets.bottom, gap: 16 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <View style={styles.doneIcon}>
-            <CheckCircle2 size={24} color="#fff" />
+    <View style={styles.screen}>
+      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingTop: space.xl + insets.top, paddingBottom: space.xxxl + insets.bottom }]}>
+        <View style={styles.hero}>
+          <View style={[styles.doneIcon, !isRideFinalized && { backgroundColor: color.warningSoft }]}>
+            {isRideFinalized ? <CheckCircle2 size={26} color={color.onPrimary} /> : <Clock3 size={26} color={color.warning} />}
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.kicker}>{isRideFinalized ? (parcel ? 'DELIVERY COMPLETED' : 'RIDE COMPLETED') : 'REACHED DESTINATION'}</Text>
+          <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+            <StatusBadge
+              label={isRideFinalized ? (parcel ? 'Delivery completed' : 'Ride completed') : 'Reached destination'}
+              tone={isRideFinalized ? 'success' : 'warning'}
+            />
             <Text style={styles.title} accessibilityRole="header">
               {isRideFinalized ? (parcel ? 'Package delivered' : 'You have arrived') : parcel ? 'Package reached destination' : 'Driver reached destination'}
             </Text>
@@ -58,43 +61,42 @@ export default function RideComplete() {
         </View>
 
         {!isRideFinalized ? (
-          <View style={styles.finalizing}>
-            <Text style={styles.finalizingKicker}>FINALIZING TRIP</Text>
+          <View style={styles.finalizing} accessibilityLiveRegion="polite">
+            <Text style={styles.finalizingKicker}>Finalizing trip</Text>
             <Text style={styles.finalizingBody}>The driver has marked destination arrival. This page will unlock rating and payment as soon as the trip is finalized.</Text>
           </View>
         ) : null}
 
         <View style={styles.receipt}>
           <View style={styles.receiptHead}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+            <View style={styles.receiptHeadLeft}>
               <View style={styles.receiptIcon}>
-                <Receipt size={14} color="#FFB86A" />
+                <Receipt size={18} color={color.goldOnDark} />
               </View>
-              <View>
-                <Text style={styles.receiptTitle}>Trip Receipt</Text>
-                <Text style={styles.receiptDate}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.receiptTitle}>Trip receipt</Text>
+                <Text style={styles.receiptDate} numberOfLines={1}>
                   {rideDate} · {rideTime}
                 </Text>
               </View>
             </View>
-            <Press scale={0.96} onPress={handleShare} accessibilityLabel="Share receipt" style={styles.shareBtn} hitSlop={8}>
-              <Share2 size={12} color="#fff" />
+            <Press scale={0.96} onPress={handleShare} accessibilityLabel="Share receipt" style={styles.shareBtn} hitSlop={4}>
+              <Share2 size={16} color={color.textInverse} />
               <Text style={styles.shareText}>Share</Text>
             </Press>
           </View>
 
-          <View style={{ padding: 16, gap: 16 }}>
+          <View style={{ padding: space.lg, gap: space.md }}>
             <View style={styles.driverRow}>
               <View style={styles.driverPhoto}>
                 {driverImage ? <Photo src={driverImage} style={{ width: '100%', height: '100%' }} /> : <Text style={styles.initials}>{getInitials(driver.name)}</Text>}
               </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <Text style={styles.driverName} numberOfLines={1}>{driver.name}</Text>
-                <Text style={styles.driverSub} numberOfLines={1}>
-                  {driver.vehicleNumber || driver.plate || 'Assigned'} · {vehicleLabel}
-                </Text>
+                <Text style={styles.driverPlate} numberOfLines={1}>{driver.vehicleNumber || driver.plate || 'Assigned'}</Text>
+                <Text style={styles.driverSub} numberOfLines={1}>{vehicleLabel}</Text>
                 <View style={styles.ratingPill}>
-                  <Star size={10} color="#F0B100" fill="#F0B100" />
+                  <Star size={12} color={color.gold} fill={color.gold} />
                   <Text style={styles.ratingText}>{driver.rating || '4.9'}</Text>
                 </View>
               </View>
@@ -103,20 +105,20 @@ export default function RideComplete() {
               </View>
             </View>
 
-            <View style={[styles.box, { flexDirection: 'row', gap: 12 }]}>
-              <View style={{ alignItems: 'center', paddingTop: 4 }}>
-                <View style={[styles.dot, { backgroundColor: EMERALD }]} />
+            <View style={[styles.box, { flexDirection: 'row', gap: space.md }]}>
+              <View style={{ alignItems: 'center', paddingTop: space.xs }}>
+                <View style={styles.pickupDot} />
                 <View style={styles.dash} />
-                <View style={[styles.dot, { backgroundColor: ORANGE }]} />
+                <View style={styles.dropSquare} />
               </View>
-              <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
+              <View style={{ flex: 1, minWidth: 0, gap: space.md }}>
                 <View>
-                  <Text style={styles.place} numberOfLines={1}>{pickup}</Text>
-                  <Text style={styles.placeLabel}>PICKUP</Text>
+                  <Text style={[styles.placeLabel, { color: PICKUP }]}>Pickup</Text>
+                  <Text style={styles.place} numberOfLines={2}>{pickup}</Text>
                 </View>
                 <View>
-                  <Text style={styles.place} numberOfLines={1}>{drop}</Text>
-                  <Text style={styles.placeLabel}>DROP</Text>
+                  <Text style={[styles.placeLabel, { color: DROP }]}>Drop</Text>
+                  <Text style={styles.place} numberOfLines={2}>{drop}</Text>
                 </View>
               </View>
             </View>
@@ -124,15 +126,15 @@ export default function RideComplete() {
             <View style={styles.box}>
               <View style={styles.billRow}>
                 <Text style={styles.billLabel}>Base fare</Text>
-                <Text style={styles.billValue}>Rs {fare.toFixed(2)}</Text>
+                <Text style={styles.billValue}>₹{fare.toFixed(2)}</Text>
               </View>
-              <View style={[styles.billRow, { marginTop: 8 }]}>
+              <View style={[styles.billRow, { marginTop: space.sm }]}>
                 <Text style={styles.billLabel}>Tip</Text>
-                <Text style={styles.billValue}>Rs {Number(selectedTip || 0).toFixed(2)}</Text>
+                <Text style={styles.billValue}>₹{Number(selectedTip || 0).toFixed(2)}</Text>
               </View>
               <View style={[styles.billRow, styles.billTotalRow]}>
                 <Text style={styles.totalLabel}>Total</Text>
-                <Text style={styles.totalValue}>Rs {totalBill.toFixed(2)}</Text>
+                <Text style={styles.totalValue}>₹{totalBill.toFixed(2)}</Text>
               </View>
             </View>
           </View>
@@ -141,16 +143,16 @@ export default function RideComplete() {
         <View style={styles.card}>
           {isSubmitted ? (
             <>
-              <Text style={[styles.cardKicker, { color: EMERALD }]}>FEEDBACK SUBMITTED</Text>
+              <StatusBadge label="Feedback submitted" tone="success" style={{ alignSelf: 'center' }} />
               <Text style={styles.cardNote}>
-                Rating: {rating || 0}/5 {selectedTip > 0 ? `| Tip added: Rs ${Number(selectedTip || 0).toFixed(2)}` : '| No tip added'}
+                Rating: {rating || 0}/5 {selectedTip > 0 ? `| Tip added: ₹${Number(selectedTip || 0).toFixed(2)}` : '| No tip added'}
               </Text>
             </>
           ) : (
             <>
-              <Text style={styles.cardKicker}>{tipsEnabled ? 'TIP YOUR DRIVER' : 'DRIVER TIPS DISABLED'}</Text>
-              {tipsEnabled && minimumTipAmount > 0 ? <Text style={styles.cardNote}>Minimum tip amount: Rs {minimumTipAmount}</Text> : null}
-              <View style={styles.tips}>
+              <Text style={styles.cardTitle}>{tipsEnabled ? 'Tip your driver' : 'Driver tips disabled'}</Text>
+              {tipsEnabled && minimumTipAmount > 0 ? <Text style={styles.cardNote}>Minimum tip amount: ₹{minimumTipAmount}</Text> : null}
+              <View style={styles.tips} accessibilityRole="radiogroup">
                 {availableTipOptions.map((amount) => {
                   const on = selectedTip === amount;
                   const off = !tipsEnabled && amount > 0;
@@ -166,9 +168,9 @@ export default function RideComplete() {
                         setSelectedTip(amount);
                         setError('');
                       }}
-                      style={[styles.tip, on ? styles.tipOn : null, off ? { opacity: 0.5 } : null]}
+                      style={[styles.tip, on ? styles.tipOn : null, off ? { opacity: 0.45 } : null]}
                     >
-                      <Text style={[styles.tipText, on ? { color: '#fff' } : null]}>{amount === 0 ? 'No tip' : `Rs ${amount}`}</Text>
+                      <Text style={[styles.tipText, on ? { color: color.onPrimary } : null]}>{amount === 0 ? 'No tip' : `₹${amount}`}</Text>
                     </Press>
                   );
                 })}
@@ -179,7 +181,7 @@ export default function RideComplete() {
 
         <View style={[styles.card, { alignItems: 'center' }]}>
           <Text style={styles.question}>How was your trip with {driver.name?.split(' ')[0] || 'your driver'}?</Text>
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
+          <View style={styles.stars} accessibilityRole="radiogroup">
             {[1, 2, 3, 4, 5].map((value) => {
               const on = rating >= value;
               return (
@@ -196,17 +198,14 @@ export default function RideComplete() {
                   }}
                   style={[styles.star, on ? styles.starOn : null]}
                 >
-                  <Star size={19} color={on ? '#fff' : tw.slate300} fill={on ? '#fff' : 'none'} />
+                  <Star size={22} color={on ? color.onGold : color.textDisabled} fill={on ? color.onGold : 'none'} />
                 </Press>
               );
             })}
           </View>
 
           <View style={styles.noteBox}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <MessageSquare size={14} color={tw.slate400} />
-              <Text style={styles.noteLabel}>ADD A NOTE</Text>
-            </View>
+            <Text style={styles.noteLabel}>Add a note</Text>
             <TextInput
               value={comment}
               onChangeText={setComment}
@@ -214,36 +213,39 @@ export default function RideComplete() {
               maxLength={500}
               editable={!isSubmitted}
               placeholder="Tell us about the trip"
-              placeholderTextColor={tw.slate300}
+              placeholderTextColor={color.textDisabled}
               textAlignVertical="top"
               accessibilityLabel="Note about the trip"
               style={styles.noteInput}
             />
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text> : null}
 
-          <Press scale={0.98} disabled={submitDisabled} onPress={submitFeedback} accessibilityLabel={submitLabel} accessibilityState={{ disabled: submitDisabled, busy: isSubmitting }} style={[styles.submit, submitDisabled ? { opacity: 0.6 } : null]}>
-            <Text style={styles.submitText}>{submitLabel}</Text>
-            <ChevronRight size={16} color="#fff" />
-          </Press>
-          <Press
-            scale={0.97}
-            hitSlop={10}
+          <Button
+            title={submitLabel}
+            iconRight={ChevronRight}
+            size="lg"
+            loading={isSubmitting}
+            disabled={submitDisabled}
+            onPress={submitFeedback}
+            style={{ marginTop: space.lg }}
+          />
+          <Button
+            title="Skip and go home"
+            variant="ghost"
             accessibilityLabel="Skip and go home"
             onPress={() => {
               clearCurrentRide();
               navigate(routeHome, { replace: true });
             }}
-            style={{ marginTop: 12 }}
-          >
-            <Text style={styles.skip}>Skip and go home</Text>
-          </Press>
+            style={{ marginTop: space.xs }}
+          />
         </View>
       </ScrollView>
 
       {shareToast ? (
-        <View style={[styles.toast, { top: 16 + insets.top }]} accessibilityLiveRegion="polite">
+        <View style={[styles.toast, { top: space.lg + insets.top }]} accessibilityLiveRegion="polite">
           <Text style={styles.toastText}>Receipt copied</Text>
         </View>
       ) : null}
@@ -251,78 +253,77 @@ export default function RideComplete() {
       <Modal visible={!!showSubmittedOverlay} transparent statusBarTranslucent animationType="fade" onRequestClose={() => navigate(routeHome, { replace: true })}>
         <View style={styles.overlay}>
           <View style={styles.overlayIcon}>
-            <CheckCircle2 size={30} color="#fff" />
+            <CheckCircle2 size={32} color={color.onPrimary} />
           </View>
-          <Text style={styles.overlayTitle}>Thanks for rating your driver</Text>
+          <Text style={styles.overlayTitle} accessibilityRole="header">Thanks for rating your driver</Text>
           <Text style={styles.overlayBody}>Your feedback has been saved successfully.</Text>
-          <Press scale={0.97} onPress={() => navigate(routeHome, { replace: true })} accessibilityLabel="Continue" style={styles.overlayBtn}>
-            <Text style={styles.overlayBtnText}>Continue</Text>
-          </Press>
+          <Button title="Continue" fullWidth={false} onPress={() => navigate(routeHome, { replace: true })} style={{ marginTop: space.sm, minWidth: 200 }} />
         </View>
       </Modal>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  doneIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: EMERALD, alignItems: 'center', justifyContent: 'center', ...shadow('0 8px 20px rgba(16,185,129,0.28)') },
-  kicker: { fontSize: 10, lineHeight: 15, letterSpacing: 2.2, color: tw.slate400, ...fo(900) },
-  title: { fontSize: 22, lineHeight: 30, color: tw.slate900, ...fo(900) },
-  finalizing: { borderRadius: 18, borderWidth: 1, borderColor: '#FEF3C6', backgroundColor: 'rgba(255,251,235,0.9)', paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center' },
-  finalizingKicker: { fontSize: 10, lineHeight: 15, letterSpacing: 1.8, color: '#BB4D00', ...fo(900) },
-  finalizingBody: { marginTop: 4, fontSize: 12, lineHeight: 17, color: '#7B3306', textAlign: 'center', ...fo(700) },
+  screen: { flex: 1, backgroundColor: color.bg },
+  content: { paddingHorizontal: space.lg, gap: space.lg },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  doneIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: color.success, alignItems: 'center', justifyContent: 'center' },
+  title: { ...type.heading, fontSize: 22, lineHeight: 28, color: color.text },
+  finalizing: { borderRadius: radii.lg, backgroundColor: color.warningSoft, paddingHorizontal: space.lg, paddingVertical: space.md },
+  finalizingKicker: { ...type.label, color: color.warning },
+  finalizingBody: { ...type.small, marginTop: space.xs, color: color.text },
 
-  receipt: { borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.95)', overflow: 'hidden', ...shadow('0 12px 30px rgba(15,23,42,0.08)') },
-  receiptHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: tw.slate900, paddingHorizontal: 16, paddingVertical: 12 },
-  receiptIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  receiptTitle: { fontSize: 13, lineHeight: 18, color: '#fff', ...fo(900) },
-  receiptDate: { fontSize: 10, lineHeight: 15, color: tw.slate400, ...fo(700) },
-  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 12, paddingVertical: 6 },
-  shareText: { fontSize: 10, lineHeight: 15, color: '#fff', ...fo(900) },
-  driverRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 18, borderWidth: 1, borderColor: tw.slate100, backgroundColor: 'rgba(248,250,252,0.8)', padding: 12 },
-  driverPhoto: { width: 56, height: 56, borderRadius: 16, overflow: 'hidden', backgroundColor: tw.slate900, borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  initials: { fontSize: 18, color: '#fff', ...fo(900) },
-  driverName: { fontSize: 16, lineHeight: 22, color: tw.slate900, ...fo(900) },
-  driverSub: { fontSize: 11, lineHeight: 16, color: tw.slate500, ...fo(700) },
-  ratingPill: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, borderRadius: 999, backgroundColor: '#FEFCE8', paddingHorizontal: 8, paddingVertical: 2 },
-  ratingText: { fontSize: 10, lineHeight: 15, color: tw.slate800, ...fo(900) },
-  vehiclePhoto: { width: 64, height: 56, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff' },
-  box: { borderRadius: 18, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', padding: 12 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
-  dash: { height: 40, borderLeftWidth: 1, borderStyle: 'dashed', borderColor: tw.slate200 },
-  place: { fontSize: 13, lineHeight: 18, color: tw.slate900, ...fo(900) },
-  placeLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1.4, color: tw.slate400, ...fo(700) },
+  receipt: { borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, overflow: 'hidden', ...elevation.card },
+  receiptHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, backgroundColor: color.primaryDeep, paddingHorizontal: space.lg, paddingVertical: space.md },
+  receiptHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: space.md, flex: 1, minWidth: 0 },
+  receiptIcon: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  receiptTitle: { ...type.bodyStrong, color: color.goldOnDark },
+  receiptDate: { ...type.caption, color: color.textOnDarkMuted },
+  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, minHeight: 40, borderRadius: radii.pill, backgroundColor: 'rgba(255,255,255,0.16)', paddingHorizontal: space.md },
+  shareText: { ...type.label, color: color.textInverse },
+  driverRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radii.md, backgroundColor: color.bg, borderWidth: 1, borderColor: color.border, padding: space.md },
+  driverPhoto: { width: 56, height: 56, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.primaryDeep, alignItems: 'center', justifyContent: 'center' },
+  initials: { ...type.heading, color: color.goldOnDark },
+  driverName: { ...type.subheading, color: color.text },
+  driverPlate: { ...type.bodyStrong, color: color.text },
+  driverSub: { ...type.caption, color: color.textSecondary },
+  ratingPill: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: space.xxs, borderRadius: radii.pill, backgroundColor: color.goldSoft, paddingHorizontal: space.sm, height: 22 },
+  ratingText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
+  vehiclePhoto: { width: 64, height: 56, borderRadius: radii.md, overflow: 'hidden', borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  box: { borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, padding: space.md },
+  pickupDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: PICKUP },
+  dropSquare: { width: 12, height: 12, borderRadius: 2, backgroundColor: DROP },
+  dash: { flex: 1, minHeight: 32, borderLeftWidth: 2, borderStyle: 'dotted', borderColor: color.borderStrong, marginVertical: space.xs },
+  placeLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold' },
+  place: { ...type.small, color: color.text },
   billRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  billLabel: { fontSize: 12, lineHeight: 16, color: tw.slate500, ...fo(700) },
-  billValue: { fontSize: 13, lineHeight: 18, color: tw.slate900, ...fo(900) },
-  billTotalRow: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: tw.slate100 },
-  totalLabel: { fontSize: 15, lineHeight: 20, color: tw.slate900, ...fo(900) },
-  totalValue: { fontSize: 18, lineHeight: 26, color: tw.slate900, ...fo(900) },
+  billLabel: { ...type.small, color: color.textSecondary },
+  billValue: { ...type.bodyStrong, color: color.text },
+  billTotalRow: { marginTop: space.md, paddingTop: space.md, borderTopWidth: 1, borderTopColor: color.border },
+  totalLabel: { ...type.subheading, color: color.text },
+  totalValue: { ...type.priceLg, color: color.text },
 
-  card: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.95)', padding: 16, ...shadow('0 10px 24px rgba(15,23,42,0.06)') },
-  cardKicker: { fontSize: 10, lineHeight: 15, letterSpacing: 2.2, color: tw.slate400, textAlign: 'center', ...fo(900) },
-  cardNote: { marginTop: 8, fontSize: 12, lineHeight: 16, color: tw.slate500, textAlign: 'center', ...fo(700) },
-  tips: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
-  tip: { borderRadius: 999, borderWidth: 1, borderColor: tw.slate100, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 10 },
-  tipOn: { borderColor: ORANGE, backgroundColor: ORANGE, ...shadow('0 8px 18px rgba(249,115,22,0.24)') },
-  tipText: { fontSize: 11, lineHeight: 16, color: tw.slate600, ...fo(900) },
-  question: { fontSize: 16, lineHeight: 22, color: tw.slate900, textAlign: 'center', ...fo(900) },
-  star: { width: 44, height: 44, borderRadius: 12, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  starOn: { backgroundColor: ORANGE, ...shadow('0 10px 20px rgba(249,115,22,0.24)') },
-  noteBox: { alignSelf: 'stretch', marginTop: 16, borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, backgroundColor: 'rgba(248,250,252,0.8)', padding: 12 },
-  noteLabel: { fontSize: 11, lineHeight: 16, letterSpacing: 1.5, color: tw.slate400, ...fo(900) },
-  noteInput: { minHeight: 72, borderRadius: 12, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, fontSize: 13, color: tw.slate900, ...fo(700) },
-  error: { marginTop: 12, fontSize: 12, lineHeight: 16, color: tw.red500, textAlign: 'center', ...fo(900) },
-  submit: { alignSelf: 'stretch', marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, backgroundColor: tw.slate900, paddingVertical: 14, paddingHorizontal: 12, ...shadow('0 12px 24px rgba(15,23,42,0.18)') },
-  submitText: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: '#fff', textAlign: 'center', ...fo(900) },
-  skip: { fontSize: 12, lineHeight: 16, color: tw.slate500, ...fo(900) },
+  card: { borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, padding: space.lg, ...elevation.card },
+  cardTitle: { ...type.subheading, color: color.text, textAlign: 'center' },
+  cardNote: { ...type.small, marginTop: space.sm, color: color.textSecondary, textAlign: 'center' },
+  tips: { marginTop: space.md, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.sm },
+  tip: { minHeight: 44, minWidth: 72, justifyContent: 'center', alignItems: 'center', borderRadius: radii.pill, borderWidth: 1.5, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.lg },
+  tipOn: { borderColor: color.primary, backgroundColor: color.primary },
+  tipText: { ...type.label, color: color.text },
+  question: { ...type.subheading, color: color.text, textAlign: 'center' },
+  stars: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
+  star: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  starOn: { backgroundColor: color.goldBright },
+  noteBox: { alignSelf: 'stretch', marginTop: space.lg, gap: space.xs },
+  noteLabel: { ...type.label, color: color.text },
+  noteInput: { minHeight: 88, borderRadius: radii.md, borderWidth: 1.5, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.md, paddingVertical: space.sm, ...type.body, color: color.text, outlineStyle: 'none' },
+  error: { ...type.small, marginTop: space.md, color: color.danger, textAlign: 'center' },
 
-  toast: { position: 'absolute', alignSelf: 'center', borderRadius: 14, backgroundColor: tw.slate900, paddingHorizontal: 20, paddingVertical: 12, ...shadow('xl') },
-  toastText: { fontSize: 12, lineHeight: 16, color: '#fff', ...fo(900) },
-  overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: 'rgba(255,255,255,0.97)', paddingHorizontal: 24 },
-  overlayIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: EMERALD, alignItems: 'center', justifyContent: 'center', ...shadow('0 10px 25px rgba(16,185,129,0.28)') },
-  overlayTitle: { fontSize: 20, lineHeight: 28, color: tw.slate900, textAlign: 'center', ...fo(900) },
-  overlayBody: { fontSize: 13, lineHeight: 18, color: tw.slate500, textAlign: 'center', ...fo(700) },
-  overlayBtn: { marginTop: 8, borderRadius: 16, backgroundColor: tw.slate900, paddingHorizontal: 24, paddingVertical: 12, ...shadow('0 12px 24px rgba(15,23,42,0.18)') },
-  overlayBtnText: { fontSize: 13, lineHeight: 18, color: '#fff', ...fo(900) },
+  toast: { position: 'absolute', alignSelf: 'center', borderRadius: radii.pill, backgroundColor: color.primaryDeep, paddingHorizontal: space.xl, paddingVertical: space.md, ...elevation.float },
+  toastText: { ...type.label, color: color.textInverse },
+  overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.lg, backgroundColor: color.bg, paddingHorizontal: space.xxl },
+  overlayIcon: { width: 68, height: 68, borderRadius: 34, backgroundColor: color.success, alignItems: 'center', justifyContent: 'center' },
+  overlayTitle: { ...type.heading, color: color.text, textAlign: 'center' },
+  overlayBody: { ...type.small, color: color.textSecondary, textAlign: 'center' },
 });

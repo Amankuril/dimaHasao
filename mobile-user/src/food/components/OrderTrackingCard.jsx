@@ -2,10 +2,10 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { ChevronRight, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
+import { IconButton } from '../../components/ds';
 import { useOrders } from '../context/OrdersContext';
 import { useProfile } from '../context/ProfileContext';
 import { orderAPI } from '../../api/food';
@@ -14,9 +14,9 @@ import { navigateTo } from '../../lib/webRouter';
 import { events } from '../../lib/events';
 import { localStore } from '../../lib/storage';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, tone as tones, type } from '../../theme';
 
-const GREEN = '#0a4d2b';
+const GREEN = color.primary;
 
 function loop(value, { to = 1, duration, delay = 0, easing = Easing.inOut(Easing.ease), yoyo = false }) {
   const seq = yoyo
@@ -41,7 +41,7 @@ const Steam = ({ delay, h }) => {
         width: 6,
         height: 12,
         borderRadius: 3,
-        backgroundColor: 'rgba(251,146,60,0.5)',
+        backgroundColor: color.goldBright,
         opacity: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0.8, 0] }),
         transform: [{ translateY: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -h * 0.66, -h] }) }],
       }}
@@ -148,15 +148,17 @@ function ordersFingerprint(orders) {
   return orders.map((o) => `${getOrderKey(o)}:${getOrderStatus(o)}`).join('|');
 }
 
-function Badge({ colors, border, children }) {
-  return (
-    <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.badge, { borderColor: border }]}>
-      {children}
-    </LinearGradient>
-  );
+/** Status tile on the right of the strip: a word plus colour, never colour alone. */
+function Badge({ tone = 'primary', solid, children }) {
+  const t = tones[tone] || tones.primary;
+  return <View style={[styles.badge, { backgroundColor: solid ? color.primary : t.bg }]}>{children(solid ? color.onPrimary : t.fg)}</View>;
 }
-const Small = ({ children, color }) => <Text style={[styles.badgeSmall, color ? { color } : null]}>{children}</Text>;
-const Big = ({ children }) => <Text style={styles.badgeBig}>{children}</Text>;
+const Small = ({ children, fg }) => <Text style={[type.caption, { color: fg }]}>{children}</Text>;
+const Big = ({ children, fg }) => (
+  <Text style={[type.bodyStrong, { color: fg }]} numberOfLines={1}>
+    {children}
+  </Text>
+);
 
 function TrackingCardContent({ activeOrder, currentOrderKey, hasBottomNav, timeRemaining, statusText, restaurantName, orderStatus, orderType, isPreparingExpired, setDismissedKey }) {
   const insets = useSafeAreaInsets();
@@ -174,36 +176,48 @@ function TrackingCardContent({ activeOrder, currentOrderKey, hasBottomNav, timeR
   let right;
   if (!isAccepted) {
     right = (
-      <Badge colors={['#F59E0B', '#F97316']} border="#FBBF24">
-        <Small color="#FFF7ED">ORDER</Small>
-        <Big>PLACED</Big>
+      <Badge tone="info">
+        {(fg) => (
+          <>
+            <Small fg={fg}>Order</Small>
+            <Big fg={fg}>Placed</Big>
+          </>
+        )}
       </Badge>
     );
   } else if (isTakeawayOrDining && isReadyOrder) {
-    right = (
-      <Badge colors={['#16A34A', '#10B981']} border="#4ADE80">
-        <Text style={[styles.badgeBig, { fontSize: 13, letterSpacing: 1.3 }]}>PICK NOW</Text>
-      </Badge>
-    );
+    right = <Badge tone="success">{(fg) => <Big fg={fg}>Pick now</Big>}</Badge>;
   } else if (isPreparingExpired) {
     right = (
-      <Badge colors={[GREEN, '#D94E0A']} border={tw.orange200}>
-        <Small color="#FFF7ED">ORDER</Small>
-        <Big>Preparing</Big>
+      <Badge tone="warning">
+        {(fg) => (
+          <>
+            <Small fg={fg}>Order</Small>
+            <Big fg={fg}>Preparing</Big>
+          </>
+        )}
       </Badge>
     );
   } else if (rawStatus === 'reached_drop' || orderStatus === 'reached_drop' || rawPhase === 'at_drop') {
     right = (
-      <Badge colors={['#16A34A', '#10B981']} border="#4ADE80">
-        <Small color="#F0FDF4">RIDER</Small>
-        <Big>Arrived!</Big>
+      <Badge tone="success">
+        {(fg) => (
+          <>
+            <Small fg={fg}>Rider</Small>
+            <Big fg={fg}>Arrived!</Big>
+          </>
+        )}
       </Badge>
     );
   } else {
     right = (
-      <Badge colors={[GREEN, '#D94E0A']} border={tw.orange200}>
-        <Small color="#FFF7ED">{isTakeawayOrDining ? 'READY IN' : 'ARRIVING IN'}</Small>
-        <Big>{timeRemaining !== null && timeRemaining > 0 ? `${timeRemaining} min` : '--'}</Big>
+      <Badge solid>
+        {(fg) => (
+          <>
+            <Small fg={fg}>{isTakeawayOrDining ? 'Ready in' : 'Arriving in'}</Small>
+            <Big fg={fg}>{timeRemaining !== null && timeRemaining > 0 ? `${timeRemaining} min` : '--'}</Big>
+          </>
+        )}
       </Badge>
     );
   }
@@ -217,23 +231,25 @@ function TrackingCardContent({ activeOrder, currentOrderKey, hasBottomNav, timeR
         { opacity: slide, transform: [{ translateY: slide.interpolate({ inputRange: [0, 1], outputRange: [100, 0] }) }] },
       ]}
     >
-      <Press scale={1} onPress={() => navigateTo(`/food/user/orders/${activeOrder.id || activeOrder._id || activeOrder.orderId}`)} style={styles.card} accessibilityLabel={`${restaurantName}. ${statusText}`}>
-        <LinearGradient colors={['rgba(255,247,237,0.5)', 'rgba(255,255,255,0.4)', 'rgba(255,255,255,0.8)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[StyleSheet.absoluteFill, { borderRadius: 20, opacity: 0.6 }]} pointerEvents="none" />
-        <Press scale={0.9} onPress={() => setDismissedKey(currentOrderKey)} accessibilityLabel="Dismiss" style={styles.close} hitSlop={6}>
-          <X size={14} color={tw.orange400} />
-        </Press>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+      <View style={styles.card}>
+        <Press
+          scale={1}
+          onPress={() => navigateTo(`/food/user/orders/${activeOrder.id || activeOrder._id || activeOrder.orderId}`)}
+          accessibilityLabel={`${restaurantName}. ${statusText}`}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}
+        >
           <CookingAnimation />
-          <View style={{ flex: 1, minWidth: 0, paddingRight: 16 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.name} numberOfLines={1}>{restaurantName}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: 2 }}>
               <Text style={styles.status} numberOfLines={1}>{statusText}</Text>
               <ChevronRight size={14} color={GREEN} />
             </View>
           </View>
           {right}
-        </View>
-      </Press>
+        </Press>
+        <IconButton icon={X} label="Dismiss" size={32} iconSize={16} variant="soft" iconColor={color.textMuted} onPress={() => setDismissedKey(currentOrderKey)} style={styles.close} />
+      </View>
     </Animated.View>
   );
 }
@@ -469,13 +485,11 @@ const OrderTrackingCard = memo(OrderTrackingCardInner);
 export default OrderTrackingCard;
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', left: 16, right: 16, zIndex: 40 },
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: 'rgba(255,237,212,0.6)', ...shadow('0 8px 30px rgba(235,89,14,0.15)') },
-  close: { position: 'absolute', top: 8, right: 8, padding: 6, borderRadius: 999, backgroundColor: 'rgba(255,247,237,0.8)', zIndex: 20 },
-  cook: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: tw.orange50, borderWidth: 1, borderColor: tw.orange100, ...shadow('0 4px 15px rgba(235,89,14,0.15)') },
-  name: { fontSize: 16, color: tw.gray900, letterSpacing: -0.2, ...poppins(700) },
-  status: { fontSize: 12, color: tw.gray500, flexShrink: 1, ...poppins(500) },
-  badge: { borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, ...shadow('0 10px 15px -3px rgba(249,115,22,0.2)') },
-  badgeSmall: { fontSize: 10, color: tw.orange50, letterSpacing: 0.5, marginBottom: 2, ...poppins(700) },
-  badgeBig: { fontSize: 16, color: '#fff', ...poppins(800) },
+  wrap: { position: 'absolute', left: space.lg, right: space.lg, zIndex: 40 },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.md, paddingTop: space.lg, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  close: { position: 'absolute', top: -space.md, right: -space.sm, zIndex: 20, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  cook: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md, backgroundColor: color.primarySoft },
+  name: { ...type.subheading, color: color.text },
+  status: { ...type.small, color: color.textSecondary, flexShrink: 1 },
+  badge: { borderRadius: radii.md, paddingHorizontal: space.md, paddingVertical: space.sm, alignItems: 'center', justifyContent: 'center', minWidth: 84 },
 });

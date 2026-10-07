@@ -1,27 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft, CircleCheck, CircleX, Clock3, Share2, Users, Wallet } from 'lucide-react-native';
-import { Press } from '../../../components/ui';
+import { FlatList, Share, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CircleCheck, CircleX, Clock3, Share2, Users, Wallet } from 'lucide-react-native';
 import { toast } from '../../../lib/notify';
 import { navigateTo } from '../../../lib/webRouter';
 import { API_ORIGIN } from '../../../api/client';
 import { userAPI } from '../../../api/food';
 import { useCompanyName } from '../../hooks/useCompanyName';
 import { useProfile } from '../../context/ProfileContext';
-import { Card, CardContent } from '../../components/cart/ui';
-import { F } from '../../components/shell';
-import { poppins, shadow, tw } from '../../../theme';
+import { Button, Card, SectionHeader, StatusBadge } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { PageHeader } from '../../components/profile/ProfileChrome';
+import { color, radii, space, type } from '../../../theme';
 
 const statusMeta = {
-  credited: { label: 'Credited', Icon: CircleCheck, bg: tw.green100, color: tw.green700 },
-  pending: { label: 'Pending', Icon: Clock3, bg: tw.amber100, color: tw.amber700 },
-  rejected: { label: 'Rejected', Icon: CircleX, bg: tw.red100, color: tw.red700 },
+  credited: { label: 'Credited', Icon: CircleCheck, tone: 'success' },
+  pending: { label: 'Pending', Icon: Clock3, tone: 'warning' },
+  rejected: { label: 'Rejected', Icon: CircleX, tone: 'danger' },
 };
 
 const RUPEE = '₹';
 
 /** Port of pages/user/profile/ReferEarn.jsx. */
 export default function ReferEarn() {
+  const insets = useSafeAreaInsets();
   const { userProfile } = useProfile();
   const companyName = useCompanyName();
   const [loading, setLoading] = useState(true);
@@ -90,111 +92,97 @@ export default function ReferEarn() {
     { Icon: Wallet, label: 'Total', value: `${RUPEE}${stats.totalReferralEarnings}` },
   ];
 
-  return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#faf6ed' }} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Press onPress={() => navigateTo('/user/profile')} accessibilityLabel="Back" style={styles.back}>
-          <ArrowLeft size={20} color="#000" />
-        </Press>
-        <Text style={styles.h1}>Refer & Earn</Text>
+  const renderFriend = ({ item }) => {
+    const meta = statusMeta[item?.status] || statusMeta.pending;
+    const invitedDate = item?.invitedAt ? new Date(item.invitedAt) : null;
+    const dateText = invitedDate && !Number.isNaN(invitedDate.getTime()) ? invitedDate.toLocaleDateString() : '-';
+    return (
+      <View style={styles.friend}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.friendName} numberOfLines={1}>
+            {item?.name || 'Friend'}
+          </Text>
+          <Text style={styles.friendPhone}>{item?.phone || 'Phone hidden'}</Text>
+          <Text style={styles.friendDate}>Invited on {dateText}</Text>
+        </View>
+        <View style={{ alignItems: 'flex-end', gap: space.sm }}>
+          <StatusBadge icon={meta.Icon} label={meta.label} tone={meta.tone} />
+          <Text style={styles.earned}>Earned: {RUPEE}{Number(item?.earnedAmount) || 0}</Text>
+        </View>
       </View>
+    );
+  };
 
-      <Card style={[styles.card, { borderRadius: 16, marginBottom: 12 }]}>
-        <CardContent style={{ padding: 16 }}>
-          <Text style={styles.intro}>Invite friends and earn when they sign up.</Text>
-          <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>
-            <View style={styles.tile}>
-              <Text style={styles.tileLabel}>Reward per invite</Text>
-              <Text style={[styles.tileValue, { color: F.green }]}>{RUPEE}{stats.rewardAmount}</Text>
-            </View>
-            <View style={styles.tile}>
-              <Text style={styles.tileLabel}>Referral earnings</Text>
-              <Text style={[styles.tileValue, { color: tw.green600 }]}>{RUPEE}{stats.totalReferralEarnings}</Text>
-            </View>
+  const header = (
+    <View style={{ gap: space.md, marginBottom: space.md }}>
+      <Card style={{ gap: space.md }}>
+        <Text style={styles.intro}>Invite friends and earn when they sign up.</Text>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <View style={styles.tile}>
+            <Text style={styles.tileLabel}>Reward per invite</Text>
+            <Text style={[styles.tileValue, { color: color.goldText }]}>{RUPEE}{stats.rewardAmount}</Text>
           </View>
-          <Press onPress={handleShare} disabled={!referralLink} scale={0.98} accessibilityLabel="Share Invite" style={[styles.shareBtn, !referralLink ? { opacity: 0.5 } : null]}>
-            <Share2 size={16} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.shareText}>Share Invite</Text>
-          </Press>
-        </CardContent>
+          <View style={styles.tile}>
+            <Text style={styles.tileLabel}>Referral earnings</Text>
+            <Text style={[styles.tileValue, { color: color.success }]}>{RUPEE}{stats.totalReferralEarnings}</Text>
+          </View>
+        </View>
+        <Button title="Share Invite" icon={Share2} onPress={handleShare} disabled={!referralLink} accessibilityLabel="Share Invite" />
       </Card>
 
-      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', gap: space.sm }}>
         {miniStats.map(({ Icon, label, value }) => (
-          <Card key={label} style={[styles.card, { flex: 1 }]}>
-            <CardContent style={{ padding: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Icon size={14} color={tw.gray500} />
-                <Text style={styles.miniLabel}>{label}</Text>
-              </View>
-              <Text style={styles.miniValue}>{value}</Text>
-            </CardContent>
+          <Card key={label} style={{ flex: 1, padding: space.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+              <Icon size={14} color={color.textMuted} />
+              <Text style={styles.miniLabel} numberOfLines={1}>
+                {label}
+              </Text>
+            </View>
+            <Text style={styles.miniValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+              {value}
+            </Text>
           </Card>
         ))}
       </View>
 
-      <Card style={[styles.card, { borderRadius: 16 }]}>
-        <CardContent style={{ padding: 16 }}>
-          <Text style={styles.listTitle}>Invited Friends Status</Text>
-          {loading ? (
-            <Text style={styles.muted}>Loading referrals...</Text>
-          ) : invitedFriends.length === 0 ? (
-            <Text style={styles.muted}>No invited friends yet. Share your referral to start earning.</Text>
-          ) : (
-            <View style={{ gap: 8 }}>
-              {invitedFriends.map((item, i) => {
-                const meta = statusMeta[item?.status] || statusMeta.pending;
-                const StatusIcon = meta.Icon;
-                const invitedDate = item?.invitedAt ? new Date(item.invitedAt) : null;
-                const dateText = invitedDate && !Number.isNaN(invitedDate.getTime()) ? invitedDate.toLocaleDateString() : '-';
-                return (
-                  <View key={item?.id || item?.refereeId || i} style={styles.friend}>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={styles.friendName} numberOfLines={1}>{item?.name || 'Friend'}</Text>
-                        <Text style={styles.friendPhone}>{item?.phone || 'Phone hidden'}</Text>
-                        <Text style={styles.friendDate}>Invited on {dateText}</Text>
-                      </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <View style={[styles.badge, { backgroundColor: meta.bg }]}>
-                          <StatusIcon size={12} color={meta.color} />
-                          <Text style={[styles.badgeText, { color: meta.color }]}>{meta.label}</Text>
-                        </View>
-                        <Text style={styles.earned}>Earned: {RUPEE}{Number(item?.earnedAmount) || 0}</Text>
-                      </View>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </CardContent>
-      </Card>
-    </ScrollView>
+      <SectionHeader title="Invited friends status" style={{ marginTop: space.md, marginBottom: 0 }} />
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <PageHeader title="Refer & Earn" onBack={() => navigateTo('/user/profile')} />
+      <FlatList
+        data={loading ? [] : invitedFriends}
+        keyExtractor={(item, i) => String(item?.id || item?.refereeId || i)}
+        renderItem={renderFriend}
+        ListHeaderComponent={header}
+        ItemSeparatorComponent={Separator}
+        ListEmptyComponent={
+          <Card>
+            <Text style={styles.muted}>{loading ? 'Loading referrals...' : 'No invited friends yet. Share your referral to start earning.'}</Text>
+          </Card>
+        }
+        contentContainerStyle={{ padding: space.lg, paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom }}
+      />
+    </View>
   );
 }
 
+const Separator = () => <View style={{ height: space.sm }} />;
+
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingVertical: 16, paddingBottom: 96 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
-  back: { height: 32, width: 32, alignItems: 'center', justifyContent: 'center', borderRadius: 6 },
-  h1: { fontSize: 20, lineHeight: 28, color: '#000', ...poppins(700) },
-  card: { backgroundColor: '#fff', borderWidth: 0, ...shadow('sm') },
-  intro: { fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
-  tile: { flex: 1, borderRadius: 12, backgroundColor: tw.gray50, padding: 12 },
-  tileLabel: { fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(400) },
-  tileValue: { fontSize: 18, lineHeight: 28, ...poppins(700) },
-  shareBtn: { marginTop: 12, height: 44, borderRadius: 12, backgroundColor: F.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%' },
-  shareText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) },
-  miniLabel: { fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(400) },
-  miniValue: { marginTop: 4, fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  listTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, marginBottom: 12, ...poppins(600) },
-  muted: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  friend: { borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, padding: 12 },
-  friendName: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  friendPhone: { marginTop: 2, fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  friendDate: { marginTop: 4, fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(400) },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  badgeText: { fontSize: 11, lineHeight: 16.5, ...poppins(500) },
-  earned: { marginTop: 8, fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(400) },
+  intro: { ...type.body, color: color.textSecondary },
+  tile: { flex: 1, borderRadius: radii.md, backgroundColor: color.surfaceMuted, padding: space.md },
+  tileLabel: { ...type.caption, color: color.textMuted },
+  tileValue: { ...type.price },
+  miniLabel: { ...type.caption, color: color.textMuted, flexShrink: 1 },
+  miniValue: { marginTop: space.xs, ...type.price, color: color.text },
+  muted: { ...type.body, color: color.textMuted },
+  friend: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, padding: space.md },
+  friendName: { ...type.bodyStrong, color: color.text },
+  friendPhone: { marginTop: space.xxs, ...type.small, color: color.textMuted },
+  friendDate: { marginTop: space.xxs, ...type.caption, color: color.textMuted },
+  earned: { ...type.caption, color: color.textSecondary },
 });

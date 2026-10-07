@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AlertCircle, Check, ShieldAlert, X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AlertCircle, ShieldAlert, X } from 'lucide-react-native';
 import { BottomSheet } from '../../components/kit';
 import { Press } from '../../components/ui';
-import { Spinner } from '../../components/Loader';
-import { fo } from '../account/ui';
-import { tw } from '../../theme';
+import { Button, IconButton } from '../../components/ds';
+import { color, radii, space, type } from '../../theme';
 
 export const TAXI_CANCELLATION_REASONS = [
   'I booked the ride by mistake',
@@ -33,6 +33,7 @@ export default function RideCancellationModal({ isOpen, onClose, onConfirm, isCa
   const [selectedReason, setSelectedReason] = useState('');
   const [customComment, setCustomComment] = useState('');
   const [focused, setFocused] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const isOtherSelected = selectedReason === 'Other';
   const isFormValid = Boolean(selectedReason) && (!isOtherSelected || Boolean(customComment.trim()));
@@ -48,108 +49,111 @@ export default function RideCancellationModal({ isOpen, onClose, onConfirm, isCa
   };
 
   return (
-    <BottomSheet visible={Boolean(isOpen)} onClose={isCancelling ? () => {} : onClose} backdrop="rgba(15,23,43,0.6)" blur={8} panelStyle={styles.panel}>
+    <BottomSheet visible={Boolean(isOpen)} onClose={isCancelling ? () => {} : onClose} backdrop={color.overlay} blur={8} panelStyle={styles.panel}>
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <View style={styles.titleRow}>
-            <ShieldAlert size={20} color={tw.red500} />
-            <Text style={styles.title}>Cancel Ride</Text>
+            <ShieldAlert size={22} color={color.danger} />
+            <Text style={styles.title} accessibilityRole="header">Cancel ride</Text>
           </View>
           <Text style={styles.sub}>
             {stage === 'searching' ? 'No fee applies while searching for drivers' : stage === 'arrived' ? 'Driver has arrived at your pickup location' : 'Driver is on the way'}
           </Text>
         </View>
-        <Press onPress={onClose} disabled={isCancelling} style={styles.closeBtn} accessibilityLabel="Close">
-          <X size={16} color={tw.slate500} />
-        </Press>
+        <IconButton icon={X} label="Close" variant="soft" onPress={onClose} disabled={isCancelling} />
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={{ padding: 16, gap: 12 }} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
         {cancellationPolicyText ? (
           <View style={styles.policy}>
-            <AlertCircle size={16} color={tw.amber600} style={{ marginTop: 2 }} />
+            <AlertCircle size={18} color={color.warning} style={{ marginTop: 1 }} />
             <Text style={styles.policyText}>{cancellationPolicyText}</Text>
           </View>
         ) : null}
 
         <Text style={styles.prompt}>
-          Please select a reason for cancellation <Text style={{ color: tw.red500 }}>*</Text>
+          Please select a reason for cancellation <Text style={{ color: color.danger }}>*</Text>
         </Text>
 
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: space.sm }} accessibilityRole="radiogroup">
           {TAXI_CANCELLATION_REASONS.map((reason) => {
             const isSelected = selectedReason === reason;
             return (
-              <Press key={reason} scale={1} onPress={() => setSelectedReason(reason)} disabled={isCancelling} style={[styles.reason, isSelected && styles.reasonOn]}>
-                <Text style={[styles.reasonText, isSelected && { color: tw.red600 }]}>{reason}</Text>
-                <View style={[styles.radio, isSelected && { borderColor: tw.red500, backgroundColor: tw.red500 }]}>
-                  {isSelected ? <Check size={10} color="#fff" strokeWidth={3} /> : null}
+              <Press
+                key={reason}
+                scale={1}
+                onPress={() => setSelectedReason(reason)}
+                disabled={isCancelling}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: isSelected, disabled: isCancelling }}
+                accessibilityLabel={reason}
+                style={[styles.reason, isSelected && styles.reasonOn]}
+              >
+                <View style={[styles.radio, isSelected && styles.radioOn]}>
+                  {isSelected ? <View style={styles.radioDot} /> : null}
                 </View>
+                <Text style={[styles.reasonText, isSelected && { color: color.primary, fontFamily: 'Poppins_600SemiBold' }]}>{reason}</Text>
               </Press>
             );
           })}
         </View>
 
         {isOtherSelected ? (
-          <View style={{ paddingTop: 8, gap: 6 }}>
+          <View style={{ paddingTop: space.sm, gap: space.xs }}>
             <Text style={styles.otherLabel}>
-              Please tell us why you want to cancel this ride <Text style={{ color: tw.red500 }}>*</Text>
+              Please tell us why you want to cancel this ride <Text style={{ color: color.danger }}>*</Text>
             </Text>
             <TextInput
               value={customComment}
               onChangeText={setCustomComment}
               placeholder="Please tell us why you want to cancel this ride..."
-              placeholderTextColor={tw.slate400}
+              placeholderTextColor={color.textDisabled}
               editable={!isCancelling}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
-              style={[styles.input, focused && { borderColor: tw.red500 }]}
+              accessibilityLabel="Reason for cancelling"
+              style={[styles.input, focused && { borderColor: color.primary }]}
             />
           </View>
         ) : null}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Press onPress={onClose} disabled={isCancelling} style={[styles.btn, { backgroundColor: tw.slate100 }]}>
-          <Text style={[styles.btnText, { color: tw.slate700 }]}>Back</Text>
-        </Press>
-        <Press onPress={handleConfirm} disabled={!isFormValid || isCancelling} style={[styles.btn, styles.btnDanger, (!isFormValid || isCancelling) && { opacity: 0.5 }]}>
-          {isCancelling ? (
-            <>
-              <Spinner size={16} />
-              <Text style={[styles.btnText, { color: '#fff' }]}>Cancelling...</Text>
-            </>
-          ) : (
-            <Text style={[styles.btnText, { color: '#fff' }]}>Confirm Cancellation</Text>
-          )}
-        </Press>
+      <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
+        <Button title="Back" variant="outline" onPress={onClose} disabled={isCancelling} style={{ flex: 1 }} />
+        <Button
+          title={isCancelling ? 'Cancelling...' : 'Confirm cancellation'}
+          variant="danger"
+          loading={isCancelling}
+          disabled={!isFormValid || isCancelling}
+          onPress={handleConfirm}
+          style={{ flex: 1.6 }}
+        />
       </View>
     </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%', overflow: 'hidden', borderWidth: 1, borderColor: tw.slate100, width: '100%' },
-  header: { padding: 16, borderBottomWidth: 1, borderBottomColor: tw.slate100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(248,250,252,0.5)' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { ...fo(700), fontSize: 18, color: tw.slate900 },
-  sub: { ...fo(400), fontSize: 12, color: tw.slate500, marginTop: 2 },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
+  panel: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, maxHeight: '85%', overflow: 'hidden', width: '100%' },
+  header: { padding: space.lg, gap: space.md, borderBottomWidth: 1, borderBottomColor: color.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  title: { ...type.heading, color: color.text },
+  sub: { ...type.small, color: color.textSecondary, marginTop: space.xxs },
   body: { flexGrow: 0, flexShrink: 1 },
-  policy: { flexDirection: 'row', gap: 8, padding: 12, backgroundColor: tw.amber50, borderWidth: 1, borderColor: tw.amber200, borderRadius: 16 },
-  policyText: { flex: 1, ...fo(500), fontSize: 12, color: tw.amber800, lineHeight: 19.5 },
-  prompt: { ...fo(600), fontSize: 12, color: tw.slate600 },
-  reason: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16, borderWidth: 1, backgroundColor: 'rgba(248,250,252,0.8)', borderColor: 'rgba(226,232,240,0.8)' },
-  reasonOn: { backgroundColor: tw.red50, borderColor: tw.red500 },
-  reasonText: { ...fo(600), fontSize: 12, color: tw.slate700, flex: 1 },
-  radio: { width: 16, height: 16, borderRadius: 8, borderWidth: 1, borderColor: tw.slate300, alignItems: 'center', justifyContent: 'center' },
-  otherLabel: { ...fo(700), fontSize: 12, color: tw.slate700 },
-  input: { minHeight: 80, borderWidth: 2, borderColor: tw.slate200, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, ...fo(400), fontSize: 12, color: tw.slate800 },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: tw.slate100, backgroundColor: 'rgba(248,250,252,0.5)', flexDirection: 'row', gap: 12 },
-  btn: { flex: 1, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  btnDanger: { backgroundColor: tw.red600, boxShadow: '0 10px 15px -3px rgba(239,68,68,0.2)' },
-  btnText: { ...fo(700), fontSize: 12 },
+  bodyContent: { padding: space.lg, gap: space.md },
+  policy: { flexDirection: 'row', gap: space.sm, padding: space.md, backgroundColor: color.warningSoft, borderRadius: radii.md },
+  policyText: { ...type.small, flex: 1, color: color.text },
+  prompt: { ...type.label, color: color.text },
+  reason: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, minHeight: 52, paddingVertical: space.sm, borderRadius: radii.md, borderWidth: 1.5, backgroundColor: color.surface, borderColor: color.border },
+  reasonOn: { backgroundColor: color.primarySoft, borderColor: color.primary },
+  reasonText: { ...type.body, color: color.text, flex: 1, minWidth: 0 },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  radioOn: { borderColor: color.primary },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.primary },
+  otherLabel: { ...type.label, color: color.text },
+  input: { minHeight: 88, borderWidth: 1.5, borderColor: color.border, borderRadius: radii.md, paddingHorizontal: space.lg, paddingVertical: space.md, ...type.body, color: color.text, outlineStyle: 'none' },
+  footer: { paddingHorizontal: space.lg, paddingTop: space.md, borderTopWidth: 1, borderTopColor: color.border, backgroundColor: color.surface, flexDirection: 'row', gap: space.md },
 });

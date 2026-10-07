@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AlertCircle, ArrowLeft, Bell, CheckCircle2, Clock, Gift, Tag, Trash2, X } from 'lucide-react-native';
+import { usePathname } from 'expo-router';
+import { AlertCircle, ArrowLeft, Bell, CheckCircle2, Clock, Gift, Tag, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
+import { EmptyState, IconButton, StatusBadge } from '../../components/ds';
+import { NAV_CLEARANCE, isImmersiveRoute } from '../../components/dh/AppBottomNav';
 import useNotificationInbox from '../hooks/useNotificationInbox';
 import RequireUser from '../components/profile/RequireUser';
 import { events } from '../../lib/events';
 import { localStore } from '../../lib/storage';
 import { navigateTo } from '../../lib/webRouter';
-import { F } from '../components/shell';
-import { poppins, shadow, tw, twClass } from '../../theme';
+import { color, radii, space, tone as tones, type } from '../../theme';
+import { LinkButton } from '../components/cart/parts';
 
 const STORAGE_KEY = 'food_user_notifications';
 const ICON_MAP = { CheckCircle2, Tag, Gift, AlertCircle, Bell };
@@ -38,10 +41,12 @@ const readLocalNotifications = () => {
   }
 };
 
-const TYPE_BG = { order: tw.green100, offer: tw.red100, broadcast: tw.blue100 };
+/** Notification type -> tone (icon tile colour); the title/badge carry the meaning. */
+const TYPE_TONE = { order: 'success', offer: 'gold', broadcast: 'info', alert: 'warning' };
 
 function NotificationsContent() {
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
   const [notificationsList, setNotificationsList] = useState(() => readLocalNotifications());
   const {
     items: broadcastNotifications,
@@ -159,86 +164,70 @@ function NotificationsContent() {
     setNotificationsList((prev) => prev.filter((n) => n.id !== id));
   };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 16, paddingBottom: 16 + insets.bottom }}>
-        <View style={styles.header}>
-          <Press scale={0.92} onPress={() => navigateTo('/food/user')} accessibilityLabel="Back" style={styles.back}>
-            <ArrowLeft size={16} color={tw.gray900} />
-          </Press>
-          <View style={styles.titleRow}>
-            <Bell size={20} color={F.green} fill={F.green} />
-            <Text style={styles.title}>Notifications</Text>
-            {unreadCount > 0 ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount}</Text>
-              </View>
-            ) : null}
-          </View>
-          {merged.length > 0 ? (
-            <Press scale={0.96} onPress={handleClearAll} accessibilityLabel="Clear All" style={styles.clear}>
-              <Trash2 size={16} color={tw.gray500} />
-              <Text style={styles.clearText}>Clear All</Text>
-            </Press>
-          ) : null}
+  const renderItem = ({ item: n }) => {
+    const Icon = ICON_MAP[n.icon] || Bell;
+    const t = tones[TYPE_TONE[n.type]] || tones.neutral;
+    return (
+      <Press
+        scale={1}
+        onPress={() => handleMarkAsRead(n.id, n.source)}
+        accessibilityLabel={`${n.read ? '' : 'Unread. '}${n.title}. ${n.message || ''}`}
+        style={[styles.card, !n.read ? styles.cardUnread : null]}
+      >
+        <View style={[styles.iconWrap, { backgroundColor: t.bg }]}>
+          <Icon size={20} color={t.fg} />
         </View>
+        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' }}>
+            <Text style={[n.read ? type.body : type.bodyStrong, { color: color.text, flexShrink: 1 }]}>{n.title}</Text>
+            {!n.read ? <StatusBadge tone="primary" label="New" /> : null}
+          </View>
+          {n.message ? <Text style={[type.small, { color: color.textSecondary }]}>{n.message}</Text> : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: 2 }}>
+            <Clock size={12} color={color.textMuted} />
+            <Text style={[type.caption, { color: color.textMuted }]}>{n.time}</Text>
+          </View>
+        </View>
+        <IconButton icon={X} label="Delete notification" size={36} iconSize={18} iconColor={color.textMuted} onPress={() => handleDeleteOne(n.id, n.source)} style={{ marginTop: -space.xs, marginRight: -space.xs }} />
+      </Press>
+    );
+  };
 
-        {isLoadingInbox && merged.length === 0 ? (
-          <View style={{ gap: 12, paddingTop: 4 }}>
-            {[1, 2, 3].map((i) => (
-              <View key={i} style={styles.sk}>
-                <View style={[styles.skBlock, { width: 40, height: 40, borderRadius: 20 }]} />
-                <View style={{ flex: 1, gap: 8, paddingVertical: 4 }}>
-                  <View style={[styles.skBlock, { height: 16, width: '33%' }]} />
-                  <View style={[styles.skBlock, { height: 14, width: '83%' }]} />
-                  <View style={[styles.skBlock, { height: 12, width: '25%', backgroundColor: tw.gray100 }]} />
-                </View>
+  return (
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <View style={styles.header}>
+        <IconButton icon={ArrowLeft} label="Back" onPress={() => navigateTo('/food/user')} />
+        <View style={styles.titleRow}>
+          <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+            Notifications
+          </Text>
+          {unreadCount > 0 ? <StatusBadge tone="primary" label={`${unreadCount} new`} /> : null}
+        </View>
+        {merged.length > 0 ? <LinkButton title="Clear all" tone="danger" onPress={handleClearAll} accessibilityLabel="Clear All" style={{ paddingHorizontal: space.sm }} /> : null}
+      </View>
+
+      {isLoadingInbox && merged.length === 0 ? (
+        <View style={{ gap: space.md, padding: space.lg }} accessibilityRole="progressbar" accessibilityLabel="Loading notifications">
+          {[1, 2, 3].map((i) => (
+            <View key={i} style={styles.sk}>
+              <View style={[styles.skBlock, { width: 40, height: 40, borderRadius: 20 }]} />
+              <View style={{ flex: 1, gap: space.sm, paddingVertical: space.xs }}>
+                <View style={[styles.skBlock, { height: 16, width: '33%' }]} />
+                <View style={[styles.skBlock, { height: 14, width: '83%' }]} />
+                <View style={[styles.skBlock, { height: 12, width: '25%' }]} />
               </View>
-            ))}
-          </View>
-        ) : merged.length > 0 ? (
-          <View style={{ gap: 12 }}>
-            {merged.map((n) => {
-              const Icon = ICON_MAP[n.icon] || Bell;
-              return (
-                <Press
-                  key={`${n.source}-${n.id}`}
-                  scale={1}
-                  onPress={() => handleMarkAsRead(n.id, n.source)}
-                  accessibilityLabel={n.title}
-                  style={[styles.card, !n.read ? styles.cardUnread : null, shadow('xs')]}
-                >
-                  {!n.read ? <View style={styles.dot} /> : null}
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12 }}>
-                    <View style={[styles.iconWrap, { backgroundColor: TYPE_BG[n.type] || tw.orange100 }]}>
-                      <Icon size={20} color={twClass(n.iconColor, tw.gray700)} />
-                    </View>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-                        <Text style={[styles.nTitle, { color: !n.read ? tw.gray900 : tw.gray700, flex: 1 }]}>{n.title}</Text>
-                        <Press scale={0.9} onPress={() => handleDeleteOne(n.id, n.source)} accessibilityLabel="Delete notification" style={styles.del} hitSlop={8}>
-                          <X size={16} color={tw.gray400} />
-                        </Press>
-                      </View>
-                      <Text style={styles.nMsg}>{n.message}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Clock size={12} color={tw.gray500} />
-                        <Text style={styles.nTime}>{n.time}</Text>
-                      </View>
-                    </View>
-                  </View>
-                </Press>
-              );
-            })}
-          </View>
-        ) : (
-          <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-            <Bell size={64} color={tw.gray300} style={{ marginBottom: 16 }} />
-            <Text style={styles.emptyTitle}>No notifications</Text>
-            <Text style={styles.emptyText}>You&apos;re all caught up!</Text>
-          </View>
-        )}
-      </ScrollView>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          data={merged}
+          keyExtractor={(n) => `${n.source}-${n.id}`}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: (isImmersiveRoute(pathname) ? 0 : NAV_CLEARANCE) + insets.bottom + space.xxl }}
+          ListEmptyComponent={<EmptyState icon={Bell} title="No notifications" message="You're all caught up!" />}
+        />
+      )}
     </View>
   );
 }
@@ -252,24 +241,11 @@ export default function Notifications() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  back: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  titleRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { fontSize: 18, lineHeight: 28, color: tw.gray800, ...poppins(700) },
-  badge: { backgroundColor: tw.green500, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(500) },
-  clear: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, height: 32, borderRadius: 6 },
-  clearText: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(500) },
-  sk: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.gray200 },
-  skBlock: { backgroundColor: tw.gray200, borderRadius: 4 },
-  card: { position: 'relative', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, paddingVertical: 4 },
-  cardUnread: { backgroundColor: 'rgba(254,242,242,0.5)', borderColor: tw.red200 },
-  dot: { position: 'absolute', top: 8, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: F.green, zIndex: 2 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.sm, paddingVertical: space.xs, minHeight: 56, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+  titleRow: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  sk: { flexDirection: 'row', alignItems: 'flex-start', gap: space.lg, backgroundColor: color.surface, borderRadius: radii.lg, padding: space.lg, borderWidth: 1, borderColor: color.border },
+  skBlock: { backgroundColor: color.surfaceMuted, borderRadius: 4 },
+  card: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, padding: space.md },
+  cardUnread: { backgroundColor: color.primarySoft, borderColor: color.primaryBorder },
   iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  nTitle: { fontSize: 14, lineHeight: 20, ...poppins(600) },
-  del: { padding: 4, borderRadius: 999 },
-  nMsg: { fontSize: 12, lineHeight: 16, color: tw.gray600, marginBottom: 8, ...poppins(400) },
-  nTime: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  emptyTitle: { fontSize: 18, lineHeight: 28, color: tw.gray700, marginBottom: 8, ...poppins(600) },
-  emptyText: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
 });

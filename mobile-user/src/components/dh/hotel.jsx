@@ -7,57 +7,72 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Fa from '../Fa';
 import { Press } from '../ui';
 import { useBooking } from '../../context/BookingContext';
-import { dh, montserrat, poppins, shadow, tw } from '../../theme';
+import { Button, IconButton, StatusBadge, fa } from '../ds';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /** components/hotel/HotelCard.jsx */
 export function HotelCard({ hotel }) {
   const { favoriteHotels, toggleFavoriteHotel } = useBooking();
   const isFavorite = favoriteHotels?.includes(hotel.id);
   const open = () => router.push(`/app/hotels/${hotel.id}`);
+  const label = `${hotel.name}, ${hotel.location}. Rated ${hotel.rating}. From ₹${hotel.startingPrice.toLocaleString('en-IN')} per night. View rooms`;
 
+  // The photo and the body are sibling buttons so the heart is never nested inside one.
   return (
-    <Press scale={0.99} onPress={open} style={styles.card} accessibilityLabel={`${hotel.name}, ${hotel.location}. View rooms`}>
+    <View style={styles.card}>
       <View style={styles.cardImageWrap}>
-        <Image source={{ uri: hotel.heroImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-        <LinearGradient colors={['rgba(0,0,0,0.2)', 'transparent', 'rgba(0,0,0,0.6)']} style={StyleSheet.absoluteFill} />
-
-        <View style={styles.badges}>
-          <Text style={styles.typeBadge}>{hotel.type}</Text>
-          {hotel.badge ? <Text style={styles.featureBadge}>{hotel.badge}</Text> : null}
-        </View>
-
-        <Press scale={0.85} onPress={() => toggleFavoriteHotel(hotel.id)} style={styles.fav} accessibilityLabel={isFavorite ? 'Remove from saved' : 'Save hotel'} hitSlop={6}>
-          <Fa name="fa-solid fa-heart" size={12} color={isFavorite ? tw.red500 : tw.gray400} />
+        <Press scale={1} onPress={open} style={StyleSheet.absoluteFill} accessibilityLabel={label}>
+          <Image source={{ uri: hotel.heroImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <LinearGradient colors={['rgba(0,0,0,0.25)', 'transparent', 'rgba(6,28,14,0.75)']} style={StyleSheet.absoluteFill} />
         </Press>
 
-        <View style={styles.imageFoot}>
-          <View style={[styles.row, { gap: 4, flexShrink: 1 }]}>
-            <Fa name="fa-solid fa-location-dot" size={12} color={tw.amber400} />
-            <Text style={styles.imageLoc} numberOfLines={1}>{hotel.location}</Text>
+        <View style={styles.badges} pointerEvents="none">
+          <StatusBadge label={hotel.type} tone="primary" style={styles.typeBadge} />
+          {hotel.badge ? <StatusBadge label={hotel.badge} tone="gold" icon={fa('fa-solid fa-star')} /> : null}
+        </View>
+
+        <IconButton
+          icon={fa('fa-solid fa-heart')}
+          label={isFavorite ? 'Remove from saved' : 'Save hotel'}
+          onPress={() => toggleFavoriteHotel(hotel.id)}
+          variant="soft"
+          iconSize={18}
+          iconColor={isFavorite ? color.danger : color.textMuted}
+          style={styles.fav}
+        />
+
+        <View style={styles.imageFoot} pointerEvents="none">
+          <View style={[styles.row, { gap: space.xs + 2, flexShrink: 1 }]}>
+            <Fa name="fa-solid fa-location-dot" size={14} color={color.goldOnDark} />
+            <Text style={styles.imageLoc} numberOfLines={1}>
+              {hotel.location}
+            </Text>
           </View>
           {hotel.distanceFromStation ? <Text style={styles.distance}>{hotel.distanceFromStation} from station</Text> : null}
         </View>
       </View>
 
-      <View style={{ padding: 14, gap: 12 }}>
-        <View>
-          <View style={[styles.row, { justifyContent: 'space-between', marginBottom: 4 }]}>
-            <View style={[styles.row, { gap: 6 }]}>
+      <Press scale={0.99} onPress={open} style={styles.cardBody} accessibilityLabel={label}>
+        <View style={{ gap: space.xs + 2 }}>
+          <View style={[styles.row, { justifyContent: 'space-between', gap: space.sm, flexWrap: 'wrap' }]}>
+            <View style={[styles.row, { gap: space.sm }]}>
               <View style={styles.rating}>
                 <Text style={styles.ratingText}>{hotel.rating}</Text>
-                <Fa name="fa-solid fa-star" size={9} color={tw.amber300} />
+                <Fa name="fa-solid fa-star" size={12} color={color.goldOnDark} />
               </View>
               <Text style={styles.reviews}>({hotel.reviewCount} reviews)</Text>
             </View>
-            <Text style={styles.freeCancel}>FREE CANCELLATION</Text>
+            <StatusBadge label="Free cancellation" tone="success" icon={fa('fa-solid fa-circle-check')} />
           </View>
 
-          <Text style={styles.name}>{hotel.name}</Text>
+          <Text style={styles.name} numberOfLines={2}>
+            {hotel.name}
+          </Text>
 
           <View style={styles.amenities}>
             {hotel.amenities.slice(0, 3).map((am) => (
               <View key={am.id} style={styles.amenity}>
-                <Fa name={am.icon} size={9} color={tw.emerald700} />
+                <Fa name={am.icon} size={12} color={color.primary} />
                 <Text style={styles.amenityText}>{am.label}</Text>
               </View>
             ))}
@@ -65,20 +80,20 @@ export function HotelCard({ hotel }) {
         </View>
 
         <View style={styles.cardFoot}>
-          <View>
-            <View style={[styles.row, { alignItems: 'baseline', gap: 6 }]}>
+          <View style={{ flexShrink: 1 }}>
+            <View style={[styles.row, { alignItems: 'baseline', gap: space.sm }]}>
               <Text style={styles.price}>₹{hotel.startingPrice.toLocaleString('en-IN')}</Text>
               {hotel.originalPrice ? <Text style={styles.strike}>₹{hotel.originalPrice.toLocaleString('en-IN')}</Text> : null}
             </View>
             <Text style={styles.priceNote}>per room / night + taxes</Text>
           </View>
           <View style={styles.viewRooms}>
-            <Text style={styles.viewRoomsText}>View Rooms</Text>
-            <Fa name="fa-solid fa-arrow-right" size={10} color={tw.amber300} />
+            <Text style={styles.viewRoomsText}>View rooms</Text>
+            <Fa name="fa-solid fa-arrow-right" size={14} color={color.onPrimary} />
           </View>
         </View>
-      </View>
-    </Press>
+      </Press>
+    </View>
   );
 }
 
@@ -101,32 +116,32 @@ export function HotelGallery({ images = [], hotelName = 'Hotel' }) {
         </Press>
 
         <View style={styles.counter} pointerEvents="none">
-          <Fa name="fa-solid fa-camera" size={10} color={tw.amber300} />
+          <Fa name="fa-solid fa-camera" size={12} color={color.goldOnDark} />
           <Text style={styles.counterText}>
             {activeIndex + 1} / {images.length}
           </Text>
         </View>
 
         <Press onPress={() => setIsFullscreen(true)} style={styles.expand} accessibilityLabel="View Fullscreen">
-          <Fa name="fa-solid fa-expand" size={12} color="#fff" />
+          <Fa name="fa-solid fa-expand" size={16} color={color.textInverse} />
         </Press>
 
         {images.length > 1 ? (
           <>
-            <Press onPress={prev} style={[styles.chevron, { left: 8 }]} accessibilityLabel="Previous image">
-              <Fa name="fa-solid fa-chevron-left" size={12} color="#fff" />
+            <Press onPress={prev} style={[styles.chevron, { left: space.sm }]} accessibilityLabel="Previous image">
+              <Fa name="fa-solid fa-chevron-left" size={16} color={color.textInverse} />
             </Press>
-            <Press onPress={next} style={[styles.chevron, { right: 8 }]} accessibilityLabel="Next image">
-              <Fa name="fa-solid fa-chevron-right" size={12} color="#fff" />
+            <Press onPress={next} style={[styles.chevron, { right: space.sm }]} accessibilityLabel="Next image">
+              <Fa name="fa-solid fa-chevron-right" size={16} color={color.textInverse} />
             </Press>
           </>
         ) : null}
       </View>
 
       {images.length > 1 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbStrip} contentContainerStyle={{ gap: 8, padding: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbStrip} contentContainerStyle={{ gap: space.sm, padding: space.sm, paddingHorizontal: space.lg }}>
           {images.map((img, idx) => (
-            <Press key={idx} scale={0.96} onPress={() => setActiveIndex(idx)} style={[styles.thumb, idx === activeIndex ? { borderColor: tw.emerald700 } : { opacity: 0.7 }]} accessibilityLabel={`Photo ${idx + 1}`}>
+            <Press key={idx} scale={0.96} onPress={() => setActiveIndex(idx)} style={[styles.thumb, idx === activeIndex ? { borderColor: color.gold } : { opacity: 0.75 }]} accessibilityLabel={`Photo ${idx + 1} of ${images.length}`} accessibilityState={{ selected: idx === activeIndex }}>
               <Image source={{ uri: img }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             </Press>
           ))}
@@ -134,33 +149,31 @@ export function HotelGallery({ images = [], hotelName = 'Hotel' }) {
       ) : null}
 
       <Modal visible={isFullscreen} transparent animationType="fade" onRequestClose={() => setIsFullscreen(false)} statusBarTranslucent>
-        <View style={[styles.lightbox, { paddingTop: 16 + insets.top, paddingBottom: 16 + insets.bottom }]}>
+        <View style={[styles.lightbox, { paddingTop: space.lg + insets.top, paddingBottom: space.lg + insets.bottom }]}>
           <View style={[styles.row, { justifyContent: 'space-between' }]}>
             <Text style={styles.lightboxTitle} numberOfLines={1}>
               {hotelName} ({activeIndex + 1} of {images.length})
             </Text>
-            <Press onPress={() => setIsFullscreen(false)} style={styles.lightboxClose} accessibilityLabel="Close">
-              <Fa name="fa-solid fa-xmark" size={16} color="#fff" />
-            </Press>
+            <IconButton icon={fa('fa-solid fa-xmark')} label="Close" variant="inverse" onPress={() => setIsFullscreen(false)} />
           </View>
 
           <View style={styles.lightboxStage}>
-            <Image source={{ uri: images[activeIndex] }} style={{ width: '100%', height: '100%', borderRadius: 8 }} resizeMode="contain" />
+            <Image source={{ uri: images[activeIndex] }} style={{ width: '100%', height: '100%', borderRadius: radii.sm }} resizeMode="contain" />
             {images.length > 1 ? (
               <>
-                <Press onPress={prev} style={[styles.lightboxChevron, { left: 8 }]} accessibilityLabel="Previous image">
-                  <Fa name="fa-solid fa-chevron-left" size={16} color="#fff" />
+                <Press onPress={prev} style={[styles.lightboxChevron, { left: space.sm }]} accessibilityLabel="Previous image">
+                  <Fa name="fa-solid fa-chevron-left" size={18} color={color.textInverse} />
                 </Press>
-                <Press onPress={next} style={[styles.lightboxChevron, { right: 8 }]} accessibilityLabel="Next image">
-                  <Fa name="fa-solid fa-chevron-right" size={16} color="#fff" />
+                <Press onPress={next} style={[styles.lightboxChevron, { right: space.sm }]} accessibilityLabel="Next image">
+                  <Fa name="fa-solid fa-chevron-right" size={18} color={color.textInverse} />
                 </Press>
               </>
             ) : null}
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingVertical: 8, flexGrow: 1, justifyContent: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: space.sm, paddingVertical: space.sm, flexGrow: 1, justifyContent: 'center' }}>
             {images.map((img, idx) => (
-              <Press key={idx} scale={0.96} onPress={() => setActiveIndex(idx)} style={[styles.lightboxThumb, idx === activeIndex ? { borderColor: tw.amber400 } : { opacity: 0.5 }]}>
+              <Press key={idx} scale={0.96} onPress={() => setActiveIndex(idx)} style={[styles.lightboxThumb, idx === activeIndex ? { borderColor: color.gold } : { opacity: 0.5 }]} accessibilityLabel={`Photo ${idx + 1} of ${images.length}`} accessibilityState={{ selected: idx === activeIndex }}>
                 <Image source={{ uri: img }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
               </Press>
             ))}
@@ -177,100 +190,100 @@ export function RoomCard({ room, isSelected = false, onSelect }) {
     <View style={[styles.room, isSelected ? styles.roomSelected : null]}>
       <View style={styles.roomImageWrap}>
         <Image source={{ uri: room.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-        <LinearGradient colors={['transparent', 'transparent', 'rgba(0,0,0,0.5)']} style={StyleSheet.absoluteFill} />
-        {room.isPopular ? <Text style={styles.popular}>Most Popular</Text> : null}
-        <Text style={styles.roomsLeft}>{room.availableRooms} rooms left</Text>
-        <Text style={styles.roomSpec}>
+        <LinearGradient colors={['rgba(0,0,0,0.2)', 'transparent', 'rgba(6,28,14,0.7)']} style={StyleSheet.absoluteFill} />
+        <View style={styles.roomBadges}>
+          {room.isPopular ? <StatusBadge label="Most popular" tone="gold" icon={fa('fa-solid fa-star')} /> : <View />}
+          <StatusBadge label={`${room.availableRooms} rooms left`} tone={room.availableRooms <= 2 ? 'warning' : 'neutral'} />
+        </View>
+        <Text style={styles.roomSpec} numberOfLines={1}>
           {room.size} • {room.bedType}
         </Text>
       </View>
 
-      <View style={{ padding: 14, gap: 12 }}>
-        <View>
-          <View style={[styles.row, { justifyContent: 'space-between', gap: 8 }]}>
-            <Text style={[styles.name, { flexShrink: 1 }]}>{room.name}</Text>
-            <Text style={styles.maxGuests}>Max {room.maxGuests} Guests</Text>
+      <View style={{ padding: space.lg, gap: space.md }}>
+        <View style={{ gap: space.sm }}>
+          <View style={[styles.row, { justifyContent: 'space-between', gap: space.sm, alignItems: 'flex-start' }]}>
+            <Text style={[styles.name, { flex: 1, minWidth: 0 }]}>{room.name}</Text>
+            <StatusBadge label={`Max ${room.maxGuests} guests`} tone="primary" icon={fa('fa-solid fa-user-group')} />
           </View>
           <View style={styles.roomAmenities}>
             {room.amenities.map((am, idx) => (
               <View key={idx} style={styles.roomAmenity}>
-                <Fa name="fa-solid fa-circle-check" size={10} color={tw.emerald600} />
-                <Text style={styles.roomAmenityText} numberOfLines={1}>{am}</Text>
+                <Fa name="fa-solid fa-circle-check" size={12} color={color.primary} />
+                <Text style={styles.roomAmenityText} numberOfLines={1}>
+                  {am}
+                </Text>
               </View>
             ))}
           </View>
         </View>
 
         <View style={styles.cardFoot}>
-          <View>
-            <View style={[styles.row, { alignItems: 'baseline', gap: 6 }]}>
-              <Text style={[styles.price, { color: tw.emerald950 }]}>₹{room.price.toLocaleString('en-IN')}</Text>
+          <View style={{ flexShrink: 1 }}>
+            <View style={[styles.row, { alignItems: 'baseline', gap: space.sm }]}>
+              <Text style={styles.price}>₹{room.price.toLocaleString('en-IN')}</Text>
               {room.originalPrice ? <Text style={styles.strike}>₹{room.originalPrice.toLocaleString('en-IN')}</Text> : null}
             </View>
             <Text style={styles.priceNote}>per night + ₹{Math.round(room.price * 0.12)} tax</Text>
           </View>
-          <Press scale={0.94} onPress={() => onSelect(room)} style={[styles.selectBtn, isSelected && { backgroundColor: tw.emerald700 }]} accessibilityState={{ selected: isSelected }}>
-            {isSelected ? <Fa name="fa-solid fa-check" size={10} color="#fff" /> : null}
-            <Text style={[styles.selectText, isSelected && { color: '#fff' }]}>{isSelected ? 'Selected' : 'Select Room'}</Text>
-          </Press>
+          <Button
+            title={isSelected ? 'Selected' : 'Select room'}
+            variant={isSelected ? 'primary' : 'secondary'}
+            icon={isSelected ? fa('fa-solid fa-check') : undefined}
+            fullWidth={false}
+            onPress={() => onSelect(room)}
+            accessibilityLabel={`${isSelected ? 'Selected' : 'Select'} ${room.name}`}
+          />
         </View>
       </View>
     </View>
   );
 }
 
-const pill = { fontSize: 10, lineHeight: 15, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' };
-
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
-  card: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(229,221,195,0.8)', ...shadow('xs') },
-  cardImageWrap: { height: 176, backgroundColor: tw.gray200 },
-  badges: { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  typeBadge: { ...pill, backgroundColor: 'rgba(6,56,30,0.9)', color: tw.amber300, borderWidth: 1, borderColor: 'rgba(255,185,0,0.4)', ...poppins(700) },
-  featureBadge: { ...pill, backgroundColor: 'rgba(254,154,0,0.9)', color: '#fff', ...poppins(700) },
-  fav: { position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  imageFoot: { position: 'absolute', bottom: 8, left: 10, right: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  imageLoc: { fontSize: 11, lineHeight: 16.5, color: '#fff', flexShrink: 1, ...poppins(500) },
-  distance: { fontSize: 10, lineHeight: 15, color: '#fff', backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden', ...poppins(500) },
-  rating: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: tw.emerald800, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  ratingText: { fontSize: 11, lineHeight: 16.5, color: '#fff', ...poppins(700) },
-  reviews: { fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(500) },
-  freeCancel: { fontSize: 10, lineHeight: 15, letterSpacing: 0.25, color: tw.emerald700, backgroundColor: tw.emerald50, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, borderWidth: 1, borderColor: tw.emerald200, overflow: 'hidden', ...poppins(600) },
-  name: { fontSize: 14, lineHeight: 19.25, color: tw.gray900, ...montserrat(700) },
-  amenities: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  amenity: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: dh.cream, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(229,221,195,0.6)' },
-  amenityText: { fontSize: 10, lineHeight: 15, color: tw.gray600, ...poppins(400) },
-  cardFoot: { paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  price: { fontSize: 16, lineHeight: 24, color: tw.emerald900, ...montserrat(800) },
-  strike: { fontSize: 11, color: tw.gray400, textDecorationLine: 'line-through', ...poppins(400) },
-  priceNote: { fontSize: 9.5, lineHeight: 12, color: tw.gray400, ...poppins(400) },
-  viewRooms: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: dh.nav, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12 },
-  viewRoomsText: { fontSize: 12, lineHeight: 16, color: tw.amber300, ...poppins(700) },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden', borderWidth: 1, borderColor: color.border, ...elevation.card },
+  cardImageWrap: { aspectRatio: 16 / 9, backgroundColor: color.surfaceMuted },
+  cardBody: { padding: space.lg, gap: space.md },
+  badges: { position: 'absolute', top: space.md, left: space.md, right: 64, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, flexWrap: 'wrap' },
+  typeBadge: { backgroundColor: color.surface },
+  fav: { position: 'absolute', top: space.sm, right: space.sm, backgroundColor: 'rgba(255,255,255,0.92)' },
+  imageFoot: { position: 'absolute', bottom: space.sm, left: space.md, right: space.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  imageLoc: { ...type.label, color: color.textInverse, flexShrink: 1 },
+  distance: { ...type.caption, color: color.textInverse, backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: space.sm, paddingVertical: 2, borderRadius: radii.sm, overflow: 'hidden' },
+  rating: { flexDirection: 'row', alignItems: 'center', gap: space.xs, backgroundColor: color.primary, paddingHorizontal: space.sm, height: 24, borderRadius: radii.sm },
+  ratingText: { ...type.label, color: color.onPrimary },
+  reviews: { ...type.caption, color: color.textMuted },
+  name: { ...type.subheading, color: color.text },
+  amenities: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs + 2 },
+  amenity: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, backgroundColor: color.surfaceMuted, paddingHorizontal: space.sm + 2, height: 28, borderRadius: radii.pill },
+  amenityText: { ...type.caption, color: color.text },
+  cardFoot: { paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+  price: { ...type.price, color: color.text },
+  strike: { ...type.small, color: color.textMuted, textDecorationLine: 'line-through' },
+  priceNote: { ...type.caption, color: color.textMuted },
+  viewRooms: { flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.primary, paddingHorizontal: space.lg, height: 44, borderRadius: radii.md },
+  viewRoomsText: { ...type.buttonSm, color: color.onPrimary },
 
-  galleryMain: { height: 256, backgroundColor: '#000' },
-  counter: { position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  counterText: { fontSize: 11, lineHeight: 16.5, color: '#fff', ...poppins(600) },
-  expand: { position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  chevron: { position: 'absolute', top: '50%', marginTop: -16, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
-  thumbStrip: { flexGrow: 0, backgroundColor: dh.cream, borderBottomWidth: 1, borderBottomColor: dh.border },
-  thumb: { height: 56, width: 80, borderRadius: 8, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent' },
-  lightbox: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingHorizontal: 16, justifyContent: 'space-between' },
-  lightboxTitle: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.amber300, marginRight: 12, ...poppins(600) },
-  lightboxClose: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  lightboxStage: { flex: 1, marginVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  lightboxChevron: { position: 'absolute', top: '50%', marginTop: -20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  lightboxThumb: { height: 48, width: 64, borderRadius: 6, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent' },
+  galleryMain: { aspectRatio: 4 / 3, maxHeight: 300, backgroundColor: color.primaryDeep },
+  counter: { position: 'absolute', bottom: space.md, right: space.md, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: space.sm + 2, height: 28, borderRadius: radii.pill },
+  counterText: { ...type.caption, color: color.textInverse },
+  expand: { position: 'absolute', top: space.sm, right: space.sm, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+  chevron: { position: 'absolute', top: '50%', marginTop: -22, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
+  thumbStrip: { flexGrow: 0, backgroundColor: color.bg, borderBottomWidth: 1, borderBottomColor: color.border },
+  thumb: { height: 56, width: 80, borderRadius: radii.sm, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent', backgroundColor: color.surfaceMuted },
+  lightbox: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingHorizontal: space.lg, justifyContent: 'space-between' },
+  lightboxTitle: { flex: 1, ...type.bodyStrong, color: color.goldOnDark, marginRight: space.md },
+  lightboxStage: { flex: 1, marginVertical: space.lg, alignItems: 'center', justifyContent: 'center' },
+  lightboxChevron: { position: 'absolute', top: '50%', marginTop: -22, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  lightboxThumb: { height: 48, width: 64, borderRadius: radii.sm, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent' },
 
-  room: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: dh.border, ...shadow('xs') },
-  roomSelected: { borderColor: tw.emerald600, borderWidth: 2, ...shadow('md') },
-  roomImageWrap: { height: 144, backgroundColor: tw.gray100 },
-  popular: { position: 'absolute', top: 8, left: 8, ...pill, borderRadius: 4, backgroundColor: tw.amber500, color: '#fff', ...poppins(700) },
-  roomsLeft: { position: 'absolute', top: 8, right: 8, ...pill, borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', ...poppins(500) },
-  roomSpec: { position: 'absolute', bottom: 8, left: 8, fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
-  maxGuests: { fontSize: 10, lineHeight: 15, color: tw.emerald800, backgroundColor: tw.emerald50, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, borderWidth: 1, borderColor: tw.emerald200, overflow: 'hidden', ...poppins(600) },
-  roomAmenities: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 6, marginTop: 10 },
-  roomAmenity: { width: '50%', flexDirection: 'row', alignItems: 'center', gap: 6, paddingRight: 6 },
-  roomAmenityText: { flex: 1, fontSize: 11, lineHeight: 16.5, color: tw.gray600, ...poppins(400) },
-  selectBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: dh.nav, ...shadow('xs') },
-  selectText: { fontSize: 12, lineHeight: 16, color: tw.amber300, ...poppins(700) },
+  room: { backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden', borderWidth: 1, borderColor: color.border, ...elevation.card },
+  roomSelected: { borderColor: color.primary, borderWidth: 2 },
+  roomImageWrap: { aspectRatio: 2, backgroundColor: color.surfaceMuted },
+  roomBadges: { position: 'absolute', top: space.sm, left: space.sm, right: space.sm, flexDirection: 'row', justifyContent: 'space-between', gap: space.sm },
+  roomSpec: { position: 'absolute', bottom: space.sm, left: space.md, right: space.md, ...type.label, color: color.textInverse },
+  roomAmenities: { flexDirection: 'row', flexWrap: 'wrap', rowGap: space.xs + 2 },
+  roomAmenity: { width: '50%', flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, paddingRight: space.xs + 2 },
+  roomAmenityText: { flex: 1, ...type.small, color: color.textSecondary },
 });

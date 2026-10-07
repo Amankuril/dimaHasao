@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { ArrowLeft, Calendar, ChevronRight, Edit2, Info, MapPin, Users } from 'lucide-react-native';
+import { ArrowLeft, Calendar, ChevronRight, Clock, Edit2, MapPin, MessageSquarePlus, Users, X } from 'lucide-react-native';
 import { authAPI, diningAPI } from '../../api/food';
 import Loader from '../../components/Loader';
 import { Dialog } from '../../components/kit';
-import { Press } from '../../components/ui';
 import { toast } from '../../lib/notify';
 import { readJson, sessionStore } from '../../lib/storage';
 import { useLocation, useNavigate } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, Card, IconButton, SectionHeader } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import useAppBackNavigation from '../hooks/useAppBackNavigation';
-import { F } from '../components/shell';
 import { BOOKING_DRAFT_KEY, formatBookingAddress, formatShortDate, useNavClearance } from '../components/dining/TableShared';
 
 const TERMS = [
@@ -22,14 +21,9 @@ const TERMS = [
   "Additional service charges on the bill are at the restaurant's discretion",
 ];
 
+/** Section title above a card (heritage SectionHeader). */
 function SectionRule({ label }) {
-  return (
-    <View style={styles.rule}>
-      <View style={styles.ruleLine} />
-      <Text style={styles.ruleLabel}>{label.toUpperCase()}</Text>
-      <View style={styles.ruleLine} />
-    </View>
-  );
+  return <SectionHeader title={label} style={{ marginBottom: space.sm }} />;
 }
 
 export default function TableBookingConfirmation() {
@@ -103,160 +97,174 @@ export default function TableBookingConfirmation() {
   return (
     <View style={styles.page}>
       <View style={styles.header}>
-        <Press scale={0.95} onPress={goBack} accessibilityLabel="Back" style={styles.headerBack} hitSlop={6}>
-          <ArrowLeft size={24} color="#fff" />
-        </Press>
-        <Text style={styles.headerText}>Reach the restaurant 15 minutes before your booking time for a hassle-free experience</Text>
+        <IconButton icon={ArrowLeft} label="Back" variant="soft" onPress={goBack} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.headerTitle} accessibilityRole="header">
+            Confirm booking
+          </Text>
+        </View>
+      </View>
+      <View style={styles.notice}>
+        <Clock size={18} color={color.info} />
+        <Text style={styles.noticeText}>Reach the restaurant 15 minutes before your booking time for a hassle-free experience</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 96 + clearance, gap: 16 }}>
-        <View style={styles.card}>
-          <View style={{ padding: 16, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: 112 + clearance, gap: space.md }}>
+        <Card padded={false}>
+          <View style={{ padding: space.lg, gap: space.lg }}>
             <View style={styles.row}>
-              <View style={[styles.iconBox, { backgroundColor: F.cream }]}>
-                <Calendar size={20} color={F.green} />
+              <View style={[styles.iconBox, { backgroundColor: color.primarySoft }]}>
+                <Calendar size={20} color={color.primary} />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.strong}>
                   {formattedDate} at {timeSlot}
                 </Text>
-                <View style={[styles.row, { gap: 8, marginTop: 2 }]}>
-                  <Users size={16} color={tw.gray500} />
+                <View style={[styles.row, { gap: space.xs, marginTop: space.xxs }]}>
+                  <Users size={16} color={color.textMuted} />
                   <Text style={styles.muted14}>{guests} guests</Text>
                 </View>
               </View>
             </View>
             <View style={[styles.row, styles.dashed]}>
-              <View style={[styles.iconBox, { backgroundColor: tw.red50 }]}>
-                <MapPin size={20} color={tw.red500} />
+              <View style={[styles.iconBox, { backgroundColor: color.goldSoft }]}>
+                <MapPin size={20} color={color.goldText} />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.strong}>{restaurant?.name}</Text>
-                <Text style={styles.addr} numberOfLines={1}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.strong} numberOfLines={2}>
+                  {restaurant?.name}
+                </Text>
+                <Text style={styles.addr} numberOfLines={2}>
                   {formatBookingAddress(restaurant?.location)}
                 </Text>
               </View>
             </View>
           </View>
-        </View>
+        </Card>
 
-        <Press
-          scale={1}
+        <Card
+          padded={false}
           onPress={() => {
             setTempRequest(specialRequest);
             setShowRequestModal(true);
           }}
-          style={[styles.card, styles.reqRow]}
+          accessibilityLabel={specialRequest ? 'Edit special request' : 'Add special request'}
+          style={styles.reqRow}
         >
-          <View style={[styles.row, { flex: 1 }]}>
-            <View style={[styles.iconBox, { backgroundColor: specialRequest ? tw.purple50 : tw.slate100 }]}>
-              <Info size={20} color={specialRequest ? F.green : tw.slate600} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.reqTitle}>{specialRequest ? 'Special Request Added' : 'Add special request'}</Text>
-              {specialRequest ? (
-                <Text style={styles.reqSub} numberOfLines={1}>
-                  {specialRequest}
-                </Text>
-              ) : null}
-            </View>
+          <View style={[styles.iconBox, { backgroundColor: specialRequest ? color.primarySoft : color.surfaceMuted }]}>
+            <MessageSquarePlus size={20} color={specialRequest ? color.primary : color.textSecondary} />
           </View>
-          <View style={[styles.row, { gap: 8 }]}>
-            {specialRequest ? <Text style={styles.edit}>EDIT</Text> : null}
-            <ChevronRight size={20} color={tw.slate400} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.reqTitle}>{specialRequest ? 'Special request added' : 'Add special request'}</Text>
+            {specialRequest ? (
+              <Text style={styles.reqSub} numberOfLines={2}>
+                {specialRequest}
+              </Text>
+            ) : null}
           </View>
-        </Press>
+          {specialRequest ? <Text style={styles.edit}>Edit</Text> : null}
+          <ChevronRight size={20} color={color.textDisabled} />
+        </Card>
 
-        <View style={{ paddingTop: 16 }}>
-          <SectionRule label="Guest Preferences" />
-          <Press
-            scale={0.98}
+        <View style={{ paddingTop: space.md }}>
+          <SectionRule label="Guest preferences" />
+          <Card
+            padded={false}
             onPress={() => {
               const targetSlug = restaurant?.slug || restaurant?._id || restaurant?.id || 'restaurant';
               navigate(`/food/user/dining/book/${targetSlug}`, {
                 state: toBooking({ guestCount: guests, selectedDate: date, selectedTime: timeSlot, isModifying: true, backTo: '/food/user/dining/book-confirmation' }),
               });
             }}
-            style={[styles.card, styles.reqRow, { marginTop: 8 }]}
+            accessibilityLabel="Modify booking"
+            style={styles.reqRow}
           >
-            <View style={[styles.row, { alignItems: 'flex-start', flex: 1 }]}>
-              <View style={{ marginTop: 4 }}>
-                <Edit2 size={20} color={F.green} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modTitle}>Modification available</Text>
-                <Text style={styles.modSub}>Valid till {timeSlot}, today</Text>
-              </View>
+            <View style={[styles.iconBox, { backgroundColor: color.primarySoft }]}>
+              <Edit2 size={20} color={color.primary} />
             </View>
-            <ChevronRight size={16} color={tw.slate300} />
-          </Press>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.modTitle}>Modification available</Text>
+              <Text style={styles.modSub}>Valid till {timeSlot}, today</Text>
+            </View>
+            <ChevronRight size={20} color={color.textDisabled} />
+          </Card>
         </View>
 
-        <View style={{ paddingTop: 16, gap: 12 }}>
-          <SectionRule label="Your Details" />
-          <View style={[styles.card, styles.detailsRow]}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.strong}>{user?.name || 'Shailu'}</Text>
-              <Text style={styles.detailSub}>{user?.phone || user?.email || '8090512291'}</Text>
+        <View style={{ paddingTop: space.md }}>
+          <SectionRule label="Your details" />
+          <Card style={styles.detailsRow}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.strong} numberOfLines={1}>
+                {user?.name || 'Shailu'}
+              </Text>
+              <Text style={styles.detailSub} numberOfLines={1}>
+                {user?.phone || user?.email || '8090512291'}
+              </Text>
             </View>
-            <Press scale={1} onPress={() => navigate('/food/user/dining/edit-user', { state: toBooking({ specialRequest, user }) })} hitSlop={8}>
-              <Text style={styles.editLink}>Edit</Text>
-            </Press>
-          </View>
+            <Button
+              title="Edit"
+              variant="ghost"
+              size="sm"
+              fullWidth={false}
+              accessibilityLabel="Edit your details"
+              style={{ minHeight: 44 }}
+              onPress={() => navigate('/food/user/dining/edit-user', { state: toBooking({ specialRequest, user }) })}
+            />
+          </Card>
         </View>
 
-        <View style={{ paddingTop: 16 }}>
-          <SectionRule label="Terms and Conditions" />
-          <View style={[styles.card, { padding: 20, marginTop: 12, gap: 16 }]}>
+        <View style={{ paddingTop: space.md }}>
+          <SectionRule label="Terms and conditions" />
+          <Card style={{ gap: space.md }}>
             {TERMS.map((term) => (
-              <View key={term} style={{ flexDirection: 'row', gap: 12 }}>
+              <View key={term} style={{ flexDirection: 'row', gap: space.md }}>
                 <View style={styles.bullet} />
                 <Text style={styles.term}>{term}</Text>
               </View>
             ))}
-          </View>
+          </Card>
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: 16 + clearance }]}>
-        <Press scale={0.98} onPress={handleBooking} disabled={bookingInProgress} accessibilityLabel="Confirm your seat" style={[styles.cta, bookingInProgress ? { opacity: 0.6 } : null]}>
-          <Text style={styles.ctaText}>{bookingInProgress ? 'Confirming...' : 'Confirm your seat'}</Text>
-        </Press>
+      <View style={[styles.footer, { paddingBottom: space.md + clearance }]}>
+        <Button
+          title={bookingInProgress ? 'Confirming...' : 'Confirm your seat'}
+          size="lg"
+          onPress={handleBooking}
+          loading={bookingInProgress}
+          accessibilityLabel="Confirm your seat"
+        />
       </View>
 
-      <Dialog visible={showRequestModal} onClose={() => setShowRequestModal(false)} backdrop="rgba(0,0,0,0.5)" blur={8} panelStyle={styles.modalPanel}>
+      <Dialog visible={showRequestModal} onClose={() => setShowRequestModal(false)} backdrop={color.overlay} blur={8} panelStyle={styles.modalPanel}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.modalHead}>
-            <Text style={styles.modalTitle}>SPECIAL REQUEST</Text>
-            <Press scale={0.95} onPress={() => setShowRequestModal(false)} accessibilityLabel="Close" style={styles.modalClose}>
-              <ArrowLeft size={16} color={tw.slate500} style={{ transform: [{ rotate: '90deg' }] }} />
-            </Press>
+            <Text style={styles.modalTitle}>Special request</Text>
+            <IconButton icon={X} label="Close" variant="soft" size={40} iconSize={18} onPress={() => setShowRequestModal(false)} />
           </View>
           <Text style={styles.modalBody}>Let the restaurant know if you have any allergies or special requirements (e.g. Birthday, Anniversary).</Text>
+          <Text style={styles.label}>Your request</Text>
           <TextInput
             value={tempRequest}
             onChangeText={setTempRequest}
             placeholder="E.g. I have a peanut allergy, or we are celebrating a birthday..."
-            placeholderTextColor={tw.slate400}
+            placeholderTextColor={color.textMuted}
             multiline
             autoFocus
             textAlignVertical="top"
+            accessibilityLabel="Special request"
             style={styles.textarea}
           />
           <View style={styles.modalBtns}>
-            <Press scale={0.95} onPress={() => setShowRequestModal(false)} style={[styles.modalBtn, { backgroundColor: tw.slate100 }]}>
-              <Text style={[styles.modalBtnText, { color: tw.slate600 }]}>CANCEL</Text>
-            </Press>
-            <Press
-              scale={0.95}
+            <Button title="Cancel" variant="outline" onPress={() => setShowRequestModal(false)} style={{ flex: 1 }} />
+            <Button
+              title="Save"
               onPress={() => {
                 setSpecialRequest(tempRequest);
                 setShowRequestModal(false);
               }}
-              style={[styles.modalBtn, { backgroundColor: F.green }, shadow('0 10px 15px -3px #FFC9C9, 0 4px 6px -4px #FFC9C9')]}
-            >
-              <Text style={[styles.modalBtnText, { color: '#fff' }]}>SAVE</Text>
-            </Press>
+              style={{ flex: 1 }}
+            />
           </View>
         </KeyboardAvoidingView>
       </Dialog>
@@ -265,41 +273,33 @@ export default function TableBookingConfirmation() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.slate50 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  header: { backgroundColor: F.green, paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', gap: 12, ...shadow('md') },
-  headerBack: { padding: 4, borderRadius: 999 },
-  headerText: { flex: 1, fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) },
-  card: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, overflow: 'hidden', ...shadow('sm') },
-  iconBox: { padding: 8, borderRadius: 12 },
-  strong: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  muted14: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  addr: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 2, ...poppins(400) },
-  dashed: { alignItems: 'flex-start', paddingTop: 16, borderTopWidth: 1, borderTopColor: tw.slate100, borderStyle: 'dashed' },
-  reqRow: { padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  reqTitle: { fontSize: 16, lineHeight: 24, color: tw.gray700, ...poppins(700) },
-  reqSub: { fontSize: 12, lineHeight: 16, color: tw.slate500, marginTop: 2, ...poppins(500) },
-  edit: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: 'rgba(10,77,43,0.4)', ...poppins(900) },
-  rule: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12 },
-  ruleLine: { flex: 1, height: 1, backgroundColor: tw.slate200 },
-  ruleLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.slate400, ...poppins(700) },
-  modTitle: { fontSize: 14, lineHeight: 20, color: tw.gray800, ...poppins(700) },
-  modSub: { fontSize: 12, lineHeight: 16, color: tw.slate400, ...poppins(400) },
-  detailsRow: { padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  detailSub: { fontSize: 14, lineHeight: 20, color: tw.slate400, marginTop: 4, ...poppins(400) },
-  editLink: { fontSize: 14, lineHeight: 20, color: tw.red500, ...poppins(700) },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: tw.slate300, marginTop: 8 },
-  term: { flex: 1, fontSize: 12, lineHeight: 19.5, color: tw.slate600, ...poppins(500) },
-  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.slate100, paddingHorizontal: 16, paddingTop: 16 },
-  cta: { height: 56, borderRadius: 16, backgroundColor: F.green, alignItems: 'center', justifyContent: 'center' },
-  ctaText: { fontSize: 18, lineHeight: 28, color: '#fff', ...poppins(700) },
-  modalPanel: { width: 340, maxWidth: '92%', backgroundColor: '#fff', borderRadius: 24, padding: 24, ...shadow('2xl') },
-  modalHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  modalTitle: { fontSize: 18, lineHeight: 28, letterSpacing: -0.45, color: tw.gray900, ...poppins(900) },
-  modalClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  modalBody: { fontSize: 14, lineHeight: 22.75, color: tw.slate500, marginBottom: 16, ...poppins(400) },
-  textarea: { height: 128, padding: 16, borderRadius: 16, backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate200, fontSize: 14, color: tw.gray900, ...poppins(500) },
-  modalBtns: { flexDirection: 'row', gap: 12, paddingTop: 20 },
-  modalBtn: { flex: 1, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  modalBtnText: { fontSize: 14, letterSpacing: 1.4, ...poppins(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.sm, backgroundColor: color.surface },
+  headerTitle: { ...type.heading, color: color.text },
+  notice: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingHorizontal: space.lg, paddingVertical: space.md, backgroundColor: color.infoSoft },
+  noticeText: { flex: 1, ...type.small, color: color.info },
+  iconBox: { width: 40, height: 40, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  strong: { ...type.subheading, color: color.text },
+  muted14: { ...type.small, color: color.textMuted },
+  addr: { ...type.small, color: color.textMuted, marginTop: space.xxs },
+  dashed: { alignItems: 'flex-start', paddingTop: space.lg, borderTopWidth: 1, borderTopColor: color.border, borderStyle: 'dashed' },
+  reqRow: { minHeight: 64, padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  reqTitle: { ...type.bodyStrong, color: color.text },
+  reqSub: { ...type.small, color: color.textMuted, marginTop: space.xxs },
+  edit: { ...type.label, color: color.primary },
+  modTitle: { ...type.bodyStrong, color: color.text },
+  modSub: { ...type.caption, color: color.textMuted },
+  detailsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+  detailSub: { ...type.small, color: color.textMuted, marginTop: space.xxs },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.gold, marginTop: 8 },
+  term: { flex: 1, ...type.small, color: color.textSecondary },
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: color.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.md, ...elevation.sheet },
+  modalPanel: { width: 360, maxWidth: '92%', backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xl, ...elevation.float },
+  modalHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space.sm },
+  modalTitle: { ...type.heading, color: color.text },
+  modalBody: { ...type.small, color: color.textSecondary, marginBottom: space.lg },
+  label: { ...type.label, color: color.text, marginBottom: space.xs },
+  textarea: { height: 128, padding: space.md, borderRadius: radii.md, backgroundColor: color.surface, borderWidth: 1.5, borderColor: color.primary, ...type.body, color: color.text },
+  modalBtns: { flexDirection: 'row', gap: space.md, paddingTop: space.xl },
 });

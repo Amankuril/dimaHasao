@@ -8,7 +8,7 @@ import { openExternal } from '../lib/links';
 import HtmlContent from './HtmlContent';
 import { Spinner } from './Loader';
 import { Press } from './ui';
-import { display, poppins, shadow, tw } from '../theme';
+import { color, display, poppins, shadow, space, tw, type } from '../theme';
 
 /*
  * Port of Food/components/user/CMSPage.jsx as the delivery module renders it
@@ -177,27 +177,27 @@ export default function CMSPage({ endpoint, title: defaultTitle, goBack }) {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#fff' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#fff' },
-  loadingText: { marginTop: 16, fontSize: 10, lineHeight: 15, color: tw.gray500, letterSpacing: 1, textTransform: 'uppercase', ...poppins(700) },
+  loadingText: { marginTop: space.lg, ...type.small, color: color.textMuted },
   header: { backgroundColor: 'rgba(255,255,255,0.8)', borderBottomWidth: 1, borderBottomColor: tw.gray100, overflow: 'hidden' },
   headerRow: { height: 64, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 16 },
   back: { height: 40, width: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   // font-black: Sora with the theme's .01em, leading-none
   title: { fontSize: 20, lineHeight: 20, color: tw.gray900, ...display(900, 20) },
-  subtitle: { marginTop: 4, fontSize: 10, lineHeight: 15, color: tw.gray400, letterSpacing: 1, textTransform: 'uppercase', ...poppins(700) },
+  subtitle: { marginTop: space.xs, ...type.caption, color: color.textMuted },
   body: { paddingHorizontal: 16, paddingVertical: 32 },
   // rounded-[2rem] p-6 (-> 17.6) border-gray-50
   card: { backgroundColor: '#fff', borderRadius: 32, padding: 17.6, borderWidth: 1, borderColor: tw.gray50 },
   contactCard: { backgroundColor: tw.gray50, padding: 17.6, borderRadius: 24, borderWidth: 1, borderColor: '#E5DDC3', alignItems: 'center' },
   contactIcon: { width: 48, height: 48, backgroundColor: '#fff', borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  contactTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, textTransform: 'uppercase', marginBottom: 8, ...display(900, 14) },
+  contactTitle: { ...type.subheading, color: color.text, marginBottom: space.sm },
   contactValue: { fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', ...poppins(500) },
-  contactCta: { marginTop: 16, fontSize: 12, lineHeight: 16, color: '#0a4d2b', textTransform: 'uppercase', ...display(900, 12) },
+  contactCta: { marginTop: space.lg, ...type.label, color: color.primary },
   empty: { alignItems: 'center', paddingVertical: 80 },
   emptyText: { color: tw.gray400, fontSize: 16, lineHeight: 24, textAlign: 'center', ...poppins(500) },
   faqWrap: { paddingTop: 40, borderTopWidth: 1, borderTopColor: tw.gray100 },
   faqTitle: { fontSize: 20, lineHeight: 28, color: tw.gray900, marginBottom: 32, ...display(900, 20) },
   faqItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, padding: 20, borderRadius: 24, backgroundColor: tw.gray50, borderWidth: 1, borderColor: '#E5DDC3' },
-  faqQ: { fontSize: 12, lineHeight: 16, color: tw.gray900, textTransform: 'uppercase', ...display(900, 12) },
+  faqQ: { ...type.bodyStrong, color: color.text },
   faqA: { fontSize: 12, lineHeight: 19.5, color: tw.gray500, ...poppins(500) },
-  footer: { marginTop: 40, textAlign: 'center', fontSize: 10, lineHeight: 16.25, color: tw.gray400, textTransform: 'uppercase', ...display(900, 10) },
+  footer: { marginTop: space.xxxl, textAlign: 'center', ...type.caption, color: color.textMuted },
 });

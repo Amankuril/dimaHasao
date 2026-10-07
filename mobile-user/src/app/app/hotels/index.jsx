@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Fa from '../../../components/Fa';
-import { Press } from '../../../components/ui';
+import { Chip, ChipRow, IconButton, fa } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
 import { SelectField } from '../../../components/kit';
 import { Header, PatternDivider } from '../../../components/dh/Header';
 import { HotelCard } from '../../../components/dh/hotel';
 import { Panel, Pulse, StateBlock, Stepper, dhs } from '../../../components/dh/ui';
 import { fetchHotels } from '../../../api/dh/hotelApi';
-import { dh, poppins, tw } from '../../../theme';
+import { color, radii, space, type } from '../../../theme';
 
 // Web: DimaHasao/pages/HotelListScreen.jsx (/app/hotels)
 
@@ -21,6 +23,7 @@ const SORTS = [
 ];
 
 export default function HotelListScreen() {
+  const insets = useSafeAreaInsets();
   const [selectedType, setSelectedType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
@@ -48,73 +51,62 @@ export default function HotelListScreen() {
   }, [hotels, selectedType, searchQuery, sortBy]);
 
   const header = (
-    <View style={{ gap: 14, marginBottom: 14 }}>
-      <Panel pad={12} style={{ gap: 10 }}>
-        <View style={{ justifyContent: 'center' }}>
-          <Fa name="fa-solid fa-magnifying-glass" size={12} color={tw.emerald800} style={styles.searchIcon} />
+    <View style={{ gap: space.lg, marginBottom: space.lg }}>
+      <Panel style={{ gap: space.md }}>
+        <View style={styles.searchBox}>
+          <Fa name="fa-solid fa-magnifying-glass" size={16} color={color.primary} />
           <TextInput
             placeholder="Search Haflong, Jatinga, Umrangso..."
-            placeholderTextColor={tw.gray400}
+            placeholderTextColor={color.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             returnKeyType="search"
-            style={[dhs.input, { paddingLeft: 36, paddingRight: 32 }]}
+            style={styles.searchInput}
             accessibilityLabel="Search stays"
           />
-          {searchQuery ? (
-            <Press onPress={() => setSearchQuery('')} style={styles.clear} accessibilityLabel="Clear search" hitSlop={8}>
-              <Fa name="fa-solid fa-xmark" size={12} color={tw.gray400} />
-            </Press>
-          ) : null}
+          {searchQuery ? <IconButton icon={fa('fa-solid fa-xmark')} label="Clear search" size={40} iconSize={16} iconColor={color.textMuted} onPress={() => setSearchQuery('')} /> : null}
         </View>
 
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <View style={styles.pref}>
-            <View style={[dhs.row, { gap: 6 }]}>
-              <Fa name="fa-regular fa-moon" size={11} color={tw.emerald700} />
-              <Text style={styles.prefLabel}>Nights:</Text>
-            </View>
-            <Stepper value={nights} onChange={setNights} label="nights" />
+        <View style={styles.pref}>
+          <View style={[dhs.row, { gap: space.sm, flexShrink: 1 }]}>
+            <Fa name="fa-regular fa-moon" size={16} color={color.primary} />
+            <Text style={styles.prefLabel}>Nights</Text>
           </View>
-          <View style={styles.pref}>
-            <View style={[dhs.row, { gap: 6 }]}>
-              <Fa name="fa-solid fa-users" size={11} color={tw.emerald700} />
-              <Text style={styles.prefLabel}>Guests:</Text>
-            </View>
-            <Stepper value={guestCount} onChange={setGuestCount} label="guests" />
+          <Stepper value={nights} onChange={setNights} label="nights" />
+        </View>
+        <View style={styles.pref}>
+          <View style={[dhs.row, { gap: space.sm, flexShrink: 1 }]}>
+            <Fa name="fa-solid fa-users" size={16} color={color.primary} />
+            <Text style={styles.prefLabel}>Guests</Text>
           </View>
+          <Stepper value={guestCount} onChange={setGuestCount} label="guests" />
         </View>
       </Panel>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
-        {PROPERTY_TYPES.map((type) => {
-          const active = selectedType === type;
-          return (
-            <Press key={type} scale={0.94} onPress={() => setSelectedType(type)} style={[styles.chip, active && styles.chipActive]} accessibilityState={{ selected: active }}>
-              <Text style={[styles.chipText, active && { color: tw.amber300 }]}>{type === 'All' ? 'All Stays' : `${type}s`}</Text>
-            </Press>
-          );
-        })}
-      </ScrollView>
+      <ChipRow style={styles.chipRow} contentStyle={{ paddingHorizontal: space.lg }}>
+        {PROPERTY_TYPES.map((t) => (
+          <Chip key={t} label={t === 'All' ? 'All stays' : `${t}s`} selected={selectedType === t} onPress={() => setSelectedType(t)} />
+        ))}
+      </ChipRow>
 
-      <View style={[dhs.row, { justifyContent: 'space-between', paddingHorizontal: 4 }]}>
+      <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm }]}>
         <Text style={styles.count}>
-          {filteredHotels.length} {filteredHotels.length === 1 ? 'Stay' : 'Stays'} Available
+          {filteredHotels.length} {filteredHotels.length === 1 ? 'stay' : 'stays'} available
         </Text>
-        <View style={[dhs.row, { gap: 6 }]}>
-          <Text style={styles.sortLabel}>Sort:</Text>
-          <SelectField value={sortBy} options={SORTS} onChange={setSortBy} accessibilityLabel="Sort stays" style={styles.sort} textStyle={styles.sortText} chevronColor={tw.gray800} />
+        <View style={[dhs.row, { gap: space.sm }]}>
+          <Text style={styles.sortLabel}>Sort</Text>
+          <SelectField value={sortBy} options={SORTS} onChange={setSortBy} accessibilityLabel="Sort stays" style={styles.sort} textStyle={styles.sortText} chevronColor={color.text} />
         </View>
       </View>
     </View>
   );
 
   const empty = loading ? (
-    <View style={{ gap: 16 }}>
+    <View style={{ gap: space.lg }} accessibilityLabel="Loading stays">
       {[0, 1, 2].map((i) => (
         <View key={i} style={[dhs.panel, { overflow: 'hidden' }]}>
-          <Pulse style={{ height: 160, borderRadius: 0 }} />
-          <View style={{ padding: 16, gap: 8 }}>
+          <Pulse style={{ height: 180, borderRadius: 0 }} />
+          <View style={{ padding: space.lg, gap: space.sm }}>
             <Pulse style={{ height: 12, width: '33%' }} />
             <Pulse style={{ height: 16, width: '66%' }} />
             <Pulse style={{ height: 12, width: '50%' }} />
@@ -123,17 +115,17 @@ export default function HotelListScreen() {
       ))}
     </View>
   ) : loadError ? (
-    <StateBlock icon="fa-solid fa-triangle-exclamation" iconColor={tw.amber400} title="Couldn't load stays" text={loadError} actionLabel="Retry" onAction={() => refetch()} />
+    <StateBlock icon="fa-solid fa-triangle-exclamation" iconColor={color.warning} title="Couldn't load stays" text={loadError} actionLabel="Retry" onAction={() => refetch()} />
   ) : (
     <StateBlock
       icon="fa-solid fa-hotel"
-      title="No Stays Found"
+      title="No stays found"
       text={
         hotels.length === 0
           ? 'No stays are listed yet. Please check back soon.'
           : `No hotels match "${searchQuery}" under ${selectedType}. Try searching another area or reset filters.`
       }
-      actionLabel="Reset Filters"
+      actionLabel="Reset filters"
       onAction={() => {
         setSearchQuery('');
         setSelectedType('All');
@@ -151,9 +143,10 @@ export default function HotelListScreen() {
         renderItem={({ item }) => <HotelCard hotel={item} />}
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-        contentContainerStyle={{ padding: 14, paddingBottom: 112 }}
+        ItemSeparatorComponent={Separator}
+        contentContainerStyle={{ padding: space.lg, paddingBottom: NAV_CLEARANCE + insets.bottom + space.lg }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshing={isRefetching}
         onRefresh={refetch}
       />
@@ -161,16 +154,16 @@ export default function HotelListScreen() {
   );
 }
 
+const Separator = () => <View style={{ height: space.lg }} />;
+
 const styles = StyleSheet.create({
-  searchIcon: { position: 'absolute', left: 14, zIndex: 1 },
-  clear: { position: 'absolute', right: 10, padding: 4 },
-  pref: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: dh.cream, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: dh.border },
-  prefLabel: { fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(500) },
-  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: dh.border },
-  chipActive: { backgroundColor: dh.nav, borderColor: tw.emerald800 },
-  chipText: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(700) },
-  count: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(700) },
-  sortLabel: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(500) },
-  sort: { backgroundColor: '#fff', borderWidth: 1, borderColor: dh.border, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, minWidth: 96, gap: 4 },
-  sortText: { fontSize: 11, lineHeight: 16.5, color: tw.gray800, ...poppins(600) },
+  searchBox: { height: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, paddingLeft: space.md, paddingRight: space.xs },
+  searchInput: { flex: 1, minWidth: 0, height: 46, padding: 0, ...type.body, color: color.text },
+  pref: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, backgroundColor: color.surfaceMuted, paddingHorizontal: space.md, paddingVertical: space.xs, borderRadius: radii.md },
+  prefLabel: { ...type.bodyStrong, color: color.text },
+  chipRow: { marginHorizontal: -space.lg },
+  count: { ...type.bodyStrong, color: color.text, flexShrink: 1 },
+  sortLabel: { ...type.small, color: color.textMuted },
+  sort: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, paddingHorizontal: space.md, minHeight: 44, minWidth: 120, gap: space.xs },
+  sortText: { ...type.label, color: color.text },
 });

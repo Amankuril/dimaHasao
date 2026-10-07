@@ -2,15 +2,18 @@ import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import Image from '../../../components/Img';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import Fa from '../../../components/Fa';
 import { Press } from '../../../components/ui';
+import { StatusBadge, fa } from '../../../components/ds';
 import { Header, PatternDivider } from '../../../components/dh/Header';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
 import { ChipRow, ResultsBar, SearchPanel } from '../../../components/dh/booking';
 import { Pulse, StateBlock, dhs } from '../../../components/dh/ui';
 import { PACKAGE_TYPES, fetchPackages } from '../../../api/dh/toursApi';
-import { dh, montserrat, poppins, shadow, tw } from '../../../theme';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 // Web: DimaHasao/pages/TourPackageListScreen.jsx (/app/packages) + components/tour/PackageCard.jsx
 
@@ -23,37 +26,43 @@ const QUICK = [
 
 function PackageCard({ pkg }) {
   return (
-    <Press scale={0.99} onPress={() => router.push(`/app/packages/${pkg.id}`)} style={styles.card} accessibilityLabel={`${pkg.title}. View plan`}>
+    <Press scale={0.99} onPress={() => router.push(`/app/packages/${pkg.id}`)} style={styles.card} accessibilityLabel={`${pkg.title}, ${pkg.duration}, ₹${pkg.pricePerPerson.toLocaleString('en-IN')} per traveller. View plan`}>
       <View style={styles.imageWrap}>
         <Image source={{ uri: pkg.heroImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-        <LinearGradient colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.7)']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(6,28,14,0.75)']} style={StyleSheet.absoluteFill} />
         <View style={styles.badges}>
-          <Text style={[styles.badge, styles.badgeGreen]}>{pkg.duration}</Text>
-          <Text style={[styles.badge, { backgroundColor: tw.amber500, color: '#fff' }]}>{pkg.type}</Text>
+          <StatusBadge label={pkg.duration} tone="primary" icon={fa('fa-regular fa-clock')} style={{ backgroundColor: color.surface }} />
+          <StatusBadge label={pkg.type} tone="gold" />
         </View>
         <View style={styles.rating}>
           <Text style={styles.ratingText}>{pkg.rating}</Text>
-          <Fa name="fa-solid fa-star" size={8} color={tw.amber300} />
+          <Fa name="fa-solid fa-star" size={12} color={color.goldOnDark} />
         </View>
         <View style={styles.imageFoot}>
-          <View style={[dhs.row, { gap: 4, maxWidth: '70%' }]}>
-            <Fa name="fa-solid fa-map-pin" size={12} color={tw.amber400} />
-            <Text style={styles.dest} numberOfLines={1}>{pkg.destinations.join(' • ')}</Text>
+          <View style={[dhs.row, { gap: space.xs + 2, flexShrink: 1 }]}>
+            <Fa name="fa-solid fa-map-pin" size={14} color={color.goldOnDark} />
+            <Text style={styles.dest} numberOfLines={1}>
+              {pkg.destinations.join(' • ')}
+            </Text>
           </View>
-          <Text style={styles.difficulty}>{pkg.difficulty}</Text>
+          {pkg.difficulty ? <Text style={styles.difficulty}>{pkg.difficulty}</Text> : null}
         </View>
       </View>
 
-      <View style={{ padding: 14, gap: 12 }}>
-        <View>
-          <Text style={styles.title}>{pkg.title}</Text>
+      <View style={{ padding: space.lg, gap: space.md }}>
+        <View style={{ gap: space.xs + 2 }}>
+          <Text style={styles.title} numberOfLines={2}>
+            {pkg.title}
+          </Text>
           {pkg.highlights[0] ? (
-            <Text style={styles.highlight} numberOfLines={2}>{pkg.highlights[0]}</Text>
+            <Text style={styles.highlight} numberOfLines={2}>
+              {pkg.highlights[0]}
+            </Text>
           ) : null}
           <View style={styles.quick}>
             {QUICK.map(([icon, label]) => (
               <View key={label} style={styles.quickItem}>
-                <Fa name={icon} size={9} color={tw.emerald800} />
+                <Fa name={icon} size={12} color={color.primary} />
                 <Text style={styles.quickText}>{label}</Text>
               </View>
             ))}
@@ -61,16 +70,16 @@ function PackageCard({ pkg }) {
         </View>
 
         <View style={styles.foot}>
-          <View>
-            <View style={[dhs.row, { alignItems: 'baseline', gap: 6 }]}>
+          <View style={{ flexShrink: 1 }}>
+            <View style={[dhs.row, { alignItems: 'baseline', gap: space.sm }]}>
               <Text style={styles.price}>₹{pkg.pricePerPerson.toLocaleString('en-IN')}</Text>
               {pkg.originalPrice ? <Text style={styles.strike}>₹{pkg.originalPrice.toLocaleString('en-IN')}</Text> : null}
             </View>
-            <Text style={styles.priceNote}>per traveler + all inclusive</Text>
+            <Text style={styles.priceNote}>per traveller, all inclusive</Text>
           </View>
           <View style={styles.cta}>
-            <Text style={styles.ctaText}>View Plan</Text>
-            <Fa name="fa-solid fa-arrow-right" size={10} color={tw.amber300} />
+            <Text style={styles.ctaText}>View plan</Text>
+            <Fa name="fa-solid fa-arrow-right" size={14} color={color.onPrimary} />
           </View>
         </View>
       </View>
@@ -79,6 +88,7 @@ function PackageCard({ pkg }) {
 }
 
 export default function TourPackageListScreen() {
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('All');
   const [sortBy, setSortBy] = useState('popular');
@@ -104,38 +114,38 @@ export default function TourPackageListScreen() {
   }, [packages, searchQuery, selectedType, sortBy]);
 
   const header = (
-    <View style={{ gap: 14, marginBottom: 14 }}>
+    <View style={{ gap: space.lg, marginBottom: space.lg }}>
       <SearchPanel value={searchQuery} onChange={setSearchQuery} placeholder="Search packages (Jatinga, Silaikul, Trekking)..." />
-      <ChipRow items={TYPES} value={selectedType} onChange={setSelectedType} label={(t) => (t === 'All' ? 'All Packages' : t)} />
-      <ResultsBar text={`${filteredPackages.length} ${filteredPackages.length === 1 ? 'Package' : 'Packages'} Available`} sortBy={sortBy} onSort={setSortBy} />
+      <ChipRow items={TYPES} value={selectedType} onChange={setSelectedType} label={(t) => (t === 'All' ? 'All packages' : t)} />
+      <ResultsBar text={`${filteredPackages.length} ${filteredPackages.length === 1 ? 'package' : 'packages'} available`} sortBy={sortBy} onSort={setSortBy} />
     </View>
   );
 
   const empty = loading ? (
-    <View style={{ gap: 16 }}>
+    <View style={{ gap: space.lg }} accessibilityLabel="Loading packages">
       {[0, 1, 2].map((n) => (
         <View key={n} style={[dhs.panel, { overflow: 'hidden' }]}>
-          <Pulse style={{ height: 176, borderRadius: 0 }} />
-          <View style={{ padding: 14, gap: 8 }}>
-            <Pulse style={{ height: 14, width: '75%' }} />
-            <Pulse tone={100} style={{ height: 12, width: '50%' }} />
-            <Pulse tone={100} style={{ height: 12, width: '33%' }} />
+          <Pulse style={{ height: 180, borderRadius: 0 }} />
+          <View style={{ padding: space.lg, gap: space.sm }}>
+            <Pulse style={{ height: 16, width: '75%' }} />
+            <Pulse tone={100} style={{ height: 13, width: '50%' }} />
+            <Pulse tone={100} style={{ height: 13, width: '33%' }} />
           </View>
         </View>
       ))}
     </View>
   ) : loadError ? (
-    <StateBlock icon="fa-solid fa-triangle-exclamation" iconColor={tw.amber400} title="Couldn't load packages" text={loadError} actionLabel="Try Again" onAction={() => refetch()} />
+    <StateBlock icon="fa-solid fa-triangle-exclamation" iconColor={color.warning} title="Couldn't load packages" text={loadError} actionLabel="Try again" onAction={() => refetch()} />
   ) : (
     <StateBlock
       icon="fa-solid fa-suitcase-rolling"
-      title="No Tour Packages Found"
+      title="No tour packages found"
       text={
         searchQuery || selectedType !== 'All'
           ? `No packages match ${searchQuery ? `"${searchQuery}"` : 'this category'}. Try another category or reset filters.`
           : 'No tour packages are live yet. Please check back soon.'
       }
-      actionLabel="Reset Filters"
+      actionLabel="Reset filters"
       onAction={() => {
         setSearchQuery('');
         setSelectedType('All');
@@ -153,9 +163,10 @@ export default function TourPackageListScreen() {
         renderItem={({ item }) => <PackageCard pkg={item} />}
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-        contentContainerStyle={{ padding: 14, paddingBottom: 112 }}
+        ItemSeparatorComponent={Separator}
+        contentContainerStyle={{ padding: space.lg, paddingBottom: NAV_CLEARANCE + insets.bottom + space.lg }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshing={isRefetching}
         onRefresh={refetch}
       />
@@ -163,26 +174,26 @@ export default function TourPackageListScreen() {
   );
 }
 
+const Separator = () => <View style={{ height: space.lg }} />;
+
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(229,221,195,0.8)', ...shadow('xs') },
-  imageWrap: { height: 176, backgroundColor: tw.gray200 },
-  badges: { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  badge: { fontSize: 10, lineHeight: 15, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, overflow: 'hidden', ...poppins(700) },
-  badgeGreen: { backgroundColor: 'rgba(6,56,30,0.9)', color: tw.amber300, borderWidth: 1, borderColor: 'rgba(255,185,0,0.4)' },
-  rating: { position: 'absolute', top: 10, right: 10, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  ratingText: { fontSize: 10, lineHeight: 15, color: '#fff', ...poppins(700) },
-  imageFoot: { position: 'absolute', bottom: 8, left: 10, right: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  dest: { flexShrink: 1, fontSize: 11, lineHeight: 16.5, color: '#fff', ...poppins(500) },
-  difficulty: { fontSize: 10, lineHeight: 15, color: '#fff', backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden', ...poppins(500) },
-  title: { fontSize: 14, lineHeight: 19.25, color: tw.gray900, ...montserrat(700) },
-  highlight: { fontSize: 11, lineHeight: 17.9, color: tw.gray500, marginTop: 4, ...poppins(400) },
-  quick: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
-  quickItem: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: dh.cream, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(229,221,195,0.6)' },
-  quickText: { fontSize: 10, lineHeight: 15, color: tw.gray600, ...poppins(400) },
-  foot: { paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  price: { fontSize: 16, lineHeight: 24, color: tw.emerald950, ...montserrat(800) },
-  strike: { fontSize: 11, color: tw.gray400, textDecorationLine: 'line-through', ...poppins(400) },
-  priceNote: { fontSize: 9.5, lineHeight: 14, color: tw.gray400, ...poppins(400) },
-  cta: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: dh.nav, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12 },
-  ctaText: { fontSize: 12, lineHeight: 16, color: tw.amber300, ...poppins(700) },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden', borderWidth: 1, borderColor: color.border, ...elevation.card },
+  imageWrap: { aspectRatio: 16 / 9, backgroundColor: color.surfaceMuted },
+  badges: { position: 'absolute', top: space.md, left: space.md, right: 72, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, flexWrap: 'wrap' },
+  rating: { position: 'absolute', top: space.md, right: space.md, flexDirection: 'row', alignItems: 'center', gap: space.xs, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: space.sm, height: 24, borderRadius: radii.pill },
+  ratingText: { ...type.caption, color: color.textInverse },
+  imageFoot: { position: 'absolute', bottom: space.sm, left: space.md, right: space.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  dest: { flexShrink: 1, ...type.label, color: color.textInverse },
+  difficulty: { ...type.caption, color: color.textInverse, backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: space.sm, paddingVertical: 2, borderRadius: radii.sm, overflow: 'hidden' },
+  title: { ...type.subheading, color: color.text },
+  highlight: { ...type.small, color: color.textSecondary },
+  quick: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs + 2, marginTop: space.xs },
+  quickItem: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, backgroundColor: color.surfaceMuted, paddingHorizontal: space.sm + 2, height: 28, borderRadius: radii.pill },
+  quickText: { ...type.caption, color: color.text },
+  foot: { paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+  price: { ...type.price, color: color.text },
+  strike: { ...type.small, color: color.textMuted, textDecorationLine: 'line-through' },
+  priceNote: { ...type.caption, color: color.textMuted },
+  cta: { flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.primary, paddingHorizontal: space.lg, height: 44, borderRadius: radii.md },
+  ctaText: { ...type.buttonSm, color: color.onPrimary },
 });

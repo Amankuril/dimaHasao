@@ -1,23 +1,23 @@
 import { forwardRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Press } from '../../../components/ui';
-import { poppins, shadow, tw } from '../../../theme';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 /*
- * The slice of the web's shadcn primitives (components/ui/{card,button,input,
- * textarea,label,badge}.tsx) that the cart pages use, at their light-theme
- * tokens (shared/styles/global.css, oklch values converted to sRGB).
+ * The slice of the web's shadcn primitives the cart / profile pages use,
+ * restyled on the design-system tokens (DESIGN_SYSTEM.md); same API as
+ * components/ui/{card,button,input,textarea,label,badge}.tsx.
  */
 export const UI = {
-  foreground: '#2B1B10',
-  mutedForeground: '#7C6B5E',
-  border: '#E8E4D6',
-  input: '#F3F2EC',
-  primary: '#D6A324',
-  primaryForeground: '#1B0F05',
-  accent: '#FBE7B8',
-  secondary: '#F4F1E4',
-  green: '#0A4D2B',
+  foreground: color.text,
+  mutedForeground: color.textMuted,
+  border: color.border,
+  input: color.border,
+  primary: color.goldBright,
+  primaryForeground: color.onGold,
+  accent: color.goldSoft,
+  secondary: color.surfaceMuted,
+  green: color.primary,
 };
 
 export function Card({ style, children }) {
@@ -70,7 +70,7 @@ export const Input = forwardRef(function Input({ style, onFocus, onBlur, ...rest
         setFocused(false);
         onBlur?.(e);
       }}
-      style={[s.input, focused ? { borderColor: tw.neutral900 } : null, style]}
+      style={[s.input, focused ? { borderColor: color.primary } : null, style]}
       {...rest}
     />
   );
@@ -93,20 +93,20 @@ export function Badge({ children, style, textStyle, outline }) {
 }
 
 const s = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: UI.border, paddingVertical: 24, gap: 24, ...shadow('sm') },
-  cardHeader: { paddingHorizontal: 24, gap: 8 },
-  cardTitle: { fontSize: 16, lineHeight: 16, color: UI.foreground, ...poppins(600) },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardContent: { paddingHorizontal: 24 },
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 36, paddingHorizontal: 16, borderRadius: 6 },
-  btnDefault: { backgroundColor: UI.primary, ...shadow('0 1px 2px rgba(0,0,0,0.05)') },
-  btnOutline: { backgroundColor: '#fff', borderWidth: 1, borderColor: UI.input, ...shadow('0 1px 2px rgba(0,0,0,0.05)') },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, paddingVertical: space.xl, gap: space.xl, ...elevation.card },
+  cardHeader: { paddingHorizontal: space.xl, gap: space.sm },
+  cardTitle: { ...type.subheading, color: UI.foreground },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  cardContent: { paddingHorizontal: space.xl },
+  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, minHeight: 44, paddingHorizontal: space.lg, borderRadius: radii.md },
+  btnDefault: { backgroundColor: UI.primary },
+  btnOutline: { backgroundColor: color.surface, borderWidth: 1.5, borderColor: color.borderStrong },
   btnGhost: { backgroundColor: 'transparent' },
-  btnIcon: { width: 36, paddingHorizontal: 0 },
-  btnText: { fontSize: 14, lineHeight: 20, ...poppins(500) },
-  input: { height: 36, width: '100%', borderRadius: 6, borderWidth: 1, borderColor: UI.input, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 4, fontSize: 16, color: UI.foreground, ...poppins(400) },
-  textarea: { minHeight: 80, paddingVertical: 8, fontSize: 14, lineHeight: 20 },
-  label: { fontSize: 14, lineHeight: 14, color: UI.foreground, ...poppins(500) },
-  badge: { alignSelf: 'flex-start', borderRadius: 999, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeText: { fontSize: 12, lineHeight: 16, ...poppins(500) },
+  btnIcon: { width: 44, paddingHorizontal: 0 },
+  btnText: { ...type.buttonSm },
+  input: { minHeight: 48, width: '100%', borderRadius: radii.md, borderWidth: 1, borderColor: UI.input, backgroundColor: color.surface, paddingHorizontal: space.md, paddingVertical: space.xs, ...type.body, lineHeight: undefined, color: UI.foreground },
+  textarea: { minHeight: 96, paddingVertical: space.sm, ...type.body },
+  label: { ...type.label, color: UI.foreground },
+  badge: { alignSelf: 'flex-start', borderRadius: radii.pill, borderWidth: 1, paddingHorizontal: space.sm, paddingVertical: 2 },
+  badgeText: { ...type.caption },
 });

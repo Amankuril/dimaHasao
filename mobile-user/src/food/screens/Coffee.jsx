@@ -1,13 +1,15 @@
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star } from 'lucide-react-native';
+import { BadgePercent, MapPin, Star } from 'lucide-react-native';
 import Image from '../../components/Img';
 import { Press } from '../../components/ui';
 import useAppBackNavigation from '../hooks/useAppBackNavigation';
 import { useLocation as useLocationHook } from '../hooks/useLocation';
 import { navigateTo } from '../../lib/webRouter';
-import { poppins, tw } from '../../theme';
-import { F, useLocationSelector } from '../components/shell';
+import { color, elevation, radii, space, type } from '../../theme';
+import { useLocationSelector } from '../components/shell';
+import { SectionHeader, StatusBadge } from '../../components/ds';
+import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { OverlayNav } from '../components/dining/DiningCards';
 
 const coffeeBanner = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&h=400&fit=crop';
@@ -23,19 +25,19 @@ const starbucksStores = [
 
 function StoreList({ stores, sectionTitle }) {
   return (
-    <View style={{ marginBottom: 32 }}>
-      <Text style={styles.section}>{sectionTitle}</Text>
-      <View>
+    <View style={{ marginBottom: space.xxl }}>
+      <SectionHeader title={sectionTitle} />
+      <View style={styles.list}>
         {stores.map((store, index) => {
           const storeSlug = store.name.toLowerCase().replace(/\s+/g, '-');
-          const isHighRating = store.rating >= 4.0;
           return (
             <Press
               key={store.id}
               scale={0.99}
+              accessibilityRole="button"
               accessibilityLabel={`${store.name}, ${store.location}`}
               onPress={() => navigateTo(`/user/restaurants/${storeSlug}`)}
-              style={[styles.row, index !== stores.length - 1 ? { borderBottomWidth: 1, borderBottomColor: tw.gray200 } : null]}
+              style={[styles.row, index !== stores.length - 1 ? { borderBottomWidth: 1, borderBottomColor: color.border } : null]}
             >
               <View style={styles.logo}>
                 {store.logo ? (
@@ -46,19 +48,21 @@ function StoreList({ stores, sectionTitle }) {
                   </View>
                 )}
               </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.location}>{store.location}</Text>
-                <View style={{ marginBottom: 8, flexDirection: 'row' }}>
-                  <View style={[styles.rating, { backgroundColor: isHighRating ? tw.green600 : F.green }]}>
+              <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm }}>
+                  <Text style={styles.location} numberOfLines={2}>{store.location}</Text>
+                  <View style={styles.rating}>
+                    <Star size={12} color={color.goldText} fill={color.gold} strokeWidth={0} />
                     <Text style={styles.ratingText}>{store.rating}</Text>
-                    <Star size={12} color="#fff" fill="#fff" />
                   </View>
                 </View>
-                <Text style={styles.distance}>{store.distance}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+                  <MapPin size={13} color={color.textSecondary} />
+                  <Text style={styles.distance}>{store.distance}</Text>
+                  <Text style={styles.distance}>·</Text>
                   <Text style={styles.price}>{store.price}</Text>
-                  {store.offer ? <Text style={styles.offer}>{store.offer}</Text> : null}
                 </View>
+                {store.offer ? <StatusBadge label={store.offer} tone="gold" icon={BadgePercent} /> : null}
               </View>
             </Press>
           );
@@ -79,21 +83,20 @@ export default function Coffee() {
 
   return (
     <View style={styles.page}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}>
-        <View style={{ width: '100%', height: Math.round(width / 3), overflow: 'hidden' }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom }}>
+        <View style={{ width: '100%', height: Math.round(width / 3), overflow: 'hidden', backgroundColor: color.primaryDeep }}>
           <Image source={{ uri: coffeeBanner }} accessibilityLabel="Coffee" style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           <OverlayNav onBack={goBack} onLocation={openLocationSelector} cityName={cityName} />
         </View>
 
-        <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
-          <View style={{ marginBottom: 24 }}>
+        <View style={{ paddingHorizontal: space.lg, paddingTop: space.xxl }}>
+          <View style={{ marginBottom: space.xxl }}>
             <Text style={styles.title} accessibilityRole="header">
               Starbucks Coffee
             </Text>
             <Text style={styles.subtitle}>Cafe, Coffee, Beverages</Text>
-            <View style={{ height: 1, backgroundColor: tw.gray200, marginTop: 16 }} />
           </View>
-          <StoreList stores={starbucksStores} sectionTitle="DINING OUTLETS NEAR YOU" />
+          <StoreList stores={starbucksStores} sectionTitle="Dining outlets near you" />
         </View>
       </ScrollView>
     </View>
@@ -101,18 +104,17 @@ export default function Coffee() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' },
-  title: { fontSize: 24, lineHeight: 32, color: tw.gray900, marginBottom: 8, ...poppins(700) },
-  subtitle: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  section: { marginBottom: 16, fontSize: 14, lineHeight: 20, letterSpacing: 0.35, color: tw.gray500, textAlign: 'center', ...poppins(600) },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, paddingVertical: 16 },
-  logo: { width: 64, height: 64, borderRadius: 32, overflow: 'hidden', backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  logoFallback: { width: '100%', height: '100%', backgroundColor: tw.gray200, alignItems: 'center', justifyContent: 'center' },
-  logoLetter: { fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(600) },
-  location: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 8, ...poppins(700) },
-  rating: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  ratingText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) },
-  distance: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginBottom: 4, ...poppins(400) },
-  price: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) },
-  offer: { fontSize: 14, lineHeight: 20, color: F.green, ...poppins(500) },
+  page: { flex: 1, backgroundColor: color.bg },
+  title: { ...type.heading, fontSize: 22, lineHeight: 30, color: color.text, marginBottom: space.xs },
+  subtitle: { ...type.small, color: color.textMuted },
+  list: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, paddingHorizontal: space.lg, ...elevation.card },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: space.lg, paddingVertical: space.lg },
+  logo: { width: 56, height: 56, borderRadius: 28, overflow: 'hidden', backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  logoFallback: { width: '100%', height: '100%', backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  logoLetter: { ...type.label, color: color.textMuted },
+  location: { ...type.subheading, color: color.text, flex: 1, minWidth: 0 },
+  rating: { flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 24, paddingHorizontal: space.sm, borderRadius: radii.pill, backgroundColor: color.goldSoft },
+  ratingText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
+  distance: { ...type.caption, color: color.textSecondary },
+  price: { ...type.caption, color: color.textSecondary },
 });

@@ -3,14 +3,14 @@ import { Animated, Easing, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { router, useFocusEffect, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BadgePercent, Bookmark, Check, ChefHat, MapPin, Plus, Tag, Search, ShoppingBag, ShoppingCart, SlidersHorizontal, UtensilsCrossed, X } from 'lucide-react-native';
+import { BadgePercent, Bookmark, Check, ChefHat, ChevronRight, MapPin, Plus, Tag, Search, ShoppingBag, ShoppingCart, SlidersHorizontal, UtensilsCrossed, X } from 'lucide-react-native';
 import Image from '../../components/Img';
 import { BottomSheet } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { adminAPI, publicGetOnce, restaurantAPI } from '../../api/food';
 import { useProfile } from '../context/ProfileContext';
 import { useCart } from '../context/CartContext';
-import { useLocation, resolveServiceCity } from '../hooks/useLocation';
+import { useLocation } from '../hooks/useLocation';
 import { useZone } from '../hooks/useZone';
 import { foodImages } from '../constants/images';
 import { isNonVegCategoryScope } from '../utils/vegMode';
@@ -23,15 +23,19 @@ import { API_ORIGIN } from '../../api/client';
 import { localStore, sessionStore } from '../../lib/storage';
 import { toast } from '../../lib/notify';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
+import { Button, Chip, ChipRow, EmptyState, SectionHeader } from '../../components/ds';
+import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import HomeHeader, { ProfileAvatar, SearchPill, VegModeToggle } from '../components/home/HomeHeader';
 import FilterSheet from '../components/home/FilterSheet';
 import { ApplyingVegOverlay, SwitchOffVegDialog, SwitchingOffVegOverlay, VegModePopup } from '../components/home/VegMode';
-import { RecommendedCard, RestaurantCard, couponsForRestaurant, openRestaurant, restaurantSlugOf } from '../components/RestaurantCard';
-import { F, StickyCartCard, useFoodNavScroll, useLocationSelector } from '../components/shell';
+import { RecommendedCard, RestaurantCard, couponsForRestaurant, restaurantSlugOf } from '../components/RestaurantCard';
+import { StickyCartCard, useFoodNavScroll, useLocationSelector } from '../components/shell';
 import OrderTrackingCard from '../components/OrderTrackingCard';
 
 const HERO_BANNER_AUTO_SLIDE_MS = 3500;
+// Height of the floating Delivery / Takeaway / Under 250 / Dining pill (FoodShell) above the app nav.
+const FOOD_TABS_HEIGHT = 72;
 const RESTAURANTS_BATCH_SIZE = 9;
 const HOME_CATEGORIES_CACHE_KEY = 'food_home_categories_v2';
 
@@ -144,19 +148,19 @@ function Pulse({ style }) {
     loop.start();
     return () => loop.stop();
   }, [v]);
-  return <Animated.View style={[{ backgroundColor: tw.gray200, opacity: v }, style]} />;
+  return <Animated.View style={[{ backgroundColor: color.surfaceMuted, opacity: v }, style]} />;
 }
 
 function RestaurantSkeleton() {
   return (
     <View style={styles.skCard}>
-      <Pulse style={{ height: 160 }} />
-      <View style={{ padding: 16, gap: 12 }}>
-        <Pulse style={{ height: 20, width: '80%', borderRadius: 10 }} />
-        <Pulse style={{ height: 16, width: '66%', borderRadius: 8 }} />
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Pulse style={{ height: 16, width: 64, borderRadius: 8 }} />
-          <Pulse style={{ height: 16, width: 96, borderRadius: 8 }} />
+      <Pulse style={{ height: 196 }} />
+      <View style={{ padding: space.lg, gap: space.md }}>
+        <Pulse style={{ height: 18, width: '75%', borderRadius: radii.sm }} />
+        <Pulse style={{ height: 14, width: '55%', borderRadius: radii.sm }} />
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <Pulse style={{ height: 14, width: 64, borderRadius: radii.sm }} />
+          <Pulse style={{ height: 14, width: 96, borderRadius: radii.sm }} />
         </View>
       </View>
     </View>
@@ -168,12 +172,12 @@ function ExploreIconImage({ image, id }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [image]);
   if (typeof image === 'string' && image && !failed) {
-    return <Image source={{ uri: image }} onError={() => setFailed(true)} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="contain" />;
+    return <Image source={{ uri: image }} onError={() => setFailed(true)} style={{ width: '100%', height: '100%', borderRadius: radii.sm }} resizeMode="contain" />;
   }
   const Icon = EXPLORE_FALLBACK_ICONS[id] || Tag;
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Icon size={30} color={F.green} strokeWidth={1.75} />
+      <Icon size={26} color={color.primary} strokeWidth={1.75} />
     </View>
   );
 }
@@ -214,7 +218,7 @@ function HeroBanner({ images, banners, zoneId, active }) {
   };
 
   return (
-    <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+    <View style={{ paddingHorizontal: space.lg, paddingTop: space.sm, paddingBottom: space.lg }}>
       <View style={styles.hero} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         <ScrollView
           ref={scroller}
@@ -261,7 +265,8 @@ function HeroBanner({ images, banners, zoneId, active }) {
 }
 
 function CategoryRail({ categories, sticky }) {
-  const size = sticky ? 72 : 80;
+  const size = sticky ? 56 : 72;
+  const itemWidth = sticky ? 72 : 84;
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={sticky ? styles.railSticky : styles.rail}>
       {categories.slice(0, 12).map((category, index) => (
@@ -270,26 +275,26 @@ function CategoryRail({ categories, sticky }) {
           scale={0.95}
           onPress={() => router.push({ pathname: '/food/user/category/[category]', params: { category: category.slug || slugifyCategory(category.name) } })}
           accessibilityLabel={`${category.name} category`}
-          style={{ width: sticky ? 74 : 92, alignItems: 'center', gap: sticky ? 6 : 10 }}
+          style={[styles.catItem, { width: itemWidth }]}
         >
           <View style={[styles.catCircle, { width: size, height: size, borderRadius: size / 2 }]}>
             <Image source={src(category.image)} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             {!sticky ? <Glint duration={2000} repeatDelay={3000 + index * 500} /> : null}
           </View>
-          <Text numberOfLines={1} style={sticky ? styles.catNameSticky : styles.catName}>
-            {sticky ? String(category.name).toUpperCase() : category.name}
+          <Text numberOfLines={1} style={styles.catName}>
+            {category.name}
           </Text>
         </Press>
       ))}
       {categories.length > 0 ? (
-        <Press scale={0.95} onPress={() => router.push('/food/user/categories')} accessibilityLabel="See all categories" style={{ width: sticky ? 74 : 92, alignItems: 'center', gap: sticky ? 6 : 10 }}>
-          <View style={[styles.catCircle, { width: size, height: size, borderRadius: size / 2, borderColor: tw.red100, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center' }]}>
-            <UtensilsCrossed size={sticky ? 28 : 32} color={tw.red500} />
+        <Press scale={0.95} onPress={() => router.push('/food/user/categories')} accessibilityLabel="See all categories" style={[styles.catItem, { width: itemWidth }]}>
+          <View style={[styles.catCircle, styles.catAll, { width: size, height: size, borderRadius: size / 2 }]}>
+            <UtensilsCrossed size={sticky ? 22 : 26} color={color.primary} />
           </View>
-          <Text numberOfLines={1} style={sticky ? styles.catNameSticky : styles.catName}>
-            {sticky ? 'SEE ALL ' : 'See all '}
-            <Text style={{ fontSize: 7, color: tw.red500 }}>▼</Text>
-          </Text>
+          <View style={styles.catAllLabel}>
+            <Text numberOfLines={1} style={[styles.catName, { color: color.primary }]}>See all</Text>
+            <ChevronRight size={14} color={color.primary} />
+          </View>
         </Press>
       ) : null}
     </ScrollView>
@@ -1026,15 +1031,23 @@ export default function Home({ homeMode = null }) {
   };
 
   const showFest = !!festBannerImageUrl && !isTakeawayActive;
-  const brandColor = showFest && festBannerTopColor ? festBannerTopColor : F.greenDark;
+  const brandColor = showFest && festBannerTopColor ? festBannerTopColor : color.primaryDeep;
   const takeawaySearchHeight = useAnimatedValue(0);
   useEffect(() => {
     Animated.spring(takeawaySearchHeight, { toValue: takeawaySearchOpen ? 1 : 0, stiffness: 380, damping: 32, mass: 0.82, useNativeDriver: false }).start();
   }, [takeawaySearchOpen, takeawaySearchHeight]);
 
+  const favoritesCount = getFavorites().length;
+
   return (
     <View style={styles.page} onLayout={(e) => (screenWidth.current = e.nativeEvent.layout.width)}>
-      <ScrollView onScroll={onScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 176 + insets.bottom }}>
+      <ScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + FOOD_TABS_HEIGHT + space.lg + insets.bottom }}
+      >
         <View style={[styles.brand, { backgroundColor: brandColor }]}>
           {showFest ? (
             <Image
@@ -1066,16 +1079,22 @@ export default function Home({ homeMode = null }) {
           ) : (
             <View style={styles.takeHead}>
               <View style={styles.takeRow}>
-                <View>
-                  <Text style={styles.takeKicker}>SELF-PICKUP</Text>
-                  <Text style={styles.takeTitle} accessibilityRole="header">Takeaway</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.takeKicker}>Self-pickup</Text>
+                  <Text style={styles.takeTitle} accessibilityRole="header" numberOfLines={1}>TAKEAWAY</Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <Press scale={0.95} onPress={() => setTakeawaySearchOpen(true)} accessibilityLabel="Search takeaway restaurants" style={[styles.takeBtn, takeawaySearchOpen ? { backgroundColor: '#fff' } : null]}>
-                    <Search size={20} color={takeawaySearchOpen ? F.green : '#fff'} strokeWidth={2.5} />
+                <View style={styles.takeActions}>
+                  <Press
+                    scale={0.95}
+                    onPress={() => setTakeawaySearchOpen(true)}
+                    accessibilityLabel="Search takeaway restaurants"
+                    accessibilityState={{ expanded: takeawaySearchOpen }}
+                    style={[styles.takeBtn, takeawaySearchOpen ? { backgroundColor: color.surface } : null]}
+                  >
+                    <Search size={20} color={takeawaySearchOpen ? color.primary : color.textInverse} strokeWidth={2.25} />
                   </Press>
                   <Press scale={0.95} onPress={() => router.push({ pathname: '/food/user/cart', params: { from: pathname } })} accessibilityLabel={`Cart, ${cartCount} items`} style={styles.takeBtn}>
-                    <ShoppingCart size={20} color="#fff" strokeWidth={2.5} />
+                    <ShoppingCart size={20} color={color.textInverse} strokeWidth={2.25} />
                     {cartCount > 0 ? (
                       <View style={styles.cartBadge}>
                         <Text style={styles.cartBadgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
@@ -1085,16 +1104,16 @@ export default function Home({ homeMode = null }) {
                   <ProfileAvatar size={40} />
                 </View>
               </View>
-              <Animated.View style={{ overflow: 'hidden', opacity: takeawaySearchHeight, height: takeawaySearchHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 54] }) }}>
+              <Animated.View style={{ overflow: 'hidden', opacity: takeawaySearchHeight, height: takeawaySearchHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 60] }) }}>
                 <View style={styles.takeSearch}>
-                  <Search size={16} color={F.green} strokeWidth={2.5} style={{ marginLeft: 8 }} />
+                  <Search size={18} color={color.primary} strokeWidth={2.25} />
                   {takeawaySearchOpen ? (
                     <TextInput
                       autoFocus
                       value={heroSearch}
                       onChangeText={setHeroSearch}
-                      placeholder="Search takeaway restaurants..."
-                      placeholderTextColor={tw.gray400}
+                      placeholder="Search takeaway restaurants"
+                      placeholderTextColor={color.textMuted}
                       returnKeyType="search"
                       autoCorrect={false}
                       accessibilityLabel="Search takeaway restaurants"
@@ -1104,8 +1123,8 @@ export default function Home({ homeMode = null }) {
                     <View style={{ flex: 1 }} />
                   )}
                   {heroSearch ? (
-                    <Press scale={0.9} onPress={() => setHeroSearch('')} accessibilityLabel="Clear search" style={[styles.takeX, { backgroundColor: 'rgba(229,231,235,0.9)' }]}>
-                      <X size={14} color={tw.gray500} strokeWidth={2.5} />
+                    <Press scale={0.9} onPress={() => setHeroSearch('')} accessibilityLabel="Clear search" hitSlop={6} style={[styles.takeX, { backgroundColor: color.surfaceMuted }]}>
+                      <X size={16} color={color.textSecondary} strokeWidth={2.5} />
                     </Press>
                   ) : null}
                   <Press
@@ -1115,9 +1134,10 @@ export default function Home({ homeMode = null }) {
                       setTakeawaySearchOpen(false);
                     }}
                     accessibilityLabel="Close search"
-                    style={[styles.takeX, { backgroundColor: 'rgba(10,77,43,0.1)' }]}
+                    hitSlop={6}
+                    style={[styles.takeX, { backgroundColor: color.primarySoft }]}
                   >
-                    <X size={16} color={F.green} strokeWidth={2.5} />
+                    <X size={16} color={color.primary} strokeWidth={2.5} />
                   </Press>
                 </View>
               </Animated.View>
@@ -1126,22 +1146,18 @@ export default function Home({ homeMode = null }) {
         </View>
 
         {isTakeawayActive ? (
-          <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ padding: 8, backgroundColor: tw.green100, borderRadius: 12 }}>
-                <ShoppingBag size={24} color={tw.green600} />
-              </View>
-              <Text style={styles.pickupTitle}>Pickup Restaurants</Text>
+          <View style={styles.pickup}>
+            <View style={styles.pickupIcon}>
+              <ShoppingBag size={22} color={color.primary} />
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 4, marginTop: 4 }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tw.red500 }} />
-              <Text style={styles.pickupSub}>Order online, skip the queue & pickup yourself</Text>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.pickupTitle}>Pickup restaurants</Text>
+              <Text style={styles.pickupSub}>Order online, skip the queue and pick it up yourself</Text>
             </View>
-            <LinearGradient colors={[tw.gray100, tw.gray200, 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 1, marginTop: 12, marginBottom: 4 }} />
           </View>
         ) : (
           <View
-            style={{ paddingVertical: 10 }}
+            style={{ paddingTop: space.lg, paddingBottom: space.sm }}
             onLayout={(e) => {
               categoriesBottom.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height;
             }}
@@ -1151,52 +1167,45 @@ export default function Home({ homeMode = null }) {
         )}
 
         {loadingBanners ? (
-          <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-            <Pulse style={{ height: 144, borderRadius: 16 }} />
+          <View style={{ paddingHorizontal: space.lg, paddingTop: space.sm, paddingBottom: space.lg }}>
+            <Pulse style={{ width: '100%', aspectRatio: 1.7, borderRadius: radii.lg }} />
           </View>
         ) : heroBannerImages.length > 0 ? (
           <HeroBanner images={heroBannerImages} banners={heroBannersData} zoneId={zoneId} active={isTabActive} />
         ) : null}
 
         {!isTakeawayActive ? (
-          <View style={styles.filterBar}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: 'center' }}>
-              <Press scale={0.95} onPress={() => setIsFilterOpen(true)} accessibilityLabel="Filters and sorting" style={[styles.chip, { borderColor: tw.gray200, gap: 6 }]}>
-                <SlidersHorizontal size={16} color="#000" />
-                <Text style={[styles.chipText, { color: '#000' }]}>FILTERS</Text>
-              </Press>
-              {QUICK_FILTERS.map((filter) => {
-                const Icon = filter.icon;
-                const active = activeFilters.has(filter.id);
-                return (
-                  <Press
-                    key={filter.id}
-                    scale={0.95}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: active }}
-                    accessibilityLabel={filter.label}
-                    onPress={() => {
-                      const nextFilters = new Set(activeFilters);
-                      if (nextFilters.has(filter.id)) nextFilters.delete(filter.id);
-                      else nextFilters.add(filter.id);
-                      setActiveFilters(nextFilters);
-                      applyFiltersAndRefetch(nextFilters, sortBy, selectedCuisine);
-                    }}
-                    style={[styles.chip, active ? { backgroundColor: F.green, borderColor: F.green } : null]}
-                  >
-                    {Icon ? <Icon size={14} color={active ? '#fff' : tw.gray700} /> : null}
-                    <Text style={[styles.chipText, active ? { color: '#fff' } : null]}>{filter.label}</Text>
-                  </Press>
-                );
-              })}
-            </ScrollView>
-          </View>
+          <ChipRow style={styles.filterBar} contentStyle={{ alignItems: 'center' }}>
+            <Chip
+              label={activeFilters.size > 0 || sortBy ? 'Filters •' : 'Filters'}
+              icon={SlidersHorizontal}
+              selected={false}
+              onPress={() => setIsFilterOpen(true)}
+              style={styles.filterChip}
+            />
+            {QUICK_FILTERS.map((filter) => (
+              <Chip
+                key={filter.id}
+                label={filter.label}
+                icon={filter.icon}
+                selected={activeFilters.has(filter.id)}
+                style={styles.filterChip}
+                onPress={() => {
+                  const nextFilters = new Set(activeFilters);
+                  if (nextFilters.has(filter.id)) nextFilters.delete(filter.id);
+                  else nextFilters.add(filter.id);
+                  setActiveFilters(nextFilters);
+                  applyFiltersAndRefetch(nextFilters, sortBy, selectedCuisine);
+                }}
+              />
+            ))}
+          </ChipRow>
         ) : null}
 
         {!isTakeawayActive && recommendedForYouRestaurants.length > 0 ? (
-          <View style={{ paddingTop: 4 }}>
-            <Text style={styles.recHeading}>RECOMMENDED FOR YOU</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16, gap: 14 }}>
+          <View style={styles.block}>
+            <SectionHeader title="Recommended for you" style={styles.gutter} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={styles.recRow}>
               {recommendedForYouRestaurants.map((restaurant) => (
                 <RecommendedCard key={`recommended-${restaurant.mongoId || restaurant.id}`} restaurant={restaurant} backFrom={homeBrowsePath} />
               ))}
@@ -1205,35 +1214,33 @@ export default function Home({ homeMode = null }) {
         ) : null}
 
         {!isTakeawayActive ? (
-          <View style={{ paddingTop: 8 }}>
-            <View style={styles.exploreHead}>
-              <Text style={styles.exploreHeading}>{String(exploreMoreHeading).toUpperCase()}</Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: tw.gray100 }} />
-            </View>
+          <View style={styles.block}>
+            <SectionHeader title={exploreMoreHeading} style={styles.gutter} />
             <View style={styles.exploreGrid}>
               {finalExploreItems.slice(0, 4).map((item) => (
                 <Press
                   key={item.id}
                   scale={0.95}
                   onPress={() => router.push(item.href.startsWith('/food/') ? item.href : toFoodUserPath(item.href))}
+                  accessibilityRole="button"
                   accessibilityLabel={item.label}
-                  style={{ flex: 1, alignItems: 'center', gap: 6 }}
+                  style={styles.exploreItem}
                 >
                   <View style={styles.exploreTile}>
                     <ExploreIconImage image={item.image} id={item.id} />
                   </View>
-                  <Text style={styles.exploreLabel} numberOfLines={1}>{String(item.label).toUpperCase()}</Text>
+                  <Text style={styles.exploreLabel} numberOfLines={1}>{item.label}</Text>
                 </Press>
               ))}
             </View>
           </View>
         ) : null}
 
-        <View style={{ paddingTop: isTakeawayActive ? 4 : 12, paddingBottom: 32 }}>
+        <View style={[styles.block, isTakeawayActive ? { paddingTop: space.sm } : null]}>
           {!showTakeawaySearchEmpty ? (
-            <View style={{ paddingHorizontal: 16, marginBottom: 12, gap: 4 }}>
-              {sectionSubtitle ? <Text style={styles.sectionSub}>{sectionSubtitle.toUpperCase()}</Text> : null}
-              <Text style={styles.sectionTitle} accessibilityRole="header">{sectionTitle}</Text>
+            <View style={styles.gutter}>
+              <SectionHeader title={sectionTitle} style={{ marginBottom: space.xxs }} />
+              {sectionSubtitle ? <Text style={styles.sectionSub}>{sectionSubtitle}</Text> : null}
             </View>
           ) : null}
 
@@ -1263,22 +1270,14 @@ export default function Home({ homeMode = null }) {
                 );
               })}
               {showTakeawaySearchEmpty ? (
-                <View style={styles.empty}>
-                  <View style={styles.emptyIcon}>
-                    <Search size={28} color={tw.gray300} />
-                  </View>
-                  <Text style={styles.emptyTitle}>No takeaway restaurants found for &quot;{takeawaySearchQuery}&quot;</Text>
-                  <Text style={styles.emptyBody}>Search by restaurant name only</Text>
-                </View>
+                <EmptyState icon={Search} title={`No takeaway restaurants found for "${takeawaySearchQuery}"`} message="Search by restaurant name only" />
               ) : null}
             </View>
           )}
 
           {hasMoreRestaurants && !showRestaurantSkeleton ? (
-            <View style={{ alignItems: 'center', paddingTop: 8 }}>
-              <Press scale={0.97} onPress={loadMoreRestaurants} accessibilityLabel="Load more restaurants" style={styles.more}>
-                <Text style={styles.moreText}>Load more restaurants</Text>
-              </Press>
+            <View style={{ alignItems: 'center', paddingTop: space.lg }}>
+              <Button title="Load more restaurants" variant="outline" size="sm" fullWidth={false} onPress={loadMoreRestaurants} />
             </View>
           ) : null}
         </View>
@@ -1359,60 +1358,55 @@ export default function Home({ homeMode = null }) {
 
       <BottomSheet visible={showManageCollections} onClose={() => setShowManageCollections(false)} spring={{ stiffness: 400, damping: 30 }} panelStyle={styles.sheet}>
         <View style={styles.sheetHead}>
-          <Text style={styles.sheetTitle}>Manage Collections</Text>
+          <Text style={styles.sheetTitle} accessibilityRole="header">Manage collections</Text>
           <Press scale={0.9} onPress={() => setShowManageCollections(false)} accessibilityLabel="Close" style={styles.sheetClose}>
-            <X size={16} color="#fff" />
+            <X size={20} color={color.text} />
           </Press>
         </View>
-        <View style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 8 }}>
+        <View style={{ padding: space.lg, gap: space.sm }}>
           <View style={styles.collRow}>
             <View style={styles.collIcon}>
-              <Bookmark size={24} color={tw.red500} fill={tw.red500} />
+              <Bookmark size={22} color={color.primary} fill={color.primary} />
             </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={styles.collName}>Bookmarks</Text>
-                <Press
-                  scale={0.9}
-                  hitSlop={12}
-                  disabled={!selectedRestaurantSlug}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: true }}
-                  accessibilityLabel="Bookmarked. Untick to remove"
-                  onPress={() => {
-                    removeFavorite(selectedRestaurantSlug);
-                    setSelectedRestaurantSlug(null);
-                    setShowManageCollections(false);
-                  }}
-                  style={[styles.check, selectedRestaurantSlug ? null : { borderColor: tw.red500, backgroundColor: tw.red500 }]}
-                >
-                  <Check size={12} color="#fff" strokeWidth={3} />
-                </Press>
-              </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.collName}>Bookmarks</Text>
               <Text style={styles.collCount}>
-                {getFavorites().length} restaurant{getFavorites().length !== 1 ? 's' : ''}
+                {favoritesCount} restaurant{favoritesCount !== 1 ? 's' : ''}
               </Text>
             </View>
+            <Press
+              scale={0.9}
+              hitSlop={12}
+              disabled={!selectedRestaurantSlug}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: true }}
+              accessibilityLabel="Bookmarked. Untick to remove"
+              onPress={() => {
+                removeFavorite(selectedRestaurantSlug);
+                setSelectedRestaurantSlug(null);
+                setShowManageCollections(false);
+              }}
+              style={[styles.check, selectedRestaurantSlug ? null : styles.checkOff]}
+            >
+              <Check size={14} color={color.onPrimary} strokeWidth={3} />
+            </Press>
           </View>
           <Press scale={0.98} onPress={() => setShowManageCollections(false)} accessibilityLabel="Create new Collection" style={styles.collRow}>
-            <View style={styles.collIcon}>
-              <Plus size={24} color={tw.red500} />
+            <View style={[styles.collIcon, { backgroundColor: color.surfaceMuted }]}>
+              <Plus size={22} color={color.primary} />
             </View>
-            <Text style={[styles.collName, { flex: 1 }]}>Create new Collection</Text>
+            <Text style={[styles.collName, { flex: 1 }]}>Create new collection</Text>
           </Press>
         </View>
-        <View style={{ borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 + insets.bottom }}>
-          <Press
-            scale={0.98}
+        <View style={[styles.sheetFoot, { paddingBottom: space.lg + insets.bottom }]}>
+          <Button
+            title="Done"
+            variant="secondary"
             onPress={() => {
               setSelectedRestaurantSlug(null);
               setShowManageCollections(false);
             }}
-            accessibilityLabel="Done"
-            style={styles.done}
-          >
-            <Text style={styles.doneText}>Done</Text>
-          </Press>
+          />
         </View>
       </BottomSheet>
     </View>
@@ -1420,68 +1414,69 @@ export default function Home({ homeMode = null }) {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' },
-  brand: { borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden', marginBottom: 8, ...shadow('lg') },
+  page: { flex: 1, backgroundColor: color.bg },
+  brand: { borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, overflow: 'hidden', ...elevation.card },
+  gutter: { paddingHorizontal: space.lg },
+  block: { paddingTop: space.xxl },
 
-  takeHead: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 },
-  takeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  takeKicker: { fontSize: 10, lineHeight: 15, letterSpacing: 2, color: tw.gray200, marginBottom: 2, ...poppins(700) },
-  takeTitle: { fontSize: 20, lineHeight: 28, color: '#fff', ...poppins(700) },
-  takeBtn: { padding: 10, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  cartBadge: { position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: F.green, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  cartBadgeText: { fontSize: 9, lineHeight: 11, color: '#fff', ...poppins(700) },
-  takeSearch: { marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: tw.gray50, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, padding: 8, height: 42 },
-  takeInput: { flex: 1, paddingHorizontal: 12, paddingVertical: 0, fontSize: 13, color: tw.gray700, ...poppins(700) },
-  takeX: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  pickupTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  pickupSub: { fontSize: 13, lineHeight: 18, color: tw.gray500, ...poppins(500) },
+  takeHead: { paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.lg },
+  takeRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  takeActions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  takeKicker: { ...type.overline, color: color.textOnDarkMuted },
+  takeTitle: { ...type.heroSerif, color: color.goldOnDark },
+  takeBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
+  cartBadge: {
+    position: 'absolute', top: -2, right: -2, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: color.goldBright,
+    borderWidth: 1.5, borderColor: color.primaryDeep, alignItems: 'center', justifyContent: 'center',
+  },
+  cartBadgeText: { ...type.caption, lineHeight: 14, fontFamily: 'Poppins_700Bold', color: color.onGold },
+  takeSearch: { marginTop: space.md, height: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.surface, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, paddingLeft: space.md, paddingRight: space.xs + 2 },
+  takeInput: { flex: 1, minWidth: 0, height: '100%', paddingVertical: 0, ...type.body, color: color.text, outlineWidth: 0 },
+  takeX: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  pickup: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginHorizontal: space.lg, marginTop: space.lg, padding: space.md, borderRadius: radii.lg, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border },
+  pickupIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  pickupTitle: { ...type.bodyStrong, color: color.text },
+  pickupSub: { ...type.small, color: color.textSecondary },
 
-  rail: { paddingHorizontal: 16, gap: 6, paddingBottom: 8 },
-  railSticky: { paddingHorizontal: 16, gap: 20, paddingTop: 12, paddingBottom: 8 },
-  catCircle: { overflow: 'hidden', borderWidth: 2, borderColor: tw.gray100, backgroundColor: '#fff', ...shadow('md') },
-  catName: { fontSize: 10, lineHeight: 12.5, color: tw.gray600, textAlign: 'center', alignSelf: 'stretch', paddingHorizontal: 2, ...poppins(700) },
-  catNameSticky: { fontSize: 9, lineHeight: 12, letterSpacing: -0.45, color: tw.gray700, textAlign: 'center', alignSelf: 'stretch', ...poppins(700) },
+  rail: { paddingHorizontal: space.md, gap: space.xs },
+  railSticky: { paddingHorizontal: space.md, gap: space.xs, paddingTop: space.xs, paddingBottom: space.sm },
+  catItem: { alignItems: 'center', gap: space.sm },
+  catCircle: { overflow: 'hidden', borderWidth: 2, borderColor: color.border, backgroundColor: color.surface, ...elevation.card },
+  catAll: { borderColor: color.primaryBorder, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  catAllLabel: { flexDirection: 'row', alignItems: 'center', gap: space.xxs },
+  catName: { ...type.caption, color: color.text, textAlign: 'center', alignSelf: 'stretch' },
 
-  hero: { width: '100%', aspectRatio: 1.7, minHeight: 180, borderRadius: 16, overflow: 'hidden', backgroundColor: '#fff', ...shadow('sm') },
-  heroDots: { position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  heroDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' },
-  heroDotActive: { width: 16, backgroundColor: '#fff' },
+  hero: { width: '100%', aspectRatio: 1.7, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.surfaceMuted, borderWidth: 1, borderColor: color.border },
+  heroDots: { position: 'absolute', bottom: space.md, right: space.md, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  heroDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.55)' },
+  heroDotActive: { width: 20, backgroundColor: color.surface },
 
-  filterBar: { paddingVertical: 10, backgroundColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  chip: { height: 36, paddingHorizontal: 16, borderRadius: 18, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  chipText: { fontSize: 12, lineHeight: 16, letterSpacing: -0.3, color: tw.gray700, ...poppins(700) },
+  filterBar: { paddingVertical: space.xs },
+  filterChip: { height: 40 },
 
-  recHeading: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, color: tw.gray400, marginBottom: 8, paddingHorizontal: 16, ...poppins(600) },
-  exploreHead: { paddingHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  exploreHeading: { fontSize: 11, lineHeight: 14, letterSpacing: 1.1, color: tw.gray400, ...poppins(900) },
-  exploreGrid: { flexDirection: 'row', gap: 6, paddingHorizontal: 18, paddingBottom: 16 },
-  exploreTile: { width: '100%', aspectRatio: 1, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, padding: 4, overflow: 'hidden', ...shadow('sm') },
-  exploreLabel: { fontSize: 9, lineHeight: 11, letterSpacing: -0.45, color: tw.gray500, textAlign: 'center', alignSelf: 'stretch', ...poppins(700) },
+  recRow: { paddingHorizontal: space.lg, paddingBottom: space.xs, gap: space.md },
+  exploreGrid: { flexDirection: 'row', gap: space.sm, paddingHorizontal: space.lg },
+  exploreItem: { flex: 1, minWidth: 0, alignItems: 'center', gap: space.sm },
+  exploreTile: { width: '100%', aspectRatio: 1, borderRadius: radii.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, padding: space.sm, overflow: 'hidden', ...elevation.card },
+  exploreLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.text, textAlign: 'center', alignSelf: 'stretch' },
 
-  sectionSub: { fontSize: 11, lineHeight: 16, letterSpacing: 1.65, color: '#5d80a3', ...poppins(600) },
-  sectionTitle: { fontSize: 18, lineHeight: 28, letterSpacing: -0.45, color: '#364d66', ...poppins(700) },
-  list: { paddingHorizontal: 16, paddingTop: 4, gap: 20 },
-  skCard: { borderRadius: 24, borderWidth: 1, borderColor: '#efe2d4', backgroundColor: '#fff', overflow: 'hidden' },
-  empty: { alignItems: 'center', paddingVertical: 56, paddingHorizontal: 24 },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  emptyTitle: { fontSize: 16, lineHeight: 24, color: tw.gray800, textAlign: 'center', ...poppins(700) },
-  emptyBody: { fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', marginTop: 6, ...poppins(400) },
-  more: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: tw.gray300, backgroundColor: '#fff' },
-  moreText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
+  sectionSub: { ...type.small, color: color.textMuted, marginBottom: space.md },
+  list: { paddingHorizontal: space.lg, gap: space.lg },
+  skCard: { borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, overflow: 'hidden' },
 
-  sticky: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.97)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)', ...shadow('lg') },
-  stickyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
-  stickySearch: { flex: 1, borderWidth: 2, borderColor: 'rgba(10,77,43,0.3)', ...shadow('md') },
+  sticky: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border, ...elevation.float },
+  stickyRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.sm },
+  stickySearch: { flex: 1, borderColor: color.primaryBorder },
 
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  sheetTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  sheetClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.gray700, alignItems: 'center', justifyContent: 'center' },
-  collRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 8 },
-  collIcon: { width: 48, height: 48, borderRadius: 8, backgroundColor: tw.pink100, alignItems: 'center', justifyContent: 'center' },
-  collName: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(500) },
-  collCount: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginTop: 4, ...poppins(400) },
-  check: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: tw.green500, backgroundColor: tw.green500, alignItems: 'center', justifyContent: 'center' },
-  done: { backgroundColor: tw.gray300, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  doneText: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
+  sheet: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: space.lg, paddingRight: space.sm, paddingTop: space.lg, paddingBottom: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  sheetTitle: { ...type.heading, color: color.text },
+  sheetClose: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  collRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, minHeight: 64, borderRadius: radii.md },
+  collIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  collName: { ...type.subheading, color: color.text },
+  collCount: { ...type.small, color: color.textMuted, marginTop: space.xxs },
+  check: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: color.primary, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
+  checkOff: { opacity: 0.6 },
+  sheetFoot: { borderTopWidth: 1, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.lg },
 });

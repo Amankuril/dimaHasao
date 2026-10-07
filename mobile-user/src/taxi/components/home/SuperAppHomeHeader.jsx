@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { ChevronDown, MapPin } from 'lucide-react-native';
+import { ChevronDown, MapPin, Wallet } from 'lucide-react-native';
 import { Press } from '../../../components/ui';
 import { useNavigate } from '../../../lib/webRouter';
 import { events } from '../../../lib/events';
 import { localStore } from '../../../lib/storage';
-import { poppins, tw } from '../../../theme';
+import { IconButton } from '../../../components/ds';
+import { color, radii, space, type } from '../../../theme';
 import {
   FOOD_LOCATION_UPDATED_EVENT,
   TAXI_LOCATION_STORAGE_KEY,
@@ -14,8 +15,8 @@ import {
   readSharedFoodLocation,
 } from '../../../shared/utils/sharedUserLocation';
 
-/* Port of Frontend/src/shared/components/SuperAppHomeHeader.jsx as the taxi Home renders it (activeVertical="taxi", vertical tabs hidden). */
-const TAXI_THEME = { accent: '#5B9BD5', theme: '#0B172A' };
+/* Port of Frontend/src/shared/components/SuperAppHomeHeader.jsx as the taxi Home renders it (activeVertical="taxi", vertical tabs hidden).
+ * Heritage look: a white location strip under the module header (it used to be a navy bar laid over the map). */
 
 function readHelloParthLocation() {
   const food = readSharedFoodLocation();
@@ -80,37 +81,33 @@ export default function SuperAppHomeHeader() {
   const onLocationClick = useCallback(() => navigate('/taxi/user/ride/select-location'), [navigate]);
 
   return (
-    <View style={[styles.wrap, { backgroundColor: TAXI_THEME.theme }]}>
-      <View style={styles.row}>
-        <Press onPress={onLocationClick} scale={1} style={styles.locBtn}>
-          <MapPin size={20} strokeWidth={1.5} color={TAXI_THEME.accent} fill={TAXI_THEME.accent} />
-          <View style={styles.locText}>
-            <View style={styles.titleRow}>
-              <Text numberOfLines={1} style={styles.title}>{displayTitle}</Text>
-              <ChevronDown size={14} color="#fff" style={{ opacity: 0.9 }} />
-            </View>
-            {displaySubtitle ? <Text numberOfLines={1} style={styles.subtitle}>{displaySubtitle}</Text> : null}
+    <View style={styles.wrap}>
+      <Press onPress={onLocationClick} scale={0.99} accessibilityLabel={`Your location: ${displayTitle}. Change`} style={styles.locBtn}>
+        <View style={styles.pinTile}>
+          <MapPin size={18} color={color.primary} />
+        </View>
+        <View style={styles.locText}>
+          <View style={styles.titleRow}>
+            <Text numberOfLines={1} style={styles.title}>{displayTitle}</Text>
+            <ChevronDown size={16} color={color.textSecondary} />
           </View>
-        </Press>
-        <Press onPress={() => navigate('/taxi/user/wallet')} scale={1} accessibilityLabel="Wallet" style={styles.wallet}>
-          <View style={styles.rupeeBox}>
-            <Text style={styles.rupee}>₹</Text>
-          </View>
-        </Press>
-      </View>
+          {displaySubtitle ? <Text numberOfLines={1} style={styles.subtitle}>{displaySubtitle}</Text> : null}
+        </View>
+      </Press>
+      <IconButton icon={Wallet} label="Wallet" variant="gold" onPress={() => navigate('/taxi/user/wallet')} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { width: '100%' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
-  locBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 },
-  locText: { flexShrink: 1, minWidth: 0 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 2, minWidth: 0 },
-  title: { flexShrink: 1, fontSize: 14, color: '#fff', textShadowColor: 'rgba(0,0,0,0.1)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1, ...poppins(700) },
-  subtitle: { fontSize: 11, color: '#fff', opacity: 0.8, maxWidth: 210, ...poppins(500) },
-  wallet: { height: 40, width: 40, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' },
-  rupeeBox: { width: 20, height: 20, borderWidth: 2, borderColor: tw.gray800, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
-  rupee: { fontSize: 10, color: tw.gray800, fontWeight: '700', fontFamily: 'serif', includeFontPadding: false },
+  wrap: {
+    flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.sm,
+    backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border,
+  },
+  locBtn: { flexDirection: 'row', alignItems: 'center', gap: space.md, flex: 1, minWidth: 0, minHeight: 48 },
+  pinTile: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  locText: { flex: 1, minWidth: 0 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs, minWidth: 0 },
+  title: { ...type.bodyStrong, color: color.text, flexShrink: 1 },
+  subtitle: { ...type.caption, color: color.textMuted },
 });

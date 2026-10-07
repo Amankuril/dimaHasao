@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Bot, CircleUser, Clock3, MessageCircle, RefreshCcw, Send, ShieldCheck, Trash2 } from 'lucide-react-native';
 import { Press } from '../../components/ui';
+import { Chip, IconButton } from '../../components/ds';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { localStore } from '../../lib/storage';
-import { tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 import { socketService } from '../api/socket';
 import { deleteSupportConversation, getSupportConversations, getSupportMessages, markSupportMessagesRead, sendSupportMessage } from '../chat/chatApi';
 import { getChatSession, parseSupportConversationKey } from '../chat/chatIdentity';
-import { fo } from '../account/ui';
 
 // Web: Taxi/modules/shared/components/UserSupportChatPanel.jsx (participant mode, as the user app mounts it)
 
@@ -63,7 +63,7 @@ const dedupeConversations = (list = []) => {
   return Array.from(merged.values()).sort((l, r) => new Date(r.updatedAt || 0) - new Date(l.updatedAt || 0));
 };
 
-function Dot({ color, animate }) {
+function Dot({ color: c, animate }) {
   const o = useAnimatedValue(1);
   useEffect(() => {
     if (!animate) return undefined;
@@ -75,7 +75,7 @@ function Dot({ color, animate }) {
     a.start();
     return () => a.stop();
   }, [animate, o]);
-  return <Animated.View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color, opacity: o }} />;
+  return <Animated.View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c, opacity: o }} />;
 }
 
 export default function UserSupportChatPanel({ title = 'Support Chat', subtitle = 'Live messages with admin', preferredRole, initialDraft = '', style }) {
@@ -323,15 +323,15 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
 
   if (!isLiveEnabled) {
     return (
-      <View style={[st.card, { padding: 32 }, style]}>
+      <View style={[st.card, { padding: space.xxl }, style]}>
         <View style={st.row}>
-          <View style={[st.iconBox, { backgroundColor: tw.indigo600, marginRight: 12 }]}><ShieldCheck size={20} color="#fff" /></View>
-          <View>
-            <Text style={[st.eyebrow, fo(600)]}>Support Chat</Text>
-            <Text style={[{ fontSize: 20, color: tw.slate900 }, fo(600)]}>{title}</Text>
+          <View style={[st.iconBox, { marginRight: space.md }]}><ShieldCheck size={20} color={color.primary} /></View>
+          <View style={st.grow}>
+            <Text style={[type.caption, { color: color.textMuted }]}>Support chat</Text>
+            <Text style={[type.heading, { color: color.text }]}>{title}</Text>
           </View>
         </View>
-        <Text style={[{ marginTop: 16, fontSize: 13, lineHeight: 24, color: tw.slate500 }, fo(600)]}>
+        <Text style={[type.body, { marginTop: space.lg, color: color.textSecondary }]}>
           Live chat will activate once the current session has a valid token.
         </Text>
       </View>
@@ -341,83 +341,72 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
   const canSend = !sending && Boolean(draft.trim());
   const peerName = selectedConversation?.peer?.name || 'Support Team';
   const threadLabel = session.role === 'driver' ? 'Driver Support Thread' : 'User Support Thread';
+  const clearOff = !selectedConversationKey || messages.length === 0 || deleting;
 
   return (
     <View style={[st.card, { flex: 1 }, style]}>
       <View style={st.head}>
-        <View style={[st.row, { flex: 1, minWidth: 0 }]}>
-          <View style={[st.iconBox, { backgroundColor: '#405189', marginRight: 16, boxShadow: '0 10px 15px rgba(79,70,229,0.1)' }]}><MessageCircle size={20} color="#fff" /></View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text numberOfLines={1} style={[{ fontSize: 18, letterSpacing: -0.45, color: tw.slate900 }, fo(900)]}>{title}</Text>
-            <View style={[st.row, { flexWrap: 'wrap' }]}>
-              <Text style={[st.tiny, { color: tw.slate400 }, fo(900)]}>Desk Terminal</Text>
-              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: tw.slate300, marginHorizontal: 8 }} />
-              <Text style={[st.tiny, { color: tw.indigo600 }, fo(900)]}>{subtitle}</Text>
-            </View>
-          </View>
+        <View style={st.iconBox}><MessageCircle size={20} color={color.primary} /></View>
+        <View style={st.grow}>
+          <Text numberOfLines={1} style={[type.subheading, { color: color.text }]} accessibilityRole="header">{title}</Text>
+          <Text numberOfLines={1} style={[type.caption, { color: color.textMuted }]}>{subtitle}</Text>
         </View>
-        <View style={[st.conn, isConnected ? { borderColor: tw.emerald100, backgroundColor: tw.emerald50 } : { borderColor: tw.rose100, backgroundColor: tw.rose50 }]}>
-          <Dot color={isConnected ? tw.emerald500 : tw.rose500} animate={isConnected} />
-          <Text style={[st.tiny, { fontSize: 10, letterSpacing: 1.8, marginLeft: 10, color: isConnected ? tw.emerald700 : tw.rose700 }, fo(900)]}>
-            {isConnected ? 'Connection: Live' : 'Connection: Offline'}
+        <View style={[st.conn, { backgroundColor: isConnected ? color.successSoft : color.dangerSoft }]} accessible accessibilityLabel={isConnected ? 'Connection live' : 'Connection offline'}>
+          <Dot color={isConnected ? color.success : color.danger} animate={isConnected} />
+          <Text style={[type.caption, { fontFamily: 'Poppins_600SemiBold', color: isConnected ? color.success : color.danger }]}>
+            {isConnected ? 'Live' : 'Offline'}
           </Text>
         </View>
       </View>
 
       <View style={st.threadHead}>
-        <View style={[st.row, { flex: 1, minWidth: 0 }]}>
-          <View style={st.avatar}>
-            {selectedConversation?.peer?.role === 'driver' ? <CircleUser size={20} color={tw.slate500} /> : <Bot size={20} color={tw.slate500} />}
-          </View>
-          <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
-            <Text numberOfLines={1} style={[{ fontSize: 15, textTransform: 'uppercase', letterSpacing: -0.4, color: tw.slate900 }, fo(600)]}>{peerName}</Text>
-            <Text style={[{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.1, color: tw.emerald600 }, fo(700)]}>{threadLabel}</Text>
-          </View>
+        <View style={st.avatar}>
+          {selectedConversation?.peer?.role === 'driver' ? <CircleUser size={20} color={color.primary} /> : <Bot size={20} color={color.primary} />}
         </View>
-        <View style={st.row}>
-          <Press
-            onPress={() => { if (selectedConversationKey) socketService.emit('chat:read', { conversationKey: selectedConversationKey }); }}
-            style={[st.toolBtn, { borderColor: tw.slate200, backgroundColor: '#fff' }]}
-          >
-            <RefreshCcw size={14} color={tw.slate500} />
-          </Press>
-          <Press
-            onPress={handleClearChat}
-            disabled={!selectedConversationKey || messages.length === 0 || deleting}
-            style={[st.toolBtn, { borderColor: tw.rose100, backgroundColor: tw.rose50, marginLeft: 8, opacity: !selectedConversationKey || messages.length === 0 || deleting ? 0.5 : 1 }]}
-          >
-            <Trash2 size={14} color={tw.rose600} />
-          </Press>
+        <View style={st.grow}>
+          <Text numberOfLines={1} style={[type.bodyStrong, { color: color.text }]}>{peerName}</Text>
+          <Text numberOfLines={1} style={[type.caption, { color: color.textMuted }]}>{threadLabel}</Text>
         </View>
+        <IconButton
+          icon={RefreshCcw}
+          label="Refresh messages"
+          variant="soft"
+          iconSize={18}
+          onPress={() => { if (selectedConversationKey) socketService.emit('chat:read', { conversationKey: selectedConversationKey }); }}
+        />
+        <IconButton icon={Trash2} label="Clear chat" variant="danger" iconSize={18} disabled={clearOff} onPress={handleClearChat} />
       </View>
 
-      <View style={{ flex: 1, backgroundColor: '#F8FAFD' }}>
+      <View style={st.thread}>
         {loading ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={st.loadingPill}>
-              <ActivityIndicator size="small" color={tw.slate500} />
-              <Text style={[{ fontSize: 12, color: tw.slate500, marginLeft: 12 }, fo(700)]}>Loading messages...</Text>
-            </View>
+          <View style={st.center}>
+            <ActivityIndicator size="small" color={color.primary} />
+            <Text style={[type.small, { color: color.textMuted }]}>Loading messages...</Text>
           </View>
         ) : (
-          <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 20, gap: 16 }} keyboardShouldPersistTaps="handled">
+          <ScrollView ref={scrollRef} contentContainerStyle={st.threadContent} keyboardShouldPersistTaps="handled">
+            {messages.length === 0 ? (
+              <Text style={[type.small, { color: color.textMuted, textAlign: 'center', paddingVertical: space.xxl }]}>No messages yet. Say hello to the support team.</Text>
+            ) : null}
             {messages.map((message) => {
               const isMine = message.sender.id && session.id ? String(message.sender.id) === String(session.id) : message.sender.role === session.role;
               return (
                 <View key={message.id} style={{ flexDirection: 'row', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
-                  <View style={{ maxWidth: '78%', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'flex-end' }}>
-                    <View style={st.msgAvatar}>
-                      {isMine ? <CircleUser size={15} color={tw.slate400} /> : <Bot size={15} color={tw.slate400} />}
+                  <View style={[st.msgWrap, { flexDirection: isMine ? 'row-reverse' : 'row' }]}>
+                    <View style={[st.msgAvatar, isMine && { backgroundColor: color.primarySoft }]}>
+                      {isMine ? <CircleUser size={16} color={color.primary} /> : <Bot size={16} color={color.textMuted} />}
                     </View>
-                    <View style={{ flexShrink: 1, marginHorizontal: 12 }}>
-                      <View style={[st.bubble, isMine
-                        ? { backgroundColor: tw.indigo600, borderColor: tw.indigo600, borderBottomRightRadius: 6 }
-                        : { backgroundColor: '#fff', borderColor: tw.slate200, borderBottomLeftRadius: 6 }]}>
-                        <Text style={[{ fontSize: 14, lineHeight: 24, color: isMine ? '#fff' : tw.slate800 }, fo(500)]}>{message.message}</Text>
+                    <View style={{ flexShrink: 1 }}>
+                      <View
+                        style={[st.bubble, isMine ? st.mine : st.theirs]}
+                        accessible
+                        accessibilityLabel={`${isMine ? 'You' : peerName}: ${message.message}, ${formatTime(message.createdAt)}`}
+                      >
+                        <Text style={[type.body, { color: isMine ? color.onPrimary : color.text }]}>{message.message}</Text>
                       </View>
-                      <View style={[st.row, { marginTop: 4, justifyContent: isMine ? 'flex-end' : 'flex-start' }]}>
-                        <Clock3 size={11} color={tw.slate400} />
-                        <Text style={[{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: tw.slate400, marginLeft: 8 }, fo(700)]}>{formatTime(message.createdAt)}</Text>
+                      <View style={[st.row, { gap: space.xs, marginTop: space.xs, justifyContent: isMine ? 'flex-end' : 'flex-start' }]}>
+                        <Clock3 size={12} color={color.textMuted} />
+                        <Text style={[type.caption, { color: color.textMuted }]}>{formatTime(message.createdAt)}</Text>
                       </View>
                     </View>
                   </View>
@@ -430,29 +419,27 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
 
       <View style={st.foot}>
         {error ? (
-          <View style={st.err}><Text style={[{ fontSize: 12, color: tw.rose600 }, fo(600)]}>{error}</Text></View>
+          <View style={st.err} accessibilityRole="alert"><Text style={[type.small, { color: color.danger }]}>{error}</Text></View>
         ) : null}
+        <View style={st.quick}>
+          {quickReplies.map((reply) => (
+            <Chip key={reply} label={reply} onPress={() => setDraft(reply)} style={st.chip} />
+          ))}
+        </View>
         <View style={st.inputBar}>
-          <View style={st.shieldBtn}><ShieldCheck size={16} color={tw.slate400} /></View>
           <TextInput
             value={draft}
             onChangeText={setDraft}
             onSubmitEditing={handleSend}
             returnKeyType="send"
             placeholder="Type a message to admin"
-            placeholderTextColor={tw.slate400}
-            style={[{ flex: 1, fontSize: 14, color: tw.slate900, marginHorizontal: 12, paddingVertical: 0 }, fo(500)]}
+            placeholderTextColor={color.textDisabled}
+            accessibilityLabel="Message"
+            style={st.input}
           />
-          <Press onPress={handleSend} disabled={!canSend} style={[st.sendBtn, { backgroundColor: canSend ? tw.indigo600 : tw.slate300 }]}>
-            {sending ? <ActivityIndicator size="small" color="#fff" /> : <Send size={16} color="#fff" />}
+          <Press onPress={handleSend} disabled={!canSend} accessibilityLabel="Send message" accessibilityState={{ disabled: !canSend, busy: sending }} style={[st.sendBtn, { backgroundColor: canSend ? color.primary : color.surfaceMuted }]}>
+            {sending ? <ActivityIndicator size="small" color={color.onPrimary} /> : <Send size={20} color={canSend ? color.onPrimary : color.textMuted} />}
           </Press>
-        </View>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          {quickReplies.map((reply) => (
-            <Press key={reply} onPress={() => setDraft(reply)} style={st.chip}>
-              <Text style={[{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.1, color: tw.slate500 }, fo(600)]}>{reply}</Text>
-            </Press>
-          ))}
         </View>
       </View>
     </View>
@@ -460,23 +447,27 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
 }
 
 const st = StyleSheet.create({
-  card: { borderRadius: 32, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', overflow: 'hidden', boxShadow: '0 30px 80px rgba(15,23,42,0.08)' },
+  card: { borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, overflow: 'hidden', ...elevation.card },
   row: { flexDirection: 'row', alignItems: 'center' },
-  iconBox: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  eyebrow: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.55, color: tw.slate400 },
-  tiny: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5 },
-  head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(226,232,240,0.6)', backgroundColor: '#fff' },
-  conn: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, maxWidth: 130 },
-  threadHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.slate100, backgroundColor: '#fff' },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  toolBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  loadingPill: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  msgAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.slate100 },
-  bubble: { borderRadius: 24, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  foot: { borderTopWidth: 1, borderTopColor: tw.slate100, backgroundColor: '#fff', padding: 16 },
-  err: { marginBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: tw.rose100, backgroundColor: tw.rose50, paddingHorizontal: 16, paddingVertical: 12 },
-  inputBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 12 },
-  shieldBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.slate100 },
-  sendBtn: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  chip: { borderRadius: 999, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 6 },
+  grow: { flex: 1, minWidth: 0 },
+  iconBox: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  head: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  conn: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, borderRadius: radii.pill, paddingHorizontal: space.sm + 2, height: 28 },
+  threadHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.lg, paddingVertical: space.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center', marginRight: space.xs },
+  thread: { flex: 1, backgroundColor: color.bg },
+  threadContent: { padding: space.lg, gap: space.lg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  msgWrap: { maxWidth: '85%', alignItems: 'flex-end', gap: space.sm },
+  msgAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: color.border },
+  bubble: { borderRadius: radii.lg, paddingHorizontal: space.lg, paddingVertical: space.md },
+  mine: { backgroundColor: color.primary, borderBottomRightRadius: space.xs },
+  theirs: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderBottomLeftRadius: space.xs },
+  foot: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, backgroundColor: color.surface, padding: space.md, gap: space.md },
+  err: { borderRadius: radii.md, backgroundColor: color.dangerSoft, paddingHorizontal: space.lg, paddingVertical: space.md },
+  quick: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  chip: { height: 36 },
+  inputBar: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  input: { flex: 1, minWidth: 0, height: 48, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.md, ...type.body, color: color.text, outlineStyle: 'none' },
+  sendBtn: { width: 48, height: 48, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
 });

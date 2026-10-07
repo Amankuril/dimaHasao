@@ -99,19 +99,16 @@ const POPPINS = {
   300: 'Poppins_400Regular', 400: 'Poppins_400Regular', 500: 'Poppins_500Medium', 600: 'Poppins_600SemiBold',
   700: 'Poppins_700Bold', 800: 'Poppins_800ExtraBold', 900: 'Poppins_800ExtraBold',
 };
-const MONTSERRAT = {
-  400: 'Montserrat_400Regular', 500: 'Montserrat_500Medium', 600: 'Montserrat_600SemiBold',
-  700: 'Montserrat_700Bold', 800: 'Montserrat_800ExtraBold', 900: 'Montserrat_900Black',
-};
-const INTER = { 400: 'Inter_400Regular', 500: 'Inter_500Medium', 600: 'Inter_600SemiBold', 700: 'Inter_700Bold', 800: 'Inter_700Bold', 900: 'Inter_700Bold' };
 
 /** Body font of the whole user app (.dh-app, global.css). */
 export function poppins(weight = 400) {
   return { fontFamily: POPPINS[weight] || POPPINS[400] };
 }
 /** `font-montserrat` */
+// Montserrat and Inter are folded into Poppins: one text family app-wide
+// (Cinzel for heritage titles, Playfair italic for header taglines only).
 export function montserrat(weight = 700) {
-  return { fontFamily: MONTSERRAT[weight] || MONTSERRAT[700] };
+  return poppins(weight);
 }
 /** `font-cinzel` (only 700 is loaded on the web) */
 export function cinzel() {
@@ -126,7 +123,7 @@ export function playfair(weight = 400, italic = false) {
 }
 /** `font-inter` */
 export function inter(weight = 400) {
-  return { fontFamily: INTER[weight] || INTER[400] };
+  return poppins(weight);
 }
 
 // The kit components ported from the delivery app call these two.
@@ -183,3 +180,98 @@ export function buildTheme() {
     black: '#000000',
   };
 }
+
+
+/* ───────────────────────── Design system (heritage) ─────────────────────────
+ * Tokens every redesigned screen uses; see DESIGN_SYSTEM.md at the app root.
+ * One look across tourism, food and taxi: deep-green heritage headers with
+ * gold Cinzel titles, warm cream background, white cards with a beige edge,
+ * brand-green actions and gold highlights. `tw`/`dh` above remain only for
+ * code not yet migrated.
+ */
+export const color = {
+  primary: '#0A4D2B', // actions, links, selected
+  primaryPressed: '#06381E',
+  primaryDeep: '#062C16', // heritage header / dark hero surfaces
+  primarySoft: '#E8F2EC',
+  primaryBorder: '#BBCCC3',
+  onPrimary: '#FFFFFF',
+
+  gold: '#CAA83E', // heritage accent: ornaments, ratings, offers, premium CTA on dark
+  goldBright: '#E5B33B',
+  goldText: '#8A6D14', // gold that passes AA as text on white/cream
+  goldSoft: '#FBF3DC',
+  onGold: '#1F1A0A',
+  goldOnDark: '#FCD34D', // titles on the deep-green header
+
+  bg: '#FDFBF7', // cream page background
+  surface: '#FFFFFF',
+  surfaceMuted: '#F6F1E6', // warm inset blocks, inputs at rest, chips
+  border: '#E5DDC3', // beige card edge
+  borderStrong: '#D6CBA8',
+  overlay: 'rgba(6,28,14,0.55)',
+
+  text: '#1F2937',
+  textSecondary: '#4B5563',
+  textMuted: '#6B7280',
+  textDisabled: '#9CA3AF',
+  textInverse: '#FFFFFF',
+  textOnDarkMuted: 'rgba(254,243,198,0.85)', // tagline on the header
+
+  success: '#15803D',
+  successSoft: '#DCFCE7',
+  warning: '#B45309',
+  warningSoft: '#FEF3C7',
+  danger: '#DC2626',
+  dangerSoft: '#FEE2E2',
+  info: '#1D4ED8',
+  infoSoft: '#DBEAFE',
+  veg: '#15803D', // FSSAI marks: never restyle these two
+  nonVeg: '#B91C1C',
+};
+
+/** Status tones: { fg, bg } for badges and banners. */
+export const tone = {
+  primary: { fg: color.primary, bg: color.primarySoft },
+  gold: { fg: color.goldText, bg: color.goldSoft },
+  success: { fg: color.success, bg: color.successSoft },
+  warning: { fg: color.warning, bg: color.warningSoft },
+  danger: { fg: color.danger, bg: color.dangerSoft },
+  info: { fg: color.info, bg: color.infoSoft },
+  neutral: { fg: color.textSecondary, bg: color.surfaceMuted },
+};
+
+export const space = { xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 };
+export const radii = { sm: 8, md: 12, lg: 16, xl: 24, pill: 999 };
+export const touch = 48;
+
+const pop = (w) => poppins(w);
+/*
+ * Type scale. Cinzel (always caps by design) only for heritage titles and
+ * section titles; Playfair italic only for header taglines; Poppins for all
+ * other text. Nothing below 12 px.
+ */
+export const type = {
+  heroSerif: { ...cinzel(), fontSize: 24, lineHeight: 30, letterSpacing: 1.5 }, // home / hero banner titles
+  titleSerif: { ...cinzel(), fontSize: 17, lineHeight: 24, letterSpacing: 1.4 }, // header titles
+  sectionSerif: { ...cinzel(), fontSize: 15, lineHeight: 22, letterSpacing: 1 }, // section titles in a page
+  tagline: { ...playfair(400, true), fontSize: 13, lineHeight: 18 }, // header subtitle only
+  heading: { ...pop(700), fontSize: 18, lineHeight: 26 }, // sheet / dialog / detail title
+  subheading: { ...pop(600), fontSize: 16, lineHeight: 22 }, // card titles, names
+  body: { ...pop(400), fontSize: 14, lineHeight: 21 },
+  bodyStrong: { ...pop(600), fontSize: 14, lineHeight: 21 },
+  small: { ...pop(400), fontSize: 13, lineHeight: 19 }, // addresses, descriptions
+  label: { ...pop(600), fontSize: 13, lineHeight: 18 }, // field labels, chips, inline actions
+  caption: { ...pop(500), fontSize: 12, lineHeight: 16 }, // timestamps, hints, badge text
+  overline: { ...pop(700), fontSize: 12, lineHeight: 16, letterSpacing: 0.8, textTransform: 'uppercase' }, // 1-3 word kickers
+  button: { ...pop(600), fontSize: 15, lineHeight: 20 },
+  buttonSm: { ...pop(600), fontSize: 13, lineHeight: 18 },
+  price: { ...pop(700), fontSize: 18, lineHeight: 24 },
+  priceLg: { ...pop(700), fontSize: 26, lineHeight: 32 },
+};
+
+export const elevation = {
+  card: { boxShadow: '0 1px 2px rgba(31,26,10,0.05), 0 2px 8px -2px rgba(31,26,10,0.08)' },
+  float: { boxShadow: '0 10px 28px -8px rgba(6,28,14,0.28)' },
+  sheet: { boxShadow: '0 -10px 32px -8px rgba(6,28,14,0.3)' },
+};

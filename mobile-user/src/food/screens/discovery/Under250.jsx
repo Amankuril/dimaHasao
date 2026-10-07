@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Animated, Image as RNImage, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowDownUp, ArrowRight, Bookmark, Check, ChevronDown, Clock, MapPin, Minus, Plus, Share2, Star, Timer, Utensils, Wallet, X } from 'lucide-react-native';
+import { ArrowDownUp, ArrowRight, Bookmark, Check, Clock, MapPin, Minus, Plus, Share2, Star, Store, Timer, Utensils, Wallet, X } from 'lucide-react-native';
 import Image from '../../../components/Img';
 import Skeleton from '../../../components/Skeleton';
 import { BottomSheet } from '../../../components/kit';
@@ -14,8 +13,22 @@ import { getDefaultFoodVariant } from '../../utils/foodVariants';
 import { isModuleAuthenticated } from '../../utils/auth';
 import { events } from '../../../lib/events';
 import { useAnimatedValue } from '../../../lib/useAnimatedValue';
-import { F, useFoodNavScroll } from '../../components/shell';
-import { poppins, tw } from '../../../theme';
+import { useFoodNavScroll } from '../../components/shell';
+import { Button, Chip, EmptyState, StatusBadge } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { color, elevation, radii, space, type } from '../../../theme';
+
+// Height of the floating Delivery / Takeaway / Under 250 / Dining pill (FoodShell).
+const FOOD_TABS_HEIGHT = 72;
+
+/** FSSAI veg mark. */
+function VegMark({ size = 14 }) {
+  return (
+    <View accessibilityLabel="Veg" style={[styles.vegMark, { width: size, height: size }]}>
+      <View style={styles.vegDot} />
+    </View>
+  );
+}
 
 const BANNER = require('../../../../assets/food/under250_banner.jpg');
 const AVATAR = require('../../../../assets/food/profile_avatar.webp');
@@ -25,7 +38,7 @@ function Dots({ count, active, onPress }) {
   return (
     <View style={styles.dots}>
       {Array.from({ length: count }).map((_, i) => (
-        <Pressable key={i} onPress={() => onPress(i)} accessibilityLabel={`Go to banner ${i + 1}`} hitSlop={6} style={[styles.dot, active === i ? styles.dotOn : null]} />
+        <Pressable key={i} onPress={() => onPress(i)} accessibilityLabel={`Go to banner ${i + 1}`} hitSlop={10} style={[styles.dot, active === i ? styles.dotOn : null]} />
       ))}
     </View>
   );
@@ -55,7 +68,7 @@ export default function Under250() {
   const onNavScroll = useFoodNavScroll();
   const x = useAnimatedValue(0);
   useEffect(() => {
-    Animated.timing(x, { toValue: -currentBannerIndex * width, duration: isTransitionEnabled ? 500 : 0, useNativeDriver: true }).start();
+    Animated.timing(x, { toValue: -currentBannerIndex * (width - space.lg * 2), duration: isTransitionEnabled ? 500 : 0, useNativeDriver: true }).start();
   }, [currentBannerIndex, isTransitionEnabled, width, x]);
 
   const requireLogin = (href) => {
@@ -65,23 +78,42 @@ export default function Under250() {
 
   const slides = bannerImages.length > 1 ? [...bannerImages, bannerImages[0]] : bannerImages.length > 0 ? bannerImages : [null];
   const activeDot = currentBannerIndex === bannerImages.length ? 0 : currentBannerIndex;
-  const bannerH = 210;
+  const bannerW = width - space.lg * 2;
+  const bannerH = Math.round(bannerW / 1.8);
   const detailOffline = shouldShowGrayscale || selectedItem?.isRestaurantOffline;
   const defaultVariant = selectedItem ? getDefaultFoodVariant(selectedItem) : null;
   const selectedLine = selectedItem ? getLineItemIdForDish(selectedItem, defaultVariant) : '';
 
   return (
-    <View style={[{ flex: 1, backgroundColor: '#fff' }, shouldShowGrayscale ? { opacity: 0.75 } : null]}>
-      <ScrollView onScroll={onNavScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 176 + insets.bottom }}>
-        <View style={{ height: bannerH, overflow: 'hidden' }} onTouchStart={handleBannerTouchStart} onTouchMove={handleBannerTouchMove} onTouchEnd={handleBannerTouchEnd}>
-          <Animated.View style={{ flexDirection: 'row', width: width * slides.length, height: '100%', transform: [{ translateX: x }] }}>
+    <View style={[{ flex: 1, backgroundColor: color.bg }, shouldShowGrayscale ? { opacity: 0.75 } : null]}>
+      <View style={styles.header}>
+        <View style={{ flexShrink: 1, minWidth: 0 }}>
+          <Text style={styles.hKicker}>Budget meals</Text>
+          <Text style={styles.hTitle} accessibilityRole="header" numberOfLines={1}>
+            UNDER <Text style={styles.hRupee}>{RUPEE_SYMBOL}</Text>
+            {under250PriceLimit}
+          </Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+          <Press scale={0.9} onPress={() => requireLogin('/food/user/wallet')} accessibilityLabel="Wallet" style={styles.hBtn}>
+            <Wallet size={22} color={color.textInverse} strokeWidth={2} />
+          </Press>
+          <Press scale={0.95} onPress={() => requireLogin('/food/user/profile')} accessibilityLabel="Profile" style={styles.avatar}>
+            <Image source={userProfile?.profileImage ? { uri: userProfile.profileImage } : AVATAR} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+          </Press>
+        </View>
+      </View>
+
+      <ScrollView onScroll={onNavScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + FOOD_TABS_HEIGHT + space.lg + insets.bottom }}>
+        <View style={styles.bannerWrap}>
+        <View style={[styles.banner, { height: bannerH }]} onTouchStart={handleBannerTouchStart} onTouchMove={handleBannerTouchMove} onTouchEnd={handleBannerTouchEnd}>
+          <Animated.View style={{ flexDirection: 'row', width: bannerW * slides.length, height: '100%', transform: [{ translateX: x }] }}>
             {slides.map((src, i) => (
-              <View key={`${i}-${src}`} style={{ width, height: '100%' }}>
+              <View key={`${i}-${src}`} style={{ width: bannerW, height: '100%' }}>
                 {src ? <Image source={{ uri: src }} style={{ width: '100%', height: '100%' }} resizeMode="cover" /> : <RNImage source={BANNER} style={{ width: '100%', height: '100%' }} resizeMode="cover" />}
               </View>
             ))}
           </Animated.View>
-          <LinearGradient pointerEvents="none" colors={['rgba(0,0,0,0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
           {bannerImages.length > 1 ? (
             <Dots
               count={bannerImages.length}
@@ -94,76 +126,70 @@ export default function Under250() {
             />
           ) : null}
         </View>
+        </View>
 
-        <View style={{ paddingHorizontal: 12, paddingTop: 8 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingHorizontal: 8, paddingVertical: 8 }}>
-            <Press scale={0.95} onPress={() => setActiveCategory(null)} accessibilityLabel="All" style={styles.catItem}>
-              {!activeCategory ? (
-                <View style={styles.catRing}>
-                  <LinearGradient colors={[F.green, F.greenDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.catCircle}>
-                    <Utensils size={24} color="#fff" />
-                  </LinearGradient>
+        <View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catRow}>
+            <Press scale={0.95} onPress={() => setActiveCategory(null)} accessibilityRole="button" accessibilityState={{ selected: !activeCategory }} accessibilityLabel="All" style={styles.catItem}>
+              <View style={[styles.catRing, !activeCategory ? styles.catRingOn : null]}>
+                <View style={[styles.catCircle, !activeCategory ? { backgroundColor: color.primary } : { backgroundColor: color.surface }]}>
+                  <Utensils size={22} color={!activeCategory ? color.onPrimary : color.textSecondary} />
                 </View>
-              ) : (
-                <View style={[styles.catCircle, { backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200 }]}>
-                  <Utensils size={24} color={tw.gray700} />
-                </View>
-              )}
-              <Text style={[styles.catName, { ...poppins(700) }, !activeCategory ? { color: F.green } : null]}>All</Text>
+              </View>
+              <Text style={[styles.catName, !activeCategory ? styles.catNameOn : null]}>All</Text>
             </Press>
             {loadingCategories
               ? [1, 2, 3, 4, 5, 6].map((i) => (
                   <View key={i} style={styles.catItem}>
-                    <Skeleton style={{ width: 56, height: 56, borderRadius: 28 }} />
-                    <Skeleton style={{ width: 48, height: 14, borderRadius: 4 }} />
+                    <Skeleton style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: color.surfaceMuted }} />
+                    <Skeleton style={{ width: 48, height: 12, borderRadius: 6, backgroundColor: color.surfaceMuted }} />
                   </View>
                 ))
               : displayCategories.map((category) => {
                   const active = activeCategory === category.id;
                   return (
-                    <Press key={category.id} scale={0.95} onPress={() => setActiveCategory(active ? null : category.id)} accessibilityLabel={category.name} style={styles.catItem}>
-                      <View style={active ? styles.catRing : null}>
-                        <View style={[styles.catCircle, { backgroundColor: '#fff', overflow: 'hidden', ...{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' } }]}>
+                    <Press key={category.id} scale={0.95} onPress={() => setActiveCategory(active ? null : category.id)} accessibilityRole="button" accessibilityState={{ selected: active }} accessibilityLabel={category.name} style={styles.catItem}>
+                      <View style={[styles.catRing, active ? styles.catRingOn : null]}>
+                        <View style={[styles.catCircle, { backgroundColor: color.surface, overflow: 'hidden' }]}>
                           {category.image ? <Image source={{ uri: category.image }} style={{ width: '100%', height: '100%' }} resizeMode="cover" /> : null}
                         </View>
                       </View>
-                      <Text style={[styles.catName, active ? { color: F.green } : null]}>{category.name.length > 7 ? `${category.name.slice(0, 7)}...` : category.name}</Text>
+                      <Text style={[styles.catName, active ? styles.catNameOn : null]} numberOfLines={1}>{category.name}</Text>
                     </Press>
                   );
                 })}
           </ScrollView>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 }}>
-            <Press scale={0.97} onPress={() => setShowSortPopup(true)} accessibilityLabel="Sort" style={[styles.pill]}>
-              <ArrowDownUp size={16} color={tw.gray700} style={{ transform: [{ rotate: '90deg' }] }} />
-              <Text style={[styles.pillText, { color: tw.gray700 }]}>{selectedSort ? sortOptions.find((o) => o.id === selectedSort)?.label : 'Sort'}</Text>
-              <ChevronDown size={12} color={tw.gray700} />
-            </Press>
-            <Press scale={0.97} onPress={() => setUnder30MinsFilter(!under30MinsFilter)} accessibilityRole="checkbox" accessibilityState={{ checked: under30MinsFilter }} accessibilityLabel="Under 30 mins" style={[styles.pill, under30MinsFilter ? { backgroundColor: F.green, borderColor: F.green } : null]}>
-              <Timer size={12} color={under30MinsFilter ? '#fff' : tw.gray600} />
-              <Text style={[styles.pillText, { color: under30MinsFilter ? '#fff' : tw.gray600 }]}>Under 30 mins</Text>
-            </Press>
+          <View style={styles.filters}>
+            <Chip
+              icon={ArrowDownUp}
+              label={selectedSort ? sortOptions.find((o) => o.id === selectedSort)?.label : 'Sort'}
+              selected={false}
+              onPress={() => setShowSortPopup(true)}
+              style={{ height: 40 }}
+            />
+            <Chip icon={Timer} label="Under 30 mins" selected={under30MinsFilter} onPress={() => setUnder30MinsFilter(!under30MinsFilter)} style={{ height: 40 }} />
           </View>
 
           {loadingRestaurants && under250Restaurants.length === 0 ? (
-            <View style={{ gap: 32, paddingTop: 16 }}>
+            <View style={{ gap: space.xxl, paddingTop: space.lg, paddingHorizontal: space.lg }} accessibilityRole="progressbar" accessibilityLabel="Loading restaurants">
               {[1, 2, 3].map((i) => (
-                <View key={i} style={{ gap: 16 }}>
-                  <View style={{ gap: 8 }}>
-                    <Skeleton style={{ height: 24, width: 192, borderRadius: 8 }} />
-                    <View style={{ flexDirection: 'row', gap: 16 }}>
-                      <Skeleton style={{ height: 16, width: 96, borderRadius: 4 }} />
-                      <Skeleton style={{ height: 16, width: 96, borderRadius: 4 }} />
+                <View key={i} style={{ gap: space.lg }}>
+                  <View style={{ gap: space.sm }}>
+                    <Skeleton style={[styles.sk, { height: 20, width: 192 }]} />
+                    <View style={{ flexDirection: 'row', gap: space.lg }}>
+                      <Skeleton style={[styles.sk, { height: 14, width: 96 }]} />
+                      <Skeleton style={[styles.sk, { height: 14, width: 96 }]} />
                     </View>
                   </View>
-                  <View style={{ flexDirection: 'row', gap: 16, overflow: 'hidden' }}>
+                  <View style={{ flexDirection: 'row', gap: space.md, overflow: 'hidden' }}>
                     {[1, 2, 3, 4].map((j) => (
                       <View key={j} style={styles.skCard}>
-                        <Skeleton style={{ height: 128, borderRadius: 8 }} />
-                        <Skeleton style={{ height: 16, width: '75%', borderRadius: 4 }} />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8 }}>
-                          <Skeleton style={{ height: 20, width: 64, borderRadius: 4 }} />
-                          <Skeleton style={{ height: 32, width: 64, borderRadius: 4 }} />
+                        <Skeleton style={[styles.sk, { height: 120, borderRadius: radii.md }]} />
+                        <Skeleton style={[styles.sk, { height: 14, width: '75%' }]} />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: space.sm }}>
+                          <Skeleton style={[styles.sk, { height: 18, width: 56 }]} />
+                          <Skeleton style={[styles.sk, { height: 32, width: 64 }]} />
                         </View>
                       </View>
                     ))}
@@ -172,83 +198,76 @@ export default function Under250() {
               ))}
             </View>
           ) : sortedAndFilteredRestaurants.length === 0 ? (
-            <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-              <Text style={{ color: tw.gray500, textAlign: 'center', fontSize: 16, lineHeight: 24, ...poppins(400) }}>
-                {under250Restaurants.length === 0 ? `No restaurants with dishes under ${RUPEE_SYMBOL}${under250PriceLimit} found.` : 'No restaurants match the selected filters.'}
-              </Text>
-            </View>
+            <EmptyState
+              icon={Store}
+              title={under250Restaurants.length === 0 ? `No restaurants with dishes under ${RUPEE_SYMBOL}${under250PriceLimit} found.` : 'No restaurants match the selected filters.'}
+            />
           ) : (
             <>
               {sortedAndFilteredRestaurants.slice(0, visibleRestaurantCount).map((restaurant) => {
                 const slug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, '-');
                 const offline = !getRestaurantAvailabilityStatus(restaurant).isOpen;
                 return (
-                  <View key={restaurant.id} style={[{ paddingTop: 16 }, offline ? { opacity: 0.8 } : null]}>
-                    <Text style={styles.rName}>{restaurant.name}</Text>
-                    <View style={styles.rMeta}>
-                      <View style={styles.m}><Clock size={14} color={tw.gray500} strokeWidth={2.5} /><Text style={styles.mText}>{restaurant.deliveryTime}</Text></View>
-                      <View style={styles.m}><MapPin size={14} color={tw.gray500} strokeWidth={2.5} /><Text style={styles.mText}>{restaurant.distance}</Text></View>
-                      <View style={styles.rate}>
-                        <Star size={12} color="#fff" fill="#fff" />
-                        <Text style={styles.rateText}>{restaurant.rating}</Text>
+                  <View key={restaurant.id} style={[styles.rBlock, offline ? { opacity: 0.8 } : null]}>
+                    <View style={styles.gutter}>
+                      <Text style={styles.rName} numberOfLines={2}>{restaurant.name}</Text>
+                      <View style={styles.rMeta}>
+                        <View style={styles.m}><Clock size={14} color={color.textSecondary} /><Text style={styles.mText}>{restaurant.deliveryTime}</Text></View>
+                        <View style={styles.m}><MapPin size={14} color={color.textSecondary} /><Text style={styles.mText}>{restaurant.distance}</Text></View>
+                        <View style={styles.rate}>
+                          <Star size={12} color={color.goldText} fill={color.gold} strokeWidth={0} />
+                          <Text style={styles.rateText}>{restaurant.rating}</Text>
+                        </View>
+                        <Text style={styles.cnt}>{restaurant.totalRatings > 0 ? `${restaurant.totalRatings >= 1000 ? `${(restaurant.totalRatings / 1000).toFixed(1)}K` : restaurant.totalRatings}+ ratings` : 'New'}</Text>
+                        {offline ? <StatusBadge label="Closed" tone="neutral" icon={Clock} /> : null}
                       </View>
-                      <View style={{ width: 1, height: 16, backgroundColor: tw.gray200 }} />
-                      <Text style={styles.cnt}>{restaurant.totalRatings > 0 ? `${restaurant.totalRatings >= 1000 ? `${(restaurant.totalRatings / 1000).toFixed(1)}K` : restaurant.totalRatings}+ Ratings` : 'New'}</Text>
                     </View>
 
                     {restaurant.menuItems && restaurant.menuItems.length > 0 ? (
-                      <View style={{ gap: 8, marginTop: 12 }}>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>
+                      <View style={{ gap: space.sm, marginTop: space.md }}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.itemsRow}>
                           {restaurant.menuItems.map((item) => {
                             const variant = getDefaultFoodVariant(item);
                             const line = getLineItemIdForDish(item, variant);
                             const quantity = quantities[line] || 0;
                             const isOffline = shouldShowGrayscale || offline;
                             return (
-                              <Press key={item.id} scale={0.99} onPress={() => handleItemClick(item, restaurant)} accessibilityLabel={item.name} style={[styles.item, isOffline ? { opacity: 0.75 } : null]}>
-                                <View style={{ height: 128, backgroundColor: tw.gray100 }}>
-                                  <Image source={{ uri: item.image }} style={[{ width: '100%', height: '100%' }, isOffline ? G : null]} resizeMode="cover" />
-                                  {item.isVeg ? (
-                                    <View style={styles.vegOuter}>
-                                      <View style={styles.vegDot} />
-                                    </View>
-                                  ) : null}
-                                </View>
-                                <View style={{ padding: 12 }}>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                                    {item.isVeg ? (
-                                      <View style={styles.vegSmall}>
-                                        <View style={[styles.vegDot, { width: 6, height: 6 }]} />
-                                      </View>
-                                    ) : null}
+                              <View key={item.id} style={[styles.item, isOffline ? { opacity: 0.75 } : null]}>
+                                <Press scale={0.99} onPress={() => handleItemClick(item, restaurant)} accessibilityRole="button" accessibilityLabel={item.name}>
+                                  <View style={{ height: 120, backgroundColor: color.surfaceMuted }}>
+                                    <Image source={{ uri: item.image }} style={[{ width: '100%', height: '100%' }, isOffline ? G : null]} resizeMode="cover" />
+                                  </View>
+                                  <View style={styles.itemHead}>
+                                    {item.isVeg ? <VegMark size={14} /> : null}
                                     <Text style={styles.iName} numberOfLines={1}>1 x {item.name}</Text>
                                   </View>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <View>
-                                      <Text style={styles.price}>{RUPEE_SYMBOL}{Math.round(item.price)}</Text>
-                                      {item.bestPrice ? <Text style={styles.best}>Best price</Text> : null}
-                                    </View>
-                                    {quantity > 0 && !offline ? (
-                                      <View style={styles.stepper}>
-                                        <Press scale={0.9} onPress={() => updateItemQuantity(item, quantity - 1, null, restaurant.name, variant)} accessibilityLabel="Decrease" style={styles.sBtn}><Minus size={14} color="#fff" /></Press>
-                                        <Text style={styles.sNum}>{quantity}</Text>
-                                        <Press scale={0.9} onPress={() => updateItemQuantity(item, quantity + 1, null, restaurant.name, variant)} accessibilityLabel="Increase" style={styles.sBtn}><Plus size={14} color="#fff" /></Press>
-                                      </View>
-                                    ) : (
-                                      <Press scale={0.95} disabled={isOffline} onPress={() => !isOffline && updateItemQuantity(item, 1, null, restaurant.name, variant)} accessibilityLabel={`Add ${item.name}`} style={[styles.add, isOffline ? { backgroundColor: tw.gray100, opacity: 0.5 } : null]}>
-                                        <Text style={[styles.addText, isOffline ? { color: tw.gray400 } : null]}>Add</Text>
-                                      </Press>
-                                    )}
+                                </Press>
+                                <View style={styles.itemFoot}>
+                                  <View style={{ flexShrink: 1 }}>
+                                    <Text style={styles.price}>{RUPEE_SYMBOL}{Math.round(item.price)}</Text>
+                                    {item.bestPrice ? <Text style={styles.best}>Best price</Text> : null}
                                   </View>
+                                  {quantity > 0 && !offline ? (
+                                    <View style={styles.stepper}>
+                                      <Press scale={0.9} onPress={() => updateItemQuantity(item, quantity - 1, null, restaurant.name, variant)} accessibilityLabel={`Remove one ${item.name}`} hitSlop={4} style={styles.sBtn}><Minus size={16} color={color.onPrimary} /></Press>
+                                      <Text style={styles.sNum}>{quantity}</Text>
+                                      <Press scale={0.9} onPress={() => updateItemQuantity(item, quantity + 1, null, restaurant.name, variant)} accessibilityLabel={`Add one more ${item.name}`} hitSlop={4} style={styles.sBtn}><Plus size={16} color={color.onPrimary} /></Press>
+                                    </View>
+                                  ) : (
+                                    <Press scale={0.95} disabled={isOffline} onPress={() => !isOffline && updateItemQuantity(item, 1, null, restaurant.name, variant)} accessibilityLabel={`Add ${item.name}`} hitSlop={4} style={[styles.add, isOffline ? styles.addOff : null]}>
+                                      <Text style={[styles.addText, isOffline ? { color: color.textDisabled } : null]}>Add</Text>
+                                      <Plus size={14} color={isOffline ? color.textDisabled : color.primary} strokeWidth={2.75} />
+                                    </Press>
+                                  )}
                                 </View>
-                              </Press>
+                              </View>
                             );
                           })}
                         </ScrollView>
 
-                        <Press scale={0.97} onPress={() => router.push(`/food/user/restaurants/${slug}?under250=true`)} accessibilityLabel="View full menu" style={styles.full}>
+                        <Press scale={0.97} onPress={() => router.push(`/food/user/restaurants/${slug}?under250=true`)} accessibilityRole="button" accessibilityLabel="View full menu" style={styles.full}>
                           <Text style={styles.fullText}>View full menu</Text>
-                          <ArrowRight size={16} color={tw.gray700} />
+                          <ArrowRight size={16} color={color.primary} />
                         </Press>
                       </View>
                     ) : null}
@@ -256,46 +275,27 @@ export default function Under250() {
                 );
               })}
               {visibleRestaurantCount < sortedAndFilteredRestaurants.length ? (
-                <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                  <Press scale={0.97} onPress={() => setVisibleRestaurantCount((n) => n + UNDER250_LIST_MAX_VISIBLE)} accessibilityLabel="Show more restaurants" style={styles.more}>
-                    <Text style={styles.moreText}>Show more restaurants</Text>
-                  </Press>
+                <View style={{ alignItems: 'center', paddingVertical: space.xxl }}>
+                  <Button title="Show more restaurants" variant="outline" size="sm" fullWidth={false} onPress={() => setVisibleRestaurantCount((n) => n + UNDER250_LIST_MAX_VISIBLE)} />
                 </View>
-              ) : (
-                <View style={{ height: 96 }} />
-              )}
+              ) : null}
             </>
           )}
         </View>
       </ScrollView>
-
-      <View style={styles.header}>
-        <View style={{ flexShrink: 1 }}>
-          <Text style={styles.hKicker}>BUDGET MEALS</Text>
-          <Text style={styles.hTitle}>Under {RUPEE_SYMBOL}{under250PriceLimit}</Text>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Press scale={0.9} onPress={() => requireLogin('/food/user/wallet')} accessibilityLabel="Wallet" style={{ padding: 6 }}>
-            <Wallet size={26} color="#fff" strokeWidth={2.2} />
-          </Press>
-          <Press scale={0.95} onPress={() => requireLogin('/food/user/profile')} accessibilityLabel="Profile" style={styles.avatar}>
-            <Image source={userProfile?.profileImage ? { uri: userProfile.profileImage } : AVATAR} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-          </Press>
-        </View>
-      </View>
 
       <Modal visible={showSortPopup} transparent animationType="fade" onRequestClose={() => setShowSortPopup(false)} statusBarTranslucent>
         <View style={styles.overlay}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowSortPopup(false)} accessibilityLabel="Close" />
           <View style={styles.sortCard}>
             <View style={styles.sortHead}>
-              <Text style={styles.sortTitle}>Sort By</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Press scale={0.96} onPress={handleClearAll} accessibilityLabel="Clear all"><Text style={styles.clear}>Clear all</Text></Press>
-                <Press scale={0.9} onPress={() => setShowSortPopup(false)} accessibilityLabel="Close" style={styles.xBtn}><X size={20} color={tw.gray700} /></Press>
+              <Text style={styles.sortTitle} accessibilityRole="header">Sort by</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Press scale={0.96} onPress={handleClearAll} accessibilityLabel="Clear all" style={styles.clearBtn}><Text style={styles.clear}>Clear all</Text></Press>
+                <Press scale={0.9} onPress={() => setShowSortPopup(false)} accessibilityLabel="Close" style={styles.xBtn}><X size={20} color={color.text} /></Press>
               </View>
             </View>
-            <View style={{ paddingHorizontal: 20, paddingVertical: 16, gap: 12 }}>
+            <View style={{ padding: space.lg, gap: space.sm }}>
               {sortOptions.map((o) => {
                 const on = selectedSort === o.id;
                 return (
@@ -307,65 +307,69 @@ export default function Under250() {
                       setSelectedSort(o.id);
                       setShowSortPopup(false);
                     }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: on }}
                     accessibilityLabel={o.label}
-                    style={[styles.opt, on ? { borderColor: F.green, backgroundColor: '#fdfafc' } : null]}
+                    style={[styles.opt, on ? styles.optOn : null]}
                   >
-                    <Text style={[styles.optText, on ? { color: F.green } : null]}>{o.label}</Text>
+                    <Text style={[styles.optText, on ? { color: color.primary, fontFamily: 'Poppins_600SemiBold' } : null]}>{o.label}</Text>
                     {on ? (
-                      <View style={styles.check}><Check size={12} color="#fff" /></View>
+                      <View style={styles.check}><Check size={14} color={color.onPrimary} /></View>
                     ) : null}
                   </Press>
                 );
               })}
             </View>
-            <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingBottom: 20 }}>
-              <Press scale={0.98} onPress={() => setShowSortPopup(false)} accessibilityLabel="Close" style={[styles.fBtn, { backgroundColor: tw.gray800 }]}><Text style={[styles.fText, { color: '#fff', ...poppins(700) }]}>Close</Text></Press>
-              <Press scale={0.98} onPress={handleApply} accessibilityLabel="Apply" style={[styles.fBtn, { backgroundColor: F.green }]}><Text style={[styles.fText, { color: '#fff' }]}>Apply</Text></Press>
+            <View style={{ flexDirection: 'row', gap: space.md, paddingHorizontal: space.lg, paddingBottom: space.lg }}>
+              <Button title="Close" variant="outline" onPress={() => setShowSortPopup(false)} style={{ flex: 1 }} />
+              <Button title="Apply" onPress={handleApply} style={{ flex: 1 }} />
             </View>
           </View>
         </View>
       </Modal>
 
-      <BottomSheet visible={Boolean(showItemDetail && selectedItem)} onClose={closeItemDetail} backdrop="rgba(0,0,0,0.4)" spring={{ stiffness: 400, damping: 30 }} panelStyle={styles.detail}>
+      <BottomSheet visible={Boolean(showItemDetail && selectedItem)} onClose={closeItemDetail} backdrop={color.overlay} spring={{ stiffness: 400, damping: 30 }} panelStyle={styles.detail}>
         {selectedItem ? (
           <>
-            <View style={[{ height: 256, overflow: 'hidden', borderTopLeftRadius: 24, borderTopRightRadius: 24 }, detailOffline ? { opacity: 0.75 } : null]}>
+            <View style={[{ height: 240, overflow: 'hidden', borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, backgroundColor: color.surfaceMuted }, detailOffline ? { opacity: 0.75 } : null]}>
               <Image source={{ uri: selectedItem.image }} style={[{ width: '100%', height: '100%' }, detailOffline ? G : null]} resizeMode="cover" />
               <View style={styles.dActions}>
-                <Press scale={0.9} onPress={() => handleBookmarkClick(selectedItem.id)} accessibilityLabel="Bookmark" style={[styles.dBtn, bookmarkedItems.has(selectedItem.id) ? { borderColor: tw.red500, backgroundColor: tw.red50 } : null]}>
-                  <Bookmark size={20} color={bookmarkedItems.has(selectedItem.id) ? tw.red500 : tw.gray600} fill={bookmarkedItems.has(selectedItem.id) ? tw.red500 : 'none'} />
+                <Press scale={0.9} onPress={() => handleBookmarkClick(selectedItem.id)} accessibilityLabel="Bookmark" accessibilityState={{ selected: bookmarkedItems.has(selectedItem.id) }} style={[styles.dBtn, bookmarkedItems.has(selectedItem.id) ? { backgroundColor: color.primary } : null]}>
+                  <Bookmark size={20} color={bookmarkedItems.has(selectedItem.id) ? color.onPrimary : color.text} fill={bookmarkedItems.has(selectedItem.id) ? color.onPrimary : 'none'} />
                 </Press>
                 <Press scale={0.9} onPress={() => handleShareItem(selectedItem)} accessibilityLabel="Share" style={styles.dBtn}>
-                  <Share2 size={20} color={tw.gray600} />
+                  <Share2 size={20} color={color.text} />
                 </Press>
               </View>
-              <Press scale={0.9} onPress={closeItemDetail} accessibilityLabel="Close" style={styles.dClose}><X size={20} color="#fff" /></Press>
+              <Press scale={0.9} onPress={closeItemDetail} accessibilityLabel="Close" style={styles.dClose}><X size={20} color={color.textInverse} /></Press>
             </View>
-            <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: space.lg }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, marginBottom: space.md }}>
                 {selectedItem.isVeg ? (
-                  <View style={styles.vegBig}><View style={[styles.vegDot, { width: 10, height: 10 }]} /></View>
+                  <View style={{ marginTop: 5 }}>
+                    <VegMark size={18} />
+                  </View>
                 ) : null}
-                <Text style={styles.dName}>{selectedItem.name}</Text>
+                <Text style={styles.dName} accessibilityRole="header">{selectedItem.name}</Text>
               </View>
               <Text style={styles.dDesc}>{selectedItem.description || `${selectedItem.name} from ${selectedItem.restaurant || 'Under 250'}`}</Text>
               {selectedItem.customisable ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <View style={{ flex: 1, height: 2, backgroundColor: tw.gray200, borderRadius: 1, overflow: 'hidden' }}>
-                    <View style={{ height: '100%', width: '50%', backgroundColor: F.green }} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.lg }}>
+                  <View style={{ flex: 1, height: 4, backgroundColor: color.surfaceMuted, borderRadius: 2, overflow: 'hidden' }}>
+                    <View style={{ height: '100%', width: '50%', backgroundColor: color.gold }} />
                   </View>
-                  <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(500) }}>highly reordered</Text>
+                  <Text style={{ ...type.caption, color: color.textSecondary }}>Highly reordered</Text>
                 </View>
               ) : null}
-              {selectedItem.notEligibleForCoupons ? <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, marginBottom: 16, ...poppins(500) }}>NOT ELIGIBLE FOR COUPONS</Text> : null}
+              {selectedItem.notEligibleForCoupons ? <StatusBadge label="Not eligible for coupons" tone="neutral" style={{ marginBottom: space.lg }} /> : null}
             </ScrollView>
-            <View style={[styles.bar, { paddingBottom: 16 + insets.bottom }]}>
+            <View style={[styles.bar, { paddingBottom: space.lg + insets.bottom }]}>
               {selectedItem.isRestaurantOffline ? <Text style={styles.closedMsg}>Restaurant is currently closed and not accepting orders.</Text> : null}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
                 <View style={[styles.dq, detailOffline ? { opacity: 0.5 } : null]}>
-                  <Press scale={0.9} disabled={itemDetailQuantity <= 1 || detailOffline} onPress={() => setItemDetailQuantity((q) => Math.max(1, q - 1))} accessibilityLabel="Decrease"><Minus size={20} color={itemDetailQuantity <= 1 || detailOffline ? tw.gray300 : tw.gray600} /></Press>
-                  <Text style={[styles.dqNum, detailOffline ? { color: tw.gray400 } : null]}>{itemDetailQuantity}</Text>
-                  <Press scale={0.9} disabled={detailOffline} onPress={() => setItemDetailQuantity((q) => q + 1)} accessibilityLabel="Increase"><Plus size={20} color={detailOffline ? tw.gray300 : tw.gray600} /></Press>
+                  <Press scale={0.9} disabled={itemDetailQuantity <= 1 || detailOffline} onPress={() => setItemDetailQuantity((q) => Math.max(1, q - 1))} accessibilityLabel="Decrease" style={styles.dqBtn}><Minus size={20} color={itemDetailQuantity <= 1 || detailOffline ? color.textDisabled : color.primary} /></Press>
+                  <Text style={[styles.dqNum, detailOffline ? { color: color.textDisabled } : null]}>{itemDetailQuantity}</Text>
+                  <Press scale={0.9} disabled={detailOffline} onPress={() => setItemDetailQuantity((q) => q + 1)} accessibilityLabel="Increase" style={styles.dqBtn}><Plus size={20} color={detailOffline ? color.textDisabled : color.primary} /></Press>
                 </View>
                 <Press
                   scale={0.98}
@@ -376,10 +380,11 @@ export default function Under250() {
                     closeItemDetail();
                   }}
                   accessibilityLabel={quantities[selectedLine] > 0 ? 'Update item' : 'Add item'}
-                  style={[styles.addBig, detailOffline ? { backgroundColor: tw.gray300, opacity: 0.5 } : null]}
+                  accessibilityState={{ disabled: !!detailOffline }}
+                  style={[styles.addBig, detailOffline ? { backgroundColor: color.surfaceMuted } : null]}
                 >
-                  <Text style={[styles.addBigText, detailOffline ? { color: tw.gray500 } : null]}>{quantities[selectedLine] > 0 ? 'Update item' : 'Add item'}</Text>
-                  <Text style={[styles.addBigText, { fontSize: 16, ...poppins(700) }, detailOffline ? { color: tw.gray500 } : null]}>{RUPEE_SYMBOL}{Math.round((defaultVariant?.price ?? selectedItem.price) * itemDetailQuantity)}</Text>
+                  <Text style={[styles.addBigText, detailOffline ? { color: color.textMuted } : null]} numberOfLines={1}>{quantities[selectedLine] > 0 ? 'Update item' : 'Add item'}</Text>
+                  <Text style={[styles.addBigText, { fontFamily: 'Poppins_700Bold' }, detailOffline ? { color: color.textMuted } : null]}>{RUPEE_SYMBOL}{Math.round((defaultVariant?.price ?? selectedItem.price) * itemDetailQuantity)}</Text>
                 </Press>
                 {quantities[selectedLine] > 0 ? (
                   <Press
@@ -401,15 +406,15 @@ export default function Under250() {
         ) : null}
       </BottomSheet>
 
-      <BottomSheet visible={Boolean(showShareOptions && selectedItem)} onClose={() => setShowShareOptions(false)} backdrop="rgba(0,0,0,0.4)" spring={{ stiffness: 320, damping: 28 }} panelStyle={[styles.share, { paddingBottom: 16 + insets.bottom }]}>
-        <View style={{ alignItems: 'center', paddingBottom: 12 }}>
-          <View style={{ width: 48, height: 4, borderRadius: 2, backgroundColor: tw.gray300 }} />
+      <BottomSheet visible={Boolean(showShareOptions && selectedItem)} onClose={() => setShowShareOptions(false)} backdrop={color.overlay} spring={{ stiffness: 320, damping: 28 }} panelStyle={[styles.share, { paddingBottom: space.lg + insets.bottom }]}>
+        <View style={{ alignItems: 'center', paddingBottom: space.md }}>
+          <View style={{ width: 48, height: 4, borderRadius: 2, backgroundColor: color.borderStrong }} />
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16 }}>
-          <Text style={{ fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) }}>Share dish</Text>
-          <Press scale={0.96} onPress={() => setShowShareOptions(false)} accessibilityLabel="Close"><Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(500) }}>Close</Text></Press>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: space.md }}>
+          <Text style={{ ...type.subheading, color: color.text }} accessibilityRole="header">Share dish</Text>
+          <Press scale={0.96} onPress={() => setShowShareOptions(false)} accessibilityLabel="Close" style={styles.clearBtn}><Text style={styles.clear}>Close</Text></Press>
         </View>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
           {[
             { id: 'whatsapp', label: 'WhatsApp' },
             { id: 'telegram', label: 'Telegram' },
@@ -418,7 +423,7 @@ export default function Under250() {
             { id: 'copy', label: 'Copy Link' },
           ].map((o) => (
             <Press key={o.id} scale={0.97} onPress={() => handleShareOption(o.id)} accessibilityLabel={o.label} style={styles.shareOpt}>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray800, ...poppins(500) }}>{o.label}</Text>
+              <Text style={{ ...type.bodyStrong, color: color.text }}>{o.label}</Text>
             </Press>
           ))}
         </View>
@@ -428,69 +433,79 @@ export default function Under250() {
 }
 
 const styles = StyleSheet.create({
-  header: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#06381E', borderBottomLeftRadius: 32, borderBottomRightRadius: 32, ...{ boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)' } },
-  hKicker: { fontSize: 10, lineHeight: 15, letterSpacing: 2, color: 'rgba(255,255,255,0.8)', ...poppins(700) },
-  hTitle: { fontSize: 20, lineHeight: 28, color: '#fff', ...poppins(700) },
-  avatar: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: '#fff', backgroundColor: '#FFF5E6', overflow: 'hidden' },
-  dots: { position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' },
-  dotOn: { width: 16, backgroundColor: '#fff' },
-  catItem: { width: 62, alignItems: 'center', gap: 8 },
-  catCircle: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  catRing: { padding: 2, borderRadius: 32, borderWidth: 2, borderColor: F.green },
-  catName: { fontSize: 12, lineHeight: 16, color: tw.gray800, textAlign: 'center', paddingBottom: 4, ...poppins(600) },
-  pill: { height: 32, paddingHorizontal: 12, borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200 },
-  pillText: { fontSize: 12, lineHeight: 16, ...poppins(500) },
-  skCard: { width: 200, height: 256, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, padding: 12, gap: 12 },
-  rName: { fontSize: 18, lineHeight: 28, color: tw.gray900, marginBottom: 4, ...poppins(700) },
-  rMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 },
-  m: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  mText: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(600) },
-  rate: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#267e3e', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  rateText: { fontSize: 10, lineHeight: 15, color: '#fff', ...poppins(900) },
-  cnt: { fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(700) },
-  item: { width: 200, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, overflow: 'hidden', ...{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)' } },
-  vegOuter: { position: 'absolute', top: 8, left: 8, width: 16, height: 16, borderRadius: 4, borderWidth: 2, borderColor: tw.green600, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  vegDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: tw.green600 },
-  vegSmall: { width: 12, height: 12, borderRadius: 3, borderWidth: 1, borderColor: tw.green600, backgroundColor: tw.green50, alignItems: 'center', justifyContent: 'center' },
-  vegBig: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: tw.green600, backgroundColor: tw.green50, alignItems: 'center', justifyContent: 'center' },
-  iName: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  price: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  best: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: F.green, borderRadius: 8, padding: 4, ...{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' } },
-  sBtn: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 4 },
-  sNum: { minWidth: 20, textAlign: 'center', paddingHorizontal: 4, color: '#fff', fontSize: 12, lineHeight: 16, ...poppins(700) },
-  add: { height: 28, paddingHorizontal: 12, borderRadius: 6, backgroundColor: F.green, alignItems: 'center', justifyContent: 'center', ...{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' } },
-  addText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(700) },
-  full: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, height: 36, paddingHorizontal: 16, borderRadius: 8, backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray200, marginTop: 8 },
-  fullText: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  more: { height: 36, paddingHorizontal: 24, borderRadius: 999, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  moreText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
-  sortCard: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', ...{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } },
-  sortHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  sortTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  clear: { fontSize: 14, lineHeight: 20, color: F.green, ...poppins(500) },
-  xBtn: { padding: 6, borderRadius: 999, backgroundColor: tw.gray100 },
-  opt: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200 },
-  optText: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  check: { width: 20, height: 20, borderRadius: 10, backgroundColor: F.green, alignItems: 'center', justifyContent: 'center' },
-  fBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
-  fText: { fontSize: 14, lineHeight: 20, ...poppins(600) },
-  detail: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '90%' },
-  dActions: { position: 'absolute', bottom: 16, right: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  dBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#fff', backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },
-  dClose: { position: 'absolute', top: 12, alignSelf: 'center', width: 40, height: 40, borderRadius: 20, backgroundColor: tw.gray800, alignItems: 'center', justifyContent: 'center' },
-  dName: { flex: 1, fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  dDesc: { fontSize: 14, lineHeight: 22.75, color: tw.gray600, marginBottom: 16, ...poppins(400) },
-  bar: { borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 16, paddingTop: 16, backgroundColor: '#fff' },
-  closedMsg: { fontSize: 14, lineHeight: 20, color: tw.red500, marginBottom: 12, textAlign: 'center', ...poppins(600) },
-  dq: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 2, borderColor: tw.gray300, borderRadius: 8, paddingHorizontal: 12, height: 44 },
-  dqNum: { minWidth: 32, textAlign: 'center', fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(600) },
-  addBig: { flex: 1, height: 44, borderRadius: 8, backgroundColor: F.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  addBigText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) },
-  remove: { height: 44, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: tw.red200, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  removeText: { fontSize: 12, lineHeight: 16, color: tw.red600, ...poppins(600) },
-  share: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 16, paddingTop: 16 },
-  shareOpt: { width: '48%', borderRadius: 16, borderWidth: 1, borderColor: tw.gray200, paddingHorizontal: 16, paddingVertical: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, paddingLeft: space.lg, paddingRight: space.md, paddingVertical: space.md, backgroundColor: color.primaryDeep, borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, ...elevation.card },
+  hKicker: { ...type.overline, color: color.textOnDarkMuted },
+  hTitle: { ...type.heroSerif, color: color.goldOnDark },
+  hRupee: { fontFamily: 'Poppins_700Bold', letterSpacing: 0 },
+  hBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: color.gold, backgroundColor: color.goldSoft, overflow: 'hidden' },
+  bannerWrap: { paddingHorizontal: space.lg, paddingTop: space.lg },
+  banner: { borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.surfaceMuted, borderWidth: 1, borderColor: color.border },
+  dots: { position: 'absolute', bottom: space.md, right: space.md, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.55)' },
+  dotOn: { width: 20, backgroundColor: color.surface },
+  catRow: { gap: space.sm, paddingHorizontal: space.lg, paddingTop: space.lg, paddingBottom: space.sm },
+  catItem: { width: 72, alignItems: 'center', gap: space.xs + 2 },
+  catRing: { padding: 2, borderRadius: 34, borderWidth: 2, borderColor: 'transparent' },
+  catRingOn: { borderColor: color.primary },
+  catCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: color.border },
+  catName: { ...type.caption, color: color.text, textAlign: 'center', alignSelf: 'stretch' },
+  catNameOn: { color: color.primary, fontFamily: 'Poppins_700Bold' },
+  filters: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.lg, paddingVertical: space.sm, flexWrap: 'wrap' },
+  sk: { backgroundColor: color.surfaceMuted, borderRadius: radii.sm },
+  skCard: { width: 184, height: 240, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, padding: space.md, gap: space.md },
+  rBlock: { paddingTop: space.xxl },
+  gutter: { paddingHorizontal: space.lg },
+  rName: { ...type.heading, color: color.text },
+  rMeta: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap', marginTop: space.xs },
+  m: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  mText: { ...type.caption, color: color.textSecondary },
+  rate: { flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 24, paddingHorizontal: space.sm, borderRadius: radii.pill, backgroundColor: color.goldSoft },
+  rateText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
+  cnt: { ...type.caption, color: color.textMuted },
+  itemsRow: { gap: space.md, paddingHorizontal: space.lg, paddingBottom: space.sm },
+  item: { width: 184, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.card },
+  itemHead: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, paddingHorizontal: space.md, paddingTop: space.sm + 2 },
+  itemFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, paddingHorizontal: space.md, paddingTop: space.xs, paddingBottom: space.md },
+  vegMark: { borderWidth: 1.5, borderRadius: 3, borderColor: color.veg, backgroundColor: color.surface, padding: 2 },
+  vegDot: { flex: 1, borderRadius: radii.pill, backgroundColor: color.veg },
+  iName: { flexShrink: 1, ...type.bodyStrong, color: color.text },
+  price: { ...type.bodyStrong, fontSize: 15, color: color.text },
+  best: { ...type.caption, color: color.textMuted },
+  stepper: { flexDirection: 'row', alignItems: 'center', height: 36, backgroundColor: color.primary, borderRadius: radii.md },
+  sBtn: { width: 32, height: '100%', alignItems: 'center', justifyContent: 'center' },
+  sNum: { minWidth: 18, textAlign: 'center', ...type.label, color: color.onPrimary },
+  add: { flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 36, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1.5, borderColor: color.primary, backgroundColor: color.surface },
+  addOff: { borderColor: color.border, backgroundColor: color.surfaceMuted },
+  addText: { ...type.label, color: color.primary },
+  full: { marginHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, height: 44, borderRadius: radii.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border },
+  fullText: { ...type.label, color: color.primary },
+  overlay: { flex: 1, backgroundColor: color.overlay, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
+  sortCard: { width: '100%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden', ...elevation.sheet },
+  sortHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: space.lg, paddingRight: space.xs, paddingVertical: space.xs, borderBottomWidth: 1, borderBottomColor: color.border },
+  sortTitle: { ...type.heading, color: color.text },
+  clearBtn: { minHeight: 44, paddingHorizontal: space.sm, justifyContent: 'center' },
+  clear: { ...type.label, color: color.primary },
+  xBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  opt: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48, paddingHorizontal: space.lg, borderRadius: radii.md, borderWidth: 1, borderColor: color.border },
+  optOn: { borderColor: color.primary, backgroundColor: color.primarySoft },
+  optText: { ...type.body, color: color.text },
+  check: { width: 22, height: 22, borderRadius: 11, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
+  detail: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, maxHeight: '90%' },
+  dActions: { position: 'absolute', bottom: space.lg, right: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  dBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', ...elevation.card },
+  dClose: { position: 'absolute', top: space.md, alignSelf: 'center', width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(17,17,17,0.72)', alignItems: 'center', justifyContent: 'center' },
+  dName: { flex: 1, ...type.heading, color: color.text },
+  dDesc: { ...type.body, color: color.textSecondary, marginBottom: space.lg },
+  bar: { borderTopWidth: 1, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.lg, backgroundColor: color.surface },
+  closedMsg: { ...type.label, color: color.warning, marginBottom: space.md, textAlign: 'center' },
+  dq: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: color.border, borderRadius: radii.md, height: 48 },
+  dqBtn: { width: 44, height: '100%', alignItems: 'center', justifyContent: 'center' },
+  dqNum: { minWidth: 28, textAlign: 'center', ...type.subheading, color: color.text },
+  addBig: { flex: 1, height: 48, borderRadius: radii.md, backgroundColor: color.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingHorizontal: space.sm },
+  addBigText: { flexShrink: 1, ...type.button, fontSize: 14, color: color.onPrimary },
+  remove: { height: 48, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1.5, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: color.surface },
+  removeText: { ...type.label, color: color.textSecondary },
+  share: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, paddingHorizontal: space.lg, paddingTop: space.lg },
+  shareOpt: { width: '47%', flexGrow: 1, minHeight: 48, justifyContent: 'center', borderRadius: radii.md, borderWidth: 1, borderColor: color.border, paddingHorizontal: space.lg },
 });

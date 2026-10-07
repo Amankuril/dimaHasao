@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, BadgePercent, Bookmark, Clock, MapPin, Star, UtensilsCrossed } from 'lucide-react-native';
+import { AlertCircle, ArrowLeft, BadgePercent, Bookmark, Clock, MapPin, Star, UtensilsCrossed } from 'lucide-react-native';
 import Image from '../../components/Img';
 import Fa from '../../components/Fa';
 import { Press } from '../../components/ui';
@@ -13,8 +13,13 @@ import { useLocation as useLocationHook } from '../hooks/useLocation';
 import { getRestaurantAvailabilityStatus } from '../utils/restaurantAvailability';
 import { filterRestaurantsForVegMode } from '../utils/vegMode';
 import { navigateTo, useParams } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
-import { F, useLocationSelector } from '../components/shell';
+import { EmptyState, IconButton, StatusBadge } from '../../components/ds';
+import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
+import { color, elevation, radii, space, type } from '../../theme';
+import { useLocationSelector } from '../components/shell';
+
+/** Dark scrim for text over the card photo (primaryDeep). */
+const SCRIM = ['rgba(6,44,22,0.85)', 'rgba(6,44,22,0.25)', 'rgba(6,44,22,0)'];
 
 const slugifyRestaurant = (value) =>
   String(value || '')
@@ -34,7 +39,9 @@ const formatAddress = (restaurant) =>
 const formatTimeValue = (value) => {
   if (!value) return null;
   if (/[ap]m/i.test(value)) return String(value).toUpperCase();
-  const m = String(value).trim().match(/^(\d{1,2}):(\d{2})/);
+  const m = String(value)
+    .trim()
+    .match(/^(\d{1,2}):(\d{2})/);
   if (!m) return value;
   const hours = Number(m[1]);
   const minutes = Number(m[2]);
@@ -73,7 +80,9 @@ export default function DiningCategory() {
     const fetchRestaurants = async () => {
       try {
         setIsLoading(true);
-        const response = await diningAPI.getRestaurants(category ? (location?.city ? { category, city: location.city } : { category }) : location?.city ? { city: location.city } : {});
+        const response = await diningAPI.getRestaurants(
+          category ? (location?.city ? { category, city: location.city } : { category }) : location?.city ? { city: location.city } : {},
+        );
         if (cancelled) return;
         if (response?.data?.success) {
           const mapped = (Array.isArray(response.data.data) ? response.data.data : []).map((restaurant) => {
@@ -119,16 +128,161 @@ export default function DiningCategory() {
   const heading = useMemo(() => formatCategoryHeading(category), [category]);
   const visibleRestaurants = useMemo(() => filterRestaurantsForVegMode(restaurants, { vegMode, vegModeOption }), [restaurants, vegMode, vegModeOption]);
 
+  const renderRestaurant = ({ item: restaurant }) => {
+    const favorite = isFavorite(restaurant.slug);
+    const open = restaurant.availability?.isOpen;
+    return (
+      <View style={styles.card}>
+        <Press
+          scale={0.98}
+          accessibilityLabel={restaurant.name}
+          onPress={() =>
+            navigateTo(`/food/user/dining/${category}/${restaurant.slug}`, {
+              state: { restaurant },
+            })
+          }
+        >
+          <View style={styles.photo}>
+            {restaurant.image ? (
+              <Image source={{ uri: restaurant.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+            ) : (
+              <View style={[StyleSheet.absoluteFill, styles.photoEmpty]}>
+                <UtensilsCrossed size={32} color={color.textDisabled} />
+              </View>
+            )}
+            <LinearGradient colors={SCRIM} locations={[0, 0.5, 1]} start={{ x: 0, y: 1 }} end={{ x: 0, y: 0 }} style={StyleSheet.absoluteFill} />
+            <View style={styles.photoTop}>
+              <View style={styles.dishPill}>
+                <Text style={styles.dishText} numberOfLines={1}>
+                  {restaurant.featuredDish}
+                  {restaurant.featuredPrice ? ` • ₹${restaurant.featuredPrice}` : ''}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.photoBottom}>
+              <Text style={styles.reserve}>Reserve your table</Text>
+              <Text style={styles.offer} numberOfLines={2}>
+                {restaurant.offer}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ padding: space.lg, gap: space.md }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: space.md,
+              }}
+            >
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {restaurant.name}
+                </Text>
+                <Text style={styles.address} numberOfLines={2}>
+                  {restaurant.address}
+                </Text>
+              </View>
+              <View style={styles.rating} accessibilityLabel={`Rated ${restaurant.rating}`}>
+                <Star size={14} color={color.gold} fill={color.gold} />
+                <Text style={styles.ratingText}>{restaurant.rating}</Text>
+              </View>
+            </View>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: space.sm,
+              }}
+            >
+              <UtensilsCrossed size={16} color={color.textMuted} />
+              <Text style={styles.cuisine} numberOfLines={1}>
+                {restaurant.cuisine}
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+              <StatusBadge icon={Clock} label={open ? 'Open now' : 'Closed now'} tone={open ? 'success' : 'danger'} />
+              <StatusBadge label={formatTimingLabel(restaurant.availability)} tone="neutral" />
+            </View>
+
+            <View style={styles.foot}>
+              <Text style={styles.price}>{restaurant.price}</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: space.xs,
+                }}
+              >
+                <BadgePercent size={16} color={color.primary} />
+                <Text style={styles.menuBook}>Menu & booking</Text>
+              </View>
+            </View>
+          </View>
+        </Press>
+        {/* Bookmark sits beside (not inside) the card's Press: no nested buttons on web. */}
+        <View style={styles.bookmarkPos}>
+          <Press
+            scale={0.9}
+            accessibilityLabel={favorite ? 'Remove bookmark' : 'Add bookmark'}
+            accessibilityState={{ selected: Boolean(favorite) }}
+            onPress={() => {
+              if (favorite) {
+                removeFavorite(restaurant.slug);
+                return;
+              }
+              addFavorite({
+                slug: restaurant.slug,
+                name: restaurant.name,
+                cuisine: restaurant.cuisine,
+                rating: restaurant.rating,
+                image: restaurant.image,
+              });
+            }}
+            style={styles.bookmark}
+          >
+            <Bookmark size={20} color={favorite ? color.primary : color.text} fill={favorite ? color.primary : 'none'} />
+          </Press>
+        </View>
+      </View>
+    );
+  };
+
+  const listHeader = (
+    <View style={styles.hero}>
+      <Text style={styles.heroKicker}>Dining category</Text>
+      <Text style={styles.heroTitle} accessibilityRole="header">
+        {heading}
+      </Text>
+      <Text style={styles.heroBody}>Explore all restaurants linked to this dining category, check their timings, preview the menu, and jump straight into table booking.</Text>
+      <StatusBadge icon={MapPin} label={`${visibleRestaurants.length} places found`} tone="gold" style={{ marginTop: space.md }} />
+    </View>
+  );
+
+  const listEmpty = isLoading ? (
+    <View style={styles.state} accessibilityRole="progressbar">
+      <ActivityIndicator color={color.primary} />
+      <Text style={styles.stateText}>Loading dining restaurants...</Text>
+    </View>
+  ) : error ? (
+    <EmptyState icon={AlertCircle} title={error} />
+  ) : (
+    <View style={styles.empty}>
+      <EmptyState icon={UtensilsCrossed} title="No restaurants yet" message="No restaurants are linked to this dining category yet." style={{ paddingVertical: space.xxxl }} />
+    </View>
+  );
+
   return (
     <View style={styles.page}>
       <View style={styles.header}>
-        <Press scale={0.95} onPress={goBack} accessibilityLabel="Go back" style={styles.back}>
-          <ArrowLeft size={20} color="#2f2215" />
-        </Press>
+        <IconButton icon={ArrowLeft} label="Go back" variant="soft" onPress={goBack} />
         <Press scale={0.97} onPress={openLocationSelector} accessibilityLabel={`Dining in ${cityName}. Change location`} style={styles.locBtn}>
-          <Fa name="fa-solid fa-location-dot" size={16} color={F.green} />
-          <View style={{ flexShrink: 1 }}>
-            <Text style={styles.locKicker}>DINING IN</Text>
+          <Fa name="fa-solid fa-location-dot" size={16} color={color.primary} />
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
+            <Text style={styles.locKicker}>Dining in</Text>
             <Text style={styles.locCity} numberOfLines={1}>
               {cityName}
             </Text>
@@ -136,159 +290,160 @@ export default function DiningCategory() {
         </Press>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 96 + insets.bottom }}>
-        <LinearGradient colors={['#fff4e7', '#ffffff', '#fff9f3']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-          <Text style={styles.heroKicker}>DINING CATEGORY</Text>
-          <Text style={styles.heroTitle} accessibilityRole="header">
-            {heading}
-          </Text>
-          <Text style={styles.heroBody}>Explore all restaurants linked to this dining category, check their timings, preview the menu, and jump straight into table booking.</Text>
-          <View style={styles.found}>
-            <MapPin size={16} color={F.green} />
-            <Text style={styles.foundText}>{visibleRestaurants.length} places found</Text>
-          </View>
-        </LinearGradient>
-
-        {isLoading ? (
-          <Text style={styles.loading}>Loading dining restaurants...</Text>
-        ) : error ? (
-          <Text style={styles.error}>{error}</Text>
-        ) : visibleRestaurants.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No restaurants are linked to this dining category yet.</Text>
-          </View>
-        ) : (
-          <View style={{ gap: 20 }}>
-            {visibleRestaurants.map((restaurant) => {
-              const favorite = isFavorite(restaurant.slug);
-              const open = restaurant.availability?.isOpen;
-              return (
-                <Press
-                  key={restaurant.id}
-                  scale={0.98}
-                  accessibilityLabel={restaurant.name}
-                  onPress={() => navigateTo(`/food/user/dining/${category}/${restaurant.slug}`, { state: { restaurant } })}
-                  style={styles.card}
-                >
-                  <View style={styles.photo}>
-                    {restaurant.image ? <Image source={{ uri: restaurant.image }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}
-                    <LinearGradient colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0)']} locations={[0, 0.5, 1]} start={{ x: 0, y: 1 }} end={{ x: 0, y: 0 }} style={StyleSheet.absoluteFill} />
-                    <View style={styles.photoTop}>
-                      <View style={styles.dishPill}>
-                        <Text style={styles.dishText}>
-                          {restaurant.featuredDish}
-                          {restaurant.featuredPrice ? ` • ₹${restaurant.featuredPrice}` : ''}
-                        </Text>
-                      </View>
-                      <Press
-                        scale={0.9}
-                        accessibilityLabel={favorite ? 'Remove bookmark' : 'Add bookmark'}
-                        onPress={() => {
-                          if (favorite) {
-                            removeFavorite(restaurant.slug);
-                            return;
-                          }
-                          addFavorite({ slug: restaurant.slug, name: restaurant.name, cuisine: restaurant.cuisine, rating: restaurant.rating, image: restaurant.image });
-                        }}
-                        style={styles.bookmark}
-                      >
-                        <Bookmark size={20} color="#2f2215" fill={favorite ? '#2f2215' : 'none'} />
-                      </Press>
-                    </View>
-                    <View style={styles.photoBottom}>
-                      <Text style={styles.reserve}>RESERVE YOUR TABLE</Text>
-                      <Text style={styles.offer}>{restaurant.offer}</Text>
-                    </View>
-                  </View>
-
-                  <View style={{ padding: 20, gap: 16 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={styles.name} numberOfLines={1}>
-                          {restaurant.name}
-                        </Text>
-                        <Text style={styles.address} numberOfLines={2}>
-                          {restaurant.address}
-                        </Text>
-                      </View>
-                      <View style={styles.rating}>
-                        <Text style={styles.ratingText}>{restaurant.rating}</Text>
-                        <Star size={14} color="#fff" fill="#fff" />
-                      </View>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <UtensilsCrossed size={16} color={F.green} />
-                      <Text style={styles.cuisine} numberOfLines={1}>
-                        {restaurant.cuisine}
-                      </Text>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                      <View style={[styles.chip, { backgroundColor: open ? tw.emerald50 : tw.rose50 }]}>
-                        <Clock size={14} color={open ? tw.emerald700 : tw.rose700} />
-                        <Text style={[styles.chipText, { color: open ? tw.emerald700 : tw.rose700 }]}>{open ? 'Open now' : 'Closed now'}</Text>
-                      </View>
-                      <View style={[styles.chip, { backgroundColor: '#fff4e7' }]}>
-                        <Text style={[styles.chipText, { color: '#a25b1f' }]}>{formatTimingLabel(restaurant.availability)}</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.foot}>
-                      <Text style={styles.price}>{restaurant.price}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <BadgePercent size={16} color={F.green} />
-                        <Text style={styles.menuBook}>Menu & booking</Text>
-                      </View>
-                    </View>
-                  </View>
-                </Press>
-              );
-            })}
-          </View>
-        )}
-      </ScrollView>
+      <FlatList
+        data={isLoading || error ? [] : visibleRestaurants}
+        keyExtractor={(restaurant, i) => String(restaurant.id ?? `restaurant-${i}`)}
+        renderItem={renderRestaurant}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        ItemSeparatorComponent={Separator}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: space.lg,
+          paddingTop: space.lg,
+          paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom,
+        }}
+      />
     </View>
   );
 }
 
+const Separator = () => <View style={{ height: space.md }} />;
+
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fffaf4' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#efe2d2', backgroundColor: 'rgba(255,250,244,0.95)' },
-  back: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#e7d8c5', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  locBtn: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: '#e7d8c5', backgroundColor: '#fff' },
-  locKicker: { fontSize: 12, lineHeight: 16, letterSpacing: 2.9, color: '#aa8b68', ...poppins(600) },
-  locCity: { fontSize: 14, lineHeight: 20, color: '#2f2215', ...poppins(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: color.border,
+    backgroundColor: color.surface,
+  },
+  locBtn: {
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    minHeight: 44,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.xs,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: color.border,
+    backgroundColor: color.surface,
+  },
+  locKicker: { ...type.caption, color: color.textMuted },
+  locCity: { ...type.bodyStrong, color: color.text },
 
-  hero: { borderRadius: 28, borderWidth: 1, borderColor: '#f0dfca', padding: 24, marginBottom: 24, ...shadow('0 18px 60px rgba(90,55,20,0.08)') },
-  heroKicker: { fontSize: 12, lineHeight: 16, letterSpacing: 4.1, color: '#c07a3a', marginBottom: 8, ...poppins(600) },
-  heroTitle: { fontSize: 30, lineHeight: 36, letterSpacing: -0.75, color: '#23180f', ...poppins(900) },
-  heroBody: { marginTop: 8, fontSize: 14, lineHeight: 20, color: '#6b5641', ...poppins(400) },
-  found: { alignSelf: 'flex-start', marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: '#fff', ...shadow('sm') },
-  foundText: { fontSize: 14, lineHeight: 20, color: '#6b5641', ...poppins(600) },
+  hero: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: color.border,
+    backgroundColor: color.surface,
+    padding: space.xl,
+    marginBottom: space.xxl,
+    ...elevation.card,
+  },
+  heroKicker: {
+    ...type.overline,
+    color: color.goldText,
+    marginBottom: space.xs,
+  },
+  heroTitle: { ...type.heroSerif, color: color.primary },
+  heroBody: { marginTop: space.sm, ...type.small, color: color.textSecondary },
 
-  loading: { paddingVertical: 80, textAlign: 'center', fontSize: 16, lineHeight: 24, color: '#7f6850', ...poppins(400) },
-  error: { paddingVertical: 80, textAlign: 'center', fontSize: 16, lineHeight: 24, color: tw.red600, ...poppins(400) },
-  empty: { borderRadius: 24, borderWidth: 1, borderStyle: 'dashed', borderColor: '#e8d9c5', backgroundColor: '#fff', paddingHorizontal: 24, paddingVertical: 64 },
-  emptyText: { textAlign: 'center', fontSize: 16, lineHeight: 24, color: '#7f6850', ...poppins(400) },
+  state: {
+    paddingVertical: space.xxxl * 2,
+    alignItems: 'center',
+    gap: space.md,
+  },
+  stateText: { ...type.body, color: color.textMuted, textAlign: 'center' },
+  empty: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: color.borderStrong,
+    backgroundColor: color.surface,
+  },
 
-  card: { borderRadius: 30, borderWidth: 1, borderColor: '#f0dfca', backgroundColor: '#fff', overflow: 'hidden', ...shadow('0 18px 60px rgba(17,24,39,0.08)') },
-  photo: { height: 256, overflow: 'hidden' },
-  photoTop: { position: 'absolute', left: 16, right: 16, top: 16, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  dishPill: { flexShrink: 1, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 12, paddingVertical: 6 },
-  dishText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
-  bookmark: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },
-  photoBottom: { position: 'absolute', left: 16, right: 16, bottom: 16 },
-  reserve: { fontSize: 11, lineHeight: 16, letterSpacing: 3.5, color: 'rgba(255,255,255,0.8)', marginBottom: 8, ...poppins(600) },
-  offer: { maxWidth: '85%', fontSize: 24, lineHeight: 30, color: '#fff', ...poppins(900) },
-  name: { fontSize: 22, lineHeight: 27, color: '#23180f', ...poppins(900) },
-  address: { marginTop: 8, fontSize: 14, lineHeight: 24, color: '#6b5641', ...poppins(400) },
-  rating: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: tw.emerald600 },
-  ratingText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
-  cuisine: { flex: 1, fontSize: 14, lineHeight: 20, color: '#5f4c39', ...poppins(400) },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
-  chipText: { fontSize: 12, lineHeight: 16, ...poppins(600) },
-  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#ead7c0', borderStyle: 'dashed', paddingTop: 16 },
-  price: { fontSize: 14, lineHeight: 20, color: '#4c3b2c', ...poppins(600) },
-  menuBook: { fontSize: 14, lineHeight: 20, color: F.green, ...poppins(700) },
+  card: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: color.border,
+    backgroundColor: color.surface,
+    overflow: 'hidden',
+    ...elevation.card,
+  },
+  photo: {
+    aspectRatio: 16 / 10,
+    overflow: 'hidden',
+    backgroundColor: color.surfaceMuted,
+  },
+  photoEmpty: { alignItems: 'center', justifyContent: 'center' },
+  photoTop: {
+    position: 'absolute',
+    left: space.md,
+    right: 64,
+    top: space.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+  },
+  bookmarkPos: { position: 'absolute', top: space.sm, right: space.sm },
+  dishPill: {
+    flexShrink: 1,
+    borderRadius: radii.pill,
+    backgroundColor: color.overlay,
+    paddingHorizontal: space.md,
+    paddingVertical: space.xs + 2,
+  },
+  dishText: { ...type.caption, color: color.textInverse },
+  bookmark: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoBottom: {
+    position: 'absolute',
+    left: space.lg,
+    right: space.lg,
+    bottom: space.lg,
+  },
+  reserve: {
+    ...type.overline,
+    color: color.goldOnDark,
+    marginBottom: space.xs,
+  },
+  offer: { maxWidth: '90%', ...type.heading, color: color.textInverse },
+  name: { ...type.heading, color: color.text },
+  address: { marginTop: space.xxs, ...type.small, color: color.textSecondary },
+  rating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xs,
+    paddingHorizontal: space.sm,
+    height: 26,
+    borderRadius: radii.pill,
+    backgroundColor: color.goldSoft,
+  },
+  ratingText: { ...type.label, color: color.goldText },
+  cuisine: { flex: 1, minWidth: 0, ...type.small, color: color.textSecondary },
+  foot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.md,
+    borderTopWidth: 1,
+    borderTopColor: color.border,
+    borderStyle: 'dashed',
+    paddingTop: space.md,
+  },
+  price: { flexShrink: 1, ...type.bodyStrong, color: color.text },
+  menuBook: { ...type.label, color: color.primary },
 });

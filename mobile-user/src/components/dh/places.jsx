@@ -2,6 +2,7 @@ import { Component, Fragment, useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Image from '../Img';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Fa from '../Fa';
@@ -10,48 +11,51 @@ import { Dialog } from '../kit';
 import { useBooking } from '../../context/BookingContext';
 import { TRANSPORTS_DATA } from '../../data/dh/tourismData';
 import { openExternal } from '../../lib/links';
-import { poppins, shadow, tw, twClass } from '../../theme';
+import { Button, IconButton, fa } from '../ds';
+import { color, elevation, radii, space, tone, type } from '../../theme';
 
 /** components/places/PlaceCard.jsx */
 export function PlaceCard({ place }) {
+  const open = () => router.push(`/app/places/${place.id}`);
   return (
     <View style={styles.card}>
-      <View style={styles.cardImageWrap}>
+      <Press scale={1} onPress={open} accessibilityLabel={`${place.name}, ${place.location}`} style={styles.cardImageWrap}>
         <Image source={{ uri: place.mainImage }} style={styles.cardImage} resizeMode="cover" accessibilityLabel={place.name} />
-      </View>
-      {place.insetImage ? (
-        <View style={styles.inset}>
-          <Image source={{ uri: place.insetImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-        </View>
-      ) : null}
-
-      <View style={{ padding: 16, paddingTop: 40 }}>
-        <Text style={styles.cardTitle}>
+      </Press>
+      <View style={styles.cardBody}>
+        {place.insetImage ? (
+          <View style={styles.inset} pointerEvents="none">
+            <Image source={{ uri: place.insetImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+          </View>
+        ) : null}
+        <Text style={styles.cardTitle} numberOfLines={2}>
           {place.number}. {place.name}
         </Text>
-        {place.subtitle ? <Text style={styles.cardSubtitle}>{place.subtitle}</Text> : null}
+        {place.subtitle ? (
+          <Text style={styles.cardSubtitle} numberOfLines={2}>
+            {place.subtitle}
+          </Text>
+        ) : null}
         <View style={styles.locRow}>
-          <Fa name="fa-solid fa-location-dot" size={11} color="#CC1B21" />
-          <Text style={styles.locText}>{place.location}</Text>
+          <Fa name="fa-solid fa-location-dot" size={14} color={color.primary} />
+          <Text style={styles.locText} numberOfLines={2}>
+            {place.location}
+          </Text>
         </View>
         <Text style={styles.cardDesc} numberOfLines={3}>
           {place.description}
         </Text>
-        <View style={styles.tags}>
-          {place.tags?.map((tag, idx) => (
-            <View key={idx} style={styles.tag}>
-              <Fa name={tag.icon} size={12} color={twClass(tag.color, tw.emerald600)} />
-              <Text style={styles.tagText}>{tag.text}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <View style={{ paddingHorizontal: 16 }}>
-        <Press scale={0.96} onPress={() => router.push(`/app/places/${place.id}`)} style={styles.explore} accessibilityLabel={`Explore ${place.name}`}>
-          <Text style={styles.exploreText}>EXPLORE</Text>
-          <Fa name="fa-solid fa-arrow-right" size={10} color="#fff" />
-        </Press>
+        {place.tags?.length ? (
+          <View style={styles.tags}>
+            {place.tags.map((tag, idx) => (
+              <View key={idx} style={styles.tag}>
+                <Fa name={tag.icon} size={14} color={color.primary} />
+                <Text style={styles.tagText}>{tag.text}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+        <Button title="Explore" variant="secondary" iconRight={fa('fa-solid fa-arrow-right')} onPress={open} accessibilityLabel={`Explore ${place.name}`} />
       </View>
     </View>
   );
@@ -59,6 +63,7 @@ export function PlaceCard({ place }) {
 
 /** components/places/GalleryViewer.jsx (also used with any { name, number, heroImage, gallery }). */
 export function GalleryViewer({ place }) {
+  const insets = useSafeAreaInsets();
   const hero = place.heroImage || place.mainImage;
   const [selectedImage, setSelectedImage] = useState(hero);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -70,22 +75,23 @@ export function GalleryViewer({ place }) {
         <Press scale={1} onPress={() => setIsLightboxOpen(true)} accessibilityLabel={`${place.name}. View fullscreen`}>
           <Image source={{ uri: selectedImage }} style={styles.hero} resizeMode="cover" />
         </Press>
-        <View style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>
+        <View style={styles.heroBadge} pointerEvents="none">
+          <Fa name="fa-solid fa-leaf" size={12} color={color.gold} />
+          <Text style={styles.heroBadgeText} numberOfLines={1}>
             {place.number}. {place.name}
           </Text>
         </View>
         <Press onPress={() => setIsLightboxOpen(true)} style={styles.expand} accessibilityLabel="View Fullscreen">
-          <Fa name="fa-solid fa-expand" size={12} color="#fff" />
+          <Fa name="fa-solid fa-expand" size={16} color={color.textInverse} />
         </Press>
       </View>
 
       {images.length > 1 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 18, paddingBottom: 10, gap: 10 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: space.lg, paddingTop: space.lg, paddingBottom: space.xs, gap: space.sm }}>
           {images.map((img, idx) => {
             const isCurrent = selectedImage === img;
             return (
-              <Press key={idx} scale={0.92} onPress={() => setSelectedImage(img)} style={[styles.thumb, isCurrent ? styles.thumbCurrent : { opacity: 0.7 }]} accessibilityLabel={`Thumbnail ${idx + 1}`}>
+              <Press key={idx} scale={0.92} onPress={() => setSelectedImage(img)} style={[styles.thumb, isCurrent ? styles.thumbCurrent : { opacity: 0.75 }]} accessibilityLabel={`Photo ${idx + 1} of ${images.length}`} accessibilityState={{ selected: isCurrent }}>
                 <Image source={{ uri: img }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
               </Press>
             );
@@ -96,9 +102,7 @@ export function GalleryViewer({ place }) {
       <Modal visible={isLightboxOpen} transparent animationType="fade" onRequestClose={() => setIsLightboxOpen(false)} statusBarTranslucent>
         <View style={styles.lightbox}>
           <Image source={{ uri: selectedImage }} style={styles.lightboxImg} resizeMode="contain" accessibilityLabel={place.name} />
-          <Press onPress={() => setIsLightboxOpen(false)} style={styles.lightboxClose} accessibilityLabel="Close">
-            <Fa name="fa-solid fa-xmark" size={18} color="#fff" />
-          </Press>
+          <IconButton icon={fa('fa-solid fa-xmark')} label="Close" variant="inverse" onPress={() => setIsLightboxOpen(false)} style={[styles.lightboxClose, { top: insets.top + space.md }]} />
         </View>
       </Modal>
     </View>
@@ -127,8 +131,8 @@ class MapBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <View style={[this.props.style, { alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray100 }]}>
-          <Text style={{ fontSize: 12, color: tw.gray500, ...poppins(500) }}>Map unavailable</Text>
+        <View style={[this.props.style, { alignItems: 'center', justifyContent: 'center', backgroundColor: color.surfaceMuted }]}>
+          <Text style={{ ...type.caption, color: color.textMuted }}>Map unavailable</Text>
         </View>
       );
     }
@@ -164,11 +168,7 @@ function PinMapView({ lat, lng, delta = 0.012, style, interactive = false }) {
   );
 }
 
-const TRANSPORT_TINT = {
-  bike: { bg: tw.green100, fg: tw.green700 },
-  auto: { bg: tw.amber100, fg: tw.amber700 },
-  cab: { bg: tw.slate100, fg: tw.slate700 },
-};
+const TRANSPORT_TINT = { bike: tone.primary, auto: tone.gold, cab: tone.neutral };
 
 /** components/places/TransportSelector.jsx */
 export function TransportSelector({ place }) {
@@ -212,24 +212,30 @@ export function TransportSelector({ place }) {
 
   return (
     <View style={styles.section}>
-      <View style={[styles.rowGap, { marginBottom: 16 }]}>
-        <Fa name="fa-solid fa-route" size={12} color={tw.emerald700} />
-        <Text style={styles.sectionKicker}>HOW TO REACH</Text>
+      <View style={[styles.rowGap, { marginBottom: space.lg }]}>
+        <Fa name="fa-solid fa-route" size={16} color={color.primary} />
+        <Text style={styles.sectionTitle} accessibilityRole="header">
+          How to reach
+        </Text>
       </View>
 
-      <View style={{ gap: 16 }}>
+      <View style={{ gap: space.lg }}>
         <View style={styles.journey}>
           <View style={styles.pinFrom} />
-          <View style={{ marginBottom: 16 }}>
-            <Text style={styles.journeyLabel}>FROM</Text>
-            <Text style={styles.journeyValue}>{fromLabel}</Text>
+          <View style={{ marginBottom: space.lg }}>
+            <Text style={styles.journeyLabel}>From</Text>
+            <Text style={styles.journeyValue} numberOfLines={2}>
+              {fromLabel}
+            </Text>
           </View>
           <View style={styles.pinTo}>
-            <Fa name="fa-solid fa-location-dot" size={12} color={tw.red500} />
+            <Fa name="fa-solid fa-location-dot" size={14} color={color.danger} />
           </View>
           <View>
-            <Text style={styles.journeyLabel}>TO</Text>
-            <Text style={styles.journeyValue}>{place.name}</Text>
+            <Text style={styles.journeyLabel}>To</Text>
+            <Text style={styles.journeyValue} numberOfLines={2}>
+              {place.name}
+            </Text>
             <Text style={styles.journeyMeta}>
               {distanceLabel} away{travelTimeLabel ? ` · ${travelTimeLabel}` : ''}
             </Text>
@@ -237,30 +243,38 @@ export function TransportSelector({ place }) {
         </View>
 
         <View>
-          <Text style={styles.optionsLabel}>TRANSPORT OPTIONS</Text>
-          <View style={{ gap: 8 }}>
+          <Text style={styles.optionsLabel}>Transport options</Text>
+          <View>
             {TRANSPORTS_DATA.map((t, idx) => {
               const isSelected = selectedTransportId === t.id;
               const tint = TRANSPORT_TINT[t.id] || TRANSPORT_TINT.cab;
               return (
                 <Fragment key={t.id}>
                   <View style={[styles.option, isSelected && styles.optionSelected]}>
-                    <View style={styles.rowGap12}>
-                      <View style={[styles.optionIcon, { backgroundColor: tint.bg }]}>
-                        <Fa name={t.iconClass} size={16} color={tint.fg} />
-                      </View>
-                      <View>
-                        <Text style={styles.optionName}>{t.name}</Text>
-                        <Text style={styles.optionTime}>{t.time}</Text>
-                      </View>
+                    <View style={[styles.optionIcon, { backgroundColor: tint.bg }]}>
+                      <Fa name={t.iconClass} size={18} color={tint.fg} />
+                    </View>
+                    <View style={styles.optionText}>
+                      <Text style={styles.optionName} numberOfLines={1}>
+                        {t.name}
+                      </Text>
+                      <Text style={styles.optionTime} numberOfLines={1}>
+                        {t.time}
+                      </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <Text style={styles.mrp}>MRP</Text>
-                      <Text style={styles.optionName}>{t.fareFormatted}</Text>
+                      <Text style={styles.optionFare}>{t.fareFormatted}</Text>
                     </View>
-                    <Press scale={0.92} onPress={() => handleSelect(t.id)} style={[styles.selectBtn, isSelected && { backgroundColor: '#0A3A22' }]}>
-                      <Text style={styles.selectBtnText}>{isSelected ? 'Book' : 'Select'}</Text>
-                    </Press>
+                    <Button
+                      title={isSelected ? 'Book' : 'Select'}
+                      variant={isSelected ? 'primary' : 'secondary'}
+                      size="sm"
+                      fullWidth={false}
+                      onPress={() => handleSelect(t.id)}
+                      accessibilityLabel={`${isSelected ? 'Book' : 'Select'} ${t.name}, ${t.fareFormatted}`}
+                      style={styles.selectBtn}
+                    />
                   </View>
                   {idx < TRANSPORTS_DATA.length - 1 ? <View style={styles.hr} /> : null}
                 </Fragment>
@@ -269,34 +283,32 @@ export function TransportSelector({ place }) {
           </View>
         </View>
 
-        <View style={{ paddingTop: 8 }}>
+        <View>
           {hasDest ? (
             <Press scale={0.99} onPress={() => setIsMapModalOpen(true)} style={styles.mapThumb} accessibilityLabel="View Route Map">
               <PinMap lat={dest.lat} lng={dest.lng} style={StyleSheet.absoluteFill} />
               <View style={styles.mapOverlay}>
                 <View style={styles.mapPill}>
-                  <Fa name="fa-solid fa-map-location-dot" size={12} color={tw.emerald700} />
-                  <Text style={styles.mapPillText}>View Route Map</Text>
+                  <Fa name="fa-solid fa-map-location-dot" size={14} color={color.primary} />
+                  <Text style={styles.mapPillText}>View route map</Text>
                 </View>
               </View>
             </Press>
           ) : (
             <View style={styles.mapEmpty}>
-              <Fa name="fa-solid fa-map-location-dot" size={18} color={tw.gray300} />
-              <Text style={styles.mapEmptyText}>Location not pinned yet — the admin hasn&apos;t set map coordinates for {place.name}</Text>
+              <Fa name="fa-solid fa-map-location-dot" size={22} color={color.textDisabled} />
+              <Text style={styles.mapEmptyText}>Location not pinned yet. The admin hasn&apos;t set map coordinates for {place.name}.</Text>
             </View>
           )}
         </View>
       </View>
 
-      <Dialog visible={isMapModalOpen} onClose={() => setIsMapModalOpen(false)} backdrop="rgba(0,0,0,0.7)" panelStyle={styles.mapModal}>
+      <Dialog visible={isMapModalOpen} onClose={() => setIsMapModalOpen(false)} backdrop={color.overlay} panelStyle={styles.mapModal}>
         <View style={styles.mapModalHead}>
-          <Text style={styles.mapModalTitle}>
-            Route Map: {fromLabel} to {place.name}
+          <Text style={styles.mapModalTitle} accessibilityRole="header">
+            Route map: {fromLabel} to {place.name}
           </Text>
-          <Press onPress={() => setIsMapModalOpen(false)} style={styles.mapModalClose} accessibilityLabel="Close">
-            <Fa name="fa-solid fa-xmark" size={12} color={tw.gray600} />
-          </Press>
+          <IconButton icon={fa('fa-solid fa-xmark')} label="Close" variant="soft" size={40} iconSize={16} onPress={() => setIsMapModalOpen(false)} />
         </View>
         <View style={styles.mapModalMap}>
           {hasDest && isMapModalOpen ? (
@@ -307,94 +319,89 @@ export function TransportSelector({ place }) {
         </View>
         <View style={styles.mapStats}>
           <Text style={styles.mapStat}>
-            Distance: <Text style={poppins(700)}>{distanceLabel}</Text>
+            Distance: <Text style={styles.mapStatStrong}>{distanceLabel}</Text>
           </Text>
           <Text style={styles.mapStat}>
-            Est. Time: <Text style={poppins(700)}>{travelTimeLabel}</Text>
+            Est. time: <Text style={styles.mapStatStrong}>{travelTimeLabel}</Text>
           </Text>
         </View>
-        {hasDest ? (
-          <Press onPress={() => openExternal(googleDirectionsUrl(dest.lat, dest.lng))} style={styles.directions}>
-            <Fa name="fa-solid fa-diamond-turn-right" size={12} color={tw.emerald800} />
-            <Text style={styles.directionsText}>Get Directions</Text>
-          </Press>
-        ) : null}
-        <Press
-          onPress={() => {
-            setIsMapModalOpen(false);
-            router.navigate('/taxi/user');
-          }}
-          style={styles.proceed}
-        >
-          <Text style={styles.proceedText}>Proceed to Book Ride</Text>
-        </Press>
+        <View style={{ gap: space.sm }}>
+          {hasDest ? (
+            <Button title="Get directions" variant="outline" icon={fa('fa-solid fa-diamond-turn-right')} onPress={() => openExternal(googleDirectionsUrl(dest.lat, dest.lng))} />
+          ) : null}
+          <Button
+            title="Proceed to book ride"
+            onPress={() => {
+              setIsMapModalOpen(false);
+              router.navigate('/taxi/user');
+            }}
+          />
+        </View>
       </Dialog>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,214,167,0.8)', paddingBottom: 16, ...shadow('md') },
-  cardImageWrap: { height: 240, width: '100%', overflow: 'hidden', backgroundColor: tw.gray100, borderTopLeftRadius: 15, borderTopRightRadius: 15 },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  cardImageWrap: { aspectRatio: 16 / 10, width: '100%', overflow: 'hidden', backgroundColor: color.surfaceMuted, borderTopLeftRadius: radii.lg - 1, borderTopRightRadius: radii.lg - 1 },
   cardImage: { width: '100%', height: '100%' },
-  inset: { position: 'absolute', top: 240 - 80 + 28, right: 16, width: 80, height: 80, borderRadius: 40, borderWidth: 4, borderColor: '#fff', overflow: 'hidden', backgroundColor: '#fff', zIndex: 10, ...shadow('lg') },
-  cardTitle: { fontSize: 16, lineHeight: 24, letterSpacing: 0.4, color: '#0A3A2A', marginBottom: 2, ...poppins(700) },
-  cardSubtitle: { fontSize: 12, lineHeight: 16.5, color: '#CC1B21', marginBottom: 6, ...poppins(700) },
-  locRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  locText: { fontSize: 11, lineHeight: 16.5, color: tw.gray600, ...poppins(500) },
-  cardDesc: { fontSize: 12, lineHeight: 19.5, color: tw.gray700, marginBottom: 14, ...poppins(400) },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: tw.gray50, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: tw.gray100 },
-  tagText: { fontSize: 10, lineHeight: 15, color: tw.gray600, ...poppins(500) },
-  explore: { backgroundColor: '#0A3A2A', borderRadius: 999, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, ...shadow('md') },
-  exploreText: { color: '#fff', fontSize: 12, lineHeight: 16, letterSpacing: 0.6, ...poppins(700) },
+  inset: { position: 'absolute', top: -40, right: space.lg, width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: color.surface, overflow: 'hidden', backgroundColor: color.surfaceMuted, zIndex: 10, ...elevation.card },
+  cardBody: { padding: space.lg, paddingTop: space.xl, gap: space.xs + 2 },
+  cardTitle: { ...type.heading, color: color.primary, paddingRight: 80 },
+  cardSubtitle: { ...type.label, color: color.goldText },
+  locRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  locText: { flex: 1, ...type.small, color: color.textSecondary },
+  cardDesc: { ...type.small, color: color.textSecondary },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.xs, marginBottom: space.sm },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, backgroundColor: color.surfaceMuted, paddingHorizontal: space.sm + 2, height: 30, borderRadius: radii.pill },
+  tagText: { ...type.caption, color: color.text },
 
-  hero: { width: '100%', height: 256, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, backgroundColor: tw.gray200 },
-  heroBadge: { position: 'absolute', top: 16, left: 16, backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 14, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: tw.amber300, ...shadow('md') },
-  heroBadgeText: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
-  expand: { position: 'absolute', bottom: 12, right: 12, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', opacity: 0.8 },
-  thumb: { width: 72, height: 72, borderRadius: 12, borderWidth: 2, borderColor: '#fff', overflow: 'hidden', ...shadow('xs') },
-  thumbCurrent: { borderColor: tw.amber500, transform: [{ scale: 1.05 }] },
-  lightbox: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', alignItems: 'center', justifyContent: 'center', padding: 16 },
-  lightboxImg: { width: '100%', height: '85%', borderRadius: 16 },
-  lightboxClose: { position: 'absolute', top: 48, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  hero: { width: '100%', aspectRatio: 4 / 3, maxHeight: 320, borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, backgroundColor: color.surfaceMuted },
+  heroBadge: {
+    position: 'absolute', top: space.lg, left: space.lg, maxWidth: '78%', flexDirection: 'row', alignItems: 'center', gap: space.xs + 2,
+    backgroundColor: 'rgba(6,44,22,0.85)', paddingHorizontal: space.md, height: 32, borderRadius: radii.pill, borderWidth: 1, borderColor: color.gold,
+  },
+  heroBadgeText: { ...type.label, color: color.goldOnDark, flexShrink: 1 },
+  expand: { position: 'absolute', bottom: space.md, right: space.md, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(6,28,14,0.6)', alignItems: 'center', justifyContent: 'center' },
+  thumb: { width: 72, height: 72, borderRadius: radii.md, borderWidth: 2, borderColor: color.surface, overflow: 'hidden', backgroundColor: color.surfaceMuted },
+  thumbCurrent: { borderColor: color.gold },
+  lightbox: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center', padding: space.lg },
+  lightboxImg: { width: '100%', height: '85%', borderRadius: radii.lg },
+  lightboxClose: { position: 'absolute', right: space.lg },
 
-  section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  rowGap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rowGap12: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  sectionKicker: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.gray800, ...poppins(700) },
-  journey: { borderLeftWidth: 2, borderStyle: 'dashed', borderLeftColor: tw.emerald300, marginLeft: 8, paddingLeft: 16, paddingVertical: 4 },
-  pinFrom: { position: 'absolute', width: 12, height: 12, borderRadius: 6, backgroundColor: tw.blue500, left: -7, top: 6 },
-  pinTo: { position: 'absolute', width: 14, height: 14, left: -8, bottom: 6, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  journeyLabel: { fontSize: 9, lineHeight: 13.5, letterSpacing: 0.225, color: tw.gray400, ...poppins(700) },
-  journeyValue: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(600) },
-  journeyMeta: { fontSize: 10, lineHeight: 15, color: tw.emerald700, ...poppins(500) },
-  optionsLabel: { fontSize: 10, lineHeight: 15, color: tw.gray400, marginBottom: 8, ...poppins(700) },
-  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: 'transparent' },
-  optionSelected: { backgroundColor: 'rgba(236,253,245,0.9)', borderColor: tw.emerald300 },
-  optionIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  optionName: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
-  optionTime: { fontSize: 10, lineHeight: 15, color: tw.gray500, ...poppins(400) },
-  mrp: { fontSize: 9, lineHeight: 13.5, color: tw.gray400, ...poppins(600) },
-  selectBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: '#0B2E13' },
-  selectBtnText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
-  hr: { height: 1, backgroundColor: tw.gray100, marginVertical: 2 },
-  mapThumb: { height: 128, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray200 },
-  mapOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.1)', alignItems: 'center', justifyContent: 'center' },
-  mapPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, ...shadow('md') },
-  mapPillText: { fontSize: 12, lineHeight: 16, color: tw.gray800, ...poppins(600) },
-  mapEmpty: { height: 128, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 16 },
-  mapEmptyText: { fontSize: 10, lineHeight: 15, color: tw.gray400, textAlign: 'center', ...poppins(500) },
-  mapModal: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: tw.emerald100, ...shadow('2xl') },
-  mapModalHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 },
-  mapModalTitle: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  mapModalClose: { width: 28, height: 28, borderRadius: 14, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  mapModalMap: { height: 256, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200, marginBottom: 16, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center' },
-  mapUnavailable: { fontSize: 12, color: tw.gray400, ...poppins(400) },
-  mapStats: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: tw.emerald50, padding: 10, borderRadius: 12, marginBottom: 16 },
-  mapStat: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(500) },
-  directions: { marginBottom: 8, paddingVertical: 10, borderWidth: 1, borderColor: tw.emerald700, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  directionsText: { fontSize: 12, lineHeight: 16, color: tw.emerald800, ...poppins(700) },
-  proceed: { paddingVertical: 10, borderRadius: 12, backgroundColor: '#0A3A22', alignItems: 'center', ...shadow('sm') },
-  proceedText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(700) },
+  section: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.lg, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  rowGap: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  sectionTitle: { ...type.subheading, color: color.text },
+  journey: { borderLeftWidth: 2, borderStyle: 'dashed', borderLeftColor: color.primaryBorder, marginLeft: space.sm, paddingLeft: space.lg, paddingVertical: space.xs },
+  pinFrom: { position: 'absolute', width: 12, height: 12, borderRadius: 6, backgroundColor: color.info, left: -7, top: 8 },
+  pinTo: { position: 'absolute', width: 16, height: 16, left: -9, bottom: 24, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  journeyLabel: { ...type.overline, color: color.textMuted },
+  journeyValue: { ...type.bodyStrong, color: color.text },
+  journeyMeta: { ...type.caption, color: color.primary },
+  optionsLabel: { ...type.overline, color: color.textMuted, marginBottom: space.sm },
+  option: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.sm, paddingHorizontal: space.sm, borderRadius: radii.md, borderWidth: 1, borderColor: 'transparent' },
+  optionSelected: { backgroundColor: color.primarySoft, borderColor: color.primaryBorder },
+  optionIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  optionText: { flex: 1, minWidth: 0 },
+  optionName: { ...type.bodyStrong, color: color.text },
+  optionTime: { ...type.caption, color: color.textMuted },
+  optionFare: { ...type.bodyStrong, color: color.text },
+  mrp: { ...type.caption, color: color.textMuted },
+  selectBtn: { height: 40, minWidth: 72 },
+  hr: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginVertical: 2 },
+  mapThumb: { height: 136, borderRadius: radii.md, overflow: 'hidden', borderWidth: 1, borderColor: color.border, backgroundColor: color.surfaceMuted },
+  mapOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.08)', alignItems: 'center', justifyContent: 'center' },
+  mapPill: { flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.surface, paddingHorizontal: space.lg, height: 40, borderRadius: radii.pill, ...elevation.float },
+  mapPillText: { ...type.label, color: color.text },
+  mapEmpty: { minHeight: 128, borderRadius: radii.md, borderWidth: 1, borderStyle: 'dashed', borderColor: color.borderStrong, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center', gap: space.sm, padding: space.lg },
+  mapEmptyText: { ...type.small, color: color.textMuted, textAlign: 'center' },
+  mapModal: { width: '100%', maxWidth: 400, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xl, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  mapModalHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm, marginBottom: space.md },
+  mapModalTitle: { flex: 1, ...type.subheading, color: color.text },
+  mapModalMap: { height: 256, borderRadius: radii.lg, overflow: 'hidden', borderWidth: 1, borderColor: color.border, marginBottom: space.lg, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  mapUnavailable: { ...type.small, color: color.textMuted },
+  mapStats: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: space.sm, backgroundColor: color.primarySoft, padding: space.md, borderRadius: radii.md, marginBottom: space.lg },
+  mapStat: { ...type.small, color: color.textSecondary },
+  mapStatStrong: { ...type.bodyStrong, color: color.text },
 });

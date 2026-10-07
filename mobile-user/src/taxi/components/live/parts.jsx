@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { useAnimatedValue } from '../../../lib/useAnimatedValue';
+import { color, elevation } from '../../../theme';
 
 /* Small pieces the live-ride screens (searching / tracking / complete) share. */
 
@@ -70,7 +71,7 @@ export function CircleLocationMarker({ position, color, title }) {
 }
 
 const styles = StyleSheet.create({
-  pinDisc: { borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 18px rgba(15,23,42,0.25)' },
-  pinDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: 'rgba(255,255,255,0.9)' },
-  circleDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: '#fff', boxShadow: '0 3px 10px rgba(15,23,42,0.25)' },
+  pinDisc: { borderWidth: 2, borderColor: color.surface, alignItems: 'center', justifyContent: 'center', ...elevation.float },
+  pinDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: color.surface },
+  circleDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: color.surface, ...elevation.float },
 });

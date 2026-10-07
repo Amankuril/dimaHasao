@@ -9,7 +9,7 @@ import { geocodeAPI } from '../../../api/food';
 import { HAS_VALID_GOOGLE_MAPS_KEY } from '../../utils/googleMaps';
 import { getSavedLocation, saveLocation, LOCATION_UPDATED_EVENT } from '../../services/locationStore';
 import { DEFAULT_COORDS } from '../../constants/districtPlaces';
-import { poppins, tw } from '../../../theme';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 /* Port of components/LocationMapSection.jsx (mobile branch: 220px map with centre pin, locator button, "Use my location"). */
 // The district headquarters (Haflong), like every other default in this app. The web template defaults to Hyderabad,
@@ -206,7 +206,7 @@ export default function LocationMapSection({ onGestureChange }) {
           <View style={[styles.pinShadow, isDragging && { opacity: 0.28, transform: [{ translateY: 7 }] }]} />
           <View style={[styles.pin, isDragging && { transform: [{ translateY: -20 }, { scale: 1.06 }] }]}>
             <View style={styles.pickupLabel}>
-              <Text style={styles.pickupLabelText}>PICKUP POINT</Text>
+              <Text style={styles.pickupLabelText} numberOfLines={1}>Pickup point</Text>
             </View>
             <View style={styles.pinStem} />
             <View style={styles.pinDot}>
@@ -216,12 +216,17 @@ export default function LocationMapSection({ onGestureChange }) {
         </View>
 
         {/* Floating locator target button */}
-        <Press onPress={requestLocation} accessibilityLabel="Use my location" style={styles.locator}>
-          <LocatorIcon color={status === 'loading' ? tw.yellow500 : '#fff'} />
+        <Press
+          onPress={requestLocation}
+          accessibilityLabel={status === 'loading' ? 'Finding your location' : 'Use my location'}
+          accessibilityState={{ busy: status === 'loading' }}
+          style={styles.locator}
+        >
+          <LocatorIcon color={status === 'loading' ? color.goldText : color.primary} />
         </Press>
 
         {!coords && status !== 'loading' ? (
-          <Press onPress={requestLocation} scale={0.99} style={styles.useMine}>
+          <Press onPress={requestLocation} scale={0.99} accessibilityLabel="Use my location" style={styles.useMine}>
             <Text style={styles.useMineText}>Use my location</Text>
           </Press>
         ) : null}
@@ -231,29 +236,30 @@ export default function LocationMapSection({ onGestureChange }) {
 }
 
 const styles = StyleSheet.create({
-  section: { width: '100%' },
-  mapBox: { height: 220, width: '100%', overflow: 'hidden', backgroundColor: '#F7F8FB', borderBottomWidth: 1, borderBottomColor: tw.slate200 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
-  msgTitle: { fontSize: 12, textAlign: 'center', color: '#0B1220', ...poppins(600) },
-  msgBody: { marginTop: 4, fontSize: 11, textAlign: 'center', color: '#64748B', ...poppins(500) },
+  section: { flex: 1, width: '100%' },
+  mapBox: { flex: 1, minHeight: 200, width: '100%', overflow: 'hidden', backgroundColor: color.surfaceMuted },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xl },
+  msgTitle: { ...type.label, textAlign: 'center', color: color.text },
+  msgBody: { ...type.caption, marginTop: space.xs, textAlign: 'center', color: color.textMuted },
+  // Over the map: the centre pin is the one place absolute positioning is expected.
   pinWrap: { position: 'absolute', left: 0, right: 0, top: '50%', alignItems: 'center', zIndex: 20 },
-  pinShadow: { position: 'absolute', top: 0, width: 14, height: 3, borderRadius: 7, backgroundColor: 'rgba(15,23,43,0.3)', opacity: 0.55 },
+  pinShadow: { position: 'absolute', top: 0, width: 14, height: 3, borderRadius: 7, backgroundColor: color.overlay, opacity: 0.55 },
   pin: { alignItems: 'center', transform: [{ translateY: -17 }] },
   pickupLabel: {
-    position: 'absolute', top: -40, backgroundColor: '#FFB300', paddingHorizontal: 14, paddingVertical: 4, borderRadius: 999,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    position: 'absolute', top: -36, alignSelf: 'center', width: 116, alignItems: 'center', backgroundColor: color.primary, paddingVertical: space.xs, borderRadius: radii.pill,
+    borderWidth: 1, borderColor: color.gold, ...elevation.float,
   },
-  pickupLabelText: { fontSize: 10, letterSpacing: 0.5, color: '#030712', ...poppins(900) },
-  pinStem: { width: 1.5, height: 14, backgroundColor: 'rgba(15,23,43,0.6)' },
-  pinDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: tw.blue500, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(0,0,0,0.2)' },
-  pinDotInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' },
+  pickupLabelText: { ...type.caption, color: color.onPrimary, fontFamily: 'Poppins_600SemiBold' },
+  pinStem: { width: 2, height: 14, backgroundColor: color.primary },
+  pinDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: color.primary, borderWidth: 2, borderColor: color.surface, alignItems: 'center', justifyContent: 'center', ...elevation.card },
+  pinDotInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.surface },
   locator: {
-    position: 'absolute', right: 16, bottom: 112, zIndex: 20, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(3,7,18,0.8)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)',
+    position: 'absolute', right: space.lg, top: space.md, zIndex: 20, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float,
   },
   useMine: {
-    position: 'absolute', bottom: 8, left: 8, zIndex: 20, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingHorizontal: 12, paddingVertical: 8, boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1)',
+    position: 'absolute', top: space.md, left: space.lg, zIndex: 20, minHeight: 44, justifyContent: 'center', borderRadius: radii.pill, borderWidth: 1, borderColor: color.border,
+    backgroundColor: color.surface, paddingHorizontal: space.md, ...elevation.card,
   },
-  useMineText: { fontSize: 11, color: tw.slate700, ...poppins(500) },
+  useMineText: { ...type.label, color: color.primary },
 });

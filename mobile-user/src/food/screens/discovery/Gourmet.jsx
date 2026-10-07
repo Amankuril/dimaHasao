@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Image as RNImage, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, BadgePercent, Bookmark, Clock, Star, Utensils } from 'lucide-react-native';
+import { AlertCircle, BadgePercent, Bookmark, ChefHat, Clock, MapPin, Star, Utensils } from 'lucide-react-native';
 import Image from '../../../components/Img';
 import { Press } from '../../../components/ui';
 import apiClient from '../../../api/food';
@@ -15,9 +14,10 @@ import { useZone } from '../../hooks/useZone';
 import { useProfile } from '../../context/ProfileContext';
 import { filterRestaurantsForVegMode } from '../../utils/vegMode';
 import { toast } from '../../../lib/notify';
-import { RestaurantGridSkeleton } from '../../components/discovery/bits';
-import { F } from '../../components/shell';
-import { poppins, tw } from '../../../theme';
+import { DiscoveryHero, RestaurantGridSkeleton } from '../../components/discovery/bits';
+import { EmptyState, StatusBadge } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 const BANNER = require('../../../../assets/food/gourmet_banner.jpg');
 
@@ -40,7 +40,6 @@ const calculateDistance = (lat1, lng1, lat2, lng2) => {
 /** Port of pages/user/Gourmet.jsx. */
 export default function Gourmet() {
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
   const goBack = useAppBackNavigation();
   const [favorites, setFavorites] = useState(new Set());
   const [list, setList] = useState([]);
@@ -87,49 +86,35 @@ export default function Gourmet() {
     });
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
-        <View style={{ height: height * 0.3, overflow: 'hidden', ...{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}>
-          <RNImage source={BANNER} style={StyleSheet.absoluteFill} resizeMode="cover" />
-          <LinearGradient colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.4)', 'transparent']} start={{ x: 0, y: 1 }} end={{ x: 0, y: 0 }} style={StyleSheet.absoluteFill} />
-          <Press scale={0.9} onPress={goBack} accessibilityLabel="Back" style={[styles.back, { top: 16 }]}>
-            <ArrowLeft size={20} color="#fff" />
-          </Press>
-          <View style={styles.bannerText}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ width: 32, height: 2, backgroundColor: F.green }} />
-              <Text style={styles.kicker}>EXPERIENCE EXCELLENCE</Text>
-            </View>
-            <Text style={styles.h1}>Gourmet Dining</Text>
-            <Text style={styles.sub}>Indulge in carefully curated premium dining from the city&apos;s finest restaurants.</Text>
-          </View>
-        </View>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom }}>
+        <DiscoveryHero
+          image={BANNER}
+          onBack={goBack}
+          height={220}
+          kicker="Experience excellence"
+          title="Gourmet dining"
+          tagline="Indulge in carefully curated premium dining from the city's finest restaurants."
+        />
 
-        <View style={{ padding: 16, gap: 16 }}>
+        <View style={{ padding: space.lg, gap: space.lg }}>
           <View style={styles.countRow}>
-            <Text style={styles.count}>{showSkeleton ? '...' : visible.length} PREMIER ESTABLISHMENTS</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={styles.count}>{showSkeleton ? '...' : visible.length} premier establishments</Text>
+            <View style={styles.liveRow}>
               <View style={styles.live} />
-              <Text style={styles.liveText}>LIVE DEALS AVAILABLE</Text>
+              <Text style={styles.liveText}>Live deals available</Text>
             </View>
           </View>
 
           {showSkeleton ? <RestaurantGridSkeleton count={4} /> : null}
 
-          {error && !loading ? (
-            <View style={{ alignItems: 'center', paddingVertical: 80 }}>
-              <Text style={{ color: tw.red500, textAlign: 'center', fontSize: 16, lineHeight: 24, ...poppins(400) }}>{error}</Text>
-              <Press onPress={() => setAttempt((n) => n + 1)} accessibilityLabel="Retry" style={styles.retry}>
-                <Text style={styles.retryText}>Retry</Text>
-              </Press>
-            </View>
-          ) : null}
+          {error && !loading ? <EmptyState icon={AlertCircle} title={error} actionLabel="Retry" onAction={() => setAttempt((n) => n + 1)} /> : null}
 
           {!showSkeleton && !error ? (
             visible.length === 0 ? (
-              <Text style={styles.none}>No Gourmet restaurants available at the moment</Text>
+              <EmptyState icon={ChefHat} title="No Gourmet restaurants available at the moment" />
             ) : (
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: space.lg }}>
                 {visible.map((item) => {
                   const restaurant = item.restaurant || item;
                   const slug = restaurant.slug || restaurant.restaurantName?.toLowerCase().replace(/\s+/g, '-') || restaurant.name?.toLowerCase().replace(/\s+/g, '-') || '';
@@ -145,48 +130,43 @@ export default function Gourmet() {
                   const menu = restaurant.menuImages?.length > 0 ? restaurant.menuImages.map((i) => i.url || i).filter(Boolean) : [];
                   const raw = cover.length > 0 ? cover[0] : menu.length > 0 ? menu[0] : restaurant.profileImage?.url || restaurant.profileImage || restaurant.image || '';
                   const img = resolveImageUrl(raw);
+                  const name = restaurant.restaurantName || restaurant.name;
+                  const open = () => router.push(`/food/user/restaurants/${slug}`);
 
                   return (
-                    <Press key={id} scale={0.98} onPress={() => router.push(`/food/user/restaurants/${slug}`)} accessibilityLabel={restaurant.restaurantName || restaurant.name} style={styles.card}>
-                      <View style={{ height: 192, backgroundColor: tw.gray100 }}>
+                    <View key={id} style={styles.card}>
+                      <Press scale={1} onPress={open} accessibilityLabel={name} style={styles.photo}>
                         {img ? (
                           <Image source={{ uri: img }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                         ) : (
                           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                            <Utensils size={32} color={tw.gray200} />
+                            <Utensils size={32} color={color.textDisabled} />
                           </View>
                         )}
-                        <LinearGradient pointerEvents="none" colors={['rgba(0,0,0,0.6)', 'transparent']} start={{ x: 0, y: 1 }} end={{ x: 0, y: 0 }} style={[StyleSheet.absoluteFill, { opacity: 0.6 }]} />
-                        <Press scale={0.9} onPress={() => toggleFavorite(id)} accessibilityLabel={fav ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
-                          <Bookmark size={20} color={fav ? '#fff' : 'rgba(255,255,255,0.8)'} fill={fav ? '#fff' : 'none'} />
-                        </Press>
-                        <View style={styles.ratingBadge}>
+                        <View pointerEvents="none" style={styles.ratingBadge}>
+                          <Star size={13} color={color.gold} fill={color.gold} strokeWidth={0} />
                           <Text style={styles.ratingText}>{restaurant.rating?.toFixed(1) || '4.0'}</Text>
-                          <Star size={14} color={F.green} fill={F.green} />
                         </View>
-                      </View>
-                      <View style={{ padding: 20 }}>
-                        <Text style={styles.name} numberOfLines={1}>{restaurant.restaurantName || restaurant.name}</Text>
+                      </Press>
+                      <Press scale={0.9} onPress={() => toggleFavorite(id)} accessibilityRole="button" accessibilityState={{ selected: fav }} accessibilityLabel={fav ? 'Remove bookmark' : 'Bookmark'} style={[styles.bookmark, fav ? styles.bookmarkOn : null]}>
+                        <Bookmark size={20} color={fav ? color.onPrimary : color.text} fill={fav ? color.onPrimary : 'none'} />
+                      </Press>
+                      <Press scale={0.99} onPress={open} accessibilityRole="button" accessibilityLabel={`${name}, open menu`} style={styles.body}>
+                        <Text style={styles.name} numberOfLines={2}>{name}</Text>
                         <View style={styles.metaRow}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Clock size={16} color={F.green} strokeWidth={2.5} />
-                            <Text style={styles.meta}>{restaurant.estimatedDeliveryTime || '25-30 mins'}</Text>
-                          </View>
-                          <Text style={{ color: tw.gray200 }}>•</Text>
-                          <Text style={[styles.meta, { color: '#F87171', ...poppins(900) }]}>{distanceStr} away</Text>
+                          <Clock size={14} color={color.textSecondary} />
+                          <Text style={styles.meta}>{restaurant.estimatedDeliveryTime || '25-30 mins'}</Text>
+                          <Text style={styles.meta}>·</Text>
+                          <MapPin size={14} color={color.textSecondary} />
+                          <Text style={styles.meta}>{distanceStr} away</Text>
                         </View>
                         {restaurant.offer ? (
-                          <View style={styles.offer}>
-                            <BadgePercent size={16} color={F.green} strokeWidth={3} />
-                            <Text style={styles.offerText}>{String(restaurant.offer).toUpperCase()}</Text>
-                          </View>
+                          <StatusBadge label={String(restaurant.offer)} tone="gold" icon={BadgePercent} style={{ marginTop: space.sm }} />
                         ) : (
-                          <View style={styles.elite}>
-                            <Text style={styles.eliteText}>ELITE SELECTION</Text>
-                          </View>
+                          <StatusBadge label="Elite selection" tone="neutral" icon={ChefHat} style={{ marginTop: space.sm }} />
                         )}
-                      </View>
-                    </Press>
+                      </Press>
+                    </View>
                   );
                 })}
               </View>
@@ -199,27 +179,19 @@ export default function Gourmet() {
 }
 
 const styles = StyleSheet.create({
-  back: { position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  bannerText: { position: 'absolute', bottom: 32, left: 24, right: 24, gap: 8 },
-  kicker: { fontSize: 10, lineHeight: 15, letterSpacing: 3, color: 'rgba(255,255,255,0.8)', ...poppins(900) },
-  h1: { fontSize: 30, lineHeight: 36, color: '#fff', ...poppins(900) },
-  sub: { fontSize: 14, lineHeight: 20, color: 'rgba(255,255,255,0.7)', ...poppins(500) },
-  countRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  count: { fontSize: 10, lineHeight: 15, letterSpacing: 2, color: tw.gray400, ...poppins(900) },
-  live: { width: 6, height: 6, borderRadius: 3, backgroundColor: tw.green500 },
-  liveText: { fontSize: 10, lineHeight: 15, color: tw.gray500, ...poppins(700) },
-  retry: { marginTop: 16, backgroundColor: F.green, paddingHorizontal: 16, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  retryText: { color: '#fff', fontSize: 14, lineHeight: 20, ...poppins(500) },
-  none: { textAlign: 'center', paddingVertical: 48, color: tw.gray500, fontSize: 16, lineHeight: 24, ...poppins(400) },
-  card: { backgroundColor: '#fff', borderRadius: 32, overflow: 'hidden', ...{ boxShadow: '0 25px 50px -12px rgba(229,231,235,0.4)' } },
-  bookmark: { position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  ratingBadge: { position: 'absolute', bottom: 16, right: 16, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
-  ratingText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(900) },
-  name: { fontSize: 20, lineHeight: 28, color: tw.gray900, marginBottom: 12, ...poppins(900) },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16 },
-  meta: { fontSize: 12, lineHeight: 16, color: tw.gray500, letterSpacing: -0.3, ...poppins(700) },
-  offer: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(10,77,43,0.05)', borderRadius: 16, alignSelf: 'flex-start' },
-  offerText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, color: F.green, ...poppins(900) },
-  elite: { paddingHorizontal: 12, paddingVertical: 8, backgroundColor: tw.gray50, borderRadius: 16, alignSelf: 'flex-start' },
-  eliteText: { fontSize: 10, lineHeight: 15, letterSpacing: 1.5, color: tw.gray400, ...poppins(900) },
+  countRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: space.sm, paddingBottom: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  count: { ...type.label, color: color.textSecondary },
+  liveRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  live: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.goldBright },
+  liveText: { ...type.caption, color: color.textMuted },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.card },
+  photo: { height: 184, backgroundColor: color.surfaceMuted },
+  bookmark: { position: 'absolute', top: space.md, right: space.md, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', ...elevation.card },
+  bookmarkOn: { backgroundColor: color.primary },
+  ratingBadge: { position: 'absolute', bottom: space.md, left: space.md, flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 28, paddingHorizontal: space.sm + 2, borderRadius: radii.pill, backgroundColor: 'rgba(17,17,17,0.78)' },
+  ratingText: { ...type.label, color: color.textInverse },
+  body: { padding: space.lg, gap: space.xs },
+  name: { ...type.heading, color: color.text },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, flexWrap: 'wrap' },
+  meta: { ...type.caption, color: color.textSecondary },
 });

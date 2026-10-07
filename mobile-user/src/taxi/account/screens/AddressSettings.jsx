@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Briefcase, Home, MapPin, Pencil, Plus, Trash2, X } from 'lucide-react-native';
-import { Press } from '../../../components/ui';
+import { Briefcase, Home, MapPin, Pencil, Trash2, X } from 'lucide-react-native';
+import { Button, Card, EmptyState, IconButton, SectionHeader } from '../../../components/ds';
 import { BottomSheet, Dialog } from '../../../components/kit';
 import { localStore } from '../../../lib/storage';
-import { tw } from '../../../theme';
-import { BackBtn, Eyebrow, fo, useHeaderTop } from '../ui';
+import { color, elevation, radii, space, tone, type } from '../../../theme';
+import { Field, PageTitle, useNavPad } from '../ui';
 
 // Web: Taxi/modules/user/pages/profile/AddressSettings.jsx (/taxi/user/profile/addresses)
 
@@ -15,49 +15,31 @@ const STORAGE_KEY = 'Appzeto 24:savedAddresses';
 const createId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const defaultState = { home: { label: 'Home', address: '', landmark: '', notes: '' }, work: null, landmarks: [] };
 
-const CARD = { backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', boxShadow: '0 14px 34px rgba(15,23,42,0.07)' };
-
-function Field({ label, children }) {
+function AddressCard({ icon: Icon, title, subtitle, iconTone, onEdit, onDelete, isEmpty }) {
+  const t = tone[iconTone] || tone.primary;
   return (
-    <View style={{ gap: 6 }}>
-      <Eyebrow style={{ letterSpacing: 2.6, fontSize: 10 }}>{label}</Eyebrow>
-      {children}
-    </View>
-  );
-}
-
-const inputBase = { backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', borderRadius: 16, paddingHorizontal: 16, fontSize: 14, color: tw.slate900, boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', ...fo(700) };
-
-function Btn({ children, onPress, primary }) {
-  return (
-    <Press onPress={onPress} style={[st.btn, primary ? { backgroundColor: tw.slate900, boxShadow: '0 16px 34px rgba(15,23,42,0.18)' } : { backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' }]}>
-      {children}
-    </Press>
-  );
-}
-
-function AddressCard({ icon: Icon, title, subtitle, accent, onEdit, onDelete, isEmpty }) {
-  return (
-    <View style={[st.addrCard, CARD]}>
-      <View style={[st.addrIcon]}><Icon size={22} color={accent} strokeWidth={2.6} /></View>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={st.addrTitle}>{title}</Text>
-        <Text style={[st.addrSub, isEmpty && { color: tw.slate400, fontStyle: 'italic' }]} numberOfLines={1}>{subtitle}</Text>
+    <Card style={st.addrCard}>
+      <View style={[st.addrIcon, { backgroundColor: t.bg }]}>
+        <Icon size={20} color={t.fg} />
       </View>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Press onPress={onEdit} accessibilityLabel={`Edit ${title}`} style={st.round}><Pencil size={16} color={tw.slate500} strokeWidth={2.8} /></Press>
-        {!isEmpty ? (
-          <Press onPress={onDelete} accessibilityLabel={`Delete ${title}`} style={[st.round, { backgroundColor: tw.rose50, borderColor: tw.rose100 }]}>
-            <Trash2 size={16} color={tw.rose500} strokeWidth={2.6} />
-          </Press>
-        ) : null}
+      <View style={st.grow}>
+        <Text style={[type.subheading, { color: color.text }]}>{title}</Text>
+        <Text style={[type.small, { color: isEmpty ? color.textMuted : color.textSecondary }]} numberOfLines={2}>
+          {subtitle}
+        </Text>
       </View>
-    </View>
+      <View style={st.actions}>
+        <IconButton icon={Pencil} label={`Edit ${title}`} variant="soft" iconSize={18} onPress={onEdit} />
+        {!isEmpty ? <IconButton icon={Trash2} label={`Delete ${title}`} variant="danger" iconSize={18} onPress={onDelete} /> : null}
+      </View>
+    </Card>
   );
 }
 
 export default function AddressSettings() {
-  const top = useHeaderTop();
+  const bottomPad = useNavPad(space.xxl);
+  const insets = useSafeAreaInsets();
+  const { height: winH } = useWindowDimensions();
   const [data, setData] = useState(() => {
     try {
       const saved = localStore.getItem(STORAGE_KEY);
@@ -124,96 +106,79 @@ export default function AddressSettings() {
   const set = (k) => (v) => setDraft((p) => ({ ...p, [k]: v }));
 
   return (
-    <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.38, 1]} style={st.flex}>
-      <View style={[st.header, { paddingTop: top }]}>
-        <BackBtn size={40} radius={20} style={{ borderWidth: 0, backgroundColor: 'transparent' }} strokeWidth={3} onPress={() => router.navigate('/taxi/user/profile')} />
-        <View style={{ minWidth: 0 }}>
-          <Eyebrow style={{ fontSize: 10, letterSpacing: 2.6 }}>Profile</Eyebrow>
-          <Text style={st.title}>Addresses</Text>
-        </View>
-      </View>
+    <View style={st.flex}>
+      <PageTitle title="Addresses" subtitle="Home, work and saved places" onBack={() => router.navigate('/taxi/user/profile')} />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 112, gap: 20 }} showsVerticalScrollIndicator={false}>
-        <View style={{ gap: 12 }}>
-          <AddressCard icon={Home} title="Home" subtitle={homeSub} accent={tw.orange600} isEmpty={!data.home?.address?.trim()} onEdit={() => setModal({ mode: 'home' })} onDelete={() => setConfirmDelete({ mode: 'home', title: 'Home address' })} />
-          <AddressCard icon={Briefcase} title="Work" subtitle={workSub} accent={tw.indigo600} isEmpty={!data.work?.address?.trim()} onEdit={() => setModal({ mode: 'work' })} onDelete={() => setConfirmDelete({ mode: 'work', title: 'Work address' })} />
+      <ScrollView contentContainerStyle={[st.content, { paddingBottom: bottomPad }]} showsVerticalScrollIndicator={false}>
+        <View style={{ gap: space.md }}>
+          <AddressCard icon={Home} title="Home" subtitle={homeSub} iconTone="primary" isEmpty={!data.home?.address?.trim()} onEdit={() => setModal({ mode: 'home' })} onDelete={() => setConfirmDelete({ mode: 'home', title: 'Home address' })} />
+          <AddressCard icon={Briefcase} title="Work" subtitle={workSub} iconTone="info" isEmpty={!data.work?.address?.trim()} onEdit={() => setModal({ mode: 'work' })} onDelete={() => setConfirmDelete({ mode: 'work', title: 'Work address' })} />
         </View>
 
-        <View style={{ gap: 12 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 4 }}>
-            <View>
-              <Eyebrow style={{ fontSize: 10, letterSpacing: 2.6 }}>Landmarks</Eyebrow>
-              <Text style={st.saved}>Saved places</Text>
-            </View>
-            <Press onPress={() => setModal({ mode: 'landmark' })} style={st.addPill}>
-              <Plus size={14} color={tw.slate700} strokeWidth={3} />
-              <Text style={st.addPillText}>Add</Text>
-            </Press>
-          </View>
-
+        <View>
+          <SectionHeader title="Saved places" action="Add" onAction={() => setModal({ mode: 'landmark' })} />
           {data.landmarks.length > 0 ? (
-            <View style={[{ borderRadius: 22, overflow: 'hidden' }, CARD]}>
+            <Card padded={false} style={{ overflow: 'hidden' }}>
               {data.landmarks.map((lm, i) => (
-                <View key={lm.id} style={[st.lm, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.7)' }]}>
-                  <View style={st.lmIcon}><MapPin size={18} color={tw.slate500} strokeWidth={2.6} /></View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={st.lmTitle} numberOfLines={1}>{lm.label}</Text>
-                    <Text style={st.lmSub} numberOfLines={1}>{lm.address}</Text>
+                <View key={lm.id} style={[st.lm, i > 0 && st.lmDivider]}>
+                  <View style={[st.addrIcon, { backgroundColor: color.goldSoft }]}>
+                    <MapPin size={18} color={color.goldText} />
                   </View>
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <Press onPress={() => setModal({ mode: 'landmark', id: lm.id })} accessibilityLabel={`Edit ${lm.label}`} style={st.round}><Pencil size={16} color={tw.slate500} strokeWidth={2.8} /></Press>
-                    <Press onPress={() => setConfirmDelete({ mode: 'landmark', id: lm.id, title: lm.label })} accessibilityLabel={`Delete ${lm.label}`} style={[st.round, { backgroundColor: tw.rose50, borderColor: tw.rose100 }]}>
-                      <Trash2 size={16} color={tw.rose500} strokeWidth={2.6} />
-                    </Press>
+                  <View style={st.grow}>
+                    <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={1}>{lm.label}</Text>
+                    <Text style={[type.small, { color: color.textSecondary }]} numberOfLines={2}>{lm.address}</Text>
+                  </View>
+                  <View style={st.actions}>
+                    <IconButton icon={Pencil} label={`Edit ${lm.label}`} variant="soft" iconSize={18} onPress={() => setModal({ mode: 'landmark', id: lm.id })} />
+                    <IconButton icon={Trash2} label={`Delete ${lm.label}`} variant="danger" iconSize={18} onPress={() => setConfirmDelete({ mode: 'landmark', id: lm.id, title: lm.label })} />
                   </View>
                 </View>
               ))}
-            </View>
+            </Card>
           ) : (
-            <View style={[{ borderRadius: 22, padding: 20, alignItems: 'center' }, CARD]}>
-              <View style={[st.lmIcon, { width: 48, height: 48 }]}><MapPin size={20} color={tw.slate400} strokeWidth={2.6} /></View>
-              <Text style={[st.addrTitle, { marginTop: 12, fontSize: 14 }]}>No landmarks yet</Text>
-              <Text style={[st.addrSub, { marginTop: 4, textAlign: 'center' }]}>Save places like “Gym”, “Mom’s house”, or “Office gate”.</Text>
-              <View style={{ marginTop: 16, alignSelf: 'stretch' }}>
-                <Btn onPress={() => setModal({ mode: 'landmark' })}>
-                  <Plus size={14} color={tw.slate800} strokeWidth={3} />
-                  <Text style={[st.btnText, { color: tw.slate800 }]}>Add landmark</Text>
-                </Btn>
-              </View>
-            </View>
+            <Card padded={false}>
+              <EmptyState
+                icon={MapPin}
+                title="No landmarks yet"
+                message={'Save places like \u201cGym\u201d, \u201cMom\u2019s house\u201d, or \u201cOffice gate\u201d.'}
+                actionLabel="Add landmark"
+                onAction={() => setModal({ mode: 'landmark' })}
+                style={{ paddingVertical: space.xxl }}
+              />
+            </Card>
           )}
         </View>
       </ScrollView>
 
-      <BottomSheet visible={Boolean(modal && draft)} onClose={closeModal} backdrop="rgba(0,0,0,0.55)" panelStyle={{ padding: 12 }}>
+      <BottomSheet visible={Boolean(modal && draft)} onClose={closeModal} backdrop={color.overlay}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={st.sheet}>
+          <View style={[st.sheet, { maxHeight: winH * 0.9 }]}>
             <View style={st.sheetHead}>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={st.sheetTitle}>{title}</Text>
-                <Text style={st.sheetSub}>{modal?.mode === 'landmark' ? 'Save a place for quick access.' : 'Update your saved address.'}</Text>
+              <View style={st.grow}>
+                <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">{title}</Text>
+                <Text style={[type.small, { color: color.textMuted }]}>{modal?.mode === 'landmark' ? 'Save a place for quick access.' : 'Update your saved address.'}</Text>
               </View>
-              <Press onPress={closeModal} accessibilityLabel="Close" style={st.close}><X size={18} color={tw.slate500} strokeWidth={2.8} /></Press>
+              <IconButton icon={X} label="Close" variant="soft" onPress={closeModal} />
             </View>
             {draft ? (
-              <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 16 }}>
+              <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[st.sheetBody, { paddingBottom: space.xxl + insets.bottom }]}>
                 {modal?.mode === 'landmark' ? (
-                  <Field label="Label">
-                    <TextInput value={draft.label} onChangeText={set('label')} placeholder="e.g., Gym, Office gate" placeholderTextColor={tw.slate300} style={[inputBase, { height: 48 }]} />
-                  </Field>
+                  <Field label="Label" hint="Required" value={draft.label} onChangeText={set('label')} placeholder="e.g., Gym, Office gate" />
                 ) : null}
-                <Field label="Address">
-                  <TextInput value={draft.address} onChangeText={set('address')} placeholder="Add full address" placeholderTextColor={tw.slate300} multiline numberOfLines={3} textAlignVertical="top" style={[inputBase, { height: 88, paddingTop: 12 }]} />
-                </Field>
-                <Field label="Landmark (Optional)">
-                  <TextInput value={draft.landmark} onChangeText={set('landmark')} placeholder="Near…" placeholderTextColor={tw.slate300} style={[inputBase, { height: 48 }]} />
-                </Field>
-                <Field label="Notes (Optional)">
-                  <TextInput value={draft.notes} onChangeText={set('notes')} placeholder="e.g., Ring bell, call on arrival" placeholderTextColor={tw.slate300} style={[inputBase, { height: 48 }]} />
-                </Field>
-                <View style={{ paddingTop: 8, gap: 10 }}>
-                  <Btn primary onPress={saveDraft}><Text style={[st.btnText, { color: '#fff' }]}>{modal?.mode === 'landmark' ? 'Save landmark' : 'Save address'}</Text></Btn>
-                  <Btn onPress={closeModal}><Text style={[st.btnText, { color: tw.slate800 }]}>Cancel</Text></Btn>
+                <Field
+                  label="Address"
+                  hint={modal?.mode === 'landmark' ? 'Required' : undefined}
+                  value={draft.address}
+                  onChangeText={set('address')}
+                  placeholder="Add full address"
+                  multiline
+                  numberOfLines={3}
+                />
+                <Field label="Landmark (optional)" value={draft.landmark} onChangeText={set('landmark')} placeholder="Near…" />
+                <Field label="Notes (optional)" value={draft.notes} onChangeText={set('notes')} placeholder="e.g., Ring bell, call on arrival" />
+                <View style={{ paddingTop: space.sm, gap: space.sm }}>
+                  <Button title={modal?.mode === 'landmark' ? 'Save landmark' : 'Save address'} onPress={saveDraft} />
+                  <Button title="Cancel" variant="outline" onPress={closeModal} />
                 </View>
               </ScrollView>
             ) : null}
@@ -221,53 +186,41 @@ export default function AddressSettings() {
         </KeyboardAvoidingView>
       </BottomSheet>
 
-      <Dialog visible={Boolean(confirmDelete)} onClose={() => setConfirmDelete(null)} backdrop="rgba(0,0,0,0.55)" panelStyle={st.dialog}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 15, color: tw.slate900, ...fo(900) }}>Delete</Text>
-            <Text style={{ marginTop: 4, fontSize: 12, color: tw.slate500, ...fo(700) }}>
-              Remove <Text style={{ color: tw.slate900 }}>{confirmDelete?.title}</Text> from saved addresses?
+      <Dialog visible={Boolean(confirmDelete)} onClose={() => setConfirmDelete(null)} backdrop={color.overlay} panelStyle={st.dialog}>
+        <View style={st.sheetHead2}>
+          <View style={st.dlgIcon}>
+            <Trash2 size={20} color={color.danger} />
+          </View>
+          <View style={st.grow}>
+            <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">Delete address?</Text>
+            <Text style={[type.small, { color: color.textSecondary, marginTop: space.xs }]}>
+              Remove <Text style={{ ...type.bodyStrong, fontSize: 13, color: color.text }}>{confirmDelete?.title}</Text> from saved addresses?
             </Text>
           </View>
-          <Press onPress={() => setConfirmDelete(null)} accessibilityLabel="Close" style={st.close}><X size={18} color={tw.slate500} strokeWidth={2.8} /></Press>
         </View>
-        <View style={{ marginTop: 20, gap: 8 }}>
-          <Press onPress={() => setConfirmDelete(null)} style={[st.dBtn, { backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' }]}>
-            <Text style={[st.dText, { color: tw.slate700 }]}>Cancel</Text>
-          </Press>
-          <Press onPress={doDelete} style={[st.dBtn, { backgroundColor: tw.rose600, boxShadow: '0 16px 34px rgba(225,29,72,0.22)' }]}>
-            <Text style={[st.dText, { color: '#fff' }]}>Delete</Text>
-          </Press>
+        <View style={st.dlgActions}>
+          <Button title="Cancel" variant="outline" onPress={() => setConfirmDelete(null)} style={st.grow} />
+          <Button title="Delete" variant="danger" onPress={doDelete} style={st.grow} />
         </View>
       </Dialog>
-    </LinearGradient>
+    </View>
   );
 }
 
 const st = StyleSheet.create({
-  flex: { flex: 1 },
-  header: { backgroundColor: 'rgba(255,255,255,0.7)', paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.7)', boxShadow: '0 10px 20px rgba(15,23,42,0.05)' },
-  title: { marginTop: 4, fontSize: 18, color: tw.slate900, letterSpacing: -0.3, ...fo(900) },
-  addrCard: { borderRadius: 22, padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
-  addrIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' },
-  addrTitle: { fontSize: 15, color: tw.slate900, lineHeight: 15, ...fo(900) },
-  addrSub: { marginTop: 4, fontSize: 12, color: tw.slate500, ...fo(700) },
-  round: { width: 36, height: 36, borderRadius: 18, backgroundColor: tw.slate50, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' },
-  saved: { marginTop: 4, fontSize: 15, color: tw.slate900, letterSpacing: -0.2, ...fo(900) },
-  addPill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
-  addPillText: { fontSize: 11, color: tw.slate700, ...fo(900) },
-  lm: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  lmIcon: { width: 40, height: 40, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
-  lmTitle: { fontSize: 14, color: tw.slate900, ...fo(900) },
-  lmSub: { marginTop: 4, fontSize: 12, color: tw.slate500, ...fo(700) },
-  sheet: { maxHeight: '100%', borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.97)', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  sheetHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.7)', backgroundColor: 'rgba(255,255,255,0.6)' },
-  sheetTitle: { fontSize: 16, color: tw.slate900, letterSpacing: -0.2, ...fo(900) },
-  sheetSub: { marginTop: 4, fontSize: 12, color: tw.slate500, ...fo(700) },
-  close: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  btnText: { fontSize: 12, letterSpacing: 2.2, textTransform: 'uppercase', ...fo(900) },
-  dialog: { width: '100%', maxWidth: 384, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', padding: 20, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  dBtn: { borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center' },
-  dText: { fontSize: 12, letterSpacing: 1.9, textTransform: 'uppercase', ...fo(900) },
+  flex: { flex: 1, backgroundColor: color.bg },
+  grow: { flex: 1, minWidth: 0 },
+  content: { paddingHorizontal: space.lg, paddingTop: space.xs, gap: space.xxl },
+  addrCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  addrIcon: { width: 44, height: 44, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  actions: { flexDirection: 'row', gap: space.xs },
+  lm: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md },
+  lmDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  sheet: { borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, backgroundColor: color.surface, overflow: 'hidden', ...elevation.sheet },
+  sheetHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingHorizontal: space.xl, paddingTop: space.xl, paddingBottom: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  sheetBody: { padding: space.xl, gap: space.lg },
+  sheetHead2: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  dlgIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center' },
+  dialog: { width: '100%', maxWidth: 384, borderRadius: radii.lg, backgroundColor: color.surface, padding: space.xl, ...elevation.float },
+  dlgActions: { marginTop: space.xl, flexDirection: 'row', gap: space.sm },
 });

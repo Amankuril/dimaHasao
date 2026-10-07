@@ -6,10 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Fa from '../../../../components/Fa';
 import { Press } from '../../../../components/ui';
+import { StatusBadge, fa } from '../../../../components/ds';
 import { Header, PatternDivider } from '../../../../components/dh/Header';
-import { GreenButton, Panel, Pulse, SegTabs, StateBlock, dhs } from '../../../../components/dh/ui';
+import { GreenButton, Panel, PanelTitle, Pulse, SegTabs, Stars, StateBlock, dhs } from '../../../../components/dh/ui';
 import { fetchPackageById } from '../../../../api/dh/toursApi';
-import { dh, montserrat, poppins, shadow, tw } from '../../../../theme';
+import { color, elevation, radii, space, type } from '../../../../theme';
 
 // Web: DimaHasao/pages/TourPackageDetailScreen.jsx (/app/packages/:id)
 // + components/tour/{ItineraryTimeline,InclusionsGrid}.jsx
@@ -27,25 +28,27 @@ function ItineraryTimeline({ itinerary = [] }) {
     setExpandedDays((prev) => (prev.includes(dayNum) ? prev.filter((d) => d !== dayNum) : [...prev, dayNum]));
   };
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: space.md }}>
       {itinerary.map((dayItem) => {
         const isOpen = expandedDays.includes(dayItem.day);
         return (
           <View key={dayItem.day} style={[dhs.panel, { overflow: 'hidden' }]}>
             <Press scale={1} onPress={() => toggleDay(dayItem.day)} style={styles.dayHead} accessibilityState={{ expanded: isOpen }} accessibilityLabel={`Day ${dayItem.day}: ${dayItem.title}`}>
-              <View style={[dhs.row, { gap: 12, flex: 1, minWidth: 0 }]}>
+              <View style={[dhs.row, { gap: space.md, flex: 1, minWidth: 0 }]}>
                 <View style={styles.dayBadge}>
                   <Text style={styles.dayBadgeText}>D{dayItem.day}</Text>
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <View style={[dhs.row, { gap: 8 }]}>
-                    <Text style={styles.dayLabel}>DAY {dayItem.day}</Text>
-                    {dayItem.mealPlan ? <Text style={styles.meal}>{dayItem.mealPlan}</Text> : null}
+                  <View style={[dhs.row, { gap: space.sm, flexWrap: 'wrap' }]}>
+                    <Text style={styles.dayLabel}>Day {dayItem.day}</Text>
+                    {dayItem.mealPlan ? <StatusBadge label={dayItem.mealPlan} tone="gold" icon={fa('fa-solid fa-utensils')} /> : null}
                   </View>
-                  <Text style={styles.dayTitle} numberOfLines={1}>{dayItem.title}</Text>
+                  <Text style={styles.dayTitle} numberOfLines={2}>
+                    {dayItem.title}
+                  </Text>
                 </View>
               </View>
-              <Fa name="fa-solid fa-chevron-down" size={12} color={isOpen ? tw.emerald800 : tw.gray400} style={isOpen ? { transform: [{ rotate: '180deg' }] } : null} />
+              <Fa name="fa-solid fa-chevron-down" size={16} color={isOpen ? color.primary : color.textMuted} style={isOpen ? { transform: [{ rotate: '180deg' }] } : null} />
             </Press>
             {isOpen ? (
               <View style={styles.dayBody}>
@@ -66,32 +69,32 @@ function ItineraryTimeline({ itinerary = [] }) {
 
 function InclusionsGrid({ includes = [], exclusions = [] }) {
   return (
-    <View style={{ gap: 16 }}>
-      <Panel style={{ gap: 10 }}>
-        <View style={[dhs.row, { gap: 8 }]}>
-          <Fa name="fa-solid fa-circle-check" size={14} color={tw.emerald600} />
-          <Text style={dhs.h3}>What&apos;s Included in Package</Text>
+    <View style={{ gap: space.lg }}>
+      <Panel style={{ gap: space.md }}>
+        <View style={[dhs.row, { gap: space.sm }]}>
+          <Fa name="fa-solid fa-circle-check" size={16} color={color.success} />
+          <Text style={dhs.h3}>What&apos;s included in the package</Text>
         </View>
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: space.sm }}>
           {includes.map((inc) => (
             <View key={inc.id} style={styles.include}>
-              <Fa name="fa-solid fa-check" size={12} color={tw.emerald700} style={{ marginTop: 3 }} />
+              <Fa name="fa-solid fa-check" size={14} color={color.success} style={{ marginTop: 3 }} />
               <Text style={styles.includeText}>{inc.label}</Text>
             </View>
           ))}
         </View>
       </Panel>
       {exclusions.length > 0 ? (
-        <Panel style={{ gap: 10 }}>
-          <View style={[dhs.row, { gap: 8 }]}>
-            <Fa name="fa-solid fa-circle-xmark" size={14} color={tw.red500} />
+        <Panel style={{ gap: space.md }}>
+          <View style={[dhs.row, { gap: space.sm }]}>
+            <Fa name="fa-solid fa-circle-xmark" size={16} color={color.danger} />
             <Text style={dhs.h3}>Exclusions</Text>
           </View>
-          <View style={{ gap: 6 }}>
+          <View style={{ gap: space.sm }}>
             {exclusions.map((exc, idx) => (
-              <View key={idx} style={[styles.activity, { gap: 8 }]}>
-                <Fa name="fa-solid fa-xmark" size={12} color={tw.red400} style={{ marginTop: 3 }} />
-                <Text style={[styles.activityText, { color: tw.gray600 }]}>{exc}</Text>
+              <View key={idx} style={styles.activity}>
+                <Fa name="fa-solid fa-xmark" size={14} color={color.danger} style={{ marginTop: 3 }} />
+                <Text style={[styles.activityText, { color: color.textSecondary }]}>{exc}</Text>
               </View>
             ))}
           </View>
@@ -131,13 +134,13 @@ export default function TourPackageDetailScreen() {
       <View style={dhs.page}>
         <Header title="Loading package" subtitle="Fetching the latest details" showBack rightAction="none" />
         <PatternDivider variant="green-gold" />
-        <Pulse style={{ height: 208, borderRadius: 0 }} />
-        <View style={{ padding: 14, gap: 12 }}>
+        <Pulse style={{ height: 220, borderRadius: 0 }} />
+        <View style={{ padding: space.lg, gap: space.md }} accessibilityLabel="Loading package">
           {[0, 1, 2].map((n) => (
-            <Panel key={n} style={{ gap: 8 }}>
-              <Pulse style={{ height: 14, width: '50%' }} />
-              <Pulse tone={100} style={{ height: 12 }} />
-              <Pulse tone={100} style={{ height: 12, width: '80%' }} />
+            <Panel key={n} style={{ gap: space.sm }}>
+              <Pulse style={{ height: 16, width: '50%' }} />
+              <Pulse tone={100} style={{ height: 13 }} />
+              <Pulse tone={100} style={{ height: 13, width: '80%' }} />
             </Panel>
           ))}
         </View>
@@ -156,7 +159,7 @@ export default function TourPackageDetailScreen() {
           icon="fa-solid fa-suitcase-rolling"
           title="This tour is no longer available"
           text="It may have been taken off sale. Browse the other expeditions on offer."
-          actionLabel="See All Packages"
+          actionLabel="See all packages"
           onAction={() => router.replace('/app/packages')}
         />
       </View>
@@ -168,31 +171,32 @@ export default function TourPackageDetailScreen() {
       <Header title={pkg.title} subtitle={`${pkg.duration} • ${pkg.type}`} showBack rightAction="none" />
       <PatternDivider variant="green-gold" />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: space.xxl }}>
         <View style={styles.hero}>
           <Image source={{ uri: pkg.heroImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-          <LinearGradient colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={['rgba(0,0,0,0.15)', 'rgba(6,28,14,0.35)', 'rgba(6,28,14,0.9)']} style={StyleSheet.absoluteFill} />
           <View style={styles.heroBody}>
-            <View style={[dhs.row, { gap: 8, flexWrap: 'wrap' }]}>
-              <Text style={[styles.badge, { backgroundColor: tw.amber500, color: '#fff' }]}>{pkg.duration}</Text>
-              <Text style={[styles.badge, { backgroundColor: 'rgba(6,56,30,0.9)', color: tw.amber300, borderWidth: 1, borderColor: 'rgba(255,185,0,0.4)' }]}>{pkg.type}</Text>
-              <Text style={[styles.badge, { backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', ...poppins(600) }]}>{pkg.groupSize}</Text>
+            <View style={[dhs.row, { gap: space.sm, flexWrap: 'wrap' }]}>
+              <StatusBadge label={pkg.duration} tone="gold" icon={fa('fa-regular fa-clock')} />
+              <StatusBadge label={pkg.type} tone="primary" style={{ backgroundColor: color.surface }} />
+              {pkg.groupSize ? <StatusBadge label={pkg.groupSize} tone="neutral" icon={fa('fa-solid fa-user-group')} /> : null}
             </View>
-            <Text style={styles.heroTitle}>{pkg.title}</Text>
-            <Text style={styles.heroDest} numberOfLines={1}>{pkg.destinations.join(' • ')}</Text>
+            <Text style={styles.heroTitle} accessibilityRole="header">
+              {pkg.title}
+            </Text>
+            <Text style={styles.heroDest} numberOfLines={2}>
+              {pkg.destinations.join(' • ')}
+            </Text>
           </View>
         </View>
 
-        <View style={{ padding: 14, gap: 16 }}>
-          <Panel style={{ gap: 12 }}>
-            <View style={[dhs.row, { gap: 8 }]}>
-              <Fa name="fa-solid fa-wand-magic-sparkles" size={14} color={tw.amber500} />
-              <Text style={dhs.h3}>Package Highlights</Text>
-            </View>
-            <View style={{ gap: 8 }}>
+        <View style={{ padding: space.lg, gap: space.lg }}>
+          <Panel style={{ gap: space.md }}>
+            <PanelTitle icon="fa-solid fa-wand-magic-sparkles">Package highlights</PanelTitle>
+            <View style={{ gap: space.sm }}>
               {pkg.highlights.map((hl, idx) => (
                 <View key={idx} style={styles.activity}>
-                  <Fa name="fa-solid fa-circle-check" size={12} color={tw.emerald600} style={{ marginTop: 3 }} />
+                  <Fa name="fa-solid fa-circle-check" size={14} color={color.primary} style={{ marginTop: 3 }} />
                   <Text style={styles.activityText}>{hl}</Text>
                 </View>
               ))}
@@ -202,10 +206,10 @@ export default function TourPackageDetailScreen() {
           <SegTabs tabs={TABS} active={activeTab} onChange={setActiveTab} />
 
           {activeTab === 'itinerary' ? (
-            <View style={{ gap: 12 }}>
-              <View style={[dhs.row, { justifyContent: 'space-between', paddingHorizontal: 4 }]}>
-                <Text style={dhs.h3}>Complete Day-by-Day Plan</Text>
-                <Text style={styles.days}>{pkg.itinerary.length} Days</Text>
+            <View style={{ gap: space.md }}>
+              <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm }]}>
+                <Text style={dhs.h3}>Complete day-by-day plan</Text>
+                <Text style={styles.days}>{pkg.itinerary.length} days</Text>
               </View>
               <ItineraryTimeline itinerary={pkg.itinerary} />
             </View>
@@ -214,13 +218,13 @@ export default function TourPackageDetailScreen() {
           {activeTab === 'includes' ? <InclusionsGrid includes={pkg.includes} exclusions={pkg.exclusions} /> : null}
 
           {activeTab === 'destinations' ? (
-            <View style={{ gap: 12 }}>
-              <Panel style={{ gap: 10 }}>
-                <Text style={dhs.h3}>Key Destinations in this Tour</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 4 }}>
+            <View style={{ gap: space.md }}>
+              <Panel style={{ gap: space.md }}>
+                <Text style={dhs.h3}>Key destinations in this tour</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
                   {pkg.destinations.map((dest, idx) => (
                     <View key={idx} style={styles.destChip}>
-                      <Fa name="fa-solid fa-location-dot" size={10} color={tw.emerald700} />
+                      <Fa name="fa-solid fa-location-dot" size={14} color={color.primary} />
                       <Text style={styles.destChipText}>{dest}</Text>
                     </View>
                   ))}
@@ -237,12 +241,9 @@ export default function TourPackageDetailScreen() {
           ) : null}
 
           {pkg.reviews.length > 0 ? (
-            <Panel style={{ gap: 12 }}>
-              <View style={[dhs.row, { justifyContent: 'space-between' }]}>
-                <View style={[dhs.row, { gap: 8 }]}>
-                  <Fa name="fa-solid fa-star" size={14} color={tw.amber500} />
-                  <Text style={dhs.h3}>Traveller Reviews</Text>
-                </View>
+            <Panel style={{ gap: space.md }}>
+              <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm, flexWrap: 'wrap' }]}>
+                <PanelTitle icon="fa-solid fa-star">Traveller reviews</PanelTitle>
                 <Text style={styles.reviewSummary}>
                   {pkg.rating.toFixed(1)} · {pkg.reviewCount} review{pkg.reviewCount === 1 ? '' : 's'}
                 </Text>
@@ -250,19 +251,17 @@ export default function TourPackageDetailScreen() {
               <View>
                 {pkg.reviews.slice(0, 5).map((review, i, arr) => (
                   <View key={review.id} style={[styles.review, i < arr.length - 1 && styles.reviewDivider]}>
-                    <View style={[dhs.row, { justifyContent: 'space-between' }]}>
-                      <Text style={styles.reviewAuthor}>{review.author}</Text>
+                    <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm }]}>
+                      <Text style={styles.reviewAuthor} numberOfLines={1}>
+                        {review.author}
+                      </Text>
                       <Text style={styles.reviewDate}>{review.date}</Text>
                     </View>
-                    <View style={[dhs.row, { gap: 2 }]}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Fa key={star} name="fa-solid fa-star" size={9} color={star <= review.rating ? tw.amber400 : tw.gray200} />
-                      ))}
-                    </View>
+                    <Stars rating={review.rating} size={12} />
                     {review.comment ? <Text style={styles.reviewComment}>{review.comment}</Text> : null}
                     {review.reply ? (
                       <Text style={styles.reply}>
-                        <Text style={poppins(700)}>Operator replied: </Text>
+                        <Text style={{ ...type.label, color: color.primary }}>Operator replied: </Text>
                         {review.reply}
                       </Text>
                     ) : null}
@@ -274,56 +273,54 @@ export default function TourPackageDetailScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.bar, { paddingBottom: 12 + insets.bottom }]}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.barLabel}>ALL-INCLUSIVE TOUR</Text>
-          <View style={[dhs.row, { alignItems: 'baseline', gap: 4 }]}>
+      <View style={[styles.bar, { paddingBottom: space.md + insets.bottom }]}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.barLabel}>All-inclusive tour</Text>
+          <View style={[dhs.row, { alignItems: 'baseline', gap: space.xs }]}>
             <Text style={styles.barPrice}>₹{pkg.pricePerPerson.toLocaleString('en-IN')}</Text>
             <Text style={styles.barPer}>/ person</Text>
           </View>
           {/* Said up front rather than at the payment step. */}
           {pkg.advancePercent < 100 ? <Text style={styles.advance}>Pay {pkg.advancePercent}% now, rest to the operator</Text> : null}
         </View>
-        <GreenButton title="Book Package" iconRight="fa-solid fa-arrow-right" onPress={() => router.push(`/app/packages/${pkg.id}/book`)} style={{ paddingHorizontal: 20, ...shadow('md') }} />
+        <GreenButton title="Book package" size="lg" fullWidth={false} iconRight="fa-solid fa-arrow-right" onPress={() => router.push(`/app/packages/${pkg.id}/book`)} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { height: 208, backgroundColor: tw.gray200 },
-  heroBody: { position: 'absolute', bottom: 12, left: 14, right: 14, gap: 4 },
-  badge: { fontSize: 10, lineHeight: 15, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden', ...poppins(700) },
-  heroTitle: { fontSize: 18, lineHeight: 22.5, color: '#fff', ...montserrat(700) },
-  heroDest: { fontSize: 12, lineHeight: 16, color: tw.gray200, ...poppins(400) },
-  days: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  dayHead: { padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  dayBadge: { width: 32, height: 32, borderRadius: 16, backgroundColor: dh.nav, alignItems: 'center', justifyContent: 'center' },
-  dayBadgeText: { fontSize: 12, lineHeight: 16, color: tw.amber300, ...montserrat(800) },
-  dayLabel: { fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(700) },
-  meal: { fontSize: 9.5, lineHeight: 14, color: tw.amber900, backgroundColor: tw.amber100, paddingHorizontal: 8, borderRadius: 4, borderWidth: 1, borderColor: tw.amber300, overflow: 'hidden', ...poppins(600) },
-  dayTitle: { fontSize: 12, lineHeight: 16, color: tw.gray900, marginTop: 2, ...montserrat(700) },
-  dayBody: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: tw.gray100, backgroundColor: 'rgba(250,246,237,0.4)', gap: 8 },
-  activity: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  activityDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: tw.emerald700, marginTop: 7 },
-  activityText: { flex: 1, fontSize: 12, lineHeight: 19.5, color: tw.gray700, ...poppins(400) },
-  include: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 8, backgroundColor: dh.cream, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(229,221,195,0.6)' },
-  includeText: { flex: 1, fontSize: 12, lineHeight: 19.5, color: tw.gray800, ...poppins(500) },
-  destChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: dh.cream, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: dh.border },
-  destChipText: { fontSize: 12, lineHeight: 16, color: tw.emerald900, ...poppins(700) },
-  gallery: { flexDirection: 'row', flexWrap: 'wrap', margin: -4 },
-  galleryCell: { width: '50%', padding: 4 },
-  galleryImg: { height: 128, borderRadius: 16, backgroundColor: tw.gray200 },
-  reviewSummary: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(700) },
-  review: { gap: 4, paddingBottom: 12 },
-  reviewDivider: { borderBottomWidth: 1, borderBottomColor: tw.gray100, marginBottom: 12 },
-  reviewAuthor: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
-  reviewDate: { fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(400) },
-  reviewComment: { fontSize: 12, lineHeight: 19.5, color: tw.gray600, ...poppins(400) },
-  reply: { fontSize: 11, lineHeight: 16.5, color: tw.emerald900, backgroundColor: dh.cream, borderWidth: 1, borderColor: dh.border, borderRadius: 8, padding: 8, marginTop: 4, ...poppins(400) },
-  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.97)', borderTopWidth: 1, borderTopColor: dh.border, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, ...shadow('lg') },
-  barLabel: { fontSize: 10, lineHeight: 15, color: tw.gray500, ...poppins(600) },
-  barPrice: { fontSize: 18, lineHeight: 28, color: tw.emerald950, ...montserrat(800) },
-  barPer: { fontSize: 10, color: tw.gray400, ...poppins(400) },
-  advance: { fontSize: 10, lineHeight: 15, color: tw.emerald800, ...poppins(600) },
+  hero: { aspectRatio: 4 / 3, maxHeight: 300, backgroundColor: color.primaryDeep },
+  heroBody: { position: 'absolute', bottom: space.lg, left: space.lg, right: space.lg, gap: space.xs + 2 },
+  heroTitle: { ...type.heading, fontSize: 20, lineHeight: 28, color: color.textInverse },
+  heroDest: { ...type.small, color: 'rgba(255,255,255,0.85)' },
+  days: { ...type.caption, color: color.textMuted },
+  dayHead: { minHeight: 64, padding: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+  dayBadge: { width: 40, height: 40, borderRadius: 20, backgroundColor: color.primaryDeep, borderWidth: 1.5, borderColor: color.gold, alignItems: 'center', justifyContent: 'center' },
+  dayBadgeText: { ...type.label, color: color.goldOnDark },
+  dayLabel: { ...type.overline, color: color.textMuted },
+  dayTitle: { ...type.bodyStrong, color: color.text, marginTop: 2 },
+  dayBody: { paddingHorizontal: space.lg, paddingBottom: space.lg, paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, backgroundColor: color.surfaceMuted, gap: space.sm },
+  activity: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm + 2 },
+  activityDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.primary, marginTop: 8 },
+  activityText: { flex: 1, ...type.body, color: color.textSecondary },
+  include: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm + 2, padding: space.md, backgroundColor: color.surfaceMuted, borderRadius: radii.md },
+  includeText: { flex: 1, ...type.small, color: color.text },
+  destChip: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, backgroundColor: color.primarySoft, paddingHorizontal: space.md, height: 36, borderRadius: radii.pill },
+  destChipText: { ...type.label, color: color.primary },
+  gallery: { flexDirection: 'row', flexWrap: 'wrap', margin: -space.xs },
+  galleryCell: { width: '50%', padding: space.xs },
+  galleryImg: { aspectRatio: 4 / 3, borderRadius: radii.lg, backgroundColor: color.surfaceMuted },
+  reviewSummary: { ...type.label, color: color.text },
+  review: { gap: space.xs, paddingBottom: space.md },
+  reviewDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border, marginBottom: space.md },
+  reviewAuthor: { ...type.bodyStrong, color: color.text, flexShrink: 1 },
+  reviewDate: { ...type.caption, color: color.textMuted },
+  reviewComment: { ...type.small, color: color.textSecondary },
+  reply: { ...type.small, color: color.text, backgroundColor: color.surfaceMuted, borderRadius: radii.sm, padding: space.sm + 2, marginTop: space.xs },
+  bar: { backgroundColor: color.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, ...elevation.sheet },
+  barLabel: { ...type.caption, color: color.textMuted },
+  barPrice: { ...type.price, color: color.text },
+  barPer: { ...type.caption, color: color.textMuted },
+  advance: { ...type.caption, color: color.primary },
 });

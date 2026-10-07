@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Image from '../../components/Img';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +11,8 @@ import { StripeBorder } from '../../components/dh/Header';
 import { useBooking } from '../../context/BookingContext';
 import { completeUserSignup, requestUserOtp, verifyUserOtp } from '../../api/auth';
 import { webAsset } from '../../lib/webAsset';
-import { cinzel, dh, montserrat, playfair, poppins, shadow, tw } from '../../theme';
+import { Button } from '../../components/ds';
+import { color, elevation, playfair, radii, space, type } from '../../theme';
 
 // Web: DimaHasao/pages/LoginScreen.jsx (/app/login). 'phone' -> 'otp' -> 'name'.
 
@@ -158,8 +159,8 @@ export default function LoginScreen() {
     return handleCompleteRegistration();
   };
 
-  const title = step === 'name' ? 'CREATE YOUR ACCOUNT' : step === 'otp' && needsName ? 'VERIFY YOUR NUMBER' : 'LOGIN TO YOUR ACCOUNT';
-  const cta = step === 'phone' ? 'GET OTP' : step === 'otp' ? 'VERIFY & EXPLORE' : 'CREATE ACCOUNT & EXPLORE';
+  const title = step === 'name' ? 'Create your account' : step === 'otp' && needsName ? 'Verify your number' : 'Login to your account';
+  const cta = step === 'phone' ? 'Get OTP' : step === 'otp' ? 'Verify & explore' : 'Create account & explore';
 
   return (
     <View style={styles.root}>
@@ -169,8 +170,10 @@ export default function LoginScreen() {
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingTop: insets.top + 10, paddingBottom: insets.bottom + 10 }]}
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + space.sm, paddingBottom: insets.bottom + space.md }]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
           bounces={false}
         >
           <View style={styles.top}>
@@ -178,86 +181,97 @@ export default function LoginScreen() {
             <Text style={styles.juthai}>JUTHAI</Text>
             <View style={styles.welcomeRow}>
               <View style={styles.welcomeLine} />
-              <Text style={styles.welcome}>• WELCOME TO •</Text>
+              <Text style={styles.welcome}>Welcome to</Text>
               <View style={styles.welcomeLine} />
             </View>
-            <Text style={styles.district}>DIMA HASAO</Text>
+            <Text style={styles.district} accessibilityRole="header">
+              DIMA HASAO
+            </Text>
           </View>
 
           <View style={styles.spacer} />
 
           <View style={styles.card}>
-            <StripeBorder height={6} band={5} colors={['#04190C', '#CAA83E', '#0D3D20', '#8C1C13']} style={styles.weave} />
+            <StripeBorder height={6} band={5} colors={WEAVE} style={styles.weave} />
 
             <View style={styles.cardTitleRow}>
-              <Fa name="fa-solid fa-leaf" size={11} color={dh.gold} style={{ transform: [{ scaleX: -1 }] }} />
-              <Text style={styles.cardTitle}>{title}</Text>
-              <Fa name="fa-solid fa-leaf" size={13} color={dh.gold} />
+              <Fa name="fa-solid fa-leaf" size={12} color={color.gold} style={{ transform: [{ scaleX: -1 }] }} />
+              <Text style={styles.cardTitle} accessibilityRole="header" numberOfLines={1}>
+                {title}
+              </Text>
+              <Fa name="fa-solid fa-leaf" size={12} color={color.gold} />
             </View>
 
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: space.md }}>
               {step === 'name' ? (
-                <View>
-                  <Text style={styles.verified}>Number verified — tell us your name to finish signing up.</Text>
-                  <View>
-                    <View style={styles.fieldIcon}>
-                      <Fa name="fa-solid fa-user" size={13} color={dh.gold} />
-                    </View>
+                <View style={{ gap: space.sm }}>
+                  <View style={styles.verifiedRow}>
+                    <Fa name="fa-solid fa-circle-check" size={14} color={VERIFIED} />
+                    <Text style={styles.verified}>Number verified. Tell us your name to finish signing up.</Text>
+                  </View>
+                  <Text style={styles.fieldLabel}>Full name</Text>
+                  <View style={[styles.inputWrap, focused === 'name' && styles.inputFocused]}>
+                    <Fa name="fa-solid fa-user" size={16} color={color.gold} />
                     <TextInput
                       value={fullName}
                       onChangeText={setFullName}
                       autoFocus
                       placeholder="Full Name"
-                      placeholderTextColor="#5D7264"
+                      placeholderTextColor={PLACEHOLDER}
                       autoCapitalize="words"
+                      autoComplete="name"
+                      textContentType="name"
                       returnKeyType="done"
                       onSubmitEditing={handleSubmit}
                       onFocus={() => setFocused('name')}
                       onBlur={() => setFocused(null)}
-                      style={[styles.input, focused === 'name' && styles.inputFocused]}
+                      style={styles.input}
                       accessibilityLabel="Full Name"
                     />
                   </View>
                 </View>
               ) : (
-                <View>
-                  <View style={styles.fieldIcon}>
-                    <Fa name="fa-solid fa-phone" size={13} color={dh.gold} />
+                <View style={{ gap: space.sm }}>
+                  <Text style={styles.fieldLabel}>Mobile number</Text>
+                  <View style={[styles.inputWrap, focused === 'phone' && styles.inputFocused, step === 'otp' && styles.inputLocked]}>
+                    <Fa name="fa-solid fa-phone" size={16} color={color.gold} />
+                    <Text style={styles.prefix}>+91</Text>
+                    <TextInput
+                      value={phone}
+                      editable={step !== 'otp'}
+                      onChangeText={(v) => setPhone(v.replace(/\D/g, '').slice(0, 10))}
+                      keyboardType="number-pad"
+                      autoComplete="tel"
+                      textContentType="telephoneNumber"
+                      maxLength={10}
+                      placeholder="Phone Number"
+                      placeholderTextColor={PLACEHOLDER}
+                      returnKeyType="done"
+                      onSubmitEditing={handleSubmit}
+                      onFocus={() => setFocused('phone')}
+                      onBlur={() => setFocused(null)}
+                      style={styles.input}
+                      accessibilityLabel="Phone Number"
+                    />
+                    {step === 'otp' ? (
+                      <Press
+                        onPress={() => {
+                          setStep('phone');
+                          setOtp(['', '', '', '']);
+                        }}
+                        accessibilityLabel="Edit phone number"
+                        style={styles.editBtn}
+                      >
+                        <Fa name="fa-solid fa-pen" size={14} color={color.gold} />
+                      </Press>
+                    ) : null}
                   </View>
-                  <TextInput
-                    value={phone}
-                    editable={step !== 'otp'}
-                    onChangeText={(v) => setPhone(v.replace(/\D/g, '').slice(0, 10))}
-                    keyboardType="number-pad"
-                    autoComplete="tel"
-                    maxLength={10}
-                    placeholder="Phone Number"
-                    placeholderTextColor="#5D7264"
-                    returnKeyType="done"
-                    onSubmitEditing={handleSubmit}
-                    onFocus={() => setFocused('phone')}
-                    onBlur={() => setFocused(null)}
-                    style={[styles.input, focused === 'phone' && styles.inputFocused, step === 'otp' && { opacity: 0.75 }]}
-                    accessibilityLabel="Phone Number"
-                  />
-                  {step === 'otp' ? (
-                    <Press
-                      onPress={() => {
-                        setStep('phone');
-                        setOtp(['', '', '', '']);
-                      }}
-                      accessibilityLabel="Edit phone number"
-                      style={styles.editBtn}
-                      hitSlop={8}
-                    >
-                      <Fa name="fa-solid fa-pen" size={11} color={dh.gold} />
-                    </Press>
-                  ) : null}
                 </View>
               )}
 
               {step === 'otp' ? (
-                <View style={{ gap: 8 }}>
+                <View style={{ gap: space.sm }}>
+                  <Text style={styles.fieldLabel}>Enter the 4-digit OTP</Text>
                   <View style={styles.otpRow}>
                     {[0, 1, 2, 3].map((index) => (
                       <TextInput
@@ -282,29 +296,29 @@ export default function LoginScreen() {
                     ))}
                   </View>
                   <View style={styles.otpFoot}>
-                    <Text style={styles.sentTo}>Sent to your phone</Text>
-                    <Text onPress={handleSendOtp} style={styles.resend} accessibilityRole="button">
-                      Resend OTP
-                    </Text>
+                    <Text style={styles.sentTo}>Sent to +91 {phone}</Text>
+                    <Press onPress={handleSendOtp} scale={0.96} accessibilityLabel="Resend OTP" style={styles.resendBtn}>
+                      <Text style={styles.resend}>Resend OTP</Text>
+                    </Press>
                   </View>
                 </View>
               ) : null}
 
-              <Press onPress={handleSubmit} disabled={isLoading} scale={0.97} style={styles.cta} accessibilityLabel={cta}>
-                {isLoading ? <ActivityIndicator size="small" color="#000" /> : <Text style={styles.ctaText}>{cta}</Text>}
-              </Press>
+              <Button title={cta} onPress={handleSubmit} loading={isLoading} variant="gold" size="lg" accessibilityLabel={cta} />
             </View>
 
-            <View style={{ marginTop: 14 }}>
+            <View style={{ marginTop: space.lg }}>
               <View style={styles.dividerRow}>
                 <LinearGradient colors={['transparent', 'rgba(202,168,62,0.7)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.dividerLine} />
-                <Fa name="fa-solid fa-leaf" size={9} color={dh.gold} style={{ transform: [{ scaleX: -1 }] }} />
+                <Fa name="fa-solid fa-leaf" size={12} color={color.gold} style={{ transform: [{ scaleX: -1 }] }} />
                 <LinearGradient colors={['rgba(202,168,62,0.7)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.dividerLine} />
               </View>
               <AuthLegalLinks
                 module="platform"
                 variant="icons"
-                containerStyle={{ marginTop: 10 }}
+                iconSize={16}
+                iconColor={color.gold}
+                containerStyle={{ marginTop: space.sm }}
                 iconWrapStyle={styles.legalIcon}
                 labelStyle={styles.legalLabel}
               />
@@ -316,47 +330,57 @@ export default function LoginScreen() {
   );
 }
 
+// The login panel's own heritage palette (the dark field and weave are part of the gate art).
+const FIELD = '#02130A';
+const WEAVE = ['#04190C', '#CAA83E', '#0D3D20', '#8C1C13'];
+const PLACEHOLDER = 'rgba(254,243,198,0.55)';
+const VERIFIED = '#86EFAC';
+const INK = '#062C14';
+
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: dh.greenDeep },
+  root: { flex: 1, backgroundColor: color.primaryDeep },
   flex: { flex: 1 },
   sky: { position: 'absolute', top: 0, left: 0, right: 0, height: 176 },
   vignette: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 192 },
-  content: { flexGrow: 1, paddingHorizontal: 10, justifyContent: 'space-between' },
-  top: { alignItems: 'center', paddingTop: 4, paddingHorizontal: 8 },
-  logo: { width: 96, height: 96, marginBottom: 4 },
-  juthai: { fontSize: 24, lineHeight: 24, letterSpacing: 1.2, color: '#062C14', marginTop: 2, ...playfair(700), textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
-  welcomeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginVertical: 2 },
-  welcomeLine: { height: 1.5, width: 24, backgroundColor: '#062C14' },
-  welcome: { fontSize: 8.5, lineHeight: 13, letterSpacing: 2.1, color: '#062C14', ...poppins(900) },
-  district: { fontSize: 18, lineHeight: 22.5, letterSpacing: 0.45, color: '#062C14', ...montserrat(900), textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
-  spacer: { flex: 1, minHeight: 40 },
+  content: { flexGrow: 1, paddingHorizontal: space.md, justifyContent: 'space-between' },
+  top: { alignItems: 'center', paddingTop: space.xs, paddingHorizontal: space.sm },
+  logo: { width: 96, height: 96, marginBottom: space.xs },
+  juthai: { fontSize: 26, lineHeight: 32, letterSpacing: 1.2, color: INK, marginTop: 2, ...playfair(700), textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
+  welcomeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, marginVertical: 2 },
+  welcomeLine: { height: 1.5, width: 24, backgroundColor: INK },
+  welcome: { ...type.overline, letterSpacing: 2, color: INK, textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
+  district: { ...type.heroSerif, color: INK, textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
+  spacer: { flex: 1, minHeight: space.xxl },
   card: {
-    width: '100%', maxWidth: 390, alignSelf: 'center', marginBottom: 4, backgroundColor: 'rgba(5,31,17,0.96)', borderWidth: 2, borderColor: dh.gold,
-    borderRadius: 22, padding: 16, overflow: 'hidden', ...shadow('0 15px 40px rgba(0,0,0,0.85)'),
+    width: '100%', maxWidth: 420, alignSelf: 'center', backgroundColor: 'rgba(5,31,17,0.96)', borderWidth: 2, borderColor: color.gold,
+    borderRadius: radii.xl, padding: space.xl, paddingTop: space.xl + space.xs, overflow: 'hidden', ...elevation.float,
   },
   weave: { position: 'absolute', top: 0, left: 0, right: 0 },
-  cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12, marginTop: 4 },
-  cardTitle: { fontSize: 11, lineHeight: 16.5, letterSpacing: 0.55, color: dh.gold, ...cinzel() },
-  verified: { fontSize: 10, lineHeight: 15, color: 'rgba(164,244,207,0.9)', marginBottom: 6, textAlign: 'center', ...poppins(400) },
-  fieldIcon: { position: 'absolute', left: 14, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 },
-  input: {
-    height: 44, paddingLeft: 40, paddingRight: 12, paddingVertical: 0, borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', borderRadius: 12,
-    backgroundColor: dh.field, color: tw.gray100, fontSize: 14, ...poppins(400),
+  cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, marginBottom: space.lg },
+  cardTitle: { ...type.sectionSerif, color: color.gold, flexShrink: 1 },
+  fieldLabel: { ...type.label, color: color.textOnDarkMuted },
+  verifiedRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, marginBottom: space.xs },
+  verified: { flex: 1, ...type.small, color: VERIFIED },
+  inputWrap: {
+    height: 52, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.lg, paddingRight: space.xs,
+    borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', borderRadius: radii.md, backgroundColor: FIELD,
   },
-  inputFocused: { borderColor: dh.gold, borderWidth: 2 },
-  editBtn: { position: 'absolute', right: 0, top: 0, bottom: 0, paddingRight: 12, justifyContent: 'center' },
-  otpRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  inputLocked: { opacity: 0.8 },
+  inputFocused: { borderColor: color.gold, borderWidth: 2 },
+  prefix: { ...type.bodyStrong, fontSize: 16, color: color.textOnDarkMuted },
+  input: { flex: 1, minWidth: 0, height: '100%', paddingVertical: 0, paddingHorizontal: 0, ...type.body, fontSize: 16, color: color.textInverse },
+  editBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
+  otpRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md },
   otpBox: {
-    width: 48, height: 48, borderRadius: 12, borderWidth: 1, borderColor: dh.gold, backgroundColor: dh.field, textAlign: 'center',
-    fontSize: 18, color: tw.amber300, padding: 0, fontFamily: Platform.select({ android: 'monospace', default: 'Courier' }), fontWeight: '900',
+    width: 56, height: 56, borderRadius: radii.md, borderWidth: 1, borderColor: 'rgba(202,168,62,0.7)', backgroundColor: FIELD, textAlign: 'center',
+    padding: 0, ...type.priceLg, fontSize: 24, color: color.goldOnDark,
   },
-  otpFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4, paddingTop: 2 },
-  sentTo: { fontSize: 11, lineHeight: 16.5, color: 'rgba(254,230,133,0.8)', ...poppins(400) },
-  resend: { fontSize: 11, lineHeight: 16.5, color: dh.gold, ...poppins(600) },
-  cta: { height: 48, borderRadius: 12, backgroundColor: dh.goldBright, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, ...shadow('button') },
-  ctaText: { fontSize: 14, lineHeight: 20, letterSpacing: 2.24, color: dh.greenDeep, ...poppins(900) },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: 0.6 },
+  otpFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
+  sentTo: { ...type.small, color: color.textOnDarkMuted, flexShrink: 1 },
+  resendBtn: { minHeight: 44, justifyContent: 'center', paddingHorizontal: space.sm, marginRight: -space.sm },
+  resend: { ...type.label, color: color.goldOnDark, textDecorationLine: 'underline' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, opacity: 0.7 },
   dividerLine: { height: 1, width: 72 },
-  legalIcon: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', backgroundColor: dh.field, alignItems: 'center', justifyContent: 'center' },
-  legalLabel: { fontSize: 9, lineHeight: 13.5, letterSpacing: 0.9, textTransform: 'uppercase', color: 'rgba(164,244,207,0.7)', ...poppins(600) },
+  legalIcon: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', backgroundColor: FIELD, alignItems: 'center', justifyContent: 'center' },
+  legalLabel: { ...type.caption, color: color.textOnDarkMuted, marginTop: space.xs },
 });

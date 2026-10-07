@@ -4,13 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowDownUp, IndianRupee, MapPin, SlidersHorizontal, Star, Timer, UtensilsCrossed } from 'lucide-react-native';
 import { BottomSheet } from '../../../components/kit';
 import { Press } from '../../../components/ui';
-import { poppins, tw } from '../../../theme';
-import { F } from '../shell';
+import { Button, Chip } from '../../../components/ds';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 /*
  * The "Filters and sorting" modal and the filter chip row shared by the
- * Dining tab and the two "explore" pages. The Dining tab draws the selected
- * state in the brand green on cream; the explore pages use green-500/50/600.
+ * Dining tab and the two "explore" pages. Both draw the selected state in
+ * the brand green (design-system tokens); `variant` / `blackText` / `tabAccent`
+ * are still accepted so callers stay unchanged.
  */
 export const DINING_QUICK_FILTERS = [
   { id: 'delivery-under-30', label: 'Under 30 mins' },
@@ -37,38 +38,18 @@ const SORTS = [
   { id: 'rating-low', label: 'Rating: Low to High' },
 ];
 
-const PALETTES = {
-  dining: { accent: F.green, border: F.green, bg: F.cream, priceBg: 'rgba(10,77,43,0.1)', tabText: F.green, apply: F.green },
-  explore: { accent: tw.green600, border: tw.green500, bg: tw.green50, priceBg: tw.green50, tabText: tw.green600, apply: tw.green600 },
-};
+const BRAND = { accent: color.primary, border: color.primary, bg: color.primarySoft, priceBg: color.primarySoft, tabText: color.primary, apply: color.primary };
+const PALETTES = { dining: BRAND, explore: BRAND };
 
 /** Horizontal chip row: the Filters button, then one toggle per quick filter. */
-export function DiningFilterChips({ activeFilters, toggleFilter, onOpenFilters, blackText = false }) {
+export function DiningFilterChips({ activeFilters, toggleFilter, onOpenFilters }) {
   return (
-    <View style={{ paddingVertical: 4, marginBottom: 16 }}>
+    <View style={{ marginBottom: space.lg }}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={styles.chipRow}>
-        <Press scale={0.95} onPress={onOpenFilters} accessibilityLabel="Filters and sorting" style={styles.chip}>
-          <SlidersHorizontal size={12} color={tw.gray700} />
-          <Text style={[styles.chipText, { color: '#000' }]}>Filters</Text>
-        </Press>
-        {DINING_QUICK_FILTERS.map((filter) => {
-          const Icon = filter.icon;
-          const active = activeFilters.has(filter.id);
-          return (
-            <Press
-              key={filter.id}
-              scale={0.95}
-              onPress={() => toggleFilter(filter.id)}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: active }}
-              accessibilityLabel={filter.label}
-              style={[styles.chip, active ? { backgroundColor: F.green, borderColor: F.green } : null]}
-            >
-              {Icon ? <Icon size={12} color={active ? '#fff' : tw.gray600} fill={active ? '#fff' : 'none'} /> : null}
-              <Text style={[styles.chipText, { color: active && !blackText ? '#fff' : '#000' }]}>{filter.label}</Text>
-            </Press>
-          );
-        })}
+        <Chip label="Filters" icon={SlidersHorizontal} onPress={onOpenFilters} />
+        {DINING_QUICK_FILTERS.map((filter) => (
+          <Chip key={filter.id} label={filter.label} icon={filter.icon} selected={activeFilters.has(filter.id)} onPress={() => toggleFilter(filter.id)} />
+        ))}
       </ScrollView>
     </View>
   );
@@ -99,7 +80,7 @@ function TileOption({ label, active, onPress, Icon, filled, palette }) {
       accessibilityLabel={label}
       style={[styles.tile, active ? { borderColor: palette.border, backgroundColor: palette.bg } : null]}
     >
-      <Icon size={24} color={active ? palette.accent : filled ? tw.gray400 : tw.gray600} fill={active && filled ? palette.accent : 'none'} strokeWidth={filled ? 2 : 1.5} />
+      <Icon size={24} color={active ? palette.accent : color.textMuted} fill={active && filled ? palette.accent : 'none'} strokeWidth={2} />
       <Text style={[styles.optText, active ? { color: palette.accent } : null]}>{label}</Text>
     </Press>
   );
@@ -132,10 +113,10 @@ export function DiningFilterModal({
     : ['Continental', 'Italian', 'Asian', 'Indian', 'Chinese', 'American', 'Seafood', 'Cafe'];
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} backdrop="rgba(0,0,0,0.5)" spring={{ stiffness: 400, damping: 30 }} panelStyle={[styles.panel, { maxHeight: height * 0.85 }]}>
+    <BottomSheet visible={visible} onClose={onClose} backdrop={color.overlay} spring={{ stiffness: 400, damping: 30 }} panelStyle={[styles.panel, { maxHeight: height * 0.85 }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Filters and sorting</Text>
-        <Press scale={0.96} onPress={onClear} accessibilityLabel="Clear all filters" hitSlop={8}>
+        <Press scale={0.96} onPress={onClear} accessibilityLabel="Clear all filters" style={styles.clearBtn}>
           <Text style={styles.clear}>Clear all</Text>
         </Press>
       </View>
@@ -153,21 +134,21 @@ export function DiningFilterModal({
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={t.label}
-                style={[styles.tab, active ? { backgroundColor: '#fff' } : null]}
+                style={[styles.tab, active ? { backgroundColor: color.surface } : null]}
               >
                 {active ? <View style={styles.tabBar} /> : null}
-                <Icon size={20} color={active ? tabText : tw.gray500} strokeWidth={1.5} />
+                <Icon size={20} color={active ? tabText : color.textMuted} strokeWidth={2} />
                 <Text style={[styles.tabText, active ? { color: tabText } : null]}>{t.label}</Text>
               </Press>
             );
           })}
         </View>
 
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: space.lg }} showsVerticalScrollIndicator={false}>
           {tab === 'sort' ? (
             <View style={styles.section}>
               <Text style={styles.h3}>Sort by</Text>
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: space.md }}>
                 {SORTS.map((o) => (
                   <RowOption key={o.id || 'relevance'} palette={palette} label={o.label} active={sortBy === o.id} onPress={() => setSortBy(o.id)} />
                 ))}
@@ -177,7 +158,7 @@ export function DiningFilterModal({
 
           {tab === 'time' ? (
             <View style={styles.section}>
-              <Text style={styles.h3}>Estimated Time</Text>
+              <Text style={styles.h3}>Estimated time</Text>
               <View style={styles.grid}>
                 <TileOption palette={palette} Icon={Timer} label="Under 30 mins" active={has('delivery-under-30')} onPress={() => toggleFilter('delivery-under-30')} />
                 <TileOption palette={palette} Icon={Timer} label="Under 45 mins" active={has('delivery-under-45')} onPress={() => toggleFilter('delivery-under-45')} />
@@ -187,7 +168,7 @@ export function DiningFilterModal({
 
           {tab === 'rating' ? (
             <View style={styles.section}>
-              <Text style={styles.h3}>Restaurant Rating</Text>
+              <Text style={styles.h3}>Restaurant rating</Text>
               <View style={styles.grid}>
                 <TileOption palette={palette} Icon={Star} filled label="Rated 3.5+" active={has('rating-35-plus')} onPress={() => toggleFilter('rating-35-plus')} />
                 <TileOption palette={palette} Icon={Star} filled label="Rated 4.0+" active={has('rating-4-plus')} onPress={() => toggleFilter('rating-4-plus')} />
@@ -208,8 +189,8 @@ export function DiningFilterModal({
 
           {tab === 'price' ? (
             <View style={styles.section}>
-              <Text style={styles.h3}>Dish Price</Text>
-              <View style={{ gap: 12 }}>
+              <Text style={styles.h3}>Dish price</Text>
+              <View style={{ gap: space.md }}>
                 <RowOption palette={{ ...palette, bg: palette.priceBg }} label="Under ₹200" active={has('price-under-200')} onPress={() => toggleFilter('price-under-200')} />
                 <RowOption palette={{ ...palette, bg: palette.priceBg }} label="Under ₹500" active={has('price-under-500')} onPress={() => toggleFilter('price-under-500')} />
               </View>
@@ -242,41 +223,33 @@ export function DiningFilterModal({
         </ScrollView>
       </View>
 
-      <View style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}>
-        <Press scale={0.98} onPress={onClose} accessibilityLabel="Close filters" style={styles.footBtn}>
-          <Text style={styles.closeText}>Close</Text>
-        </Press>
-        <Press scale={0.98} onPress={onClose} accessibilityLabel="Show results" style={[styles.footBtn, { backgroundColor: hasAny ? palette.apply : tw.gray200 }]}>
-          <Text style={[styles.applyText, hasAny ? { color: '#fff' } : null]}>{hasAny ? `Show ${resultCount} results` : 'Show results'}</Text>
-        </Press>
+      <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
+        <Button title="Close" variant="outline" onPress={onClose} accessibilityLabel="Close filters" style={{ flex: 1 }} />
+        <Button title={hasAny ? `Show ${resultCount} results` : 'Show results'} variant={hasAny ? 'primary' : 'secondary'} onPress={onClose} accessibilityLabel="Show results" style={{ flex: 1 }} />
       </View>
     </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  chipRow: { gap: 6, alignItems: 'center', paddingVertical: 4, paddingHorizontal: 12 },
-  chip: { height: 28, paddingHorizontal: 8, borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200 },
-  chipText: { fontSize: 12, lineHeight: 16, ...poppins(700) },
+  chipRow: { gap: space.sm, alignItems: 'center', paddingHorizontal: space.lg },
 
-  panel: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  title: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  clear: { fontSize: 14, lineHeight: 20, color: F.green, ...poppins(500) },
+  panel: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, overflow: 'hidden', ...elevation.sheet },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: space.lg, paddingRight: space.sm, paddingVertical: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  title: { ...type.heading, color: color.text },
+  clearBtn: { minHeight: 44, paddingHorizontal: space.sm, justifyContent: 'center' },
+  clear: { ...type.label, color: color.primary },
   bodyRow: { flexDirection: 'row', flexShrink: 1, minHeight: 0 },
-  tabs: { width: 96, backgroundColor: tw.gray50, borderRightWidth: 1, borderRightColor: tw.gray200 },
-  tab: { alignItems: 'center', gap: 4, paddingVertical: 16, paddingHorizontal: 8 },
-  tabBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: F.green, borderTopRightRadius: 4, borderBottomRightRadius: 4 },
-  tabText: { fontSize: 12, lineHeight: 15, color: tw.gray500, textAlign: 'center', ...poppins(500) },
-  section: { marginBottom: 32 },
-  h3: { fontSize: 18, lineHeight: 28, color: tw.gray900, marginBottom: 16, ...poppins(600) },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  tile: { width: '47%', flexGrow: 1, maxWidth: '48.5%', alignItems: 'center', gap: 8, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200 },
-  cuisine: { width: '47%', flexGrow: 1, maxWidth: '48.5%', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, alignItems: 'center' },
-  rowOpt: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200 },
-  optText: { fontSize: 14, lineHeight: 20, color: tw.gray700, textAlign: 'center', ...poppins(500) },
-  footer: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: tw.gray200, backgroundColor: '#fff' },
-  footBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12 },
-  closeText: { fontSize: 16, lineHeight: 24, color: tw.gray700, ...poppins(600) },
-  applyText: { fontSize: 16, lineHeight: 24, color: tw.gray500, ...poppins(600) },
+  tabs: { width: 96, backgroundColor: color.surfaceMuted, borderRightWidth: 1, borderRightColor: color.border },
+  tab: { alignItems: 'center', gap: space.xs, paddingVertical: space.lg, paddingHorizontal: space.sm, minHeight: 64 },
+  tabBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: color.primary, borderTopRightRadius: 4, borderBottomRightRadius: 4 },
+  tabText: { ...type.caption, color: color.textSecondary, textAlign: 'center' },
+  section: { marginBottom: space.xxxl },
+  h3: { ...type.subheading, color: color.text, marginBottom: space.lg },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  tile: { width: '47%', flexGrow: 1, maxWidth: '48.5%', alignItems: 'center', gap: space.sm, padding: space.lg, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  cuisine: { width: '47%', flexGrow: 1, maxWidth: '48.5%', minHeight: 48, paddingHorizontal: space.lg, justifyContent: 'center', borderRadius: radii.md, borderWidth: 1, borderColor: color.border, alignItems: 'center', backgroundColor: color.surface },
+  rowOpt: { minHeight: 48, paddingHorizontal: space.lg, justifyContent: 'center', borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  optText: { ...type.body, color: color.text, textAlign: 'center' },
+  footer: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingTop: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, backgroundColor: color.surface },
 });

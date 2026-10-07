@@ -11,7 +11,7 @@ import { useCart } from '../context/CartContext';
 import { getCachedUnder250PriceLimit, getLandingSettingsPublic } from '../utils/foodPageCache';
 import { subscribeBottomNavShow } from '../utils/bottomNavEvents';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /** Food module brand colours (the pages write them as arbitrary values). */
 export const F = { green: '#0A4D2B', greenDark: '#06381E', accent: '#257D3C', cream: '#FAF6ED' };
@@ -166,7 +166,7 @@ export function FoodBottomNavigation({ state, navigation }) {
   if (activeRoute === 'profile') return null;
 
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.navWrap, { bottom: 68 + insets.bottom, transform: [{ translateY: y }] }]}>
+    <Animated.View pointerEvents="box-none" style={[styles.navWrap, { bottom: 80 + insets.bottom, transform: [{ translateY: y }] }]}>
       <View style={[styles.nav, { width: Math.min(width - 48, 448) }]}>
         {TABS.filter((tab) => state.routes.some((r) => r.name === tab.route)).map((tab) => {
           const active = activeRoute === tab.route;
@@ -187,8 +187,8 @@ export function FoodBottomNavigation({ state, navigation }) {
             >
               {active ? <View style={styles.navActiveBg} /> : null}
               <View style={{ alignItems: 'center', gap: 2 }}>
-                <Icon size={active ? 22 : 20} color={active ? F.green : tw.gray600} strokeWidth={active ? 2.5 : 2} />
-                <Text style={[styles.navLabel, active ? { color: F.green } : null]}>{tab.label.toUpperCase()}</Text>
+                <Icon size={20} color={active ? color.primary : color.textSecondary} strokeWidth={active ? 2.5 : 2} />
+                <Text style={[styles.navLabel, active ? styles.navLabelOn : null]} numberOfLines={1}>{tab.label}</Text>
               </View>
             </Press>
           );
@@ -210,20 +210,20 @@ export function OutOfZoneScreen({ location, handleLocationClick }) {
 
   return (
     <ImageBackground source={require('../../../assets/food/outofzone_bg.jpg')} style={styles.ooz} resizeMode="cover">
-      <View style={[styles.oozBar, { paddingTop: 24 + insets.top }]}>
+      <View style={[styles.oozBar, { paddingTop: space.lg + insets.top }]}>
         <Press scale={0.97} onPress={handleLocationClick} style={styles.oozLoc} accessibilityLabel={`Change location, ${title}`}>
-          <MapPin size={20} color="#fff" />
+          <MapPin size={20} color={color.textInverse} />
           <View style={{ flexShrink: 1 }}>
             <View style={styles.row}>
               <Text style={styles.oozTitle} numberOfLines={1}>{title}</Text>
-              <ChevronDown size={14} color="rgba(255,255,255,0.9)" />
+              <ChevronDown size={16} color="rgba(255,255,255,0.9)" />
             </View>
             <Text style={styles.oozCity} numberOfLines={1}>{location?.city || 'Pinpoint location'}</Text>
           </View>
         </Press>
         <View style={[styles.row, { gap: 12 }]}>
           <Press scale={0.9} onPress={() => router.push('/food/user/wallet')} style={styles.oozIcon} accessibilityLabel="Wallet">
-            <Wallet size={22} color="#fff" />
+            <Wallet size={22} color={color.textInverse} />
           </Press>
           <Press scale={0.9} onPress={() => router.navigate('/food/user/profile')} style={styles.oozAvatar} accessibilityLabel="Profile">
             <Text style={styles.oozInitial}>{initials}</Text>
@@ -260,17 +260,17 @@ export function StickyCartCard() {
           <Text style={styles.cartName} numberOfLines={1}>{restaurantName}</Text>
           <View style={[styles.row, { gap: 4 }]}>
             <Text style={styles.cartSub}>View Menu</Text>
-            <ChevronRight size={12} color={tw.gray600} />
+            <ChevronRight size={14} color={color.textSecondary} />
           </View>
         </Press>
         <Press scale={0.96} onPress={() => router.push('/food/user/cart')} style={styles.cartBtn} accessibilityLabel={`View cart, ${cartCount} items`}>
           <Text style={[styles.cartBtnText, { opacity: 0.9 }]}>View Cart</Text>
-          <Text style={[styles.cartBtnText, poppins(700)]}>
+          <Text style={[styles.cartBtnText, { fontFamily: 'Poppins_700Bold' }]}>
             {cartCount} {cartCount === 1 ? 'item' : 'items'}
           </Text>
         </Press>
         <Press scale={0.9} onPress={() => setIsVisible(false)} style={styles.cartClose} accessibilityLabel="Hide cart strip" hitSlop={6}>
-          <X size={16} color={tw.gray500} />
+          <X size={18} color={color.textMuted} />
         </Press>
       </View>
     </View>
@@ -288,7 +288,7 @@ export function LocationLoaderOverlay() {
   return (
     <View style={styles.loader} accessibilityRole="progressbar" accessibilityLabel="Fetching location">
       <Animated.View style={[styles.loaderRing, { transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }]} />
-      <Text style={styles.loaderText}>Fetching Location...</Text>
+      <Text style={styles.loaderText}>Fetching location…</Text>
     </View>
   );
 }
@@ -297,36 +297,37 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   navWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 40 },
   nav: {
-    height: 72, backgroundColor: '#fff', borderRadius: 32, borderWidth: 1, borderColor: tw.gray100, flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-around', paddingHorizontal: 8, overflow: 'hidden', ...shadow('0 15px 40px -10px rgba(0,0,0,0.3)'),
+    height: 60, backgroundColor: color.surface, borderRadius: radii.pill, borderWidth: 1, borderColor: color.border, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-around', paddingHorizontal: space.xs, overflow: 'hidden', ...elevation.float,
   },
-  navItem: { flex: 1, height: 56, alignItems: 'center', justifyContent: 'center' },
-  navActiveBg: { position: 'absolute', top: 4, bottom: 4, left: 4, right: 4, borderRadius: 24, backgroundColor: '#FFF5F5' },
-  navLabel: { fontSize: 10, lineHeight: 10, letterSpacing: -0.25, color: 'rgba(16,24,40,0.7)', ...poppins(900) },
+  navItem: { flex: 1, height: 52, alignItems: 'center', justifyContent: 'center' },
+  navActiveBg: { position: 'absolute', top: 2, bottom: 2, left: 2, right: 2, borderRadius: radii.pill, backgroundColor: color.primarySoft },
+  navLabel: { ...type.caption, color: color.textSecondary },
+  navLabelOn: { color: color.primary, fontFamily: 'Poppins_600SemiBold' },
 
-  ooz: { flex: 1, backgroundColor: '#2A1C3D' },
-  oozBar: { paddingHorizontal: 16, paddingBottom: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  oozLoc: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  oozTitle: { flexShrink: 1, fontSize: 17, lineHeight: 24, color: '#fff', ...poppins(900) },
-  oozCity: { fontSize: 12, lineHeight: 15, color: 'rgba(255,255,255,0.9)', ...poppins(700) },
-  oozIcon: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  oozAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#FFF5E6', borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
-  oozInitial: { fontSize: 22, lineHeight: 26, color: F.green, ...poppins(900) },
-  oozText: { position: 'absolute', left: 0, right: 0, paddingHorizontal: 24, alignItems: 'center' },
-  oozHeading: { fontSize: 28, lineHeight: 33.6, letterSpacing: -0.7, color: '#fff', textAlign: 'center', marginBottom: 16, ...poppins(700) },
-  oozBody: { fontSize: 16, lineHeight: 24, color: 'rgba(255,255,255,0.9)', textAlign: 'center', ...poppins(500) },
-  oozBrand: { position: 'absolute', left: 32, fontSize: 34, lineHeight: 38, letterSpacing: -1.7, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', ...poppins(900) },
+  ooz: { flex: 1, backgroundColor: color.primaryDeep },
+  oozBar: { paddingHorizontal: space.lg, paddingBottom: space.lg, flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  oozLoc: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 44 },
+  oozTitle: { flexShrink: 1, ...type.subheading, color: color.textInverse },
+  oozCity: { ...type.caption, color: 'rgba(255,255,255,0.9)' },
+  oozIcon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  oozAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.goldSoft, borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
+  oozInitial: { ...type.heading, color: color.primary },
+  oozText: { position: 'absolute', left: 0, right: 0, paddingHorizontal: space.xxl, alignItems: 'center' },
+  oozHeading: { ...type.heroSerif, color: color.textInverse, textAlign: 'center', marginBottom: space.lg },
+  oozBody: { ...type.body, fontSize: 16, lineHeight: 24, color: 'rgba(255,255,255,0.9)', textAlign: 'center' },
+  oozBrand: { position: 'absolute', left: space.xxxl, ...type.heroSerif, fontSize: 30, lineHeight: 36, color: 'rgba(255,255,255,0.3)' },
 
-  cartWrap: { position: 'absolute', left: 0, right: 0, paddingHorizontal: 16, zIndex: 30 },
-  cart: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, backgroundColor: '#fff', borderRadius: 24, borderWidth: 1, borderColor: tw.gray200, ...shadow('2xl') },
-  cartImg: { width: 56, height: 56, borderRadius: 8, backgroundColor: tw.gray100 },
-  cartName: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 2, ...poppins(700) },
-  cartSub: { fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
-  cartBtn: { backgroundColor: F.green, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-  cartBtnText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
-  cartClose: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  cartWrap: { position: 'absolute', left: 0, right: 0, paddingHorizontal: space.lg, zIndex: 30 },
+  cart: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  cartImg: { width: 52, height: 52, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
+  cartName: { ...type.subheading, color: color.text },
+  cartSub: { ...type.small, color: color.textSecondary },
+  cartBtn: { backgroundColor: color.primary, paddingHorizontal: space.lg, minHeight: 44, justifyContent: 'center', borderRadius: radii.md, alignItems: 'center' },
+  cartBtnText: { ...type.caption, color: color.onPrimary },
+  cartClose: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 
-  loader: { ...StyleSheet.absoluteFill, zIndex: 1000, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
-  loaderRing: { width: 40, height: 40, borderRadius: 20, borderWidth: 3, borderColor: F.green, borderTopColor: 'transparent' },
-  loaderText: { marginTop: 16, fontSize: 13, lineHeight: 20, letterSpacing: -0.3, color: tw.gray800, ...poppins(700) },
+  loader: { ...StyleSheet.absoluteFill, zIndex: 1000, backgroundColor: 'rgba(253,251,247,0.85)', alignItems: 'center', justifyContent: 'center' },
+  loaderRing: { width: 40, height: 40, borderRadius: 20, borderWidth: 3, borderColor: color.primary, borderTopColor: 'transparent' },
+  loaderText: { marginTop: space.lg, ...type.bodyStrong, color: color.text },
 });

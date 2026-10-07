@@ -3,12 +3,12 @@ import { Animated, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWind
 import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Fa from '../Fa';
-import { Press } from '../ui';
 import { useAuth } from '../../context/AuthContext';
 import { useBooking } from '../../context/BookingContext';
-import { navStateFor } from './AppBottomNav';
+import { NAV_CLEARANCE, navStateFor } from './AppBottomNav';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, IconButton, fa } from '../ds';
+import { color, elevation, radii, space, tone, type } from '../../theme';
 
 /** MobileFrame's toast: the dark pill above the bottom nav (`showToast(msg)`). */
 export function DhToast() {
@@ -29,7 +29,7 @@ export function DhToast() {
   }, [toastMessage, anim]);
 
   if (!shown) return null;
-  // `bottom-16`: sits just above the nav where there is one.
+  // Sits just above the floating nav where there is one.
   const navVisible = navStateFor(pathname, signedIn).visible;
   return (
     <Animated.View
@@ -37,12 +37,12 @@ export function DhToast() {
       accessibilityRole="alert"
       style={[
         styles.toastWrap,
-        { bottom: (navVisible ? 64 : 24) + insets.bottom, opacity: anim },
+        { bottom: (navVisible ? NAV_CLEARANCE : space.xxl) + insets.bottom, opacity: anim },
         { transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }, { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] },
       ]}
     >
       <View style={styles.toast}>
-        <Fa name="fa-solid fa-circle-check" size={14} color={tw.emerald400} />
+        <Fa name="fa-solid fa-circle-check" size={16} color={color.goldOnDark} />
         <Text style={styles.toastText}>{shown}</Text>
       </View>
     </Animated.View>
@@ -56,8 +56,7 @@ const NOTIFICATIONS = [
     desc: 'Annual wildlife and tribal music extravaganza dates released. Umrangso Lake venue confirmed.',
     time: '2 hrs ago',
     icon: 'fa-solid fa-feather-pointed',
-    color: tw.amber500,
-    bg: tw.amber50,
+    tone: 'gold',
   },
   {
     id: 2,
@@ -65,8 +64,7 @@ const NOTIFICATIONS = [
     desc: 'Jatinga watchtower observatory is now open for evening visitors. Best time 5:30 PM.',
     time: '1 day ago',
     icon: 'fa-solid fa-dove',
-    color: tw.emerald600,
-    bg: tw.emerald50,
+    tone: 'primary',
   },
   {
     id: 3,
@@ -74,8 +72,7 @@ const NOTIFICATIONS = [
     desc: 'Thank you for exploring our hills! Enjoy verified taxi rides & registered eco guides.',
     time: '3 days ago',
     icon: 'fa-solid fa-leaf',
-    color: tw.blue500,
-    bg: tw.blue50,
+    tone: 'info',
   },
 ];
 
@@ -111,26 +108,26 @@ export function NotificationsDrawer() {
     <Modal visible transparent animationType="none" onRequestClose={close} statusBarTranslucent navigationBarTranslucent>
       <View style={styles.drawerRoot}>
         <Animated.View style={[StyleSheet.absoluteFill, { opacity: fade }]}>
-          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]} onPress={close} accessibilityLabel="Close notifications" />
+          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: color.overlay }]} onPress={close} accessibilityLabel="Close notifications" />
         </Animated.View>
         <Animated.View style={[styles.drawer, { width: panelWidth, transform: [{ translateX: x }] }]}>
           <View style={{ flex: 1 }}>
-            <View style={[styles.drawerHead, { paddingTop: 16 + insets.top }]}>
+            <View style={[styles.drawerHead, { paddingTop: space.md + insets.top }]}>
               <View style={styles.rowGap}>
-                <Fa name="fa-solid fa-bell" size={14} color={tw.amber400} />
-                <Text style={styles.drawerTitle}>Notifications</Text>
+                <Fa name="fa-solid fa-bell" size={16} color={color.gold} />
+                <Text style={styles.drawerTitle} accessibilityRole="header">
+                  NOTIFICATIONS
+                </Text>
               </View>
-              <Press onPress={close} style={styles.closeBtn} accessibilityLabel="Close">
-                <Fa name="fa-solid fa-xmark" size={14} color="#fff" />
-              </Press>
+              <IconButton icon={fa('fa-solid fa-xmark')} label="Close" variant="inverse" onPress={close} />
             </View>
-            <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+            <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md }}>
               {NOTIFICATIONS.map((n) => (
                 <View key={n.id} style={styles.note}>
-                  <View style={[styles.noteIcon, { backgroundColor: n.bg }]}>
-                    <Fa name={n.icon} size={14} color={n.color} />
+                  <View style={[styles.noteIcon, { backgroundColor: tone[n.tone].bg }]}>
+                    <Fa name={n.icon} size={16} color={tone[n.tone].fg} />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.noteTitle}>{n.title}</Text>
                     <Text style={styles.noteDesc}>{n.desc}</Text>
                     <Text style={styles.noteTime}>{n.time}</Text>
@@ -139,10 +136,8 @@ export function NotificationsDrawer() {
               ))}
             </ScrollView>
           </View>
-          <View style={[styles.drawerFoot, { paddingBottom: 16 + insets.bottom }]}>
-            <Press onPress={close} style={styles.drawerClose}>
-              <Text style={styles.drawerCloseText}>Close</Text>
-            </Press>
+          <View style={[styles.drawerFoot, { paddingBottom: space.lg + insets.bottom }]}>
+            <Button title="Close" variant="secondary" onPress={close} />
           </View>
         </Animated.View>
       </View>
@@ -151,24 +146,21 @@ export function NotificationsDrawer() {
 }
 
 const styles = StyleSheet.create({
-  toastWrap: { position: 'absolute', left: 16, right: 16, alignItems: 'center', zIndex: 999 },
+  toastWrap: { position: 'absolute', left: space.lg, right: space.lg, alignItems: 'center', zIndex: 999 },
   toast: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: 384, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999,
-    backgroundColor: 'rgba(15,23,43,0.95)', borderWidth: 1, borderColor: 'rgba(255,185,0,0.3)', ...shadow('xl'),
+    flexDirection: 'row', alignItems: 'center', gap: space.sm, maxWidth: 400, minHeight: 44, paddingHorizontal: space.lg, paddingVertical: space.sm + 2, borderRadius: radii.pill,
+    backgroundColor: color.primaryDeep, borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', ...elevation.float,
   },
-  toastText: { flexShrink: 1, fontSize: 12, lineHeight: 16, color: tw.amber300, ...poppins(500) },
+  toastText: { flexShrink: 1, ...type.label, color: color.textInverse },
   drawerRoot: { flex: 1, alignItems: 'flex-end' },
-  drawer: { flex: 1, backgroundColor: '#fff', ...shadow('2xl') },
-  drawerHead: { padding: 16, backgroundColor: '#0A3A22', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  rowGap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  drawerTitle: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  note: { flexDirection: 'row', gap: 12, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.gray100, backgroundColor: 'rgba(249,250,251,0.5)' },
-  noteIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
-  noteTitle: { fontSize: 12, lineHeight: 15, color: tw.gray900, ...poppins(700) },
-  noteDesc: { fontSize: 11, lineHeight: 15, color: tw.gray600, marginTop: 4, ...poppins(400) },
-  noteTime: { fontSize: 9, lineHeight: 13.5, color: tw.gray400, marginTop: 6, ...poppins(500) },
-  drawerFoot: { padding: 16, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  drawerClose: { paddingVertical: 8, borderRadius: 12, backgroundColor: '#0A3A22', alignItems: 'center' },
-  drawerCloseText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
+  drawer: { flex: 1, backgroundColor: color.bg, ...elevation.sheet },
+  drawerHead: { paddingLeft: space.lg, paddingRight: space.sm, paddingBottom: space.md, backgroundColor: color.primaryDeep, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  rowGap: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  drawerTitle: { ...type.titleSerif, color: color.goldOnDark },
+  note: { flexDirection: 'row', gap: space.md, padding: space.md, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  noteIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  noteTitle: { ...type.bodyStrong, color: color.text },
+  noteDesc: { ...type.small, color: color.textSecondary, marginTop: 2 },
+  noteTime: { ...type.caption, color: color.textMuted, marginTop: space.xs },
+  drawerFoot: { padding: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, backgroundColor: color.surface },
 });

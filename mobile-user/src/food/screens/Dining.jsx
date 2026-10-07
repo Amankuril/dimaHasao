@@ -3,7 +3,7 @@ import { Animated, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimen
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Search, Wallet, X } from 'lucide-react-native';
+import { Search, UtensilsCrossed, Wallet, X } from 'lucide-react-native';
 import Image from '../../components/Img';
 import Skeleton from '../../components/Skeleton';
 import { Press } from '../../components/ui';
@@ -18,14 +18,20 @@ import { events } from '../../lib/events';
 import { localStore } from '../../lib/storage';
 import { navigateTo } from '../../lib/webRouter';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { EmptyState, IconButton, SectionHeader, StatusBadge } from '../../components/ds';
+import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
+import { color, elevation, radii, space, type } from '../../theme';
 import { DiningFilterChips, DiningFilterModal } from '../components/dining/DiningFilters';
 import { DiningRestaurantCard } from '../components/dining/DiningCards';
-import { F, useFoodNavScroll } from '../components/shell';
+import { useFoodNavScroll } from '../components/shell';
 
 const DINING_CACHE_TTL_MS = 15 * 60 * 1000;
 const BANNER_AUTO_SLIDE_MS = 3500;
 const PROFILE_AVATAR = require('../../../assets/food/profile_avatar.webp');
+/** Height of the floating Delivery / Takeaway / Under 250 / Dining pill above the app nav. */
+const FOOD_PILL_CLEARANCE = 88;
+/** Dark scrim for banner captions (primaryDeep, transparent → 80%). */
+const SCRIM = ['rgba(6,44,22,0)', 'rgba(6,44,22,0.8)'];
 
 const isDiningCacheFresh = (cached) => Boolean(cached?.ts && Date.now() - Number(cached.ts) < DINING_CACHE_TTL_MS);
 
@@ -71,13 +77,9 @@ const goIfSignedIn = (path, state) => {
 
 function CategorySkeleton({ width }) {
   return (
-    <View style={[styles.catSk, { width }]}>
-      <View style={{ padding: 10 }}>
-        <Skeleton style={{ height: 12, width: 64, borderRadius: 6, backgroundColor: '#f0dcca' }} />
-        <Skeleton style={{ height: 16, width: 96, borderRadius: 8, marginTop: 12, backgroundColor: '#ead2bc' }} />
-        <Skeleton style={{ height: 16, width: 80, borderRadius: 8, marginTop: 8, backgroundColor: '#f3e3d4' }} />
-      </View>
-      <View style={styles.catSkBottom} />
+    <View style={[styles.cat, { width }]}>
+      <Skeleton style={{ height: 14, width: '70%', borderRadius: radii.sm, backgroundColor: color.surfaceMuted }} />
+      <Skeleton style={{ flex: 1, marginTop: space.sm, borderRadius: radii.md, backgroundColor: color.surfaceMuted }} />
     </View>
   );
 }
@@ -85,22 +87,14 @@ function CategorySkeleton({ width }) {
 function RestaurantSkeleton() {
   return (
     <View style={styles.rSk}>
-      <Skeleton style={{ height: 176, borderRadius: 0, backgroundColor: '#fcf6fa' }} />
-      <View style={{ padding: 16, gap: 16 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <Skeleton style={{ height: 20, width: 160, borderRadius: 10, backgroundColor: '#ead8c8' }} />
-            <Skeleton style={{ height: 16, width: 96, borderRadius: 8, marginTop: 8, backgroundColor: '#f2e7dd' }} />
-          </View>
-          <Skeleton style={{ height: 32, width: 48, borderRadius: 8, backgroundColor: '#d7efe0' }} />
+      <Skeleton style={{ aspectRatio: 16 / 9, borderRadius: 0, backgroundColor: color.surfaceMuted }} />
+      <View style={{ padding: space.lg, gap: space.md }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: space.md }}>
+          <Skeleton style={{ height: 20, width: 160, borderRadius: radii.sm, backgroundColor: color.surfaceMuted }} />
+          <Skeleton style={{ height: 24, width: 48, borderRadius: radii.pill, backgroundColor: color.goldSoft }} />
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Skeleton style={{ height: 16, width: 16, borderRadius: 8, backgroundColor: '#efe2d7' }} />
-          <Skeleton style={{ height: 16, width: 96, borderRadius: 8, backgroundColor: '#efe2d7' }} />
-          <Skeleton style={{ height: 16, width: 16, borderRadius: 8, backgroundColor: '#f5ece4' }} />
-          <Skeleton style={{ height: 16, width: 80, borderRadius: 8, backgroundColor: '#f5ece4' }} />
-        </View>
-        <Skeleton style={{ height: 16, width: 192, borderRadius: 8, backgroundColor: '#f0e1d3' }} />
+        <Skeleton style={{ height: 14, width: 192, borderRadius: radii.sm, backgroundColor: color.surfaceMuted }} />
+        <Skeleton style={{ height: 24, width: 120, borderRadius: radii.pill, backgroundColor: color.surfaceMuted }} />
       </View>
     </View>
   );
@@ -161,12 +155,22 @@ function HeroBanner({ banners, active, height }) {
             {banners.map((banner, i) => (
               <View key={banner.id} style={{ width: width || 1, height: '100%' }}>
                 <Image source={{ uri: banner.imageUrl }} accessibilityLabel={`Dining Banner ${i + 1}`} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                <View style={styles.heroCaption}>
-                  <View style={{ maxWidth: '75%', paddingHorizontal: 12, paddingVertical: 12 }}>
-                    {banner.promoCode ? <Text style={styles.heroPromo}>{banner.promoCode}</Text> : null}
-                    {banner.tagline ? <Text style={styles.heroTagline}>{banner.tagline}</Text> : null}
-                  </View>
-                </View>
+                {banner.promoCode || banner.tagline ? (
+                  <LinearGradient colors={SCRIM} style={styles.heroCaption}>
+                    <View style={{ maxWidth: '80%' }}>
+                      {banner.promoCode ? (
+                        <Text style={styles.heroPromo} numberOfLines={1}>
+                          {banner.promoCode}
+                        </Text>
+                      ) : null}
+                      {banner.tagline ? (
+                        <Text style={styles.heroTagline} numberOfLines={2}>
+                          {banner.tagline}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </LinearGradient>
+                ) : null}
               </View>
             ))}
           </ScrollView>
@@ -176,9 +180,10 @@ function HeroBanner({ banners, active, height }) {
                 <Press
                   key={`${banner.id}-dot`}
                   scale={1}
-                  hitSlop={6}
+                  hitSlop={{ top: 16, bottom: 16, left: 4, right: 4 }}
                   onPress={() => goTo(i)}
                   accessibilityLabel={`Go to dining banner ${i + 1}`}
+                  accessibilityState={{ selected: index === i }}
                   style={[styles.heroDot, index === i ? styles.heroDotActive : null]}
                 />
               ))}
@@ -186,13 +191,14 @@ function HeroBanner({ banners, active, height }) {
           ) : null}
         </>
       ) : (
-        <LinearGradient colors={['#fff5e8', '#fffdf9', '#ffe3cf']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill}>
-          <View style={styles.heroEmpty}>
-            <Text style={styles.heroEmptyKicker}>DINING</Text>
-            <Text style={styles.heroEmptyTitle}>Fresh dining picks near you</Text>
-            <Text style={styles.heroEmptyBody}>Banner will appear here as soon as a dining hero banner is available.</Text>
+        <View style={styles.heroEmpty}>
+          <View style={styles.heroEmptyIcon}>
+            <UtensilsCrossed size={24} color={color.goldOnDark} />
           </View>
-        </LinearGradient>
+          <Text style={styles.heroEmptyKicker}>Dining</Text>
+          <Text style={styles.heroEmptyTitle}>Fresh dining picks near you</Text>
+          <Text style={styles.heroEmptyBody}>Banner will appear here as soon as a dining hero banner is available.</Text>
+        </View>
       )}
     </View>
   );
@@ -206,14 +212,14 @@ function CategoryTile({ category, width }) {
       accessibilityLabel={category.name}
       style={[styles.cat, { width }]}
     >
-      <Text style={styles.catName}>{category.name}</Text>
+      <Text style={styles.catName} numberOfLines={2}>
+        {category.name}
+      </Text>
       <View style={styles.catImage}>
         {category.imageUrl ? (
           <Image source={{ uri: category.imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
         ) : (
-          <LinearGradient colors={['#fff7ee', '#fff1e1']} style={StyleSheet.absoluteFill}>
-            <View style={styles.catFallback} />
-          </LinearGradient>
+          <UtensilsCrossed size={22} color={color.textDisabled} />
         )}
       </View>
     </Press>
@@ -531,8 +537,8 @@ export default function Dining() {
     }
   };
 
-  const gridWidth = screenWidth - 24;
-  const tileWidth = Math.floor((gridWidth - 20) / 3);
+  const gridWidth = screenWidth - space.lg * 2;
+  const tileWidth = Math.floor((gridWidth - space.md * 2) / 3);
   const avatarUri = !avatarFailed && userProfile?.profileImage ? userProfile.profileImage : null;
   const bannerHeight = Math.round(screenHeight * 0.24);
 
@@ -540,40 +546,34 @@ export default function Dining() {
     <View style={styles.page}>
       <View style={styles.header}>
         <View style={styles.headRow}>
-          <View style={{ flexShrink: 1 }}>
-            <Text style={styles.kicker}>TABLE BOOKING</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.kicker}>Table booking</Text>
             <Text style={styles.title} accessibilityRole="header">
               Dining
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Press
-              scale={0.95}
-              onPress={() => setDiningSearchOpen(true)}
-              accessibilityLabel="Search dining restaurants"
-              style={[styles.searchBtn, diningSearchOpen ? { backgroundColor: '#fff', borderWidth: 0 } : { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }]}
-            >
-              <Search size={20} color={diningSearchOpen ? F.green : '#fff'} strokeWidth={2.5} />
-            </Press>
-            <Press scale={0.9} onPress={() => goIfSignedIn('/food/user/wallet', { from: '/food/user' })} accessibilityLabel="Wallet" style={styles.walletBtn}>
-              <Wallet size={18} color="#fff" strokeWidth={2} />
-            </Press>
-            <Press scale={0.95} onPress={() => goIfSignedIn('/food/user/profile', { from: '/food/user/dining' })} accessibilityLabel="Profile" style={styles.avatar}>
-              <Image source={avatarUri ? { uri: avatarUri } : PROFILE_AVATAR} onError={() => setAvatarFailed(true)} style={{ width: '100%', height: '100%' }} />
-            </Press>
-          </View>
+          <IconButton
+            icon={Search}
+            label="Search dining restaurants"
+            variant={diningSearchOpen ? 'solid' : 'primary'}
+            onPress={() => setDiningSearchOpen(true)}
+          />
+          <IconButton icon={Wallet} label="Wallet" variant="primary" onPress={() => goIfSignedIn('/food/user/wallet', { from: '/food/user' })} />
+          <Press scale={0.95} onPress={() => goIfSignedIn('/food/user/profile', { from: '/food/user/dining' })} accessibilityLabel="Profile" style={styles.avatar}>
+            <Image source={avatarUri ? { uri: avatarUri } : PROFILE_AVATAR} onError={() => setAvatarFailed(true)} style={{ width: '100%', height: '100%' }} />
+          </Press>
         </View>
 
-        <Animated.View style={{ overflow: 'hidden', opacity: searchHeight, height: searchHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 56] }) }}>
+        <Animated.View style={{ overflow: 'hidden', opacity: searchHeight, height: searchHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 60] }) }}>
           <View style={styles.searchBox}>
-            <Search size={16} color={F.green} strokeWidth={2.5} style={{ marginLeft: 8 }} />
+            <Search size={18} color={color.textMuted} strokeWidth={2.25} />
             {diningSearchOpen ? (
               <TextInput
                 autoFocus
                 value={heroSearch}
                 onChangeText={setHeroSearch}
                 placeholder="Search dining restaurants..."
-                placeholderTextColor={tw.gray400}
+                placeholderTextColor={color.textMuted}
                 returnKeyType="search"
                 autoCorrect={false}
                 accessibilityLabel="Search dining restaurants"
@@ -582,14 +582,8 @@ export default function Dining() {
             ) : (
               <View style={{ flex: 1 }} />
             )}
-            {heroSearch ? (
-              <Press scale={0.9} onPress={() => setHeroSearch('')} accessibilityLabel="Clear search" style={[styles.searchX, { backgroundColor: 'rgba(229,231,235,0.9)' }]}>
-                <X size={14} color={tw.gray500} strokeWidth={2.5} />
-              </Press>
-            ) : null}
-            <Press scale={0.9} onPress={closeSearch} accessibilityLabel="Close search" style={[styles.searchX, { backgroundColor: 'rgba(10,77,43,0.1)' }]}>
-              <X size={16} color={F.green} strokeWidth={2.5} />
-            </Press>
+            {heroSearch ? <IconButton icon={X} iconSize={16} label="Clear search" size={36} onPress={() => setHeroSearch('')} /> : null}
+            <IconButton icon={X} iconSize={18} label="Close search" variant="primary" size={36} onPress={closeSearch} />
           </View>
         </Animated.View>
       </View>
@@ -600,15 +594,15 @@ export default function Dining() {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 176 + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + FOOD_PILL_CLEARANCE + insets.bottom }}
       >
         {!isDiningSearching ? (
-          <View style={{ paddingHorizontal: 12, paddingTop: 20, paddingBottom: 12 }}>
-            {showPageSkeleton ? <Skeleton style={{ height: bannerHeight, borderRadius: 22, ...shadow('lg') }} /> : <HeroBanner banners={diningHeroBanners} active={isTabActive} height={bannerHeight} />}
+          <View style={{ paddingHorizontal: space.lg, paddingTop: space.lg }}>
+            {showPageSkeleton ? <Skeleton style={{ height: bannerHeight, borderRadius: radii.xl, backgroundColor: color.surfaceMuted }} /> : <HeroBanner banners={diningHeroBanners} active={isTabActive} height={bannerHeight} />}
           </View>
         ) : null}
 
-        <View style={{ paddingHorizontal: 12, paddingTop: isDiningSearching ? 8 : 12, paddingBottom: 16 }}>
+        <View style={{ paddingHorizontal: space.lg, paddingTop: isDiningSearching ? space.lg : space.xxl }}>
           {showPageSkeleton ? (
             <>
               {!isDiningSearching ? (
@@ -618,19 +612,14 @@ export default function Dining() {
                   ))}
                 </View>
               ) : null}
-              <View style={{ marginBottom: 16, marginTop: isDiningSearching ? 0 : 16 }}>
-                {!isDiningSearching ? (
-                  <View style={{ marginBottom: 24, paddingHorizontal: 4, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <Skeleton style={{ height: 32, width: 4, borderRadius: 2, backgroundColor: '#f0dcca' }} />
-                    <Skeleton style={{ height: 28, width: 224, maxWidth: '70%', borderRadius: 14, backgroundColor: '#ead8c8' }} />
-                  </View>
-                ) : null}
-                <View style={{ flexDirection: 'row', gap: 8, paddingVertical: 4, marginBottom: 16, overflow: 'hidden' }}>
+              <View style={{ marginTop: isDiningSearching ? 0 : space.xxl }}>
+                {!isDiningSearching ? <Skeleton style={{ height: 22, width: 224, maxWidth: '70%', borderRadius: radii.sm, marginBottom: space.lg, backgroundColor: color.surfaceMuted }} /> : null}
+                <View style={{ flexDirection: 'row', gap: space.sm, marginBottom: space.lg, overflow: 'hidden' }}>
                   {Array.from({ length: 6 }, (_, i) => (
-                    <Skeleton key={`filter-skeleton-${i}`} style={{ height: 32, width: i === 0 ? 90 : i % 2 === 0 ? 122 : 108, borderRadius: 6, borderWidth: 1, borderColor: '#efe3d7', backgroundColor: '#fff7f1' }} />
+                    <Skeleton key={`filter-skeleton-${i}`} style={{ height: 38, width: i === 0 ? 90 : i % 2 === 0 ? 122 : 108, borderRadius: radii.pill, backgroundColor: color.surfaceMuted }} />
                   ))}
                 </View>
-                <View style={{ gap: 16 }}>
+                <View style={{ gap: space.md }}>
                   {Array.from({ length: 6 }, (_, i) => (
                     <RestaurantSkeleton key={`restaurant-skeleton-${i}`} />
                   ))}
@@ -647,50 +636,31 @@ export default function Dining() {
                 </View>
               ) : null}
 
-              <View style={{ marginBottom: 16, marginTop: isDiningSearching ? 0 : 16 }}>
+              <View style={{ marginTop: isDiningSearching || filteredCategories.length === 0 ? 0 : space.xxl }}>
                 {!showDiningSearchEmpty ? (
-                  <View style={{ marginBottom: 24, paddingHorizontal: 4, gap: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <View style={styles.bar} />
-                      <Text style={styles.sectionTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} accessibilityRole="header">
-                        {isDiningSearching ? 'Search Results' : 'Popular Restaurants Within 10km'}
-                      </Text>
-                    </View>
-                    {!isDiningSearching ? (
-                      <View style={styles.countPill}>
-                        <Text style={styles.countText}>{filteredRestaurants.length} NEARBY PLACES</Text>
-                      </View>
-                    ) : null}
+                  <View style={{ marginBottom: space.md }}>
+                    <SectionHeader title={isDiningSearching ? 'Search results' : 'Popular within 10 km'} style={{ marginBottom: space.sm }} />
+                    {!isDiningSearching ? <StatusBadge label={`${filteredRestaurants.length} nearby ${filteredRestaurants.length === 1 ? 'place' : 'places'}`} tone="primary" /> : null}
                     {isDiningSearching && filteredRestaurants.length > 0 ? (
-                      <View style={styles.countPill}>
-                        <Text style={styles.countText}>
-                          {filteredRestaurants.length} RESULT{filteredRestaurants.length === 1 ? '' : 'S'}
-                        </Text>
-                      </View>
+                      <StatusBadge label={`${filteredRestaurants.length} result${filteredRestaurants.length === 1 ? '' : 's'}`} tone="primary" />
                     ) : null}
                   </View>
                 ) : null}
 
                 {!isDiningSearching ? (
-                  <View style={{ marginHorizontal: -12 }}>
+                  <View style={{ marginHorizontal: -space.lg }}>
                     <DiningFilterChips activeFilters={activeFilters} toggleFilter={toggleFilter} onOpenFilters={() => setIsFilterOpen(true)} />
                   </View>
                 ) : null}
 
                 {showDiningSearchEmpty ? (
-                  <View style={styles.empty}>
-                    <View style={styles.emptyIcon}>
-                      <Search size={28} color={tw.gray300} />
-                    </View>
-                    <Text style={styles.emptyTitle}>No dining restaurants found for &quot;{diningSearchQuery}&quot;</Text>
-                    <Text style={styles.emptyBody}>Search by restaurant name only</Text>
-                  </View>
+                  <EmptyState icon={Search} title={`No dining restaurants found for "${diningSearchQuery}"`} message="Search by restaurant name only" />
                 ) : filteredRestaurants.length === 0 ? (
                   <View style={styles.none}>
-                    <Text style={styles.noneText}>No popular dining restaurants were found within 10 km for the current location.</Text>
+                    <EmptyState icon={UtensilsCrossed} title="No restaurants nearby" message="No popular dining restaurants were found within 10 km for the current location." style={{ paddingVertical: space.xxxl }} />
                   </View>
                 ) : (
-                  <View style={{ gap: 16 }}>
+                  <View style={{ gap: space.md }}>
                     {filteredRestaurants.map((restaurant, index) => {
                       const restaurantSlug = restaurant.slug || encodeURIComponent(restaurant.name);
                       return (
@@ -734,48 +704,33 @@ export default function Dining() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' },
-  header: { backgroundColor: F.greenDark, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, borderBottomWidth: 2, borderBottomColor: 'rgba(255,255,255,0.2)', paddingTop: 12, paddingBottom: 14, paddingHorizontal: 16, zIndex: 10 },
-  headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  kicker: { fontSize: 10, lineHeight: 15, letterSpacing: 2, color: tw.gray200, ...poppins(700) },
-  title: { fontSize: 20, lineHeight: 28, color: '#fff', ...poppins(700) },
-  searchBtn: { padding: 10, borderRadius: 999, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  walletBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  avatar: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#fff', backgroundColor: '#FFF5E6', overflow: 'hidden' },
-  searchBox: { marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: tw.gray50, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, padding: 8, height: 44 },
-  searchInput: { flex: 1, paddingHorizontal: 12, paddingVertical: 0, fontSize: 13, color: tw.gray700, ...poppins(700) },
-  searchX: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  page: { flex: 1, backgroundColor: color.bg },
+  header: { backgroundColor: color.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border, paddingTop: space.sm, paddingBottom: space.sm, paddingHorizontal: space.lg, zIndex: 10 },
+  headRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  kicker: { ...type.overline, color: color.goldText },
+  title: { ...type.heading, color: color.text },
+  avatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: color.gold, backgroundColor: color.goldSoft, overflow: 'hidden' },
+  searchBox: { marginTop: space.sm, flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.surfaceMuted, borderRadius: radii.md, borderWidth: 1, borderColor: color.primary, paddingLeft: space.md, paddingRight: space.xs, height: 48 },
+  searchInput: { flex: 1, minWidth: 0, paddingVertical: 0, ...type.body, color: color.text },
 
-  hero: { width: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#fff', ...shadow('lg') },
-  heroCaption: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16 },
-  heroPromo: { fontSize: 11, lineHeight: 16, letterSpacing: 3.3, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', ...poppins(600) },
-  heroTagline: { marginTop: 8, fontSize: 18, lineHeight: 22, color: '#fff', ...poppins(700) },
-  heroDots: { position: 'absolute', bottom: 16, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.25)' },
+  hero: { width: '100%', borderRadius: radii.xl, overflow: 'hidden', backgroundColor: color.primaryDeep, ...elevation.card },
+  heroCaption: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: space.lg, paddingTop: space.xxxl, paddingBottom: space.xxxl },
+  heroPromo: { ...type.overline, color: color.goldOnDark },
+  heroTagline: { marginTop: space.xs, ...type.heading, color: color.textInverse },
+  heroDots: { position: 'absolute', bottom: space.md, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, paddingVertical: space.xs + 2, borderRadius: radii.pill, backgroundColor: color.overlay },
   heroDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.55)' },
-  heroDotActive: { width: 20, backgroundColor: '#fff' },
-  heroEmpty: { position: 'absolute', left: 24, bottom: 24, maxWidth: '70%' },
-  heroEmptyKicker: { fontSize: 11, lineHeight: 16, letterSpacing: 3.7, color: '#b46f37', ...poppins(600) },
-  heroEmptyTitle: { marginTop: 8, fontSize: 24, lineHeight: 32, color: '#2e1d11', ...poppins(900) },
-  heroEmptyBody: { marginTop: 8, fontSize: 14, lineHeight: 20, color: '#6d5744', ...poppins(500) },
+  heroDotActive: { width: 20, backgroundColor: color.goldOnDark },
+  heroEmpty: { flex: 1, justifyContent: 'flex-end', padding: space.xl, gap: space.xs },
+  heroEmptyIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: space.sm },
+  heroEmptyKicker: { ...type.overline, color: color.goldOnDark },
+  heroEmptyTitle: { ...type.heroSerif, color: color.textInverse },
+  heroEmptyBody: { ...type.small, color: color.textOnDarkMuted, maxWidth: 300 },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  cat: { height: 114, borderRadius: 22, borderWidth: 1, borderColor: '#ece5dc', backgroundColor: '#fdfaf8', padding: 10, overflow: 'hidden' },
-  catName: { fontSize: 12, lineHeight: 15, letterSpacing: -0.3, color: '#2d2722', marginBottom: 4, ...poppins(700) },
-  catImage: { flex: 1, overflow: 'hidden', borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.4)' },
-  catFallback: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: 'rgba(255,255,255,0.3)' },
-  catSk: { height: 114, borderRadius: 22, borderWidth: 1, borderColor: '#efe2d3', backgroundColor: '#fdfafc', overflow: 'hidden', ...shadow('0 1px 2px rgba(60,15,61,0.05)') },
-  catSkBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '64%', borderBottomLeftRadius: 18, borderBottomRightRadius: 18, backgroundColor: '#f8eef5' },
-  rSk: { borderRadius: 16, backgroundColor: '#fff', overflow: 'hidden', borderWidth: 1, borderColor: '#efe2d3', ...shadow('md') },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  cat: { height: 120, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, padding: space.sm + 2, overflow: 'hidden', ...elevation.card },
+  catName: { ...type.label, color: color.text, marginBottom: space.xs },
+  catImage: { flex: 1, overflow: 'hidden', borderRadius: radii.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  rSk: { borderRadius: radii.lg, backgroundColor: color.surface, overflow: 'hidden', borderWidth: 1, borderColor: color.border },
 
-  bar: { height: 32, width: 4, borderRadius: 2, backgroundColor: '#ef4f5f', ...shadow('0 0 10px rgba(239,79,95,0.4)') },
-  sectionTitle: { flex: 1, fontSize: 20, lineHeight: 28, letterSpacing: -0.5, color: tw.gray900, ...poppins(900) },
-  countPill: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red100, borderRadius: 999, ...shadow('sm') },
-  countText: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: '#ef4f5f', ...poppins(900) },
-
-  empty: { alignItems: 'center', paddingVertical: 64, paddingHorizontal: 24 },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  emptyTitle: { fontSize: 16, lineHeight: 24, color: tw.gray800, textAlign: 'center', ...poppins(700) },
-  emptyBody: { fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', marginTop: 6, maxWidth: 320, ...poppins(400) },
-  none: { borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#eadfce', backgroundColor: '#fffaf4', paddingHorizontal: 24, paddingVertical: 48 },
-  noneText: { fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', ...poppins(500) },
+  none: { borderRadius: radii.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: color.borderStrong, backgroundColor: color.surface },
 });
