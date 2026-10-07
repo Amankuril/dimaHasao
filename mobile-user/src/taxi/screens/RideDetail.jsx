@@ -151,7 +151,7 @@ export default function RideDetail() {
         ) : null}
 
         <View style={styles.map}>
-          <Image source={require('../../../assets/taxi/map_image.jpg')} style={styles.mapImg} resizeMode="cover" accessibilityLabel="Map view" />
+          <Image source={require('../../../assets/taxi/map_image.webp')} style={styles.mapImg} resizeMode="cover" accessibilityLabel="Map view" />
         </View>
 
         <Card style={{ gap: space.lg }}>

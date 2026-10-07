@@ -16,10 +16,10 @@ import { DEFAULT_COORDS, DEFAULT_PLACE } from '../constants/districtPlaces'
 import { getTaxiUserRoutePrefix } from '../utils/routePrefix'
 import { window, document, navigator } from '../../lib/webShim'
 
-const carIcon = require('../../../assets/taxi/icons/car.png')
-const bikeIcon = require('../../../assets/taxi/icons/bike.png')
-const autoIcon = require('../../../assets/taxi/icons/auto.png')
-const deliveryIcon = require('../../../assets/taxi/icons/Delivery.png')
+const carIcon = require('../../../assets/taxi/icons/car.webp')
+const bikeIcon = require('../../../assets/taxi/icons/bike.webp')
+const autoIcon = require('../../../assets/taxi/icons/auto.webp')
+const deliveryIcon = require('../../../assets/taxi/icons/Delivery.webp')
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 
 const DEFAULT_CENTER = { lat: 22.7196, lng: 75.8577 };

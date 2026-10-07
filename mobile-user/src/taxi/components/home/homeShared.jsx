@@ -4,18 +4,18 @@ import { BACKEND_ORIGIN } from '../../api/runtimeConfig';
 
 /* Shared constants, helpers and image components of the taxi Home (web pages/Home.jsx). */
 
-export const taxiFallback = require('../../../../assets/taxi/user-app/taxi.png');
-export const bikeFallback = require('../../../../assets/taxi/user-app/bike.png');
-export const deliveryFallback = require('../../../../assets/taxi/user-app/delivery.png');
-export const parcelFallback = require('../../../../assets/taxi/user-app/parcel.png');
-export const truckFallback = require('../../../../assets/taxi/user-app/truck.png');
-export const busFallback = require('../../../../assets/taxi/user-app/fallback-car.png'); // bus.png is damaged in the web repo
-export const fallbackCar = require('../../../../assets/taxi/user-app/fallback-car.png');
-export const yellowTaxiImg = require('../../../../assets/taxi/user-app/yellow-taxi.jpg');
-export const seamlessHighwayBg = require('../../../../assets/taxi/user-app/yellow-taxi.jpg'); // seamless_highway_bg.png is damaged in the web repo
-export const airplaneIcon = require('../../../../assets/taxi/3d images/AutoCab/airoplan.png');
-export const railwayIcon = require('../../../../assets/taxi/3d images/AutoCab/one way.png');
-export const busStationIcon = require('../../../../assets/taxi/3d images/AutoCab/bus.png');
+export const taxiFallback = require('../../../../assets/taxi/user-app/taxi.webp');
+export const bikeFallback = require('../../../../assets/taxi/user-app/bike.webp');
+export const deliveryFallback = require('../../../../assets/taxi/user-app/delivery.webp');
+export const parcelFallback = require('../../../../assets/taxi/user-app/parcel.webp');
+export const truckFallback = require('../../../../assets/taxi/user-app/truck.webp');
+export const busFallback = require('../../../../assets/taxi/user-app/fallback-car.webp'); // bus.png is damaged in the web repo
+export const fallbackCar = require('../../../../assets/taxi/user-app/fallback-car.webp');
+export const yellowTaxiImg = require('../../../../assets/taxi/user-app/yellow-taxi.webp');
+export const seamlessHighwayBg = require('../../../../assets/taxi/user-app/yellow-taxi.webp'); // seamless_highway_bg.png is damaged in the web repo
+export const airplaneIcon = require('../../../../assets/taxi/3d images/AutoCab/airoplan.webp');
+export const railwayIcon = require('../../../../assets/taxi/3d images/AutoCab/one way.webp');
+export const busStationIcon = require('../../../../assets/taxi/3d images/AutoCab/bus.webp');
 
 export const ACTIVE_RIDE_SYNC_INTERVAL_MS = 15000;
 export const IDLE_RIDE_SYNC_INTERVALS_MS = [60000, 120000, 180000];

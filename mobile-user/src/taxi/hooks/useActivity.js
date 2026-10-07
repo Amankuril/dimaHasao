@@ -11,8 +11,8 @@ import { CURRENT_RIDE_UPDATED_EVENT, getCurrentRide, isActiveCurrentRide } from 
 import { getTaxiUserRoutePrefix } from '../utils/routePrefix'
 import { window } from '../../lib/webShim'
 
-const taxiFallback = require('../../../assets/taxi/user-app/taxi.png')
-const bikeFallback = require('../../../assets/taxi/user-app/bike.png')
+const taxiFallback = require('../../../assets/taxi/user-app/taxi.webp')
+const bikeFallback = require('../../../assets/taxi/user-app/bike.webp')
 const getCurrentRideIcon = (ride) => {
   const customIcon = String(
     ride?.vehicleIconUrl ||

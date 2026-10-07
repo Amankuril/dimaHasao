@@ -30,7 +30,7 @@ function VegMark({ size = 14 }) {
   );
 }
 
-const BANNER = require('../../../../assets/food/under250_banner.jpg');
+const BANNER = require('../../../../assets/food/under250_banner.webp');
 const AVATAR = require('../../../../assets/food/profile_avatar.webp');
 const G = { filter: 'grayscale(1)' };
 

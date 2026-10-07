@@ -74,7 +74,7 @@ function Hero() {
 
       <View style={[styles.brand, { top: 66 + insets.top }]}>
         <Press scale={0.97} onPress={() => router.navigate('/app/places')} accessibilityLabel="Dima Hasao Tourism">
-          <Image source={require('../../../assets/images/user-logo.png')} style={styles.brandLogo} resizeMode="contain" />
+          <Image source={require('../../../assets/images/user-logo.webp')} style={styles.brandLogo} resizeMode="contain" />
         </Press>
         <View>
           <View style={{ flexDirection: 'row' }}>

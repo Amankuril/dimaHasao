@@ -177,7 +177,7 @@ export default function LoginScreen() {
           bounces={false}
         >
           <View style={styles.top}>
-            <Image source={require('../../../assets/images/user-logo.png')} style={styles.logo} resizeMode="contain" accessibilityLabel="Dima Hasao Tourism Logo" />
+            <Image source={require('../../../assets/images/user-logo.webp')} style={styles.logo} resizeMode="contain" accessibilityLabel="Dima Hasao Tourism Logo" />
             <Text style={styles.juthai}>JUTHAI</Text>
             <View style={styles.welcomeRow}>
               <View style={styles.welcomeLine} />

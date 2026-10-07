@@ -9,7 +9,7 @@ import { getGoogleMapsApiKey } from '../utils/googleMapsApiKey';
 import { localStore } from '../../lib/storage';
 import { color, elevation, radii, space, type } from '../../theme';
 
-const RIDER = require('../../../assets/food/map_rider.png');
+const RIDER = require('../../../assets/food/map_rider.webp');
 const MAP_STYLE = [
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },

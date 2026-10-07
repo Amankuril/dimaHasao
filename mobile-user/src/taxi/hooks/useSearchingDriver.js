@@ -15,12 +15,12 @@ import { getTaxiUserRoutePrefix } from '../utils/routePrefix'
 import { sessionStore } from '../../lib/storage'
 import { BackHandler } from 'react-native'
 
-const LuxuryIcon = require('../../../assets/taxi/icons/Luxury.png')
-const PremiumIcon = require('../../../assets/taxi/icons/Premium.png')
-const SuvIcon = require('../../../assets/taxi/icons/SUV.png')
-const BikeIcon = require('../../../assets/taxi/icons/bike.png')
-const CarIcon = require('../../../assets/taxi/icons/car.png')
-const AutoIcon = require('../../../assets/taxi/icons/auto.png')
+const LuxuryIcon = require('../../../assets/taxi/icons/Luxury.webp')
+const PremiumIcon = require('../../../assets/taxi/icons/Premium.webp')
+const SuvIcon = require('../../../assets/taxi/icons/SUV.webp')
+const BikeIcon = require('../../../assets/taxi/icons/bike.webp')
+const CarIcon = require('../../../assets/taxi/icons/car.webp')
+const AutoIcon = require('../../../assets/taxi/icons/auto.webp')
 const MAP_OPTIONS = {
   disableDefaultUI: true,
   styles: [

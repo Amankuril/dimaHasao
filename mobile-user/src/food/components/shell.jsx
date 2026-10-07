@@ -209,7 +209,7 @@ export function OutOfZoneScreen({ location, handleLocationClick }) {
   const title = area && !/^-?\d+(\.\d+)?$/.test(String(area).trim()) ? area : location?.city || 'Select Location';
 
   return (
-    <ImageBackground source={require('../../../assets/food/outofzone_bg.jpg')} style={styles.ooz} resizeMode="cover">
+    <ImageBackground source={require('../../../assets/food/outofzone_bg.webp')} style={styles.ooz} resizeMode="cover">
       <View style={[styles.oozBar, { paddingTop: space.lg + insets.top }]}>
         <Press scale={0.97} onPress={handleLocationClick} style={styles.oozLoc} accessibilityLabel={`Change location, ${title}`}>
           <MapPin size={20} color={color.textInverse} />

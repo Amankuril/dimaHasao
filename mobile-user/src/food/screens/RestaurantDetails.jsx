@@ -20,7 +20,7 @@ import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { color, elevation, radii, space, type } from '../../theme';
 
 const DISH_FALLBACK = require('../../../assets/food/dish_fallback.webp');
-const FSSAI_LOGO = require('../../../assets/food/fssai.png');
+const FSSAI_LOGO = require('../../../assets/food/fssai.webp');
 const RUPEE = '₹';
 
 function DishImg({ uri, style }) {

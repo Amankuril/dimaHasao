@@ -16,7 +16,7 @@ import { color, elevation, radii, space, type } from '../../../../theme';
 const PICKUP = color.primary;
 const DROP = color.danger;
 
-const CarIcon = require('../../../../../assets/taxi/icons/car.png');
+const CarIcon = require('../../../../../assets/taxi/icons/car.webp');
 
 function PulseRing({ index }) {
   const v = useLoop({ duration: 3000, delay: (index + 1) * 750, easing: Easing.out(Easing.quad) });

@@ -1,9 +1,9 @@
-import carIcon from '../../../../assets/taxi/icons/car.png';
-import bikeIcon from '../../../../assets/taxi/icons/bike.png';
-import autoIcon from '../../../../assets/taxi/icons/auto.png';
-import LuxuryIcon from '../../../../assets/taxi/icons/Luxury.png';
-import PremiumIcon from '../../../../assets/taxi/icons/Premium.png';
-import SuvIcon from '../../../../assets/taxi/icons/SUV.png';
+import carIcon from '../../../../assets/taxi/icons/car.webp';
+import bikeIcon from '../../../../assets/taxi/icons/bike.webp';
+import autoIcon from '../../../../assets/taxi/icons/auto.webp';
+import LuxuryIcon from '../../../../assets/taxi/icons/Luxury.webp';
+import PremiumIcon from '../../../../assets/taxi/icons/Premium.webp';
+import SuvIcon from '../../../../assets/taxi/icons/SUV.webp';
 export const PAGE_SIZE = 4;
 export const TABS = ['All', 'Rides', 'Outstation', 'Scheduled', 'Support'];
 

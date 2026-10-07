@@ -19,7 +19,7 @@ import { EmptyState, StatusBadge } from '../../../components/ds';
 import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
 import { color, elevation, radii, space, type } from '../../../theme';
 
-const BANNER = require('../../../../assets/food/gourmet_banner.jpg');
+const BANNER = require('../../../../assets/food/gourmet_banner.webp');
 
 const resolveImageUrl = (url) => {
   if (typeof url !== 'string') return '';

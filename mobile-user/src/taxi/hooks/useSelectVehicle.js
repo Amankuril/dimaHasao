@@ -14,21 +14,21 @@ import { getTaxiUserRoutePrefix } from '../utils/routePrefix'
 import { localStore } from '../../lib/storage'
 import { window, document } from '../../lib/webShim'
 
-const BikeIcon = require('../../../assets/taxi/icons/bike.png')
-const AutoIcon = require('../../../assets/taxi/icons/auto.png')
-const CarIcon = require('../../../assets/taxi/icons/car.png')
-const PremiumIcon = require('../../../assets/taxi/icons/Premium.png')
-const LuxuryIcon = require('../../../assets/taxi/icons/Luxury.png')
-const SuvIcon = require('../../../assets/taxi/icons/SUV.png')
-const TruckIcon = require('../../../assets/taxi/icons/truck.png')
-const LcvIcon = require('../../../assets/taxi/icons/LCV.png')
-const McvIcon = require('../../../assets/taxi/icons/mcv.png')
-const HcvIcon = require('../../../assets/taxi/icons/hcv.png')
-const EhcvIcon = require('../../../assets/taxi/icons/ehcv.png')
-const ScootyIcon = require('../../../assets/taxi/icons/bike.png') // scooty.png is damaged in the web repo
-const HatchbackIcon = require('../../../assets/taxi/icons/Hatchback.png')
-const BusIcon = require('../../../assets/taxi/icons/car.png') // bus.png is damaged in the web repo
-const MiniBusIcon = require('../../../assets/taxi/icons/car.png') // mini_bus.png is damaged in the web repo
+const BikeIcon = require('../../../assets/taxi/icons/bike.webp')
+const AutoIcon = require('../../../assets/taxi/icons/auto.webp')
+const CarIcon = require('../../../assets/taxi/icons/car.webp')
+const PremiumIcon = require('../../../assets/taxi/icons/Premium.webp')
+const LuxuryIcon = require('../../../assets/taxi/icons/Luxury.webp')
+const SuvIcon = require('../../../assets/taxi/icons/SUV.webp')
+const TruckIcon = require('../../../assets/taxi/icons/truck.webp')
+const LcvIcon = require('../../../assets/taxi/icons/LCV.webp')
+const McvIcon = require('../../../assets/taxi/icons/mcv.webp')
+const HcvIcon = require('../../../assets/taxi/icons/hcv.webp')
+const EhcvIcon = require('../../../assets/taxi/icons/ehcv.webp')
+const ScootyIcon = require('../../../assets/taxi/icons/bike.webp') // scooty.png is damaged in the web repo
+const HatchbackIcon = require('../../../assets/taxi/icons/Hatchback.webp')
+const BusIcon = require('../../../assets/taxi/icons/car.webp') // bus.png is damaged in the web repo
+const MiniBusIcon = require('../../../assets/taxi/icons/car.webp') // mini_bus.png is damaged in the web repo
 const MAP_CONTAINER_STYLE = { width: '100%', height: '100%' };
 
 const SELECT_VEHICLE_MAP_OPTIONS = {

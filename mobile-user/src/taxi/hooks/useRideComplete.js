@@ -12,10 +12,10 @@ import { getTaxiUserRoutePrefix } from '../utils/routePrefix'
 import { localStore } from '../../lib/storage'
 import { window, document, navigator } from '../../lib/webShim'
 
-const carIcon = require('../../../assets/taxi/icons/car.png')
-const bikeIcon = require('../../../assets/taxi/icons/bike.png')
-const autoIcon = require('../../../assets/taxi/icons/auto.png')
-const deliveryIcon = require('../../../assets/taxi/icons/Delivery.png')
+const carIcon = require('../../../assets/taxi/icons/car.webp')
+const bikeIcon = require('../../../assets/taxi/icons/bike.webp')
+const autoIcon = require('../../../assets/taxi/icons/auto.webp')
+const deliveryIcon = require('../../../assets/taxi/icons/Delivery.webp')
 const TIP_OPTIONS = [0, 20, 50, 100];
 
 const PAYMENT_OPTIONS = [
