@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { AlertCircle, ArrowLeft, Check, ChevronDown, ChevronRight, Headset, Plus, X } from 'lucide-react-native';
+import { AlertCircle, Check, ChevronDown, ChevronRight, Headset, Plus, X } from 'lucide-react-native';
 import { BottomSheet } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { useNavigate } from '../../lib/webRouter';
-import { outfit as fo, shadow, tw } from '../../theme';
+import { outfit as fo, playfair, shadow } from '../../theme';
 import { supportTicketService } from '../services/supportTicketService';
+import { DT } from '../ui/dt';
+import ScreenHeader from '../ui/ScreenHeader';
+import { CtaButton } from '../ui/Surface';
 
+// bg / fg / border per ticket status (pending = warning, assigned = info, closed = ok)
 export const STATUS_STYLES = {
-  pending: { bg: '#FFF7ED', fg: '#F54900', border: '#FFEDD4' },
-  assigned: { bg: '#EFF6FF', fg: '#155DFC', border: '#DBEAFE' },
-  closed: { bg: '#ECFDF5', fg: '#009966', border: '#D0FAE5' },
+  pending: { bg: DT.warnSoft, fg: DT.warnInk, border: DT.warnSoft },
+  assigned: { bg: DT.infoSoft, fg: DT.info, border: DT.infoSoft },
+  closed: { bg: DT.successSoft, fg: DT.successInk, border: DT.successSoft },
 };
 const TABS = ['All', 'Open', 'Resolved'];
 
@@ -33,6 +36,7 @@ export default function SupportTickets() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [focused, setFocused] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -88,33 +92,30 @@ export default function SupportTickets() {
   const selectedTitle = titleOptions.find((o) => String(o.id) === String(titleId))?.title;
 
   return (
-    <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.38, 1]} style={{ flex: 1 }}>
-      <View style={[styles.header, { paddingTop: 40 + insets.top }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <Press scale={0.95} onPress={() => navigate(-1)} accessibilityLabel="Go back" style={styles.back} hitSlop={6}>
-            <ArrowLeft size={18} color={tw.slate900} strokeWidth={2.5} />
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
+      <ScreenHeader
+        title="Support Tickets"
+        subtitle="Raise and track your issues"
+        onBack={() => navigate(-1)}
+        right={
+          <Press scale={0.9} onPress={() => setShowForm(true)} accessibilityLabel="New support ticket" style={styles.plus} hitSlop={6}>
+            <Plus size={20} color={DT.ctaInk} strokeWidth={3} />
           </Press>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.kicker}>HELP CENTER</Text>
-            <Text style={styles.title} accessibilityRole="header">Support Tickets</Text>
-          </View>
-          <Press scale={0.9} onPress={() => setShowForm(true)} accessibilityLabel="New support ticket" style={[styles.back, { backgroundColor: tw.slate900, borderColor: tw.slate900 }]} hitSlop={6}>
-            <Plus size={16} color="#fff" strokeWidth={3} />
-          </Press>
-        </View>
+        }
+      >
         <View style={styles.tabs}>
           {TABS.map((tab) => {
             const on = activeTab === tab;
             return (
               <Press key={tab} scale={0.98} onPress={() => setActiveTab(tab)} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={tab} style={[styles.tab, on ? styles.tabOn : null]}>
-                <Text style={[styles.tabText, on ? { color: tw.slate900 } : null]}>{tab.toUpperCase()}</Text>
+                <Text style={[styles.tabText, on ? { color: DT.brand } : null]}>{tab.toUpperCase()}</Text>
               </Press>
             );
           })}
         </View>
-      </View>
+      </ScreenHeader>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48 + insets.bottom, gap: 10 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 + insets.bottom, gap: 12 }}>
         {error ? (
           <View style={styles.error}>
             <Text style={styles.errorText}>{error}</Text>
@@ -122,12 +123,12 @@ export default function SupportTickets() {
         ) : null}
         {loading ? (
           <View style={{ paddingVertical: 64, alignItems: 'center' }} accessibilityRole="progressbar" accessibilityLabel="Loading tickets">
-            <ActivityIndicator size="small" color={tw.slate400} />
+            <ActivityIndicator size="small" color={DT.brand} />
           </View>
         ) : filtered.length === 0 ? (
           <View style={styles.empty}>
             <View style={styles.emptyIcon}>
-              <Headset size={36} color={tw.slate300} strokeWidth={1.5} />
+              <Headset size={36} color={DT.faint} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>No tickets yet</Text>
             <Text style={styles.emptyBody}>Tap + to get help</Text>
@@ -138,7 +139,7 @@ export default function SupportTickets() {
             return (
               <Press key={t.id || t.ticketCode} scale={0.98} onPress={() => navigate(`/taxi/driver/support/ticket/${t.ticketCode}`, { state: { ticket: t } })} accessibilityLabel={`${t.title}, ${t.status}`} style={styles.ticket}>
                 <View style={styles.ticketIcon}>
-                  <Headset size={16} color="#2B7FFF" strokeWidth={2} />
+                  <Headset size={18} color={DT.brand} strokeWidth={2} />
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
@@ -149,7 +150,7 @@ export default function SupportTickets() {
                     {t.supportType} · {new Date(t.updatedAt).toLocaleString('en-IN')}
                   </Text>
                 </View>
-                <ChevronRight size={15} color={tw.slate300} strokeWidth={2.5} style={{ marginTop: 4 }} />
+                <ChevronRight size={18} color={DT.faint} strokeWidth={2.5} style={{ marginTop: 4 }} />
               </Press>
             );
           })
@@ -161,15 +162,15 @@ export default function SupportTickets() {
         <View style={styles.sheetHead}>
           <Text style={styles.sheetTitle}>New Ticket</Text>
           <Press scale={0.9} onPress={() => setShowForm(false)} accessibilityLabel="Close" style={styles.sheetClose} hitSlop={8}>
-            <X size={15} color={tw.slate500} strokeWidth={2.5} />
+            <X size={18} color={DT.muted} strokeWidth={2.5} />
           </Press>
         </View>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 16 }}>
           <View>
             <Text style={styles.label}>TICKET TITLE</Text>
             <Press scale={1} onPress={() => setShowTitles((v) => !v)} accessibilityRole="combobox" accessibilityState={{ expanded: showTitles }} accessibilityLabel={`Ticket title, ${selectedTitle || 'not selected'}`} style={[styles.field, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-              <Text style={[styles.fieldText, selectedTitle ? null : { color: tw.slate400 }]} numberOfLines={1}>{selectedTitle || 'Select title'}</Text>
-              <ChevronDown size={16} color={tw.slate400} />
+              <Text style={[styles.fieldText, selectedTitle ? null : { color: DT.faint }]} numberOfLines={1}>{selectedTitle || 'Select title'}</Text>
+              <ChevronDown size={16} color={DT.muted} />
             </Press>
             {showTitles ? (
               <View style={styles.options}>
@@ -188,8 +189,8 @@ export default function SupportTickets() {
                       }}
                       style={styles.option}
                     >
-                      <Text style={[styles.optionText, option.id ? null : { color: tw.slate400 }]}>{option.title}</Text>
-                      {on && option.id ? <Check size={14} color={tw.slate900} strokeWidth={3} /> : null}
+                      <Text style={[styles.optionText, option.id ? null : { color: DT.faint }]}>{option.title}</Text>
+                      {on && option.id ? <Check size={16} color={DT.brand} strokeWidth={3} /> : null}
                     </Press>
                   );
                 })}
@@ -206,14 +207,16 @@ export default function SupportTickets() {
                 setErrors((p) => ({ ...p, title: '' }));
               }}
               placeholder="Write custom title if not listed"
-              placeholderTextColor={tw.slate300}
+              placeholderTextColor={DT.faint}
               returnKeyType="next"
               accessibilityLabel="Custom title"
-              style={[styles.field, styles.fieldText, errors.title ? styles.fieldError : null]}
+              onFocus={() => setFocused('title')}
+              onBlur={() => setFocused('')}
+              style={[styles.field, styles.fieldText, focused === 'title' ? styles.fieldFocus : null, errors.title ? styles.fieldError : null]}
             />
             {errors.title ? (
               <View style={styles.fieldErrorRow}>
-                <AlertCircle size={11} color={tw.red500} strokeWidth={3} />
+                <AlertCircle size={12} color={DT.danger} strokeWidth={3} />
                 <Text style={styles.fieldErrorText}>{errors.title}</Text>
               </View>
             ) : null}
@@ -228,63 +231,59 @@ export default function SupportTickets() {
                 setErrors((p) => ({ ...p, description: '' }));
               }}
               placeholder="Describe your issue in detail..."
-              placeholderTextColor={tw.slate300}
+              placeholderTextColor={DT.faint}
               multiline
               textAlignVertical="top"
               accessibilityLabel="Description"
-              style={[styles.field, styles.fieldText, { minHeight: 104 }, errors.description ? styles.fieldError : null]}
+              onFocus={() => setFocused('description')}
+              onBlur={() => setFocused('')}
+              style={[styles.field, styles.fieldText, { minHeight: 104 }, focused === 'description' ? styles.fieldFocus : null, errors.description ? styles.fieldError : null]}
             />
             {errors.description ? (
               <View style={styles.fieldErrorRow}>
-                <AlertCircle size={11} color={tw.red500} strokeWidth={3} />
+                <AlertCircle size={12} color={DT.danger} strokeWidth={3} />
                 <Text style={styles.fieldErrorText}>{errors.description}</Text>
               </View>
             ) : null}
           </View>
 
-          <Press scale={0.97} disabled={submitting} onPress={handleSubmit} accessibilityLabel="Submit ticket" accessibilityState={{ busy: submitting }} style={styles.submit}>
-            {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.submitText}>SUBMIT TICKET</Text>}
-          </Press>
+          <CtaButton variant="brand" title="SUBMIT TICKET" loading={submitting} onPress={handleSubmit} accessibilityLabel="Submit ticket" />
         </ScrollView>
       </BottomSheet>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 20, paddingBottom: 16, backgroundColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.8)', ...shadow('0 4px 20px rgba(15,23,42,0.05)') },
-  back: { width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  kicker: { fontSize: 9, lineHeight: 14, letterSpacing: 2.3, color: tw.slate400, ...fo(900) },
-  title: { fontSize: 19, lineHeight: 26, letterSpacing: -0.475, color: tw.slate900, ...fo(900) },
-  tabs: { flexDirection: 'row', gap: 6, backgroundColor: '#FFFDF0', borderWidth: 1, borderColor: 'rgba(254,249,194,0.7)', padding: 4, borderRadius: 14 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: 'transparent' },
-  tabOn: { backgroundColor: '#fff', borderColor: 'rgba(241,245,249,0.8)', ...shadow('sm') },
-  tabText: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, color: tw.slate500, ...fo(900) },
-  error: { borderRadius: 14, borderWidth: 1, borderColor: tw.red100, backgroundColor: tw.red50, paddingHorizontal: 16, paddingVertical: 12 },
-  errorText: { fontSize: 12, lineHeight: 16, color: tw.red600, ...fo(700) },
+  plus: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.cta, alignItems: 'center', justifyContent: 'center' },
+  tabs: { flexDirection: 'row', gap: 6, marginTop: 16, backgroundColor: 'rgba(255,255,255,0.12)', padding: 4, borderRadius: DT.radius.pill },
+  tab: { flex: 1, minHeight: 44, borderRadius: DT.radius.pill, alignItems: 'center', justifyContent: 'center' },
+  tabOn: { backgroundColor: DT.card },
+  tabText: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 64, textAlign: 'center', color: DT.onBrand, ...fo(800) },
+  error: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
+  errorText: { fontSize: 13, lineHeight: 18, color: DT.dangerInk, ...fo(700) },
   empty: { alignItems: 'center', paddingVertical: 80, gap: 4 },
-  emptyIcon: { width: 80, height: 80, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  emptyTitle: { fontSize: 15, lineHeight: 22, color: tw.slate700, ...fo(900) },
-  emptyBody: { fontSize: 12, lineHeight: 16, color: tw.slate400, ...fo(700) },
-  ticket: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.9)', padding: 16, ...shadow('0 4px 14px rgba(15,23,42,0.06)') },
-  ticketIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center' },
-  ticketTitle: { flex: 1, fontSize: 14, lineHeight: 17.5, color: tw.slate900, ...fo(900) },
-  status: { fontSize: 9, lineHeight: 14, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, borderWidth: 1, overflow: 'hidden', ...fo(900) },
-  ticketMeta: { fontSize: 11, lineHeight: 16, color: tw.slate400, marginTop: 4, ...fo(700) },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 16 },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: tw.slate200, alignSelf: 'center', marginBottom: 16 },
+  emptyIcon: { width: 80, height: 80, borderRadius: DT.radius.xl, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 12, ...shadow('sm') },
+  emptyTitle: { fontSize: 16, lineHeight: 22, color: DT.ink, ...fo(800) },
+  emptyBody: { fontSize: 13, lineHeight: 18, color: DT.muted, ...fo(500) },
+  ticket: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 16, ...shadow('sm') },
+  ticketIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  ticketTitle: { flex: 1, fontSize: 14, lineHeight: 20, color: DT.ink, ...fo(700) },
+  status: { fontSize: 10, lineHeight: 14, minWidth: 54, textAlign: 'center', paddingHorizontal: 10, paddingVertical: 3, borderRadius: DT.radius.pill, overflow: 'hidden', ...fo(800) },
+  ticketMeta: { fontSize: 11, lineHeight: 16, color: DT.muted, marginTop: 4, ...fo(500) },
+  sheet: { backgroundColor: DT.card, borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingHorizontal: 20, paddingTop: 16 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: DT.border, alignSelf: 'center', marginBottom: 16 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  sheetTitle: { fontSize: 18, lineHeight: 28, color: tw.slate900, ...fo(900) },
-  sheetClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.slate50, alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, color: tw.slate400, marginLeft: 4, marginBottom: 4, ...fo(900) },
-  field: { borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 2, borderColor: tw.slate100, backgroundColor: tw.slate50 },
-  fieldText: { fontSize: 14, color: tw.slate900, ...fo(700) },
-  fieldError: { borderColor: tw.red200, backgroundColor: tw.red50 },
+  sheetTitle: { fontSize: 20, lineHeight: 28, color: DT.brand, ...playfair(700) },
+  sheetClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
+  label: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 90, color: DT.muted, marginLeft: 4, marginBottom: 6, ...fo(800) },
+  field: { minHeight: 52, borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card },
+  fieldText: { fontSize: 14, color: DT.ink, ...fo(600) },
+  fieldFocus: { borderColor: DT.brand },
+  fieldError: { borderColor: DT.danger, backgroundColor: DT.dangerSoft },
   fieldErrorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 4, marginTop: 4 },
-  fieldErrorText: { fontSize: 11, lineHeight: 16, color: tw.red500, ...fo(900) },
-  options: { marginTop: 6, borderRadius: 14, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', overflow: 'hidden' },
-  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: tw.slate50 },
-  optionText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.slate900, ...fo(700) },
-  submit: { backgroundColor: tw.slate900, paddingVertical: 16, borderRadius: 16, alignItems: 'center' },
-  submitText: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, color: '#fff', ...fo(900) },
+  fieldErrorText: { fontSize: 11, lineHeight: 16, color: DT.dangerInk, ...fo(800) },
+  options: { marginTop: 6, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, overflow: 'hidden' },
+  option: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: DT.borderSoft },
+  optionText: { flex: 1, fontSize: 14, lineHeight: 20, color: DT.ink, ...fo(600) },
 });

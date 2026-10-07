@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   AlertCircle,
   ArrowLeft,
   Bell,
   CalendarClock,
-  CheckCircle2,
   ChevronRight,
   Clock3,
   MapPin,
@@ -20,7 +18,10 @@ import Skeleton from '../../components/Skeleton';
 import { Press } from '../../components/ui';
 import { toast } from '../../lib/notify';
 import { useNavigate } from '../../lib/webRouter';
-import { outfit, shadow, tw } from '../../theme';
+import { outfit, shadow } from '../../theme';
+import { DT } from '../ui/dt';
+import ScreenHeader from '../ui/ScreenHeader';
+import { CtaButton } from '../ui/Surface';
 import { getDriverNotifications, getDriverScheduledRides } from '../services/registrationService';
 import {
   getVisibleDriverNotifications,
@@ -120,11 +121,11 @@ const createScheduledRidePreview = (ride) => ({
 
 const SkeletonCard = () => (
   <View style={styles.skeletonCard}>
-    <Skeleton style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: tw.slate200 }} />
+    <Skeleton style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: DT.border }} />
     <View style={{ flex: 1, gap: 8 }}>
-      <Skeleton style={{ height: 12, borderRadius: 999, width: '66%', backgroundColor: tw.slate200 }} />
-      <Skeleton style={{ height: 10, borderRadius: 999, width: '100%', backgroundColor: tw.slate100 }} />
-      <Skeleton style={{ height: 10, borderRadius: 999, width: '80%', backgroundColor: tw.slate100 }} />
+      <Skeleton style={{ height: 12, borderRadius: 999, width: '66%', backgroundColor: DT.border }} />
+      <Skeleton style={{ height: 10, borderRadius: 999, width: '100%', backgroundColor: DT.borderSoft }} />
+      <Skeleton style={{ height: 10, borderRadius: 999, width: '80%', backgroundColor: DT.borderSoft }} />
     </View>
   </View>
 );
@@ -153,13 +154,10 @@ function NotificationImage({ uri }) {
 const ErrorState = ({ message, onRetry }) => (
   <View style={styles.state}>
     <View style={[styles.stateIcon, { width: 64, height: 64 }]}>
-      <AlertCircle size={28} color={tw.red400} strokeWidth={2} />
+      <AlertCircle size={28} color={DT.danger} strokeWidth={2} />
     </View>
     <Text style={styles.errorTitle}>{message}</Text>
-    <Press onPress={onRetry} accessibilityLabel="Retry" style={styles.retry}>
-      <RefreshCw size={13} color="#fff" strokeWidth={2.5} />
-      <Text style={styles.retryText}>RETRY</Text>
-    </Press>
+    <CtaButton variant="brand" title="RETRY" onPress={onRetry} accessibilityLabel="Retry" icon={<RefreshCw size={14} color={DT.onBrand} strokeWidth={2.5} />} style={{ minWidth: 160 }} />
   </View>
 );
 
@@ -282,7 +280,7 @@ export default function DriverNotifications() {
   const busy = loading || scheduledLoading;
 
   return (
-    <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.38, 1]} style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
       <IncomingRideRequest
         visible={Boolean(selectedScheduledRide)}
         requestData={selectedScheduledRide}
@@ -291,47 +289,18 @@ export default function DriverNotifications() {
         onDecline={() => setSelectedScheduledRide(null)}
       />
 
-      <View pointerEvents="none" style={[styles.blob, { top: -64, right: -40, width: 176, height: 176, backgroundColor: 'rgba(219,234,254,0.35)' }]} />
-      <View pointerEvents="none" style={[styles.blob, { top: 208, left: -60, width: 208, height: 208, backgroundColor: 'rgba(241,245,249,0.45)' }]} />
-
-      <View style={[styles.header, { paddingTop: 40 + insets.top }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Press onPress={() => navigate(`${routePrefix}/home`)} accessibilityLabel="Back" style={styles.back}>
-            <ArrowLeft size={18} color={tw.slate900} strokeWidth={2.5} />
-          </Press>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.kicker}>INBOX</Text>
-            <Text style={styles.title} accessibilityRole="header">Notifications</Text>
-          </View>
+      <ScreenHeader
+        title="Notifications"
+        subtitle="Admin alerts and scheduled rides"
+        onBack={() => navigate(`${routePrefix}/home`)}
+        right={
           <View style={styles.countPill}>
             <Text style={styles.countPillText}>{totalCount}</Text>
           </View>
-        </View>
-        <View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-          <Press
-            onPress={() => loadAllData(currentPage)}
-            disabled={busy}
-            accessibilityLabel="Refresh"
-            style={[styles.pill, { borderColor: tw.slate200, backgroundColor: '#fff' }, busy ? { opacity: 0.5 } : null]}
-          >
-            {busy ? <Spinner size={12} color={tw.slate600} strokeWidth={2.5} /> : <RefreshCw size={12} color={tw.slate600} strokeWidth={2.5} />}
-            <Text style={[styles.pillText, { color: tw.slate600 }]}>REFRESH</Text>
-          </Press>
-          {activeTab === 'alerts' ? (
-            <Press
-              onPress={handleClearAll}
-              disabled={clearing || loading || alertItems.length === 0}
-              accessibilityLabel="Clear All"
-              style={[styles.pill, { borderColor: tw.rose100, backgroundColor: tw.rose50 }, clearing || loading || alertItems.length === 0 ? { opacity: 0.5 } : null]}
-            >
-              <Trash2 size={12} color={tw.rose500} strokeWidth={2.5} />
-              <Text style={[styles.pillText, { color: tw.rose500 }]}>CLEAR ALL</Text>
-            </Press>
-          ) : null}
-        </View>
-      </View>
+        }
+      />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48 + insets.bottom, gap: 10 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 + insets.bottom, gap: 12 }}>
         <View style={styles.tabs}>
           {[
             { id: 'alerts', label: 'Alerts', count: alertItems.length },
@@ -349,17 +318,39 @@ export default function DriverNotifications() {
                 accessibilityLabel={tab.label}
                 style={[styles.tab, isActive ? styles.tabOn : null]}
               >
-                {tab.id === 'schedule' ? <CalendarClock size={14} color={isActive ? '#fff' : tw.slate500} strokeWidth={2.4} /> : <Radio size={14} color={isActive ? '#fff' : tw.slate500} strokeWidth={2.4} />}
-                <Text style={[styles.tabText, { color: isActive ? '#fff' : tw.slate500 }]}>{tab.label.toUpperCase()}</Text>
-                <Text style={[styles.tabCount, isActive ? { backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' } : { backgroundColor: tw.slate100, color: tw.slate500 }]}>{tab.count}</Text>
+                {tab.id === 'schedule' ? <CalendarClock size={15} color={isActive ? DT.onBrand : DT.muted} strokeWidth={2.4} /> : <Radio size={15} color={isActive ? DT.onBrand : DT.muted} strokeWidth={2.4} />}
+                <Text style={[styles.tabText, { color: isActive ? DT.onBrand : DT.muted }]}>{tab.label.toUpperCase()}</Text>
+                <Text style={[styles.tabCount, isActive ? { backgroundColor: 'rgba(255,255,255,0.18)', color: DT.accent } : { backgroundColor: DT.bgSoft, color: DT.muted }]}>{tab.count}</Text>
               </Press>
             );
           })}
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
-          <Text style={styles.label}>{activeTab === 'schedule' ? 'SCHEDULED RIDES' : 'ADMIN & SYSTEM ALERTS'}</Text>
-          <Text style={styles.label2}>{totalCount} VISIBLE</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.label} numberOfLines={1}>{activeTab === 'schedule' ? 'SCHEDULED RIDES' : 'ADMIN & SYSTEM ALERTS'}</Text>
+            <Text style={styles.label2}>{totalCount} VISIBLE</Text>
+          </View>
+          <Press
+            onPress={() => loadAllData(currentPage)}
+            disabled={busy}
+            accessibilityLabel="Refresh"
+            style={[styles.pill, { borderColor: DT.border, backgroundColor: DT.card }, busy ? { opacity: 0.5 } : null]}
+          >
+            {busy ? <Spinner size={14} color={DT.brand} strokeWidth={2.5} /> : <RefreshCw size={14} color={DT.brand} strokeWidth={2.5} />}
+            <Text style={[styles.pillText, { color: DT.brand }]}>REFRESH</Text>
+          </Press>
+          {activeTab === 'alerts' ? (
+            <Press
+              onPress={handleClearAll}
+              disabled={clearing || loading || alertItems.length === 0}
+              accessibilityLabel="Clear All"
+              style={[styles.pill, { borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft }, clearing || loading || alertItems.length === 0 ? { opacity: 0.5 } : null]}
+            >
+              <Trash2 size={14} color={DT.danger} strokeWidth={2.5} />
+              <Text style={[styles.pillText, { color: DT.dangerInk }]}>CLEAR ALL</Text>
+            </Press>
+          ) : null}
         </View>
 
         {activeTab === 'alerts' && loading && Array.from({ length: 4 }).map((_, index) => <SkeletonCard key={index} />)}
@@ -371,7 +362,7 @@ export default function DriverNotifications() {
         {activeTab === 'alerts' && !loading && !error && alertItems.length === 0 ? (
           <View style={styles.state}>
             <View style={[styles.stateIcon, { width: 80, height: 80 }]}>
-              <Bell size={36} color={tw.slate300} strokeWidth={1.5} />
+              <Bell size={36} color={DT.faint} strokeWidth={1.5} />
             </View>
             <View style={{ alignItems: 'center' }}>
               <Text style={styles.emptyTitle}>No notifications yet</Text>
@@ -383,7 +374,7 @@ export default function DriverNotifications() {
         {activeTab === 'schedule' && !scheduledLoading && !scheduledError && scheduledRides.length === 0 ? (
           <View style={styles.state}>
             <View style={[styles.stateIcon, { width: 80, height: 80 }]}>
-              <CalendarClock size={34} color={tw.slate300} strokeWidth={1.7} />
+              <CalendarClock size={34} color={DT.faint} strokeWidth={1.7} />
             </View>
             <View style={{ alignItems: 'center' }}>
               <Text style={styles.emptyTitle}>No scheduled rides yet</Text>
@@ -394,16 +385,16 @@ export default function DriverNotifications() {
 
         {activeTab === 'alerts' && !loading && !error && alertItems.map((notification) => (
           <View key={notification.id || notification._id} style={styles.card}>
-            <View style={[styles.cardIcon, { backgroundColor: tw.emerald50 }]}>
-              <Radio size={16} color={tw.emerald500} strokeWidth={2.3} />
+            <View style={[styles.cardIcon, { backgroundColor: DT.brandSoft }]}>
+              <Radio size={18} color={DT.brand} strokeWidth={2.3} />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                 <Text style={[styles.cardTitle, { flex: 1 }]}>{notification.title || 'Notification'}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <Text style={styles.time}>{formatNotificationTime(notification.sentAt)}</Text>
-                  <Press scale={1} onPress={() => handleRemoveSingle(notification.id)} accessibilityLabel="Remove notification" hitSlop={6} style={{ padding: 6 }}>
-                    <Trash2 size={13} color={tw.slate300} strokeWidth={2.5} />
+                  <Press scale={1} onPress={() => handleRemoveSingle(notification.id)} accessibilityLabel="Remove notification" hitSlop={6} style={{ padding: 10, margin: -6 }}>
+                    <Trash2 size={16} color={DT.faint} strokeWidth={2.5} />
                   </Press>
                 </View>
               </View>
@@ -427,8 +418,8 @@ export default function DriverNotifications() {
             style={[styles.card, { flexDirection: 'column', alignItems: 'stretch', gap: 0 }]}
           >
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-              <View style={[styles.cardIcon, { backgroundColor: tw.blue50 }]}>
-                <CalendarClock size={16} color={tw.blue600} strokeWidth={2.3} />
+              <View style={[styles.cardIcon, { backgroundColor: DT.brandSoft }]}>
+                <CalendarClock size={18} color={DT.brand} strokeWidth={2.3} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -439,7 +430,7 @@ export default function DriverNotifications() {
                     <Text style={styles.scheduleAt}>{formatScheduledDateTime(ride.scheduledAt).toUpperCase()}</Text>
                     <Text style={styles.countdown}>{getScheduledRideCountdown(ride.scheduledAt, scheduleNow)}</Text>
                   </View>
-                  <ChevronRight size={16} color={tw.slate300} strokeWidth={2.5} style={{ marginTop: 2 }} />
+                  <ChevronRight size={18} color={DT.faint} strokeWidth={2.5} style={{ marginTop: 2 }} />
                 </View>
 
                 <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>
@@ -455,15 +446,15 @@ export default function DriverNotifications() {
 
                 <View style={{ marginTop: 12, gap: 8 }}>
                   <View style={styles.infoRow}>
-                    <Clock3 size={13} color={tw.blue500} strokeWidth={2.3} style={{ marginTop: 2 }} />
+                    <Clock3 size={13} color={DT.info} strokeWidth={2.3} style={{ marginTop: 2 }} />
                     <Text style={styles.infoText}>{ride.user?.name || 'Customer'}{ride.user?.phone ? ` • ${ride.user.phone}` : ''}</Text>
                   </View>
                   <View style={styles.infoRow}>
-                    <MapPin size={13} color={tw.emerald500} strokeWidth={2.3} style={{ marginTop: 2 }} />
+                    <MapPin size={13} color={DT.success} strokeWidth={2.3} style={{ marginTop: 2 }} />
                     <Text style={styles.infoText} numberOfLines={1}>{ride.pickupAddress || 'Pickup point'}</Text>
                   </View>
                   <View style={styles.infoRow}>
-                    <MapPin size={13} color={tw.orange500} strokeWidth={2.3} style={{ marginTop: 2 }} />
+                    <MapPin size={13} color={DT.warn} strokeWidth={2.3} style={{ marginTop: 2 }} />
                     <Text style={styles.infoText} numberOfLines={1}>{ride.dropAddress || 'Drop point'}</Text>
                   </View>
                 </View>
@@ -481,7 +472,7 @@ export default function DriverNotifications() {
               accessibilityLabel="Previous page"
               style={[styles.pager, currentPage === 1 || busy ? { opacity: 0.4 } : null]}
             >
-              <ArrowLeft size={14} color={tw.slate600} strokeWidth={2.5} />
+              <ArrowLeft size={14} color={DT.brand} strokeWidth={2.5} />
               <Text style={styles.pagerText}>PREV</Text>
             </Press>
             <Text style={styles.page}>PAGE {currentPage}</Text>
@@ -492,55 +483,48 @@ export default function DriverNotifications() {
               style={[styles.pager, !hasMore || busy ? { opacity: 0.4 } : null]}
             >
               <Text style={styles.pagerText}>NEXT</Text>
-              <ChevronRight size={14} color={tw.slate600} strokeWidth={2.5} />
+              <ChevronRight size={14} color={DT.brand} strokeWidth={2.5} />
             </Press>
           </View>
         )}
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  blob: { position: 'absolute', borderRadius: 999 },
-  header: { paddingHorizontal: 20, paddingBottom: 16, backgroundColor: 'rgba(255,255,255,0.9)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.8)', ...shadow('0 4px 20px rgba(15,23,42,0.05)') },
-  back: { width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  kicker: { fontSize: 9, lineHeight: 13.5, letterSpacing: 2.34, color: tw.slate400, ...outfit(900) },
-  title: { fontSize: 19, lineHeight: 20.9, letterSpacing: -0.475, color: tw.slate900, ...outfit(900) },
-  countPill: { backgroundColor: tw.slate900, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, ...shadow('sm') },
-  countPillText: { fontSize: 10, lineHeight: 15, color: '#fff', ...outfit(900) },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
-  pillText: { fontSize: 10, lineHeight: 15, letterSpacing: 1, ...outfit(900) },
-  tabs: { flexDirection: 'row', gap: 8, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.7)', padding: 4, ...shadow('0 8px 24px rgba(15,23,42,0.05)') },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 12 },
-  tabOn: { backgroundColor: tw.slate900, ...shadow('0 10px 24px rgba(15,23,42,0.18)') },
-  tabText: { fontSize: 11, lineHeight: 16.5, letterSpacing: 1.76, ...outfit(900) },
-  tabCount: { fontSize: 9, lineHeight: 13.5, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden', ...outfit(900) },
-  label: { fontSize: 10, lineHeight: 15, letterSpacing: 2.6, color: tw.slate400, ...outfit(900) },
-  label2: { fontSize: 10, lineHeight: 15, letterSpacing: 1.8, color: tw.slate400, ...outfit(900) },
-  skeletonCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', padding: 16 },
-  state: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80, gap: 16 },
-  stateIcon: { backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  errorTitle: { fontSize: 14, lineHeight: 21, color: tw.slate700, textAlign: 'center', ...outfit(900) },
-  retry: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: tw.slate900, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 999 },
-  retryText: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, color: '#fff', ...outfit(900) },
-  emptyTitle: { fontSize: 16, lineHeight: 24, color: tw.slate700, textAlign: 'center', ...outfit(900) },
-  emptyBody: { fontSize: 12, lineHeight: 16, color: tw.slate400, marginTop: 4, textAlign: 'center', ...outfit(700) },
-  card: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: '#fff', padding: 16, ...shadow('0 4px 14px rgba(15,23,42,0.07)') },
-  cardIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  cardTitle: { fontSize: 13, lineHeight: 16.25, color: tw.slate900, ...outfit(900) },
-  time: { fontSize: 9, lineHeight: 13.5, color: tw.slate400, marginTop: 2, ...outfit(700) },
-  body: { fontSize: 11, lineHeight: 17.9, color: tw.slate500, marginTop: 4, ...outfit(700) },
-  image: { marginTop: 12, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: tw.slate100, backgroundColor: tw.slate50, ...shadow('sm') },
-  serviceLocation: { fontSize: 9, lineHeight: 13.5, letterSpacing: 0.9, color: tw.slate300, marginTop: 8, ...outfit(900) },
-  scheduleAt: { marginTop: 4, fontSize: 10, lineHeight: 15, letterSpacing: 1.8, color: tw.blue500, ...outfit(900) },
-  countdown: { marginTop: 4, fontSize: 11, lineHeight: 16.5, color: tw.emerald600, ...outfit(900) },
-  stat: { flex: 1, borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, backgroundColor: tw.slate50, paddingHorizontal: 12, paddingVertical: 8 },
-  statLabel: { fontSize: 8, lineHeight: 12, letterSpacing: 0.8, color: tw.slate400, ...outfit(900) },
-  statValue: { marginTop: 4, fontSize: 13, lineHeight: 19.5, color: tw.slate900, ...outfit(900) },
+  countPill: { minWidth: 36, alignItems: 'center', backgroundColor: DT.gold, paddingHorizontal: 12, paddingVertical: 6, borderRadius: DT.radius.pill },
+  countPillText: { fontSize: 13, lineHeight: 18, color: DT.ctaInk, ...outfit(800) },
+  pill: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: DT.radius.pill, borderWidth: 1, paddingHorizontal: 12 },
+  pillText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.8, minWidth: 48, ...outfit(800) },
+  tabs: { flexDirection: 'row', gap: 6, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, padding: 4, ...shadow('sm') },
+  tab: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: DT.radius.pill, paddingHorizontal: 12 },
+  tabOn: { backgroundColor: DT.brand },
+  tabText: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 64, textAlign: 'center', ...outfit(800) },
+  tabCount: { fontSize: 10, lineHeight: 14, borderRadius: DT.radius.pill, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden', ...outfit(800) },
+  label: { fontSize: 11, lineHeight: 16, letterSpacing: 0.8, minWidth: 120, color: DT.ink, ...outfit(800) },
+  label2: { fontSize: 10, lineHeight: 15, letterSpacing: 0.8, minWidth: 80, color: DT.muted, ...outfit(700) },
+  skeletonCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: DT.radius.lg, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, padding: 16 },
+  state: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 16 },
+  stateIcon: { backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, borderRadius: DT.radius.xl, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
+  errorTitle: { fontSize: 14, lineHeight: 21, color: DT.inkSoft, textAlign: 'center', ...outfit(800) },
+  emptyTitle: { fontSize: 16, lineHeight: 24, color: DT.ink, textAlign: 'center', ...outfit(800) },
+  emptyBody: { fontSize: 13, lineHeight: 19, color: DT.muted, marginTop: 4, textAlign: 'center', paddingHorizontal: 16, ...outfit(500) },
+  card: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 16, ...shadow('sm') },
+  cardIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { fontSize: 14, lineHeight: 20, color: DT.ink, ...outfit(700) },
+  time: { fontSize: 10, lineHeight: 14, color: DT.muted, marginTop: 2, ...outfit(600) },
+  body: { fontSize: 13, lineHeight: 19, color: DT.inkSoft, marginTop: 4, ...outfit(500) },
+  image: { marginTop: 12, borderRadius: DT.radius.md, overflow: 'hidden', borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg },
+  serviceLocation: { fontSize: 10, lineHeight: 14, letterSpacing: 0.8, color: DT.muted, marginTop: 8, ...outfit(700) },
+  scheduleAt: { marginTop: 4, fontSize: 10, lineHeight: 15, letterSpacing: 0.8, color: DT.info, ...outfit(800) },
+  countdown: { marginTop: 4, fontSize: 12, lineHeight: 17, color: DT.successInk, ...outfit(800) },
+  stat: { flex: 1, borderRadius: DT.radius.md, backgroundColor: DT.bg, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 12, paddingVertical: 8 },
+  statLabel: { fontSize: 9, lineHeight: 12, letterSpacing: 0.8, minWidth: 50, color: DT.muted, ...outfit(800) },
+  statValue: { marginTop: 4, fontSize: 14, lineHeight: 20, color: DT.ink, ...outfit(800) },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  infoText: { flex: 1, fontSize: 11, lineHeight: 17.9, color: tw.slate600, ...outfit(700) },
-  pager: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate200, ...shadow('sm') },
-  pagerText: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, color: tw.slate600, ...outfit(900) },
-  page: { fontSize: 11, lineHeight: 16.5, letterSpacing: 1.1, color: tw.slate400, ...outfit(900) },
+  infoText: { flex: 1, fontSize: 12, lineHeight: 18, color: DT.inkSoft, ...outfit(600) },
+  pager: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, borderRadius: DT.radius.pill, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, ...shadow('sm') },
+  pagerText: { fontSize: 12, lineHeight: 16, letterSpacing: 1, minWidth: 40, color: DT.brand, ...outfit(800) },
+  page: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 60, textAlign: 'center', color: DT.muted, ...outfit(800) },
 });

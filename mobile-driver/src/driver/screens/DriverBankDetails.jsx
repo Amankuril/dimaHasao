@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Landmark, QrCode, Save, Upload } from 'lucide-react-native';
+import { Landmark, QrCode, Save, Upload } from 'lucide-react-native';
 import Img from '../../components/Img';
-import { Spinner } from '../../components/Loader';
-import { Press } from '../../components/ui';
 import { openCamera, openGallery } from '../../lib/images';
 import { useNavigate } from '../../lib/webRouter';
-import { outfit as fo, shadow, tw } from '../../theme';
+import { outfit as fo, shadow } from '../../theme';
 import { getCurrentDriver, updateDriverProfile } from '../services/registrationService';
 import { readFileAsDataUrl, uploadService } from '../services/driverUploadService';
+import { DT } from '../ui/dt';
+import ScreenHeader from '../ui/ScreenHeader';
+import { Card, CtaButton } from '../ui/Surface';
 
 // Web: Taxi/modules/driver/pages/DriverBankDetailsPage.jsx (/taxi/driver/profile/bank-details)
 
@@ -36,14 +37,14 @@ function Field({ label, value, onChange, placeholder, keyboardType, maxLength, a
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor={tw.slate400}
+        placeholderTextColor={DT.faint}
         keyboardType={keyboardType}
         maxLength={maxLength}
         autoCapitalize={autoCapitalize}
         autoCorrect={false}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        style={[st.input, focused && { borderColor: tw.slate900, backgroundColor: '#fff' }]}
+        style={[st.input, focused && { borderColor: DT.brand, backgroundColor: DT.card }]}
       />
     </View>
   );
@@ -174,25 +175,16 @@ export default function DriverBankDetails() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={st.root}>
+      <ScreenHeader title="Bank Details" subtitle="Driver profile" onBack={() => navigate(`${routePrefix}/profile`)} />
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 16, paddingBottom: 40 + insets.bottom, gap: 24 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 + insets.bottom, gap: 20 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Press onPress={() => navigate(`${routePrefix}/profile`)} style={st.back}>
-            <ArrowLeft size={18} color={tw.slate700} />
-          </Press>
-          <View>
-            <Text style={st.eyebrow}>DRIVER PROFILE</Text>
-            <Text style={st.h1}>Bank Details</Text>
-          </View>
-        </View>
-
-        <View style={st.dark}>
+        <Card tone="dark" style={st.dark}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
             <View style={st.darkIcon}>
-              <Landmark size={24} color="#fff" />
+              <Landmark size={24} color={DT.gold} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={st.darkEyebrow}>PAYOUT SETUP</Text>
@@ -200,9 +192,9 @@ export default function DriverBankDetails() {
               <Text style={st.darkNote}>These details will be used when you send a withdrawal request.</Text>
             </View>
           </View>
-        </View>
+        </Card>
 
-        <View style={st.card}>
+        <Card style={st.card}>
           {loading ? (
             <Text style={st.loading}>Loading bank details...</Text>
           ) : (
@@ -213,17 +205,21 @@ export default function DriverBankDetails() {
               <View style={st.qrBox}>
                 <View style={{ gap: 16 }}>
                   <View style={st.qrPreview}>
-                    {bankForm.qrCodeImage ? <Img source={{ uri: bankForm.qrCodeImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel="UPI QR code" /> : <QrCode size={42} color={tw.slate300} />}
+                    {bankForm.qrCodeImage ? <Img source={{ uri: bankForm.qrCodeImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel="UPI QR code" /> : <QrCode size={42} color={DT.faint} />}
                   </View>
                   <View style={{ gap: 12 }}>
                     <View>
                       <Text style={st.qrTitle}>UPI QR Code</Text>
                       <Text style={st.qrSub}>Upload your payout QR image from gallery or camera.</Text>
                     </View>
-                    <Press onPress={handleQrUpload} disabled={uploading} scale={0.99} accessibilityLabel="Upload UPI QR code" style={[st.upload, { backgroundColor: uploading ? tw.slate200 : tw.slate950 }]}>
-                      <Upload size={15} color={uploading ? tw.slate400 : '#fff'} />
-                      <Text style={[st.uploadText, { color: uploading ? tw.slate400 : '#fff' }]}>{uploading ? 'UPLOADING...' : 'UPLOAD QR'}</Text>
-                    </Press>
+<CtaButton
+                      title={uploading ? 'UPLOADING...' : 'UPLOAD QR'}
+                      variant="brand"
+                      onPress={handleQrUpload}
+                      disabled={uploading}
+                      accessibilityLabel="Upload UPI QR code"
+                      icon={<Upload size={15} color={DT.onBrand} />}
+                    />
                   </View>
                 </View>
               </View>
@@ -238,47 +234,33 @@ export default function DriverBankDetails() {
               {success ? <Text style={st.success}>{success}</Text> : null}
 
               <View style={{ gap: 12, paddingTop: 8 }}>
-                <Press onPress={() => navigate(`${routePrefix}/profile`)} style={st.backBtn}>
-                  <Text style={st.backBtnText}>Back</Text>
-                </Press>
-                <Press onPress={handleSave} disabled={saving || uploading} style={[st.save, (saving || uploading) && { opacity: 0.6 }]}>
-                  {saving ? <Spinner size={16} color="#fff" /> : <Save size={15} color="#fff" />}
-                  <Text style={st.saveText}>Save</Text>
-                </Press>
+<CtaButton title="Save" onPress={handleSave} disabled={uploading} loading={saving} icon={<Save size={16} color={DT.ctaInk} />} />
+                <CtaButton title="Back" variant="outline" onPress={() => navigate(`${routePrefix}/profile`)} />
               </View>
             </View>
           )}
-        </View>
+        </Card>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const st = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f8fafc' },
-  back: { width: 44, height: 44, borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  eyebrow: { fontSize: 11, letterSpacing: 2.64, color: tw.slate400, ...fo(900) },
-  h1: { marginTop: 4, fontSize: 24, letterSpacing: -0.6, color: tw.slate950, ...fo(900) },
-  dark: { borderRadius: 32, backgroundColor: tw.slate950, padding: 24, ...shadow('xl') },
-  darkIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  darkEyebrow: { fontSize: 11, letterSpacing: 2.2, color: tw.slate400, ...fo(900) },
-  darkSummary: { marginTop: 8, fontSize: 18, letterSpacing: -0.45, color: '#fff', ...fo(900) },
-  darkNote: { marginTop: 8, fontSize: 14, color: tw.slate300, ...fo(500) },
-  card: { borderRadius: 32, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', padding: 24, ...shadow('sm') },
-  loading: { paddingVertical: 64, textAlign: 'center', fontSize: 14, color: tw.slate500, ...fo(600) },
-  fieldLabel: { fontSize: 11, letterSpacing: 1.1, color: tw.slate500, ...fo(700) },
-  input: { height: 48, borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 0, fontSize: 15, color: tw.slate900, ...fo(700) },
-  qrBox: { borderRadius: 28, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, padding: 16 },
-  qrPreview: { height: 144, width: '100%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.slate300, backgroundColor: '#fff' },
-  qrTitle: { fontSize: 13, color: tw.slate900, ...fo(700) },
-  qrSub: { marginTop: 4, fontSize: 12, color: tw.slate500, ...fo(500) },
-  upload: { height: 48, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  uploadText: { flexShrink: 0, fontSize: 12, letterSpacing: 0.6, ...fo(700) },
-  updated: { fontSize: 12, color: tw.slate400, ...fo(500) },
-  error: { borderRadius: 16, backgroundColor: tw.rose50, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: tw.rose600, ...fo(700) },
-  success: { borderRadius: 16, backgroundColor: tw.emerald50, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: tw.emerald700, ...fo(700) },
-  backBtn: { height: 48, borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, alignItems: 'center', justifyContent: 'center' },
-  backBtnText: { fontSize: 13, color: tw.slate700, ...fo(700) },
-  save: { height: 48, borderRadius: 16, backgroundColor: tw.slate950, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  saveText: { fontSize: 13, color: '#fff', ...fo(700) },
+  root: { flex: 1, backgroundColor: DT.bg },
+  dark: { borderRadius: DT.radius.xl, padding: 22, ...shadow('lg') },
+  darkIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
+  darkEyebrow: { fontSize: 11, letterSpacing: 1.4, minWidth: 100, color: DT.gold, ...fo(800) },
+  darkSummary: { marginTop: 8, fontSize: 18, color: DT.onBrand, ...fo(800) },
+  darkNote: { marginTop: 8, fontSize: 13, lineHeight: 19, color: DT.onBrandMuted, ...fo(500) },
+  card: { borderRadius: DT.radius.xl, padding: 22 },
+  loading: { paddingVertical: 64, textAlign: 'center', fontSize: 14, color: DT.muted, ...fo(600) },
+  fieldLabel: { fontSize: 11, letterSpacing: 0.8, minWidth: 60, color: DT.muted, ...fo(800) },
+  input: { height: 52, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg, paddingHorizontal: 16, paddingVertical: 0, fontSize: 15, color: DT.ink, ...fo(600) },
+  qrBox: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bgSoft, padding: 16 },
+  qrPreview: { height: 144, width: '100%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: DT.radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: DT.brandBorder, backgroundColor: DT.card },
+  qrTitle: { fontSize: 14, color: DT.ink, ...fo(800) },
+  qrSub: { marginTop: 4, fontSize: 12, color: DT.inkSoft, ...fo(500) },
+  updated: { fontSize: 12, color: DT.muted, ...fo(500) },
+  error: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: DT.dangerInk, ...fo(600) },
+  success: { borderRadius: DT.radius.md, backgroundColor: DT.successSoft, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: DT.successInk, ...fo(600) },
 });

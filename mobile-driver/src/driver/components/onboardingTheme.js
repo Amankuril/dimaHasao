@@ -1,29 +1,37 @@
-import { jakarta } from '../../theme';
+import { outfit, shadow } from '../../theme';
+import { DT } from '../ui/dt';
 
-/* onboarding.css tokens (scoped to .dh-onboarding). */
+/*
+ * Onboarding tokens. The keys keep their old names (OB.*) so every onboarding file keeps working,
+ * but the values now come from the shared driver tokens (DT): deep-green brand, slate surfaces.
+ */
 export const OB = {
-  primary: '#0a4d2b',
-  primaryStrong: '#06381e',
-  primarySoft: '#e8f2ec',
-  accent: '#f59e0b',
-  surface: '#ffffff',
-  bg: '#faf6ed',
-  border: '#e5ddc3',
-  text: '#1f1f24',
-  muted: '#6b7280',
-  danger: '#b91c1c',
-  dangerSoft: '#fef2f2',
+  primary: DT.brandMid,
+  primaryStrong: DT.brand,
+  primarySoft: DT.brandSoft,
+  accent: DT.gold,
+  surface: DT.card,
+  bg: DT.bg,
+  border: DT.border,
+  text: DT.ink,
+  muted: DT.muted,
+  faint: DT.faint,
+  danger: DT.dangerInk,
+  dangerSoft: DT.dangerSoft,
+  success: DT.success,
+  successSoft: DT.successSoft,
 };
 
-/* Plus Jakarta Sans has no 900 cut here: font-black maps to the heaviest, 800. */
-export const jk = (weight = 400) => jakarta(Math.min(weight, 800));
+/* Body font of the onboarding screens: Outfit, like the user app (kept under its old name `jk`). */
+export const jk = (weight = 400) => outfit(Math.min(weight, 900));
 
-/** .dh-card */
+/** White rounded card with a hairline border and a soft shadow. */
 export const obCard = {
-  backgroundColor: OB.surface,
+  backgroundColor: DT.card,
   borderWidth: 1,
-  borderColor: OB.border,
-  borderRadius: 22,
+  borderColor: DT.borderSoft,
+  borderRadius: DT.radius.xl,
+  ...shadow('sm'),
 };
 
 /*
@@ -32,10 +40,12 @@ export const obCard = {
  */
 export const up = (value) => String(value ?? '').toUpperCase();
 
-/** font-extrabold uppercase label (.dh-label): pass the text through up(). */
+/** Small caps field label: pass the text through up(). */
 export const obLabel = {
   ...jk(800),
   fontSize: 11,
+  lineHeight: 16,
   letterSpacing: 0.88,
-  color: OB.muted,
+  minWidth: 40,
+  color: DT.inkSoft,
 };

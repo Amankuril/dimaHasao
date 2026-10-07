@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Bike, Camera, Car, CheckCircle2, Edit3, ImagePlus, Save, Truck, X } from 'lucide-react-native';
+import { Bike, Camera, Car, CheckCircle2, Edit3, ImagePlus, Save, Truck, X } from 'lucide-react-native';
 import Img from '../../components/Img';
 import { BottomSheet } from '../../components/kit';
 import { Spinner } from '../../components/Loader';
@@ -9,8 +9,11 @@ import { Press } from '../../components/ui';
 import { localStore, sessionStore } from '../../lib/storage';
 import { useKeyboardHeight } from '../../lib/useKeyboard';
 import { useNavigate } from '../../lib/webRouter';
-import { outfit, shadow, tw } from '../../theme';
-import DriverBottomNav from '../components/DriverBottomNav';
+import { outfit, playfair, shadow } from '../../theme';
+import DriverBottomNav, { NAV_BAR_HEIGHT } from '../components/DriverBottomNav';
+import { DT } from '../ui/dt';
+import ScreenHeader from '../ui/ScreenHeader';
+import { Card, CtaButton, SectionLabel } from '../ui/Surface';
 import { useDriverImageUpload } from '../hooks/useDriverImageUpload';
 import {
   getCurrentDriver,
@@ -198,7 +201,7 @@ const buildVisibleVehicleTypes = (allTypes, driver) => {
 function VehicleField({ label, value, onChangeText, placeholder, style, inputStyle, autoCapitalize }) {
   const [focused, setFocused] = useState(false);
   return (
-    <View style={[styles.field, focused ? { borderColor: tw.slate400 } : null, style]}>
+    <View style={[styles.field, focused ? { borderColor: DT.brand } : null, style]}>
       <Text style={styles.fieldLabel}>{label.toUpperCase()}</Text>
       <TextInput
         value={value}
@@ -206,7 +209,7 @@ function VehicleField({ label, value, onChangeText, placeholder, style, inputSty
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         placeholder={placeholder}
-        placeholderTextColor={tw.slate300}
+        placeholderTextColor={DT.faint}
         autoCapitalize={autoCapitalize}
         accessibilityLabel={label}
         style={[styles.fieldInput, inputStyle]}
@@ -389,23 +392,17 @@ export default function VehicleFleet() {
   const previewSrc = imagePreview || formData.vehicleImage;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f8f9fb' }}>
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 56 + insets.top, paddingBottom: 128 + insets.bottom }}>
-        <View style={styles.header}>
-          <Press onPress={() => navigate('/taxi/driver/profile')} accessibilityLabel="Back" style={styles.back}>
-            <ArrowLeft size={18} color={tw.slate900} />
-          </Press>
-          <Text style={styles.title} accessibilityRole="header">My Vehicle</Text>
-        </View>
-
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
+      <ScreenHeader title="My Vehicle" subtitle="Vehicle type decides which requests you get" onBack={() => navigate('/taxi/driver/profile')} />
+      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 20, paddingBottom: NAV_BAR_HEIGHT + 24 + insets.bottom }}>
         {isLoading ? (
           <View style={{ minHeight: 420, alignItems: 'center', justifyContent: 'center' }} accessibilityRole="progressbar" accessibilityLabel="Loading">
-            <Spinner size={28} color={tw.slate400} />
+            <Spinner size={28} color={DT.brand} />
           </View>
         ) : (
-          <View style={{ gap: 24 }}>
+          <View style={{ gap: 20 }}>
             <View style={styles.hero}>
-              <View style={{ gap: 20 }}>
+              <View style={{ gap: 18 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                   <View style={{ gap: 6, minWidth: 0, flex: 1 }}>
                     <Text style={styles.heroKicker}>PRIMARY VEHICLE</Text>
@@ -419,12 +416,12 @@ export default function VehicleFleet() {
                     </View>
                   ) : (
                     <View style={styles.heroIcon}>
-                      <VehicleGlyph iconType={activeIconType} size={26} color="#fff" />
+                      <VehicleGlyph iconType={activeIconType} size={26} color={DT.accent} />
                     </View>
                   )}
                 </View>
                 <View style={styles.heroBadge}>
-                  <CheckCircle2 size={15} color={tw.emerald400} />
+                  <CheckCircle2 size={15} color={DT.accent} />
                   <Text style={styles.heroBadgeText}>MAP ICON LINKED TO SELECTED TYPE</Text>
                 </View>
               </View>
@@ -432,29 +429,28 @@ export default function VehicleFleet() {
 
             {message ? <Text style={styles.message}>{message.toUpperCase()}</Text> : null}
 
-            <View style={{ gap: 20 }}>
+            <View style={{ gap: 14 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
-                <Text style={styles.section}>CONFIGURATION</Text>
-                <Press
-                  scale={1}
-                  onPress={() => {
-                    setFormData(buildForm(driver));
-                    setIsEditing(true);
-                  }}
-                  accessibilityLabel="Edit Details"
-                  style={styles.edit}
-                >
-                  <Edit3 size={13} color={tw.blue600} />
-                  <Text style={styles.editText}>Edit Details</Text>
-                </Press>
+                <SectionLabel>Configuration</SectionLabel>
               </View>
 
-              <View style={styles.dispatch}>
+              <Card style={styles.dispatch}>
                 <Text style={styles.dispatchTitle}>DISPATCH MATCHING</Text>
                 <Text style={styles.dispatchBody}>
                   Update the primary vehicle here if requests are not reaching this driver. The system uses the selected vehicle type exactly for job distribution.
                 </Text>
-              </View>
+              </Card>
+
+              <CtaButton
+                variant="cta"
+                title="Edit Details"
+                onPress={() => {
+                  setFormData(buildForm(driver));
+                  setIsEditing(true);
+                }}
+                accessibilityLabel="Edit Details"
+                icon={<Edit3 size={18} color={DT.ctaInk} />}
+              />
             </View>
           </View>
         )}
@@ -475,13 +471,13 @@ export default function VehicleFleet() {
               <Text style={styles.sheetTitle}>Vehicle Details</Text>
             </View>
             <Press scale={1} onPress={() => setIsEditing(false)} accessibilityLabel="Close" style={styles.sheetClose}>
-              <X size={22} color={tw.slate500} />
+              <X size={22} color={DT.muted} />
             </Press>
           </View>
 
           <View style={{ gap: 16 }}>
             <View style={{ gap: 8 }}>
-              <Text style={[styles.fieldLabel, { paddingLeft: 4, color: tw.slate400, marginBottom: 0 }]}>SELECTION</Text>
+              <Text style={[styles.fieldLabel, { paddingLeft: 4, color: DT.muted, marginBottom: 0, minWidth: 80 }]}>SELECTION</Text>
               <View onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
                 {vehicleTypes.map((type) => {
                   const id = String(type._id || type.id);
@@ -498,10 +494,10 @@ export default function VehicleFleet() {
                       accessibilityLabel={getTypeLabel(type)}
                       style={[styles.typeCard, { width: cardWidth }, selected ? styles.typeCardOn : styles.typeCardOff]}
                     >
-                      <View style={[styles.typeImageBox, { backgroundColor: selected ? 'rgba(255,255,255,0.14)' : tw.slate50 }]}>
+                      <View style={[styles.typeImageBox, { backgroundColor: selected ? 'rgba(255,255,255,0.14)' : DT.bg }]}>
                         <Img source={toSource(typeImage)} style={{ width: 32, height: 32 }} resizeMode="contain" accessibilityLabel={getTypeLabel(type)} />
                       </View>
-                      <Text style={[styles.typeLabel, { color: selected ? '#fff' : tw.slate400 }]}>{getTypeLabel(type).toUpperCase()}</Text>
+                      <Text style={[styles.typeLabel, { color: selected ? DT.onBrand : DT.inkSoft }]}>{getTypeLabel(type).toUpperCase()}</Text>
                     </Press>
                   );
                 })}
@@ -531,17 +527,17 @@ export default function VehicleFleet() {
                     <Img source={{ uri: previewSrc }} style={{ width: '100%', height: '100%', opacity: imageUploading ? 0.6 : 1 }} resizeMode="cover" accessibilityLabel="Vehicle" />
                   ) : (
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                      <VehicleGlyph iconType={activeIconType} size={22} color={tw.slate300} />
+                      <VehicleGlyph iconType={activeIconType} size={22} color={DT.faint} />
                     </View>
                   )}
                 </View>
                 <View style={{ flex: 1, gap: 8 }}>
                   <Press scale={1} onPress={openVehicleGalleryPicker} disabled={imageUploading} accessibilityLabel="Choose From Gallery" style={[styles.pickBtn, imageUploading ? { opacity: 0.6 } : null]}>
-                    {imageUploading ? <Spinner size={16} color={tw.slate700} /> : <ImagePlus size={16} color={tw.slate700} />}
+                    {imageUploading ? <Spinner size={16} color={DT.brand} /> : <ImagePlus size={16} color={DT.brand} />}
                     <Text style={styles.pickText}>{imageUploading ? 'Uploading...' : 'Choose From Gallery'}</Text>
                   </Press>
                   <Press scale={1} onPress={openVehicleCameraPicker} disabled={imageUploading} accessibilityLabel="Use Camera" style={[styles.pickBtn, imageUploading ? { opacity: 0.6 } : null]}>
-                    {imageUploading ? <Spinner size={16} color={tw.slate700} /> : <Camera size={16} color={tw.slate700} />}
+                    {imageUploading ? <Spinner size={16} color={DT.brand} /> : <Camera size={16} color={DT.brand} />}
                     <Text style={styles.pickText}>{imageUploading ? 'Uploading...' : 'Use Camera'}</Text>
                   </Press>
                 </View>
@@ -549,10 +545,16 @@ export default function VehicleFleet() {
             </View>
           </View>
 
-          <Press scale={0.95} onPress={handleSave} disabled={isSaving || imageUploading} accessibilityLabel="Update Vehicle" style={[styles.save, isSaving || imageUploading ? { opacity: 0.5 } : null]}>
-            {isSaving || imageUploading ? <Spinner size={20} color="#fff" /> : <Save size={20} color="#fff" />}
-            <Text style={styles.saveText}>UPDATE VEHICLE</Text>
-          </Press>
+          <CtaButton
+            variant="cta"
+            title="UPDATE VEHICLE"
+            onPress={handleSave}
+            disabled={isSaving || imageUploading}
+            accessibilityLabel="Update Vehicle"
+            icon={isSaving || imageUploading ? <Spinner size={20} color={DT.ctaInk} /> : <Save size={20} color={DT.ctaInk} />}
+            style={styles.save}
+            textStyle={styles.saveText}
+          />
         </ScrollView>
       </BottomSheet>
       <DriverBottomNav />
@@ -561,40 +563,34 @@ export default function VehicleFleet() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 32 },
-  back: { width: 40, height: 40, borderRadius: 12, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  title: { fontSize: 20, lineHeight: 28, letterSpacing: -0.5, color: tw.slate900, ...outfit(700) },
-  hero: { backgroundColor: tw.slate900, padding: 28, borderRadius: 40, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', overflow: 'hidden', ...shadow('xl') },
-  heroKicker: { fontSize: 11, lineHeight: 16.5, letterSpacing: 1.1, color: 'rgba(255,255,255,0.4)', ...outfit(700) },
-  heroTitle: { fontSize: 22, lineHeight: 22, letterSpacing: -0.55, color: '#fff', ...outfit(700) },
-  heroNumber: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, color: 'rgba(255,255,255,0.5)', marginTop: 4, ...outfit(600) },
-  heroMeta: { fontSize: 11, lineHeight: 16.5, color: 'rgba(255,255,255,0.3)', ...outfit(500) },
-  heroImage: { height: 64, width: 80, overflow: 'hidden', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)', ...shadow('lg') },
-  heroIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center', ...shadow('lg') },
-  heroBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(0,188,125,0.1)', borderWidth: 1, borderColor: 'rgba(0,188,125,0.2)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 16 },
-  heroBadgeText: { fontSize: 11, lineHeight: 16.5, letterSpacing: 0.55, color: tw.emerald400, ...outfit(600) },
-  message: { fontSize: 11, lineHeight: 16.5, letterSpacing: 1.1, color: tw.slate500, paddingHorizontal: 4, ...outfit(700) },
-  section: { fontSize: 11, lineHeight: 16.5, letterSpacing: 1.1, color: tw.slate400, ...outfit(700) },
-  edit: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: tw.blue50, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  editText: { fontSize: 11, lineHeight: 16.5, color: tw.blue600, ...outfit(700) },
-  dispatch: { backgroundColor: 'rgba(255,251,235,0.5)', borderWidth: 1, borderColor: 'rgba(254,243,198,0.5)', borderRadius: 16, paddingHorizontal: 20, paddingVertical: 16 },
-  dispatchTitle: { fontSize: 11, lineHeight: 16.5, letterSpacing: 0.55, color: tw.amber600, marginBottom: 4, ...outfit(700) },
-  dispatchBody: { fontSize: 12, lineHeight: 19.5, color: tw.slate500, ...outfit(500) },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 40, borderTopRightRadius: 40, width: '100%', maxWidth: 512, alignSelf: 'center', overflow: 'hidden', ...shadow('2xl') },
-  sheetKicker: { fontSize: 11, lineHeight: 16.5, letterSpacing: 1.1, color: tw.slate400, ...outfit(700) },
-  sheetTitle: { fontSize: 24, lineHeight: 32, color: tw.slate900, ...outfit(700) },
-  sheetClose: { width: 40, height: 40, borderRadius: 16, backgroundColor: tw.slate50, alignItems: 'center', justifyContent: 'center' },
-  typeCard: { minHeight: 90, padding: 12, borderRadius: 16, borderWidth: 2, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  typeCardOn: { backgroundColor: tw.slate950, borderColor: tw.slate950, ...shadow('0 20px 25px -5px rgba(3,6,24,0.2), 0 8px 10px -6px rgba(3,6,24,0.2)') },
-  typeCardOff: { backgroundColor: '#fff', borderColor: tw.slate100 },
-  typeImageBox: { width: 40, height: 40, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  typeLabel: { fontSize: 10, lineHeight: 10, letterSpacing: 0.5, textAlign: 'center', ...outfit(700) },
-  field: { backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate200, padding: 16, borderRadius: 16 },
-  fieldLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.slate500, marginBottom: 4, ...outfit(700) },
-  fieldInput: { padding: 0, fontSize: 15, color: tw.slate900, ...outfit(700) },
-  imageBox: { height: 64, width: 80, overflow: 'hidden', borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', ...shadow('sm') },
-  pickBtn: { height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', paddingHorizontal: 12 },
-  pickText: { fontSize: 12, lineHeight: 16, color: tw.slate700, ...outfit(700) },
-  save: { height: 64, backgroundColor: tw.slate950, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, ...shadow('0 20px 25px -5px rgba(3,6,24,0.2), 0 8px 10px -6px rgba(3,6,24,0.2)') },
-  saveText: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, color: '#fff', ...outfit(700) },
+  hero: { backgroundColor: DT.brand, padding: 24, borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.brandMid, overflow: 'hidden', ...shadow('lg') },
+  heroKicker: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, minWidth: 120, color: DT.gold, ...outfit(700) },
+  heroTitle: { fontSize: 22, lineHeight: 28, color: DT.onBrand, ...playfair(700) },
+  heroNumber: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, color: DT.accent, marginTop: 4, ...outfit(700) },
+  heroMeta: { fontSize: 12, lineHeight: 17, color: DT.onBrandMuted, ...outfit(500) },
+  heroImage: { height: 64, width: 80, overflow: 'hidden', borderRadius: DT.radius.md, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.08)' },
+  heroIcon: { width: 56, height: 56, borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
+  heroBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 14, paddingVertical: 10, borderRadius: DT.radius.pill },
+  heroBadgeText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.4, minWidth: 100, flexShrink: 1, color: DT.onBrand, ...outfit(700) },
+  message: { fontSize: 11, lineHeight: 16, letterSpacing: 0.6, color: DT.info, backgroundColor: DT.infoSoft, borderRadius: DT.radius.md, paddingHorizontal: 14, paddingVertical: 10, overflow: 'hidden', ...outfit(700) },
+  dispatch: { backgroundColor: DT.warnSoft, borderColor: DT.warnSoft, borderRadius: DT.radius.lg },
+  dispatchTitle: { fontSize: 11, lineHeight: 16, letterSpacing: 0.55, minWidth: 140, color: DT.warnInk, marginBottom: 4, ...outfit(800) },
+  dispatchBody: { fontSize: 13, lineHeight: 20, color: DT.inkSoft, ...outfit(500) },
+  sheet: { backgroundColor: DT.card, borderTopLeftRadius: 32, borderTopRightRadius: 32, width: '100%', maxWidth: 512, alignSelf: 'center', overflow: 'hidden', ...shadow('2xl') },
+  sheetKicker: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, minWidth: 80, color: DT.muted, ...outfit(700) },
+  sheetTitle: { fontSize: 24, lineHeight: 32, color: DT.brand, ...playfair(700) },
+  sheetClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
+  typeCard: { minHeight: 90, padding: 12, borderRadius: DT.radius.md, borderWidth: 2, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  typeCardOn: { backgroundColor: DT.brand, borderColor: DT.brand },
+  typeCardOff: { backgroundColor: DT.card, borderColor: DT.border },
+  typeImageBox: { width: 40, height: 40, borderRadius: DT.radius.md, alignItems: 'center', justifyContent: 'center' },
+  typeLabel: { fontSize: 10, lineHeight: 12, letterSpacing: 0.5, textAlign: 'center', ...outfit(700) },
+  field: { backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, padding: 16, borderRadius: DT.radius.md },
+  fieldLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, minWidth: 60, color: DT.muted, marginBottom: 4, ...outfit(800) },
+  fieldInput: { padding: 0, minHeight: 24, fontSize: 15, color: DT.ink, ...outfit(700) },
+  imageBox: { height: 64, width: 80, overflow: 'hidden', borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg },
+  pickBtn: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingHorizontal: 12 },
+  pickText: { fontSize: 12, lineHeight: 16, color: DT.brand, ...outfit(700) },
+  save: { minHeight: 56 },
+  saveText: { fontSize: 14, lineHeight: 20, minWidth: 120 },
 });

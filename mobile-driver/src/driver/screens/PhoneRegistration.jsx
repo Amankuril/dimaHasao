@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Loader2, Phone } from 'lucide-react-native';
 import { useLocation, useNavigate } from '../../lib/webRouter';
 import {
@@ -15,7 +14,8 @@ import {
 import AuthLegalLinks from '../../components/AuthLegalLinks';
 import usePlatformSettings from '../../shared/hooks/usePlatformSettings';
 import { Alert, CtaButton, FieldBox, Spin } from '../components/OnboardingFields';
-import { DRIVER_BRAND_LOGO } from '../components/OnboardingShell';
+import { AuthScaffold } from '../components/OnboardingShell';
+import { DT } from '../ui/dt';
 import { OB, jk, obLabel, up } from '../components/onboardingTheme';
 
 /*
@@ -31,7 +31,6 @@ const errorMessage = (error) =>
 export default function PhoneRegistration() {
   const navigate = useNavigate();
   const location = useLocation();
-  const insets = useSafeAreaInsets();
   const brand = usePlatformSettings({ brandName: 'Dima Hasao' });
 
   const stored = getStoredDriverRegistrationSession();
@@ -131,64 +130,47 @@ export default function PhoneRegistration() {
   const disabled = phone.length !== 10 || loading;
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: OB.bg }}
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 56 + insets.top, paddingBottom: 32 + insets.bottom }}
+    <AuthScaffold
+      title={`Drive with ${brand.brandName || 'Dima Hasao'}`}
+      subtitle="Enter your mobile number. We will send a code to confirm it is you."
+      footer={<AuthLegalLinks module="taxi" style={styles.legal} linkStyle={styles.legal} />}
     >
-      <View style={styles.maxW}>
-        <Image source={DRIVER_BRAND_LOGO} style={{ width: 64, height: 64, borderRadius: 32 }} />
-
-        <Text style={styles.h1}>Drive with {brand.brandName || 'Dima Hasao'}</Text>
-        <Text style={styles.sub}>Enter your mobile number. We will send a code to confirm it is you.</Text>
-
-        <View style={{ marginTop: 32 }}>
-          <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up('Mobile number')}</Text>
-          <FieldBox focused={focused} style={{ paddingVertical: 14 }}>
-            <Phone size={18} strokeWidth={2.2} color={OB.muted} />
-            <Text style={{ ...jk(700), fontSize: 15, color: OB.muted }}>+91</Text>
-            <TextInput
-              value={phone}
-              onChangeText={(value) => setPhone(value.replace(/\D/g, '').slice(0, 10))}
-              keyboardType="number-pad"
-              maxLength={10}
-              autoFocus
-              placeholder="98765 43210"
-              placeholderTextColor="#c2bda9"
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              style={{ ...jk(600), fontSize: 15, color: OB.text, padding: 0, flex: 1, minWidth: 0, letterSpacing: 1.2 }}
-            />
-          </FieldBox>
-        </View>
-
-        {error ? <Alert style={{ marginTop: 16 }}>{error}</Alert> : null}
+      <View>
+        <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up('Mobile number')}</Text>
+        <FieldBox focused={focused} style={{ paddingVertical: 14 }}>
+          <Phone size={18} strokeWidth={2.2} color={OB.muted} />
+          <Text style={{ ...jk(700), fontSize: 15, color: OB.muted }}>+91</Text>
+          <TextInput
+            value={phone}
+            onChangeText={(value) => setPhone(value.replace(/\D/g, '').slice(0, 10))}
+            keyboardType="number-pad"
+            maxLength={10}
+            autoFocus
+            accessibilityLabel="Mobile number"
+            placeholder="98765 43210"
+            placeholderTextColor={DT.faint}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={{ ...jk(600), fontSize: 16, color: OB.text, padding: 0, flex: 1, minWidth: 0, letterSpacing: 1.2 }}
+          />
+        </FieldBox>
       </View>
 
-      <View style={[styles.maxW, { gap: 20, marginTop: 24 }]}>
-        <CtaButton onPress={handleSendOtp} disabled={disabled}>
-          {loading ? (
-            <Spin>
-              <Loader2 size={18} color="#fff" />
-            </Spin>
-          ) : (
-            'Send code'
-          )}
-        </CtaButton>
+      {error ? <Alert>{error}</Alert> : null}
 
-        <AuthLegalLinks
-          module="taxi"
-          style={styles.legal}
-          linkStyle={styles.legal}
-        />
-      </View>
-    </ScrollView>
+      <CtaButton onPress={handleSendOtp} disabled={disabled}>
+        {loading ? (
+          <Spin>
+            <Loader2 size={18} color={DT.ctaInk} />
+          </Spin>
+        ) : (
+          'Send code'
+        )}
+      </CtaButton>
+    </AuthScaffold>
   );
 }
 
 const styles = StyleSheet.create({
-  maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
-  h1: { ...jk(800), fontSize: 30, lineHeight: 37.5, letterSpacing: -0.6, color: OB.text, marginTop: 24 },
-  sub: { ...jk(500), fontSize: 14, lineHeight: 22.75, color: OB.muted, marginTop: 8, maxWidth: 240 },
   legal: { ...jk(600), fontSize: 12, color: OB.muted, textAlign: 'center' },
 });

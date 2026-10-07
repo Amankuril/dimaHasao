@@ -23,7 +23,9 @@ import {
   getDriverScheduledRides,
   getLocalDriverToken,
 } from '../services/registrationService';
-import DriverBottomNav from '../components/DriverBottomNav';
+import DriverBottomNav, { NAV_BAR_HEIGHT } from '../components/DriverBottomNav';
+import { DT } from '../ui/dt';
+import { CtaButton } from '../ui/Surface';
 import HomeMap, { getMapIconForVehicle } from '../components/HomeMap';
 import IncomingRideRequest from './IncomingRideRequest';
 import { addLocalDriverNotification, getUnreadDriverNotificationCount, getVisibleDriverNotifications } from '../utils/notificationState';
@@ -1451,14 +1453,14 @@ const DriverHome = () => {
   };
 
   const topPad = Math.max(48, insets.top + 16);
-  const bottomOffset = 80 + Math.max(0, insets.bottom - 8);
+  const bottomOffset = NAV_BAR_HEIGHT + Math.max(insets.bottom, 8) - 8;
   const noticeTop = 104 + (topPad - 48);
 
   const summaryItems = [
-    { Icon: IndianRupee, bg: tw.emerald50, color: tw.emerald600, value: formatSummaryMoney(todaySummary.earnings), label: 'EARNINGS' },
-    { Icon: Clock, bg: tw.blue50, color: tw.blue600, value: `${dutyHours}h ${dutyMins}m`, label: 'ACTIVE' },
-    { Icon: Navigation, bg: tw.orange50, color: tw.orange600, value: formatSummaryDistance(todaySummary.distanceMeters), label: 'DISTANCE' },
-    { Icon: BarChart2, bg: tw.purple50, color: tw.purple600, value: String(todaySummary.rides), label: 'RIDES' },
+    { Icon: IndianRupee, bg: alpha(DT.success, 0.18), color: tw.emerald400, value: formatSummaryMoney(todaySummary.earnings), label: 'EARNINGS' },
+    { Icon: Clock, bg: alpha(DT.gold, 0.2), color: DT.accent, value: `${dutyHours}h ${dutyMins}m`, label: 'ACTIVE' },
+    { Icon: Navigation, bg: alpha(tw.blue400, 0.18), color: tw.blue400, value: formatSummaryDistance(todaySummary.distanceMeters), label: 'DISTANCE' },
+    { Icon: BarChart2, bg: alpha(DT.success, 0.18), color: tw.emerald400, value: String(todaySummary.rides), label: 'RIDES' },
   ];
 
   return (
@@ -1513,7 +1515,7 @@ const DriverHome = () => {
           <Text style={[outfit(600), st.dlgBody]}>New ride requests will stop until you go online again.</Text>
           <View style={st.dlgButtons}>
             <Press onPress={() => setShowOfflineConfirm(false)} scale={1} style={[st.dlgBtn, st.dlgBtnGhost]}>
-              <Text style={[outfit(900), st.dlgBtnText, { color: tw.slate500, letterSpacing: 1.68 }]}>STAY ONLINE</Text>
+              <Text numberOfLines={1} style={[outfit(800), st.dlgBtnText, { color: DT.ink }]}>Stay online</Text>
             </Press>
             <Press
               onPress={() => {
@@ -1521,9 +1523,9 @@ const DriverHome = () => {
                 goOffline();
               }}
               scale={1}
-              style={[st.dlgBtn, { backgroundColor: tw.rose500, boxShadow: '0 14px 28px rgba(244,63,94,0.28)' }]}
+              style={[st.dlgBtn, { backgroundColor: DT.danger, borderColor: DT.danger }]}
             >
-              <Text style={[outfit(900), st.dlgBtnText, { color: '#fff', letterSpacing: 1.68 }]}>GO OFFLINE</Text>
+              <Text numberOfLines={1} style={[outfit(800), st.dlgBtnText, { color: DT.onBrand }]}>Go offline</Text>
             </Press>
           </View>
         </CenterDialog>
@@ -1550,17 +1552,17 @@ const DriverHome = () => {
               scale={1}
               style={[st.dlgBtn, st.dlgBtnGhost, { paddingHorizontal: 12 }, selfieUploading && { opacity: 0.6 }]}
             >
-              <Text style={[outfit(900), st.dlgBtnText, { fontSize: 11, letterSpacing: 0.88, color: tw.slate500 }]}>CANCEL</Text>
+              <Text numberOfLines={1} style={[outfit(800), st.dlgBtnText, { color: DT.ink }]}>Cancel</Text>
             </Press>
             <Press
               disabled={selfieUploading}
               onPress={openSelfieCamera}
               scale={1}
-              style={[st.dlgBtn, { paddingHorizontal: 12, backgroundColor: tw.emerald500, boxShadow: '0 14px 28px rgba(16,185,129,0.28)' }, selfieUploading && { opacity: 0.6 }]}
+              style={[st.dlgBtn, { paddingHorizontal: 12, backgroundColor: DT.cta, borderColor: DT.cta, ...shadow('md') }, selfieUploading && { opacity: 0.6 }]}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <Camera size={14} color="#fff" />
-                <Text numberOfLines={1} style={[outfit(900), st.dlgBtnText, { fontSize: 10, letterSpacing: 0.8, color: '#fff', flexShrink: 1 }]}>TAKE NEW SELFIE</Text>
+                <Camera size={16} color={DT.ctaInk} />
+                <Text numberOfLines={1} style={[outfit(800), st.dlgBtnText, { color: DT.ctaInk, flexShrink: 1 }]}>Take new selfie</Text>
               </View>
             </Press>
           </View>
@@ -1578,7 +1580,7 @@ const DriverHome = () => {
             </View>
             <Press onPress={() => setIsScheduleSheetOpen(false)} style={st.sheetClose}>
               <View style={{ transform: [{ rotate: '45deg' }] }}>
-                <ChevronRight size={18} color={tw.slate500} />
+                <ChevronRight size={18} color={DT.muted} />
               </View>
             </Press>
           </View>
@@ -1587,7 +1589,7 @@ const DriverHome = () => {
             {isScheduleLoading ? (
               [0, 1, 2].map((index) => (
                 <Pulse key={index} style={st.skeleton}>
-                  <View style={{ height: 12, width: '50%', borderRadius: 999, backgroundColor: tw.slate200 }} />
+                  <View style={{ height: 12, width: '50%', borderRadius: 999, backgroundColor: DT.border }} />
                   <View style={{ marginTop: 12, height: 10, width: '100%', borderRadius: 999, backgroundColor: tw.slate100 }} />
                   <View style={{ marginTop: 8, height: 10, width: '80%', borderRadius: 999, backgroundColor: tw.slate100 }} />
                 </Pulse>
@@ -1595,7 +1597,7 @@ const DriverHome = () => {
             ) : scheduledRides.length === 0 ? (
               <View style={st.emptyBox}>
                 <View style={st.emptyIcon}>
-                  <CalendarClock size={28} strokeWidth={1.8} color={tw.slate300} />
+                  <CalendarClock size={28} strokeWidth={1.8} color={DT.faint} />
                 </View>
                 <Text style={[outfit(900), st.emptyTitle]}>No scheduled rides yet</Text>
                 <Text style={[outfit(700), st.emptySub]}>Scheduled bookings will show here when they are assigned.</Text>
@@ -1605,7 +1607,7 @@ const DriverHome = () => {
                 <Press key={ride.rideId} onPress={() => setSelectedScheduledRide(createScheduledRidePreview(ride))} scale={0.99} style={st.rideCard}>
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
                     <View style={st.rideIcon}>
-                      <CalendarClock size={18} strokeWidth={2.2} color={tw.blue600} />
+                      <CalendarClock size={18} strokeWidth={2.2} color={DT.brand} />
                     </View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -1620,13 +1622,13 @@ const DriverHome = () => {
                           <Text style={[outfit(900), st.rideFareText]}>{formatFareLabel(ride.fare || ride.baseFare).toUpperCase()}</Text>
                         </View>
                       </View>
-                      <Text numberOfLines={1} style={[outfit(700), st.rideLine, { marginTop: 12, color: tw.slate500 }]}>
+                      <Text numberOfLines={1} style={[outfit(700), st.rideLine, { marginTop: 12, color: DT.muted }]}>
                         {ride.user?.name || 'Customer'}{ride.user?.phone ? ` • ${ride.user.phone}` : ''}
                       </Text>
-                      <Text numberOfLines={1} style={[outfit(700), st.rideLine, { marginTop: 8, color: tw.slate700 }]}>
+                      <Text numberOfLines={1} style={[outfit(700), st.rideLine, { marginTop: 8, color: DT.inkSoft }]}>
                         Pickup: {ride.pickupAddress || 'Pickup point'}
                       </Text>
-                      <Text numberOfLines={1} style={[outfit(700), st.rideLine, { marginTop: 4, color: tw.slate700 }]}>
+                      <Text numberOfLines={1} style={[outfit(700), st.rideLine, { marginTop: 4, color: DT.inkSoft }]}>
                         Drop: {ride.dropAddress || 'Drop point'}
                       </Text>
                     </View>
@@ -1647,20 +1649,21 @@ const DriverHome = () => {
               setIsScheduleSheetOpen(true);
             }}
             scale={0.9}
+            accessibilityLabel="Scheduled rides"
             style={st.roundBtn}
           >
-            <CalendarClock size={18} color={tw.slate900} />
+            <CalendarClock size={20} color={DT.brand} />
             {scheduledRideCount > 0 ? (
-              <View style={[st.badge, { backgroundColor: tw.blue600 }]}>
+              <View style={[st.badge, { backgroundColor: DT.brand }]}>
                 <Text style={[outfit(900), st.badgeText]}>{scheduledRideCount > 99 ? '99+' : scheduledRideCount}</Text>
               </View>
             ) : null}
           </Press>
 
-          <Press onPress={() => navigate('/taxi/driver/notifications')} scale={0.9} style={st.roundBtn}>
-            <Bell size={18} color={tw.slate900} />
+          <Press onPress={() => navigate('/taxi/driver/notifications')} scale={0.9} accessibilityLabel="Notifications" style={st.roundBtn}>
+            <Bell size={20} color={DT.brand} />
             {notificationCount > 0 ? (
-              <View style={[st.badge, { backgroundColor: tw.rose500 }]}>
+              <View style={[st.badge, { backgroundColor: DT.danger }]}>
                 <Text style={[outfit(900), st.badgeText]}>{notificationCount > 99 ? '99+' : notificationCount}</Text>
               </View>
             ) : null}
@@ -1672,13 +1675,14 @@ const DriverHome = () => {
             disabled={isTogglingDuty}
             onPress={handleDutyToggle}
             scale={1}
-            style={[st.duty, isOnline ? { backgroundColor: tw.emerald500, boxShadow: '0 10px 15px -3px rgba(16,185,129,0.2), 0 4px 6px -4px rgba(16,185,129,0.2)' } : { backgroundColor: tw.slate200, ...shadow('lg') }]}
+            accessibilityLabel={isOnline ? 'Go offline' : 'Go online'}
+            style={[st.duty, isOnline ? { backgroundColor: DT.success, borderColor: DT.successInk, ...shadow('lg') } : { backgroundColor: DT.card, borderColor: DT.border, ...shadow('lg') }]}
           >
             <Animated.View style={[st.knob, { transform: [{ translateX: knobX }] }]}>
-              <Power size={14} strokeWidth={3} color={isOnline ? tw.emerald500 : tw.slate400} />
+              <Power size={16} strokeWidth={3} color={isOnline ? DT.successInk : DT.muted} />
             </Animated.View>
             <View style={st.dutyLabelWrap}>
-              <Text style={[outfit(900), st.dutyLabel, isOnline ? { color: '#fff', marginRight: 24 } : { color: tw.slate400, marginLeft: 24 }]}>
+              <Text style={[outfit(900), st.dutyLabel, isOnline ? { color: DT.onBrand, marginRight: 24 } : { color: DT.inkSoft, marginLeft: 24 }]}>
                 {isOnline ? 'ONLINE' : 'OFFLINE'}
               </Text>
             </View>
@@ -1686,8 +1690,8 @@ const DriverHome = () => {
         </View>
 
         <View style={st.topRight}>
-          <Press onPress={() => navigate('/taxi/driver/wallet')} scale={0.95} style={st.walletPill}>
-            <IndianRupee size={12} strokeWidth={3} color={tw.emerald400} />
+          <Press onPress={() => navigate('/taxi/driver/wallet')} scale={0.95} accessibilityLabel="Wallet balance" style={st.walletPill}>
+            <IndianRupee size={14} strokeWidth={3} color={DT.accent} />
             <Text style={[outfit(900), st.walletText]}>
               {Number(walletSummary.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </Text>
@@ -1697,31 +1701,29 @@ const DriverHome = () => {
 
       {walletNotice ? (
         <View style={[st.noticeWrap, { top: noticeTop }]}>
-          <View style={[st.notice, { borderColor: walletNotice.tone === 'danger' ? tw.rose100 : tw.amber100 }]}>
-            <View style={[st.noticeIcon, { backgroundColor: walletNotice.tone === 'danger' ? tw.rose50 : tw.amber50 }]}>
-              <Wallet size={18} strokeWidth={2.6} color={walletNotice.tone === 'danger' ? tw.rose600 : tw.amber600} />
+          <View style={[st.notice, { borderColor: walletNotice.tone === 'danger' ? DT.danger : DT.warn }]}>
+            <View style={[st.noticeIcon, { backgroundColor: walletNotice.tone === 'danger' ? DT.dangerSoft : DT.warnSoft }]}>
+              <Wallet size={18} strokeWidth={2.6} color={walletNotice.tone === 'danger' ? DT.dangerInk : DT.warnInk} />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text numberOfLines={1} style={[outfit(900), st.noticeTitle]}>{walletNotice.title}</Text>
-                <View style={[st.noticeBadge, { backgroundColor: walletNotice.tone === 'danger' ? tw.rose50 : tw.amber50 }]}>
-                  <Text style={[outfit(900), st.noticeBadgeText, { color: walletNotice.tone === 'danger' ? tw.rose600 : tw.amber600 }]}>
+                <View style={[st.noticeBadge, { backgroundColor: walletNotice.tone === 'danger' ? DT.dangerSoft : DT.warnSoft }]}>
+                  <Text style={[outfit(900), st.noticeBadgeText, { color: walletNotice.tone === 'danger' ? DT.dangerInk : DT.warnInk }]}>
                     Rs {Number(walletSummary.balance || 0).toFixed(0)}
                   </Text>
                 </View>
               </View>
               <Text style={[outfit(600), st.noticeMsg]}>{walletNotice.message}</Text>
             </View>
-            <Press onPress={() => navigate('/taxi/driver/wallet')} scale={0.95} style={st.topUp}>
-              <Text style={[outfit(900), st.topUpText]}>TOP UP</Text>
-            </Press>
+            <CtaButton title="Top up" onPress={() => navigate('/taxi/driver/wallet')} style={st.topUp} textStyle={st.topUpText} />
           </View>
         </View>
       ) : null}
 
       <View style={st.recenterWrap}>
         <Press onPress={recenterMap} scale={0.9} accessibilityLabel="Recenter map" style={st.recenter}>
-          <Target size={20} strokeWidth={2.4} color={tw.slate900} />
+          <Target size={22} strokeWidth={2.4} color={DT.brand} />
         </Press>
       </View>
 
@@ -1741,7 +1743,7 @@ const DriverHome = () => {
               <Pulse style={st.summaryDot} />
             </View>
             <Animated.View style={[st.chevron, { transform: [{ rotate: chevron.interpolate({ inputRange: [0, 1], outputRange: ['-90deg', '90deg'] }) }] }]}>
-              <ChevronRight size={16} strokeWidth={2.8} color={tw.slate500} />
+              <ChevronRight size={16} strokeWidth={2.8} color={DT.onBrandMuted} />
             </Animated.View>
           </Pressable>
 
@@ -1767,86 +1769,86 @@ const DriverHome = () => {
 };
 
 const st = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#E5E7EB', overflow: 'hidden' },
-  mapFallback: { flex: 1, backgroundColor: tw.slate200, alignItems: 'center', justifyContent: 'center' },
-  mapFallbackDot: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.slate300, marginBottom: 16 },
-  mapFallbackText: { fontSize: 14, lineHeight: 20, color: tw.slate500, textAlign: 'center' },
+  root: { flex: 1, backgroundColor: DT.bgSoft, overflow: 'hidden' },
+  mapFallback: { flex: 1, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
+  mapFallbackDot: { width: 64, height: 64, borderRadius: 32, backgroundColor: DT.border, marginBottom: 16 },
+  mapFallbackText: { fontSize: 14, lineHeight: 20, color: DT.muted, textAlign: 'center' },
 
   topBar: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 16, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', zIndex: 40 },
   topLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   topCenter: { flex: 1, alignItems: 'center' },
   topRight: { flex: 1, alignItems: 'flex-end' },
-  roundBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('md') },
-  badge: { position: 'absolute', top: -4, right: -4, height: 16, minWidth: 16, paddingHorizontal: 4, borderRadius: 8, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  badgeText: { fontSize: 8, lineHeight: 10, color: '#fff' },
-  duty: { width: 112, height: 40, borderRadius: 20, padding: 4, justifyContent: 'center' },
-  knob: { position: 'absolute', left: 4, top: 4, width: 32, height: 32, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
+  roundBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
+  badge: { position: 'absolute', top: -4, right: -4, height: 18, minWidth: 18, paddingHorizontal: 4, borderRadius: 9, borderWidth: 2, borderColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
+  badgeText: { fontSize: 9, lineHeight: 12, color: DT.onBrand },
+  duty: { width: 112, height: 44, borderRadius: 22, borderWidth: 1, padding: 5, justifyContent: 'center' },
+  knob: { position: 'absolute', left: 5, top: 5, width: 32, height: 32, borderRadius: 16, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
   dutyLabelWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingLeft: 8 },
-  dutyLabel: { fontSize: 9, letterSpacing: 0.9, minWidth: 52 },
-  walletPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: '#000', paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' },
-  walletText: { fontSize: 13, letterSpacing: -0.325, color: '#fff' },
+  dutyLabel: { fontSize: 10, letterSpacing: 0.9, minWidth: 56 },
+  walletPill: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: DT.brand, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: DT.gold, ...shadow('md') },
+  walletText: { fontSize: 14, letterSpacing: -0.2, color: DT.onBrand },
 
   noticeWrap: { position: 'absolute', left: 16, right: 16, zIndex: 40 },
-  notice: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 21.6, borderWidth: 1, backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 14, paddingVertical: 12, boxShadow: '0 16px 36px rgba(15,23,42,0.14)' },
-  noticeIcon: { width: 40, height: 40, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  noticeTitle: { flexShrink: 1, fontSize: 14, lineHeight: 20, letterSpacing: -0.35, color: tw.slate950 },
+  notice: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, backgroundColor: DT.card, paddingHorizontal: 14, paddingVertical: 12, ...shadow('md') },
+  noticeIcon: { width: 44, height: 44, borderRadius: DT.radius.md, alignItems: 'center', justifyContent: 'center' },
+  noticeTitle: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: DT.ink },
   noticeBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  noticeBadgeText: { fontSize: 10 },
-  noticeMsg: { marginTop: 2, fontSize: 12, lineHeight: 16.5, color: tw.slate500 },
-  topUp: { borderRadius: 999, backgroundColor: tw.slate950, paddingHorizontal: 12, paddingVertical: 8, ...shadow('sm') },
-  topUpText: { fontSize: 10, letterSpacing: 1, color: '#fff' },
+  noticeBadgeText: { fontSize: 10, lineHeight: 14 },
+  noticeMsg: { marginTop: 2, fontSize: 12, lineHeight: 16.5, color: DT.muted },
+  topUp: { minHeight: 44, paddingHorizontal: 16, borderRadius: DT.radius.pill },
+  topUpText: { fontSize: 13 },
 
   recenterWrap: { position: 'absolute', right: 20, top: '50%', marginTop: -24, zIndex: 30 },
-  recenter: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: tw.slate100, backgroundColor: 'rgba(255,255,255,0.95)', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 30px rgba(15,23,42,0.16)' },
+  recenter: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
 
-  bottom: { position: 'absolute', left: 0, right: 0, padding: 24, paddingBottom: 16, zIndex: 60 },
-  statusToast: { marginBottom: 16, alignSelf: 'center', maxWidth: 280, borderRadius: 16, backgroundColor: 'rgba(15,23,43,0.92)', paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  statusText: { fontSize: 12, lineHeight: 19.5, color: '#fff', textAlign: 'center' },
-  summary: { width: '100%', overflow: 'hidden', borderRadius: 28, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' },
-  summaryHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
-  summaryTitle: { fontSize: 13, letterSpacing: 1.3, color: tw.slate400 },
-  summaryDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: tw.emerald500 },
-  chevron: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.slate50, alignItems: 'center', justifyContent: 'center' },
+  bottom: { position: 'absolute', left: 0, right: 0, paddingHorizontal: 16, paddingBottom: 8, zIndex: 60 },
+  statusToast: { marginBottom: 12, alignSelf: 'center', maxWidth: 300, borderRadius: DT.radius.md, backgroundColor: DT.brandDeep, borderWidth: 1, borderColor: DT.gold, paddingHorizontal: 16, paddingVertical: 12, ...shadow('lg') },
+  statusText: { fontSize: 12, lineHeight: 18, color: DT.onBrand, textAlign: 'center' },
+  summary: { width: '100%', overflow: 'hidden', borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.darkSoft, backgroundColor: DT.dark, ...shadow('lg') },
+  summaryHead: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
+  summaryTitle: { fontSize: 12, letterSpacing: 1.3, minWidth: 130, color: DT.gold },
+  summaryDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: DT.success },
+  chevron: { width: 36, height: 36, borderRadius: 18, backgroundColor: DT.darkSoft, alignItems: 'center', justifyContent: 'center' },
   summaryGrid: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 20 },
-  summaryIcon: { width: 40, height: 40, borderRadius: 16, marginBottom: 8, alignItems: 'center', justifyContent: 'center' },
-  summaryValue: { fontSize: 14, color: tw.slate900 },
-  summaryLabel: { fontSize: 9, letterSpacing: -0.225, color: tw.slate400 },
+  summaryIcon: { width: 44, height: 44, borderRadius: DT.radius.md, marginBottom: 8, alignItems: 'center', justifyContent: 'center' },
+  summaryValue: { fontSize: 15, lineHeight: 20, color: DT.onBrand },
+  summaryLabel: { fontSize: 9, lineHeight: 12, letterSpacing: 0.5, minWidth: 52, textAlign: 'center', color: DT.onBrandMuted },
 
   dialogRoot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   dialogBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.slate950, 0.45) },
-  dialogCard: { width: Math.min(384, Dimensions.get('window').width - 40), borderRadius: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)', backgroundColor: '#fff', padding: 24, boxShadow: '0 24px 60px rgba(15,23,42,0.22)' },
-  dlgTitle: { fontSize: 18, lineHeight: 28, letterSpacing: -0.45, color: tw.slate950 },
-  dlgBody: { marginTop: 8, fontSize: 13, lineHeight: 21, color: tw.slate500 },
+  dialogCard: { width: Math.min(384, Dimensions.get('window').width - 40), borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 24, ...shadow('lg') },
+  dlgTitle: { fontSize: 20, lineHeight: 28, color: DT.ink },
+  dlgBody: { marginTop: 8, fontSize: 13, lineHeight: 21, color: DT.muted },
   dlgButtons: { marginTop: 20, flexDirection: 'row', gap: 12 },
-  dlgBtn: { flex: 1, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  dlgBtnGhost: { borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50 },
-  dlgBtnText: { fontSize: 12 },
-  selfieKicker: { fontSize: 10, letterSpacing: 1.8, color: tw.emerald500 },
-  selfieTitle: { marginTop: 8, fontSize: 20, lineHeight: 28, letterSpacing: -0.5, color: tw.slate950 },
-  selfieError: { marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.rose100, backgroundColor: tw.rose50, paddingHorizontal: 12, paddingVertical: 8 },
-  selfieErrorText: { fontSize: 12, color: tw.rose600 },
+  dlgBtn: { flex: 1, minHeight: 52, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  dlgBtnGhost: { borderColor: DT.border, backgroundColor: DT.card },
+  dlgBtnText: { fontSize: 14, lineHeight: 20 },
+  selfieKicker: { fontSize: 10, letterSpacing: 1.8, minWidth: 100, color: DT.successInk },
+  selfieTitle: { marginTop: 8, fontSize: 20, lineHeight: 28, color: DT.ink },
+  selfieError: { marginTop: 12, borderRadius: DT.radius.sm, borderWidth: 1, borderColor: DT.danger, backgroundColor: DT.dangerSoft, paddingHorizontal: 12, paddingVertical: 8 },
+  selfieErrorText: { fontSize: 12, color: DT.dangerInk },
 
   sheetRoot: { flex: 1, justifyContent: 'flex-end' },
   sheetBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.slate950, 0.45) },
-  sheet: { maxHeight: SCREEN_H * 0.78, borderTopLeftRadius: 30, borderTopRightRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)', backgroundColor: '#fff', paddingHorizontal: 20, paddingBottom: 24, paddingTop: 20, boxShadow: '0 -24px 60px rgba(15,23,42,0.24)' },
-  sheetHandle: { alignSelf: 'center', width: 56, height: 6, borderRadius: 999, backgroundColor: tw.slate200 },
+  sheet: { maxHeight: SCREEN_H * 0.78, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, paddingHorizontal: 20, paddingBottom: 24, paddingTop: 12, ...shadow('lg') },
+  sheetHandle: { alignSelf: 'center', width: 48, height: 5, borderRadius: 999, backgroundColor: DT.border },
   sheetHead: { marginTop: 16, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  sheetKicker: { fontSize: 10, letterSpacing: 2, color: tw.blue500 },
-  sheetTitle: { marginTop: 4, fontSize: 22, lineHeight: 28, letterSpacing: -0.55, color: tw.slate950 },
-  sheetSub: { marginTop: 4, fontSize: 12, color: tw.slate500 },
-  sheetClose: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, alignItems: 'center', justifyContent: 'center' },
-  skeleton: { borderRadius: 22, borderWidth: 1, borderColor: tw.slate100, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 16 },
-  emptyBox: { borderRadius: 24, borderWidth: 1, borderColor: tw.slate100, backgroundColor: tw.slate50, paddingHorizontal: 20, paddingVertical: 40, alignItems: 'center' },
-  emptyIcon: { width: 64, height: 64, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  emptyTitle: { marginTop: 16, fontSize: 16, color: tw.slate700 },
-  emptySub: { marginTop: 4, fontSize: 12, color: tw.slate400, textAlign: 'center' },
-  rideCard: { width: '100%', borderRadius: 22, borderWidth: 1, borderColor: tw.slate100, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 16, ...shadow('sm') },
-  rideIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: tw.blue100, alignItems: 'center', justifyContent: 'center' },
-  rideTitle: { fontSize: 14, color: tw.slate950 },
-  rideWhen: { marginTop: 4, fontSize: 10, letterSpacing: 1.6, color: tw.blue500 },
-  rideCountdown: { marginTop: 4, fontSize: 11, color: tw.emerald600 },
-  rideFare: { borderRadius: 999, backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4 },
-  rideFareText: { fontSize: 9, letterSpacing: 0.45, color: tw.slate500 },
+  sheetKicker: { fontSize: 10, letterSpacing: 2, minWidth: 80, color: DT.gold },
+  sheetTitle: { marginTop: 4, fontSize: 22, lineHeight: 28, color: DT.ink },
+  sheetSub: { marginTop: 4, fontSize: 12, color: DT.muted },
+  sheetClose: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },
+  skeleton: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 16 },
+  emptyBox: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingHorizontal: 20, paddingVertical: 40, alignItems: 'center' },
+  emptyIcon: { width: 64, height: 64, borderRadius: DT.radius.lg, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
+  emptyTitle: { marginTop: 16, fontSize: 16, color: DT.ink },
+  emptySub: { marginTop: 4, fontSize: 12, color: DT.muted, textAlign: 'center' },
+  rideCard: { width: '100%', borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 16, ...shadow('sm') },
+  rideIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  rideTitle: { fontSize: 14, color: DT.ink },
+  rideWhen: { marginTop: 4, fontSize: 10, letterSpacing: 1.6, minWidth: 80, color: DT.info },
+  rideCountdown: { marginTop: 4, fontSize: 11, color: DT.successInk },
+  rideFare: { borderRadius: 999, backgroundColor: DT.successSoft, paddingHorizontal: 10, paddingVertical: 4 },
+  rideFareText: { fontSize: 9, letterSpacing: 0.45, minWidth: 40, color: DT.successInk },
   rideLine: { fontSize: 11 },
 });
 

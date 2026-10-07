@@ -4,9 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CheckCircle2, Clock, FileText, HelpCircle, ShieldCheck, TrendingUp } from 'lucide-react-native';
 import { useNavigate } from '../../lib/webRouter';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { Press } from '../../components/ui';
-import { outfit, tw } from '../../theme';
-import { up } from '../components/onboardingTheme';
+import { outfit, playfair } from '../../theme';
+import { BrandHero, LogoBadge } from '../components/OnboardingShell';
+import { obCard, up } from '../components/onboardingTheme';
+import { Chip, CtaButton } from '../ui/Surface';
+import { DT } from '../ui/dt';
 
 /*
  * Port of driver/pages/registration/ApplicationStatus.jsx (/taxi/driver/status).
@@ -14,8 +16,6 @@ import { up } from '../components/onboardingTheme';
  * are not defined anywhere, so the page inherits the taxi root colours (#1C2833 on #F9F9F9)
  * and the "pulsing ring" (bg-taxi-primary) is invisible. Kept as is.
  */
-
-const TEXT = '#1C2833';
 
 export default function ApplicationStatus() {
   const navigate = useNavigate();
@@ -40,74 +40,87 @@ export default function ApplicationStatus() {
   const scale = enter.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] });
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F9F9F9' }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 32, paddingTop: 80 + insets.top, paddingBottom: 128 + insets.bottom }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 48 }}>
-          <Animated.View style={[styles.hero, { opacity: enter, transform: [{ rotate }, { scale }] }]}>
-            <Clock size={52} strokeWidth={2.5} color={TEXT} />
-            <View style={styles.badge}>
-              <CheckCircle2 size={20} strokeWidth={3} color="#fff" />
-            </View>
-          </Animated.View>
-
-          <View style={{ alignItems: 'center', gap: 16, paddingHorizontal: 8 }}>
-            <Text style={styles.h1}>Application Successfully Submitted</Text>
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 + insets.bottom }}>
+        <BrandHero top={insets.top + 14} style={{ paddingBottom: 64 }}>
+          <View style={styles.maxW}>
+            <LogoBadge size={48} />
+            <Text style={styles.h1} accessibilityRole="header">Application Successfully Submitted</Text>
             <Text style={styles.lead}>
-              Our team is currently reviewing your documents. This usually takes <Text style={{ color: TEXT }}>12-24 hours.</Text>
+              Our team is currently reviewing your documents. This usually takes <Text style={{ color: DT.accent, ...outfit(800) }}>12-24 hours.</Text>
             </Text>
           </View>
+        </BrandHero>
 
-          <View style={{ width: '100%', gap: 16 }}>
-            <View style={styles.row}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                <View style={[styles.rowIcon, { backgroundColor: tw.emerald50 }]}>
-                  <FileText size={20} color={tw.emerald500} />
-                </View>
-                <View style={{ gap: 2 }}>
-                  <Text style={styles.rowTitle}>KYC Verification</Text>
-                  <Text style={styles.rowSub}>{up('In Progress')}</Text>
-                </View>
+        <View style={[styles.maxW, { paddingHorizontal: 20, marginTop: -36, gap: 16 }]}>
+          <View style={styles.statusCard}>
+            <Animated.View style={[styles.hero, { opacity: enter, transform: [{ rotate }, { scale }] }]}>
+              <Clock size={40} strokeWidth={2.5} color={DT.warn} />
+              <View style={styles.badge}>
+                <CheckCircle2 size={18} strokeWidth={3} color={DT.onBrand} />
               </View>
-              <Animated.View style={{ opacity: pulse }}>
-                <TrendingUp size={16} color={tw.emerald500} />
-              </Animated.View>
+            </Animated.View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Chip label="In review" tone="warn" />
+              <Text style={styles.statusText}>We will notify you as soon as there is a decision.</Text>
             </View>
+          </View>
 
-            <View style={styles.row}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                <View style={[styles.rowIcon, { backgroundColor: tw.slate50 }]}>
-                  <ShieldCheck size={20} color={tw.slate300} />
-                </View>
-                <View style={{ gap: 2, opacity: 0.4 }}>
-                  <Text style={styles.rowTitle}>Background Check</Text>
-                  <Text style={styles.rowSub}>{up('Waiting')}</Text>
-                </View>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.rowIcon, { backgroundColor: DT.successSoft }]}>
+                <FileText size={20} color={DT.success} />
+              </View>
+              <View style={{ gap: 2, flex: 1, minWidth: 0 }}>
+                <Text style={styles.rowTitle}>KYC Verification</Text>
+                <Text style={styles.rowSub}>{up('In Progress')}</Text>
+              </View>
+            </View>
+            <Animated.View style={{ opacity: pulse }}>
+              <TrendingUp size={18} color={DT.success} />
+            </Animated.View>
+          </View>
+
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.rowIcon, { backgroundColor: DT.bgSoft }]}>
+                <ShieldCheck size={20} color={DT.faint} />
+              </View>
+              <View style={{ gap: 2, opacity: 0.6, flex: 1, minWidth: 0 }}>
+                <Text style={styles.rowTitle}>Background Check</Text>
+                <Text style={styles.rowSub}>{up('Waiting')}</Text>
               </View>
             </View>
           </View>
         </View>
       </ScrollView>
 
-      <View style={[styles.bottom, { paddingBottom: 48 + insets.bottom }]}>
-        <Press onPress={() => navigate('/taxi/driver/support')} style={styles.support}>
-          <Text style={styles.supportText}>{up('Contact Support')}</Text>
-          <HelpCircle size={20} strokeWidth={2.5} color={tw.slate500} />
-        </Press>
+      <View style={[styles.bottom, { paddingBottom: 20 + insets.bottom }]}>
+        <CtaButton
+          variant="outline"
+          title={up('Contact Support')}
+          accessibilityLabel="Contact Support"
+          onPress={() => navigate('/taxi/driver/support')}
+          icon={<HelpCircle size={20} strokeWidth={2.5} color={DT.muted} />}
+          style={styles.maxW}
+        />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { width: 128, height: 128, backgroundColor: '#fff', borderRadius: 40, borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  badge: { position: 'absolute', bottom: -8, right: -8, width: 40, height: 40, backgroundColor: tw.emerald500, borderRadius: 20, borderWidth: 4, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)' },
-  h1: { ...outfit(900), fontSize: 30, lineHeight: 36, letterSpacing: -0.75, color: TEXT, textAlign: 'center' },
-  lead: { ...outfit(700), fontSize: 14, lineHeight: 22.75, color: tw.slate400, textAlign: 'center' },
-  row: { backgroundColor: '#fff', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: tw.slate50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 25px rgba(0,0,0,0.01)' },
-  rowIcon: { width: 40, height: 40, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  rowTitle: { ...outfit(900), fontSize: 14, color: TEXT },
-  rowSub: { ...outfit(700), fontSize: 11, letterSpacing: -0.55, color: tw.slate400 },
-  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 32, paddingTop: 16, backgroundColor: 'rgba(255,255,255,0.5)' },
-  support: { height: 64, backgroundColor: '#fff', borderWidth: 2, borderColor: tw.slate100, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  supportText: { ...outfit(900), fontSize: 16, letterSpacing: -0.4, color: tw.slate500 },
+  maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
+  statusCard: { ...obCard, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  hero: { width: 80, height: 80, backgroundColor: DT.warnSoft, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  badge: { position: 'absolute', bottom: -6, right: -6, width: 32, height: 32, backgroundColor: DT.success, borderRadius: 16, borderWidth: 3, borderColor: DT.card, alignItems: 'center', justifyContent: 'center' },
+  h1: { ...playfair(700), fontSize: 26, lineHeight: 34, color: DT.gold, marginTop: 16 },
+  lead: { ...outfit(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted, marginTop: 8 },
+  statusText: { ...outfit(500), fontSize: 13, lineHeight: 19, color: DT.inkSoft, marginTop: 8 },
+  row: { ...obCard, padding: 16, borderRadius: DT.radius.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  rowLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  rowIcon: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  rowTitle: { ...outfit(800), fontSize: 14, lineHeight: 20, color: DT.ink },
+  rowSub: { ...outfit(700), fontSize: 11, lineHeight: 16, letterSpacing: 0.5, minWidth: 40, color: DT.muted },
+  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12, backgroundColor: 'rgba(248,250,252,0.96)' },
 });

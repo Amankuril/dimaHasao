@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { AlertTriangle, ArrowLeft, ShieldCheck, X } from 'lucide-react-native';
+import { AlertTriangle, ShieldCheck, X } from 'lucide-react-native';
 import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { useNavigate } from '../../lib/webRouter';
-import { outfit as fo, shadow, tw } from '../../theme';
+import { outfit as fo, shadow } from '../../theme';
 import {
   clearDriverAuthState,
   deleteCurrentDriverAccount,
@@ -14,6 +13,9 @@ import {
   sendDriverLoginOtp,
   verifyDriverLoginOtp,
 } from '../services/registrationService';
+import { DT } from '../ui/dt';
+import ScreenHeader from '../ui/ScreenHeader';
+import { CtaButton, SectionLabel } from '../ui/Surface';
 
 const REASONS = [
   'Low earnings',
@@ -47,6 +49,7 @@ export default function DriverDeleteAccount() {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [debugOtp, setDebugOtp] = useState('');
+  const [otpFocused, setOtpFocused] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -139,32 +142,24 @@ export default function DriverDeleteAccount() {
   const canDelete = Boolean(reason) && !hasPendingRequest && !isFetching;
 
   return (
-    <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.38, 1]} style={{ flex: 1 }}>
-      <View style={[styles.header, { paddingTop: 40 + insets.top }]}>
-        <Press scale={0.95} onPress={() => navigate(`${routePrefix}/profile`)} accessibilityLabel="Go back" style={styles.back} hitSlop={6}>
-          <ArrowLeft size={18} color={tw.slate900} strokeWidth={2.5} />
-        </Press>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.kicker}>DANGER ZONE</Text>
-          <Text style={styles.title} accessibilityRole="header">Delete Driver Account</Text>
-        </View>
-      </View>
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
+      <ScreenHeader title="Delete Driver Account" subtitle="Danger zone" onBack={() => navigate(`${routePrefix}/profile`)} />
 
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48 + insets.bottom, gap: 16 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 48 + insets.bottom, gap: 16 }}>
         {success ? (
           <View style={styles.success}>
             <Text style={styles.successText}>{success}</Text>
             <Press scale={0.9} onPress={() => setSuccess(null)} accessibilityLabel="Dismiss" hitSlop={12}>
-              <X size={13} color={tw.emerald400} />
+              <X size={16} color={DT.successInk} />
             </Press>
           </View>
         ) : null}
         {error ? (
           <View style={styles.error} accessibilityLiveRegion="polite">
-            <AlertTriangle size={14} color={tw.red500} strokeWidth={2.5} />
+            <AlertTriangle size={16} color={DT.danger} strokeWidth={2.5} />
             <Text style={styles.errorText}>{error}</Text>
             <Press scale={0.9} onPress={() => setError(null)} accessibilityLabel="Dismiss" hitSlop={12}>
-              <X size={13} color={tw.red400} />
+              <X size={16} color={DT.danger} />
             </Press>
           </View>
         ) : null}
@@ -172,9 +167,9 @@ export default function DriverDeleteAccount() {
         <View style={styles.warning}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
             <View style={styles.warningIcon}>
-              <AlertTriangle size={18} color={tw.red500} strokeWidth={2} />
+              <AlertTriangle size={20} color={DT.danger} strokeWidth={2} />
             </View>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.warningTitle}>Delete driver account</Text>
               <Text style={styles.warningSub}>This will soft delete and log you out</Text>
             </View>
@@ -190,7 +185,7 @@ export default function DriverDeleteAccount() {
         </View>
 
         <View>
-          <Text style={styles.section}>WHY ARE YOU LEAVING?</Text>
+          <SectionLabel style={styles.section}>Why are you leaving?</SectionLabel>
           <View style={styles.reasons} accessibilityRole="radiogroup">
             {REASONS.map((r, i) => {
               const on = reason === r;
@@ -203,10 +198,10 @@ export default function DriverDeleteAccount() {
                   accessibilityRole="radio"
                   accessibilityState={{ checked: on, disabled: hasPendingRequest }}
                   accessibilityLabel={r}
-                  style={[styles.reason, i < REASONS.length - 1 ? styles.reasonBorder : null, on ? { backgroundColor: 'rgba(254,242,242,0.6)' } : null, hasPendingRequest ? { opacity: 0.6 } : null]}
+                  style={[styles.reason, i < REASONS.length - 1 ? styles.reasonBorder : null, on ? { backgroundColor: DT.dangerSoft } : null, hasPendingRequest ? { opacity: 0.6 } : null]}
                 >
-                  <View style={[styles.radio, on ? { borderColor: tw.red500, backgroundColor: tw.red500 } : null]}>{on ? <View style={styles.radioDot} /> : null}</View>
-                  <Text style={[styles.reasonText, on ? { color: tw.red600 } : null]}>{r}</Text>
+                  <View style={[styles.radio, on ? { borderColor: DT.danger, backgroundColor: DT.danger } : null]}>{on ? <View style={styles.radioDot} /> : null}</View>
+                  <Text style={[styles.reasonText, on ? { color: DT.dangerInk } : null]}>{r}</Text>
                 </Press>
               );
             })}
@@ -214,26 +209,23 @@ export default function DriverDeleteAccount() {
         </View>
 
         <View style={{ gap: 10, paddingTop: 8 }}>
-          <Press
-            scale={hasPendingRequest ? 1 : 0.97}
+          <CtaButton
+            variant="danger"
             disabled={!canDelete}
             onPress={() => setShowConfirm(true)}
+            title={hasPendingRequest ? 'REQUEST ALREADY SENT' : 'DELETE MY ACCOUNT'}
             accessibilityLabel={hasPendingRequest ? 'Request Already Sent' : 'Delete my account'}
-            accessibilityState={{ disabled: !canDelete }}
-            style={[styles.delete, canDelete ? shadow('0 6px 20px rgba(239,68,68,0.25)') : { backgroundColor: tw.slate100 }]}
-          >
-            <AlertTriangle size={15} color={canDelete ? '#fff' : tw.slate400} strokeWidth={2.5} />
-            <Text style={[styles.deleteText, canDelete ? null : { color: tw.slate400 }]}>{hasPendingRequest ? 'REQUEST ALREADY SENT' : 'DELETE MY ACCOUNT'}</Text>
-          </Press>
-          <Press scale={1} onPress={() => navigate(`${routePrefix}/profile`)} accessibilityLabel="Cancel" style={styles.cancel}>
-            <Text style={styles.cancelText}>CANCEL</Text>
-          </Press>
+            icon={<AlertTriangle size={16} color={DT.onBrand} strokeWidth={2.5} />}
+            style={styles.delete}
+            textStyle={styles.deleteText}
+          />
+          <CtaButton variant="outline" title="CANCEL" onPress={() => navigate(`${routePrefix}/profile`)} accessibilityLabel="Cancel" />
         </View>
       </ScrollView>
 
       <Dialog visible={showConfirm} onClose={() => setShowConfirm(false)} backdrop="rgba(0,0,0,0.6)" blur={8} panelStyle={styles.dialog}>
         <View style={styles.dialogIcon}>
-          <AlertTriangle size={30} color={tw.red500} strokeWidth={2} />
+          <AlertTriangle size={30} color={DT.danger} strokeWidth={2} />
         </View>
         <Text style={styles.dialogTitle}>Delete this account?</Text>
         <Text style={styles.dialogBody}>Your driver account will be marked inactive instead of being permanently removed.</Text>
@@ -241,69 +233,68 @@ export default function DriverDeleteAccount() {
         {otpSent ? (
           <View style={{ alignSelf: 'stretch', marginBottom: 20 }}>
             <Text style={styles.otpLabel}>OTP SENT TO +91 {driverPhone}</Text>
-            <View style={styles.otpBox}>
-              <ShieldCheck size={16} color={tw.slate400} strokeWidth={2.5} />
+            <View style={[styles.otpBox, otpFocused ? { borderColor: DT.brand } : null]}>
+              <ShieldCheck size={16} color={DT.muted} strokeWidth={2.5} />
               <TextInput
                 value={otp}
                 onChangeText={(text) => setOtp(text.replace(/\D/g, '').slice(0, 4))}
                 keyboardType="number-pad"
                 maxLength={4}
                 placeholder="0000"
-                placeholderTextColor="rgba(15,23,43,0.5)"
+                placeholderTextColor={DT.faint}
                 accessibilityLabel="OTP"
+                onFocus={() => setOtpFocused(true)}
+                onBlur={() => setOtpFocused(false)}
                 style={styles.otpInput}
               />
             </View>
             {debugOtp ? <Text style={styles.debugOtp}>Dev OTP: {debugOtp}</Text> : null}
           </View>
         ) : null}
-        <Press scale={0.97} disabled={loading} onPress={otpSent ? handleDelete : handleSendOtp} accessibilityLabel={otpSent ? 'Verify OTP & Delete' : 'Send OTP'} accessibilityState={{ busy: loading }} style={styles.dialogYes}>
-          {loading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.dialogYesText}>{otpSent ? 'VERIFY OTP & DELETE' : 'SEND OTP'}</Text>}
-        </Press>
-        <Press scale={1} onPress={() => setShowConfirm(false)} accessibilityLabel="No, keep my account" style={{ paddingVertical: 14, alignSelf: 'stretch' }}>
+        <CtaButton
+          variant="danger"
+          loading={loading}
+          onPress={otpSent ? handleDelete : handleSendOtp}
+          title={otpSent ? 'VERIFY OTP & DELETE' : 'SEND OTP'}
+          accessibilityLabel={otpSent ? 'Verify OTP & Delete' : 'Send OTP'}
+          style={{ alignSelf: 'stretch', marginBottom: 8 }}
+        />
+        <Press scale={1} onPress={() => setShowConfirm(false)} accessibilityLabel="No, keep my account" style={{ minHeight: 48, justifyContent: 'center', alignSelf: 'stretch' }}>
           <Text style={styles.dialogNo}>NO, KEEP MY ACCOUNT</Text>
         </Press>
       </Dialog>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 16, backgroundColor: 'rgba(255,255,255,0.9)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.8)', ...shadow('0 4px 20px rgba(15,23,42,0.05)') },
-  back: { width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  kicker: { fontSize: 9, lineHeight: 13.5, letterSpacing: 2.34, color: tw.red400, ...fo(900) },
-  title: { fontSize: 19, lineHeight: 28.5, letterSpacing: -0.475, color: tw.red600, ...fo(900) },
-  success: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: tw.emerald50, borderWidth: 1, borderColor: tw.emerald100, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  successText: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.emerald600, ...fo(900) },
-  error: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red100, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  errorText: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.red600, ...fo(900) },
-  warning: { borderRadius: 20, borderWidth: 2, borderColor: tw.red100, backgroundColor: 'rgba(254,242,242,0.6)', padding: 20 },
-  warningIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: tw.red100, alignItems: 'center', justifyContent: 'center' },
-  warningTitle: { fontSize: 14, lineHeight: 17.5, color: tw.red700, ...fo(900) },
-  warningSub: { fontSize: 11, lineHeight: 16.5, color: tw.red400, ...fo(700) },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: tw.red400, marginTop: 6 },
-  consequence: { flex: 1, fontSize: 12, lineHeight: 19.5, color: tw.red600, ...fo(700) },
-  section: { fontSize: 10, lineHeight: 15, letterSpacing: 2.6, color: tw.slate400, marginBottom: 8, ...fo(900) },
-  reasons: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.9)', overflow: 'hidden', ...shadow('0 4px 14px rgba(15,23,42,0.05)') },
-  reason: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  reasonBorder: { borderBottomWidth: 1, borderBottomColor: tw.slate50 },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: tw.slate200, alignItems: 'center', justifyContent: 'center' },
-  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' },
-  reasonText: { fontSize: 13, lineHeight: 19.5, color: tw.slate700, ...fo(900) },
-  delete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 18, backgroundColor: tw.red500 },
-  deleteText: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, color: '#fff', ...fo(900) },
-  cancel: { paddingVertical: 16, borderRadius: 18, borderWidth: 1, borderColor: tw.slate100, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center' },
-  cancelText: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, color: tw.slate500, ...fo(900) },
-  dialog: { width: '82%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 28, padding: 28, alignItems: 'center', ...shadow('2xl') },
-  dialogIcon: { width: 64, height: 64, borderRadius: 20, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  dialogTitle: { fontSize: 18, lineHeight: 28, color: tw.slate900, marginBottom: 8, ...fo(900) },
-  dialogBody: { fontSize: 13, lineHeight: 21.1, color: tw.slate500, marginBottom: 4, textAlign: 'center', ...fo(700) },
-  dialogNote: { fontSize: 12, lineHeight: 16, color: tw.red400, marginBottom: 20, textAlign: 'center', ...fo(700) },
-  otpLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 2.2, color: tw.slate400, marginLeft: 4, ...fo(900) },
-  otpBox: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 16, borderWidth: 2, borderColor: tw.slate100, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 12 },
-  otpInput: { flex: 1, padding: 0, textAlign: 'center', fontSize: 20, letterSpacing: 7, color: tw.slate900, ...fo(900) },
-  debugOtp: { marginTop: 4, textAlign: 'center', fontSize: 10, lineHeight: 15, color: tw.slate400, ...fo(900) },
-  dialogYes: { alignSelf: 'stretch', backgroundColor: tw.red500, paddingVertical: 14, borderRadius: 16, alignItems: 'center', marginBottom: 10 },
-  dialogYesText: { fontSize: 13, lineHeight: 18, letterSpacing: 1.3, color: '#fff', ...fo(900) },
-  dialogNo: { fontSize: 13, lineHeight: 18, letterSpacing: 1.3, color: tw.slate400, textAlign: 'center', ...fo(900) },
+  success: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: DT.successSoft, borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12 },
+  successText: { flex: 1, fontSize: 13, lineHeight: 18, color: DT.successInk, ...fo(700) },
+  error: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: DT.dangerSoft, borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12 },
+  errorText: { flex: 1, fontSize: 13, lineHeight: 18, color: DT.dangerInk, ...fo(700) },
+  warning: { borderRadius: DT.radius.xl, borderWidth: 1.5, borderColor: DT.danger, backgroundColor: DT.dangerSoft, padding: 20 },
+  warningIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },
+  warningTitle: { fontSize: 16, lineHeight: 22, color: DT.dangerInk, ...fo(800) },
+  warningSub: { fontSize: 12, lineHeight: 17, color: DT.dangerInk, ...fo(600) },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: DT.danger, marginTop: 7 },
+  consequence: { flex: 1, fontSize: 13, lineHeight: 20, color: DT.dangerInk, ...fo(600) },
+  section: { marginBottom: 10, paddingHorizontal: 4 },
+  reasons: { borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, overflow: 'hidden', ...shadow('sm') },
+  reason: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
+  reasonBorder: { borderBottomWidth: 1, borderBottomColor: DT.borderSoft },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: DT.border, alignItems: 'center', justifyContent: 'center' },
+  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: DT.onBrand },
+  reasonText: { fontSize: 14, lineHeight: 20, color: DT.ink, ...fo(700) },
+  delete: { minHeight: 56 },
+  deleteText: { minWidth: 180, letterSpacing: 1 },
+  dialog: { width: '86%', maxWidth: 384, backgroundColor: DT.card, borderRadius: DT.radius.xl, padding: 24, alignItems: 'center', ...shadow('2xl') },
+  dialogIcon: { width: 64, height: 64, borderRadius: 20, backgroundColor: DT.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  dialogTitle: { fontSize: 18, lineHeight: 28, color: DT.ink, marginBottom: 8, ...fo(800) },
+  dialogBody: { fontSize: 13, lineHeight: 20, color: DT.inkSoft, marginBottom: 4, textAlign: 'center', ...fo(600) },
+  dialogNote: { fontSize: 12, lineHeight: 17, color: DT.dangerInk, marginBottom: 20, textAlign: 'center', ...fo(700) },
+  otpLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1.2, minWidth: 100, color: DT.muted, marginLeft: 4, ...fo(800) },
+  otpBox: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingHorizontal: 16, minHeight: 56 },
+  otpInput: { flex: 1, padding: 0, minHeight: 28, textAlign: 'center', fontSize: 20, letterSpacing: 7, color: DT.ink, ...fo(800) },
+  debugOtp: { marginTop: 4, textAlign: 'center', fontSize: 10, lineHeight: 15, color: DT.muted, ...fo(800) },
+  dialogNo: { fontSize: 13, lineHeight: 18, letterSpacing: 1, minWidth: 140, color: DT.inkSoft, textAlign: 'center', ...fo(800) },
 });

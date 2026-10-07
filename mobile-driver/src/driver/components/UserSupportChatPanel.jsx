@@ -7,7 +7,8 @@ import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { useKeyboardHeight } from '../../lib/useKeyboard';
 import Text from './UpperText';
 import { localStore } from '../../lib/storage';
-import { outfit as fo, tw } from '../../theme';
+import { outfit as fo, shadow } from '../../theme';
+import { DT } from '../ui/dt';
 import { socketService } from '../api/socket';
 import { deleteSupportConversation, getSupportConversations, getSupportMessages, markSupportMessagesRead, sendSupportMessage } from '../shared/chat/chatApi';
 import { getChatSession, parseSupportConversationKey } from '../shared/chat/chatIdentity';
@@ -331,15 +332,15 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
 
   if (!isLiveEnabled) {
     return (
-      <View style={[isPlainSurface ? { flex: 1, backgroundColor: '#fff', padding: 24 } : [st.card, { padding: 32 }], style]}>
+      <View style={[isPlainSurface ? { flex: 1, backgroundColor: DT.bg, padding: 24 } : [st.card, { padding: 32 }], style]}>
         <View style={st.row}>
-          <View style={[st.iconBox, { backgroundColor: tw.indigo600, marginRight: 12 }]}><ShieldCheck size={20} color="#fff" /></View>
+          <View style={[st.iconBox, { marginRight: 12 }]}><ShieldCheck size={20} color={DT.accent} /></View>
           <View>
             <Text style={[st.eyebrow, fo(600)]}>Support Chat</Text>
-            <Text style={[{ fontSize: 20, color: tw.slate900 }, fo(600)]}>{title}</Text>
+            <Text style={[{ fontSize: 20, color: DT.ink }, fo(800)]}>{title}</Text>
           </View>
         </View>
-        <Text style={[{ marginTop: 16, fontSize: 13, lineHeight: 24, color: tw.slate500 }, fo(600)]}>
+        <Text style={[{ marginTop: 16, fontSize: 13, lineHeight: 22, color: DT.muted }, fo(600)]}>
           Live chat will activate once the current session has a valid token.
         </Text>
       </View>
@@ -351,22 +352,22 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
   const threadLabel = session.role === 'driver' ? 'Driver Support Thread' : 'User Support Thread';
 
   return (
-    <View style={[isPlainSurface ? { flex: 1, backgroundColor: '#fff', overflow: 'hidden' } : [st.card, { flex: 1 }], style, { paddingBottom: bottomGap }]}>
+    <View style={[isPlainSurface ? { flex: 1, backgroundColor: DT.bg, overflow: 'hidden' } : [st.card, { flex: 1 }], style, { paddingBottom: bottomGap }]}>
       <View style={st.head}>
         <View style={[st.row, { flexShrink: 1, minWidth: 0 }]}>
-          <View style={[st.iconBox, { backgroundColor: '#405189', marginRight: 16, boxShadow: '0 10px 15px rgba(79,70,229,0.1)' }]}><MessageCircle size={20} color="#fff" /></View>
+          <View style={[st.iconBox, { marginRight: 14 }]}><MessageCircle size={20} color={DT.accent} /></View>
           <View style={{ flexShrink: 1, minWidth: 0 }}>
-            <Text numberOfLines={1} style={[{ fontSize: 18, letterSpacing: -0.45, color: tw.slate900 }, fo(900)]}>{title}</Text>
+            <Text numberOfLines={1} style={[{ fontSize: 18, color: DT.ink }, fo(800)]}>{title}</Text>
             <View style={[st.row, { flexWrap: 'wrap' }]}>
-              <Text style={[st.tiny, { color: tw.slate400 }, fo(900)]}>Desk Terminal</Text>
-              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: tw.slate300, marginHorizontal: 8 }} />
-              <Text style={[st.tiny, { color: tw.indigo600 }, fo(900)]}>{subtitle}</Text>
+              <Text style={[st.tiny, { color: DT.muted }, fo(800)]}>Desk Terminal</Text>
+              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: DT.faint, marginHorizontal: 8 }} />
+              <Text style={[st.tiny, { color: DT.brand }, fo(800)]}>{subtitle}</Text>
             </View>
           </View>
         </View>
-        <View style={[st.conn, isConnected ? { borderColor: tw.emerald100, backgroundColor: tw.emerald50 } : { borderColor: tw.rose100, backgroundColor: tw.rose50 }]}>
-          <Dot color={isConnected ? tw.emerald500 : tw.rose500} animate={isConnected} />
-          <Text style={[st.tiny, { fontSize: 10, letterSpacing: 1.8, marginLeft: 10, color: isConnected ? tw.emerald700 : tw.rose700 }, fo(900)]}>
+        <View style={[st.conn, isConnected ? { borderColor: DT.successSoft, backgroundColor: DT.successSoft } : { borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft }]}>
+          <Dot color={isConnected ? DT.success : DT.danger} animate={isConnected} />
+          <Text style={[st.tiny, { fontSize: 10, letterSpacing: 0.4, marginLeft: 8, color: isConnected ? DT.successInk : DT.dangerInk }, fo(800)]}>
             {isConnected ? 'Connection: Live' : 'Connection: Offline'}
           </Text>
         </View>
@@ -375,36 +376,36 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
       <View style={st.threadHead}>
         <View style={[st.row, { flex: 1, minWidth: 0 }]}>
           <View style={st.avatar}>
-            {selectedConversation?.peer?.role === 'driver' ? <CircleUser size={20} color={tw.slate500} /> : <Bot size={20} color={tw.slate500} />}
+            {selectedConversation?.peer?.role === 'driver' ? <CircleUser size={20} color={DT.accent} /> : <Bot size={20} color={DT.accent} />}
           </View>
           <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
-            <Text numberOfLines={1} style={[{ fontSize: 15, textTransform: 'uppercase', letterSpacing: -0.4, color: tw.slate900 }, fo(600)]}>{peerName}</Text>
-            <Text style={[{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.1, color: tw.emerald600 }, fo(700)]}>{threadLabel}</Text>
+            <Text numberOfLines={1} style={[{ fontSize: 15, color: DT.ink }, fo(800)]}>{peerName}</Text>
+            <Text style={[{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 60, color: DT.successInk }, fo(700)]}>{threadLabel}</Text>
           </View>
         </View>
         <View style={st.row}>
           <Press
             onPress={() => { if (selectedConversationKey) socketService.emit('chat:read', { conversationKey: selectedConversationKey }); }}
-            style={[st.toolBtn, { borderColor: tw.slate200, backgroundColor: '#fff' }]}
+            style={[st.toolBtn, { borderColor: DT.border, backgroundColor: DT.card }]}
           >
-            <RefreshCcw size={14} color={tw.slate500} />
+            <RefreshCcw size={16} color={DT.inkSoft} />
           </Press>
           <Press
             onPress={handleClearChat}
             disabled={!selectedConversationKey || messages.length === 0 || deleting}
-            style={[st.toolBtn, { borderColor: tw.rose100, backgroundColor: tw.rose50, marginLeft: 8, opacity: !selectedConversationKey || messages.length === 0 || deleting ? 0.5 : 1 }]}
+            style={[st.toolBtn, { borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft, marginLeft: 8, opacity: !selectedConversationKey || messages.length === 0 || deleting ? 0.5 : 1 }]}
           >
-            <Trash2 size={14} color={tw.rose600} />
+            <Trash2 size={16} color={DT.dangerInk} />
           </Press>
         </View>
       </View>
 
-      <View style={{ flex: 1, backgroundColor: '#F8FAFD' }}>
+      <View style={{ flex: 1, backgroundColor: DT.bg }}>
         {loading ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <View style={st.loadingPill}>
-              <ActivityIndicator size="small" color={tw.slate500} />
-              <Text style={[{ fontSize: 12, color: tw.slate500, marginLeft: 12 }, fo(700)]}>Loading messages...</Text>
+              <ActivityIndicator size="small" color={DT.brand} />
+              <Text style={[{ fontSize: 12, color: DT.muted, marginLeft: 12 }, fo(700)]}>Loading messages...</Text>
             </View>
           </View>
         ) : (
@@ -415,17 +416,17 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
                 <View key={message.id} style={{ flexDirection: 'row', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                   <View style={{ maxWidth: '78%', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'flex-end' }}>
                     <View style={st.msgAvatar}>
-                      {isMine ? <CircleUser size={15} color={tw.slate400} /> : <Bot size={15} color={tw.slate400} />}
+                      {isMine ? <CircleUser size={15} color={DT.brand} /> : <Bot size={15} color={DT.brand} />}
                     </View>
                     <View style={{ flexShrink: 1, marginHorizontal: 12 }}>
                       <View style={[st.bubble, isMine
-                        ? { backgroundColor: tw.indigo600, borderColor: tw.indigo600, borderBottomRightRadius: 6 }
-                        : { backgroundColor: '#fff', borderColor: tw.slate200, borderBottomLeftRadius: 6 }]}>
-                        <Text style={[{ fontSize: 14, lineHeight: 24, color: isMine ? '#fff' : tw.slate800 }, fo(500)]}>{message.message}</Text>
+                        ? { backgroundColor: DT.brand, borderColor: DT.brand, borderBottomRightRadius: 6 }
+                        : { backgroundColor: DT.card, borderColor: DT.border, borderBottomLeftRadius: 6 }]}>
+                        <Text style={[{ fontSize: 14, lineHeight: 22, color: isMine ? DT.onBrand : DT.ink }, fo(600)]}>{message.message}</Text>
                       </View>
                       <View style={[st.row, { marginTop: 4, justifyContent: isMine ? 'flex-end' : 'flex-start' }]}>
-                        <Clock3 size={11} color={tw.slate400} />
-                        <Text style={[{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: tw.slate400, marginLeft: 8 }, fo(700)]}>{formatTime(message.createdAt)}</Text>
+                        <Clock3 size={11} color={DT.muted} />
+                        <Text style={[{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.4, color: DT.muted, marginLeft: 6 }, fo(700)]}>{formatTime(message.createdAt)}</Text>
                       </View>
                     </View>
                   </View>
@@ -438,27 +439,27 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
 
       <View style={st.foot}>
         {error ? (
-          <View style={st.err}><Text style={[{ fontSize: 12, color: tw.rose600 }, fo(600)]}>{error}</Text></View>
+          <View style={st.err}><Text style={[{ fontSize: 12, color: DT.dangerInk }, fo(600)]}>{error}</Text></View>
         ) : null}
         <View style={st.inputBar}>
-          <View style={st.shieldBtn}><ShieldCheck size={16} color={tw.slate400} /></View>
+          <View style={st.shieldBtn}><ShieldCheck size={16} color={DT.brand} /></View>
           <TextInput
             value={draft}
             onChangeText={setDraft}
             onSubmitEditing={handleSend}
             returnKeyType="send"
             placeholder="Type a message to admin"
-            placeholderTextColor={tw.slate400}
-            style={[{ flex: 1, fontSize: 14, color: tw.slate900, marginHorizontal: 12, paddingVertical: 0 }, fo(500)]}
+            placeholderTextColor={DT.faint}
+            style={[{ flex: 1, fontSize: 15, minHeight: 44, color: DT.ink, marginHorizontal: 10, paddingVertical: 0 }, fo(600)]}
           />
-          <Press onPress={handleSend} disabled={!canSend} style={[st.sendBtn, { backgroundColor: canSend ? tw.indigo600 : tw.slate300 }]}>
-            {sending ? <ActivityIndicator size="small" color="#fff" /> : <Send size={16} color="#fff" />}
+          <Press onPress={handleSend} disabled={!canSend} accessibilityLabel="Send message" style={[st.sendBtn, { backgroundColor: canSend ? DT.cta : DT.bgSoft }]}>
+            {sending ? <ActivityIndicator size="small" color={DT.ctaInk} /> : <Send size={18} color={canSend ? DT.ctaInk : DT.faint} strokeWidth={2.5} />}
           </Press>
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           {quickReplies.map((reply) => (
             <Press key={reply} onPress={() => setDraft(reply)} style={st.chip}>
-              <Text style={[{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.1, color: tw.slate500 }, fo(600)]}>{reply}</Text>
+              <Text style={[{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 40, color: DT.brand }, fo(700)]}>{reply}</Text>
             </Press>
           ))}
         </View>
@@ -468,23 +469,23 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
 }
 
 const st = StyleSheet.create({
-  card: { borderRadius: 32, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', overflow: 'hidden', boxShadow: '0 30px 80px rgba(15,23,42,0.08)' },
+  card: { borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, overflow: 'hidden', ...shadow('md') },
   row: { flexDirection: 'row', alignItems: 'center' },
-  iconBox: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  eyebrow: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.55, color: tw.slate400 },
-  tiny: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5 },
-  head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(226,232,240,0.6)', backgroundColor: '#fff' },
-  conn: { flexDirection: 'row', alignItems: 'center', flexShrink: 0, borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  threadHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.slate100, backgroundColor: '#fff' },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  toolBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  loadingPill: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  msgAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.slate100 },
-  bubble: { borderRadius: 24, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  foot: { borderTopWidth: 1, borderTopColor: tw.slate100, backgroundColor: '#fff', padding: 16 },
-  err: { marginBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: tw.rose100, backgroundColor: tw.rose50, paddingHorizontal: 16, paddingVertical: 12 },
-  inputBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 12 },
-  shieldBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.slate100 },
-  sendBtn: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  chip: { borderRadius: 999, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 6 },
+  iconBox: { width: 48, height: 48, borderRadius: 24, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
+  eyebrow: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 60, color: DT.muted },
+  tiny: { fontSize: 10, lineHeight: 14, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 40 },
+  head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: DT.borderSoft, backgroundColor: DT.card },
+  conn: { flexDirection: 'row', alignItems: 'center', flexShrink: 0, borderWidth: 1, borderRadius: DT.radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
+  threadHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: DT.borderSoft, backgroundColor: DT.card },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
+  toolBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: 22, paddingHorizontal: 12 },
+  loadingPill: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 18, paddingVertical: 12, ...shadow('sm') },
+  msgAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  bubble: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10, ...shadow('xs') },
+  foot: { borderTopWidth: 1, borderTopColor: DT.borderSoft, backgroundColor: DT.card, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, padding: 16 },
+  err: { marginBottom: 12, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
+  inputBar: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg, paddingLeft: 8, paddingRight: 6, paddingVertical: 6 },
+  shieldBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  sendBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  chip: { minHeight: 36, justifyContent: 'center', borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft, paddingHorizontal: 14 },
 });

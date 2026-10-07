@@ -32,9 +32,11 @@ import { openExternal } from '../../lib/links';
 import { clearSavedFcmToken } from '../../lib/push';
 import { localStore } from '../../lib/storage';
 import { useNavigate } from '../../lib/webRouter';
-import { outfit as fo, shadow, tw } from '../../theme';
+import { outfit as fo, playfair, shadow } from '../../theme';
 import { socketService } from '../api/socket';
-import DriverBottomNav from '../components/DriverBottomNav';
+import DriverBottomNav, { NAV_BAR_HEIGHT } from '../components/DriverBottomNav';
+import { DT } from '../ui/dt';
+import { Card, SectionLabel } from '../ui/Surface';
 import { useSupportInfo } from '../hooks/useDriverSupportInfo';
 import { clearDriverAuthState, getCurrentDriver, updateDriverProfile } from '../services/registrationService';
 
@@ -361,93 +363,114 @@ export default function DriverProfile() {
     <View style={st.root}>
       <View style={[st.header, { paddingTop: insets.top + 16 }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <View style={{ width: 32 }} />
-          <Press onPress={() => navigate(`${routePrefix}/help-support`)} scale={1} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Info size={18} color="#88B04B" />
+          <Text style={st.headerTitle} accessibilityRole="header">
+            Profile
+          </Text>
+          <Press onPress={() => navigate(`${routePrefix}/help-support`)} scale={1} accessibilityLabel="Help and support" style={st.helpBtn}>
+            <Info size={16} color={DT.accent} />
             <Text style={st.help}>Help & Support</Text>
           </Press>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ gap: 2, flexShrink: 1 }}>
-            <Text style={st.name}>{isLoading ? 'Loading...' : driverName}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Star size={14} color={tw.sky500} fill={tw.sky500} />
-              <Text style={st.rating}>{driverRating.toFixed(1)} Rating</Text>
-            </View>
-          </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <View>
-            <View style={[st.avatar, hasProfileImage ? { backgroundColor: tw.slate900 } : { backgroundColor: tw.slate100, borderWidth: 1, borderColor: tw.slate200 }]}>
-              {hasProfileImage ? <Img source={{ uri: driver?.profileImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={driverName} /> : <User size={30} color={tw.slate500} strokeWidth={1.8} />}
+            <View style={[st.avatar, hasProfileImage ? { backgroundColor: DT.dark } : { backgroundColor: DT.brandSoft }]}>
+              {hasProfileImage ? <Img source={{ uri: driver?.profileImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={driverName} /> : <User size={32} color={DT.brand} strokeWidth={1.8} />}
             </View>
             {hasProfileImage ? (
               <View style={st.badge}>
-                <Check size={12} color="#fff" strokeWidth={4} />
+                <Check size={12} color={DT.onBrand} strokeWidth={4} />
               </View>
             ) : null}
           </View>
-        </View>
-        <View style={st.infoBox}>
-          {error ? (
-            <Text style={st.errorLine}>{error}</Text>
-          ) : (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, rowGap: 12, justifyContent: 'space-between' }}>
-              <InfoCell label="Phone" value={driverPhone} />
-              <InfoCell label="Email" value={driverEmail} />
-              <InfoCell label="Vehicle Type" value={driverVehicle} />
-              <InfoCell label="City" value={driverLocation} />
-              <InfoCell label="Zone" value={driverZone} />
-              <InfoCell label="Vehicle No." value={driverNumber} />
-              <InfoCell label="Color" value={driverColor} />
+          <View style={{ gap: 6, flex: 1, minWidth: 0 }}>
+            <Text style={st.name} numberOfLines={1}>
+              {isLoading ? 'Loading...' : driverName}
+            </Text>
+            <View style={st.ratingChip}>
+              <Star size={13} color={DT.accent} fill={DT.accent} />
+              <Text style={st.rating}>{driverRating.toFixed(1)} Rating</Text>
             </View>
-          )}
+          </View>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 128 + insets.bottom }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingBottom: NAV_BAR_HEIGHT + 24 + insets.bottom }} showsVerticalScrollIndicator={false}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+          <Card>
+            <SectionLabel style={{ marginBottom: 12 }}>Your details</SectionLabel>
+            {error ? (
+              <Text style={st.errorLine}>{error}</Text>
+            ) : (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, rowGap: 14, justifyContent: 'space-between' }}>
+                <InfoCell label="Phone" value={driverPhone} />
+                <InfoCell label="Email" value={driverEmail} />
+                <InfoCell label="Vehicle Type" value={driverVehicle} />
+                <InfoCell label="City" value={driverLocation} />
+                <InfoCell label="Zone" value={driverZone} />
+                <InfoCell label="Vehicle No." value={driverNumber} />
+                <InfoCell label="Color" value={driverColor} />
+              </View>
+            )}
+          </Card>
+        </View>
+
         <View style={{ gap: 4 }}>
           {sections.map((section) => (
-            <View key={section.title} style={{ paddingTop: 20 }}>
-              <Text style={st.sectionTitle}>{section.title.toUpperCase()}</Text>
-              {section.items.map((item) => (
-                <Pressable
-                  key={item.id}
-                  onPress={() => {
-                    if (item.action) item.action();
-                    else if (item.path) navigate(item.path);
-                  }}
-                  style={({ pressed }) => [st.row, pressed && item.type !== 'toggle' && { backgroundColor: '#F8F9FA' }]}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, flex: 1 }}>
-                    <item.Icon size={20} color={tw.slate400} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={st.rowLabel}>{item.label}</Text>
-                      {item.sub ? <Text style={st.rowSub}>{item.sub}</Text> : null}
-                    </View>
-                  </View>
-                  {item.type === 'toggle' ? (
+            <View key={section.title} style={{ paddingTop: 20, paddingHorizontal: 16 }}>
+              <SectionLabel style={st.sectionTitle}>{section.title}</SectionLabel>
+              <Card style={st.listCard}>
+                {section.items.map((item, idx) => {
+                  const danger = section.title === 'Danger Zone';
+                  return (
                     <Pressable
-                      onPress={handleRouteBookingToggle}
-                      disabled={routeBookingBusy}
-                      style={[st.toggle, { backgroundColor: routeBookingPreferences.enabled ? tw.slate900 : tw.slate200 }, routeBookingBusy && { opacity: 0.7 }]}
+                      key={item.id}
+                      onPress={() => {
+                        if (item.action) item.action();
+                        else if (item.path) navigate(item.path);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={item.label}
+                      style={({ pressed }) => [st.row, idx > 0 && st.rowDivider, pressed && item.type !== 'toggle' && { backgroundColor: DT.bg }]}
                     >
-                      <View style={[st.knob, { left: routeBookingPreferences.enabled ? 20 : 2 }]} />
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+                        <View style={[st.iconTile, danger && { backgroundColor: DT.dangerSoft }]}>
+                          <item.Icon size={20} color={danger ? DT.danger : DT.brand} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[st.rowLabel, danger && { color: DT.dangerInk }]}>{item.label}</Text>
+                          {item.sub ? <Text style={st.rowSub}>{item.sub}</Text> : null}
+                        </View>
+                      </View>
+                      {item.type === 'toggle' ? (
+                        <Pressable
+                          onPress={handleRouteBookingToggle}
+                          disabled={routeBookingBusy}
+                          accessibilityRole="switch"
+                          accessibilityLabel="Route booking"
+                          accessibilityState={{ checked: routeBookingPreferences.enabled }}
+                          hitSlop={10}
+                          style={[st.toggle, { backgroundColor: routeBookingPreferences.enabled ? DT.brand : DT.border }, routeBookingBusy && { opacity: 0.7 }]}
+                        >
+                          <View style={[st.knob, { left: routeBookingPreferences.enabled ? 22 : 2 }]} />
+                        </Pressable>
+                      ) : (
+                        <ChevronRight size={18} color={DT.faint} />
+                      )}
                     </Pressable>
-                  ) : (
-                    <ChevronRight size={16} color={tw.slate200} />
-                  )}
-                </Pressable>
-              ))}
+                  );
+                })}
+              </Card>
             </View>
           ))}
         </View>
 
         {/* Owner Support Section */}
         {supportInfo.email || supportInfo.phone ? (
-          <View style={{ paddingHorizontal: 24, paddingVertical: 16, marginTop: 24 }}>
+          <View style={{ paddingHorizontal: 16, paddingVertical: 8, marginTop: 20 }}>
             <View style={st.support}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tw.emerald500 }} />
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: DT.success }} />
                 <Text style={st.supportTitle}>DISTRICT SUPPORT</Text>
               </View>
 
@@ -455,7 +478,7 @@ export default function DriverProfile() {
                 {supportInfo.email ? (
                   <Pressable onPress={() => openExternal(`mailto:${supportInfo.email}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                     <View style={st.supportIcon}>
-                      <Mail size={18} color={tw.slate400} />
+                      <Mail size={18} color={DT.brand} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={st.supportLabel}>EMAIL SUPPORT</Text>
@@ -467,7 +490,7 @@ export default function DriverProfile() {
                 {supportInfo.phone ? (
                   <Pressable onPress={() => openExternal(`tel:${supportInfo.phoneHref}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                     <View style={st.supportIcon}>
-                      <Phone size={18} color={tw.slate400} />
+                      <Phone size={18} color={DT.brand} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={st.supportLabel}>CALL SUPPORT</Text>
@@ -481,9 +504,9 @@ export default function DriverProfile() {
         ) : null}
 
         {/* Sign Out Section */}
-        <View style={{ paddingHorizontal: 24, paddingVertical: 24 }}>
-          <Press onPress={() => setIsLogoutOpen(true)} scale={1} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, alignSelf: 'flex-start' }}>
-            <LogOut size={16} strokeWidth={2.5} color={tw.rose500} />
+        <View style={{ paddingHorizontal: 16, paddingVertical: 16 }}>
+          <Press onPress={() => setIsLogoutOpen(true)} scale={0.98} accessibilityLabel="Logout from Account" style={st.logoutBtn}>
+            <LogOut size={18} strokeWidth={2.5} color={DT.danger} />
             <Text style={st.logout}>Logout from Account</Text>
           </Press>
         </View>
@@ -516,10 +539,10 @@ export default function DriverProfile() {
               <View style={{ padding: 32 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                   <View style={st.legalIcon}>
-                    <legalModal.Icon size={28} color={tw.slate900} />
+                    <legalModal.Icon size={28} color={DT.brand} />
                   </View>
                   <Press onPress={() => setLegalModal(null)} accessibilityLabel="Close" style={st.legalClose}>
-                    <X size={20} color={tw.slate500} />
+                    <X size={20} color={DT.muted} />
                   </Press>
                 </View>
 
@@ -545,43 +568,49 @@ export default function DriverProfile() {
 }
 
 const st = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#fff' },
-  header: { paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: tw.slate50, backgroundColor: '#fff', zIndex: 60 },
-  help: { fontSize: 13, letterSpacing: 0.65, color: '#88B04B', ...fo(700) },
-  name: { fontSize: 22, lineHeight: 27.5, color: tw.slate900, ...fo(700) },
-  rating: { fontSize: 14, color: tw.sky500, ...fo(700) },
-  avatar: { width: 64, height: 64, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...shadow('lg') },
-  badge: { position: 'absolute', bottom: -4, right: -4, width: 20, height: 20, backgroundColor: tw.emerald500, borderRadius: 8, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  infoBox: { marginTop: 16, borderRadius: 16, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: tw.slate100 },
-  errorLine: { fontSize: 11, color: tw.rose500, ...fo(500) },
-  infoLabel: { fontSize: 10, color: tw.slate400, ...fo(500) },
-  infoValue: { fontSize: 12, color: tw.slate900, ...fo(700) },
-  sectionTitle: { paddingHorizontal: 24, fontSize: 11, letterSpacing: 1.1, color: tw.slate400, marginBottom: 12, ...fo(600) },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(248,250,252,0.5)' },
-  rowLabel: { fontSize: 15, letterSpacing: -0.375, color: tw.slate800, ...fo(500) },
-  rowSub: { fontSize: 11, color: tw.slate400, ...fo(500) },
-  toggle: { width: 40, height: 22, borderRadius: 11 },
-  knob: { position: 'absolute', top: 4, width: 14, height: 14, borderRadius: 7, backgroundColor: '#fff', ...shadow('sm') },
-  support: { borderRadius: 28, borderWidth: 1, borderColor: tw.slate100, backgroundColor: 'rgba(248,250,252,0.5)', padding: 24 },
-  supportTitle: { fontSize: 13, letterSpacing: 0.65, color: tw.slate900, ...fo(700) },
-  supportIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  supportLabel: { fontSize: 10, letterSpacing: 1, color: tw.slate400, ...fo(700) },
-  supportValue: { fontSize: 14, color: tw.slate800, ...fo(700) },
-  logout: { fontSize: 13, color: tw.rose500, ...fo(700) },
-  logoutPanel: { width: '100%', maxWidth: 320, borderRadius: 28, backgroundColor: '#fff', padding: 24, borderWidth: 1, borderColor: tw.slate100, ...shadow('2xl') },
-  logoutTitle: { fontSize: 18, letterSpacing: -0.45, color: tw.slate900, ...fo(700) },
-  logoutText: { fontSize: 13, color: tw.slate500, textAlign: 'center', ...fo(500) },
-  cancelBtn: { flex: 1, height: 48, borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, alignItems: 'center', justifyContent: 'center' },
-  cancelText: { fontSize: 13, color: tw.slate700, ...fo(700) },
-  confirmBtn: { flex: 1, height: 48, borderRadius: 16, backgroundColor: tw.rose500, alignItems: 'center', justifyContent: 'center' },
-  confirmText: { fontSize: 13, color: '#fff', ...fo(700) },
+  root: { flex: 1, backgroundColor: DT.bg },
+  header: { paddingHorizontal: 20, paddingBottom: 24, backgroundColor: DT.brandDeep, borderBottomLeftRadius: DT.radius.xl, borderBottomRightRadius: DT.radius.xl, zIndex: 60, ...shadow('md') },
+  headerTitle: { fontSize: 22, lineHeight: 28, color: DT.gold, ...playfair(700) },
+  helpBtn: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.12)' },
+  help: { fontSize: 13, color: DT.onBrand, ...fo(700) },
+  name: { fontSize: 22, lineHeight: 28, color: DT.onBrand, ...fo(700) },
+  ratingChip: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.14)' },
+  rating: { fontSize: 13, color: DT.accent, ...fo(700) },
+  avatar: { width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 2, borderColor: DT.gold },
+  badge: { position: 'absolute', bottom: -4, right: -4, width: 22, height: 22, backgroundColor: DT.success, borderRadius: 11, borderWidth: 2, borderColor: DT.brandDeep, alignItems: 'center', justifyContent: 'center' },
+  errorLine: { fontSize: 12, color: DT.danger, ...fo(500) },
+  infoLabel: { fontSize: 11, color: DT.muted, ...fo(500) },
+  infoValue: { fontSize: 13, color: DT.ink, ...fo(700) },
+  sectionTitle: { paddingHorizontal: 8, marginBottom: 10 },
+  listCard: { padding: 0, overflow: 'hidden', borderRadius: DT.radius.xl },
+  row: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  rowDivider: { borderTopWidth: 1, borderTopColor: DT.borderSoft },
+  iconTile: { width: 40, height: 40, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  rowLabel: { fontSize: 15, color: DT.ink, ...fo(600) },
+  rowSub: { marginTop: 1, fontSize: 12, color: DT.muted, ...fo(500) },
+  toggle: { width: 44, height: 24, borderRadius: 12, justifyContent: 'center' },
+  knob: { position: 'absolute', top: 2, width: 20, height: 20, borderRadius: 10, backgroundColor: DT.onBrand, ...shadow('sm') },
+  support: { borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 20, ...shadow('sm') },
+  supportTitle: { fontSize: 13, letterSpacing: 0.65, minWidth: 120, color: DT.ink, ...fo(700) },
+  supportIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  supportLabel: { fontSize: 10, letterSpacing: 1, minWidth: 90, color: DT.muted, ...fo(700) },
+  supportValue: { fontSize: 14, color: DT.ink, ...fo(700) },
+  logoutBtn: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft },
+  logout: { fontSize: 14, color: DT.dangerInk, ...fo(700) },
+  logoutPanel: { width: '100%', maxWidth: 320, borderRadius: DT.radius.xl, backgroundColor: DT.card, padding: 24, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('2xl') },
+  logoutTitle: { fontSize: 18, letterSpacing: -0.45, color: DT.ink, ...fo(700) },
+  logoutText: { fontSize: 13, color: DT.muted, textAlign: 'center', ...fo(500) },
+  cancelBtn: { flex: 1, height: 48, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, alignItems: 'center', justifyContent: 'center' },
+  cancelText: { fontSize: 13, color: DT.inkSoft, ...fo(700) },
+  confirmBtn: { flex: 1, height: 48, borderRadius: DT.radius.md, backgroundColor: DT.danger, alignItems: 'center', justifyContent: 'center' },
+  confirmText: { fontSize: 13, color: DT.onBrand, ...fo(700) },
   legalWrap: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 16, paddingBottom: 32 },
-  legal: { overflow: 'hidden', borderRadius: 32, backgroundColor: '#fff', ...shadow('2xl') },
-  legalIcon: { width: 56, height: 56, borderRadius: 20, backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  legalClose: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  legalTitle: { fontSize: 24, color: tw.slate950, ...fo(700) },
-  legalDesc: { marginTop: 4, fontSize: 14, color: tw.slate500, ...fo(500) },
-  legalBody: { fontSize: 14, lineHeight: 28, color: tw.slate700, ...fo(500) },
-  understood: { marginTop: 32, width: '100%', borderRadius: 16, backgroundColor: tw.slate950, paddingVertical: 16, alignItems: 'center', boxShadow: '0 20px 25px -5px rgba(226,232,240,1), 0 8px 10px -6px rgba(226,232,240,1)' },
-  understoodText: { fontSize: 14, color: '#fff', ...fo(700) },
+  legal: { overflow: 'hidden', borderRadius: 32, backgroundColor: DT.card, ...shadow('2xl') },
+  legalIcon: { width: 56, height: 56, borderRadius: 20, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  legalClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
+  legalTitle: { fontSize: 24, color: DT.brand, ...playfair(700) },
+  legalDesc: { marginTop: 4, fontSize: 14, color: DT.muted, ...fo(500) },
+  legalBody: { fontSize: 14, lineHeight: 26, color: DT.inkSoft, ...fo(500) },
+  understood: { marginTop: 32, width: '100%', minHeight: 52, borderRadius: DT.radius.lg, backgroundColor: DT.brand, paddingVertical: 16, alignItems: 'center' },
+  understoodText: { fontSize: 14, color: DT.onBrand, ...fo(700) },
 });

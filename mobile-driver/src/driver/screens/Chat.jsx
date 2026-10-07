@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Phone, Send, Smile } from 'lucide-react-native';
+import { Phone, Send } from 'lucide-react-native';
 import { Press } from '../../components/ui';
-import Img from '../../components/Img';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { useKeyboardHeight } from '../../lib/useKeyboard';
 import { localStore } from '../../lib/storage';
 import Text from '../components/UpperText';
 import { useLocation, useNavigate } from '../../lib/webRouter';
-import { outfit, tw } from '../../theme';
+import { outfit, shadow } from '../../theme';
+import ScreenHeader from '../ui/ScreenHeader';
+import { DT } from '../ui/dt';
 import { socketService } from '../api/socket';
 
 // Web: Taxi/modules/user/pages/ride/Chat.jsx, driver role (/taxi/driver/chat).
@@ -71,8 +71,8 @@ function Bubble({ m }) {
       }}
     >
       <View style={[st.bubble, isUser ? st.bubbleMe : st.bubbleOther]}>
-        <Text style={[{ fontSize: 14, lineHeight: 22.75, color: isUser ? '#fff' : tw.slate800 }, fo(700)]}>{m.text}</Text>
-        <Text style={[{ fontSize: 9, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.9, color: isUser ? 'rgba(255,255,255,0.5)' : tw.slate400 }, fo(900)]}>{m.time}</Text>
+        <Text style={[{ fontSize: 14, lineHeight: 22.75, color: isUser ? DT.onBrand : DT.ink }, fo(600)]}>{m.text}</Text>
+        <Text style={[{ fontSize: 10, marginTop: 4, minWidth: 30, color: isUser ? DT.onBrandMuted : DT.muted }, fo(700)]}>{m.time}</Text>
       </View>
     </Animated.View>
   );
@@ -192,34 +192,25 @@ export default function Chat() {
   };
 
   return (
-    <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.6, 1]} style={{ flex: 1, overflow: 'hidden' }}>
-      <View pointerEvents="none" style={st.blob} />
+    <View style={{ flex: 1, overflow: 'hidden', backgroundColor: DT.bg }}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, paddingBottom: androidKeyboard }}>
-        <View style={[st.header, { paddingTop: insets.top + 14 }]}>
-          <Press onPress={() => navigate(-1)} style={st.backSquare}>
-            <ArrowLeft size={18} color={tw.slate900} strokeWidth={2.5} />
-          </Press>
-          <View style={{ marginLeft: 12 }}>
-            <View style={st.avatarBox}>
-              <Img source={{ uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(otherName)}&background=f1f5f9&color=0f172a&format=png` }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-            </View>
-            <View style={st.online} />
-          </View>
-          <View style={{ flex: 1, minWidth: 0, marginHorizontal: 12 }}>
-            <Text style={[{ fontSize: 14, lineHeight: 17.5, color: tw.slate900 }, fo(900)]}>{otherName}</Text>
-            <Text style={[{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: tw.emerald500 }, fo(900)]}>{resolvedPeer.subtitle}</Text>
-          </View>
-          <Press onPress={call} style={[st.sqBtn, { boxShadow: '0 4px 12px rgba(15,23,42,0.07)' }]}>
-            <Phone size={15} color={tw.slate700} strokeWidth={2.5} />
-          </Press>
-        </View>
+        <ScreenHeader
+          title={otherName}
+          subtitle={resolvedPeer.subtitle}
+          onBack={() => navigate(-1)}
+          right={(
+            <Press onPress={call} accessibilityLabel="Call" scale={0.92} style={st.callBtn}>
+              <Phone size={18} color={DT.brand} strokeWidth={2.5} />
+            </Press>
+          )}
+        />
 
-        <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: 20, gap: 10, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           {isJoiningRide ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               <View style={st.pill}>
-                <ActivityIndicator size="small" color={tw.slate500} />
-                <Text style={[{ fontSize: 13, color: tw.slate600, marginLeft: 12 }, fo(700)]}>Connecting trip chat...</Text>
+                <ActivityIndicator size="small" color={DT.brand} />
+                <Text style={[{ fontSize: 13, color: DT.inkSoft, marginLeft: 12 }, fo(700)]}>Connecting trip chat...</Text>
               </View>
             </View>
           ) : (
@@ -227,13 +218,13 @@ export default function Chat() {
               {!messages.length && !chatError ? (
                 <View style={{ alignItems: 'center', paddingTop: 24 }}>
                   <View style={st.pill}>
-                    <Text style={[{ fontSize: 12, color: tw.slate500 }, fo(700)]}>Trip chat is connected.</Text>
+                    <Text style={[{ fontSize: 12, color: DT.muted }, fo(700)]}>Trip chat is connected.</Text>
                   </View>
                 </View>
               ) : null}
               {chatError ? (
                 <View style={st.errBox}>
-                  <Text style={[{ fontSize: 12, color: tw.rose600 }, fo(700)]}>{chatError}</Text>
+                  <Text style={[{ fontSize: 12, color: DT.dangerInk }, fo(700)]}>{chatError}</Text>
                 </View>
               ) : null}
               {messages.map((m) => <Bubble key={m.id} m={m} />)}
@@ -245,12 +236,11 @@ export default function Chat() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 2 }} keyboardShouldPersistTaps="handled">
             {quickReplies.map((r) => (
               <Press key={r} scale={0.95} onPress={() => send(r)} style={st.chip}>
-                <Text style={[{ fontSize: 11, color: tw.slate600 }, fo(900)]}>{r}</Text>
+                <Text style={[{ fontSize: 12, color: DT.brand }, fo(700)]}>{r}</Text>
               </Press>
             ))}
           </ScrollView>
           <View style={st.inputRow}>
-            <Smile size={18} color={tw.slate400} strokeWidth={2} />
             <TextInput
               value={input}
               onChangeText={setInput}
@@ -258,38 +248,34 @@ export default function Chat() {
               returnKeyType="send"
               editable={Boolean(rideId) && !isJoiningRide}
               placeholder={rideId ? 'Type a message...' : 'Ride chat unavailable'}
-              placeholderTextColor={tw.slate300}
-              style={[{ flex: 1, fontSize: 14, marginHorizontal: 8, paddingVertical: 0, color: rideId && !isJoiningRide ? tw.slate900 : tw.slate400 }, fo(700)]}
+              placeholderTextColor={DT.faint}
+              style={[{ flex: 1, fontSize: 15, minHeight: 44, marginRight: 8, paddingVertical: 0, color: rideId && !isJoiningRide ? DT.ink : DT.faint }, fo(600)]}
             />
             <Press
               onPress={() => send()}
               disabled={!canSend}
+              accessibilityLabel="Send message"
               scale={0.9}
-              style={[st.sendBtn, canSend ? { backgroundColor: tw.slate900, boxShadow: '0 4px 10px rgba(15,23,42,0.2)' } : { backgroundColor: tw.slate200 }]}
+              style={[st.sendBtn, canSend ? { backgroundColor: DT.cta } : { backgroundColor: DT.bgSoft }]}
             >
-              <Send size={14} color={canSend ? '#fff' : tw.slate400} strokeWidth={2.5} />
+              <Send size={18} color={canSend ? DT.ctaInk : DT.faint} strokeWidth={2.5} />
             </Press>
           </View>
         </View>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const st = StyleSheet.create({
-  blob: { position: 'absolute', top: -64, right: -40, width: 176, height: 176, borderRadius: 88, backgroundColor: 'rgba(255,237,212,0.5)' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 14, backgroundColor: 'rgba(255,255,255,0.9)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.8)', boxShadow: '0 4px 20px rgba(15,23,42,0.05)' },
-  backSquare: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(15,23,42,0.07)' },
-  avatarBox: { width: 40, height: 40, borderRadius: 13, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: tw.slate100 },
-  online: { position: 'absolute', bottom: -2, right: -2, width: 12, height: 12, borderRadius: 6, backgroundColor: tw.emerald500, borderWidth: 2, borderColor: '#fff' },
-  sqBtn: { width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },
-  pill: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.9)', borderWidth: 1, borderColor: tw.slate100, paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  errBox: { borderRadius: 16, borderWidth: 1, borderColor: tw.rose100, backgroundColor: tw.rose50, paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  bubble: { maxWidth: '78%', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 18, boxShadow: '0 2px 8px rgba(15,23,42,0.06)' },
-  bubbleMe: { backgroundColor: tw.slate900, borderBottomRightRadius: 6 },
-  bubbleOther: { backgroundColor: 'rgba(255,255,255,0.95)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', borderBottomLeftRadius: 6 },
-  footer: { backgroundColor: 'rgba(255,255,255,0.9)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.8)', paddingHorizontal: 16, paddingTop: 12, gap: 10, boxShadow: '0 -4px 20px rgba(15,23,42,0.05)' },
-  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(248,250,252,0.8)', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: tw.slate100 },
-  sendBtn: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  callBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.cta, alignItems: 'center', justifyContent: 'center' },
+  pill: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 18, paddingVertical: 12, ...shadow('sm') },
+  errBox: { borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
+  bubble: { maxWidth: '80%', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
+  bubbleMe: { backgroundColor: DT.brand, borderBottomRightRadius: 6, ...shadow('sm') },
+  bubbleOther: { backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, borderBottomLeftRadius: 6, ...shadow('xs') },
+  footer: { backgroundColor: DT.card, borderTopWidth: 1, borderTopColor: DT.borderSoft, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, paddingHorizontal: 16, paddingTop: 12, gap: 10, ...shadow('navTop') },
+  chip: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 14, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft },
+  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: DT.bg, borderRadius: DT.radius.pill, paddingLeft: 18, paddingRight: 6, paddingVertical: 6, borderWidth: 1, borderColor: DT.border },
+  sendBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });

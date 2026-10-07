@@ -12,6 +12,7 @@ import {
 import OnboardingShell from '../components/OnboardingShell';
 import { ChipGroup, Field, ReadOnlyRow } from '../components/OnboardingFields';
 import { OB, jk, obCard } from '../components/onboardingTheme';
+import { DT } from '../ui/dt';
 
 /* Port of driver/pages/registration/StepPersonal.jsx (/taxi/driver/step-personal). */
 
@@ -169,8 +170,8 @@ export default function StepPersonal() {
           />
         </View>
       ) : (
-        <Press scale={1} onPress={() => setShowReferral(true)} style={styles.referral}>
-          <Gift size={16} strokeWidth={2.4} color={OB.primary} />
+        <Press scale={1} onPress={() => setShowReferral(true)} accessibilityLabel="I have a referral code" style={styles.referral}>
+          <Gift size={16} strokeWidth={2.4} color={DT.brandMid} />
           <Text style={styles.referralText}>I have a referral code</Text>
         </Press>
       )}
@@ -180,6 +181,6 @@ export default function StepPersonal() {
 
 const styles = StyleSheet.create({
   card: { padding: 20, gap: 16 },
-  referral: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
+  referral: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 44, paddingVertical: 12, borderRadius: DT.radius.pill, borderWidth: 1.5, borderStyle: 'dashed', borderColor: DT.brandBorder, backgroundColor: DT.brandSoft },
   referralText: { ...jk(700), fontSize: 13, color: OB.primary },
 });

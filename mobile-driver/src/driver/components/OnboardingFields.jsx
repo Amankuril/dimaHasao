@@ -5,6 +5,8 @@ import { Check } from 'lucide-react-native';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Press } from '../../components/ui';
 import { SelectField as KitSelect } from '../../components/kit';
+import { shadow } from '../../theme';
+import { DT } from '../ui/dt';
 import { OB, jk, obLabel, up } from './onboardingTheme';
 
 /*
@@ -40,10 +42,12 @@ export function CtaButton({ onPress, disabled, children, style }) {
       scale={0.99}
       onPress={onPress}
       disabled={disabled}
-      style={[styles.cta, { backgroundColor: disabled ? '#d9d3c2' : OB.primary }, style]}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: Boolean(disabled) }}
+      style={[styles.cta, disabled ? styles.ctaOff : styles.ctaOn, style]}
     >
       {typeof children === 'string' ? (
-        <Text style={[styles.ctaText, { color: disabled ? '#93917f' : '#fff' }]}>{children}</Text>
+        <Text style={[styles.ctaText, { color: disabled ? DT.faint : DT.ctaInk }]}>{children}</Text>
       ) : (
         children
       )}
@@ -66,8 +70,8 @@ export function FieldBox({ focused, invalid, children, style }) {
     <View
       style={[
         styles.box,
-        focused && { borderColor: OB.primary, boxShadow: '0 0 0 4px rgba(10,77,43,0.08)' },
-        invalid && { borderColor: OB.danger, boxShadow: '0 0 0 4px rgba(185,28,28,0.07)' },
+        focused && { borderColor: DT.brandMid, backgroundColor: DT.card, boxShadow: '0 0 0 4px rgba(10,77,43,0.10)' },
+        invalid && { borderColor: DT.danger, boxShadow: '0 0 0 4px rgba(244,63,94,0.10)' },
         style,
       ]}
     >
@@ -103,7 +107,7 @@ export function Field({
           value={value}
           onChangeText={onChange}
           placeholder={placeholder}
-          placeholderTextColor="#c2bda9"
+          placeholderTextColor={DT.faint}
           keyboardType={type === 'email' ? 'email-address' : inputMode === 'numeric' ? 'number-pad' : 'default'}
           autoCapitalize={type === 'email' ? 'none' : undefined}
           autoCorrect={type === 'email' ? false : undefined}
@@ -137,7 +141,7 @@ export function SelectField({ label, icon: Icon, value, onChange, options, place
           accessibilityLabel={label}
           chevronColor={OB.muted}
           style={{ flex: 1, minWidth: 0 }}
-          textStyle={{ ...jk(600), fontSize: 15, color: current ? OB.text : '#c2bda9' }}
+          textStyle={{ ...jk(600), fontSize: 15, color: current ? OB.text : DT.faint }}
         />
       </FieldBox>
     </View>
@@ -163,9 +167,9 @@ export function DateField({ label, value, onChange, valid = false }) {
   return (
     <View>
       <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up(label)}</Text>
-      <Press scale={1} onPress={Platform.OS === 'android' ? open : undefined}>
+      <Press scale={1} onPress={Platform.OS === 'android' ? open : undefined} accessibilityLabel={label}>
         <FieldBox>
-          <Text style={[inputText, { color: value ? OB.text : '#c2bda9' }]}>{shown}</Text>
+          <Text style={[inputText, { color: value ? OB.text : DT.faint }]}>{shown}</Text>
           {valid ? <Check size={17} strokeWidth={3} color={OB.primary} /> : null}
         </FieldBox>
       </Press>
@@ -187,10 +191,12 @@ export function ChipGroup({ label, value, onChange, options, columns = 3 }) {
             <Press
               key={optionValue}
               scale={1}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
               onPress={() => onChange(optionValue)}
-              style={[styles.chip, { flex: 1 }, selected && { backgroundColor: OB.primary, borderColor: OB.primary }]}
+              style={[styles.chip, { flex: 1 }, selected && { backgroundColor: DT.brand, borderColor: DT.brand }]}
             >
-              <Text style={[styles.chipText, { color: selected ? '#fff' : OB.muted }]}>{optionLabel}</Text>
+              <Text style={[styles.chipText, { color: selected ? DT.onBrand : DT.inkSoft }]}>{optionLabel}</Text>
             </Press>
           );
         })}
@@ -205,7 +211,7 @@ export function ReadOnlyRow({ label, icon: Icon, value }) {
     <View style={styles.readOnly}>
       {Icon ? <Icon size={18} strokeWidth={2.2} color={OB.primary} /> : null}
       <View style={{ minWidth: 0, flex: 1 }}>
-        <Text style={[obLabel, { color: 'rgba(10,77,43,0.7)' }]}>{up(label)}</Text>
+        <Text style={[obLabel, { color: DT.brandMid }]}>{up(label)}</Text>
         <Text style={{ ...jk(700), fontSize: 15, color: OB.text, lineHeight: 22.5 }}>{value}</Text>
       </View>
     </View>
@@ -213,13 +219,15 @@ export function ReadOnlyRow({ label, icon: Icon, value }) {
 }
 
 const styles = StyleSheet.create({
-  cta: { height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, alignSelf: 'stretch' },
-  ctaText: { ...jk(800), fontSize: 15, letterSpacing: 0.3 },
-  alert: { backgroundColor: OB.dangerSoft, borderWidth: 1, borderColor: 'rgba(185,28,28,0.2)', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12 },
-  alertText: { ...jk(600), fontSize: 13, color: OB.danger, lineHeight: 19.5 },
-  box: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1.5, borderColor: OB.border, backgroundColor: OB.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  hint: { ...jk(500), fontSize: 11, color: OB.muted, marginTop: 4, paddingHorizontal: 4, lineHeight: 16.5 },
-  chip: { height: 44, paddingHorizontal: 8, borderWidth: 1.5, borderColor: OB.border, backgroundColor: OB.surface, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  chipText: { ...jk(700), fontSize: 13 },
-  readOnly: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(10,77,43,0.15)', backgroundColor: OB.primarySoft, paddingHorizontal: 16, paddingVertical: 12 },
+  cta: { minHeight: 56, borderRadius: DT.radius.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, alignSelf: 'stretch' },
+  ctaOn: { backgroundColor: DT.cta, ...shadow('md') },
+  ctaOff: { backgroundColor: DT.bgSoft },
+  ctaText: { ...jk(800), fontSize: 15, lineHeight: 20 },
+  alert: { backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: 'rgba(244,63,94,0.25)', borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12 },
+  alertText: { ...jk(600), fontSize: 13, color: DT.dangerInk, lineHeight: 19.5 },
+  box: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, borderWidth: 1.5, borderColor: DT.border, backgroundColor: DT.bg, borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12 },
+  hint: { ...jk(500), fontSize: 11, color: DT.muted, marginTop: 4, paddingHorizontal: 4, lineHeight: 16.5 },
+  chip: { minHeight: 44, paddingHorizontal: 8, borderWidth: 1.5, borderColor: DT.border, backgroundColor: DT.bg, borderRadius: DT.radius.pill, alignItems: 'center', justifyContent: 'center' },
+  chipText: { ...jk(700), fontSize: 13, lineHeight: 18 },
+  readOnly: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft, paddingHorizontal: 16, paddingVertical: 12 },
 });

@@ -1,6 +1,7 @@
 import { Linking, Modal, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DT } from '../ui/dt';
 
 /*
  * The one payment step that has no native Expo SDK: Razorpay Checkout (checkout.js) in a full-screen WebView.
@@ -40,12 +41,13 @@ export default function DriverRazorpayCheckout({ request, onDone }) {
 
   return (
     <Modal visible={Boolean(request)} transparent animationType="fade" onRequestClose={() => finish({ type: 'dismiss' })} statusBarTranslucent>
-      <View style={[styles.wrap, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View style={[styles.wrap, { paddingTop: insets.top + 8, paddingBottom: insets.bottom }]}>
         {request ? (
           <WebView
             originWhitelist={['*']}
             source={{ html: html(request.checkout), baseUrl: 'https://checkout.razorpay.com' }}
             style={styles.web}
+            containerStyle={styles.webBox}
             javaScriptEnabled
             onMessage={(e) => {
               try {
@@ -68,6 +70,7 @@ export default function DriverRazorpayCheckout({ request, onDone }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
+  wrap: { flex: 1, backgroundColor: 'rgba(6,44,22,0.62)' },
+  webBox: { flex: 1, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, overflow: 'hidden', backgroundColor: 'transparent' },
   web: { flex: 1, backgroundColor: 'transparent' },
 });

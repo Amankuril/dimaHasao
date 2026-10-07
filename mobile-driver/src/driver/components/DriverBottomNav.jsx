@@ -5,10 +5,14 @@ import { Briefcase, Bus, Car, History, Home, IndianRupee, Trophy, User, Users } 
 import { Press } from '../../components/ui';
 import { localStore } from '../../lib/storage';
 import { navigateTo } from '../../lib/webRouter';
-import { outfit, tw } from '../../theme';
+import { outfit, shadow } from '../../theme';
+import { DT } from '../ui/dt';
 import { useDriverAppSettings } from '../hooks/useDriverAppSettings';
 
-/* Port of Taxi/modules/shared/components/DriverBottomNav.jsx (fixed bottom bar of the driver screens). */
+/*
+ * Port of Taxi/modules/shared/components/DriverBottomNav.jsx. Drawn in the user app's taxi style: a floating deep-green pill
+ * with a gold active icon and label. NAV_BAR_HEIGHT is how much a screen must leave clear at the bottom.
+ */
 
 const isEnabledFlag = (value) => {
   if (typeof value === 'boolean') return value;
@@ -17,7 +21,7 @@ const isEnabledFlag = (value) => {
 };
 
 /** Height the bar occupies (pt-2 + 68), plus the bottom inset: what a screen's `pb-28`/`pb-32` clears. */
-export const NAV_BAR_HEIGHT = 76;
+export const NAV_BAR_HEIGHT = 92;
 
 export default function DriverBottomNav() {
   const pathname = usePathname().replace(/\/+$/, '');
@@ -46,31 +50,28 @@ export default function DriverBottomNav() {
       ];
 
   return (
-    <View style={[st.nav, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      <View style={st.grid}>
+    <View pointerEvents="box-none" style={[st.wrap, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+      <View style={st.nav}>
         {navItems.map((item) => {
           const isActive =
             pathname === item.path ||
             pathname.startsWith(`${item.path}/`) ||
             (item.path === `${routePrefix}/home` && pathname === `${routePrefix}/dashboard`);
+          const tint = isActive ? DT.accent : 'rgba(255,255,255,0.78)';
           return (
             <Press
               key={item.path}
               onPress={() => navigateTo(item.path)}
-              scale={1}
+              scale={0.9}
               accessibilityLabel={item.label}
+              accessibilityState={{ selected: isActive }}
               style={[st.item, isActive && st.itemActive]}
             >
-              <View style={{ transform: [{ scale: isActive ? 1.05 : 1 }], opacity: isActive ? 1 : 0.8 }}>
-                <item.Icon size={20} strokeWidth={isActive ? 2.5 : 2} color={isActive ? '#000000' : 'rgba(0,0,0,0.6)'} />
-              </View>
-              <Text
-                numberOfLines={1}
-                style={[st.label, { color: isActive ? '#000000' : 'rgba(0,0,0,0.6)', opacity: isActive ? 1 : 0.8, transform: [{ scale: isActive ? 1 : 0.95 }], ...outfit(isActive ? 900 : 700) }]}
-              >
+              <item.Icon size={20} strokeWidth={isActive ? 2.6 : 2} color={tint} />
+              {/* literal upper case with a minWidth: Android clips the last letter of letter-spaced, text-transformed labels */}
+              <Text numberOfLines={1} style={[st.label, { color: tint, ...outfit(isActive ? 800 : 600) }]}>
                 {item.label.toUpperCase()}
               </Text>
-              {isActive ? <View style={st.bar} /> : null}
             </Press>
           );
         })}
@@ -80,22 +81,19 @@ export default function DriverBottomNav() {
 }
 
 const st = StyleSheet.create({
+  wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 12, zIndex: 50 },
   nav: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    height: 64,
+    borderRadius: DT.radius.pill,
+    backgroundColor: DT.brand,
+    borderWidth: 1,
+    borderColor: 'rgba(202,168,62,0.35)',
     paddingHorizontal: 8,
-    paddingTop: 8,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderTopWidth: 1,
-    borderTopColor: tw.slate100,
-    boxShadow: '0 -10px 30px rgba(0,0,0,0.03)',
-    zIndex: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...shadow('xl'),
   },
-  grid: { height: 68, flexDirection: 'row', alignItems: 'stretch', gap: 2 },
-  item: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 16, paddingHorizontal: 4 },
-  itemActive: { backgroundColor: tw.slate50, transform: [{ translateY: -1 }] },
-  label: { maxWidth: '100%', minWidth: 28, fontSize: 8, letterSpacing: 0.32, textAlign: 'center' },
-  bar: { position: 'absolute', top: -8, width: 28, height: 2, borderRadius: 999, backgroundColor: tw.slate900 },
+  item: { flex: 1, minWidth: 0, height: 52, alignItems: 'center', justifyContent: 'center', gap: 3, borderRadius: DT.radius.pill, paddingHorizontal: 2 },
+  itemActive: { backgroundColor: 'rgba(255,255,255,0.1)' },
+  label: { maxWidth: '100%', minWidth: 30, fontSize: 8.5, lineHeight: 11, letterSpacing: 0.3, textAlign: 'center' },
 });

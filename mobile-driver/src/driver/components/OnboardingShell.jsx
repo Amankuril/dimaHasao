@@ -1,22 +1,65 @@
-import { useEffect, useMemo } from 'react';
-import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Loader2 } from 'lucide-react-native';
-import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Press } from '../../components/ui';
+import { playfair, shadow } from '../../theme';
+import { DT } from '../ui/dt';
 import { Alert, CtaButton, Spin } from './OnboardingFields';
-import { OB, jk, up } from './onboardingTheme';
+import { jk, obCard, up } from './onboardingTheme';
 
 export const DRIVER_BRAND_LOGO = require('../../../assets/images/driver-logo.png');
 
 /*
- * Port of driver/pages/registration/OnboardingShell.jsx: the frame every driver
- * onboarding step sits in (header, progress, title block, fixed footer button).
+ * The frame every driver onboarding step sits in: a deep-green hero (logo or back button, step pills,
+ * gold serif title), the step's white cards, and a fixed footer with the yellow call-to-action.
  */
 
 /** The steps a driver walks, in order. The shell derives progress from this. */
 export const ONBOARDING_STEPS = ['phone', 'otp', 'personal', 'vehicle', 'documents'];
+
+/** The green hero block: rounded bottom corners, gold serif title, cream subtitle. */
+export function BrandHero({ top = 0, children, style }) {
+  return <View style={[styles.hero, { paddingTop: top + 18 }, style]}>{children}</View>;
+}
+
+/** The logo medallion used by the sign-in screens and the status screens. */
+export function LogoBadge({ size = 64 }) {
+  return (
+    <View style={[styles.logoRing, { width: size + 8, height: size + 8, borderRadius: (size + 8) / 2 }]}>
+      <Image source={DRIVER_BRAND_LOGO} style={{ width: size, height: size, borderRadius: size / 2 }} />
+    </View>
+  );
+}
+
+/**
+ * Sign-in layout (phone number, code): green hero with the logo and a gold serif title,
+ * then a white form card pulled up over the hero's edge, then an optional footer (legal links).
+ */
+export function AuthScaffold({ title, subtitle, children, footer = null, icon = null }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <ScrollView
+      style={{ flex: 1, backgroundColor: DT.bg }}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: 28 + insets.bottom }}
+    >
+      <BrandHero top={insets.top + 14} style={styles.authHero}>
+        <View style={styles.maxW}>
+          {icon || <LogoBadge size={64} />}
+          <Text style={styles.authTitle}>{title}</Text>
+          {subtitle ? <View style={{ marginTop: 8 }}>{typeof subtitle === 'string' ? <Text style={styles.subtitle}>{subtitle}</Text> : subtitle}</View> : null}
+        </View>
+      </BrandHero>
+
+      <View style={[styles.maxW, styles.authBody]}>
+        <View style={[obCard, styles.authCard]}>{children}</View>
+        {footer ? <View style={{ marginTop: 20 }}>{footer}</View> : null}
+      </View>
+    </ScrollView>
+  );
+}
 
 export default function OnboardingShell({
   step,
@@ -39,40 +82,50 @@ export default function OnboardingShell({
     return { index: position < 0 ? 0 : position, total: ONBOARDING_STEPS.length };
   }, [step]);
 
-  const percent = Math.round(((index + 1) / total) * 100);
-  const width = useAnimatedValue(percent);
-  useEffect(() => {
-    Animated.timing(width, { toValue: percent, duration: 420, easing: Easing.bezier(0.22, 1, 0.36, 1), useNativeDriver: false }).start();
-  }, [percent, width]);
-
   return (
-    <View style={{ flex: 1, backgroundColor: OB.bg }}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24 + insets.top, paddingBottom: 160 }}>
-        <View style={styles.maxW}>
-          <View style={{ gap: 20 }}>
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 170 }}>
+        <BrandHero top={insets.top}>
+          <View style={styles.maxW}>
             <View style={styles.headRow}>
               {onBack ? (
-                <Press scale={1} onPress={onBack} accessibilityLabel="Go back" style={styles.back}>
-                  <ArrowLeft size={17} strokeWidth={2.5} color={OB.text} />
+                <Press scale={0.92} onPress={onBack} accessibilityLabel="Go back" style={styles.back} hitSlop={8}>
+                  <ArrowLeft size={20} strokeWidth={2.5} color={DT.onBrand} />
                 </Press>
               ) : (
-                <Image source={DRIVER_BRAND_LOGO} style={{ width: 40, height: 40, borderRadius: 20 }} />
+                <Image source={DRIVER_BRAND_LOGO} style={{ width: 44, height: 44, borderRadius: 22 }} />
               )}
-              <Text style={styles.stepText}>{up(`Step ${index + 1} of ${total}`)}</Text>
+              <View style={styles.stepPill}>
+                <Text style={styles.stepText}>{up(`Step ${index + 1} of ${total}`)}</Text>
+              </View>
             </View>
 
-            <View style={styles.track} accessibilityRole="progressbar" accessibilityLabel="Onboarding progress">
-              <Animated.View style={[styles.fill, { width: width.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }) }]} />
+            <View
+              style={styles.segments}
+              accessibilityRole="progressbar"
+              accessibilityLabel="Onboarding progress"
+              accessibilityValue={{ min: 1, max: total, now: index + 1 }}
+            >
+              {ONBOARDING_STEPS.map((name, i) => (
+                <View
+                  key={name}
+                  style={[styles.segment, i < index && styles.segmentDone, i === index && styles.segmentActive]}
+                />
+              ))}
             </View>
 
-            <View style={{ gap: 6, paddingTop: 4 }}>
+            <View style={{ gap: 6, marginTop: 20 }}>
               {eyebrow ? <Text style={styles.eyebrow}>{up(eyebrow)}</Text> : null}
-              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.title} accessibilityRole="header">
+                {title}
+              </Text>
               {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
             </View>
           </View>
+        </BrandHero>
 
-          <View style={{ marginTop: 24, gap: 16 }}>{children}</View>
+        <View style={[styles.maxW, { paddingHorizontal: 20, marginTop: 20 }]}>
+          <View style={{ gap: 16 }}>{children}</View>
 
           {error ? <Alert style={{ marginTop: 16 }}>{error}</Alert> : null}
 
@@ -81,15 +134,15 @@ export default function OnboardingShell({
       </ScrollView>
 
       <View style={styles.fixed} pointerEvents="box-none">
-        <LinearGradient colors={['rgba(250,246,237,0)', OB.bg, OB.bg]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
-        <View style={[styles.maxW, { gap: 12, paddingTop: 40, paddingBottom: 28 + insets.bottom, paddingHorizontal: 20 }]}>
+        <LinearGradient colors={['rgba(248,250,252,0)', DT.bg, DT.bg]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        <View style={[styles.maxW, { gap: 12, paddingTop: 36, paddingBottom: 20 + insets.bottom, paddingHorizontal: 20 }]}>
           <CtaButton onPress={onPrimary} disabled={primaryDisabled || primaryLoading}>
             {primaryLoading ? (
               <Spin>
-                <Loader2 size={18} color="#fff" />
+                <Loader2 size={18} color={DT.ctaInk} />
               </Spin>
             ) : (
-              <Text style={[styles.ctaText, { color: primaryDisabled ? '#93917f' : '#fff' }]}>{primaryLabel}</Text>
+              <Text style={[styles.ctaText, { color: primaryDisabled ? DT.faint : DT.ctaInk }]}>{primaryLabel}</Text>
             )}
           </CtaButton>
           {secondary}
@@ -101,14 +154,39 @@ export default function OnboardingShell({
 
 const styles = StyleSheet.create({
   maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
+  hero: {
+    backgroundColor: DT.brandDeep,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    borderBottomLeftRadius: DT.radius.xl,
+    borderBottomRightRadius: DT.radius.xl,
+    ...shadow('md'),
+  },
+  authHero: { paddingBottom: 56 },
+  authBody: { paddingHorizontal: 20, marginTop: -32 },
+  authCard: { padding: 20, gap: 16 },
+  authTitle: { ...playfair(700), fontSize: 30, lineHeight: 38, color: DT.gold, marginTop: 18 },
+  logoRing: { alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: DT.gold, backgroundColor: DT.brand },
   headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  back: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: OB.border, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  stepText: { ...jk(800), fontSize: 11, letterSpacing: 1.54, color: OB.muted, minWidth: 96, textAlign: 'right', flexShrink: 0 },
-  track: { height: 4, borderRadius: 999, backgroundColor: OB.border, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: 999, backgroundColor: OB.primary },
-  eyebrow: { ...jk(800), fontSize: 11, letterSpacing: 1.76, color: OB.primary },
-  title: { ...jk(800), fontSize: 28, lineHeight: 35, letterSpacing: -0.56, color: OB.text },
-  subtitle: { ...jk(500), fontSize: 14, lineHeight: 22.75, color: OB.muted, maxWidth: 255 },
+  back: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepPill: { minWidth: 112, paddingHorizontal: 12, paddingVertical: 6, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)' },
+  stepText: { ...jk(800), fontSize: 11, lineHeight: 16, letterSpacing: 1.2, color: DT.gold, textAlign: 'center' },
+  segments: { flexDirection: 'row', gap: 6, marginTop: 18 },
+  segment: { flex: 1, height: 6, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.18)' },
+  segmentDone: { backgroundColor: DT.gold },
+  segmentActive: { backgroundColor: DT.accent },
+  eyebrow: { ...jk(800), fontSize: 11, lineHeight: 16, letterSpacing: 1.6, minWidth: 40, color: DT.onBrandMuted },
+  title: { ...playfair(700), fontSize: 28, lineHeight: 36, color: DT.gold },
+  subtitle: { ...jk(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted },
   fixed: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  ctaText: { ...jk(800), fontSize: 15, letterSpacing: 0.3 },
+  ctaText: { ...jk(800), fontSize: 15, lineHeight: 20 },
 });

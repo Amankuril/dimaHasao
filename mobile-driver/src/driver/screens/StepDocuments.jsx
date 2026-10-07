@@ -20,6 +20,8 @@ import OnboardingShell from '../components/OnboardingShell';
 import DriverImageSourceSheet from '../components/DriverImageSourceSheet';
 import { DateField, Field, OnboardingLoading, Spin } from '../components/OnboardingFields';
 import { OB, jk, obCard } from '../components/onboardingTheme';
+import { Chip } from '../ui/Surface';
+import { DT } from '../ui/dt';
 
 /*
  * Port of driver/pages/registration/StepDocuments.jsx (/taxi/driver/step-documents).
@@ -222,7 +224,7 @@ export default function StepDocuments() {
         footer={
           <View style={styles.footer}>
             <View style={{ marginTop: 2 }}>
-              <ShieldCheck size={15} color={OB.primary} />
+              <ShieldCheck size={15} color={DT.brandMid} />
             </View>
             <Text style={styles.footerText}>
               Your documents are reviewed by the district team. You will be notified once your
@@ -239,15 +241,15 @@ export default function StepDocuments() {
           return (
             <View key={field.key} style={[obCard, { padding: 16, gap: 12 }]}>
               <View style={styles.head}>
-                <View style={[styles.iconBox, { backgroundColor: uploaded ? OB.primary : OB.primarySoft }]}>
+                <View style={[styles.iconBox, { backgroundColor: uploaded ? DT.success : OB.primarySoft }]}>
                   {busy ? (
                     <Spin>
-                      <Loader2 size={17} color={uploaded ? '#fff' : OB.primary} />
+                      <Loader2 size={18} color={uploaded ? DT.onBrand : DT.brandMid} />
                     </Spin>
                   ) : uploaded ? (
-                    <Check size={17} strokeWidth={3} color="#fff" />
+                    <Check size={18} strokeWidth={3} color={DT.onBrand} />
                   ) : (
-                    <FileText size={17} strokeWidth={2.2} color={OB.primary} />
+                    <FileText size={18} strokeWidth={2.2} color={DT.brandMid} />
                   )}
                 </View>
 
@@ -258,13 +260,22 @@ export default function StepDocuments() {
                   <Text style={styles.docReq}>{field.isRequired ? 'REQUIRED' : 'OPTIONAL'}</Text>
                 </View>
 
-                <Press scale={1} onPress={() => setSourceFor(field)} disabled={busy} style={[styles.upload, busy && { opacity: 0.5 }]}>
-                  {uploaded ? <RefreshCw size={14} color={OB.primary} /> : <Camera size={15} color={OB.primary} />}
-                  <Text style={styles.uploadText}>{uploaded ? 'Replace' : 'Upload'}</Text>
-                </Press>
+                {uploaded ? <Chip label="Uploaded" tone="success" /> : null}
               </View>
 
-              {preview ? <Img source={{ uri: preview }} style={styles.preview} resizeMode="cover" /> : null}
+              <Press
+                scale={0.99}
+                onPress={() => setSourceFor(field)}
+                disabled={busy}
+                accessibilityLabel={`${uploaded ? 'Replace' : 'Upload'} ${field.label || field.templateName || field.key}`}
+                style={[styles.tile, uploaded ? styles.tileDone : styles.tileEmpty, busy && { opacity: 0.5 }]}
+              >
+                {preview ? <Img source={{ uri: preview }} style={styles.preview} resizeMode="cover" /> : null}
+                <View style={styles.tileRow}>
+                  {uploaded ? <RefreshCw size={16} color={DT.successInk} /> : <Camera size={18} color={DT.brandMid} />}
+                  <Text style={[styles.uploadText, { color: uploaded ? DT.successInk : DT.brandMid }]}>{uploaded ? 'Replace' : 'Upload'}</Text>
+                </View>
+              </Press>
 
               {field.hasIdentifyNumber && (
                 <Field
@@ -290,7 +301,7 @@ export default function StepDocuments() {
 
         {fields.length === 0 && (
           <View style={[obCard, styles.empty]}>
-            <ShieldCheck size={20} color={OB.primary} />
+            <ShieldCheck size={20} color={DT.brandMid} />
             <Text style={styles.emptyText}>
               The district has not asked for any documents yet. An admin will contact you if
               anything else is needed.
@@ -308,12 +319,15 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingHorizontal: 4 },
   footerText: { ...jk(500), flex: 1, fontSize: 12, lineHeight: 19.5, color: OB.muted },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  docName: { ...jk(700), fontSize: 14, color: OB.text },
-  docReq: { ...jk(600), fontSize: 11, letterSpacing: 0.55, color: OB.muted },
-  upload: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  uploadText: { ...jk(700), fontSize: 12, color: OB.primary },
-  preview: { height: 144, width: '100%', borderRadius: 12, borderWidth: 1, borderColor: OB.border },
+  iconBox: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  docName: { ...jk(700), fontSize: 14, lineHeight: 20, color: OB.text },
+  docReq: { ...jk(600), fontSize: 11, lineHeight: 16, letterSpacing: 0.55, minWidth: 40, color: OB.muted },
+  tile: { minHeight: 56, borderRadius: DT.radius.lg, borderWidth: 1.5, padding: 10, gap: 8, alignItems: 'stretch', justifyContent: 'center' },
+  tileEmpty: { borderStyle: 'dashed', borderColor: DT.brandBorder, backgroundColor: DT.brandSoft },
+  tileDone: { borderColor: DT.success, backgroundColor: DT.successSoft },
+  tileRow: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  uploadText: { ...jk(700), fontSize: 13, lineHeight: 18 },
+  preview: { height: 144, width: '100%', borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border },
   empty: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20 },
   emptyText: { ...jk(500), flex: 1, fontSize: 13, lineHeight: 21, color: OB.muted },
 });

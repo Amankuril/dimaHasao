@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, CheckCircle2, Copy, Gift, Share2 } from 'lucide-react-native';
+import { CheckCircle2, Copy, Gift, Share2 } from 'lucide-react-native';
 import { API_ORIGIN } from '../../api/client';
 import { Press } from '../../components/ui';
 import { openExternal } from '../../lib/links';
 import { localStore } from '../../lib/storage';
 import { useNavigate } from '../../lib/webRouter';
-import { outfit, shadow, tw } from '../../theme';
+import { outfit, playfair, shadow } from '../../theme';
 import { useDriverAppSettings } from '../hooks/useDriverAppSettings';
 import { getCurrentDriver } from '../services/registrationService';
 import { getReferralSettingsContent } from '../services/referralTranslationService';
@@ -19,6 +19,9 @@ import {
   DRIVER_REFERRAL_TRANSLATION_FIELDS,
   getStoredReferralLanguageCode,
 } from '../utils/referralFields';
+import { DT } from '../ui/dt';
+import ScreenHeader from '../ui/ScreenHeader';
+import { CtaButton } from '../ui/Surface';
 
 const readStoredDriverInfo = () => {
   try {
@@ -34,8 +37,6 @@ const replaceLegacyReferralBrand = (value, appName) => {
   const safeAppName = String(appName || '').trim() || 'App';
   return String(value || '').replace(LEGACY_BRAND_REGEX, safeAppName);
 };
-
-const BLUE = '#1830b8';
 
 /** Port of Taxi/modules/driver/pages/settings/Referral.jsx (/taxi/driver/referral). */
 export default function DriverReferral() {
@@ -187,53 +188,60 @@ export default function DriverReferral() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f5f7fb' }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingTop: 32 + insets.top, paddingBottom: 40 + insets.bottom }}>
-        <View style={styles.header}>
-          <Press onPress={() => navigate(`${routePrefix}/profile`)} accessibilityLabel="Back" style={styles.back}>
-            <ArrowLeft size={18} color={tw.gray900} strokeWidth={2.3} />
-          </Press>
-          <Text style={styles.title} accessibilityRole="header">Referrals</Text>
-        </View>
-
-        <View style={styles.panel}>
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
+      <ScreenHeader title="Referrals" subtitle="Invite drivers and earn rewards" onBack={() => navigate(`${routePrefix}/profile`)} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: 20, paddingBottom: 40 + insets.bottom, gap: 16 }}>
+        <View style={styles.hero}>
           <View style={styles.banner}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.bannerText}>{bannerText}</Text>
               <Text style={styles.lang}>Language: {translation.language_code?.toUpperCase() || 'EN'}</Text>
             </View>
             <View style={styles.gift}>
-              <Gift size={20} color="#fff" />
+              <Gift size={22} color={DT.accent} />
             </View>
           </View>
 
+          <View style={styles.codeBox}>
+            <Text style={styles.codeLabel}>YOUR REFERRAL CODE</Text>
+            <Text style={styles.code} selectable>{referralCode || 'Not available'}</Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+            <CtaButton
+              variant="cta"
+              title="Copy"
+              onPress={handleCopy}
+              disabled={!referralCode}
+              accessibilityLabel="Copy referral code"
+              icon={copied ? <CheckCircle2 size={18} color={DT.ctaInk} /> : <Copy size={18} color={DT.ctaInk} />}
+              style={{ flex: 1 }}
+            />
+            <CtaButton
+              variant="outline"
+              title="Share"
+              onPress={handleShare}
+              disabled={!referralCode}
+              accessibilityLabel="Share referral"
+              icon={<Share2 size={18} color={DT.ink} />}
+              style={{ flex: 1 }}
+            />
+          </View>
+
+          <View style={styles.linkBox}>
+            <Text style={styles.linkLabel}>SHARE LINK</Text>
+            <Text style={styles.link} selectable>{referralShareLink || 'Share link will appear once your referral code is ready.'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.panel}>
           <View style={{ padding: 16 }}>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={styles.codeBox}>
-                <Text style={styles.code}>{referralCode || 'Not available'}</Text>
-                <Text style={styles.codeLabel}>Your referral code</Text>
-              </View>
-              <Press scale={1} onPress={handleCopy} disabled={!referralCode} accessibilityLabel="Copy referral code" style={[styles.btn, { backgroundColor: BLUE }, !referralCode && { opacity: 0.5 }]}>
-                {copied ? <CheckCircle2 size={15} color="#fff" /> : <Copy size={15} color="#fff" />}
-                <Text style={styles.btnText}>Copy</Text>
-              </Press>
-              <Press scale={1} onPress={handleShare} disabled={!referralCode} accessibilityLabel="Share referral" style={[styles.btn, { backgroundColor: '#ef4444' }, !referralCode && { opacity: 0.5 }]}>
-                <Text style={styles.btnText}>Share</Text>
-                <Share2 size={15} color="#fff" />
-              </Press>
-            </View>
-
-            <View style={styles.linkBox}>
-              <Text style={styles.linkLabel}>SHARE LINK</Text>
-              <Text style={styles.link}>{referralShareLink || 'Share link will appear once your referral code is ready.'}</Text>
-            </View>
-
             <View style={styles.tabs}>
               {[['refer', 'Refer and earn'], ['history', 'Referral history']].map(([k, label]) => {
                 const on = activeTab === k;
                 return (
-                  <Press key={k} scale={1} onPress={() => setActiveTab(k)} accessibilityRole="tab" accessibilityState={{ selected: on }} style={[styles.tab, on ? styles.tabOn : { backgroundColor: tw.gray100 }]}>
-                    <Text style={[styles.tabText, { color: on ? tw.gray900 : tw.gray500 }]}>{label}</Text>
+                  <Press key={k} scale={1} onPress={() => setActiveTab(k)} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={label} style={[styles.tab, on ? styles.tabOn : { backgroundColor: DT.bgSoft }]}>
+                    <Text style={[styles.tabText, { color: on ? DT.onBrand : DT.muted }]}>{label}</Text>
                   </Press>
                 );
               })}
@@ -243,7 +251,7 @@ export default function DriverReferral() {
           <View style={{ paddingHorizontal: 16, paddingBottom: 16, minHeight: 340 }}>
             {loading ? (
               <View style={{ alignItems: 'center', paddingVertical: 64 }} accessibilityRole="progressbar" accessibilityLabel="Loading">
-                <ActivityIndicator size="large" color={BLUE} />
+                <ActivityIndicator size="large" color={DT.brand} />
               </View>
             ) : activeTab === 'refer' ? (
               <View style={{ gap: 16 }}>
@@ -278,33 +286,29 @@ export default function DriverReferral() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
-  back: { width: 36, height: 36, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  title: { fontSize: 19, lineHeight: 28.5, color: tw.gray900, ...outfit(600) },
-  panel: { width: '100%', maxWidth: 448, alignSelf: 'center', borderRadius: 28, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', overflow: 'hidden', ...shadow('sm') },
-  banner: { backgroundColor: BLUE, paddingHorizontal: 20, paddingVertical: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  bannerText: { fontSize: 26, lineHeight: 32.5, color: '#fff', ...outfit(600) },
-  lang: { fontSize: 11, lineHeight: 16.5, color: tw.indigo100, marginTop: 4, ...outfit(400) },
-  gift: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  codeBox: { flex: 1, minWidth: 0, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray300, paddingHorizontal: 12, paddingVertical: 12, alignItems: 'center' },
-  code: { fontSize: 18, lineHeight: 28, letterSpacing: 0.45, color: tw.gray900, textAlign: 'center', ...outfit(600) },
-  codeLabel: { fontSize: 10, lineHeight: 15, color: tw.gray400, marginTop: 4, ...outfit(400) },
-  btn: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 16 },
-  btnText: { fontSize: 14, lineHeight: 20, color: '#fff', ...outfit(500) },
-  linkBox: { marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray50, paddingHorizontal: 12, paddingVertical: 12 },
-  linkLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1.6, color: tw.gray400, ...outfit(600) },
-  link: { marginTop: 4, fontSize: 12, lineHeight: 16, color: tw.gray700, ...outfit(400) },
-  tabs: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  tab: { flex: 1, borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  tabOn: { backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200 },
-  tabText: { fontSize: 12, lineHeight: 16, ...outfit(500) },
-  how: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...outfit(600) },
-  empty: { fontSize: 14, lineHeight: 20, color: tw.gray400, ...outfit(400) },
-  block: { fontSize: 14, lineHeight: 24, color: tw.gray800, ...outfit(400) },
-  history: { borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200, backgroundColor: tw.gray50, paddingHorizontal: 20, paddingVertical: 32, alignItems: 'center' },
-  historyTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...outfit(500) },
-  historyBody: { fontSize: 12, lineHeight: 16, color: tw.gray400, marginTop: 8, textAlign: 'center', ...outfit(400) },
+  hero: { width: '100%', maxWidth: 448, alignSelf: 'center', borderRadius: DT.radius.xl, backgroundColor: DT.brand, padding: 20, borderWidth: 1, borderColor: DT.brandMid, ...shadow('lg') },
+  banner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
+  bannerText: { fontSize: 24, lineHeight: 31, color: DT.gold, ...playfair(700) },
+  lang: { fontSize: 11, lineHeight: 16, color: DT.onBrandMuted, marginTop: 4, ...outfit(500) },
+  gift: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
+  codeBox: { borderRadius: DT.radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: DT.gold, backgroundColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 16, paddingVertical: 16, alignItems: 'center' },
+  code: { fontSize: 26, lineHeight: 34, letterSpacing: 2, color: DT.onBrand, textAlign: 'center', marginTop: 4, ...outfit(800) },
+  codeLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1.2, minWidth: 140, textAlign: 'center', color: DT.onBrandMuted, ...outfit(700) },
+  linkBox: { marginTop: 14, borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 14, paddingVertical: 12 },
+  linkLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1.2, minWidth: 90, color: DT.gold, ...outfit(700) },
+  link: { marginTop: 4, fontSize: 12, lineHeight: 17, color: DT.onBrand, ...outfit(500) },
+  panel: { width: '100%', maxWidth: 448, alignSelf: 'center', borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, overflow: 'hidden', ...shadow('sm') },
+  tabs: { flexDirection: 'row', gap: 8 },
+  tab: { flex: 1, minHeight: 44, borderRadius: DT.radius.pill, paddingVertical: 10, alignItems: 'center', justifyContent: 'center' },
+  tabOn: { backgroundColor: DT.brand },
+  tabText: { fontSize: 12, lineHeight: 16, ...outfit(700) },
+  how: { fontSize: 18, lineHeight: 26, color: DT.brand, ...playfair(700) },
+  empty: { fontSize: 14, lineHeight: 20, color: DT.muted, ...outfit(500) },
+  block: { fontSize: 14, lineHeight: 24, color: DT.inkSoft, ...outfit(500) },
+  history: { borderRadius: DT.radius.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: DT.border, backgroundColor: DT.bg, paddingHorizontal: 20, paddingVertical: 32, alignItems: 'center' },
+  historyTitle: { fontSize: 14, lineHeight: 20, color: DT.ink, ...outfit(700) },
+  historyBody: { fontSize: 12, lineHeight: 17, color: DT.muted, marginTop: 8, textAlign: 'center', ...outfit(500) },
   toastWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  toast: { backgroundColor: tw.gray900, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, ...shadow('xl') },
-  toastText: { fontSize: 12, lineHeight: 16, color: '#fff', ...outfit(600) },
+  toast: { backgroundColor: DT.dark, borderRadius: DT.radius.pill, paddingHorizontal: 20, paddingVertical: 12, ...shadow('xl') },
+  toastText: { fontSize: 13, lineHeight: 18, color: DT.onBrand, ...outfit(700) },
 });

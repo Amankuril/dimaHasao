@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { AlertCircle, ArrowDownLeft, ArrowLeft, ArrowUpRight, CheckCircle2, Clock3, IndianRupee, RefreshCw, Wallet, X } from 'lucide-react-native';
+import { AlertCircle, ArrowDownLeft, ArrowUpRight, CheckCircle2, Clock3, IndianRupee, RefreshCw, Wallet, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { openExternal } from '../../lib/links';
 import { localStore } from '../../lib/storage';
@@ -10,9 +9,12 @@ import { useNavigate } from '../../lib/webRouter';
 import { outfit as fo, shadow, tw } from '../../theme';
 import { socketService } from '../api/socket';
 import api from '../api/client';
-import DriverBottomNav from '../components/DriverBottomNav';
+import DriverBottomNav, { NAV_BAR_HEIGHT } from '../components/DriverBottomNav';
 import DriverRazorpayCheckout from '../components/DriverRazorpayCheckout';
 import SpinView from '../components/SpinView';
+import { DT } from '../ui/dt';
+import ScreenHeader from '../ui/ScreenHeader';
+import { Card, Chip, CtaButton } from '../ui/Surface';
 import { useDriverAppSettings } from '../hooks/useDriverAppSettings';
 import { getLocalDriverToken } from '../services/registrationService';
 import { clearPendingPhonePeRedirect, readPendingPhonePeRedirect, rememberPendingPhonePeRedirect } from '../utils/phonePeResume';
@@ -60,14 +62,14 @@ const withdrawalStatusMeta = (status = '') => {
   const normalized = String(status || '').toLowerCase();
 
   if (normalized === 'completed' || normalized === 'approved') {
-    return { label: 'Approved', bg: tw.emerald100, fg: tw.emerald700 };
+    return { label: 'Approved', tone: 'success' };
   }
 
   if (normalized === 'cancelled' || normalized === 'rejected') {
-    return { label: 'Rejected', bg: tw.rose100, fg: tw.rose700 };
+    return { label: 'Rejected', tone: 'danger' };
   }
 
-  return { label: 'Pending', bg: tw.amber100, fg: tw.amber700 };
+  return { label: 'Pending', tone: 'warn' };
 };
 
 const transactionHint = (tx = {}) => {
@@ -132,9 +134,9 @@ const WALLET_FILTERS = [
 ];
 
 const TONES = {
-  good: { fg: tw.emerald700, bg: tw.emerald50 },
-  warn: { fg: tw.amber700, bg: tw.amber50 },
-  dark: { fg: tw.slate700, bg: tw.slate100 },
+  good: { fg: DT.successInk, bg: DT.successSoft },
+  warn: { fg: DT.warnInk, bg: DT.warnSoft },
+  dark: { fg: DT.inkSoft, bg: DT.bgSoft },
 };
 
 const StatPill = ({ label, value, tone = 'dark', style }) => {
@@ -432,7 +434,7 @@ export default function DriverWallet() {
             email: driverInfo?.email || '',
             contact: prefillContact,
           },
-          theme: { color: '#E85D04' },
+          theme: { color: DT.brand },
         },
         onClose: () => {
           setProcessingTopUp(false);
@@ -538,52 +540,51 @@ export default function DriverWallet() {
 
   return (
     <View style={st.flex}>
+      <ScreenHeader
+        title="Driver wallet"
+        subtitle={walletIntro}
+        onBack={() => navigate(-1)}
+        right={
+          <Press onPress={() => loadWallet()} disabled={refreshing} accessibilityLabel="Refresh wallet" style={[st.roundBtn, refreshing && { opacity: 0.6 }]}>
+            <SpinView active={refreshing}>
+              <RefreshCw size={18} color={DT.onBrand} />
+            </SpinView>
+          </Press>
+        }
+      />
       <ScrollView
         style={st.flex}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 16, paddingBottom: 112 + insets.bottom }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: NAV_BAR_HEIGHT + insets.bottom + 16 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={st.header}>
-          <Press onPress={() => navigate(-1)} accessibilityLabel="Go back" style={st.roundBtn}>
-            <ArrowLeft size={18} color={tw.slate900} />
-          </Press>
-          <View style={{ alignItems: 'center' }}>
-            <Text style={st.title}>Driver wallet</Text>
-            <Text style={st.intro}>{walletIntro}</Text>
-          </View>
-          <Press onPress={() => loadWallet()} disabled={refreshing} accessibilityLabel="Refresh wallet" style={[st.roundBtn, refreshing && { opacity: 0.6 }]}>
-            <SpinView active={refreshing}>
-              <RefreshCw size={18} color={tw.slate900} />
-            </SpinView>
-          </Press>
-        </View>
-
         {loading ? (
           <View style={st.loading}>
             <SpinView>
-              <RefreshCw size={28} color={tw.emerald700} />
+              <RefreshCw size={28} color={DT.brand} />
             </SpinView>
             <Text style={st.loadingText}>Loading wallet...</Text>
           </View>
         ) : (
           <View style={{ gap: 16 }}>
-            <View style={st.hero}>
+            <Card tone="dark" style={st.hero}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                 <View style={{ flexShrink: 1 }}>
                   <Text style={st.heroLabel}>CURRENT BALANCE</Text>
-                  <Text style={st.balance}>{money(wallet.balance)}</Text>
+                  <Text style={st.balance} numberOfLines={1} adjustsFontSizeToFit>
+                    {money(wallet.balance)}
+                  </Text>
                   <View style={[st.statusPill, { backgroundColor: rules.canReceiveOrders ? 'rgba(0,212,146,0.15)' : 'rgba(255,185,0,0.15)' }]}>
                     <Text style={[st.statusText, { color: rules.canReceiveOrders ? tw.emerald200 : tw.amber200 }]}>{statusCopy}</Text>
                   </View>
                 </View>
                 <View style={st.walletIcon}>
-                  <Wallet size={26} color="#fff" />
+                  <Wallet size={26} color={DT.gold} />
                 </View>
               </View>
 
               {owner ? (
-                <LinearGradient colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.salary}>
+                <View style={st.salary}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <View style={{ flexShrink: 1 }}>
                       <Text style={st.heroSmall}>MONTHLY SALARY</Text>
@@ -594,7 +595,7 @@ export default function DriverWallet() {
                       <IndianRupee size={22} color={tw.emerald200} />
                     </View>
                   </View>
-                </LinearGradient>
+                </View>
               ) : null}
 
               <View style={[owner ? { gap: 12 } : { flexDirection: 'row', gap: 12 }, { marginTop: 20 }]}>
@@ -607,11 +608,11 @@ export default function DriverWallet() {
                   <Text style={[st.miniValue, { color: rules.availableForOrders >= 0 ? tw.emerald200 : tw.amber200 }]}>{money(rules.availableForOrders)}</Text>
                 </View>
               </View>
-            </View>
+            </Card>
 
             {error ? (
               <View style={st.errorBox}>
-                <AlertCircle size={18} color={tw.rose700} style={{ marginTop: 2 }} />
+                <AlertCircle size={18} color={DT.dangerInk} style={{ marginTop: 2 }} />
                 <Text style={st.errorText}>{error}</Text>
               </View>
             ) : null}
@@ -622,26 +623,19 @@ export default function DriverWallet() {
             ) : null}
 
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <Press
-                onPress={() => setShowTopUp(true)}
-                disabled={topUpDisabled}
-                style={[st.actionBtn, shadow('sm'), { backgroundColor: topUpDisabled ? tw.slate200 : '#009b72' }]}
-              >
-                <Text style={[st.actionText, topUpDisabled && { color: tw.slate400 }]}>TOP UP</Text>
-                <ArrowUpRight size={17} color={topUpDisabled ? tw.slate400 : '#fff'} />
-              </Press>
-              <Press
+              <CtaButton title="TOP UP" onPress={() => setShowTopUp(true)} disabled={topUpDisabled} icon={<ArrowUpRight size={17} color={DT.ctaInk} />} style={{ flex: 1 }} />
+              <CtaButton
+                title="WITHDRAW"
+                variant="outline"
                 onPress={() => setShowWithdraw(true)}
                 disabled={withdrawDisabled}
-                style={[st.actionBtn, shadow('sm'), { backgroundColor: withdrawDisabled ? tw.slate200 : tw.slate900 }]}
-              >
-                <Text style={[st.actionText, withdrawDisabled && { color: tw.slate400 }]}>WITHDRAW</Text>
-                <ArrowDownLeft size={17} color={withdrawDisabled ? tw.slate400 : '#fff'} />
-              </Press>
+                icon={<ArrowDownLeft size={17} color={DT.ink} />}
+                style={{ flex: 1 }}
+              />
             </View>
 
             {recentWithdrawalRequests.length > 0 ? (
-              <View style={st.card}>
+              <Card>
                 <View style={{ marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Text style={st.cardTitle}>Withdrawal requests</Text>
                   <Text style={st.cardMeta}>{recentWithdrawalRequests.length} recent</Text>
@@ -656,19 +650,17 @@ export default function DriverWallet() {
                           <Text style={st.wdAmount}>{money(request.amount)}</Text>
                           <Text style={st.wdDate}>{formatDate(request.createdAt)}</Text>
                         </View>
-                        <View style={[st.wdBadge, { backgroundColor: statusMeta.bg }]}>
-                          <Text style={[st.wdBadgeText, { color: statusMeta.fg }]}>{statusMeta.label.toUpperCase()}</Text>
-                        </View>
+                        <Chip label={statusMeta.label} tone={statusMeta.tone} />
                       </View>
                     );
                   })}
                 </View>
-              </View>
+              </Card>
             ) : null}
 
-            <View style={st.card}>
+            <Card>
               <View style={{ marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <IndianRupee size={18} color={tw.emerald700} />
+                <IndianRupee size={18} color={DT.brand} />
                 <Text style={st.cardTitle}>{owner ? 'Wallet activity guide' : 'How it reflects'}</Text>
               </View>
               <View style={{ gap: 8 }}>
@@ -689,7 +681,7 @@ export default function DriverWallet() {
                   </Text>
                 </View>
               </View>
-            </View>
+            </Card>
 
             <View style={{ gap: 12 }}>
               {owner ? <StatPill label="Monthly salary" value={money(driverProfile.salary)} tone="good" /> : null}
@@ -714,8 +706,14 @@ export default function DriverWallet() {
                 {WALLET_FILTERS.map((filter) => {
                   const on = activeFilter === filter.id;
                   return (
-                    <Press key={filter.id} onPress={() => setActiveFilter(filter.id)} scale={1} style={[st.filter, on ? { backgroundColor: tw.slate900 } : [{ backgroundColor: '#fff' }, shadow('sm')]]}>
-                      <Text style={[st.filterText, { color: on ? '#fff' : tw.slate500 }]}>{filter.label.toUpperCase()}</Text>
+                    <Press
+                      key={filter.id}
+                      onPress={() => setActiveFilter(filter.id)}
+                      scale={1}
+                      accessibilityLabel={`Filter ${filter.label}`}
+                      style={[st.filter, on ? { backgroundColor: DT.brand, borderColor: DT.brand } : { backgroundColor: DT.card, borderColor: DT.border }]}
+                    >
+                      <Text style={[st.filterText, { color: on ? DT.onBrand : DT.inkSoft }]}>{filter.label.toUpperCase()}</Text>
                     </Press>
                   );
                 })}
@@ -723,7 +721,7 @@ export default function DriverWallet() {
 
               {recentTransactions.length === 0 ? (
                 <View style={st.empty}>
-                  <Clock3 size={30} color={tw.slate300} />
+                  <Clock3 size={30} color={DT.faint} />
                   <Text style={st.emptyTitle}>No transactions yet</Text>
                   <Text style={st.emptySub}>No entries match the selected earnings filter.</Text>
                 </View>
@@ -733,8 +731,8 @@ export default function DriverWallet() {
                   return (
                     <View key={tx._id || tx.id || index} style={st.txCard}>
                       <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <View style={[st.txIcon, { backgroundColor: isDebit ? tw.rose50 : tw.emerald50 }]}>
-                          {isDebit ? <ArrowDownLeft size={18} color={tw.rose600} /> : <ArrowUpRight size={18} color={tw.emerald700} />}
+                        <View style={[st.txIcon, { backgroundColor: isDebit ? DT.dangerSoft : DT.successSoft }]}>
+                          {isDebit ? <ArrowDownLeft size={18} color={DT.danger} /> : <ArrowUpRight size={18} color={DT.successInk} />}
                         </View>
                         <View style={{ flex: 1, minWidth: 0 }}>
                           <Text style={st.txTitle}>{transactionLabel(tx.type)}</Text>
@@ -742,8 +740,8 @@ export default function DriverWallet() {
                           <Text style={st.txDate}>{formatDate(tx.createdAt)}</Text>
                         </View>
                       </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={[st.txAmount, { color: isDebit ? tw.rose600 : tw.emerald700 }]}>{money(tx.amount)}</Text>
+                      <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                        <Text style={[st.txAmount, { color: isDebit ? DT.dangerInk : DT.successInk }]}>{money(tx.amount)}</Text>
                         <Text style={st.txBal}>BAL {money(tx.balanceAfter).toUpperCase()}</Text>
                       </View>
                     </View>
@@ -759,6 +757,7 @@ export default function DriverWallet() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={st.modalWrap}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowTopUp(false)} accessibilityLabel="Close top-up" />
           <View style={[st.sheet, { paddingBottom: 32 + insets.bottom }]}>
+            <View style={st.grab} />
             <View style={st.sheetHead}>
               <View style={{ flex: 1 }}>
                 <Text style={st.sheetTitle}>Top up wallet</Text>
@@ -768,14 +767,14 @@ export default function DriverWallet() {
                 </Text>
               </View>
               <Press onPress={() => setShowTopUp(false)} accessibilityLabel="Close top-up" style={st.closeBtn}>
-                <X size={18} color={tw.slate600} />
+                <X size={18} color={DT.inkSoft} />
               </Press>
             </View>
 
             {topUpSuccess ? (
               <View style={{ alignItems: 'center', paddingVertical: 40 }}>
                 <View style={st.okIcon}>
-                  <CheckCircle2 size={38} strokeWidth={3} color={tw.emerald700} />
+                  <CheckCircle2 size={38} strokeWidth={3} color={DT.successInk} />
                 </View>
                 <Text style={st.okTitle}>Wallet updated</Text>
               </View>
@@ -787,24 +786,12 @@ export default function DriverWallet() {
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   {quickAmounts.map((amount) => (
-                    <Press key={amount} onPress={() => setTopUpAmount(amount)} scale={1} style={[st.quick, shadow('sm')]}>
+                    <Press key={amount} onPress={() => setTopUpAmount(amount)} scale={1} style={st.quick}>
                       <Text style={st.quickText}>{money(amount)}</Text>
                     </Press>
                   ))}
                 </View>
-                <Press
-                  onPress={handleTopUp}
-                  disabled={processingTopUp || !rules.walletEnabled}
-                  style={[st.submit, { backgroundColor: processingTopUp || !rules.walletEnabled ? tw.slate200 : '#101521' }]}
-                >
-                  {processingTopUp ? (
-                    <SpinView>
-                      <RefreshCw size={18} color={tw.slate400} />
-                    </SpinView>
-                  ) : (
-                    <Text style={[st.submitText, !rules.walletEnabled && { color: tw.slate400 }]}>ADD MONEY</Text>
-                  )}
-                </Press>
+                <CtaButton title="ADD MONEY" onPress={handleTopUp} loading={processingTopUp} disabled={!rules.walletEnabled} style={{ height: 56 }} />
               </View>
             )}
           </View>
@@ -815,20 +802,21 @@ export default function DriverWallet() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={st.modalWrap}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowWithdraw(false)} accessibilityLabel="Close withdrawal" />
           <View style={[st.sheet, { paddingBottom: 32 + insets.bottom }]}>
+            <View style={st.grab} />
             <View style={st.sheetHead}>
               <View style={{ flex: 1 }}>
                 <Text style={st.sheetTitle}>Withdraw to admin request</Text>
                 <Text style={st.sheetSub}>Minimum amount: {money(rules.minimumTransferAmount)}</Text>
               </View>
               <Press onPress={() => setShowWithdraw(false)} accessibilityLabel="Close withdrawal" style={st.closeBtn}>
-                <X size={18} color={tw.slate600} />
+                <X size={18} color={DT.inkSoft} />
               </Press>
             </View>
 
             {withdrawSuccess ? (
               <View style={{ alignItems: 'center', paddingVertical: 40 }}>
                 <View style={st.okIcon}>
-                  <CheckCircle2 size={38} strokeWidth={3} color={tw.emerald700} />
+                  <CheckCircle2 size={38} strokeWidth={3} color={DT.successInk} />
                 </View>
                 <Text style={st.okTitle}>Request sent</Text>
                 <Text style={[st.sheetSub, { marginTop: 4 }]}>Admin will review your withdrawal request.</Text>
@@ -837,22 +825,10 @@ export default function DriverWallet() {
               <View style={{ gap: 16 }}>
                 <View style={st.amountBox}>
                   <Text style={st.amountLabel}>WITHDRAWAL AMOUNT</Text>
-                  <TextInput value={withdrawAmount} onChangeText={setWithdrawAmount} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={tw.slate400} style={st.amountInput} />
+                  <TextInput value={withdrawAmount} onChangeText={setWithdrawAmount} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={DT.faint} style={st.amountInput} />
                   <Text style={[st.cardMeta, { marginTop: 8, textAlign: 'center' }]}>Available balance: {money(wallet.balance)}</Text>
                 </View>
-                <Press
-                  onPress={handleWithdrawRequest}
-                  disabled={processingWithdraw || !rules.transferEnabled}
-                  style={[st.submit, { backgroundColor: processingWithdraw || !rules.transferEnabled ? tw.slate200 : tw.slate900 }]}
-                >
-                  {processingWithdraw ? (
-                    <SpinView>
-                      <RefreshCw size={18} color={tw.slate400} />
-                    </SpinView>
-                  ) : (
-                    <Text style={[st.submitText, !rules.transferEnabled && { color: tw.slate400 }]}>SEND REQUEST</Text>
-                  )}
-                </Press>
+                <CtaButton title="SEND REQUEST" variant="brand" onPress={handleWithdrawRequest} loading={processingWithdraw} disabled={!rules.transferEnabled} style={{ height: 56 }} />
               </View>
             )}
           </View>
@@ -866,72 +842,63 @@ export default function DriverWallet() {
 }
 
 const st = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#f5f1e8' },
-  header: { marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  roundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  title: { fontSize: 18, letterSpacing: -0.45, color: tw.slate950, ...fo(900) },
-  intro: { fontSize: 12, color: tw.slate500, ...fo(700) },
+  flex: { flex: 1, backgroundColor: DT.bg },
+  roundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
   loading: { minHeight: 480, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  loadingText: { fontSize: 14, color: tw.slate500, ...fo(900) },
-  hero: { borderRadius: 32, backgroundColor: '#101521', padding: 20, overflow: 'hidden', ...shadow('xl') },
-  heroLabel: { fontSize: 12, letterSpacing: 2.16, color: 'rgba(255,255,255,0.45)', ...fo(900) },
-  balance: { marginTop: 8, fontSize: 36, letterSpacing: -0.9, color: '#fff', ...fo(900) },
-  statusPill: { marginTop: 12, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
-  statusText: { fontSize: 12, ...fo(900) },
-  walletIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  salary: { marginTop: 20, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 16, overflow: 'hidden' },
-  heroSmall: { fontSize: 10, letterSpacing: 1.6, color: 'rgba(255,255,255,0.45)', ...fo(900) },
-  salaryValue: { marginTop: 4, fontSize: 24, color: tw.emerald200, ...fo(900) },
-  salaryNote: { marginTop: 4, fontSize: 11, color: 'rgba(255,255,255,0.55)', ...fo(700) },
+  loadingText: { fontSize: 14, color: DT.muted, ...fo(700) },
+  hero: { borderRadius: DT.radius.xl, padding: 20, overflow: 'hidden', ...shadow('lg') },
+  heroLabel: { fontSize: 12, letterSpacing: 1.6, minWidth: 130, color: DT.gold, ...fo(800) },
+  balance: { marginTop: 8, fontSize: 38, lineHeight: 46, letterSpacing: -0.5, color: DT.onBrand, fontVariant: ['tabular-nums'], ...fo(800) },
+  statusPill: { marginTop: 12, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+  statusText: { fontSize: 12, ...fo(800) },
+  walletIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
+  salary: { marginTop: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.07)', padding: 16, overflow: 'hidden' },
+  heroSmall: { fontSize: 10, letterSpacing: 1.2, minWidth: 90, color: DT.onBrandMuted, ...fo(800) },
+  salaryValue: { marginTop: 4, fontSize: 24, color: tw.emerald200, ...fo(800) },
+  salaryNote: { marginTop: 4, fontSize: 11, color: DT.onBrandMuted, ...fo(600) },
   salaryIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(0,212,146,0.15)', alignItems: 'center', justifyContent: 'center' },
-  miniCard: { borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', padding: 12 },
-  miniValue: { marginTop: 4, fontSize: 18, color: '#fff', ...fo(900) },
-  errorBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 16, borderWidth: 1, borderColor: tw.rose100, backgroundColor: tw.rose50, padding: 16 },
-  errorText: { flex: 1, fontSize: 14, color: tw.rose700, ...fo(700) },
-  warnBox: { borderRadius: 16, borderWidth: 1, borderColor: tw.amber100, backgroundColor: tw.amber50, padding: 16 },
-  warnText: { fontSize: 14, color: tw.amber700, ...fo(700) },
-  actionBtn: { flex: 1, height: 52, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  actionText: { flexShrink: 0, fontSize: 14, letterSpacing: 1.12, color: '#fff', ...fo(900) },
-  card: { borderRadius: 27.2, backgroundColor: '#fff', padding: 16, ...shadow('sm') },
-  cardTitle: { fontSize: 14, color: tw.slate950, ...fo(900) },
-  cardMeta: { fontSize: 12, color: tw.slate500, ...fo(700) },
-  wdRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 16, backgroundColor: tw.slate50, padding: 12 },
-  wdAmount: { fontSize: 14, color: tw.slate900, ...fo(900) },
-  wdDate: { marginTop: 2, fontSize: 11, color: tw.slate500, ...fo(700) },
-  wdBadge: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
-  wdBadgeText: { flexShrink: 0, fontSize: 10, letterSpacing: 1.6, ...fo(900) },
-  guide: { borderRadius: 16, backgroundColor: tw.slate50, padding: 12 },
-  guideTitle: { fontSize: 14, color: tw.slate900, ...fo(900) },
-  guideText: { marginTop: 4, fontSize: 12, lineHeight: 19.5, color: tw.slate500, ...fo(700) },
-  stat: { borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  statLabel: { fontSize: 10, letterSpacing: 1.6, opacity: 0.7, ...fo(900) },
-  statValue: { marginTop: 4, fontSize: 16, ...fo(900) },
-  txSub: { marginTop: 4, fontSize: 11, color: tw.slate500, ...fo(700) },
-  filter: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
-  filterText: { fontSize: 10, letterSpacing: 1.6, ...fo(900) },
-  empty: { borderRadius: 27.2, backgroundColor: '#fff', padding: 32, alignItems: 'center', ...shadow('sm') },
-  emptyTitle: { marginTop: 12, fontSize: 14, color: tw.slate700, ...fo(900) },
-  emptySub: { marginTop: 4, fontSize: 12, color: tw.slate400, textAlign: 'center', ...fo(700) },
-  txCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: 22.4, backgroundColor: '#fff', padding: 16, ...shadow('sm') },
+  miniCard: { borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.08)', padding: 12 },
+  miniValue: { marginTop: 4, fontSize: 18, color: DT.onBrand, fontVariant: ['tabular-nums'], ...fo(800) },
+  errorBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.danger, backgroundColor: DT.dangerSoft, padding: 16 },
+  errorText: { flex: 1, fontSize: 14, color: DT.dangerInk, ...fo(600) },
+  warnBox: { borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.warn, backgroundColor: DT.warnSoft, padding: 16 },
+  warnText: { fontSize: 14, color: DT.warnInk, ...fo(600) },
+  cardTitle: { fontSize: 15, color: DT.ink, ...fo(800) },
+  cardMeta: { fontSize: 12, color: DT.muted, ...fo(600) },
+  wdRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: DT.radius.md, backgroundColor: DT.bgSoft, padding: 12 },
+  wdAmount: { fontSize: 15, color: DT.ink, fontVariant: ['tabular-nums'], ...fo(800) },
+  wdDate: { marginTop: 2, fontSize: 11, color: DT.muted, ...fo(600) },
+  guide: { borderRadius: DT.radius.md, backgroundColor: DT.bgSoft, padding: 14 },
+  guideTitle: { fontSize: 14, color: DT.ink, ...fo(800) },
+  guideText: { marginTop: 4, fontSize: 12, lineHeight: 19, color: DT.inkSoft, ...fo(500) },
+  stat: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 16, paddingVertical: 14 },
+  statLabel: { fontSize: 10, letterSpacing: 1.2, minWidth: 80, ...fo(800) },
+  statValue: { marginTop: 4, fontSize: 18, fontVariant: ['tabular-nums'], ...fo(800) },
+  txSub: { marginTop: 4, fontSize: 11, color: DT.muted, ...fo(600) },
+  filter: { minHeight: 40, justifyContent: 'center', borderRadius: 999, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 8 },
+  filterText: { fontSize: 11, letterSpacing: 0.8, minWidth: 28, ...fo(800) },
+  empty: { borderRadius: DT.radius.lg, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, padding: 32, alignItems: 'center', ...shadow('sm') },
+  emptyTitle: { marginTop: 12, fontSize: 14, color: DT.inkSoft, ...fo(800) },
+  emptySub: { marginTop: 4, fontSize: 12, color: DT.muted, textAlign: 'center', ...fo(600) },
+  txCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 14, ...shadow('sm') },
   txIcon: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  txTitle: { fontSize: 14, color: tw.slate950, ...fo(900) },
-  txHint: { marginTop: 2, fontSize: 12, lineHeight: 20, color: tw.slate500, ...fo(700) },
-  txDate: { marginTop: 4, fontSize: 11, color: tw.slate400, ...fo(700) },
-  txAmount: { fontSize: 14, ...fo(900) },
-  txBal: { marginTop: 4, fontSize: 10, color: tw.slate400, ...fo(900) },
-  modalWrap: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(2,6,24,0.55)', paddingHorizontal: 12 },
-  sheet: { borderTopLeftRadius: 32, borderTopRightRadius: 32, backgroundColor: '#fff', padding: 20, ...shadow('2xl') },
+  txTitle: { fontSize: 14, color: DT.ink, ...fo(800) },
+  txHint: { marginTop: 2, fontSize: 12, lineHeight: 18, color: DT.inkSoft, ...fo(500) },
+  txDate: { marginTop: 4, fontSize: 11, color: DT.muted, ...fo(600) },
+  txAmount: { fontSize: 16, fontVariant: ['tabular-nums'], ...fo(800) },
+  txBal: { marginTop: 4, fontSize: 10, color: DT.muted, fontVariant: ['tabular-nums'], ...fo(700) },
+  modalWrap: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(6,44,22,0.55)' },
+  sheet: { borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, backgroundColor: DT.card, paddingHorizontal: 20, paddingTop: 10, ...shadow('2xl') },
+  grab: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: DT.border, marginBottom: 14 },
   sheetHead: { marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  sheetTitle: { fontSize: 20, color: tw.slate950, ...fo(900) },
-  sheetSub: { fontSize: 14, color: tw.slate500, ...fo(700) },
-  closeBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  okIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: tw.emerald50, alignItems: 'center', justifyContent: 'center' },
-  okTitle: { marginTop: 16, fontSize: 18, color: tw.slate950, ...fo(900) },
-  amountBox: { borderRadius: 24, backgroundColor: tw.slate50, padding: 20, alignItems: 'center' },
-  amountLabel: { fontSize: 12, letterSpacing: 1.92, color: tw.slate400, ...fo(900) },
-  amountInput: { marginTop: 8, width: '100%', padding: 0, textAlign: 'center', fontSize: 36, color: tw.slate950, ...fo(900) },
-  quick: { flex: 1, borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', paddingVertical: 12, alignItems: 'center' },
-  quickText: { fontSize: 14, color: tw.slate700, ...fo(900) },
-  submit: { height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  submitText: { fontSize: 14, letterSpacing: 1.4, color: '#fff', ...fo(900) },
+  sheetTitle: { fontSize: 20, color: DT.ink, ...fo(800) },
+  sheetSub: { fontSize: 13, color: DT.muted, ...fo(600) },
+  closeBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
+  okIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: DT.successSoft, alignItems: 'center', justifyContent: 'center' },
+  okTitle: { marginTop: 16, fontSize: 18, color: DT.ink, ...fo(800) },
+  amountBox: { borderRadius: DT.radius.xl, backgroundColor: DT.bgSoft, padding: 20, alignItems: 'center' },
+  amountLabel: { fontSize: 12, letterSpacing: 1.4, minWidth: 90, color: DT.muted, ...fo(800) },
+  amountInput: { marginTop: 8, width: '100%', padding: 0, textAlign: 'center', fontSize: 36, color: DT.ink, fontVariant: ['tabular-nums'], ...fo(800) },
+  quick: { flex: 1, minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingVertical: 10, alignItems: 'center' },
+  quickText: { fontSize: 14, color: DT.ink, ...fo(700) },
 });
