@@ -291,7 +291,7 @@ export default function Feed() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#fff', overflow: 'hidden' },
   content: { flex: 1, paddingTop: 120 },
-  mapBox: { ...StyleSheet.absoluteFillObject, top: -120 },
+  mapBox: { ...StyleSheet.absoluteFill, top: -120 },
   sim: {
     position: 'absolute',
     top: 180,

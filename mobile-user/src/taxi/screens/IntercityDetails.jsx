@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   mapMsgIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.rose50, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   mapMsgTitle: { fontSize: 16, lineHeight: 24, color: tw.slate900, ...fo(900) },
   mapMsgBody: { fontSize: 13, lineHeight: 19, color: tw.slate500, marginTop: 8, textAlign: 'center', ...fo(700) },
-  pinWrap: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', paddingBottom: 64 },
+  pinWrap: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingBottom: 64 },
   pinHead: { width: 48, height: 48, borderRadius: 18, backgroundColor: tw.blue600, borderWidth: 4, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('2xl') },
   pinStick: { width: 4, height: 24, backgroundColor: tw.blue600, marginTop: -8 },
   locate: { position: 'absolute', right: 24, bottom: 40, width: 56, height: 56, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', ...shadow('xl') },

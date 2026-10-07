@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
   sugHead: { paddingHorizontal: 16, paddingVertical: 8, fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.gray400, backgroundColor: tw.gray50, ...poppins(700) },
   mapSug: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   mapSugText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  pinLayer: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  pinLayer: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   pinHead: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.green100, alignItems: 'center', justifyContent: 'center', marginBottom: -6 },
   pinCore: { width: 24, height: 24, borderRadius: 12, backgroundColor: tw.green600, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   pinStem: { width: 6, height: 24, backgroundColor: tw.green600, borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#fff', borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
   savedLine: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 4, paddingRight: 8, ...poppins(400) },
   roundBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, alignItems: 'center', justifyContent: 'center' },
 
-  fetching: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
+  fetching: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
   fetchingText: { marginTop: 16, fontSize: 13, letterSpacing: -0.3, color: tw.gray800, ...poppins(700) },
 
   delPanel: { width: '100%', maxWidth: 340, backgroundColor: '#fff', borderRadius: 24, ...shadow('0 25px 50px rgba(0,0,0,0.25)') },

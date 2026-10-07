@@ -381,13 +381,13 @@ const styles = StyleSheet.create({
   dietBox: { width: 14, height: 14, borderWidth: 1.5, borderRadius: 2, backgroundColor: '#fff', padding: 1.5 },
   dietDot: { flex: 1, borderRadius: 999 },
   dishText: { fontSize: 12, lineHeight: 16, letterSpacing: -0.3, color: '#fff', ...poppins(700) },
-  unavailable: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray100 },
+  unavailable: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray100 },
   dots: { position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' },
   dotActive: { width: 16, backgroundColor: '#fff' },
 
   card: { backgroundColor: '#fff', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(229,231,235,0.7)', overflow: 'hidden', ...shadow('md') },
-  greyWash: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(120,120,120,0.35)' },
+  greyWash: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(120,120,120,0.35)' },
   bookmark: {
     position: 'absolute', top: 16, right: 16, width: 44, height: 44, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center', justifyContent: 'center', ...shadow('xl'),

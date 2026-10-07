@@ -73,8 +73,8 @@ function Spinner({ size = 64 }) {
   }, [v]);
   return (
     <View style={{ width: size, height: size }}>
-      <View style={{ ...StyleSheet.absoluteFillObject, borderRadius: size / 2, borderWidth: 4, borderColor: tw.gray200 }} />
-      <Animated.View style={{ ...StyleSheet.absoluteFillObject, borderRadius: size / 2, borderWidth: 4, borderColor: 'transparent', borderTopColor: F.green, transform: [{ rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }} />
+      <View style={{ ...StyleSheet.absoluteFill, borderRadius: size / 2, borderWidth: 4, borderColor: tw.gray200 }} />
+      <Animated.View style={{ ...StyleSheet.absoluteFill, borderRadius: size / 2, borderWidth: 4, borderColor: 'transparent', borderTopColor: F.green, transform: [{ rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }} />
     </View>
   );
 }

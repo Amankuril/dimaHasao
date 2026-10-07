@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { setAuthTokens, setTokensRefreshedHandler, setUnauthorizedHandler } from '../api/client';
+import { setAuthTokens, setHotelToken, setHotelUnauthorizedHandler, setTokensRefreshedHandler, setUnauthorizedHandler } from '../api/client';
 import { clearMeCache, logout as logoutApi } from '../api/auth';
 import { hydrateLocalStore, localStore, sessionStore, setSessionSecrets } from '../lib/storage';
 import { events } from '../lib/events';
@@ -22,6 +22,9 @@ import { clearCache as clearApiCache } from '../lib/apiCache';
 
 const KEY_ACCESS = 'restaurant_accessToken';
 const KEY_REFRESH = 'restaurant_refreshToken';
+// The hotel partner half: shared/partner + Hotel/utils/partnerAuth.js use the module name `partner`.
+const KEY_HOTEL = 'partner_accessToken';
+const HOTEL_LOCAL_KEYS = ['partner_authenticated', 'partner_user'];
 
 // SecureStore has no web implementation; the Expo web preview falls back to localStore.
 const secure =
@@ -56,18 +59,23 @@ export function AuthProvider({ children }) {
   const [booting, setBooting] = useState(true);
   const [session, setSession] = useState(null); // { accessToken, refreshToken }
   const [user, setUser] = useState(null);
+  const [hotelToken, setHotelTokenState] = useState(null);
+  const [hotelUser, setHotelUser] = useState(null);
   const expiredToastShown = useRef(false);
 
+  /*
+   * clearModuleAuth('restaurant'): signs the restaurant half out and leaves the hotel half alone, as on
+   * the web (restaurant logout, a rejected refresh, "Back to login" on pending-verification and
+   * clearAuthData() all leave partner_accessToken in place). Both halves go together only through
+   * clearPartnerSessions() (partnerSession.js: under-review "Back to login").
+   */
   const clearLocal = useCallback(async () => {
     setAuthTokens(null);
     setSessionSecrets({});
     clearMeCache();
     clearRestaurantCaches();
     await Promise.all([KEY_ACCESS, KEY_REFRESH].map((k) => secure.deleteItemAsync(k))).catch(() => {});
-    // clearModuleAuth('restaurant') + clearPartnerSessions(): every key the web removes.
-    ['restaurant_authenticated', 'restaurant_user', 'partner_profiles', 'partner_active_workspace', 'partner_onboarding_intent', FCM_TOKEN_KEY].forEach((k) =>
-      localStore.removeItem(k),
-    );
+    ['restaurant_authenticated', 'restaurant_user', FCM_TOKEN_KEY].forEach((k) => localStore.removeItem(k));
     sessionStore.removeItem('restaurantAuthData');
     clearApiCache();
     clearDiskCache();
@@ -83,8 +91,9 @@ export function AuthProvider({ children }) {
       await hydrateLocalStore();
       let accessToken = null;
       let refreshToken = null;
+      let storedHotel = null;
       try {
-        [accessToken, refreshToken] = await Promise.all([secure.getItemAsync(KEY_ACCESS), secure.getItemAsync(KEY_REFRESH)]);
+        [accessToken, refreshToken, storedHotel] = await Promise.all([secure.getItemAsync(KEY_ACCESS), secure.getItemAsync(KEY_REFRESH), secure.getItemAsync(KEY_HOTEL)]);
       } catch {
         /* treat as signed out */
       }
@@ -101,6 +110,16 @@ export function AuthProvider({ children }) {
           setUser(JSON.parse(localStore.getItem('restaurant_user') || 'null'));
         } catch {
           setUser(null);
+        }
+      }
+      // isPartnerSignedIn(): a hotel partner token that has not expired (the hotel half has no refresh token).
+      if (storedHotel && !isTokenExpired(storedHotel)) {
+        setHotelToken(storedHotel);
+        setHotelTokenState(storedHotel);
+        try {
+          setHotelUser(JSON.parse(localStore.getItem('partner_user') || 'null'));
+        } catch {
+          setHotelUser(null);
         }
       }
       setBooting(false);
@@ -133,6 +152,52 @@ export function AuthProvider({ children }) {
       setTokensRefreshedHandler(null);
     };
   }, [clearLocal]);
+
+  /** clearPartnerSession(): signs only the hotel half out. */
+  const clearHotel = useCallback(async () => {
+    setHotelToken(null);
+    await secure.deleteItemAsync(KEY_HOTEL).catch(() => {});
+    HOTEL_LOCAL_KEYS.forEach((k) => localStore.removeItem(k));
+    try {
+      const rest = JSON.parse(localStore.getItem('partner_profiles') || '[]').filter((p) => p !== 'hotel');
+      localStore.setItem('partner_profiles', JSON.stringify(rest));
+    } catch {
+      /* the list is rebuilt at the next sign-in */
+    }
+    setHotelTokenState(null);
+    setHotelUser(null);
+    events.emit('partnerAuthChanged');
+  }, []);
+
+  useEffect(() => {
+    setHotelUnauthorizedHandler(() => {
+      clearHotel();
+      toast.error('Session expired. Please log in again.', { id: 'session-expired' });
+    });
+    return () => setHotelUnauthorizedHandler(null);
+  }, [clearHotel]);
+
+  /** setPartnerSession(token, user): stores the hotel half of a partner sign-in. */
+  const loginHotel = useCallback(async (token, hotel) => {
+    if (!token) return null;
+    await secure.setItemAsync(KEY_HOTEL, token);
+    localStore.setItem('partner_authenticated', 'true');
+    if (hotel) localStore.setItem('partner_user', JSON.stringify(hotel));
+    setHotelToken(token);
+    setHotelTokenState(token);
+    setHotelUser(hotel || null);
+    events.emit('partnerAuthChanged');
+    return hotel || null;
+  }, []);
+
+  /** Keeps the cached hotel partner object in step with a profile change. */
+  const updateHotelUser = useCallback((patch) => {
+    setHotelUser((prev) => {
+      const next = { ...(prev || {}), ...(patch || {}) };
+      localStore.setItem('partner_user', JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   /** setAuthData('restaurant', accessToken, user, refreshToken) */
   const loginWithAuthData = useCallback(async (data) => {
@@ -181,21 +246,29 @@ export function AuthProvider({ children }) {
 
   // Plain modules ported from the web (utils/auth) sign in / out through here.
   useEffect(() => {
-    registerAuthHandlers({ login: loginWithAuthData, logout: clearLocal });
-  }, [loginWithAuthData, clearLocal]);
+    registerAuthHandlers({ login: loginWithAuthData, logout: clearLocal, hotelLogin: loginHotel, hotelLogout: clearHotel });
+  }, [loginWithAuthData, clearLocal, loginHotel, clearHotel]);
 
   const value = useMemo(
     () => ({
       booting,
       session,
       user,
-      signedIn: Boolean(session?.accessToken),
+      // Either half of a partner sign-in counts as signed in (a hotel-only number has no restaurant session).
+      signedIn: Boolean(session?.accessToken) || Boolean(hotelToken),
+      signedInRestaurant: Boolean(session?.accessToken),
+      signedInHotel: Boolean(hotelToken),
+      hotelToken,
+      hotelUser,
       loginWithAuthData,
+      loginHotel,
+      clearHotel,
+      updateHotelUser,
       logout,
       clearSession: clearLocal,
       updateUser,
     }),
-    [booting, session, user, loginWithAuthData, logout, clearLocal, updateUser],
+    [booting, session, user, hotelToken, hotelUser, loginWithAuthData, loginHotel, clearHotel, updateHotelUser, logout, clearLocal, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

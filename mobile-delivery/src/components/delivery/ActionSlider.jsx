@@ -183,7 +183,7 @@ export default ActionSlider;
 const styles = StyleSheet.create({
   track: { width: '100%', height: 68, borderRadius: 999, padding: PAD, overflow: 'hidden', backgroundColor: tw.gray950 },
   fill: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: 999 },
-  labelWrap: { ...StyleSheet.absoluteFillObject, paddingHorizontal: 64, alignItems: 'center', justifyContent: 'center' },
+  labelWrap: { ...StyleSheet.absoluteFill, paddingHorizontal: 64, alignItems: 'center', justifyContent: 'center' },
   // font-extrabold: Sora, and the theme's .01em letter-spacing beats tracking-[0.16em].
   label: {
     color: '#fff',

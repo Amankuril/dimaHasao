@@ -688,7 +688,7 @@ export default function SelectLocation() {
       <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.38, 1]} style={StyleSheet.absoluteFill} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      {!showMapPicker && <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerInner}>
           <Press onPress={handleScreenBack} style={styles.backBtn}>
             <ArrowLeft size={22} color={tw.slate900} strokeWidth={3} />
@@ -698,9 +698,9 @@ export default function SelectLocation() {
             <Text style={styles.headerTitle} numberOfLines={1}>Where to?</Text>
           </View>
         </View>
-      </View>
+      </View>}
 
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: pickup && drop ? 110 : 24 + insets.bottom }}>
+      {!showMapPicker && <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: pickup && drop ? 110 : 24 + insets.bottom }}>
         {/* Input Card */}
         <View style={styles.inputWrap}>
           <View style={styles.inputCard}>
@@ -863,7 +863,7 @@ export default function SelectLocation() {
             </Text>
           ) : null}
         </View>
-      </ScrollView>
+      </ScrollView>}
 
       {/* Confirm button */}
       {pickup && drop && !showMapPicker ? (
@@ -1000,7 +1000,7 @@ const styles = StyleSheet.create({
   confirmBtn: { backgroundColor: '#f8e001', paddingVertical: 16, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 8px 30px rgba(248,224,1,0.3)' },
   confirmText: { ...fo(700), fontSize: 16, color: tw.slate900 },
   // map picker
-  mapOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#fff', zIndex: 100 },
+  mapOverlay: { flex: 1, backgroundColor: '#fff' },
   mapArea: { flex: 1, backgroundColor: tw.slate200 },
   mapHeader: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, paddingHorizontal: 20, paddingBottom: 16 },
   mapHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
   mapAddrBox: { flex: 1, minWidth: 0, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)' },
   mapAddrKicker: { ...fo(700), fontSize: 10, letterSpacing: 0.5, color: tw.slate400, marginBottom: 2 },
   mapAddr: { ...fo(600), fontSize: 14, lineHeight: 17, color: tw.slate900 },
-  mapMsgWrap: { ...StyleSheet.absoluteFillObject, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  mapMsgWrap: { ...StyleSheet.absoluteFill, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
   mapMsgCard: { backgroundColor: '#fff', borderRadius: 24, paddingHorizontal: 32, paddingVertical: 40, borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
   mapMsgIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FFF1F2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   mapMsgTitle: { ...fo(700), fontSize: 16, color: tw.slate900 },

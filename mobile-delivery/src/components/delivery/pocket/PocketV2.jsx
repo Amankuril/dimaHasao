@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
   offerOrders: { fontSize: 9, lineHeight: 13.5, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
   rings: { padding: 32, paddingBottom: 40, flexDirection: 'row', justifyContent: 'space-around', gap: 32 },
   ring: { width: 112, height: 112 },
-  ringCenter: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
+  ringCenter: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
   ringValue: { fontSize: 20, lineHeight: 20, color: '#000', ...display(900, 20) },
   ringOf: { marginTop: 2, fontSize: 9, lineHeight: 13.5, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
   ringLabel: { marginTop: 16, fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray500, ...ff(700) },

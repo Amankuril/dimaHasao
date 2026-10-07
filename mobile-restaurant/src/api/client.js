@@ -26,6 +26,9 @@ const TIMEOUT_MS = 20000;
 const UPLOAD_TIMEOUT_MS = 120000;
 
 let session = { accessToken: null, refreshToken: null, taxiToken: null };
+// The hotel partner half of a partner sign-in: its own token, never refreshed here (web: partner_accessToken).
+let hotelToken = null;
+let onHotelUnauthorized = null;
 let onUnauthorized = null;
 let onTokensRefreshed = null;
 let lastWriteAt = 0;
@@ -39,6 +42,13 @@ export function setAuthTokens(tokens) {
 }
 export function setAuthToken(token) {
   session = { ...session, accessToken: token || null };
+}
+export function setHotelToken(token) {
+  hotelToken = token || null;
+}
+export const getHotelToken = () => hotelToken;
+export function setHotelUnauthorizedHandler(fn) {
+  onHotelUnauthorized = fn;
 }
 export const getAuthToken = () => session.accessToken;
 export const getRefreshToken = () => session.refreshToken;
@@ -92,6 +102,8 @@ async function classifyNetworkFailure() {
 function moduleFromUrl(url = '') {
   const u = String(url).toLowerCase();
   if (u.includes('/admin/') || u.includes('/food/admin/') || u.includes('/auth/admin') || u.includes('admin/login')) return 'admin';
+  // The hotel partner API is mounted at /hotel (web: modules/Hotel/config/apiConfig.js).
+  if (/(^|\/)hotel\//.test(u.replace(/^https?:\/\/[^/]+/, '').replace(/^\/api\/v1/, ''))) return 'hotel';
   if (u.includes('/food/delivery') || u.includes('/auth/delivery') || u.includes('/delivery/')) return 'delivery';
   if (u.includes('/food/restaurant/') || u.includes('/auth/restaurant') || u.includes('/restaurant/')) {
     if (u.includes('/food/restaurants') && !u.includes('/food/restaurant/')) return 'user';
@@ -103,6 +115,7 @@ function moduleFromUrl(url = '') {
 function resolveAuth(path, opts) {
   if (opts.auth !== undefined) return opts.auth;
   const mod = opts.contextModule || moduleFromUrl(path);
+  if (mod === 'hotel') return 'hotel';
   return mod === 'user' ? undefined : false;
 }
 
@@ -110,7 +123,7 @@ function baseHeaders(extra, isForm, auth) {
   const h = { Accept: 'application/json', ...(isForm ? {} : { 'Content-Type': 'application/json' }) };
   // The web marks local dev builds so the backend's maintenance gate stays open.
   if (__DEV__) h['X-HelloParth-Client'] = 'local-dev';
-  const token = auth === false ? null : auth === 'taxi' ? session.taxiToken || session.accessToken : session.accessToken;
+  const token = auth === false ? null : auth === 'hotel' ? hotelToken : auth === 'taxi' ? session.taxiToken || session.accessToken : session.accessToken;
   if (token) h.Authorization = `Bearer ${token}`;
   return { ...h, ...(extra || {}) };
 }
@@ -209,9 +222,18 @@ async function withAuthRetry(path, opts) {
   try {
     return await rawFetch(path, opts);
   } catch (err) {
+    // A hotel partner request that the server refuses (401, or 403 with isBlocked) signs only the hotel half
+    // out (web: Hotel apiService interceptor -> clearPartnerSession). The cross-business /partner client
+    // (shared/partner/partnerApi.js, flagged `quiet`) has no such interceptor on the web, so a failure there
+    // signs nobody out.
+    if ((err.status === 401 || (err.status === 403 && err.response?.data?.isBlocked)) && resolveAuth(path, opts) === 'hotel') {
+      if (!opts.quiet) onHotelUnauthorized?.();
+      throw err;
+    }
     if (err.status !== 401 || opts._retried || !session.accessToken) throw err;
-    // A request that carried no user token cannot be fixed by refreshing it.
-    if (resolveAuth(path, opts) !== undefined) throw err;
+    // A request that carried no user token cannot be fixed by refreshing it ('restaurant' is the restaurant's own token).
+    const callAuth = resolveAuth(path, opts);
+    if (callAuth !== undefined && callAuth !== 'restaurant') throw err;
     if (!session.refreshToken) {
       onUnauthorized?.();
       throw err;
@@ -237,7 +259,7 @@ export async function request(path, opts = {}) {
     return res;
   }
   // Plain GETs: share one in-flight request and retry transient failures twice.
-  const key = opts.signal ? null : `${buildUrl(path, opts.params)}|${session.accessToken || ''}`;
+  const key = opts.signal ? null : `${buildUrl(path, opts.params)}|${session.accessToken || ''}|${hotelToken || ''}`;
   if (key && inflight.has(key)) return inflight.get(key);
   const run = (async () => {
     let attempt = 0;
@@ -307,7 +329,7 @@ export function upload(path, formData, { method = 'POST', onProgress, headers, a
     });
   return send()
     .catch(async (err) => {
-      if (err.status !== 401 || !session.refreshToken) throw err;
+      if (err.status !== 401 || !session.refreshToken || (auth !== undefined && auth !== 'restaurant')) throw err;
       const token = await refreshAccessToken();
       if (token && token !== 'REJECTED') return send();
       if (token === 'REJECTED') onUnauthorized?.();

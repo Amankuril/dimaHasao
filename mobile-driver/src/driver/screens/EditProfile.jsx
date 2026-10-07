@@ -204,7 +204,7 @@ const st = StyleSheet.create({
   toast: { position: 'absolute', left: 24, right: 24, zIndex: 100, backgroundColor: tw.emerald500, padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 12, boxShadow: '0 25px 50px -12px rgba(0,188,125,0.2)' },
   toastText: { fontSize: 13, letterSpacing: 0.26, color: '#fff', ...fo(700) },
   avatar: { width: 96, height: 96, borderRadius: 32, backgroundColor: tw.slate900, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...shadow('lg') },
-  avatarSpin: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  avatarSpin: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   camera: { position: 'absolute', bottom: 0, right: 0, width: 36, height: 36, borderRadius: 12, backgroundColor: '#fff', borderWidth: 2, borderColor: tw.slate50, alignItems: 'center', justifyContent: 'center', ...shadow('xl') },
   photoLabel: { fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: tw.slate400, ...fo(700) },
   field: { backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 20, borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, gap: 8, ...shadow('sm') },

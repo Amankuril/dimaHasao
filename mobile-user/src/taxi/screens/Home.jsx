@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   exploreTitle: { fontSize: 12, lineHeight: 15, letterSpacing: -0.3, color: INK, textAlign: 'center', marginTop: 8, ...fo(900) },
 
   promo: { borderRadius: 22, overflow: 'hidden', backgroundColor: INK, borderWidth: 1, borderColor: 'rgba(226,232,240,0.6)', ...shadow('md') },
-  promoText: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', padding: 24, paddingRight: '24%' },
+  promoText: { ...StyleSheet.absoluteFill, justifyContent: 'center', padding: 24, paddingRight: '24%' },
   promoTag: { alignSelf: 'flex-start', fontSize: 10, lineHeight: 15, letterSpacing: 1, color: YELLOW, backgroundColor: 'rgba(255,196,0,0.1)', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', marginBottom: 4, ...fo(900) },
   promoTitle: { fontSize: 17, lineHeight: 21, color: '#F8FAFC', ...fo(900) },
   promoSub: { fontSize: 11, lineHeight: 15, color: 'rgba(226,232,240,0.9)', marginTop: 4, ...fo(600) },

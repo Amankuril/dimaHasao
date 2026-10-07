@@ -164,7 +164,7 @@ export default function EditRestaurantAddress() {
 const styles = StyleSheet.create({
   header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray200, paddingHorizontal: 16, paddingBottom: 12, zIndex: 100 },
   title: { flexShrink: 1, fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  mapLoading: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', zIndex: 30 },
+  mapLoading: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', zIndex: 30 },
   pinWrap: { position: 'absolute', top: '36%', left: 0, right: 0, alignItems: 'center', transform: [{ translateY: -100 }], zIndex: 10 },
   pinTip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginBottom: 8, maxWidth: 220, ...shadow('lg') },
   pinDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: RT.primary, borderWidth: 3, borderColor: '#fff', ...shadow('lg') },

@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   gridRow: { flexDirection: 'row', gap: 10 },
   festival: { borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', backgroundColor: '#000', ...shadow('md') },
   festivalImg: { width: '100%', height: 144, opacity: 0.8 },
-  festivalBody: { ...StyleSheet.absoluteFillObject, padding: 14, justifyContent: 'space-between' },
+  festivalBody: { ...StyleSheet.absoluteFill, padding: 14, justifyContent: 'space-between' },
   gala: { backgroundColor: tw.red600, color: '#fff', fontSize: 9.5, lineHeight: 14, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, letterSpacing: 0.5, overflow: 'hidden', ...poppins(700) },
   festivalDates: { fontSize: 10, lineHeight: 15, color: tw.amber300, ...poppins(700) },
   festivalTitle: { fontSize: 14, lineHeight: 20, color: '#fff', ...montserrat(700) },

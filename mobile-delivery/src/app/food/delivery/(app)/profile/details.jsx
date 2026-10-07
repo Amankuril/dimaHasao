@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
 
   avatar: { width: 128, height: 128, borderRadius: 40, backgroundColor: tw.gray100, borderWidth: 2, borderColor: '#fff', alignSelf: 'center', overflow: 'hidden' },
   avatarImg: { width: '100%', height: '100%' },
-  avatarBusy: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
+  avatarBusy: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   avatarActions: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 8, transform: [{ translateY: 26 }] },
   avatarBtn: { padding: 12, borderRadius: 16, borderWidth: 4, borderColor: CARD_BORDER, alignItems: 'center', justifyContent: 'center' },
 

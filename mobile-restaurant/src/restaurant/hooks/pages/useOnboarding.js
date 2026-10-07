@@ -13,8 +13,16 @@ import { prepareUploadFile } from '../../../lib/images'
 import { geocodeAPI } from '../../../api/geocode'
 import { BackHandler, Keyboard } from 'react-native'
 import { collectFcmTokenForSignup, persistModuleFcmToken, syncPendingPartnerFcmQuick, clearOnboardingFcmLocalState } from '../../../lib/push'
-import { setAuthData } from '../../utils/auth'
-import { clearOnboardingIntent } from '../../utils/partnerSession'
+import { setAuthData, setHotelSession } from '../../utils/auth'
+import { WORKSPACE, clearOnboardingIntent, getOnboardingIntent, setActiveWorkspace, setPartnerProfiles } from '../../utils/partnerSession'
+import { createHotelProfile, fetchPartnerProfiles, submitHotelKyc } from '../../../api/partner'
+import {
+  HOTEL_BUSINESS_DEFAULTS,
+  HOTEL_DOCUMENTS_DEFAULTS,
+  validateHotelBusinessFields,
+  validateHotelDocumentFields,
+  buildHotelKycFormData,
+} from '../../../hotel/onboarding/hotelOnboardingFields'
 import { localStore } from '../../../lib/storage'
 import { events } from '../../../lib/events'
 
@@ -599,7 +607,11 @@ export function useOnboarding() {
     accountType: "",
   })
 
-  const totalSteps = 3
+  // Steps 4-5, only reached when onboarding intent is "both" (see handleNext step 3 branch,
+  // which advances here instead of submitting once the restaurant half is in).
+  const [hotelStep1, setHotelStep1] = useState(HOTEL_BUSINESS_DEFAULTS)
+  const [hotelStep2, setHotelStep2] = useState(HOTEL_DOCUMENTS_DEFAULTS)
+  const totalSteps = getOnboardingIntent() === "both" ? 5 : 3
 
   const hasStep1UnsavedProgress = useCallback(
     () => hasRestaurantStep1Progress(step1),
@@ -862,6 +874,21 @@ export function useOnboarding() {
 
         // 2. Hydrate from API if exists
         if (apiData) {
+          /*
+           * A reload here means the restaurant half already submitted (it has
+           * a token and a profile now) but "both" hadn't reached the hotel
+           * steps' own submit yet: those two steps live only in this
+           * component's state, so they can't be resumed in place. Sending the
+           * partner to the equivalent settings screen finishes the hotel half
+           * rather than dropping them into "edit my already-submitted
+           * restaurant" mode, which the fall-through below would otherwise do.
+           */
+          if (getOnboardingIntent() === "both") {
+            clearOnboardingIntent()
+            navigate("/food/restaurant/add-hotel", { replace: true })
+            return
+          }
+
           setHasExistingRestaurantProfile(true)
           const onboarding = apiData.onboarding || {}
           const s1 = onboarding.step1 || {}
@@ -1318,6 +1345,10 @@ export function useOnboarding() {
       validationErrors = validateStep2()
     } else if (step === 3) {
       validationErrors = validateStep3()
+    } else if (step === 4) {
+      validationErrors = validateHotelBusinessFields(hotelStep1)
+    } else if (step === 5) {
+      validationErrors = validateHotelDocumentFields(hotelStep2)
     }
 
     if (validationErrors.length > 0) {
@@ -1511,7 +1542,7 @@ export function useOnboarding() {
          * sending the partner back through another OTP.
          */
         if (registered?.session?.accessToken) {
-          setAuthData("restaurant", registered.session.accessToken, registered, registered.session.refreshToken)
+          await setAuthData("restaurant", registered.session.accessToken, registered, registered.session.refreshToken)
         }
 
         // Clear localStore when onboarding is complete
@@ -1521,6 +1552,27 @@ export function useOnboarding() {
           await clearAllFilesFromDB()
         } catch {}
 
+        /*
+         * "Both" doesn't stop here: steps 4-5 (the hotel half: owner details,
+         * then Aadhaar/PAN) run next inside this same wizard, using the
+         * session registration just issued. finalizeRestaurantPendingSubmission
+         * only runs once all five steps are done, or immediately for a
+         * restaurant-only signup.
+         */
+        if (getOnboardingIntent() === "both") {
+          toast.success("Restaurant submitted. Now let's add your stay.", { duration: 4000 })
+          // The owner's name/email were just typed into step 1: no reason to ask again here.
+          setHotelStep1((prev) => ({
+            ...prev,
+            businessName: prev.businessName || step1.ownerName || "",
+            ownerName: prev.ownerName || step1.ownerName || "",
+            email: prev.email || step1.ownerEmail || "",
+          }))
+          setStep(4)
+          scrollToTop()
+          return
+        }
+
         toast.success("Registration submitted. Awaiting admin approval.", { duration: 4000 })
         await finalizeRestaurantPendingSubmission(navigate, step1.ownerPhone, {
           fcmToken,
@@ -1528,6 +1580,34 @@ export function useOnboarding() {
           ownerName: step1.ownerName,
           ownerEmail: step1.ownerEmail,
         })
+      } else if (step === 4) {
+        setStep(5)
+        scrollToTop()
+      } else if (step === 5) {
+        const session = await createHotelProfile({
+          name: hotelStep1.businessName.trim(),
+          email: hotelStep1.email.trim(),
+        })
+
+        if (session?.token) {
+          await setHotelSession(session.token, session.user)
+        }
+
+        await submitHotelKyc(buildHotelKycFormData(hotelStep1, hotelStep2))
+
+        // Re-read from the server rather than assuming, so the switcher matches what actually exists.
+        try {
+          const profiles = await fetchPartnerProfiles()
+          setPartnerProfiles(profiles?.profiles || [])
+        } catch {
+          setPartnerProfiles([WORKSPACE.RESTAURANT, WORKSPACE.HOTEL])
+        }
+
+        setActiveWorkspace(WORKSPACE.HOTEL)
+        clearOnboardingIntent()
+
+        toast.success("Submitted for review.", { duration: 4000 })
+        navigate("/hotel/partner/under-review", { replace: true })
       }
     } catch (err) {
       const msg =
@@ -1717,6 +1797,10 @@ export function useOnboarding() {
     step3,
     setStep3,
     totalSteps,
+    hotelStep1,
+    setHotelStep1,
+    hotelStep2,
+    setHotelStep2,
     scrollRef,
     selectLocationSuggestion,
     hasStep1UnsavedProgress,

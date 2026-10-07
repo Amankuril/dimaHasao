@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   cartBtnText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
   cartClose: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
 
-  loader: { ...StyleSheet.absoluteFillObject, zIndex: 1000, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
+  loader: { ...StyleSheet.absoluteFill, zIndex: 1000, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
   loaderRing: { width: 40, height: 40, borderRadius: 20, borderWidth: 3, borderColor: F.green, borderTopColor: 'transparent' },
   loaderText: { marginTop: 16, fontSize: 13, lineHeight: 20, letterSpacing: -0.3, color: tw.gray800, ...poppins(700) },
 });

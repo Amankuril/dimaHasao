@@ -31,6 +31,6 @@ export default function AnimatedSplash({ ready, children }) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  cover: { ...StyleSheet.absoluteFillObject, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  cover: { ...StyleSheet.absoluteFill, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   logo: { width: 220, height: 220 },
 });

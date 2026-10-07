@@ -8,7 +8,7 @@ import { useCallback, useMemo } from 'react';
 import { Link, router, useLocalSearchParams, usePathname } from 'expo-router';
 
 export { Link };
-import { readRouteState, stashRouteState } from './routeState';
+import { clearRouteState, readRouteState, stashRouteState } from './routeState';
 
 // The bottom-bar destinations: returning to one must not stack a second copy.
 const MAIN_TABS = new Set(['/food/restaurant', '/food/restaurant/reservations', '/food/restaurant/inventory', '/food/restaurant/feedback', '/food/restaurant/explore']);
@@ -44,7 +44,10 @@ export function navigateTo(to, options = {}) {
   }
   const href = toAppPath(typeof to === 'object' && to ? `${to.pathname || ''}${to.search || ''}` : to);
   const path = pathOnly(href);
+  // `location.state` belongs to one history entry on the web. Here it is kept per path, so a navigation that
+  // carries no state must drop what an earlier visit left, or "Add" would reopen the last edited property.
   if (options.state !== undefined) stashRouteState(path, options.state);
+  else clearRouteState(path);
   // A main tab is already mounted under the stack: return to it, don't stack a copy.
   if (MAIN_TABS.has(path)) router.navigate(href);
   else if (options.replace) router.replace(href);

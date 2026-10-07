@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, padding: 16, paddingTop: 24 },
   card: { height: 192, borderRadius: 16, padding: 16, overflow: 'hidden' },
   share: { position: 'absolute', top: 12, right: 12, zIndex: 10 },
-  illus: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
+  illus: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingBottom: 40 },
   mini: { position: 'absolute', width: 56, height: 44, backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', ...{ boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' } },
   miniIn: { flex: 1, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center', padding: 4 },
   food: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.amber400, alignItems: 'center', justifyContent: 'center' },

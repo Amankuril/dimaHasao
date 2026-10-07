@@ -30,6 +30,8 @@ import AnimatedSplash from '../components/AnimatedSplash';
 import OfflineBanner from '../components/OfflineBanner';
 import { ToastContainer } from '../components/Toast';
 import { ConfirmModalContainer } from '../components/ConfirmModal';
+import PartnerWorkspaceSwitcher from '../restaurant/components/PartnerWorkspaceSwitcher';
+import RazorpayHost from '../components/RazorpayHost';
 
 export { default as ErrorBoundary } from '../components/CrashScreen';
 
@@ -69,9 +71,13 @@ function Boot() {
     <AnimatedSplash ready={!booting && (fontsLoaded || Boolean(fontError))}>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fff' }, animation: 'fade', animationDuration: 120 }} />
+      {/* Renders only for partners who run both businesses. */}
+      <PartnerWorkspaceSwitcher />
       <OfflineBanner />
       <ToastContainer />
       <ConfirmModalContainer />
+      {/* Hotel wallet "add money" opens Razorpay checkout in a WebView through this host. */}
+      <RazorpayHost />
     </AnimatedSplash>
   );
 }

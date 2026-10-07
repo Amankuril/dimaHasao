@@ -6,19 +6,20 @@ import { Press } from '../../components/ui';
 import { poppins, shadow, tw } from '../../theme';
 import ImageSourcePicker from '../components/ImageSourcePicker';
 import OnboardingExitModal from '../components/OnboardingExitModal';
+import { HotelBusinessFields, HotelDocumentsFields } from '../../hotel/onboarding/hotelOnboardingFields';
 import { useOnboarding } from '../hooks/pages/useOnboarding';
 import { RT, RT_GRADIENT } from '../theme';
 import Step1 from './onboarding/Step1';
 import Step2 from './onboarding/Step2';
 import Step3 from './onboarding/Step3';
+import { Section } from './onboarding/parts';
 
 /*
  * Port of Food/pages/restaurant/Onboarding.jsx (/food/restaurant/onboarding): the three-step
  * registration wizard a new partner number lands on after the code is verified.
  *
- * Left out on purpose (hotel side is not part of this app): the web's steps 4-5 (hotel business
- * and documents, only reached when the sign-in chose "restaurant and hotel").
- * The step bodies are in ./onboarding.
+ * Steps 4-5 (hotel business, then hotel documents) only exist when the sign-in chose "Both"
+ * (totalSteps is 5); they reuse the shared hotel fields. The step bodies are in ./onboarding.
  */
 function GradientButton({ title, onPress, disabled, style }) {
   return (
@@ -36,7 +37,7 @@ export default function Onboarding() {
   const {
     step, loading, saving, error, isLoggingOut, isEditing, setIsEditing, totalSteps, scrollRef,
     handleLogout, handleNext, handleBack, requestExit, showExitModal, handleStay, handleExit,
-    sourcePicker, closeImageSourcePicker,
+    sourcePicker, closeImageSourcePicker, hotelStep1, setHotelStep1, hotelStep2, setHotelStep2,
   } = o;
 
   if (loading) {
@@ -56,7 +57,7 @@ export default function Onboarding() {
           <Press onPress={step === 1 ? requestExit : handleBack} accessibilityLabel={step === 1 ? 'Close onboarding' : 'Go back'} style={styles.round}>
             {step === 1 ? <X size={18} color={tw.gray700} strokeWidth={2.5} /> : <ArrowLeft size={18} color={tw.gray700} strokeWidth={2.5} />}
           </Press>
-          <Text style={styles.title} accessibilityRole="header">Restaurant onboarding</Text>
+          <Text style={styles.title} accessibilityRole="header">{step <= 3 ? 'Restaurant onboarding' : 'Hotel onboarding'}</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           {!isEditing ? (
@@ -74,7 +75,21 @@ export default function Onboarding() {
 
       <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
         <View pointerEvents={isEditing ? 'auto' : 'none'}>
-          {step === 1 ? <Step1 o={o} /> : step === 2 ? <Step2 o={o} /> : <Step3 o={o} />}
+          {step === 1 ? <Step1 o={o} /> : step === 2 ? <Step2 o={o} /> : step === 3 ? <Step3 o={o} /> : step === 4 ? (
+            <View style={{ gap: 24 }}>
+              <Section title="Your stay — business details" style={{ gap: 0 }}>
+                <Text style={styles.lead}>You picked &quot;Both&quot; — these last two steps set up your hotel or stay alongside the restaurant above.</Text>
+                <HotelBusinessFields values={hotelStep1} onChange={setHotelStep1} />
+              </Section>
+            </View>
+          ) : (
+            <View style={{ gap: 24 }}>
+              <Section title="Your stay — identity documents" style={{ gap: 0 }}>
+                <Text style={styles.lead}>Required before your stay listing can be reviewed.</Text>
+                <HotelDocumentsFields values={hotelStep2} onChange={setHotelStep2} />
+              </Section>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -98,6 +113,7 @@ const styles = StyleSheet.create({
   logout: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   edit: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, height: 32, borderRadius: 6, borderWidth: 1, borderColor: tw.blue300, backgroundColor: tw.blue50 },
   editText: { fontSize: 12, lineHeight: 16, color: tw.blue700, ...poppins(500) },
+  lead: { marginTop: 4, marginBottom: 16, fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
   error: { paddingHorizontal: 16, paddingBottom: 8, fontSize: 12, lineHeight: 16, color: RT.primary, ...poppins(400) },
   footer: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingTop: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.slate100 },
   button: { height: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, ...shadow('md') },

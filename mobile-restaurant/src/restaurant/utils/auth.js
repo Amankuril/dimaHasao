@@ -1,4 +1,4 @@
-import { getAuthToken, getRefreshToken } from '../../api/client';
+import { getAuthToken, getHotelToken, getRefreshToken } from '../../api/client';
 import { localStore, sessionStore } from '../../lib/storage';
 
 /*
@@ -10,7 +10,7 @@ import { localStore, sessionStore } from '../../lib/storage';
  */
 
 const MODULE = 'restaurant';
-let handlers = { login: null, logout: null };
+let handlers = { login: null, logout: null, hotelLogin: null, hotelLogout: null };
 
 /** AuthContext registers how to sign in / out so plain modules can ask for it. */
 export function registerAuthHandlers(next) {
@@ -70,4 +70,26 @@ export function clearAuthData() {
 export function setAuthData(module, token, user, refreshToken = null) {
   if (module !== MODULE || !token) throw new Error(`Invalid parameters: module=${module}, token=${Boolean(token)}`);
   return handlers.login?.({ accessToken: token, user, refreshToken });
+}
+
+/*
+ * The hotel partner half (web: Hotel/utils/partnerAuth.js over moduleAuth 'partner').
+ * Same ownership as the restaurant half: AuthContext holds the session, these
+ * helpers answer what the web asks of localStorage.
+ */
+export const setHotelSession = (token, user) => handlers.hotelLogin?.(token, user);
+export const clearHotelSession = () => handlers.hotelLogout?.();
+export const getHotelSessionToken = () => getHotelToken();
+
+export function isHotelAuthenticated() {
+  const token = getHotelToken();
+  return Boolean(token) && !isTokenExpired(token);
+}
+
+export function getHotelUser() {
+  try {
+    return JSON.parse(localStore.getItem('partner_user') || 'null');
+  } catch {
+    return null;
+  }
 }

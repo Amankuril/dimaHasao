@@ -39,9 +39,9 @@ export function Spinner({ size = 20, color = '#fff', strokeWidth = 2 }) {
 }
 
 const styles = StyleSheet.create({
-  full: { ...StyleSheet.absoluteFillObject, zIndex: 50, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  full: { ...StyleSheet.absoluteFill, zIndex: 50, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
   inline: { paddingVertical: 32, alignItems: 'center', justifyContent: 'center' },
   box: { width: 48, height: 48 },
-  ring: { ...StyleSheet.absoluteFillObject, borderWidth: 4, borderRadius: 24 },
+  ring: { ...StyleSheet.absoluteFill, borderWidth: 4, borderRadius: 24 },
   top: { borderColor: 'transparent', borderTopColor: '#0a4d2b' },
 });

@@ -19,10 +19,6 @@ import { clearModuleAuth } from '../utils/auth';
 const RED = '#FF3131';
 const DANGER = '#DC2626';
 
-/* The hotel business has its own partner app, so its "List a hotel or stay" card is left out here. */
-const withoutHotel = (sections) =>
-  sections.map((section) => ({ ...section, items: section.items.filter((item) => item.id !== 'add-hotel') })).filter((section) => section.items.length > 0);
-
 function Avatar({ image, size }) {
   const uri = image?.url || (typeof image === 'string' ? image : '');
   return (
@@ -73,7 +69,7 @@ export default function ExploreMore() {
     isLoggingOut, logoutConfirmOpen, setLogoutConfirmOpen, restaurantData, setRestaurantData, loadingRestaurant, restaurantDisplayAddress, userData, restaurantDisplayName,
     handleLogout, handleLogoutAllDevices, getFilteredSections,
   } = useExploreMore();
-  const sections = withoutHotel(getFilteredSections());
+  const sections = getFilteredSections();
 
   const openItem = (item) => {
     if (item.id === 6) {

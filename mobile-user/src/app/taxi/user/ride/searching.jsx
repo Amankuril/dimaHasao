@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   schedBtn: { marginTop: 24, height: 48, alignSelf: 'stretch', borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   schedBtnText: { ...fo(900), fontSize: 14, color: tw.slate900, letterSpacing: 2.2 },
   // map overlays
-  rings: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  rings: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   ring: { position: 'absolute', width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: 'rgba(251,146,60,0.4)', backgroundColor: 'rgba(251,146,60,0.05)', marginTop: -22 },
   vehicleBox: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center' },
   vehicleRing: { position: 'absolute', width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(16,185,129,0.45)', backgroundColor: 'rgba(52,211,153,0.1)' },

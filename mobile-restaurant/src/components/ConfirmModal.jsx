@@ -62,7 +62,7 @@ export function ConfirmModalContainer() {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.6)' },
   card: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: radius.xl, padding: 24, ...shadow('2xl') },
   title: { fontSize: 20, lineHeight: 28, color: tw.gray900, textAlign: 'center', ...display(700, 20) },
   message: { marginTop: 8, fontSize: 14, lineHeight: 22, color: tw.gray500, textAlign: 'center', ...ff(500) },

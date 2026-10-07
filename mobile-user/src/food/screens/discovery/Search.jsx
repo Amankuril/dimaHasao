@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   catCell: { width: '25%', alignItems: 'center' },
   catBox: { width: 60, height: 60, borderRadius: 22, marginBottom: 8, borderWidth: 2, borderColor: tw.gray50, backgroundColor: '#fff', ...{ boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' } },
   catBoxActive: { borderColor: F.green, boxShadow: '0 4px 6px -1px rgba(10,77,43,0.05)' },
-  catInner: { ...StyleSheet.absoluteFillObject, borderRadius: 20, overflow: 'hidden' },
+  catInner: { ...StyleSheet.absoluteFill, borderRadius: 20, overflow: 'hidden' },
   catName: { fontSize: 10, lineHeight: 15, color: tw.gray500, textAlign: 'center', ...poppins(700) },
   recent: { fontSize: 14, lineHeight: 20, letterSpacing: 0.7, color: tw.slate500, marginBottom: 8, paddingHorizontal: 4, ...poppins(600) },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate200, borderRadius: 999 },

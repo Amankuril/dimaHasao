@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   applyBtn: { paddingVertical: 10, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   applyText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) },
 
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', gap: 12, zIndex: 50 },
+  overlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', gap: 12, zIndex: 50 },
   overlayText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
   toastWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   toast: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8, ...shadow('lg') },

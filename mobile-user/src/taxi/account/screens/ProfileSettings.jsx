@@ -187,7 +187,7 @@ const st = StyleSheet.create({
   h2: { fontSize: 18, color: tw.slate900, letterSpacing: -0.3, ...fo(700) },
   avatarBox: { width: 110, height: 110, borderRadius: 42, backgroundColor: tw.slate50, padding: 6, borderWidth: 1, borderColor: tw.slate100, overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
   avatar: { width: '100%', height: '100%', borderRadius: 34 },
-  upl: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  upl: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   camBadge: { position: 'absolute', bottom: -4, right: -4, backgroundColor: '#fff', padding: 10, borderRadius: 16, borderWidth: 1, borderColor: tw.slate50, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
   pick: { flex: 1, height: 44, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   pickOff: { backgroundColor: tw.slate100, borderColor: tw.slate200 },

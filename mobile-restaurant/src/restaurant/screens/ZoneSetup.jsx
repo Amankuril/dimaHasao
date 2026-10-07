@@ -149,5 +149,5 @@ const styles = StyleSheet.create({
   save: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 8 },
   selected: { marginTop: 12, padding: 12, backgroundColor: tw.green50, borderWidth: 1, borderColor: tw.green200, borderRadius: 8 },
   info: { backgroundColor: tw.blue50, borderWidth: 1, borderColor: tw.blue200, borderRadius: 8, padding: 16, marginBottom: 24 },
-  mapLoading: { ...StyleSheet.absoluteFillObject, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', zIndex: 10 },
+  mapLoading: { ...StyleSheet.absoluteFill, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', zIndex: 10 },
 });

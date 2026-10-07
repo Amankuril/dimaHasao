@@ -190,7 +190,7 @@ export default function TripMap({ t }) {
 }
 
 const st = StyleSheet.create({
-  mapMsgWrap: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.slate200, paddingHorizontal: 24 },
+  mapMsgWrap: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.slate200, paddingHorizontal: 24 },
   mapMsg: { backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 16, alignItems: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
   back: { position: 'absolute', left: 16, zIndex: 50, width: 40, height: 40, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.95)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)' },
   topBar: { position: 'absolute', left: 64, right: 16, zIndex: 50, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(15,23,43,0.92)', padding: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },

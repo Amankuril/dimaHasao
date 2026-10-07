@@ -1724,7 +1724,7 @@ const st = StyleSheet.create({
   summaryLabel: { fontSize: 9, letterSpacing: -0.225, color: tw.slate400 },
 
   dialogRoot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  dialogBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: alpha(tw.slate950, 0.45) },
+  dialogBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.slate950, 0.45) },
   dialogCard: { width: Math.min(384, Dimensions.get('window').width - 40), borderRadius: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)', backgroundColor: '#fff', padding: 24, boxShadow: '0 24px 60px rgba(15,23,42,0.22)' },
   dlgTitle: { fontSize: 18, lineHeight: 28, letterSpacing: -0.45, color: tw.slate950 },
   dlgBody: { marginTop: 8, fontSize: 13, lineHeight: 21, color: tw.slate500 },
@@ -1738,7 +1738,7 @@ const st = StyleSheet.create({
   selfieErrorText: { fontSize: 12, color: tw.rose600 },
 
   sheetRoot: { flex: 1, justifyContent: 'flex-end' },
-  sheetBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: alpha(tw.slate950, 0.45) },
+  sheetBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.slate950, 0.45) },
   sheet: { maxHeight: SCREEN_H * 0.78, borderTopLeftRadius: 30, borderTopRightRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)', backgroundColor: '#fff', paddingHorizontal: 20, paddingBottom: 24, paddingTop: 20, boxShadow: '0 -24px 60px rgba(15,23,42,0.24)' },
   sheetHandle: { alignSelf: 'center', width: 56, height: 6, borderRadius: 999, backgroundColor: tw.slate200 },
   sheetHead: { marginTop: 16, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },

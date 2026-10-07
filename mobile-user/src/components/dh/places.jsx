@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   selectBtnText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
   hr: { height: 1, backgroundColor: tw.gray100, marginVertical: 2 },
   mapThumb: { height: 128, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray200 },
-  mapOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.1)', alignItems: 'center', justifyContent: 'center' },
+  mapOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.1)', alignItems: 'center', justifyContent: 'center' },
   mapPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, ...shadow('md') },
   mapPillText: { fontSize: 12, lineHeight: 16, color: tw.gray800, ...poppins(600) },
   mapEmpty: { height: 128, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 16 },

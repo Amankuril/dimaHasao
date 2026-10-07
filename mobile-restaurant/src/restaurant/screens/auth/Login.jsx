@@ -13,8 +13,9 @@ import { localStore, sessionStore } from '../../../lib/storage';
 import { useLocation, useNavigate } from '../../../lib/webRouter';
 import { montserrat, poppins } from '../../../theme';
 import AuthShell, { AUTH, AuthTitle, authStyles } from '../../components/AuthShell';
-import { checkOnboardingStatus, clearOnboardingFromLocalStorage, isRestaurantOnboardingComplete } from '../../utils/onboardingUtils';
-import { RESTAURANT_HOME, WORKSPACE, clearOnboardingIntent, setActiveWorkspace, setOnboardingIntent, storePartnerSession } from '../../utils/partnerSession';
+import { checkOnboardingStatus, clearAllFilesFromDB, clearOnboardingFromLocalStorage, isRestaurantOnboardingComplete } from '../../utils/onboardingUtils';
+import OnboardingChoice from '../../components/OnboardingChoice';
+import { RESTAURANT_HOME, WORKSPACE, clearOnboardingIntent, resolvePartnerHome, setActiveWorkspace, storePartnerSession } from '../../utils/partnerSession';
 
 const DEFAULT_COUNTRY_CODE = '+91';
 const clean = (value) => String(value || '').replace(/\D/g, '');
@@ -28,7 +29,7 @@ const setPendingPhone = (phone) => phone && localStore.setItem('restaurant_pendi
 export default function RestaurantLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signedIn, booting } = useAuth();
+  const { signedInRestaurant, user, booting } = useAuth();
   const isOtpStep = location.pathname.endsWith('/otp');
 
   const [phone, setPhone] = useState(() => sessionStore.getItem('restaurantLoginPhone') || '');
@@ -39,6 +40,8 @@ export default function RestaurantLogin() {
   const [resendTimer, setResendTimer] = useState(0);
   const [blockTimer, setBlockTimer] = useState(0);
   const [authData, setAuthData] = useState(null);
+  // A verified number that owns neither business picks what it is opening (web: signupToken).
+  const [signupToken, setSignupToken] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [focused, setFocused] = useState(false);
   const inputRefs = useRef([]);
@@ -50,6 +53,7 @@ export default function RestaurantLogin() {
   // A fresh visit to sign-in starts from a clean onboarding draft.
   useEffect(() => {
     clearOnboardingFromLocalStorage();
+    clearAllFilesFromDB().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -110,8 +114,17 @@ export default function RestaurantLogin() {
     return () => clearTimeout(id);
   }, [isOtpStep]);
 
-  // AuthRedirect: a signed-in partner has no business on the sign-in screen.
-  if (!booting && signedIn && !leaving) return <Redirect href={RESTAURANT_HOME} />;
+  /*
+   * AuthRedirect module="restaurant": only a live restaurant session leaves the sign-in screen (a pending,
+   * rejected or disabled restaurant goes to pending-verification, anything else to the restaurant home).
+   * A hotel-only session stays here, exactly as on the web, so a partner who just logged out of the
+   * restaurant half can sign in again.
+   */
+  if (!booting && signedInRestaurant && !leaving && !signupToken) {
+    const status = String(user?.status || '').toLowerCase();
+    const needsVerification = ['pending', 'rejected', 'banned', 'deleted'].includes(status);
+    return <Redirect href={needsVerification ? `${RESTAURANT_HOME}/pending-verification` : RESTAURANT_HOME} />;
+  }
 
   const validatePhone = (num) => {
     const digits = clean(num);
@@ -187,25 +200,17 @@ export default function RestaurantLogin() {
         sessionStore.removeItem(resendKey(phoneVal));
       };
 
-      // A verified number with no business yet. The web asks "restaurant, hotel or both";
-      // this is the restaurant app, so it opens the restaurant's own onboarding.
+      /*
+       * A number that owns neither business gets the chooser, not a dashboard.
+       * Nothing is created yet: the restaurant path runs its own wizard, and
+       * the hotel path spends the signup ticket returned here.
+       */
       if (data.nextStep === 'onboarding' || !(data.profiles || []).length) {
         isSuccessRef.current = true;
-        setLeaving(true);
         setPendingPhone(phoneVal);
         clearOtpSession();
-        setOnboardingIntent('restaurant');
-        setActiveWorkspace(WORKSPACE.RESTAURANT);
-        navigate('/food/restaurant/onboarding', { replace: true });
-        return;
-      }
-
-      // The number owns a stay but no restaurant: that business lives in the hotel partner app.
-      if (!data.restaurant?.accessToken) {
-        hasSubmittedRef.current = false;
-        setOtp(['', '', '', '']);
+        setSignupToken(data.signupToken || '');
         setLoading(false);
-        toast.error('This number is registered for a hotel or stay. Please use the Dima Hasao hotel partner app.');
         return;
       }
 
@@ -221,22 +226,32 @@ export default function RestaurantLogin() {
       }
       clearOtpSession();
 
+      /*
+       * Approval is per business now. A pending restaurant still gets a session,
+       * because refusing it would also lock the partner out of an approved
+       * hotel; the shell sends it to pending-verification, and the server
+       * still refuses every restaurant route behind requireApprovedRestaurant.
+       */
       const restaurantStatus = String(data.restaurant?.status || '').toLowerCase();
-      if (profiles.length === 1 && restaurantStatus && restaurantStatus !== 'approved') {
+      if (profiles.length === 1 && profiles[0] === WORKSPACE.RESTAURANT && restaurantStatus && restaurantStatus !== 'approved') {
         setLoading(false);
         goPending(phoneVal, { isRejected: restaurantStatus === 'rejected', isDisabled: restaurantStatus === 'banned' || restaurantStatus === 'deleted' });
         return;
       }
 
-      setActiveWorkspace(WORKSPACE.RESTAURANT);
-      if (!isRestaurantOnboardingComplete(data.restaurant?.user)) {
-        const incompleteStep = await checkOnboardingStatus();
-        if (incompleteStep) {
-          navigate(`/food/restaurant/onboarding?step=${incompleteStep}`, { replace: true });
-          return;
+      const home = resolvePartnerHome(profiles);
+      setActiveWorkspace(home.startsWith('/hotel') ? WORKSPACE.HOTEL : WORKSPACE.RESTAURANT);
+
+      if (profiles.includes(WORKSPACE.RESTAURANT) && home.startsWith('/food')) {
+        if (!isRestaurantOnboardingComplete(data.restaurant?.user)) {
+          const incompleteStep = await checkOnboardingStatus();
+          if (incompleteStep) {
+            navigate(`/food/restaurant/onboarding?step=${incompleteStep}`, { replace: true });
+            return;
+          }
         }
       }
-      navigate(RESTAURANT_HOME, { replace: true });
+      navigate(home, { replace: true });
     } catch (err) {
       const message = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Invalid OTP. Please try again.';
       setOtp(['', '', '', '']);
@@ -308,6 +323,15 @@ export default function RestaurantLogin() {
   const isOtpComplete = otp.every((digit) => digit !== '');
   const phoneDisabled = loading || phone.length < 10;
   const verifyDisabled = loading || !isOtpComplete || blockTimer > 0;
+
+  if (signupToken) {
+    return (
+      <AuthShell>
+        <OnboardingChoice phone={contactInfo} signupToken={signupToken} />
+        <AuthLegalLinks module="food" containerStyle={{ marginTop: 32 }} style={styles.legal} linkStyle={styles.legal} />
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell>

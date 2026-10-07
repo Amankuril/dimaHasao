@@ -70,7 +70,7 @@ export function requestRestaurantOtp(phone) {
 
 export function verifyRestaurantOtp(phone, otp, fcmToken = null, platform = 'mobile', confirmAction = null) {
   const normalized = normalizePhone(phone);
-  const otpStr = String(otp).replace(/D/g, '').slice(0, 6);
+  const otpStr = String(otp).replace(/\D/g, '').slice(0, 6);
   if (!normalized || otpStr.length < 4) return Promise.reject(new Error('Phone and 4-digit OTP are required'));
   return api.post(OTP_VERIFY, {
     audience: AUDIENCE_RESTAURANT,
@@ -94,7 +94,7 @@ export function requestPartnerOtp(phone) {
 
 export function verifyPartnerOtp(phone, otp, fcmToken = null, platform = 'mobile') {
   const normalized = normalizePhone(phone);
-  const otpStr = String(otp).replace(/D/g, '').slice(0, 6);
+  const otpStr = String(otp).replace(/\D/g, '').slice(0, 6);
   if (!normalized || otpStr.length < 4) return Promise.reject(new Error('Phone and 4-digit OTP are required'));
   return api.post(OTP_VERIFY, {
     audience: AUDIENCE_PARTNER,
@@ -115,6 +115,19 @@ export function completeUserSignup(signupToken, payload = {}) {
     return Promise.reject(new Error('Your verification has expired. Please request a new OTP.'));
   }
   return api.post(OTP_COMPLETE, { audience: AUDIENCE_USER, signupToken, ...payload });
+}
+
+/** Spends the signup ticket a partner OTP verify returned (web: services/api/auth.js completePartnerSignup). */
+export function completePartnerSignup(signupToken, { name, email } = {}) {
+  if (!signupToken) {
+    return Promise.reject(new Error('Signup session expired. Please sign in again.'));
+  }
+  return api.post(OTP_COMPLETE, {
+    audience: AUDIENCE_PARTNER,
+    signupToken,
+    name,
+    ...(email ? { email } : {}),
+  });
 }
 
 export function logout(refreshToken, fcmToken = null, platform = 'mobile') {
