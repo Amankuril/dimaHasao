@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AlertCircle, ArrowLeft, FileText } from 'lucide-react-native';
-import { Press } from '../../components/ui';
+import { usePathname } from 'expo-router';
+import { ArrowLeft, FileText, Info } from 'lucide-react-native';
 import { SelectField } from '../../components/kit';
-import { Spinner } from '../../components/Loader';
+import { Button, Card, IconButton } from '../../components/ds';
+import { NAV_CLEARANCE, isImmersiveRoute } from '../../components/dh/AppBottomNav';
 import { orderAPI } from '../../api/food';
 import useAppBackNavigation from '../hooks/useAppBackNavigation';
 import { useParams, navigateTo } from '../../lib/webRouter';
 import { toast } from '../../lib/notify';
-import { poppins, tw } from '../../theme';
+import { color, radii, space, tone, type } from '../../theme';
+import { CtaBar, Field, LinkButton } from '../components/cart/parts';
 
-const GREEN = '#0a4d2b';
 const COMPLAINT_TYPES = [
   { value: '', label: 'Select complaint type' },
   { value: 'Food Quality', label: 'Food Quality Issue' },
@@ -25,6 +26,7 @@ const COMPLAINT_TYPES = [
 export default function SubmitComplaint() {
   const goBack = useAppBackNavigation();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -106,125 +108,101 @@ export default function SubmitComplaint() {
 
   if (loading) {
     return (
-      <View style={[styles.page, { alignItems: 'center', justifyContent: 'center' }]}>
-        <Text style={{ color: tw.gray600, fontSize: 14, ...poppins(400) }}>Loading...</Text>
+      <View style={[styles.page, { alignItems: 'center', justifyContent: 'center' }]} accessibilityRole="progressbar">
+        <Text style={[type.body, { color: color.textSecondary }]}>Loading...</Text>
       </View>
     );
   }
   if (!order) return null;
 
+  const required = (label) => (
+    <Text>
+      {label} <Text style={{ color: color.danger }}>*</Text>
+    </Text>
+  );
+
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.header}>
-        <Press scale={0.9} onPress={goBack} accessibilityLabel="Back" style={{ padding: 4 }}>
-          <ArrowLeft size={24} color={tw.gray700} />
-        </Press>
-        <Text style={styles.title}>Submit Complaint</Text>
-        <Press onPress={() => navigateTo('/user/profile/support')} style={{ marginLeft: 'auto' }}>
-          <Text style={{ fontSize: 14, color: GREEN, ...poppins(600) }}>View History</Text>
-        </Press>
+        <IconButton icon={ArrowLeft} label="Back" onPress={goBack} />
+        <Text style={[type.heading, { color: color.text, flex: 1 }]} numberOfLines={1} accessibilityRole="header">
+          Submit complaint
+        </Text>
+        <LinkButton title="View history" onPress={() => navigateTo('/user/profile/support')} style={{ paddingHorizontal: space.sm }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
-        <View style={styles.info}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <View style={styles.infoIcon}>
-              <FileText size={20} color={tw.gray600} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: tw.gray800, ...poppins(600) }}>Order #{order.orderId || order._id}</Text>
-              <Text style={{ fontSize: 12, color: tw.gray500, ...poppins(400) }}>{order.restaurantName || 'Restaurant'}</Text>
-            </View>
+      <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl }} keyboardShouldPersistTaps="handled">
+        <Card style={styles.orderCard}>
+          <View style={styles.infoIcon}>
+            <FileText size={20} color={color.primary} />
           </View>
-          <Text style={{ fontSize: 14, color: tw.gray600, ...poppins(400) }}>
-            {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-          </Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={1}>
+              Order #{order.orderId || order._id}
+            </Text>
+            <Text style={[type.small, { color: color.textSecondary }]} numberOfLines={1}>
+              {order.restaurantName || 'Restaurant'}
+            </Text>
+            <Text style={[type.caption, { color: color.textMuted }]}>
+              {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+            </Text>
+          </View>
+        </Card>
+
+        <View style={{ gap: space.xs + 2 }}>
+          <Text style={[type.label, { color: color.text }]}>{required('Complaint type')}</Text>
+          <SelectField
+            value={formData.complaintType}
+            options={COMPLAINT_TYPES}
+            onChange={(v) => setFormData({ ...formData, complaintType: v })}
+            accessibilityLabel="Complaint type"
+            style={styles.select}
+            textStyle={[type.body, { color: formData.complaintType ? color.text : color.textDisabled }]}
+          />
         </View>
+        <Field
+          label={required('Subject')}
+          value={formData.subject}
+          onChangeText={(t) => setFormData({ ...formData, subject: t })}
+          placeholder="Brief description of your complaint"
+          maxLength={200}
+          accessibilityLabel="Subject"
+        />
+        <Field
+          label={required('Description')}
+          value={formData.description}
+          onChangeText={(t) => setFormData({ ...formData, description: t })}
+          placeholder="Please provide detailed information about your complaint..."
+          multiline
+          maxLength={1000}
+          accessibilityLabel="Description"
+          inputStyle={{ minHeight: 150 }}
+          hint={`${formData.description.length}/1000 characters`}
+        />
 
-        <View style={{ marginHorizontal: 16, marginTop: 16, gap: 16 }}>
-          <View>
-            <Text style={styles.label}>
-              Complaint Type <Text style={{ color: tw.red500 }}>*</Text>
+        <View style={styles.infoBox}>
+          <Info size={20} color={color.info} style={{ marginTop: 2 }} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[type.bodyStrong, { color: color.text, marginBottom: space.xs }]}>What happens next?</Text>
+            <Text style={[type.small, { color: color.textSecondary }]}>
+              Your complaint will be sent to the restaurant. They will review and respond to your complaint. You can track the status in your complaints section.
             </Text>
-            <SelectField
-              value={formData.complaintType}
-              options={COMPLAINT_TYPES}
-              onChange={(v) => setFormData({ ...formData, complaintType: v })}
-              accessibilityLabel="Complaint type"
-              style={styles.field}
-              textStyle={{ fontSize: 16, color: formData.complaintType ? tw.gray900 : tw.gray500, ...poppins(400) }}
-            />
-          </View>
-          <View>
-            <Text style={styles.label}>
-              Subject <Text style={{ color: tw.red500 }}>*</Text>
-            </Text>
-            <TextInput
-              value={formData.subject}
-              onChangeText={(t) => setFormData({ ...formData, subject: t })}
-              placeholder="Brief description of your complaint"
-              placeholderTextColor={tw.gray400}
-              maxLength={200}
-              style={[styles.field, styles.input]}
-            />
-          </View>
-          <View>
-            <Text style={styles.label}>
-              Description <Text style={{ color: tw.red500 }}>*</Text>
-            </Text>
-            <TextInput
-              value={formData.description}
-              onChangeText={(t) => setFormData({ ...formData, description: t })}
-              placeholder="Please provide detailed information about your complaint..."
-              placeholderTextColor={tw.gray400}
-              multiline
-              numberOfLines={6}
-              maxLength={1000}
-              textAlignVertical="top"
-              style={[styles.field, styles.input, { minHeight: 150 }]}
-            />
-            <Text style={{ fontSize: 12, color: tw.gray500, marginTop: 4, ...poppins(400) }}>{formData.description.length}/1000 characters</Text>
-          </View>
-
-          <View style={styles.infoBox}>
-            <AlertCircle size={20} color={tw.blue600} style={{ marginTop: 2 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14, color: tw.blue800, marginBottom: 4, ...poppins(600) }}>What happens next?</Text>
-              <Text style={{ fontSize: 14, color: tw.blue700, lineHeight: 20, ...poppins(400) }}>
-                Your complaint will be sent to the restaurant. They will review and respond to your complaint. You can track the status in your complaints section.
-              </Text>
-            </View>
           </View>
         </View>
       </ScrollView>
 
-      <View style={[styles.bottom, { paddingBottom: 16 + insets.bottom }]}>
-        <Press onPress={handleSubmit} disabled={submitting} style={[styles.submit, submitting ? { opacity: 0.5 } : null]}>
-          {submitting ? (
-            <>
-              <Spinner size={16} />
-              <Text style={styles.submitText}>Submitting...</Text>
-            </>
-          ) : (
-            <Text style={styles.submitText}>Submit Complaint</Text>
-          )}
-        </Press>
-      </View>
+      <CtaBar extraBottom={(isImmersiveRoute(pathname) ? 0 : NAV_CLEARANCE) + insets.bottom}>
+        <Button title={submitting ? 'Submitting...' : 'Submit complaint'} size="lg" loading={submitting} disabled={submitting} onPress={handleSubmit} />
+      </CtaBar>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.gray50 },
-  header: { backgroundColor: '#fff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, elevation: 2 },
-  title: { fontSize: 18, color: tw.gray800, ...poppins(600) },
-  info: { backgroundColor: '#fff', marginHorizontal: 16, marginTop: 16, padding: 16, borderRadius: 12, elevation: 1 },
-  infoIcon: { width: 40, height: 40, backgroundColor: tw.gray100, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 14, color: tw.gray700, marginBottom: 8, ...poppins(600) },
-  field: { borderWidth: 1, borderColor: tw.gray300, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff' },
-  input: { fontSize: 16, color: tw.gray900, ...poppins(400) },
-  infoBox: { backgroundColor: tw.blue50, borderWidth: 1, borderColor: tw.blue200, borderRadius: 8, padding: 16, flexDirection: 'row', gap: 12 },
-  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.gray200, padding: 16 },
-  submit: { backgroundColor: GREEN, paddingVertical: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  submitText: { color: '#fff', fontSize: 16, ...poppins(600) },
+  page: { flex: 1, backgroundColor: color.bg },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, paddingVertical: space.xs, minHeight: 56, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+  orderCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  infoIcon: { width: 44, height: 44, backgroundColor: color.primarySoft, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  select: { minHeight: 48, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, paddingHorizontal: space.md, justifyContent: 'center', backgroundColor: color.surface },
+  infoBox: { backgroundColor: tone.info.bg, borderRadius: radii.md, padding: space.lg, flexDirection: 'row', gap: space.md },
 });

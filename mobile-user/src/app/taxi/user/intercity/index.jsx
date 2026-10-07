@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Keyboard, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, Keyboard, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { AlertTriangle, ArrowLeft, ArrowUpDown, Calendar, Check, ChevronRight, LoaderCircle, MapPin, MapPinned, Navigation, Pencil, PhoneCall, Search, User, X } from 'lucide-react-native';
-import { Press } from '../../../../components/ui';
+import { AlertTriangle, ArrowLeft, ArrowUpDown, Calendar, Check, ChevronRight, LocateFixed, MapPin, Pencil, PhoneCall, Search, X } from 'lucide-react-native';
+import { Press, Spinner } from '../../../../components/ui';
+import { Button, IconButton } from '../../../../components/ds';
+import { NAV_CLEARANCE } from '../../../../components/dh/AppBottomNav';
 import { useAnimatedValue } from '../../../../lib/useAnimatedValue';
 import { toast } from '../../../../lib/notify';
 import { useNavigate } from '../../../../lib/webRouter';
 import { geocodeAPI } from '../../../../api/food';
-import { tw } from '../../../../theme';
+import { color, elevation, radii, space, type } from '../../../../theme';
 import usePlatformSettings from '../../../../shared/hooks/usePlatformSettings';
-import { fo } from '../../../../taxi/account/ui';
 import { userService } from '../../../../taxi/services/userService';
 import { DISTRICT_CENTER, HAS_VALID_GOOGLE_MAPS_KEY } from '../../../../taxi/utils/googleMaps';
 import { getTaxiUserRoutePrefix } from '../../../../taxi/utils/routePrefix';
@@ -450,118 +450,118 @@ export default function IntercityHome() {
   }, [isDragging, isGeocoding, pinLift]);
 
   return (
-    <View ref={rootRef} collapsable={false} style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-      <View style={[st.header, { paddingTop: insets.top + 16 }]}>
-        <Press onPress={() => navigate(routePrefix || '/')} scale={0.9} style={st.backBtn}>
-          <ArrowLeft size={20} color={tw.slate800} strokeWidth={2.5} />
-        </Press>
-        <Text style={[{ fontSize: 17, letterSpacing: -0.425, color: tw.slate900 }, fo(800)]}>Outstation Cabs</Text>
-        <View style={st.userDot}><User size={18} color={tw.blue600} strokeWidth={2.5} /></View>
+    <View ref={rootRef} collapsable={false} style={st.screen}>
+      <View style={[st.header, { paddingTop: insets.top + space.sm }]}>
+        <IconButton icon={ArrowLeft} label="Back to taxi home" onPress={() => navigate(routePrefix || '/')} />
+        <Text style={st.headerTitle} accessibilityRole="header">Outstation cabs</Text>
+        <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 112 + insets.bottom }} keyboardShouldPersistTaps="handled">
-        <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + space.xl + insets.bottom }} keyboardShouldPersistTaps="handled">
+        <View style={{ paddingHorizontal: space.lg, paddingTop: space.lg }}>
           <View style={st.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
-              <LinearGradient colors={['rgba(226,232,240,0)', tw.slate200]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 1, flex: 1 }} />
-              <Text style={[{ fontSize: 10, color: tw.blue500, letterSpacing: 1.5, textTransform: 'uppercase' }, fo(800)]}>India&apos;s Premier Intercity Cabs</Text>
-              <LinearGradient colors={[tw.slate200, 'rgba(226,232,240,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 1, flex: 1 }} />
+            <View style={st.kickerRow}>
+              <View style={st.kickerLine} />
+              <Text style={st.kicker}>India&apos;s premier intercity cabs</Text>
+              <View style={st.kickerLine} />
             </View>
 
-            <View style={st.toggle}>
+            <View style={st.toggle} accessibilityRole="tablist">
               {[['One Way', 'Drop-off only'], ['Round Trip', 'Return with same cab']].map(([label, sub]) => {
                 const active = tripType === label;
                 return (
-                  <Press key={label} onPress={() => setTripType(label)} scale={1} style={[st.toggleBtn, active && { backgroundColor: '#1E90FF', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }]}>
-                    <Text style={[{ fontSize: 13, lineHeight: 16.25, letterSpacing: 0.33, textTransform: 'uppercase', color: active ? '#fff' : tw.slate800 }, fo(active ? 800 : 800)]}>{label}</Text>
-                    <Text style={[{ fontSize: 9, marginTop: 2, lineHeight: 9, opacity: 0.85, color: active ? '#fff' : tw.slate500 }, fo(400)]}>{sub}</Text>
+                  <Press
+                    key={label}
+                    onPress={() => setTripType(label)}
+                    scale={1}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={`${label === 'One Way' ? 'One way' : 'Round trip'}. ${sub}`}
+                    style={[st.toggleBtn, active && st.toggleBtnOn]}
+                  >
+                    <Text style={[st.toggleLabel, { color: active ? color.onPrimary : color.text }]}>{label === 'One Way' ? 'One way' : 'Round trip'}</Text>
+                    <Text style={[st.toggleSub, { color: active ? color.textOnDarkMuted : color.textMuted }]}>{sub}</Text>
                   </Press>
                 );
               })}
             </View>
 
             <View ref={boxRef} collapsable={false} style={st.locBox}>
-              <Press onPress={handleOpenMapPicker} scale={1} style={st.fromRow}>
-                <View style={st.locIcon}><MapPin size={20} color={tw.slate400} /></View>
-                <View style={{ flex: 1, minWidth: 0, marginLeft: 16 }}>
-                  <Text style={[st.fieldLabel, { marginBottom: 6 }, fo(800)]}>FROM</Text>
-                  <Text numberOfLines={1} style={[{ fontSize: 15, lineHeight: 20.6, color: tw.slate800 }, fo(700)]}>{pickupAddress || 'Enter Pickup Location'}</Text>
+              <Press onPress={handleOpenMapPicker} scale={1} accessibilityLabel={`From: ${pickupAddress || 'set pickup location'}. Change on map`} style={st.fromRow}>
+                <View style={st.locIcon}><View style={st.pickupDot} /></View>
+                <View style={st.locText}>
+                  <Text style={[st.fieldLabel, { color: color.primary }]}>From (pickup)</Text>
+                  <Text numberOfLines={1} style={[st.fieldValue, !pickupAddress && { color: color.textDisabled }]}>{pickupAddress || 'Enter Pickup Location'}</Text>
                 </View>
               </Press>
 
               <View style={st.toRow}>
-                <View style={st.locIcon}><MapPin size={20} color="#1E90FF" /></View>
-                <View style={{ flex: 1, minWidth: 0, marginLeft: 16 }}>
-                  <Text style={[st.fieldLabel, { marginBottom: 4 }, fo(800)]}>TO</Text>
+                <View style={st.locIcon}><View style={st.dropSquare} /></View>
+                <View style={st.locText}>
+                  <Text style={[st.fieldLabel, { color: color.danger }]}>To (drop)</Text>
                   <TextInput
                     placeholder="Enter Drop Location"
-                    placeholderTextColor={tw.slate400}
+                    placeholderTextColor={color.textDisabled}
                     value={toCitySearch}
                     onChangeText={(text) => {
                       setToCitySearch(text);
                       if (selectedPackage && selectedPackage.destination !== text) setSelectedPackage(null);
                     }}
                     onFocus={openToDropdown}
-                    style={[{ padding: 0, marginTop: 2, fontSize: 15, lineHeight: 20.6, color: tw.slate800 }, fo(700)]}
+                    accessibilityLabel="Drop city"
+                    style={st.toInput}
                   />
                 </View>
                 {toCitySearch ? (
-                  <Press onPress={() => { setToCitySearch(''); setSelectedPackage(null); }} style={st.clearBtn}>
-                    <X size={14} color={tw.slate400} />
+                  <Press onPress={() => { setToCitySearch(''); setSelectedPackage(null); }} hitSlop={10} accessibilityLabel="Clear drop" style={st.clearBtn}>
+                    <X size={18} color={color.textMuted} />
                   </Press>
                 ) : null}
               </View>
 
-              <Press onPress={handleSwapLocations} scale={0.95} style={st.swapBtn}>
-                <ArrowUpDown size={15} color="#1E90FF" />
-              </Press>
+              <IconButton icon={ArrowUpDown} label="Swap pickup and drop" iconSize={18} iconColor={color.primary} onPress={handleSwapLocations} style={st.swapBtn} />
             </View>
 
-            <Press onPress={triggerDateTimePicker} scale={1} style={st.tripStart}>
-              <View style={st.calIcon}><Calendar size={18} color="#1E90FF" /></View>
-              <View style={{ flex: 1, marginLeft: 16 }}>
-                <Text style={[st.fieldLabel, { marginBottom: 6 }, fo(800)]}>TRIP START</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-                  <Text style={[{ fontSize: 15, lineHeight: 15, color: tw.slate800 }, fo(900)]}>{displayDateStr}</Text>
-                  <Text style={[{ fontSize: 12, lineHeight: 12, color: tw.slate500 }, fo(500)]}>{displayTimeStr}</Text>
+            <Press onPress={triggerDateTimePicker} scale={1} accessibilityLabel={`Trip start ${displayDateStr} ${displayTimeStr}. Change`} style={st.tripStart}>
+              <View style={st.calIcon}><Calendar size={20} color={color.goldText} /></View>
+              <View style={st.locText}>
+                <Text style={st.fieldLabel}>Trip start</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.sm }}>
+                  <Text style={st.fieldValue}>{displayDateStr}</Text>
+                  <Text style={st.timeText}>{displayTimeStr}</Text>
                 </View>
               </View>
-              <ChevronRight size={16} color={tw.slate400} />
+              <ChevronRight size={20} color={color.textMuted} />
             </Press>
 
-            <Press onPress={handleExploreCabs} scale={0.98} style={st.explore}>
-              <Text style={[{ fontSize: 15, letterSpacing: 1.5, color: '#fff', textTransform: 'uppercase' }, fo(800)]}>EXPLORE CABS</Text>
-            </Press>
+            <Button title="Explore cabs" size="lg" iconRight={ChevronRight} onPress={handleExploreCabs} style={{ marginTop: space.xl }} />
           </View>
         </View>
 
         {supportPhone ? (
-          <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-            <LinearGradient colors={['rgba(232,242,236,0.8)', 'rgba(243,248,245,0.8)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.cta}>
-              <View style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
-                <Text style={[{ fontSize: 8, color: '#0a4d2b', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 2 }, fo(800)]}>Need help planning?</Text>
-                <Text style={[{ fontSize: 13, lineHeight: 16.25, color: tw.slate900 }, fo(800)]}>TALK TO THE DISTRICT TEAM</Text>
-                <Text style={[{ fontSize: 10, lineHeight: 13.75, marginTop: 2, color: tw.slate500 }, fo(400)]}>We can help you pick a route and a vehicle.</Text>
+          <View style={{ paddingHorizontal: space.lg, marginTop: space.xl }}>
+            <View style={st.cta}>
+              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                <Text style={st.ctaKicker}>Need help planning?</Text>
+                <Text style={st.ctaTitle}>Talk to the district team</Text>
+                <Text style={st.ctaBody}>We can help you pick a route and a vehicle.</Text>
               </View>
-              <Press onPress={() => Linking.openURL(`tel:${supportPhone.replace(/\s+/g, '')}`).catch(() => {})} style={st.callBtn}>
-                <PhoneCall size={12} color="#0a4d2b" />
-                <Text style={[{ fontSize: 11, color: tw.slate900, marginLeft: 6 }, fo(900)]}>Call us</Text>
-              </Press>
-            </LinearGradient>
+              <Button title="Call us" icon={PhoneCall} variant="outline" size="sm" fullWidth={false} onPress={() => Linking.openURL(`tel:${supportPhone.replace(/\s+/g, '')}`).catch(() => {})} accessibilityLabel="Call the district team" style={{ minHeight: 44 }} />
+            </View>
           </View>
         ) : null}
       </ScrollView>
 
       {isToFocused ? (
         <>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => { setIsToFocused(false); Keyboard.dismiss(); }} />
+          <Pressable style={StyleSheet.absoluteFill} accessibilityLabel="Close suggestions" onPress={() => { setIsToFocused(false); Keyboard.dismiss(); }} />
           {dropPos ? (
             <View style={[st.dropdown, { left: dropPos.left, top: dropPos.top, width: dropPos.width }]}>
               <ScrollView style={{ maxHeight: 288 }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
                 {loading ? (
-                  <View style={{ padding: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                    <ActivityIndicator size="small" color={tw.blue500} />
-                    <Text style={[{ fontSize: 13, color: tw.slate400 }, fo(500)]}>Loading routes...</Text>
+                  <View style={st.dropState}>
+                    <Spinner size={18} color={color.primary} />
+                    <Text style={st.dropStateText}>Loading routes...</Text>
                   </View>
                 ) : filteredPackages.length > 0 ? (
                   filteredPackages.map((pkg, i) => (
@@ -575,22 +575,23 @@ export default function IntercityHome() {
                         setIsToFocused(false);
                         Keyboard.dismiss();
                       }}
+                      accessibilityLabel={`From ${pkg.serviceLocationName} to ${pkg.destination}, starts from ₹${pkg.vehicles?.[0]?.basePrice || '---'}`}
                       style={[st.pkgRow, i === filteredPackages.length - 1 && { borderBottomWidth: 0 }]}
                     >
                       <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={[{ fontSize: 10, color: tw.slate400, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 }, fo(700)]}>From {pkg.serviceLocationName}</Text>
-                        <Text style={[{ fontSize: 14, color: tw.slate800 }, fo(900)]}>To {pkg.destination}</Text>
+                        <Text style={st.pkgFrom} numberOfLines={1}>From {pkg.serviceLocationName}</Text>
+                        <Text style={st.pkgTo} numberOfLines={1}>To {pkg.destination}</Text>
                       </View>
-                      <View style={{ alignItems: 'flex-end', paddingLeft: 12 }}>
-                        <Text style={[{ fontSize: 9, color: tw.slate400, letterSpacing: 0.45, textTransform: 'uppercase' }, fo(700)]}>Starts from</Text>
-                        <Text style={[{ fontSize: 14, color: tw.slate900 }, fo(900)]}>{`₹${pkg.vehicles?.[0]?.basePrice || '---'}`}</Text>
+                      <View style={{ alignItems: 'flex-end', paddingLeft: space.md }}>
+                        <Text style={st.pkgFrom}>Starts from</Text>
+                        <Text style={st.pkgPrice}>{`₹${pkg.vehicles?.[0]?.basePrice || '---'}`}</Text>
                       </View>
                     </Press>
                   ))
                 ) : (
-                  <View style={{ padding: 32, alignItems: 'center' }}>
-                    <Text style={[{ fontSize: 13, color: tw.slate400 }, fo(700)]}>No routes matching query</Text>
-                    <Text style={[{ fontSize: 11, marginTop: 2, color: tw.slate400 }, fo(400)]}>Check spelling or try a different city</Text>
+                  <View style={[st.dropState, { flexDirection: 'column', gap: space.xxs }]}>
+                    <Text style={st.dropStateTitle}>No routes matching query</Text>
+                    <Text style={st.dropStateText}>Check spelling or try a different city</Text>
                   </View>
                 )}
               </ScrollView>
@@ -601,19 +602,17 @@ export default function IntercityHome() {
 
       {iosPicker ? (
         <Modal transparent animationType="slide" onRequestClose={() => setIosPicker(false)}>
-          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }} onPress={() => setIosPicker(false)} />
-          <View style={{ backgroundColor: '#fff', paddingBottom: insets.bottom + 12 }}>
+          <Pressable style={{ flex: 1, backgroundColor: color.overlay }} accessibilityLabel="Close date picker" onPress={() => setIosPicker(false)} />
+          <View style={[st.iosSheet, { paddingBottom: insets.bottom + space.lg }]}>
             <DateTimePicker value={currentPickerValue()} mode="datetime" display="spinner" minimumDate={new Date()} onChange={(_, d) => d && applyPicked(d)} />
-            <Press onPress={() => setIosPicker(false)} style={[st.explore, { marginHorizontal: 20 }]}>
-              <Text style={[{ fontSize: 15, color: '#fff' }, fo(800)]}>Done</Text>
-            </Press>
+            <Button title="Done" size="lg" onPress={() => setIosPicker(false)} style={{ marginHorizontal: space.lg }} />
           </View>
         </Modal>
       ) : null}
 
       <Modal visible={showMapPicker} animationType="slide" statusBarTranslucent onRequestClose={() => setShowMapPicker(false)}>
-        <View style={{ flex: 1, backgroundColor: '#fff' }}>
-          <View style={{ flex: 1, backgroundColor: tw.slate100 }}>
+        <View style={{ flex: 1, backgroundColor: color.surface }}>
+          <View style={{ flex: 1, backgroundColor: color.surfaceMuted }}>
             {HAS_VALID_GOOGLE_MAPS_KEY ? (
               <MapView
                 ref={mapRef}
@@ -629,52 +628,51 @@ export default function IntercityHome() {
               />
             ) : (
               <View style={st.mapDown}>
-                <AlertTriangle size={40} color={tw.amber400} />
-                <Text style={[{ fontSize: 14, color: tw.slate500, textAlign: 'center', marginTop: 16 }, fo(700)]}>Map service unavailable. Please check your connection or API key.</Text>
+                <AlertTriangle size={40} color={color.warning} />
+                <Text style={st.mapDownText}>Map service unavailable. Please check your connection or API key.</Text>
               </View>
             )}
 
             <View pointerEvents="none" style={st.pinWrap}>
               <Animated.View style={{ alignItems: 'center', transform: [{ translateY: pinLift }] }}>
-                <View style={st.pinHead}><MapPinned size={20} color="#fff" /></View>
-                <View style={{ width: 4, height: 24, backgroundColor: tw.blue600, marginTop: -8 }} />
+                <View style={st.pinHead}><MapPin size={20} color={color.textInverse} /></View>
+                <View style={st.pinStick} />
               </Animated.View>
               <View style={st.pinShadow} />
             </View>
 
-            <Press onPress={handleUseCurrentLocation} scale={0.9} style={st.locateBtn}>
-              {isLocating ? <ActivityIndicator size="small" color={tw.blue500} /> : <Navigation size={24} color={tw.slate900} />}
+            <Press onPress={handleUseCurrentLocation} scale={0.9} accessibilityLabel="Move map to my location" accessibilityState={{ busy: isLocating }} style={st.locateBtn}>
+              {isLocating ? <Spinner size={22} color={color.primary} /> : <LocateFixed size={24} color={color.primary} />}
             </Press>
 
-            <LinearGradient colors={['#fff', 'rgba(255,255,255,0.95)', 'rgba(255,255,255,0)']} locations={[0, 0.5, 1]} style={[st.pickerTop, { paddingTop: insets.top + 12 }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Press onPress={() => setShowMapPicker(false)} scale={0.9} style={st.pickBack}>
-                  <ArrowLeft size={20} color={tw.slate900} strokeWidth={2.5} />
-                </Press>
+            <View style={[st.pickerTop, { paddingTop: insets.top + space.md }]} pointerEvents="box-none">
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+                <IconButton icon={ArrowLeft} label="Close map" onPress={() => setShowMapPicker(false)} style={st.pickBack} />
                 <View style={st.pickCard}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
-                    <Text style={[{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: tw.blue600 }, fo(900)]}>Pinpoint Pickup</Text>
-                    <Press onPress={handleEditPickup} style={st.editPill}>
-                      <Pencil size={10} color={tw.slate600} />
-                      <Text style={[{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: tw.slate600, marginLeft: 4 }, fo(900)]}>Edit</Text>
+                  <View style={st.pickCardHead}>
+                    <Text style={st.pickLabel}>Pinpoint pickup</Text>
+                    <Press onPress={handleEditPickup} hitSlop={10} accessibilityLabel="Search pickup location" style={st.editPill}>
+                      <Pencil size={14} color={color.primary} />
+                      <Text style={st.editText}>Edit</Text>
                     </Press>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
                     {isEditingPickup ? (
                       <>
-                        <Search size={14} color={tw.slate400} />
+                        <Search size={16} color={color.textMuted} />
                         <TextInput
                           ref={mapSearchInputRef}
                           value={mapSearchInput}
                           onChangeText={setMapSearchInput}
                           onFocus={() => setIsMapSearchFocused(true)}
                           placeholder={isGeocoding ? 'Finding exact address...' : 'Search pickup location'}
-                          placeholderTextColor={tw.slate400}
-                          style={[{ flex: 1, padding: 0, fontSize: 14, color: tw.slate900 }, fo(700)]}
+                          placeholderTextColor={color.textDisabled}
+                          accessibilityLabel="Search pickup location"
+                          style={st.pickInput}
                         />
                       </>
                     ) : (
-                      <Text numberOfLines={1} style={[{ flex: 1, fontSize: 14, lineHeight: 17.5, color: tw.slate900 }, fo(700)]}>
+                      <Text numberOfLines={2} style={st.pickAddr}>
                         {isGeocoding ? 'Finding exact address...' : (pickupAddress || 'Set location on map')}
                       </Text>
                     )}
@@ -684,28 +682,30 @@ export default function IntercityHome() {
               {isSearchingMapLocations || mapSearchResults.length > 0 ? (
                 <View style={st.sugBox}>
                   {isSearchingMapLocations ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4, paddingVertical: 8 }}>
-                      <LoaderCircle size={14} color={tw.blue500} />
-                      <Text style={[{ fontSize: 12, color: tw.slate500 }, fo(700)]}>Searching suggestions...</Text>
+                    <View style={st.sugLoading}>
+                      <Spinner size={16} color={color.primary} />
+                      <Text style={st.dropStateText}>Searching suggestions...</Text>
                     </View>
                   ) : null}
                   {mapSearchResults.map((result) => (
-                    <Press key={normalizeSuggestionKey(result)} scale={1} onPress={() => handleMapSearchSuggestionSelect(result)} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 4, paddingVertical: 12 }}>
-                      <MapPin size={15} color={tw.blue500} style={{ marginTop: 2 }} />
+                    <Press key={normalizeSuggestionKey(result)} scale={1} onPress={() => handleMapSearchSuggestionSelect(result)} accessibilityLabel={`${result.title}, ${result.address}`} style={st.sugRow}>
+                      <MapPin size={18} color={color.primary} style={{ marginTop: 2 }} />
                       <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text numberOfLines={1} style={[{ fontSize: 13, color: tw.slate900 }, fo(900)]}>{result.title}</Text>
-                        <Text style={[{ fontSize: 12, lineHeight: 20, marginTop: 2, color: tw.slate500 }, fo(700)]}>{result.address}</Text>
+                        <Text numberOfLines={1} style={st.sugTitle}>{result.title}</Text>
+                        <Text numberOfLines={2} style={st.sugAddr}>{result.address}</Text>
                       </View>
                     </Press>
                   ))}
                 </View>
               ) : null}
-            </LinearGradient>
+            </View>
           </View>
 
-          <View style={[st.pickFoot, { paddingBottom: Math.max(insets.bottom, 0) + 48 }]}>
-            <Press
-              scale={0.98}
+          <View style={[st.pickFoot, { paddingBottom: insets.bottom + space.lg }]}>
+            <Button
+              title="Confirm pickup"
+              icon={Check}
+              size="lg"
               disabled={isGeocoding}
               onPress={() => {
                 const { lat, lng } = lastCenterRef.current;
@@ -713,11 +713,7 @@ export default function IntercityHome() {
                 if (!pickupAddress) reverseGeocode({ lat, lng });
                 setShowMapPicker(false);
               }}
-              style={[st.confirm, isGeocoding && { opacity: 0.4 }]}
-            >
-              <Check size={20} color="#fff" strokeWidth={3} />
-              <Text style={[{ fontSize: 16, letterSpacing: 1.6, textTransform: 'uppercase', color: '#fff', marginLeft: 12 }, fo(900)]}>Confirm Pickup</Text>
-            </Press>
+            />
           </View>
         </View>
       </Modal>
@@ -726,36 +722,66 @@ export default function IntercityHome() {
 }
 
 const st = StyleSheet.create({
-  header: { paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.slate100, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', zIndex: 30 },
-  backBtn: { width: 40, height: 40, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  userDot: { width: 36, height: 36, borderRadius: 18, backgroundColor: tw.blue100, alignItems: 'center', justifyContent: 'center' },
-  card: { backgroundColor: '#fff', borderRadius: 28, padding: 24, borderWidth: 1, borderColor: tw.slate100, boxShadow: '0 12px 40px rgba(0,0,0,0.04)' },
-  toggle: { flexDirection: 'row', borderWidth: 1, borderColor: tw.slate200, borderRadius: 12, padding: 4, marginBottom: 20, backgroundColor: '#fff' },
-  toggleBtn: { flex: 1, paddingVertical: 14, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  locBox: { borderWidth: 1, borderColor: tw.slate200, borderRadius: 16, backgroundColor: '#F2F7FA', padding: 2 },
-  fromRow: { paddingHorizontal: 20, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(226,232,240,0.8)' },
-  toRow: { paddingHorizontal: 20, paddingVertical: 16, flexDirection: 'row', alignItems: 'center' },
+  screen: { flex: 1, backgroundColor: color.bg },
+  header: { paddingHorizontal: space.sm, paddingBottom: space.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border, zIndex: 30 },
+  headerTitle: { ...type.heading, color: color.text },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.xl, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md, marginBottom: space.xl },
+  kickerLine: { height: 1, flex: 1, backgroundColor: color.border },
+  kicker: { ...type.overline, color: color.goldText },
+  toggle: { flexDirection: 'row', borderRadius: radii.md, padding: space.xs, gap: space.xs, marginBottom: space.lg, backgroundColor: color.surfaceMuted },
+  toggleBtn: { flex: 1, minHeight: 56, paddingVertical: space.sm, borderRadius: radii.sm + 2, alignItems: 'center', justifyContent: 'center' },
+  toggleBtnOn: { backgroundColor: color.primary },
+  toggleLabel: { ...type.bodyStrong },
+  toggleSub: { ...type.caption },
+  locBox: { borderWidth: 1, borderColor: color.border, borderRadius: radii.lg, backgroundColor: color.bg },
+  fromRow: { paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 64, flexDirection: 'row', alignItems: 'center', paddingRight: 64, borderBottomWidth: 1, borderBottomColor: color.border },
+  toRow: { paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 64, flexDirection: 'row', alignItems: 'center', paddingRight: 64 },
   locIcon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
-  fieldLabel: { fontSize: 9, lineHeight: 9, color: tw.slate400, letterSpacing: 0.45, textTransform: 'uppercase' },
-  clearBtn: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  swapBtn: { position: 'absolute', right: 16, top: '50%', marginTop: -18, width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate200, alignItems: 'center', justifyContent: 'center', zIndex: 10, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
-  tripStart: { marginTop: 16, padding: 16, borderRadius: 16, backgroundColor: '#EBF5FC', borderWidth: 1, borderColor: '#D5E6F3', flexDirection: 'row', alignItems: 'center' },
-  calIcon: { width: 32, height: 32, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  explore: { marginTop: 20, backgroundColor: '#FF7A1A', paddingVertical: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
-  cta: { padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: 'rgba(10,77,43,0.15)', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  callBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate200, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  dropdown: { position: 'absolute', backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, zIndex: 50, elevation: 12, boxShadow: '0 20px 25px rgba(0,0,0,0.1)' },
-  pkgRow: { paddingHorizontal: 20, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: tw.slate50 },
-  mapDown: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.slate50, padding: 40 },
-  pinWrap: { position: 'absolute', top: '50%', left: '50%', width: 48, marginLeft: -24, marginTop: -90, alignItems: 'center' },
-  pinHead: { width: 48, height: 48, backgroundColor: tw.blue600, borderRadius: 18, borderWidth: 4, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' },
-  pinShadow: { position: 'absolute', bottom: -4, width: 16, height: 8, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.2)' },
-  locateBtn: { position: 'absolute', bottom: 40, right: 24, width: 56, height: 56, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.slate100, zIndex: 20, boxShadow: '0 20px 25px rgba(0,0,0,0.1)' },
-  pickerTop: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 24, paddingBottom: 24, zIndex: 20 },
-  pickBack: { width: 40, height: 40, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  pickCard: { flex: 1, minWidth: 0, backgroundColor: '#fff', borderRadius: 24, borderWidth: 1, borderColor: tw.blue50, paddingHorizontal: 20, paddingVertical: 16, boxShadow: '0 10px 15px rgba(0,0,0,0.1)' },
-  editPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: tw.slate100, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  sugBox: { marginTop: 16, backgroundColor: '#fff', borderRadius: 24, borderWidth: 1, borderColor: tw.slate200, paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  pickFoot: { paddingHorizontal: 24, paddingTop: 24, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.slate50 },
-  confirm: { height: 64, backgroundColor: tw.blue600, borderRadius: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 25px rgba(59,130,246,0.2)' },
+  pickupDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: color.primary, borderWidth: 3, borderColor: color.primarySoft },
+  dropSquare: { width: 14, height: 14, borderRadius: 3, backgroundColor: color.danger, borderWidth: 3, borderColor: color.dangerSoft },
+  locText: { flex: 1, minWidth: 0, marginLeft: space.md },
+  fieldLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.textMuted },
+  fieldValue: { ...type.bodyStrong, fontSize: 15, color: color.text },
+  toInput: { ...type.bodyStrong, fontSize: 15, color: color.text, paddingVertical: space.xxs, outlineStyle: 'none' },
+  timeText: { ...type.small, color: color.textSecondary },
+  clearBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  swapBtn: { position: 'absolute', right: space.md, top: '50%', marginTop: -22, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, zIndex: 10, ...elevation.card },
+  tripStart: { marginTop: space.lg, padding: space.lg, minHeight: 64, borderRadius: radii.lg, backgroundColor: color.goldSoft, borderWidth: 1, borderColor: color.border, flexDirection: 'row', alignItems: 'center' },
+  calIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  cta: { padding: space.lg, gap: space.md, borderRadius: radii.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: color.primarySoft, borderWidth: 1, borderColor: color.primaryBorder },
+  ctaKicker: { ...type.overline, color: color.primary },
+  ctaTitle: { ...type.subheading, color: color.text },
+  ctaBody: { ...type.caption, color: color.textSecondary },
+  dropdown: { position: 'absolute', backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, zIndex: 50, elevation: 12, overflow: 'hidden', ...elevation.float },
+  dropState: { padding: space.xxl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  dropStateTitle: { ...type.bodyStrong, color: color.text },
+  dropStateText: { ...type.small, color: color.textMuted },
+  pkgRow: { paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  pkgFrom: { ...type.caption, color: color.textMuted },
+  pkgTo: { ...type.bodyStrong, color: color.text },
+  pkgPrice: { ...type.price, fontSize: 16, color: color.text },
+  iosSheet: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, paddingTop: space.md },
+  mapDown: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.surfaceMuted, padding: space.xxxl },
+  mapDownText: { ...type.body, color: color.textSecondary, textAlign: 'center', marginTop: space.lg },
+  pinWrap: { position: 'absolute', top: '50%', left: '50%', width: 48, marginLeft: -24, marginTop: -72, alignItems: 'center' },
+  pinHead: { width: 44, height: 44, backgroundColor: color.primary, borderRadius: 22, borderWidth: 3, borderColor: color.surface, alignItems: 'center', justifyContent: 'center', ...elevation.float },
+  pinStick: { width: 4, height: 20, backgroundColor: color.primary, marginTop: -2, borderBottomLeftRadius: 2, borderBottomRightRadius: 2 },
+  pinShadow: { position: 'absolute', bottom: -4, width: 14, height: 6, borderRadius: 7, backgroundColor: color.overlay },
+  locateBtn: { position: 'absolute', bottom: space.xl, right: space.lg, width: 52, height: 52, borderRadius: 26, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: color.border, zIndex: 20, ...elevation.float },
+  pickerTop: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: space.lg, paddingBottom: space.lg, zIndex: 20 },
+  pickBack: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  pickCard: { flex: 1, minWidth: 0, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, paddingHorizontal: space.lg, paddingVertical: space.md, ...elevation.float },
+  pickCardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, marginBottom: space.xs },
+  pickLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.primary },
+  editPill: { flexDirection: 'row', alignItems: 'center', gap: space.xs, backgroundColor: color.primarySoft, borderRadius: radii.pill, paddingHorizontal: space.md, height: 28 },
+  editText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.primary },
+  pickInput: { flex: 1, minWidth: 0, ...type.bodyStrong, color: color.text, paddingVertical: space.xs, outlineStyle: 'none' },
+  pickAddr: { flex: 1, ...type.bodyStrong, color: color.text },
+  sugBox: { marginTop: space.md, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, paddingHorizontal: space.md, paddingVertical: space.xs, ...elevation.card },
+  sugLoading: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.xs, paddingVertical: space.sm },
+  sugRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingHorizontal: space.xs, paddingVertical: space.md, minHeight: 52 },
+  sugTitle: { ...type.bodyStrong, color: color.text },
+  sugAddr: { ...type.small, color: color.textMuted },
+  pickFoot: { paddingHorizontal: space.lg, paddingTop: space.lg, backgroundColor: color.surface, borderTopWidth: 1, borderTopColor: color.border },
 });

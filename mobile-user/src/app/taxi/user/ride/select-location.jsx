@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { AlertTriangle, ArrowLeft, Check, ChevronRight, Map as MapIcon, MapPin, Minus, Navigation, Plus, X } from 'lucide-react-native';
+import { ArrowLeft, Check, ChevronRight, LocateFixed, MapPin, Minus, Navigation, Plus, SearchX, X } from 'lucide-react-native';
 import { useLocation, useNavigate } from '../../../../lib/webRouter';
 import { Press, Spinner } from '../../../../components/ui';
 import { geocodeAPI } from '../../../../api/food';
 import { localStore } from '../../../../lib/storage';
 import { events } from '../../../../lib/events';
-import { tw } from '../../../../theme';
-import { fo } from '../../../../taxi/account/ui';
+import { Button, Card, EmptyState, IconButton, SectionHeader } from '../../../../components/ds';
+import { color, elevation, radii, space, type } from '../../../../theme';
 import api from '../../../../taxi/api/client';
 import { DISTRICT_CENTER, HAS_VALID_GOOGLE_MAPS_KEY } from '../../../../taxi/utils/googleMaps';
 import { getSavedLocation, getSavedLocationCoords, saveLocation } from '../../../../taxi/services/locationStore';
@@ -682,43 +681,58 @@ export default function SelectLocation() {
 
   const heading = query.trim().length > 0 ? 'Search Results' : currentZone?.name ? `${currentZone.name} Suggestions` : 'Popular Locations';
 
-  return (
-    <View style={styles.root}>
-      <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.38, 1]} style={StyleSheet.absoluteFill} />
+  // iOS keyboard: the screen sits under the module header, so the avoiding view needs its own window offset.
+  const kavRef = useRef(null);
+  const [kavOffset, setKavOffset] = useState(0);
+  const measureKav = () => kavRef.current?.measureInWindow?.((_x, y) => setKavOffset(Number(y) || 0));
+  const pointLabel = activeInput === 'pickup' ? 'Pickup' : activeInput === 'drop' ? 'Drop' : `Stop ${Number(activeInput) + 1}`;
+  const pointColor = activeInput === 'pickup' ? color.primary : activeInput === 'drop' ? DROP : color.info;
 
+  return (
+    <KeyboardAvoidingView
+      ref={kavRef}
+      onLayout={measureKav}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={kavOffset}
+      style={styles.root}
+    >
       {/* Header */}
       {!showMapPicker && <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerInner}>
-          <Press onPress={handleScreenBack} style={styles.backBtn}>
-            <ArrowLeft size={22} color={tw.slate900} strokeWidth={3} />
-          </Press>
-          <View style={{ minWidth: 0 }}>
-            <Text style={styles.headerKicker}>RIDE</Text>
-            <Text style={styles.headerTitle} numberOfLines={1}>Where to?</Text>
+          <IconButton icon={ArrowLeft} label="Go back" onPress={handleScreenBack} />
+          <View style={{ minWidth: 0, flex: 1 }}>
+            <Text style={styles.headerKicker}>Ride</Text>
+            <Text style={styles.headerTitle} numberOfLines={1} accessibilityRole="header">Where to?</Text>
           </View>
         </View>
       </View>}
 
-      {!showMapPicker && <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: pickup && drop ? 110 : 24 + insets.bottom }}>
+      {!showMapPicker && <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: space.xxl + (pickup && drop ? 0 : insets.bottom) }}>
         {/* Input Card */}
         <View style={styles.inputWrap}>
-          <View style={styles.inputCard}>
+          <Card style={styles.inputCard}>
             {/* Pickup */}
             <View style={styles.row}>
-              <View style={[styles.dotRing, { borderColor: tw.emerald700 }]}><View style={[styles.dot, { backgroundColor: tw.emerald700 }]} /></View>
-              <View style={[styles.field, activeInput === 'pickup' && { boxShadow: `0 0 0 2px ${tw.emerald200}` }]}>
-                <TextInput
-                  value={pickup}
-                  onChangeText={(v) => setPickup(sanitizeLocationInput(v))}
-                  onFocus={() => setActiveInput('pickup')}
-                  selection={activeInput === 'pickup' ? undefined : { start: 0, end: 0 }}
-                  placeholder="Your pickup location"
-                  placeholderTextColor={tw.slate300}
-                  style={styles.input}
-                />
-                {pickup.length > 0 && (
-                  <Press onPress={() => setPickup('')} scale={1} style={styles.clearBtn}><X size={16} color={tw.slate300} /></Press>
-                )}
+              <View style={styles.markerCol}>
+                <View style={[styles.dotRing, { borderColor: color.primary }]}><View style={[styles.dot, { backgroundColor: color.primary }]} /></View>
+              </View>
+              <View style={styles.fieldCol}>
+                <Text style={[styles.fieldLabel, { color: color.primary }]}>Pickup</Text>
+                <View style={[styles.field, activeInput === 'pickup' && styles.fieldFocused]}>
+                  <TextInput
+                    value={pickup}
+                    onChangeText={(v) => setPickup(sanitizeLocationInput(v))}
+                    onFocus={() => setActiveInput('pickup')}
+                    selection={activeInput === 'pickup' ? undefined : { start: 0, end: 0 }}
+                    placeholder="Your pickup location"
+                    placeholderTextColor={color.textDisabled}
+                    accessibilityLabel="Pickup location"
+                    style={styles.input}
+                  />
+                  {pickup.length > 0 && (
+                    <Press onPress={() => setPickup('')} scale={1} hitSlop={10} accessibilityLabel="Clear pickup" style={styles.clearBtn}><X size={18} color={color.textMuted} /></Press>
+                  )}
+                </View>
               </View>
             </View>
 
@@ -728,69 +742,65 @@ export default function SelectLocation() {
             {stops.map((stop, idx) => (
               <View key={`stop-${idx}`}>
                 <View style={styles.row}>
-                  <View style={[styles.dotRing, { borderColor: tw.indigo500 }]}><View style={[styles.dot, { backgroundColor: tw.indigo500 }]} /></View>
-                  <View
-                    style={[
-                      styles.field,
-                      stop.trim().length > 0
-                        ? { backgroundColor: 'rgba(255,255,255,0.9)', borderColor: tw.indigo200 || '#C7D2FE', boxShadow: '0 10px 24px rgba(99,102,241,0.10)' }
-                        : { backgroundColor: 'rgba(238,242,255,0.7)', borderColor: 'rgba(224,231,255,0.7)' },
-                      activeInput === idx && { boxShadow: `0 0 0 2px ${'#C7D2FE'}` },
-                    ]}
-                  >
-                    <TextInput
-                      value={stop}
-                      autoFocus={activeInput === idx}
-                      placeholder={`Stop ${idx + 1} location...`}
-                      placeholderTextColor={stop.trim().length > 0 ? tw.slate300 : '#A3B3FF'}
-                      onFocus={() => setActiveInput(idx)}
-                      onChangeText={(v) => updateStop(idx, sanitizeLocationInput(v))}
-                      style={styles.input}
-                    />
-                    {stop.length > 0 && (
-                      <Press onPress={() => updateStop(idx, '')} scale={1} style={styles.clearBtn}><X size={16} color="#A3B3FF" /></Press>
-                    )}
+                  <View style={styles.markerCol}>
+                    <View style={[styles.dotRing, { borderColor: color.info }]}><View style={[styles.dot, { backgroundColor: color.info }]} /></View>
                   </View>
-                  <Press onPress={() => removeStop(idx)} style={styles.removeStop}>
-                    <Minus size={14} color={tw.red500 || '#F43F5E'} strokeWidth={3} />
-                  </Press>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: color.info }]}>{`Stop ${idx + 1}`}</Text>
+                    <View style={[styles.field, activeInput === idx && styles.fieldFocused]}>
+                      <TextInput
+                        value={stop}
+                        autoFocus={activeInput === idx}
+                        placeholder={`Stop ${idx + 1} location...`}
+                        placeholderTextColor={color.textDisabled}
+                        onFocus={() => setActiveInput(idx)}
+                        onChangeText={(v) => updateStop(idx, sanitizeLocationInput(v))}
+                        accessibilityLabel={`Stop ${idx + 1} location`}
+                        style={styles.input}
+                      />
+                      {stop.length > 0 && (
+                        <Press onPress={() => updateStop(idx, '')} scale={1} hitSlop={10} accessibilityLabel={`Clear stop ${idx + 1}`} style={styles.clearBtn}><X size={18} color={color.textMuted} /></Press>
+                      )}
+                    </View>
+                  </View>
+                  <IconButton icon={Minus} label={`Remove stop ${idx + 1}`} variant="danger" size={36} iconSize={16} onPress={() => removeStop(idx)} style={styles.removeStop} />
                 </View>
-                <View style={[styles.connector, { marginTop: 12 }]} />
+                <View style={[styles.connector, { marginTop: space.sm }]} />
               </View>
             ))}
 
             {/* Drop */}
             <View style={styles.row}>
-              <View style={[styles.dotRing, { borderColor: tw.orange600 }]}><View style={[styles.dot, { backgroundColor: tw.orange600 }]} /></View>
-              <View style={[styles.field, activeInput === 'drop' && { boxShadow: `0 0 0 2px ${tw.orange200}` }]}>
-                <TextInput
-                  value={drop}
-                  autoFocus={activeInput === 'drop'}
-                  placeholder="Enter drop location..."
-                  placeholderTextColor={tw.slate300}
-                  onFocus={() => setActiveInput('drop')}
-                  selection={activeInput === 'drop' ? undefined : { start: 0, end: 0 }}
-                  onChangeText={(v) => setDrop(sanitizeLocationInput(v))}
-                  style={styles.input}
-                />
-                {drop.length > 0 && (
-                  <Press onPress={() => setDrop('')} scale={1} style={styles.clearBtn}><X size={16} color={tw.slate300} /></Press>
-                )}
+              <View style={styles.markerCol}>
+                <View style={styles.dropMarker} />
+              </View>
+              <View style={styles.fieldCol}>
+                <Text style={[styles.fieldLabel, { color: DROP }]}>Drop</Text>
+                <View style={[styles.field, activeInput === 'drop' && styles.fieldFocused]}>
+                  <TextInput
+                    value={drop}
+                    autoFocus={activeInput === 'drop'}
+                    placeholder="Enter drop location..."
+                    placeholderTextColor={color.textDisabled}
+                    onFocus={() => setActiveInput('drop')}
+                    selection={activeInput === 'drop' ? undefined : { start: 0, end: 0 }}
+                    onChangeText={(v) => setDrop(sanitizeLocationInput(v))}
+                    accessibilityLabel="Drop location"
+                    style={styles.input}
+                  />
+                  {drop.length > 0 && (
+                    <Press onPress={() => setDrop('')} scale={1} hitSlop={10} accessibilityLabel="Clear drop" style={styles.clearBtn}><X size={18} color={color.textMuted} /></Press>
+                  )}
+                </View>
               </View>
             </View>
-          </View>
+          </Card>
         </View>
 
         {/* Action pills */}
         <View style={styles.pills}>
-          <Press onPress={showMapToast} style={styles.pill}>
-            <MapPin size={16} color={tw.slate900} />
-            <Text style={styles.pillText}>Select on map</Text>
-          </Press>
-          <Press onPress={addStop} style={styles.pill}>
-            <View style={styles.plusBox}><Plus size={12} color="#fff" strokeWidth={3} /></View>
-            <Text style={styles.pillText}>Add stop {stops.length > 0 ? `(${stops.length})` : ''}</Text>
-          </Press>
+          <Button title="Select on map" icon={MapPin} variant="outline" size="md" onPress={showMapToast} style={styles.pill} />
+          <Button title={`Add stop${stops.length > 0 ? ` (${stops.length})` : ''}`} icon={Plus} variant="outline" size="md" onPress={addStop} style={styles.pill} />
         </View>
 
         {/* Stop chips */}
@@ -800,7 +810,7 @@ export default function SelectLocation() {
               <View key={idx} style={styles.chip}>
                 <View style={styles.chipDot} />
                 <Text style={styles.chipText} numberOfLines={1}>{s.trim() || `Stop ${idx + 1}`}</Text>
-                <Press onPress={() => removeStop(idx)} scale={1}><X size={11} color={tw.slate400} strokeWidth={3} /></Press>
+                <Press onPress={() => removeStop(idx)} scale={1} hitSlop={12} accessibilityLabel={`Remove stop ${idx + 1}`}><X size={14} color={color.textMuted} strokeWidth={2.5} /></Press>
               </View>
             ))}
           </View>
@@ -808,19 +818,19 @@ export default function SelectLocation() {
 
         {/* Results */}
         <View style={styles.resultsWrap}>
-          <Text style={styles.resultsHeading}>{heading.toUpperCase()}</Text>
+          <SectionHeader title={heading} />
 
           {searchResults.length > 0 ? (
-            <View style={styles.resultsCard}>
-              <Press onPress={handleUseCurrentLocationResult} scale={0.99} style={styles.currentRow}>
+            <Card padded={false} style={{ overflow: 'hidden' }}>
+              <Press onPress={handleUseCurrentLocationResult} scale={0.99} accessibilityLabel="Use current location" accessibilityState={{ busy: isLocating }} style={styles.currentRow}>
                 <View style={styles.currentIcon}>
-                  {isLocating ? <Spinner size={18} color={tw.emerald500} /> : <Navigation size={18} color={tw.emerald500} fill={tw.emerald50} />}
+                  {isLocating ? <Spinner size={18} color={color.primary} /> : <Navigation size={18} color={color.primary} />}
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.currentTitle}>Use Current Location</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.currentTitle}>Use current location</Text>
                   <Text style={styles.currentSub}>Perfect for accurate pickup</Text>
                 </View>
-                <ChevronRight size={16} color={tw.slate300} />
+                <ChevronRight size={20} color={color.textMuted} />
               </Press>
 
               {searchResults.map((result, idx) => (
@@ -828,49 +838,46 @@ export default function SelectLocation() {
                   key={idx}
                   onPress={() => handleSelectResult(result)}
                   scale={0.99}
+                  accessibilityLabel={`${result.title}, ${result.address}`}
                   style={[styles.resultRow, idx === searchResults.length - 1 && { borderBottomWidth: 0 }]}
                 >
-                  <View style={styles.resultIcon}><MapPin size={18} color={tw.slate500} strokeWidth={2.6} /></View>
+                  <View style={styles.resultIcon}><MapPin size={18} color={color.textSecondary} /></View>
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.resultTitle}>{result.title}</Text>
-                    <Text style={styles.resultAddr} numberOfLines={1}>{result.address}</Text>
+                    <Text style={styles.resultTitle} numberOfLines={1}>{result.title}</Text>
+                    <Text style={styles.resultAddr} numberOfLines={2}>{result.address}</Text>
                   </View>
                 </Press>
               ))}
-            </View>
+            </Card>
           ) : (
-            <View style={styles.empty}>
-              <View style={styles.emptyIcon}><Text style={styles.emptyDash}>—</Text></View>
-              <Text style={styles.emptyTitle}>
-                No results for <Text style={{ color: tw.slate900 }}>&quot;{query}&quot;</Text>
-              </Text>
-              <Text style={styles.emptySub}>Try a different search term</Text>
-            </View>
+            <Card>
+              <EmptyState icon={SearchX} title={`No results for "${query}"`} message="Try a different search term" style={styles.empty} />
+            </Card>
           )}
           {query.trim().length >= 3 && (
-            <Text style={styles.note}>
-              {isSearchingLocations
-                ? 'Searching locations inside your service zone...'
-                : zonePaths.length
-                  ? 'Showing zone-prioritized results after 3+ characters.'
-                  : 'Showing optimized search results after 3+ characters.'}
-            </Text>
+            <View style={styles.noteRow}>
+              {isSearchingLocations ? <Spinner size={14} color={color.primary} /> : null}
+              <Text style={styles.note}>
+                {isSearchingLocations
+                  ? 'Searching locations inside your service zone...'
+                  : zonePaths.length
+                    ? 'Showing zone-prioritized results after 3+ characters.'
+                    : 'Showing optimized search results after 3+ characters.'}
+              </Text>
+            </View>
           )}
           {!query.trim().length && currentZone?.name ? (
             <Text style={styles.note}>
-              Popular suggestions are pulled from the admin-created stores in the <Text style={{ color: tw.slate600 }}>{currentZone.name}</Text> zone.
+              Popular suggestions are pulled from the admin-created stores in the <Text style={{ color: color.textSecondary, fontFamily: 'Poppins_600SemiBold' }}>{currentZone.name}</Text> zone.
             </Text>
           ) : null}
         </View>
       </ScrollView>}
 
-      {/* Confirm button */}
+      {/* Confirm button: pinned bar under the list */}
       {pickup && drop && !showMapPicker ? (
-        <View style={[styles.confirmWrap, { bottom: 24 }]} pointerEvents="box-none">
-          <Press onPress={() => handleConfirmNavigate()} scale={0.98} style={styles.confirmBtn}>
-            <Text style={styles.confirmText}>Confirm & Proceed</Text>
-            <ChevronRight size={18} color={tw.slate900} strokeWidth={3} style={{ opacity: 0.6 }} />
-          </Press>
+        <View style={[styles.confirmBar, { paddingBottom: space.lg + insets.bottom }]}>
+          <Button title="Confirm & proceed" iconRight={ChevronRight} size="lg" onPress={() => handleConfirmNavigate()} />
         </View>
       ) : null}
 
@@ -880,11 +887,11 @@ export default function SelectLocation() {
           <View style={styles.mapArea}>
             {!HAS_VALID_GOOGLE_MAPS_KEY ? (
               <View style={styles.mapMsgWrap}>
-                <View style={styles.mapMsgCard}>
-                  <View style={styles.mapMsgIcon}><X size={32} color={tw.rose400 || '#FB7185'} /></View>
-                  <Text style={styles.mapMsgTitle}>Config Error</Text>
+                <Card style={styles.mapMsgCard}>
+                  <View style={styles.mapMsgIcon}><X size={28} color={color.danger} /></View>
+                  <Text style={styles.mapMsgTitle}>Map unavailable</Text>
                   <Text style={styles.mapMsgSub}>Google Maps API Key is missing.</Text>
-                </View>
+                </Card>
               </View>
             ) : (
               <MapView
@@ -901,127 +908,116 @@ export default function SelectLocation() {
               />
             )}
 
-            {/* Central pin */}
+            {/* Central pin: green for pickup, red for drop */}
             <View style={styles.pinWrap} pointerEvents="none">
               <Animated.View style={{ alignItems: 'center', transform: [{ translateY: pinLift }] }}>
-                <View style={styles.pinHead}>
-                  <View style={{ transform: [{ rotate: '-45deg' }] }}>
-                    <MapIcon size={18} color="#fff" fill="rgba(255,255,255,0.2)" />
-                  </View>
+                <View style={[styles.pinHead, { backgroundColor: pointColor }]}>
+                  <MapPin size={18} color={color.textInverse} />
                 </View>
-                <View style={styles.pinStick} />
+                <View style={[styles.pinStick, { backgroundColor: pointColor }]} />
               </Animated.View>
               <View style={styles.pinShadow} />
             </View>
 
             {/* Current location FAB */}
-            <Press onPress={handleUseCurrentLocation} disabled={isLocating} scale={0.9} style={styles.fab}>
-              {isLocating ? <Spinner size={20} color={tw.slate400} /> : <Navigation size={20} color={tw.slate900} fill="rgba(15,23,43,0.1)" />}
+            <Press onPress={handleUseCurrentLocation} disabled={isLocating} scale={0.9} accessibilityLabel="Move map to my location" accessibilityState={{ busy: isLocating }} style={styles.fab}>
+              {isLocating ? <Spinner size={20} color={color.primary} /> : <LocateFixed size={22} color={color.primary} />}
             </Press>
           </View>
 
           {/* Header over the map */}
-          <LinearGradient colors={['#FFFFFF', 'rgba(255,255,255,0.8)', 'rgba(255,255,255,0)']} style={[styles.mapHeader, { paddingTop: insets.top + 16 }]}>
+          <View style={[styles.mapHeader, { paddingTop: insets.top + space.md }]} pointerEvents="box-none">
             <View style={styles.mapHeaderRow}>
-              <Press onPress={handleMapBack} style={styles.mapBack}>
-                <ArrowLeft size={20} color={tw.slate900} strokeWidth={2.5} />
-              </Press>
+              <IconButton icon={ArrowLeft} label="Back to search" onPress={handleMapBack} style={styles.mapBack} />
               <View style={styles.mapAddrBox}>
-                <Text style={styles.mapAddrKicker}>SELECT POINT</Text>
+                <Text style={[styles.mapAddrKicker, { color: pointColor }]}>{`Select ${pointLabel.toLowerCase()} point`}</Text>
                 <Text style={styles.mapAddr} numberOfLines={1}>{isGeocoding ? 'Locating...' : pickedAddress}</Text>
               </View>
             </View>
-          </LinearGradient>
+          </View>
 
           {/* Confirm actions */}
-          <View style={[styles.mapConfirm, { paddingBottom: 40 + Math.max(0, insets.bottom - 16) }]}>
+          <View style={[styles.mapConfirm, { paddingBottom: space.lg + insets.bottom }]}>
             <View style={styles.mapConfirmRow}>
-              <View style={styles.mapConfirmIcon}><MapPin size={20} color={tw.slate400} /></View>
+              <View style={[styles.mapConfirmIcon, { backgroundColor: activeInput === 'drop' ? color.dangerSoft : color.primarySoft }]}><MapPin size={20} color={pointColor} /></View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.mapConfirmTitle}>Confirm Spot</Text>
-                <Text style={styles.mapConfirmAddr} numberOfLines={1}>{pickedAddress}</Text>
+                <Text style={styles.mapConfirmTitle}>{`Confirm ${pointLabel.toLowerCase()} spot`}</Text>
+                <Text style={styles.mapConfirmAddr} numberOfLines={2}>{pickedAddress}</Text>
               </View>
             </View>
-            <Press onPress={handleConfirmMapLocation} disabled={isGeocoding} scale={0.98} style={[styles.mapConfirmBtn, isGeocoding && { opacity: 0.5 }]}>
-              <Check size={18} color="#fff" strokeWidth={3} />
-              <Text style={styles.mapConfirmBtnText}>Confirm Location</Text>
-            </Press>
+            <Button title="Confirm location" icon={Check} size="lg" onPress={handleConfirmMapLocation} disabled={isGeocoding} />
           </View>
         </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
+/** Drop is a red square marker everywhere in the ride flow; pickup is a brand-green dot. */
+const DROP = color.danger;
+
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#F3F4F6' },
-  header: { backgroundColor: 'rgba(255,255,255,0.7)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.7)', boxShadow: '0 10px 20px rgba(15,23,42,0.05)', zIndex: 30 },
-  headerInner: { paddingHorizontal: 20, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backBtn: { padding: 8, marginLeft: -8, borderRadius: 999 },
-  headerKicker: { ...fo(700), fontSize: 10, letterSpacing: 0.5, color: tw.slate400 },
-  headerTitle: { ...fo(700), marginTop: 2, fontSize: 20, lineHeight: 20, letterSpacing: -0.5, color: tw.slate900 },
-  inputWrap: { paddingHorizontal: 20, paddingTop: 16 },
-  inputCard: { backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 22, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', boxShadow: '0 18px 44px rgba(15,23,42,0.08)', gap: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  dotRing: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, backgroundColor: 'rgba(255,255,255,0.7)', alignItems: 'center', justifyContent: 'center' },
-  dot: { width: 6, height: 6, borderRadius: 3 },
-  field: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  input: { flex: 1, ...fo(500), fontSize: 15, color: tw.slate900, padding: 0, margin: 0 },
-  clearBtn: { marginLeft: 8 },
-  connector: { marginLeft: 9, height: 8, width: 0, borderLeftWidth: 1.5, borderStyle: 'dotted', borderLeftColor: 'rgba(202,213,226,0.7)' },
-  removeStop: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FFE4E6', alignItems: 'center', justifyContent: 'center' },
-  pills: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginVertical: 16 },
-  pill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', borderRadius: 999, paddingVertical: 10, boxShadow: '0 12px 26px rgba(15,23,42,0.06)' },
-  pillText: { ...fo(700), fontSize: 13, color: tw.slate800 },
-  plusBox: { width: 16, height: 16, borderRadius: 4, backgroundColor: tw.indigo500, alignItems: 'center', justifyContent: 'center' },
-  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20, marginBottom: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  chipDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#7C86FF' },
-  chipText: { ...fo(700), fontSize: 12, color: tw.slate700, maxWidth: 110 },
-  resultsWrap: { paddingHorizontal: 20, marginBottom: 16 },
-  resultsHeading: { ...fo(700), fontSize: 14, color: tw.slate400, marginBottom: 12, marginLeft: 4, letterSpacing: 1.4 },
-  resultsCard: { backgroundColor: 'rgba(255,255,255,0.75)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', overflow: 'hidden', boxShadow: '0 14px 34px rgba(15,23,42,0.06)' },
-  currentRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.7)', backgroundColor: 'rgba(236,253,245,0.3)' },
-  currentIcon: { width: 40, height: 40, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.emerald100, alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  currentTitle: { ...fo(700), fontSize: 15, lineHeight: 19, color: tw.slate900 },
-  currentSub: { ...fo(500), fontSize: 12, color: tw.slate400, marginTop: 2 },
-  resultRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.7)' },
-  resultIcon: { marginTop: 2, width: 40, height: 40, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  resultTitle: { ...fo(600), fontSize: 15, lineHeight: 19, color: tw.slate900 },
-  resultAddr: { ...fo(500), fontSize: 13, color: tw.slate500, marginTop: 4 },
-  empty: { alignItems: 'center', paddingVertical: 48 },
-  emptyIcon: { width: 56, height: 56, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  emptyDash: { ...fo(700), fontSize: 22, color: tw.slate400 },
-  emptyTitle: { ...fo(600), marginTop: 12, fontSize: 15, color: tw.slate600, textAlign: 'center' },
-  emptySub: { ...fo(500), fontSize: 13, color: tw.slate400, marginTop: 4 },
-  note: { ...fo(700), fontSize: 11, color: tw.slate400, marginTop: 12, paddingHorizontal: 4 },
-  confirmWrap: { position: 'absolute', left: 20, right: 20, zIndex: 40 },
-  confirmBtn: { backgroundColor: '#f8e001', paddingVertical: 16, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 8px 30px rgba(248,224,1,0.3)' },
-  confirmText: { ...fo(700), fontSize: 16, color: tw.slate900 },
+  root: { flex: 1, backgroundColor: color.bg },
+  header: { backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border, zIndex: 30 },
+  headerInner: { paddingHorizontal: space.sm, paddingVertical: space.sm, flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  headerKicker: { ...type.overline, color: color.goldText },
+  headerTitle: { ...type.heading, color: color.text },
+  inputWrap: { paddingHorizontal: space.lg, paddingTop: space.lg },
+  inputCard: { gap: space.xs },
+  row: { flexDirection: 'row', alignItems: 'flex-end', gap: space.md },
+  markerCol: { width: 20, height: 48, alignItems: 'center', justifyContent: 'center' },
+  fieldCol: { flex: 1, minWidth: 0, gap: space.xs },
+  fieldLabel: { ...type.label },
+  dotRing: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  dropMarker: { width: 16, height: 16, borderRadius: 3, backgroundColor: DROP, borderWidth: 3, borderColor: color.dangerSoft },
+  field: { minHeight: 48, flexDirection: 'row', alignItems: 'center', backgroundColor: color.surfaceMuted, borderWidth: 1.5, borderColor: color.border, borderRadius: radii.md, paddingHorizontal: space.md },
+  fieldFocused: { borderColor: color.primary, backgroundColor: color.surface },
+  input: { flex: 1, minWidth: 0, ...type.body, fontSize: 15, color: color.text, paddingVertical: space.sm, margin: 0, outlineStyle: 'none' },
+  clearBtn: { marginLeft: space.sm, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  connector: { marginLeft: 9, height: 12, width: 0, borderLeftWidth: 2, borderStyle: 'dotted', borderLeftColor: color.borderStrong },
+  removeStop: { marginBottom: 6 },
+  pills: { flexDirection: 'row', gap: space.md, paddingHorizontal: space.lg, marginVertical: space.lg },
+  pill: { flex: 1, paddingHorizontal: space.sm },
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, paddingHorizontal: space.lg, marginBottom: space.lg },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.pill, paddingHorizontal: space.md, height: 36 },
+  chipDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.info },
+  chipText: { ...type.label, color: color.text, maxWidth: 140 },
+  resultsWrap: { paddingHorizontal: space.lg, marginBottom: space.lg },
+  currentRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, minHeight: 68, paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: color.border, backgroundColor: color.primarySoft },
+  currentIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.primaryBorder, alignItems: 'center', justifyContent: 'center' },
+  currentTitle: { ...type.bodyStrong, color: color.primary },
+  currentSub: { ...type.caption, color: color.textSecondary },
+  resultRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, minHeight: 64, paddingVertical: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  resultIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  resultTitle: { ...type.bodyStrong, color: color.text },
+  resultAddr: { ...type.small, color: color.textMuted },
+  empty: { paddingVertical: space.xxl },
+  noteRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  note: { ...type.caption, color: color.textMuted, marginTop: space.md, flexShrink: 1 },
+  confirmBar: { paddingHorizontal: space.lg, paddingTop: space.md, backgroundColor: color.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, ...elevation.sheet },
   // map picker
-  mapOverlay: { flex: 1, backgroundColor: '#fff' },
-  mapArea: { flex: 1, backgroundColor: tw.slate200 },
-  mapHeader: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, paddingHorizontal: 20, paddingBottom: 16 },
-  mapHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  mapBack: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)' },
-  mapAddrBox: { flex: 1, minWidth: 0, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, paddingHorizontal: 16, paddingVertical: 12, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)' },
-  mapAddrKicker: { ...fo(700), fontSize: 10, letterSpacing: 0.5, color: tw.slate400, marginBottom: 2 },
-  mapAddr: { ...fo(600), fontSize: 14, lineHeight: 17, color: tw.slate900 },
-  mapMsgWrap: { ...StyleSheet.absoluteFill, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
-  mapMsgCard: { backgroundColor: '#fff', borderRadius: 24, paddingHorizontal: 32, paddingVertical: 40, borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
-  mapMsgIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FFF1F2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  mapMsgTitle: { ...fo(700), fontSize: 16, color: tw.slate900 },
-  mapMsgSub: { ...fo(500), marginTop: 8, fontSize: 13, color: tw.slate500, textAlign: 'center' },
-  pinWrap: { position: 'absolute', top: '50%', left: '50%', width: 40, marginLeft: -20, marginTop: -61, alignItems: 'center', zIndex: 10 },
-  pinHead: { width: 40, height: 40, backgroundColor: tw.slate900, borderRadius: 16, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '45deg' }], borderWidth: 2, borderColor: '#fff', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  pinStick: { width: 4, height: 20, backgroundColor: tw.slate900, marginTop: -8 },
-  pinShadow: { position: 'absolute', bottom: -4, width: 8, height: 4, borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.3)' },
-  fab: { position: 'absolute', bottom: 24, right: 20, width: 48, height: 48, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', zIndex: 20, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' },
-  mapConfirm: { paddingHorizontal: 20, paddingTop: 16, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.slate50, gap: 16 },
-  mapConfirmRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4, paddingHorizontal: 4 },
-  mapConfirmIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  mapConfirmTitle: { ...fo(700), fontSize: 15, lineHeight: 15, color: tw.slate900 },
-  mapConfirmAddr: { ...fo(500), fontSize: 12, color: tw.slate400, marginTop: 4 },
-  mapConfirmBtn: { width: '100%', backgroundColor: tw.slate900, paddingVertical: 16, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 20px 25px -5px rgba(226,232,240,1)' },
-  mapConfirmBtnText: { ...fo(700), fontSize: 15, color: '#fff' },
+  mapOverlay: { flex: 1, backgroundColor: color.surface },
+  mapArea: { flex: 1, backgroundColor: color.surfaceMuted },
+  mapHeader: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, paddingHorizontal: space.lg, paddingBottom: space.lg },
+  mapHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  mapBack: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  mapAddrBox: { flex: 1, minWidth: 0, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, paddingHorizontal: space.lg, paddingVertical: space.sm, ...elevation.float },
+  mapAddrKicker: { ...type.caption, fontFamily: 'Poppins_600SemiBold' },
+  mapAddr: { ...type.bodyStrong, color: color.text },
+  mapMsgWrap: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xxl },
+  mapMsgCard: { alignItems: 'center', paddingHorizontal: space.xxxl, paddingVertical: space.xxxl },
+  mapMsgIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.lg },
+  mapMsgTitle: { ...type.subheading, color: color.text },
+  mapMsgSub: { ...type.small, marginTop: space.sm, color: color.textMuted, textAlign: 'center' },
+  pinWrap: { position: 'absolute', top: '50%', left: '50%', width: 40, marginLeft: -20, marginTop: -58, alignItems: 'center', zIndex: 10 },
+  pinHead: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: color.surface, ...elevation.float },
+  pinStick: { width: 4, height: 18, marginTop: -2, borderBottomLeftRadius: 2, borderBottomRightRadius: 2 },
+  pinShadow: { position: 'absolute', bottom: -4, width: 10, height: 4, borderRadius: 4, backgroundColor: color.overlay },
+  fab: { position: 'absolute', bottom: space.xl, right: space.lg, width: 48, height: 48, backgroundColor: color.surface, borderRadius: 24, borderWidth: 1, borderColor: color.border, alignItems: 'center', justifyContent: 'center', zIndex: 20, ...elevation.float },
+  mapConfirm: { paddingHorizontal: space.lg, paddingTop: space.lg, backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, marginTop: -space.xl, gap: space.lg, ...elevation.sheet },
+  mapConfirmRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  mapConfirmIcon: { width: 44, height: 44, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  mapConfirmTitle: { ...type.subheading, color: color.text },
+  mapConfirmAddr: { ...type.small, color: color.textMuted },
 });

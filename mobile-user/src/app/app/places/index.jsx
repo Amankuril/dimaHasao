@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Fa from '../../../components/Fa';
-import { Press } from '../../../components/ui';
-import Skeleton from '../../../components/Skeleton';
+import { Chip, ChipRow, IconButton, fa } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { Pulse, StateBlock } from '../../../components/dh/ui';
 import { Header, PatternDivider } from '../../../components/dh/Header';
 import { PlaceCard } from '../../../components/dh/places';
 import { fetchDestinations } from '../../../api/dh/toursApi';
-import { playfair, poppins, tw } from '../../../theme';
+import { color, radii, space, type } from '../../../theme';
 
 // Web: DimaHasao/pages/TouristPlacesList.jsx (/app/places)
 
@@ -21,18 +23,8 @@ const FILTER_CHIPS = [
   { id: 'wildlife', label: 'Wildlife' },
 ];
 
-function StateCard({ icon, iconColor, title, text, action }) {
-  return (
-    <View style={styles.state}>
-      <Fa name={icon} size={30} color={iconColor} style={{ marginBottom: 8 }} />
-      <Text style={styles.stateTitle}>{title}</Text>
-      {text ? <Text style={styles.stateText}>{text}</Text> : null}
-      {action}
-    </View>
-  );
-}
-
 export default function TouristPlacesList() {
+  const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchFilter, setSearchFilter] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -51,59 +43,36 @@ export default function TouristPlacesList() {
   const visibleChips = FILTER_CHIPS.filter((chip) => chip.id === 'all' || places.some((p) => p.category === chip.id));
 
   const listHeader = (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={{ flexGrow: 0 }}>
-      {visibleChips.map((chip) => {
-        const active = activeFilter === chip.id;
-        return (
-          <Press key={chip.id} onPress={() => setActiveFilter(chip.id)} style={[styles.chip, active ? styles.chipActive : styles.chipIdle]} accessibilityState={{ selected: active }}>
-            <Text style={[styles.chipText, active && { color: '#fff' }]}>{chip.label}</Text>
-          </Press>
-        );
-      })}
-    </ScrollView>
+    <ChipRow contentStyle={styles.chips}>
+      {visibleChips.map((chip) => (
+        <Chip key={chip.id} label={chip.label} selected={activeFilter === chip.id} onPress={() => setActiveFilter(chip.id)} />
+      ))}
+    </ChipRow>
   );
 
   const empty = loading ? (
-    <View style={{ gap: 20 }}>
+    <View style={{ gap: space.md }} accessibilityLabel="Loading places">
       {[0, 1, 2].map((n) => (
         <View key={n} style={styles.skeletonCard}>
-          <Skeleton style={{ height: 160, borderRadius: 0, backgroundColor: tw.gray200 }} />
-          <View style={{ padding: 16, gap: 8 }}>
-            <Skeleton style={{ height: 14, width: '66%', borderRadius: 4, backgroundColor: tw.gray200 }} />
-            <Skeleton style={{ height: 12, width: '50%', borderRadius: 4, backgroundColor: tw.gray100 }} />
+          <Pulse style={{ height: 180, borderRadius: 0 }} />
+          <View style={{ padding: space.lg, gap: space.sm }}>
+            <Pulse style={{ height: 16, width: '66%' }} />
+            <Pulse tone={100} style={{ height: 13, width: '50%' }} />
           </View>
         </View>
       ))}
     </View>
   ) : loadError ? (
-    <StateCard
-      icon="fa-solid fa-triangle-exclamation"
-      iconColor={tw.amber400}
-      title="Couldn't load destinations"
-      text={loadError}
-      action={
-        <Text onPress={() => refetch()} style={styles.reset} accessibilityRole="button">
-          Try again
-        </Text>
-      }
-    />
+    <StateBlock icon="fa-solid fa-triangle-exclamation" iconColor={color.warning} title="Couldn't load destinations" text={loadError} actionLabel="Try again" onAction={() => refetch()} />
   ) : (
-    <StateCard
+    <StateBlock
       icon="fa-solid fa-mountain"
-      iconColor={tw.gray400}
       title={searchFilter || activeFilter !== 'all' ? 'No destinations match your search' : 'No destinations published yet'}
-      action={
-        <Text
-          onPress={() => {
-            setSearchFilter('');
-            setActiveFilter('all');
-          }}
-          style={styles.reset}
-          accessibilityRole="button"
-        >
-          Reset filters
-        </Text>
-      }
+      actionLabel="Reset filters"
+      onAction={() => {
+        setSearchFilter('');
+        setActiveFilter('all');
+      }}
     />
   );
 
@@ -115,22 +84,18 @@ export default function TouristPlacesList() {
       {showSearchInput ? (
         <View style={styles.searchBar}>
           <View style={styles.searchBox}>
-            <Fa name="fa-solid fa-magnifying-glass" size={12} color={tw.gray400} />
+            <Fa name="fa-solid fa-magnifying-glass" size={16} color={color.textMuted} />
             <TextInput
               value={searchFilter}
               onChangeText={setSearchFilter}
               placeholder="Filter tourist destinations..."
-              placeholderTextColor={tw.gray400}
+              placeholderTextColor={color.textMuted}
               autoFocus
               returnKeyType="search"
               style={styles.searchInput}
               accessibilityLabel="Filter tourist destinations"
             />
-            {searchFilter ? (
-              <Press onPress={() => setSearchFilter('')} accessibilityLabel="Clear" hitSlop={8}>
-                <Fa name="fa-solid fa-xmark" size={12} color={tw.gray400} />
-              </Press>
-            ) : null}
+            {searchFilter ? <IconButton icon={fa('fa-solid fa-xmark')} label="Clear" size={40} iconSize={16} iconColor={color.textMuted} onPress={() => setSearchFilter('')} /> : null}
           </View>
         </View>
       ) : null}
@@ -140,34 +105,31 @@ export default function TouristPlacesList() {
         keyExtractor={(place) => place.id}
         renderItem={({ item }) => <PlaceCard place={item} />}
         ListHeaderComponent={listHeader}
-        ListEmptyComponent={<View style={{ paddingHorizontal: 16 }}>{empty}</View>}
-        ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+        ListEmptyComponent={<View style={{ paddingHorizontal: space.lg }}>{empty}</View>}
+        ItemSeparatorComponent={Separator}
         contentContainerStyle={{ flexGrow: 1 }}
-        ListHeaderComponentStyle={{ marginBottom: 16 }}
+        ListHeaderComponentStyle={{ marginBottom: space.lg }}
         CellRendererComponent={({ children, style, ...rest }) => (
-          <View {...rest} style={[style, { paddingHorizontal: 16 }]}>
+          <View {...rest} style={[style, { paddingHorizontal: space.lg }]}>
             {children}
           </View>
         )}
         refreshing={isRefetching}
         onRefresh={refetch}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         ListFooterComponent={
-          <View style={{ marginTop: 16 }}>
+          <View style={{ marginTop: space.xxl }}>
             <PatternDivider variant="native" />
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                <Fa name="fa-solid fa-leaf" size={13} color={tw.emerald400} />
-                {'  '}Plan your trip, stay safe {'\n'} and enjoy the beauty of Dima Hasao!
-              </Text>
+            <View style={[styles.footer, { paddingBottom: NAV_CLEARANCE + insets.bottom + space.lg }]}>
+              <Fa name="fa-solid fa-leaf" size={14} color={color.gold} />
+              <Text style={styles.footerText}>Plan your trip, stay safe and enjoy the beauty of Dima Hasao!</Text>
               <View style={styles.footerDots}>
                 {[0, 1, 2, 3, 4].map((i) => (
                   <View key={i} style={styles.footerDot} />
                 ))}
               </View>
             </View>
-            {/* pb-20: room for the floating nav */}
-            <View style={{ height: 80, backgroundColor: '#FDF5E6' }} />
           </View>
         }
       />
@@ -175,23 +137,17 @@ export default function TouristPlacesList() {
   );
 }
 
+const Separator = () => <View style={{ height: space.lg }} />;
+
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FDF5E6' },
-  searchBar: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.9)', borderBottomWidth: 1, borderBottomColor: tw.orange200 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: tw.gray100, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
-  searchInput: { flex: 1, fontSize: 12, color: tw.gray800, padding: 0, height: 22, ...poppins(400) },
-  chips: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
-  chipActive: { backgroundColor: '#0A3A2A' },
-  chipIdle: { backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: 'rgba(255,214,167,0.6)' },
-  chipText: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(600) },
-  skeletonCard: { backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 16, borderWidth: 1, borderColor: tw.orange200, overflow: 'hidden' },
-  state: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 24, backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 16, borderWidth: 1, borderColor: tw.orange200 },
-  stateTitle: { fontSize: 14, lineHeight: 20, color: tw.gray700, textAlign: 'center', ...poppins(700) },
-  stateText: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 4, textAlign: 'center', ...poppins(400) },
-  reset: { marginTop: 12, fontSize: 12, lineHeight: 16, color: tw.emerald800, textDecorationLine: 'underline', ...poppins(600) },
-  footer: { backgroundColor: '#0A3A2A', padding: 20, alignItems: 'center', marginTop: 8 },
-  footerText: { fontSize: 14, lineHeight: 22.75, color: tw.amber200, textAlign: 'center', ...playfair(400, true) },
-  footerDots: { marginTop: 12, flexDirection: 'row', justifyContent: 'center', gap: 4, opacity: 0.6 },
-  footerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: tw.amber400 },
+  page: { flex: 1, backgroundColor: color.bg },
+  searchBar: { paddingHorizontal: space.lg, paddingVertical: space.sm, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+  searchBox: { height: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.surfaceMuted, borderRadius: radii.md, paddingLeft: space.md, paddingRight: space.xs },
+  searchInput: { flex: 1, minWidth: 0, height: 46, padding: 0, ...type.body, color: color.text },
+  chips: { paddingTop: space.md },
+  skeletonCard: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden' },
+  footer: { backgroundColor: color.primaryDeep, paddingTop: space.xl, paddingHorizontal: space.xl, alignItems: 'center', gap: space.sm },
+  footerText: { ...type.tagline, fontSize: 15, lineHeight: 22, color: color.textOnDarkMuted, textAlign: 'center' },
+  footerDots: { flexDirection: 'row', justifyContent: 'center', gap: space.xs, opacity: 0.7 },
+  footerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.gold },
 });

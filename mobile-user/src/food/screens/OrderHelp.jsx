@@ -1,15 +1,17 @@
 import { useRef } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePathname } from 'expo-router';
+import { NAV_CLEARANCE, isImmersiveRoute } from '../../components/dh/AppBottomNav';
 import { AlertCircle, ArrowLeft, CheckCircle, Clock, CreditCard, FileText, HelpCircle, Mail, MapPin, MessageCircle, Package, Phone, RefreshCw, Truck, XCircle } from 'lucide-react-native';
-import { Press } from '../../components/ui';
+import { Button, EmptyState, IconButton, SectionHeader, StatusBadge } from '../../components/ds';
 import usePlatformSettings from '../../shared/hooks/usePlatformSettings';
 import { useOrders } from '../context/OrdersContext';
 import { useParams, navigateTo } from '../../lib/webRouter';
 import { alert } from '../../lib/webShim';
-import { poppins, tw } from '../../theme';
-import { Card, HELP, HelpButton, HelpPage, helpText } from '../components/helpUi';
+import { color, radii, space, type } from '../../theme';
+import { Card, HelpPage, HelpRow, helpText } from '../components/helpUi';
 
-const GREEN = '#0a4d2b';
 const commonIssues = [
   { id: 'late-delivery', title: 'Order is Late', icon: Clock, description: "Your order hasn't arrived within the estimated time",
     solutions: ['Check the order tracking page for real-time updates', 'Contact the delivery driver if contact information is available', 'Wait an additional 15-20 minutes as delays can occur', 'Contact support if the order is more than 30 minutes late'],
@@ -38,6 +40,9 @@ const formatDate = (s) => {
 const statusLabel = (s) => ({ placed: 'Order Placed', confirmed: 'Confirmed', preparing: 'Preparing', outForDelivery: 'Out for Delivery', delivered: 'Delivered' })[s] || s;
 
 export default function OrderHelp() {
+  const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const bottomPad = (isImmersiveRoute(pathname) ? 0 : NAV_CLEARANCE) + insets.bottom + space.xxl;
   const platform = usePlatformSettings();
   const { orderId } = useParams();
   const { getOrderById } = useOrders();
@@ -56,20 +61,12 @@ export default function OrderHelp() {
   if (!order) {
     return (
       <HelpPage>
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md }}>
           <Card>
-            <View style={{ paddingVertical: 48, alignItems: 'center', paddingHorizontal: 16 }}>
-              <AlertCircle size={64} color={HELP.muted} />
-              <Text style={{ fontSize: 24, color: HELP.fg, marginTop: 16, marginBottom: 8, ...poppins(700) }}>Order Not Found</Text>
-              <Text style={[helpText.muted, { marginBottom: 24, textAlign: 'center' }]}>We couldn&apos;t find an order with ID: {orderId}</Text>
-              <View style={{ flexDirection: 'row', gap: 16 }}>
-                <HelpButton onPress={() => navigateTo('/user/orders')}>
-                  <Text style={helpText.btn}>View All Orders</Text>
-                </HelpButton>
-                <HelpButton variant="default" onPress={() => navigateTo('/user/help')}>
-                  <Text style={[helpText.btn, { color: '#fff' }]}>Go to Help Center</Text>
-                </HelpButton>
-              </View>
+            <EmptyState icon={AlertCircle} title="Order not found" message={`We couldn't find an order with ID: ${orderId}`} />
+            <View style={{ flexDirection: 'row', gap: space.md, padding: space.lg, paddingTop: 0 }}>
+              <Button title="All orders" variant="outline" onPress={() => navigateTo('/user/orders')} style={{ flex: 1 }} />
+              <Button title="Help centre" onPress={() => navigateTo('/user/help')} style={{ flex: 1 }} />
             </View>
           </Card>
         </ScrollView>
@@ -78,168 +75,125 @@ export default function OrderHelp() {
   }
 
   const field = (label, value, extra) => (
-    <View>
-      <Text style={[helpText.muted, { fontSize: 14, marginBottom: 4 }]}>{label}</Text>
-      <Text style={[{ color: HELP.fg, ...poppins(600) }, extra]}>{value}</Text>
+    <View style={styles.field}>
+      <Text style={[type.small, { color: color.textMuted }]}>{label}</Text>
+      <Text style={[type.bodyStrong, { color: color.text, textAlign: 'right', flexShrink: 1 }, extra]}>{value}</Text>
     </View>
   );
+  const statusTone = { placed: 'info', confirmed: 'info', preparing: 'warning', outForDelivery: 'info', delivered: 'success' }[order.status] || (String(order.status).includes('cancel') ? 'danger' : 'neutral');
 
   return (
     <HelpPage>
-      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-          <Press scale={0.9} onPress={() => navigateTo('/user/help')} style={styles.back} accessibilityLabel="Back">
-            <ArrowLeft size={16} color={HELP.fg} />
-          </Press>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 24, color: HELP.fg, ...poppins(700) }}>Order Help</Text>
-            <Text style={[helpText.muted, { fontSize: 14 }]}>Order {order.id}</Text>
-          </View>
+      <View style={styles.header}>
+        <IconButton icon={ArrowLeft} label="Back" onPress={() => navigateTo('/user/help')} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+            Order help
+          </Text>
+          <Text style={[type.small, { color: color.textMuted }]} numberOfLines={1}>
+            Order {order.id}
+          </Text>
         </View>
-
-        <Card>
-          <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Package size={16} color={GREEN} />
-              <Text style={{ fontSize: 18, color: HELP.fg, ...poppins(600) }}>Order Summary</Text>
+      </View>
+      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: bottomPad }}>
+        <Card style={{ padding: space.lg, gap: space.md }}>
+          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+            <View style={styles.row}>
+              <Package size={20} color={color.primary} />
+              <Text style={[type.subheading, { color: color.text }]}>Order summary</Text>
             </View>
-            <View style={[styles.badge, ['confirmed', 'preparing', 'outForDelivery', 'delivered'].includes(order.status) ? null : { backgroundColor: tw.gray500 }]}>
-              <Text style={{ color: '#fff', fontSize: 12, ...poppins(600) }}>{statusLabel(order.status)}</Text>
-            </View>
+            <StatusBadge tone={statusTone} label={statusLabel(order.status)} />
           </View>
-          <View style={{ padding: 16, paddingTop: 0, gap: 16 }}>
-            {field('Order ID', order.id)}
-            {field('Placed On', formatDate(order.createdAt))}
-            {field('Total Amount', `$${order.total.toFixed(2)}`, { color: GREEN, fontSize: 20 })}
-            {field('Items', `${order.items?.length || 0} items`)}
-            {order.address ? (
-              <View style={{ paddingTop: 16, borderTopWidth: 1, borderTopColor: HELP.border, flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                <MapPin size={16} color={HELP.muted} style={{ marginTop: 2 }} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[helpText.muted, { fontSize: 14, marginBottom: 4 }]}>Delivery Address</Text>
-                  <Text style={{ fontSize: 14, color: HELP.fg, ...poppins(400) }}>
-                    {order.address.street}
-                    {order.address.additionalDetails && `, ${order.address.additionalDetails}`}
-                    {'\n'}
-                    {order.address.city}, {order.address.state} {order.address.zipCode}
-                  </Text>
-                </View>
+          {field('Order ID', order.id)}
+          {field('Placed on', formatDate(order.createdAt))}
+          {field('Items', `${order.items?.length || 0} items`)}
+          {field('Total amount', `₹${order.total.toFixed(2)}`, type.price)}
+          {order.address ? (
+            <View style={[styles.row, { alignItems: 'flex-start', paddingTop: space.md, borderTopWidth: 1, borderTopColor: color.border }]}>
+              <MapPin size={18} color={color.primary} style={{ marginTop: 2 }} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[type.caption, { color: color.textMuted }]}>Delivery address</Text>
+                <Text style={[type.small, { color: color.text }]}>
+                  {order.address.street}
+                  {order.address.additionalDetails && `, ${order.address.additionalDetails}`}
+                  {'\n'}
+                  {order.address.city}, {order.address.state} {order.address.zipCode}
+                </Text>
               </View>
-            ) : null}
-          </View>
+            </View>
+          ) : null}
         </Card>
 
-        <View style={{ gap: 16 }}>
-          <Text style={{ fontSize: 20, color: HELP.fg, ...poppins(700) }}>What can we help you with?</Text>
-          {commonIssues.map((issue) => {
-            const Icon = issue.icon;
-            return (
-              <Card key={issue.id} style={{ shadowOpacity: 0 }}>
-                <View style={{ padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                  <View style={{ padding: 8, backgroundColor: tw.yellow100, borderRadius: 8 }}>
-                    <Icon size={16} color={GREEN} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, color: HELP.fg, ...poppins(600) }}>{issue.title}</Text>
-                    <Text style={[helpText.muted, { fontSize: 14, marginTop: 4 }]}>{issue.description}</Text>
-                  </View>
+        <SectionHeader title="What can we help with?" style={{ marginTop: space.lg, marginBottom: 0 }} />
+        {commonIssues.map((issue) => {
+          const Icon = issue.icon;
+          return (
+            <Card key={issue.id} style={{ padding: space.lg, gap: space.md }}>
+              <View style={[styles.row, { alignItems: 'flex-start', gap: space.md }]}>
+                <View style={styles.iconTile}>
+                  <Icon size={20} color={color.primary} />
                 </View>
-                <View style={{ padding: 16, paddingTop: 0, gap: 12 }}>
-                  <Text style={{ fontSize: 14, color: HELP.fg, ...poppins(600) }}>What to do:</Text>
-                  {issue.solutions.map((s, i) => (
-                    <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                      <CheckCircle size={16} color={tw.green600} style={{ marginTop: 2 }} />
-                      <Text style={[helpText.muted, { fontSize: 14, flex: 1 }]}>{s}</Text>
-                    </View>
-                  ))}
-                  <View style={{ flexDirection: 'row', gap: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: HELP.border, flexWrap: 'wrap' }}>
-                    {issue.actions.map((a, idx) => (
-                      <HelpButton key={idx} variant={idx === 0 ? 'default' : 'outline'} onPress={() => handleAction(a.path)} style={{ minHeight: 32, paddingHorizontal: 12 }}>
-                        <Text style={[helpText.btn, { fontSize: 13 }, idx === 0 ? { color: '#fff' } : null]}>{a.label}</Text>
-                      </HelpButton>
-                    ))}
-                  </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.subheading, { color: color.text }]}>{issue.title}</Text>
+                  <Text style={helpText.muted}>{issue.description}</Text>
                 </View>
-              </Card>
-            );
-          })}
-        </View>
+              </View>
+              <Text style={[type.label, { color: color.text }]}>What to do</Text>
+              {issue.solutions.map((sol, i) => (
+                <View key={i} style={[styles.row, { alignItems: 'flex-start' }]}>
+                  <CheckCircle size={16} color={color.success} style={{ marginTop: 2 }} />
+                  <Text style={[type.small, { color: color.textSecondary, flex: 1 }]}>{sol}</Text>
+                </View>
+              ))}
+              <View style={styles.actions}>
+                {issue.actions.map((a, idx) => (
+                  <Button key={idx} title={a.label} size="sm" variant={idx === 0 ? 'secondary' : 'outline'} fullWidth={false} onPress={() => handleAction(a.path)} style={{ flexGrow: 1, height: 44 }} />
+                ))}
+              </View>
+            </Card>
+          );
+        })}
 
-        <Card gold>
-          <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <HelpCircle size={16} color={GREEN} />
-            <Text style={{ fontSize: 18, color: HELP.fg, ...poppins(600) }}>Quick Actions</Text>
-          </View>
-          <View style={{ padding: 16, paddingTop: 0, gap: 16 }}>
-            {[
-              [Truck, 'Track Order', 'View real-time status', () => navigateTo(`/user/orders/${orderId}`)],
-              [FileText, 'View Invoice', 'Download receipt', () => navigateTo(`/user/orders/${orderId}/invoice`)],
-              [MessageCircle, 'Contact Support', 'Get help now', scrollToSupport],
-            ].map(([Icon, t, sub, fn]) => (
-              <HelpButton key={t} onPress={fn} style={{ justifyContent: 'flex-start', paddingVertical: 12 }}>
-                <Icon size={16} color={HELP.fg} />
-                <View>
-                  <Text style={{ color: HELP.fg, ...poppins(600) }}>{t}</Text>
-                  <Text style={[helpText.muted, { fontSize: 12 }]}>{sub}</Text>
-                </View>
-              </HelpButton>
-            ))}
-          </View>
+        <SectionHeader title="Quick actions" style={{ marginTop: space.lg, marginBottom: 0 }} />
+        <Card style={{ overflow: 'hidden' }}>
+          {[
+            [Truck, 'Track order', 'View real-time status', () => navigateTo(`/user/orders/${orderId}`)],
+            [FileText, 'View invoice', 'Download receipt', () => navigateTo(`/user/orders/${orderId}/invoice`)],
+            [MessageCircle, 'Contact support', 'Get help now', scrollToSupport],
+          ].map(([Icon, t, sub, fn], i) => (
+            <HelpRow key={t} icon={Icon} title={t} subtitle={sub} onPress={fn} last={i === 2} />
+          ))}
         </Card>
 
-        <View onLayout={(e) => { supportY.current = e.nativeEvent.layout.y; }}>
-          <Card>
-            <View style={{ padding: 16, gap: 4 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MessageCircle size={20} color={GREEN} />
-                <Text style={{ fontSize: 20, color: HELP.fg, flex: 1, ...poppins(600) }}>Contact Support for This Order</Text>
-              </View>
-              <Text style={[helpText.muted, { fontSize: 14 }]}>Our support team is ready to help you with order {order.id}</Text>
+        <View
+          onLayout={(e) => {
+            supportY.current = e.nativeEvent.layout.y;
+          }}
+        >
+          <Card gold style={{ padding: space.lg, gap: space.md, marginTop: space.lg }}>
+            <View style={{ gap: space.xs }}>
+              <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+                Contact support for this order
+              </Text>
+              <Text style={[type.small, { color: color.textSecondary }]}>Our support team is ready to help you with order {order.id}</Text>
             </View>
-            <View style={{ padding: 16, gap: 16 }}>
-              <View style={styles.contact}>
-                <View style={styles.contactIcon}><Phone size={20} color={GREEN} /></View>
-                <View>
-                  <Text style={[helpText.title, { marginBottom: 4 }]}>Phone Support</Text>
-                  <Text style={[helpText.muted, { fontSize: 14, marginBottom: 8 }]}>Mention order {order.id}</Text>
-                  <Press scale={0.98} onPress={() => Linking.openURL('tel:+1-800-123-4567').catch(() => {})}>
-                    <Text style={styles.linkText}>+1 (800) 123-4567</Text>
-                  </Press>
-                </View>
-              </View>
-              <View style={styles.contact}>
-                <View style={styles.contactIcon}><Mail size={20} color={GREEN} /></View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[helpText.title, { marginBottom: 4 }]}>Email Support</Text>
-                  <Text style={[helpText.muted, { fontSize: 14, marginBottom: 8 }]}>Include order {order.id} in subject</Text>
-                  {platform.supportEmail ? (
-                    <Press scale={0.98} onPress={() => Linking.openURL(`mailto:${platform.supportEmail}?subject=${encodeURIComponent(`Help with Order ${order.id}`)}`).catch(() => {})}>
-                      <Text style={styles.linkText}>{platform.supportEmail}</Text>
-                    </Press>
-                  ) : (
-                    <Text style={[helpText.muted, { fontSize: 14 }]}>Not configured yet</Text>
-                  )}
-                </View>
-              </View>
-              <View style={{ paddingTop: 16, borderTopWidth: 1, borderTopColor: HELP.border }}>
-                <HelpButton variant="default" onPress={() => alert('Live chat would open here with order context')} style={{ width: '100%' }}>
-                  <MessageCircle size={16} color="#fff" />
-                  <Text style={[helpText.btn, { color: '#fff' }]}>Start Live Chat</Text>
-                </HelpButton>
-              </View>
-            </View>
+            <Card style={{ overflow: 'hidden' }}>
+              <HelpRow icon={Phone} title="Phone support" subtitle={`Mention order ${order.id} · +1 (800) 123-4567`} onPress={() => Linking.openURL('tel:+1-800-123-4567').catch(() => {})} />
+              <HelpRow
+                icon={Mail}
+                title="Email support"
+                subtitle={platform.supportEmail ? `Include order ${order.id} in subject · ${platform.supportEmail}` : `Include order ${order.id} in subject · Not configured yet`}
+                onPress={platform.supportEmail ? () => Linking.openURL(`mailto:${platform.supportEmail}?subject=${encodeURIComponent(`Help with Order ${order.id}`)}`).catch(() => {}) : undefined}
+                last
+              />
+            </Card>
+            <Button title="Start live chat" icon={MessageCircle} onPress={() => alert('Live chat would open here with order context')} />
           </Card>
         </View>
 
-        <View style={{ flexDirection: 'row', gap: 16 }}>
-          <HelpButton onPress={() => navigateTo('/user/orders')} style={{ flex: 1 }}>
-            <ArrowLeft size={16} color={HELP.fg} />
-            <Text style={helpText.btn}>Back to All Orders</Text>
-          </HelpButton>
-          <HelpButton onPress={() => navigateTo('/user/help')} style={{ flex: 1 }}>
-            <HelpCircle size={16} color={HELP.fg} />
-            <Text style={helpText.btn}>Help Center</Text>
-          </HelpButton>
+        <View style={{ flexDirection: 'row', gap: space.md, marginTop: space.sm }}>
+          <Button title="All orders" icon={ArrowLeft} variant="outline" onPress={() => navigateTo('/user/orders')} style={{ flex: 1 }} />
+          <Button title="Help centre" icon={HelpCircle} variant="outline" onPress={() => navigateTo('/user/help')} style={{ flex: 1 }} />
         </View>
       </ScrollView>
     </HelpPage>
@@ -247,9 +201,9 @@ export default function OrderHelp() {
 }
 
 const styles = StyleSheet.create({
-  back: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  badge: { backgroundColor: GREEN, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999 },
-  contact: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 16, backgroundColor: 'rgba(245,243,236,0.5)', borderRadius: 8 },
-  contactIcon: { padding: 8, backgroundColor: tw.orange100, borderRadius: 8 },
-  linkText: { fontSize: 14, color: HELP.primary, ...poppins(500) },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.sm, paddingVertical: space.xs, minHeight: 56, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  field: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md },
+  iconTile: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  actions: { flexDirection: 'row', gap: space.sm, paddingTop: space.md, borderTopWidth: 1, borderTopColor: color.border, flexWrap: 'wrap' },
 });

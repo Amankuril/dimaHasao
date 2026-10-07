@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
-import { CheckCircle2, Copy, Tag, Ticket, X } from 'lucide-react-native';
-import { Press } from '../../../components/ui';
-import { tw } from '../../../theme';
+import { AlertCircle, CheckCircle2, Clock, Copy, Tag, Ticket, X } from 'lucide-react-native';
+import { Button, Card, EmptyState, IconButton, SectionHeader } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { color, elevation, radii, space, type } from '../../../theme';
 import { userService } from '../../services/userService';
-import { BackBtn, Eyebrow, Pulse, fo, headerShadow, sh, useHeaderTop } from '../ui';
+import { PageTitle, Pulse, useNavPad } from '../ui';
 
 // Web: Taxi/modules/user/pages/PromoCodes.jsx (/taxi/user/promo)
 
@@ -30,18 +31,19 @@ const toPromoCard = (p) => ({
 });
 
 const SkeletonCard = () => (
-  <View style={[st.card, { backgroundColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.8)', gap: 12 }]}>
+  <Card style={{ gap: space.md }}>
     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-      <Pulse style={{ height: 16, width: 96, borderRadius: 8, backgroundColor: tw.slate200 }} />
-      <Pulse style={{ height: 16, width: 64, borderRadius: 8, backgroundColor: tw.slate100 }} />
+      <Pulse style={{ height: 16, width: 96, borderRadius: 8, backgroundColor: color.surfaceMuted }} />
+      <Pulse style={{ height: 16, width: 64, borderRadius: 8, backgroundColor: color.surfaceMuted }} />
     </View>
-    <Pulse style={{ height: 12, width: '75%', borderRadius: 6, backgroundColor: tw.slate100 }} />
-    <Pulse style={{ height: 32, borderRadius: 10, backgroundColor: tw.slate100 }} />
-  </View>
+    <Pulse style={{ height: 12, width: '75%', borderRadius: 6, backgroundColor: color.surfaceMuted }} />
+    <Pulse style={{ height: 48, borderRadius: radii.md, backgroundColor: color.surfaceMuted }} />
+  </Card>
 );
 
 export default function PromoCodes() {
-  const top = useHeaderTop();
+  const bottomPad = useNavPad(space.xxl);
+  const toastBottom = NAV_CLEARANCE + useSafeAreaInsets().bottom + space.md;
   const [promos, setPromos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(null);
@@ -98,96 +100,89 @@ export default function PromoCodes() {
   };
 
   return (
-    <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.38, 1]} style={st.flex}>
-      <View style={[st.header, headerShadow, { paddingTop: top }]}>
-        <BackBtn />
-        <View style={st.flex}>
-          <Eyebrow>Offers & coupons</Eyebrow>
-          <Text style={st.title}>Promo Codes</Text>
-        </View>
-        <Tag size={20} color={tw.yellow500} strokeWidth={2} />
-      </View>
+    <View style={st.flex}>
+      <PageTitle title="Promo codes" subtitle="Offers & coupons" right={<View style={st.tagIcon}><Tag size={20} color={color.goldText} /></View>} />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 112, gap: 16 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[st.content, { paddingBottom: bottomPad }]} showsVerticalScrollIndicator={false}>
         {errorBanner ? (
-          <View style={st.banner}>
-            <X size={14} color={tw.red500} strokeWidth={2.5} />
-            <Text style={st.bannerText}>{errorBanner}</Text>
-            <Press onPress={() => setErrorBanner(null)} accessibilityLabel="Dismiss"><X size={13} color={tw.red400} /></Press>
+          <View style={st.banner} accessibilityRole="alert">
+            <AlertCircle size={18} color={color.danger} />
+            <Text style={[type.small, st.grow, { color: color.danger }]}>{errorBanner}</Text>
+            <IconButton icon={X} label="Dismiss" iconSize={18} iconColor={color.danger} onPress={() => setErrorBanner(null)} style={st.dismiss} />
           </View>
         ) : null}
 
         <View>
-          <Eyebrow style={{ fontSize: 10, letterSpacing: 2.6 }}>Available Offers</Eyebrow>
-          <Text style={st.h2}>Copy a code</Text>
-          <Text style={st.hint}>Enter it in the coupon row when you pick your vehicle.</Text>
+          <SectionHeader title="Available offers" style={{ marginBottom: space.xs }} />
+          <Text style={[type.small, { color: color.textMuted }]}>Copy a code and enter it in the coupon row when you pick your vehicle.</Text>
         </View>
 
         {loading ? [0, 1, 2].map((i) => <SkeletonCard key={i} />) : null}
 
-        {!loading && promos.length === 0 ? (
-          <View style={{ alignItems: 'center', paddingVertical: 64, gap: 16 }}>
-            <View style={st.emptyIcon}><Ticket size={28} color={tw.slate300} strokeWidth={1.5} /></View>
-            <Text style={{ fontSize: 14, color: tw.slate500, ...fo(900) }}>No promo codes available right now</Text>
-          </View>
-        ) : null}
+        {!loading && promos.length === 0 ? <EmptyState icon={Ticket} title="No promo codes available right now" message="New offers for your district will show up here." /> : null}
 
         {!loading ? promos.map((p) => {
           const isCopied = copied === p.code;
           return (
-            <View key={p.id} style={[st.card, isCopied ? { backgroundColor: 'rgba(236,253,245,0.8)', borderColor: tw.emerald200, boxShadow: '0 4px 14px rgba(16,185,129,0.10)' } : [sh, { backgroundColor: 'rgba(255,255,255,0.9)', borderColor: 'rgba(255,255,255,0.8)' }]]}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                <View style={st.flex}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={st.code}>{p.code}</Text>
-                    {isCopied ? <CheckCircle2 size={16} color={tw.emerald500} strokeWidth={2.5} /> : null}
+            <Card key={p.id} style={[st.card, isCopied && st.cardCopied]}>
+              <View style={st.cardTop}>
+                <View style={st.grow}>
+                  <View style={st.codeChip}>
+                    <Text style={st.code} numberOfLines={1} selectable>{p.code}</Text>
+                    {isCopied ? <CheckCircle2 size={16} color={color.success} accessibilityLabel="Copied" /> : null}
                   </View>
-                  <Text style={st.meta}>{p.service}{p.minFare > 0 ? ` · Min fare ₹${p.minFare}` : ''}</Text>
+                  <Text style={[type.small, { color: color.textMuted, marginTop: space.sm }]}>
+                    {p.service}{p.minFare > 0 ? ` · Min fare ₹${p.minFare}` : ''}
+                  </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={st.pct}>{p.discountPercentage}%<Text style={st.off}> off</Text></Text>
-                  {p.maxDiscount > 0 ? <Text style={st.small}>up to ₹{p.maxDiscount}</Text> : null}
-                  {p.expiry ? <Text style={st.small}>Expires {p.expiry}</Text> : null}
+                  <Text style={[type.price, { color: color.goldText }]}>{p.discountPercentage}% off</Text>
+                  {p.maxDiscount > 0 ? <Text style={[type.caption, { color: color.textMuted }]}>up to ₹{p.maxDiscount}</Text> : null}
                 </View>
               </View>
-              <Press onPress={() => copyCode(p.code)} scale={0.97} style={[st.copyBtn, { backgroundColor: isCopied ? tw.emerald100 : tw.slate900 }]}>
-                {isCopied ? <CheckCircle2 size={13} color={tw.emerald700} strokeWidth={2.5} /> : <Copy size={13} color="#fff" strokeWidth={2.5} />}
-                <Text style={[st.copyText, { color: isCopied ? tw.emerald700 : '#fff' }]}>{isCopied ? 'Copied' : 'Copy Code'}</Text>
-              </Press>
-            </View>
+              {p.expiry ? (
+                <View style={st.expiry}>
+                  <Clock size={14} color={color.textMuted} />
+                  <Text style={[type.caption, { color: color.textMuted }]}>Expires {p.expiry}</Text>
+                </View>
+              ) : null}
+              <Button
+                title={isCopied ? 'Copied' : 'Copy code'}
+                icon={isCopied ? CheckCircle2 : Copy}
+                variant="secondary"
+                accessibilityLabel={isCopied ? `${p.code} copied` : `Copy code ${p.code}`}
+                onPress={() => copyCode(p.code)}
+              />
+            </Card>
           );
         }) : null}
       </ScrollView>
 
       {toast ? (
-        <View pointerEvents="none" style={st.toastWrap}>
-          <View style={[st.toast, { backgroundColor: toast.type === 'success' ? tw.emerald600 : tw.red600 }]}>
-            <Text style={st.toastText}>{toast.type === 'success' ? '✓ ' : '✗ '}{toast.msg}</Text>
+        <View pointerEvents="none" style={[st.toastWrap, { bottom: toastBottom }]}>
+          <View style={[st.toast, { backgroundColor: toast.type === 'success' ? color.success : color.danger }]} accessibilityLiveRegion="polite">
+            {toast.type === 'success' ? <CheckCircle2 size={16} color={color.textInverse} /> : <AlertCircle size={16} color={color.textInverse} />}
+            <Text style={[type.label, { color: color.textInverse, flexShrink: 1 }]}>{toast.msg}</Text>
           </View>
         </View>
       ) : null}
-    </LinearGradient>
+    </View>
   );
 }
 
 const st = StyleSheet.create({
-  flex: { flex: 1 },
-  header: { backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.8)' },
-  title: { fontSize: 19, color: tw.slate900, lineHeight: 21, ...fo(900) },
-  banner: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red100, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  bannerText: { flex: 1, fontSize: 12, color: tw.red600, ...fo(900) },
-  h2: { marginTop: 2, fontSize: 16, color: tw.slate900, ...fo(900) },
-  hint: { marginTop: 4, fontSize: 12, color: tw.slate400, ...fo(700) },
-  emptyIcon: { width: 64, height: 64, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center' },
-  card: { borderRadius: 20, borderWidth: 1, padding: 16 },
-  code: { fontSize: 16, letterSpacing: 0.8, color: tw.slate900, ...fo(900) },
-  meta: { fontSize: 11, color: tw.slate400, marginTop: 2, ...fo(700) },
-  pct: { fontSize: 18, color: tw.slate900, ...fo(900) },
-  off: { fontSize: 11, color: tw.slate400, ...fo(700) },
-  small: { fontSize: 9, color: tw.slate400, ...fo(700) },
-  copyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, borderRadius: 12 },
-  copyText: { fontSize: 12, letterSpacing: 1.8, textTransform: 'uppercase', ...fo(900) },
-  toastWrap: { position: 'absolute', bottom: 96, left: 0, right: 0, alignItems: 'center' },
-  toast: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  toastText: { color: '#fff', fontSize: 12, ...fo(900) },
+  flex: { flex: 1, backgroundColor: color.bg },
+  grow: { flex: 1, minWidth: 0 },
+  content: { paddingHorizontal: space.lg, paddingTop: space.xs, gap: space.md },
+  tagIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.goldSoft, alignItems: 'center', justifyContent: 'center' },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.dangerSoft, borderRadius: radii.md, paddingLeft: space.md },
+  dismiss: { borderRadius: radii.md },
+  card: { gap: space.md },
+  cardCopied: { borderColor: color.success, backgroundColor: color.successSoft },
+  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  codeChip: { alignSelf: 'flex-start', maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, paddingVertical: space.xs + 2, borderRadius: radii.sm, borderWidth: 1.5, borderStyle: 'dashed', borderColor: color.gold, backgroundColor: color.goldSoft },
+  code: { ...type.subheading, color: color.text, flexShrink: 1 },
+  expiry: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  toastWrap: { position: 'absolute', left: space.lg, right: space.lg, alignItems: 'center' },
+  toast: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.lg, paddingVertical: space.md, borderRadius: radii.md, ...elevation.float },
 });

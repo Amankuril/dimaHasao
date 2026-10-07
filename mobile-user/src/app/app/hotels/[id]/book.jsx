@@ -2,15 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Image from '../../../../components/Img';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Fa from '../../../../components/Fa';
 import { Press } from '../../../../components/ui';
 import { Dialog } from '../../../../components/kit';
+import { StatusBadge } from '../../../../components/ds';
 import { Header, PatternDivider } from '../../../../components/dh/Header';
 import { DateField, Field, FormScroll, GreenButton, Panel, PanelTitle, Pulse, StateBlock, Stepper, dhs, rupees, toIso } from '../../../../components/dh/ui';
 import { useBooking } from '../../../../context/BookingContext';
 import { createHotelBooking as createHotelBookingApi, fetchHotelById, quoteStay, verifyHotelPayment } from '../../../../api/dh/hotelApi';
 import { initRazorpayPayment } from '../../../../lib/razorpay';
-import { dh, montserrat, poppins, shadow, tw } from '../../../../theme';
+import { color, elevation, radii, space, type } from '../../../../theme';
 
 // Web: DimaHasao/pages/HotelBookingScreen.jsx (/app/hotels/:id/book?roomId=&nights=)
 // Every amount comes from POST /hotel/bookings/quote.
@@ -46,6 +48,7 @@ export default function HotelBookingScreen() {
   const { id } = params;
   const roomId = params.roomId ? String(params.roomId) : null;
   const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { user, showToast, refreshHotelBookings } = useBooking();
 
   const [hotel, setHotel] = useState(null);
@@ -265,11 +268,11 @@ export default function HotelBookingScreen() {
       <View style={dhs.page}>
         <Header title="REVIEW & BOOK" subtitle="Loading your stay" showBack rightAction="none" />
         <PatternDivider variant="green-gold" />
-        <View style={{ padding: 14, gap: 12 }}>
+        <View style={{ padding: space.lg, gap: space.md }} accessibilityLabel="Loading your stay">
           {[0, 1, 2].map((n) => (
-            <Panel key={n} style={{ gap: 8 }}>
-              <Pulse style={{ height: 14, width: '50%' }} />
-              <Pulse tone={100} style={{ height: 12 }} />
+            <Panel key={n} style={{ gap: space.sm }}>
+              <Pulse style={{ height: 16, width: '50%' }} />
+              <Pulse tone={100} style={{ height: 13 }} />
             </Panel>
           ))}
         </View>
@@ -282,7 +285,7 @@ export default function HotelBookingScreen() {
       <View style={dhs.page}>
         <Header title="REVIEW & BOOK" showBack rightAction="none" />
         <PatternDivider variant="green-gold" />
-        <StateBlock card={false} icon="fa-solid fa-hotel" title="This stay is no longer available" actionLabel="See All Stays" onAction={() => router.replace('/app/hotels')} />
+        <StateBlock card={false} icon="fa-solid fa-hotel" title="This stay is no longer available" actionLabel="See all stays" onAction={() => router.replace('/app/hotels')} />
       </View>
     );
   }
@@ -292,23 +295,30 @@ export default function HotelBookingScreen() {
       ? `Reserve (${rupees(quote.totalAmount)} at hotel)`
       : `Confirm & Pay (${rupees(quote.totalAmount)})`
     : 'Loading price…';
+  const ctaShort = quote ? (paymentMethod === 'cash' ? 'Reserve' : 'Confirm & pay') : 'Loading…';
 
   return (
     <View style={dhs.page}>
       <Header title="REVIEW & BOOK" subtitle="Confirm your stay details" showBack rightAction="none" />
       <PatternDivider variant="green-gold" />
 
-      <FormScroll contentContainerStyle={{ padding: 14, gap: 16 }} bottomSpace={40}>
-        <Panel style={{ gap: 12 }}>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
+      <FormScroll contentContainerStyle={{ padding: space.lg, gap: space.lg }} bottomSpace={space.xxl}>
+        <Panel style={{ gap: space.md }}>
+          <View style={{ flexDirection: 'row', gap: space.md }}>
             <Image source={{ uri: selectedRoom.image || hotel.heroImage }} style={styles.thumb} />
-            <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start' }}>
-              <Text style={styles.typeBadge}>{hotel.type}</Text>
-              <Text style={[dhs.h3, { marginTop: 4 }]} numberOfLines={1}>{hotel.name}</Text>
-              <Text style={styles.roomName}>{selectedRoom.name}</Text>
-              <View style={[dhs.row, { gap: 4, marginTop: 2 }]}>
-                <Fa name="fa-solid fa-location-dot" size={11} color={tw.emerald700} />
-                <Text style={styles.loc} numberOfLines={1}>{hotel.location}</Text>
+            <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 2 }}>
+              <StatusBadge label={hotel.type} tone="gold" />
+              <Text style={[dhs.h3, { marginTop: space.xs }]} numberOfLines={2}>
+                {hotel.name}
+              </Text>
+              <Text style={styles.roomName} numberOfLines={1}>
+                {selectedRoom.name}
+              </Text>
+              <View style={[dhs.row, { gap: space.xs + 2 }]}>
+                <Fa name="fa-solid fa-location-dot" size={12} color={color.primary} />
+                <Text style={styles.loc} numberOfLines={1}>
+                  {hotel.location}
+                </Text>
               </View>
             </View>
           </View>
@@ -318,56 +328,56 @@ export default function HotelBookingScreen() {
             <Text style={styles.checkout}>Checking out {fmt(`${checkOutDate}T00:00:00`, { weekday: 'short', day: 'numeric', month: 'short' })}</Text>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 8, paddingTop: 8 }}>
+          <View style={{ gap: space.sm }}>
             {[
-              ['Nights', nights, setNights],
-              ['Rooms', roomCount, setRoomCount],
-              ['Adults', adults, setAdults],
-            ].map(([label, value, set]) => (
+              ['Nights', nights, setNights, 'fa-regular fa-moon'],
+              ['Rooms', roomCount, setRoomCount, 'fa-solid fa-door-closed'],
+              ['Adults', adults, setAdults, 'fa-solid fa-user'],
+            ].map(([label, value, set, icon]) => (
               <View key={label} style={styles.counter}>
-                <Text style={styles.counterLabel}>{label}</Text>
-                <View style={{ marginTop: 4 }}>
-                  <Stepper value={value} onChange={set} label={label} />
+                <View style={[dhs.row, { gap: space.sm, flexShrink: 1 }]}>
+                  <Fa name={icon} size={16} color={color.primary} />
+                  <Text style={styles.counterLabel}>{label}</Text>
                 </View>
+                <Stepper value={value} onChange={set} label={label} />
               </View>
             ))}
           </View>
         </Panel>
 
-        <Panel style={{ gap: 12 }}>
-          <PanelTitle icon="fa-solid fa-user-check">Guest Information</PanelTitle>
-          <View style={{ gap: 10 }}>
-            <Field label="Full Name" value={guestName} onChangeText={setGuestName} autoCapitalize="words" autoComplete="name" />
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Field style={{ flex: 1 }} label="Phone Number" value={guestPhone} onChangeText={setGuestPhone} keyboardType="phone-pad" autoComplete="tel" />
-              <Field style={{ flex: 1 }} label="Email ID" value={guestEmail} onChangeText={setGuestEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
-            </View>
-            <Field label="Special Requests (Optional)" placeholder="e.g. Early check-in, high floor, quiet room" value={specialRequest} onChangeText={setSpecialRequest} />
+        <Panel style={{ gap: space.md }}>
+          <PanelTitle icon="fa-solid fa-user-check">Guest information</PanelTitle>
+          <View style={{ gap: space.md }}>
+            <Field label="Full name" value={guestName} onChangeText={setGuestName} autoCapitalize="words" autoComplete="name" />
+            <Field label="Phone number" value={guestPhone} onChangeText={setGuestPhone} keyboardType="phone-pad" autoComplete="tel" />
+            <Field label="Email ID" value={guestEmail} onChangeText={setGuestEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+            <Field label="Special requests (optional)" placeholder="e.g. Early check-in, high floor, quiet room" value={specialRequest} onChangeText={setSpecialRequest} />
           </View>
         </Panel>
 
-        <Panel pad={14}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Field style={{ flex: 1 }} placeholder="Promo code" value={promoCode} onChangeText={setPromoCode} autoCapitalize="characters" inputStyle={poppins(700)} />
-            <GreenButton title="Apply" onPress={handleApplyPromo} />
+        <Panel style={{ gap: space.sm }}>
+          <PanelTitle icon="fa-solid fa-tag">Promo code</PanelTitle>
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <Field style={{ flex: 1 }} placeholder="Promo code" value={promoCode} onChangeText={setPromoCode} autoCapitalize="characters" inputStyle={type.bodyStrong} />
+            <GreenButton title="Apply" variant="secondary" fullWidth={false} onPress={handleApplyPromo} />
           </View>
           {quote?.couponCode ? (
-            <View style={[dhs.row, { gap: 4, marginTop: 8, flexWrap: 'wrap' }]}>
-              <Fa name="fa-solid fa-tag" size={11} color={tw.emerald700} />
+            <View style={[dhs.row, { gap: space.sm, flexWrap: 'wrap' }]}>
+              <Fa name="fa-solid fa-circle-check" size={14} color={color.success} />
               <Text style={styles.couponOk}>
                 Coupon {quote.couponCode} applied — saving {rupees(quote.discount)}
               </Text>
-              <Text onPress={clearPromo} style={styles.remove} accessibilityRole="button">
-                remove
-              </Text>
+              <Press onPress={clearPromo} accessibilityLabel="Remove coupon" style={styles.remove}>
+                <Text style={styles.removeText}>Remove</Text>
+              </Press>
             </View>
           ) : null}
           {quote?.couponMessage && !quote?.couponCode ? <Text style={styles.couponWarn}>{quote.couponMessage}</Text> : null}
         </Panel>
 
-        <Panel style={{ gap: 12 }}>
-          <PanelTitle icon="fa-solid fa-credit-card">Payment Method</PanelTitle>
-          <View style={{ gap: 8 }} accessibilityRole="radiogroup">
+        <Panel style={{ gap: space.md }}>
+          <PanelTitle icon="fa-solid fa-credit-card">Payment method</PanelTitle>
+          <View style={{ gap: space.sm }} accessibilityRole="radiogroup">
             {METHODS.map((method) => {
               const selected = paymentMethod === method.id;
               return (
@@ -377,35 +387,36 @@ export default function HotelBookingScreen() {
                   onPress={() => setPaymentMethod(method.id)}
                   accessibilityRole="radio"
                   accessibilityState={{ selected }}
+                  accessibilityLabel={method.badge ? `${method.label}, ${method.badge}` : method.label}
                   style={[styles.method, selected && styles.methodSelected]}
                 >
-                  <View style={[dhs.row, { gap: 12, flex: 1 }]}>
-                    <View style={[styles.radio, selected && { borderColor: tw.emerald800 }]}>{selected ? <View style={styles.radioDot} /> : null}</View>
-                    <Fa name={method.icon} size={14} color={tw.emerald900} />
+                  <View style={[styles.radio, selected && { borderColor: color.primary }]}>{selected ? <View style={styles.radioDot} /> : null}</View>
+                  <Fa name={method.icon} size={18} color={color.primary} />
+                  <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                     <Text style={styles.methodLabel}>{method.label}</Text>
+                    {method.badge ? <Text style={styles.methodBadge}>{method.badge}</Text> : null}
                   </View>
-                  {method.badge ? <Text style={styles.methodBadge}>{method.badge}</Text> : null}
                 </Press>
               );
             })}
           </View>
         </Panel>
 
-        <Panel style={{ gap: 10 }}>
-          <Text style={dhs.h3}>Fare Summary</Text>
+        <Panel style={{ gap: space.md }}>
+          <PanelTitle icon="fa-solid fa-receipt">Fare summary</PanelTitle>
           {quoteError ? (
             <Text style={styles.quoteError}>{quoteError}</Text>
           ) : !quote ? (
-            <View style={{ gap: 8, paddingVertical: 4 }}>
-              <Pulse tone={100} style={{ height: 12 }} />
-              <Pulse tone={100} style={{ height: 12, width: '66%' }} />
-              <Pulse style={{ height: 16, width: '50%' }} />
+            <View style={{ gap: space.sm, paddingVertical: space.xs }} accessibilityLabel="Loading price">
+              <Pulse tone={100} style={{ height: 13 }} />
+              <Pulse tone={100} style={{ height: 13, width: '66%' }} />
+              <Pulse style={{ height: 18, width: '50%' }} />
             </View>
           ) : (
-            <View style={[{ gap: 6 }, quoting && { opacity: 0.5 }]}>
+            <View style={[{ gap: space.sm }, quoting && { opacity: 0.5 }]}>
               <View style={styles.line}>
                 <Text style={styles.lineLabel}>
-                  Room Base Fare ({quote.totalNights}N × {quote.rooms} room{quote.rooms > 1 ? 's' : ''})
+                  Room base fare ({quote.totalNights}N × {quote.rooms} room{quote.rooms > 1 ? 's' : ''})
                 </Text>
                 <Text style={styles.lineValue}>{rupees(quote.baseAmount)}</Text>
               </View>
@@ -417,16 +428,16 @@ export default function HotelBookingScreen() {
               ) : null}
               {quote.discount > 0 ? (
                 <View style={styles.line}>
-                  <Text style={[styles.lineLabel, styles.discount]}>Promo Discount ({quote.couponCode})</Text>
+                  <Text style={[styles.lineLabel, styles.discount]}>Promo discount ({quote.couponCode})</Text>
                   <Text style={[styles.lineValue, styles.discount]}>- {rupees(quote.discount)}</Text>
                 </View>
               ) : null}
               <View style={styles.line}>
-                <Text style={styles.lineLabel}>GST &amp; Hospitality Taxes ({quote.taxRate}%)</Text>
+                <Text style={styles.lineLabel}>GST &amp; hospitality taxes ({quote.taxRate}%)</Text>
                 <Text style={styles.lineValue}>{rupees(quote.taxes)}</Text>
               </View>
               <View style={[styles.line, styles.total]}>
-                <Text style={styles.totalLabel}>Total Amount</Text>
+                <Text style={styles.totalLabel}>Total amount</Text>
                 <Text style={styles.totalValue}>{rupees(quote.totalAmount)}</Text>
               </View>
               {paymentMethod === 'cash' ? <Text style={styles.note}>You&apos;ll pay this at the property on arrival.</Text> : null}
@@ -438,52 +449,63 @@ export default function HotelBookingScreen() {
             </View>
           )}
         </Panel>
-
-        <GreenButton size="lg" icon="fa-solid fa-lock" title={cta} onPress={handleConfirmStay} disabled={!quote || quoting} loading={submitting} style={shadow('md')} />
       </FormScroll>
 
-      <Dialog visible={isSuccessModalOpen && Boolean(createdBookingData)} onClose={() => {}} closeOnBackdrop={false} backdrop="rgba(0,0,0,0.7)" panelStyle={[styles.modal, { maxHeight: height * 0.9 }]}>
+      <View style={[styles.bar, { paddingBottom: space.md + insets.bottom }]}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.barLabel} numberOfLines={1}>
+            {paymentMethod === 'cash' ? 'Pay at hotel' : 'Total payable'}
+          </Text>
+          {quote ? <Text style={[styles.barPrice, quoting && { opacity: 0.5 }]}>{rupees(quote.totalAmount)}</Text> : <Pulse style={{ height: 20, width: 88, marginTop: 4 }} />}
+        </View>
+        <GreenButton size="lg" fullWidth={false} icon="fa-solid fa-lock" title={ctaShort} loadingTitle="Processing…" accessibilityLabel={cta} onPress={handleConfirmStay} disabled={!quote || quoting} loading={submitting} />
+      </View>
+
+      <Dialog visible={isSuccessModalOpen && Boolean(createdBookingData)} onClose={() => {}} closeOnBackdrop={false} backdrop={color.overlay} panelStyle={[styles.modal, { maxHeight: height * 0.9 }]}>
         {createdBookingData ? (
-          <ScrollView contentContainerStyle={{ gap: 16 }} showsVerticalScrollIndicator={false}>
-            <View style={{ alignItems: 'center', gap: 4 }}>
+          <ScrollView contentContainerStyle={{ gap: space.lg }} showsVerticalScrollIndicator={false}>
+            <View style={{ alignItems: 'center', gap: space.xs }}>
               <View style={styles.okIcon}>
-                <Fa name="fa-solid fa-circle-check" size={24} color={tw.emerald800} />
+                <Fa name="fa-solid fa-circle-check" size={28} color={color.success} />
               </View>
-              <Text style={styles.okTitle}>Booking Confirmed!</Text>
+              <Text style={styles.okTitle} accessibilityRole="header">
+                Booking confirmed!
+              </Text>
               <Text style={styles.okText}>Your stay has been reserved successfully</Text>
-              <Text style={styles.okId}>ID: {createdBookingData.id}</Text>
+              <Text style={styles.okId} selectable>
+                ID: {createdBookingData.id}
+              </Text>
             </View>
 
             <View style={styles.invoice}>
               <View style={styles.invoiceHead}>
-                <Text style={styles.invoiceKicker}>PROPERTY &amp; ROOM</Text>
+                <Text style={styles.invoiceKicker}>Property &amp; room</Text>
                 <Text style={styles.invoiceHotel}>{createdBookingData.hotelName}</Text>
                 <Text style={styles.invoiceRoom}>{createdBookingData.roomName}</Text>
               </View>
               <View style={styles.invoiceGrid}>
                 {[
-                  ['Check-in:', createdBookingData.checkIn],
-                  ['Check-out:', createdBookingData.checkOut],
-                  ['Guests:', createdBookingData.guests],
-                  ['Payment:', createdBookingData.paymentStatus, true],
+                  ['Check-in', createdBookingData.checkIn],
+                  ['Check-out', createdBookingData.checkOut],
+                  ['Guests', createdBookingData.guests],
+                  ['Payment', createdBookingData.paymentStatus, true],
                 ].map(([label, value, green]) => (
-                  <View key={label} style={{ width: '50%', marginBottom: 8 }}>
+                  <View key={label} style={{ width: '50%', marginBottom: space.sm, paddingRight: space.sm }}>
                     <Text style={styles.invoiceLabel}>{label}</Text>
-                    <Text style={[styles.invoiceValue, green && { color: tw.emerald800 }]}>{value}</Text>
+                    <Text style={[styles.invoiceValue, green && { color: color.success }]}>{value}</Text>
                   </View>
                 ))}
               </View>
               <View style={styles.invoiceTotal}>
-                <Text style={styles.invoiceTotalLabel}>Total Paid/Payable:</Text>
+                <Text style={styles.invoiceTotalLabel}>Total paid/payable</Text>
                 <Text style={styles.invoiceTotalValue}>₹{Number(createdBookingData.totalAmount || 0).toLocaleString('en-IN')}</Text>
               </View>
             </View>
 
-            <View style={{ gap: 8, paddingTop: 4 }}>
+            <View style={{ gap: space.sm }}>
               <GreenButton
                 title="View in My Bookings"
                 icon="fa-solid fa-calendar-check"
-                style={{ paddingVertical: 12, ...shadow('md') }}
                 onPress={() => {
                   setIsSuccessModalOpen(false);
                   router.dismissTo('/app');
@@ -492,8 +514,7 @@ export default function HotelBookingScreen() {
               />
               <GreenButton
                 tone="gray"
-                title="Back to Home"
-                textStyle={poppins(600)}
+                title="Back to home"
                 onPress={() => {
                   setIsSuccessModalOpen(false);
                   router.dismissTo('/app');
@@ -508,46 +529,49 @@ export default function HotelBookingScreen() {
 }
 
 const styles = StyleSheet.create({
-  thumb: { width: 80, height: 80, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray100 },
-  typeBadge: { fontSize: 10, lineHeight: 15, color: tw.amber700, backgroundColor: tw.amber50, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: tw.amber200, overflow: 'hidden', ...poppins(700) },
-  roomName: { fontSize: 12, lineHeight: 16, color: tw.emerald800, ...poppins(600) },
-  loc: { flex: 1, fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(400) },
-  divided: { paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  checkout: { fontSize: 10, lineHeight: 15, color: tw.gray400, marginTop: 4, ...poppins(400) },
-  counter: { flex: 1, alignItems: 'center', backgroundColor: dh.cream, padding: 8, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(229,221,195,0.6)' },
-  counterLabel: { fontSize: 10, lineHeight: 15, color: tw.gray500, ...poppins(400) },
-  couponOk: { fontSize: 11, lineHeight: 16.5, color: tw.emerald700, flexShrink: 1, ...poppins(600) },
-  remove: { fontSize: 11, lineHeight: 16.5, color: tw.gray400, textDecorationLine: 'underline', marginLeft: 4, ...poppins(600) },
-  couponWarn: { fontSize: 11, lineHeight: 16.5, color: tw.amber700, marginTop: 8, ...poppins(600) },
-  method: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: dh.border, backgroundColor: 'rgba(250,246,237,0.4)' },
-  methodSelected: { borderColor: tw.emerald700, borderWidth: 2, padding: 11, backgroundColor: 'rgba(236,253,245,0.7)' },
-  radio: { width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, borderColor: tw.gray400, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: tw.emerald800 },
-  methodLabel: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(600) },
-  methodBadge: { fontSize: 9.5, lineHeight: 14, color: tw.emerald800, backgroundColor: '#fff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: tw.emerald200, overflow: 'hidden', ...poppins(700) },
-  quoteError: { fontSize: 12, lineHeight: 16, color: tw.red600, backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red100, borderRadius: 12, padding: 10, ...poppins(400) },
-  line: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  lineLabel: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  lineValue: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(600) },
-  discount: { color: tw.emerald700, ...poppins(600) },
-  total: { paddingTop: 8, marginTop: 2, borderTopWidth: 1, borderTopColor: tw.gray200, alignItems: 'baseline' },
-  totalLabel: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  totalValue: { fontSize: 18, lineHeight: 28, color: tw.emerald950, ...montserrat(900) },
-  note: { fontSize: 11, lineHeight: 16.5, color: tw.amber700, paddingTop: 4, ...poppins(600) },
-  modal: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: tw.emerald200, ...shadow('2xl') },
-  okIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: tw.emerald100, alignItems: 'center', justifyContent: 'center' },
-  okTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...montserrat(700) },
-  okText: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  okId: { fontSize: 12, lineHeight: 16, color: tw.emerald900, backgroundColor: dh.cream, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: dh.border, overflow: 'hidden', fontFamily: 'monospace', fontWeight: '700' },
-  invoice: { backgroundColor: dh.cream, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: dh.border, gap: 8 },
-  invoiceHead: { borderBottomWidth: 1, borderBottomColor: dh.border, paddingBottom: 8 },
-  invoiceKicker: { fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(700) },
-  invoiceHotel: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
-  invoiceRoom: { fontSize: 12, lineHeight: 16, color: tw.emerald800, ...poppins(600) },
+  thumb: { width: 84, height: 84, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
+  roomName: { ...type.label, color: color.primary },
+  loc: { flex: 1, ...type.caption, color: color.textMuted },
+  divided: { paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  checkout: { ...type.caption, color: color.textMuted, marginTop: space.xs + 2 },
+  counter: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, backgroundColor: color.surfaceMuted, paddingHorizontal: space.md, paddingVertical: space.xs, borderRadius: radii.md },
+  counterLabel: { ...type.bodyStrong, color: color.text },
+  couponOk: { ...type.label, color: color.success, flexShrink: 1 },
+  remove: { minHeight: 44, justifyContent: 'center', paddingHorizontal: space.xs },
+  removeText: { ...type.label, color: color.danger, textDecorationLine: 'underline' },
+  couponWarn: { ...type.small, color: color.warning },
+  method: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  methodSelected: { borderColor: color.primary, borderWidth: 2, paddingHorizontal: space.md - 1, backgroundColor: color.primarySoft },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: color.surface },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.primary },
+  methodLabel: { ...type.bodyStrong, color: color.text },
+  methodBadge: { ...type.caption, color: color.primary },
+  quoteError: { ...type.small, color: color.danger, backgroundColor: color.dangerSoft, borderRadius: radii.md, padding: space.md },
+  line: { flexDirection: 'row', justifyContent: 'space-between', gap: space.sm },
+  lineLabel: { flex: 1, ...type.small, color: color.textSecondary },
+  lineValue: { ...type.bodyStrong, color: color.text },
+  discount: { color: color.success },
+  total: { paddingTop: space.sm, marginTop: 2, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.borderStrong, alignItems: 'baseline' },
+  totalLabel: { ...type.subheading, color: color.text },
+  totalValue: { ...type.price, color: color.text },
+  note: { ...type.small, color: color.warning },
+  bar: { backgroundColor: color.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md, ...elevation.sheet },
+  barLabel: { ...type.caption, color: color.textMuted },
+  barPrice: { ...type.price, color: color.text },
+  modal: { width: '100%', maxWidth: 400, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xl, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  okIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: color.successSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.xs },
+  okTitle: { ...type.heading, color: color.text },
+  okText: { ...type.small, color: color.textMuted, textAlign: 'center' },
+  okId: { ...type.label, color: color.primary, backgroundColor: color.surfaceMuted, paddingHorizontal: space.md, paddingVertical: space.xs, borderRadius: radii.pill, overflow: 'hidden', marginTop: space.xs },
+  invoice: { backgroundColor: color.surfaceMuted, borderRadius: radii.lg, padding: space.lg, gap: space.sm },
+  invoiceHead: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.borderStrong, paddingBottom: space.sm, gap: 2 },
+  invoiceKicker: { ...type.overline, color: color.textMuted },
+  invoiceHotel: { ...type.bodyStrong, color: color.text },
+  invoiceRoom: { ...type.label, color: color.primary },
   invoiceGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  invoiceLabel: { fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(400) },
-  invoiceValue: { fontSize: 11, lineHeight: 16.5, color: tw.gray700, ...poppins(600) },
-  invoiceTotal: { paddingTop: 8, borderTopWidth: 1, borderTopColor: dh.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  invoiceTotalLabel: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
-  invoiceTotalValue: { fontSize: 14, lineHeight: 20, color: tw.emerald950, ...montserrat(900) },
+  invoiceLabel: { ...type.caption, color: color.textMuted },
+  invoiceValue: { ...type.label, color: color.text },
+  invoiceTotal: { paddingTop: space.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.borderStrong, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
+  invoiceTotalLabel: { ...type.bodyStrong, color: color.text },
+  invoiceTotalValue: { ...type.price, color: color.text },
 });

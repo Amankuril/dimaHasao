@@ -1,14 +1,14 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { Calendar, CheckCircle2, Clock3, Navigation } from 'lucide-react-native';
-import { Press } from '../../components/ui';
-import { shadow, tw } from '../../theme';
-import { fo } from '../account/ui';
+import { StyleSheet, Text, View } from 'react-native';
+import { Calendar, CheckCircle2, Navigation } from 'lucide-react-native';
+import { Spinner } from '../../components/ui';
+import { Button, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import { useIntercityConfirm } from '../hooks/useIntercityConfirm';
 
 const TONE = {
-  scheduled: { bg: 'rgba(5,150,105,0.2)', fg: tw.emerald400 },
-  error: { bg: 'rgba(225,29,72,0.2)', fg: tw.rose400 },
-  saving: { bg: 'rgba(37,99,235,0.2)', fg: tw.blue400 },
+  scheduled: { bg: color.successSoft, fg: color.success, badge: 'success', label: 'Scheduled' },
+  error: { bg: color.dangerSoft, fg: color.danger, badge: 'danger', label: 'Failed' },
+  saving: { bg: color.warningSoft, fg: color.warning, badge: 'warning', label: 'Saving' },
 };
 
 /** Port of Taxi/modules/user/pages/intercity/IntercityConfirm.jsx (/taxi/user/intercity/confirm). */
@@ -23,12 +23,13 @@ export default function IntercityConfirm() {
     <View style={styles.screen}>
       <View style={styles.card}>
         <View style={[styles.icon, { backgroundColor: tone.bg }]}>
-          <Icon size={26} color={tone.fg} />
+          <Icon size={28} color={tone.fg} />
         </View>
+        <StatusBadge label={tone.label} tone={tone.badge} style={{ alignSelf: 'center', marginTop: space.lg }} />
         <Text style={styles.title} accessibilityRole="header">
           {status === 'scheduled' ? 'Intercity ride scheduled' : status === 'error' ? 'Scheduling failed' : 'Scheduling your ride'}
         </Text>
-        <Text style={styles.body}>
+        <Text style={styles.body} accessibilityLiveRegion="polite">
           {status === 'scheduled'
             ? 'Your booking has been saved. Drivers will be notified automatically at the scheduled time.'
             : status === 'error'
@@ -37,44 +38,47 @@ export default function IntercityConfirm() {
         </Text>
 
         <View style={styles.panel}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Calendar size={16} color={tw.blue300} />
-            <Text style={styles.panelLabel}>Scheduled For</Text>
+          <View style={styles.row}>
+            <Calendar size={18} color={color.goldText} />
+            <Text style={styles.panelLabel}>Scheduled for</Text>
           </View>
           <Text style={styles.when}>{formattedSchedule || state.date || 'Scheduled'}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 }}>
-            <Clock3 size={15} color="rgba(255,255,255,0.65)" />
-            <Text style={styles.route} numberOfLines={2}>{String(`${state.fromCity} to ${state.toCity}`).toUpperCase()}</Text>
+          <View style={[styles.row, { marginTop: space.md }]}>
+            <View style={styles.pickupDot} />
+            <Text style={styles.route} numberOfLines={1}>{state.fromCity}</Text>
+          </View>
+          <View style={[styles.row, { marginTop: space.xs }]}>
+            <View style={styles.dropSquare} />
+            <Text style={styles.route} numberOfLines={1}>{state.toCity}</Text>
           </View>
         </View>
 
         {status === 'saving' ? (
           <View style={styles.saving} accessibilityRole="progressbar">
-            <ActivityIndicator size="small" color={tw.blue300} />
-            <Text style={styles.savingText}>SAVING SCHEDULE</Text>
+            <Spinner size={18} color={color.primary} />
+            <Text style={styles.savingText}>Saving schedule</Text>
           </View>
         ) : null}
 
-        <Press onPress={() => navigate(routePrefix || '/')} style={styles.done}>
-          <Text style={styles.doneText}>{status === 'error' ? 'BACK TO HOME' : 'DONE'}</Text>
-        </Press>
+        <Button title={status === 'error' ? 'Back to home' : 'Done'} size="lg" onPress={() => navigate(routePrefix || '/')} style={{ marginTop: space.xl }} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.slate950, paddingHorizontal: 24 },
-  card: { width: '100%', borderRadius: 32, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 24, paddingVertical: 32, alignItems: 'center', ...shadow('2xl') },
-  icon: { width: 64, height: 64, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  title: { marginTop: 20, fontSize: 22, lineHeight: 28, color: '#fff', textAlign: 'center', ...fo(900) },
-  body: { marginTop: 8, fontSize: 13, lineHeight: 19, color: 'rgba(255,255,255,0.55)', textAlign: 'center', ...fo(700) },
-  panel: { alignSelf: 'stretch', marginTop: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)', padding: 16 },
-  panelLabel: { fontSize: 14, lineHeight: 20, color: '#fff', ...fo(700) },
-  when: { marginTop: 8, fontSize: 18, lineHeight: 28, color: '#fff', ...fo(900) },
-  route: { flex: 1, fontSize: 12, lineHeight: 16, letterSpacing: 1.9, color: 'rgba(255,255,255,0.65)', ...fo(700) },
-  saving: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 24 },
-  savingText: { fontSize: 12, lineHeight: 16, letterSpacing: 2.2, color: tw.blue300, ...fo(900) },
-  done: { alignSelf: 'stretch', height: 48, marginTop: 24, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  doneText: { fontSize: 14, letterSpacing: 2.2, color: tw.slate900, ...fo(900) },
+  screen: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg, paddingHorizontal: space.lg },
+  card: { width: '100%', maxWidth: 480, borderRadius: radii.xl, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.xl, paddingVertical: space.xxl, alignItems: 'center', ...elevation.card },
+  icon: { width: 64, height: 64, borderRadius: radii.lg, alignItems: 'center', justifyContent: 'center' },
+  title: { ...type.heading, marginTop: space.sm, color: color.text, textAlign: 'center' },
+  body: { ...type.small, marginTop: space.sm, color: color.textSecondary, textAlign: 'center' },
+  panel: { alignSelf: 'stretch', marginTop: space.xl, borderRadius: radii.lg, backgroundColor: color.goldSoft, padding: space.lg },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  panelLabel: { ...type.label, color: color.goldText },
+  when: { ...type.price, marginTop: space.sm, color: color.text },
+  pickupDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.primary },
+  dropSquare: { width: 10, height: 10, borderRadius: 2, backgroundColor: color.danger },
+  route: { ...type.small, flex: 1, minWidth: 0, color: color.textSecondary },
+  saving: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md, marginTop: space.xl },
+  savingText: { ...type.label, color: color.warning },
 });

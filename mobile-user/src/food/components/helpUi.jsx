@@ -1,51 +1,89 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronRight } from 'lucide-react-native';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /*
- * The shadcn Card / Button / Badge the help screens are written with, at the
- * app's theme values (global.css: --border oklch(.9 .02 85), --muted-foreground
- * oklch(.5 .05 50), --primary oklch(.7 .15 85)).
+ * Shared pieces of the food help screens (Help centre, Order help), on the
+ * design-system tokens (see DESIGN_SYSTEM.md).
  */
 export const HELP = {
-  fg: '#2a1c10',
-  muted: '#78665a',
-  border: '#e6e1d3',
-  mutedBg: '#f5f3ec',
-  primary: '#cda022',
-  green: '#0a4d2b',
+  fg: color.text,
+  muted: color.textMuted,
+  border: color.border,
+  mutedBg: color.surfaceMuted,
+  primary: color.primary,
+  green: color.primary,
 };
 
 export function HelpPage({ children }) {
-  return (
-    <LinearGradient colors={['rgba(254,252,232,0.3)', '#ffffff', 'rgba(255,247,237,0.2)']} style={{ flex: 1 }}>
-      {children}
-    </LinearGradient>
-  );
+  return <View style={{ flex: 1, backgroundColor: color.bg }}>{children}</View>;
 }
 
+/** White card with the beige edge; `gold` = the highlighted "still need help" panel. */
 export function Card({ children, style, gold }) {
   return <View style={[styles.card, gold ? styles.gold : null, style]}>{children}</View>;
 }
 
-export function HelpButton({ children, onPress, variant = 'outline', style }) {
+/** variant: default (green fill) | outline. Children are the label/icon nodes. */
+export function HelpButton({ children, onPress, variant = 'outline', style, accessibilityLabel, disabled }) {
   return (
-    <Press onPress={onPress} style={[styles.btn, variant === 'default' ? { backgroundColor: HELP.green, borderColor: HELP.green } : null, style]}>
+    <Press
+      onPress={onPress}
+      disabled={disabled}
+      scale={0.98}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.btn, variant === 'default' ? styles.btnDefault : null, disabled ? { opacity: 0.5 } : null, style]}
+    >
       {children}
     </Press>
   );
 }
 
+/** Icon tile + title/subtitle row (tappable when onPress is set). */
+export function HelpRow({ icon: Icon, title, subtitle, onPress, right, last }) {
+  const body = (
+    <>
+      <View style={styles.rowIcon}>
+        <Icon size={20} color={color.primary} />
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={[type.bodyStrong, { color: color.text }]}>{title}</Text>
+        {subtitle ? <Text style={[type.small, { color: color.textMuted }]}>{subtitle}</Text> : null}
+      </View>
+      {right}
+      {onPress ? <ChevronRight size={20} color={color.textDisabled} /> : null}
+    </>
+  );
+  const rowStyle = [styles.row, !last && styles.rowDivider];
+  return onPress ? (
+    <Press onPress={onPress} scale={0.99} accessibilityRole="button" accessibilityLabel={title} style={rowStyle}>
+      {body}
+    </Press>
+  ) : (
+    <View style={rowStyle}>{body}</View>
+  );
+}
+
 export const helpText = StyleSheet.create({
-  h1: { fontSize: 30, color: HELP.fg, ...poppins(700) },
-  muted: { color: HELP.muted, ...poppins(400) },
-  title: { color: HELP.fg, ...poppins(600) },
-  btn: { fontSize: 14, color: HELP.fg, ...poppins(500) },
+  h1: { ...type.heading, color: color.text },
+  muted: { ...type.small, color: color.textMuted },
+  title: { ...type.bodyStrong, color: color.text },
+  btn: { ...type.buttonSm, color: color.text },
+  btnOn: { ...type.buttonSm, color: color.onPrimary },
+  link: { ...type.label, color: color.primary },
 });
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: HELP.border, ...shadow('lg') },
-  gold: { backgroundColor: '#FFFBEB', borderColor: tw.yellow200 },
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 36, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: HELP.border, backgroundColor: '#fff', ...shadow('xs') },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  gold: { backgroundColor: color.goldSoft, borderColor: color.gold },
+  btn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, minHeight: 44, paddingHorizontal: space.lg, paddingVertical: space.sm,
+    borderRadius: radii.md, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface,
+  },
+  btnDefault: { backgroundColor: color.primary, borderColor: color.primary },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 64, paddingHorizontal: space.lg, paddingVertical: space.md },
+  rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  rowIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
 });

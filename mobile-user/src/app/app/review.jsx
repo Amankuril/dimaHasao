@@ -4,10 +4,11 @@ import { router } from 'expo-router';
 import Fa from '../../components/Fa';
 import { Press } from '../../components/ui';
 import { SelectField } from '../../components/kit';
+import { Chip } from '../../components/ds';
 import { Header, PatternDivider } from '../../components/dh/Header';
 import { Field, FormScroll, GreenButton, Panel, dhs } from '../../components/dh/ui';
 import { useBooking } from '../../context/BookingContext';
-import { dh, poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 
 // Web: DimaHasao/pages/RatingReviewScreen.jsx (/app/review).
 // As on the web, this form thanks the visitor and returns to My Bookings; it
@@ -43,50 +44,37 @@ export default function RatingReviewScreen() {
       <Header title="RATE & REVIEW" subtitle="Share your honest feedback" showBack rightAction="none" />
       <PatternDivider variant="green-gold" />
 
-      <FormScroll contentContainerStyle={{ padding: 14 }} bottomSpace={40}>
-        <Panel style={{ gap: 16 }}>
+      <FormScroll contentContainerStyle={{ padding: space.lg }} bottomSpace={space.xxl}>
+        <Panel style={{ gap: space.xl }}>
           <View>
-            <Text style={dhs.label}>Select Experience to Rate</Text>
-            <SelectField value={serviceType} options={SERVICES} onChange={setServiceType} accessibilityLabel="Experience to rate" style={[dhs.input, { gap: 8 }]} textStyle={styles.selectText} />
+            <Text style={dhs.label}>Select experience to rate</Text>
+            <SelectField value={serviceType} options={SERVICES} onChange={setServiceType} accessibilityLabel="Experience to rate" style={[dhs.input, { gap: space.sm }]} textStyle={styles.selectText} chevronColor={color.text} />
           </View>
 
-          <View style={{ alignItems: 'center', gap: 8, paddingVertical: 8 }}>
-            <Text style={styles.tap}>TAP TO RATE</Text>
-            <View style={[dhs.row, { gap: 8 }]} accessibilityRole="adjustable" accessibilityLabel={`Rating ${rating} of 5`}>
+          <View style={styles.rateBox}>
+            <Text style={styles.tap}>Tap to rate</Text>
+            <View style={[dhs.row, { gap: space.xs }]} accessibilityRole="adjustable" accessibilityLabel={`Rating ${rating} of 5`}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <Press key={star} scale={0.9} onPress={() => setRating(star)} accessibilityLabel={`${star} star${star > 1 ? 's' : ''}`} hitSlop={4}>
-                  <Fa name={star <= rating ? 'fa-solid fa-star' : 'fa-regular fa-star'} size={30} color={star <= rating ? tw.amber400 : tw.gray300} />
+                <Press key={star} scale={0.9} onPress={() => setRating(star)} accessibilityLabel={`${star} star${star > 1 ? 's' : ''}`} accessibilityState={{ selected: star <= rating }} style={styles.star}>
+                  <Fa name={star <= rating ? 'fa-solid fa-star' : 'fa-regular fa-star'} size={32} color={star <= rating ? color.goldBright : color.borderStrong} />
                 </Press>
               ))}
             </View>
             <Text style={styles.verdict}>{verdict}</Text>
           </View>
 
-          <View style={{ gap: 6 }}>
+          <View style={{ gap: space.sm }}>
             <Text style={[dhs.label, { marginBottom: 0 }]}>What did you like most?</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-              {TAGS.map((tag) => {
-                const isSelected = selectedTags.includes(tag);
-                return (
-                  <Press key={tag} scale={0.96} onPress={() => toggleTag(tag)} accessibilityState={{ selected: isSelected }} style={[styles.tag, isSelected && styles.tagSelected]}>
-                    <Text style={[styles.tagText, isSelected && { color: tw.amber300 }]}>{tag}</Text>
-                  </Press>
-                );
-              })}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+              {TAGS.map((tag) => (
+                <Chip key={tag} label={tag} selected={selectedTags.includes(tag)} onPress={() => toggleTag(tag)} />
+              ))}
             </View>
           </View>
 
-          <Field
-            label="Write a Review (Optional)"
-            multiline
-            numberOfLines={3}
-            placeholder="Tell fellow tourists what made your experience memorable..."
-            value={reviewText}
-            onChangeText={setReviewText}
-            inputStyle={{ padding: 12, paddingTop: 12, ...poppins(400) }}
-          />
+          <Field label="Write a review (optional)" multiline numberOfLines={3} placeholder="Tell fellow tourists what made your experience memorable..." value={reviewText} onChangeText={setReviewText} />
 
-          <GreenButton title="Submit Verified Review" onPress={handleSubmit} style={{ paddingVertical: 12, ...shadow('md') }} />
+          <GreenButton title="Submit verified review" size="lg" onPress={handleSubmit} />
         </Panel>
       </FormScroll>
     </View>
@@ -94,10 +82,9 @@ export default function RatingReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  selectText: { fontSize: 12, color: tw.gray900, ...poppins(600) },
-  tap: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.gray600, ...poppins(700) },
-  verdict: { fontSize: 12, lineHeight: 16, color: tw.emerald900, ...poppins(700) },
-  tag: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: dh.border, backgroundColor: dh.cream },
-  tagSelected: { backgroundColor: dh.nav, borderColor: tw.emerald800 },
-  tagText: { fontSize: 11, lineHeight: 16.5, color: tw.gray700, ...poppins(600) },
+  selectText: { flex: 1, ...type.bodyStrong, color: color.text },
+  rateBox: { alignItems: 'center', gap: space.sm, paddingVertical: space.md, backgroundColor: color.surfaceMuted, borderRadius: radii.md },
+  tap: { ...type.overline, color: color.textSecondary },
+  star: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  verdict: { ...type.bodyStrong, color: color.primary },
 });

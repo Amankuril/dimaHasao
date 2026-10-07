@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { ArrowLeft, ChevronRight, Clock, Copy, Link2, Mail, MessageCircle, MessagesSquare, MoreVertical, RotateCcw, Search, Send, Share2, Star, X } from 'lucide-react-native';
+import { ActivityIndicator, FlatList, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePathname } from 'expo-router';
+import {
+  ArrowLeft, ChevronRight, Clock, Copy, FileText, Link2, Mail, MessageCircle, MessagesSquare, MoreVertical, Receipt, RotateCcw, Search, Send, Share2, ShoppingBag, Star,
+  UtensilsCrossed, X,
+} from 'lucide-react-native';
 import Image from '../../components/Img';
 import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Button, Card, EmptyState, IconButton, StatusBadge } from '../../components/ds';
+import { NAV_CLEARANCE, isImmersiveRoute } from '../../components/dh/AppBottomNav';
 import { orderAPI } from '../../api/food';
 import { API_ORIGIN } from '../../api/client';
 import { useCart } from '../context/CartContext';
@@ -14,11 +20,9 @@ import { navigateTo } from '../../lib/webRouter';
 import { navigator } from '../../lib/webShim';
 import { toast } from '../../lib/notify';
 import { localStore } from '../../lib/storage';
-import { poppins, shadow, tw } from '../../theme';
-import { F } from '../components/shell';
+import { color, elevation, radii, space, type } from '../../theme';
+import { Divider, Field, VegMark } from '../components/cart/parts';
 
-const GREEN = '#0a4d2b';
-const DARK_GREEN = '#06381e';
 const RUPEE = '₹';
 const FALLBACK_REST = 'https://images.unsplash.com/photo-1604908176997-125188eb3c52?auto=format&fit=crop&w=200&q=80';
 
@@ -140,40 +144,25 @@ const transform = (order) => {
   };
 };
 
-const BADGE = {
-  red: { bg: tw.red50, color: tw.red700, border: tw.red200 },
-  amber: { bg: tw.amber50, color: tw.amber700, border: tw.amber200 },
-  emerald: { bg: tw.emerald50, color: tw.emerald700, border: tw.emerald200 },
-};
-
 function Header({ goBack }) {
   return (
     <View style={styles.header}>
-      <Press scale={0.9} onPress={goBack} accessibilityLabel="Back" hitSlop={8}>
-        <ArrowLeft size={24} color={tw.gray700} />
-      </Press>
-      <Text style={styles.headerTitle}>Your Orders</Text>
+      <IconButton icon={ArrowLeft} label="Back" onPress={goBack} />
+      <Text style={[type.heading, { color: color.text, flex: 1 }]} accessibilityRole="header">
+        Your orders
+      </Text>
     </View>
   );
 }
 
-function VegMark({ veg }) {
-  const c = veg ? tw.green600 : tw.red600;
+function Stars({ value, setValue, label }) {
   return (
-    <View style={[styles.veg, { borderColor: c }]}>
-      <View style={{ flex: 1, borderRadius: 999, backgroundColor: c }} />
-    </View>
-  );
-}
-
-function Stars({ value, setValue, size = 40 }) {
-  return (
-    <View style={styles.stars}>
+    <View style={styles.stars} accessibilityRole="radiogroup" accessibilityLabel={label}>
       {[1, 2, 3, 4, 5].map((n) => {
         const active = (value || 0) >= n;
         return (
-          <Press key={n} scale={0.9} onPress={() => setValue(n)} style={{ padding: 8 }} accessibilityLabel={`${n} star`}>
-            <Star size={size} color={active ? tw.yellow400 : tw.gray300} fill={active ? tw.yellow400 : 'transparent'} />
+          <Press key={n} scale={0.9} onPress={() => setValue(n)} style={styles.star} accessibilityRole="radio" accessibilityState={{ checked: value === n }} accessibilityLabel={`${n} star${n > 1 ? 's' : ''}`}>
+            <Star size={32} color={active ? color.gold : color.borderStrong} fill={active ? color.gold : 'transparent'} />
           </Press>
         );
       })}
@@ -182,14 +171,19 @@ function Stars({ value, setValue, size = 40 }) {
 }
 
 const SHARE_TARGETS = [
-  ['whatsapp', 'WhatsApp', MessageCircle, tw.green600],
-  ['telegram', 'Telegram', Send, tw.sky500],
-  ['email', 'Email', Mail, tw.rose500],
-  ['sms', 'SMS', MessagesSquare, tw.violet500],
-  ['facebook', 'Facebook', Share2, tw.blue600],
-  ['x', 'X', Link2, tw.gray900],
-  ['linkedin', 'LinkedIn', Share2, tw.blue700],
+  ['whatsapp', 'WhatsApp', MessageCircle],
+  ['telegram', 'Telegram', Send],
+  ['email', 'Email', Mail],
+  ['sms', 'SMS', MessagesSquare],
+  ['facebook', 'Facebook', Share2],
+  ['x', 'X', Link2],
+  ['linkedin', 'LinkedIn', Share2],
 ];
+
+const sentence = (s) => {
+  const t = String(s || '').replace(/_/g, ' ');
+  return t ? (t[0].toUpperCase() + t.slice(1).toLowerCase()).replace(/^Cod\b/, 'COD') : t;
+};
 
 export default function Orders() {
   const goBack = useAppBackNavigation();
@@ -424,12 +418,16 @@ export default function Orders() {
     }
   };
 
+  const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const bottomPad = (isImmersiveRoute(pathname) ? 0 : NAV_CLEARANCE) + insets.bottom + space.xxl;
+
   if (loading) {
     return (
       <View style={styles.page}>
         <Header goBack={goBack} />
-        <View style={{ paddingVertical: 80, alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={GREEN} />
+        <View style={{ paddingVertical: 80, alignItems: 'center' }} accessibilityRole="progressbar" accessibilityLabel="Loading orders">
+          <ActivityIndicator size="large" color={color.primary} />
         </View>
       </View>
     );
@@ -439,314 +437,288 @@ export default function Orders() {
     return (
       <View style={styles.page}>
         <Header goBack={goBack} />
-        <View style={{ paddingHorizontal: 16, paddingVertical: 32, alignItems: 'center' }}>
-          <Text style={styles.emptyText}>You haven&apos;t placed any orders yet</Text>
-          <Press onPress={() => navigateTo('/user')} style={{ marginTop: 16 }}>
-            <Text style={[styles.link, poppins(500)]}>Start Ordering</Text>
-          </Press>
-        </View>
+        <EmptyState icon={Receipt} title="No orders yet" message="You haven't placed any orders yet" actionLabel="Start ordering" onAction={() => navigateTo('/user')} />
       </View>
     );
   }
 
-  return (
-    <View style={styles.page}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }} stickyHeaderIndices={[0]}>
-        <Header goBack={goBack} />
-        <View style={styles.searchWrap}>
-          <View style={styles.searchBox}>
-            <Search size={20} color={GREEN} />
-            <TextInput
-              placeholder="Search by restaurant or dish"
-              placeholderTextColor={tw.gray400}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={styles.searchInput}
-            />
+  const renderOrder = ({ item: order }) => {
+    const m = order.payment?.method;
+    const isCodOrWallet = ['cash', 'cod', 'wallet'].includes(m) || ['cash', 'cod', 'wallet'].includes(order.paymentMethod);
+    const isCancelled = order.status === 'cancelled' || order.status === 'restaurant_cancelled';
+    const paymentFailed = !isCodOrWallet && !isCancelled && order.payment?.status === 'failed';
+    const isDelivered = order.status === 'delivered';
+    const isRestaurantCancelled = order.isRestaurantCancelled || order.status === 'restaurant_cancelled';
+    const isUserCancelled = order.isUserCancelled || (isCancelled && order.cancelledBy === 'user');
+    const restaurantImage = order.restaurantImage || order.items?.[0]?.image || FALLBACK_REST;
+    const location = order.restaurantLocation || `${order.address?.city || ''}, ${order.address?.state || ''}`.trim() || 'Location not available';
+    const payTone = order.payment?.status === 'completed' || (isDelivered && isCodOrWallet) ? 'success' : order.payment?.status === 'failed' ? 'danger' : 'warning';
+    let status;
+    if (isRestaurantCancelled) status = { tone: 'danger', label: 'Cancelled' };
+    else if (paymentFailed) status = { tone: 'danger', label: 'Payment failed' };
+    else if (isDelivered) status = { tone: 'success', label: order.orderType === 'takeaway' ? 'Picked up' : 'Delivered' };
+    else if (isUserCancelled) status = { tone: 'danger', label: 'Cancelled by you' };
+    else if (isCancelled) status = { tone: 'danger', label: 'Cancelled' };
+    else if (order.orderType === 'takeaway' && (order.status === 'ready' || order.status === 'ready_for_pickup')) status = { tone: 'primary', label: 'Ready for pickup' };
+    else
+      status =
+        order.status === 'preparing'
+          ? { tone: 'warning', label: 'Preparing' }
+          : { tone: 'info', label: order.status === 'outForDelivery' ? 'Out for delivery' : order.status === 'placed' ? 'Order placed' : 'Confirmed' };
+    const secondary = isRestaurantCancelled ? (
+      <View style={{ gap: 2 }}>
+        {order.cancellationReason ? (
+          <Text style={[type.small, { color: color.danger }]} numberOfLines={2}>
+            Reason: {order.cancellationReason}
+          </Text>
+        ) : null}
+        <Text style={[type.caption, { color: color.textMuted }]}>Refund processed in 24-48 hours</Text>
+      </View>
+    ) : paymentFailed ? (
+      <Text style={[type.small, { color: color.danger }]}>Please try ordering again</Text>
+    ) : isDelivered && order.restaurantRating && (!order.deliveryPartnerId || order.deliveryPartnerRating) ? (
+      <View style={[styles.row, { flexWrap: 'wrap' }]}>
+        <Text style={[type.caption, { color: color.textMuted }]}>Your rating:</Text>
+        <StatusBadge tone="gold" icon={Star} label={`Food ${order.restaurantRating}`} />
+        {order.deliveryPartnerId && order.deliveryPartnerRating ? <StatusBadge tone="gold" icon={Star} label={`Delivery ${order.deliveryPartnerRating}`} /> : null}
+      </View>
+    ) : isDelivered ? (
+      <Press onPress={() => handleOpenRating(order)} accessibilityRole="button" style={[styles.row, { minHeight: 44 }]}>
+        <Star size={16} color={color.goldText} />
+        <Text style={[type.label, { color: color.goldText }]}>{order.orderType === 'takeaway' ? 'Rate restaurant' : 'Rate restaurant & delivery'}</Text>
+      </Press>
+    ) : countdowns[order.id] > 0 ? (
+      <View style={styles.row}>
+        <Clock size={14} color={color.primary} />
+        <Text style={[type.label, { color: color.primary }]}>
+          {countdowns[order.id]} min{countdowns[order.id] !== 1 ? 's' : ''} remaining
+        </Text>
+      </View>
+    ) : null;
+
+    return (
+      <Card padded={false}>
+        <View style={styles.cardTop}>
+          <Image source={{ uri: restaurantImage }} style={styles.restImg} />
+          <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+            <Text style={[type.subheading, { color: color.text }]} numberOfLines={2}>
+              {order.restaurant}
+            </Text>
+            <Text style={[type.caption, { color: color.textMuted }]} numberOfLines={1}>
+              {location}
+            </Text>
+            <Text style={[type.caption, { color: color.textMuted }]} numberOfLines={1}>
+              Order ID <Text style={{ color: color.textSecondary }}>{order.orderId || order.id}</Text>
+            </Text>
+            <View style={[styles.row, { flexWrap: 'wrap', marginTop: space.xs }]}>
+              <StatusBadge tone={status.tone} label={status.label} />
+              {order.orderType === 'takeaway' ? (
+                <StatusBadge tone="neutral" icon={ShoppingBag} label="Takeaway (self-pick)" />
+              ) : order.orderType === 'dining' ? (
+                <StatusBadge tone="neutral" icon={UtensilsCrossed} label="Dining in" />
+              ) : null}
+            </View>
+            {order.deliveryPartnerName ? (
+              <Text style={[type.small, { color: color.textSecondary, marginTop: space.xs }]} numberOfLines={2}>
+                Delivery: {order.deliveryPartnerName}
+                {order.deliveryPartnerPhone ? ` | ${order.deliveryPartnerPhone}` : ''}
+              </Text>
+            ) : null}
+            {order.restaurantId ? (
+              <Press scale={0.97} onPress={() => navigateTo(`/user/restaurants/${order.restaurantId}`)} accessibilityRole="link" style={[styles.row, { minHeight: 36, alignSelf: 'flex-start' }]} hitSlop={4}>
+                <Text style={[type.label, { color: color.primary }]}>View menu</Text>
+                <ChevronRight size={16} color={color.primary} />
+              </Press>
+            ) : null}
           </View>
+          <IconButton
+            icon={MoreVertical}
+            label="More"
+            iconColor={color.textMuted}
+            onPress={() => setActiveMenuOrderId((c) => (c === order.id ? null : order.id))}
+            style={{ marginTop: -space.sm, marginRight: -space.sm }}
+          />
         </View>
 
-        <View style={{ paddingHorizontal: 16, paddingVertical: 8, gap: 16 }}>
-          {filteredOrders.length === 0 ? (
-            <View style={[styles.card, { padding: 32, alignItems: 'center' }]}>
-              <Text style={styles.emptyText}>No orders found matching your search</Text>
-            </View>
-          ) : (
-            filteredOrders.map((order) => {
-              const m = order.payment?.method;
-              const isCodOrWallet = ['cash', 'cod', 'wallet'].includes(m) || ['cash', 'cod', 'wallet'].includes(order.paymentMethod);
-              const isCancelled = order.status === 'cancelled' || order.status === 'restaurant_cancelled';
-              const paymentFailed = !isCodOrWallet && !isCancelled && order.payment?.status === 'failed';
-              const isDelivered = order.status === 'delivered';
-              const isRestaurantCancelled = order.isRestaurantCancelled || order.status === 'restaurant_cancelled';
-              const isUserCancelled = order.isUserCancelled || (isCancelled && order.cancelledBy === 'user');
-              const restaurantImage = order.restaurantImage || order.items?.[0]?.image || FALLBACK_REST;
-              const location = order.restaurantLocation || `${order.address?.city || ''}, ${order.address?.state || ''}`.trim() || 'Location not available';
-              const payBadge =
-                order.payment?.status === 'completed' || (isDelivered && isCodOrWallet) ? BADGE.emerald : order.payment?.status === 'failed' ? BADGE.red : BADGE.amber;
-              const tag = (bg, color, border, label, extra) => (
-                <View style={[styles.statusBadge, { backgroundColor: bg, borderColor: border }]}>
-                  <Text style={[styles.statusText, { color }, extra]}>{label}</Text>
-                </View>
-              );
-              let statusNode;
-              if (isRestaurantCancelled) statusNode = tag(tw.red50, tw.red700, tw.red200, 'CANCELLED');
-              else if (paymentFailed) statusNode = tag(tw.red50, tw.red700, tw.red200, 'PAYMENT FAILED');
-              else if (isDelivered) statusNode = tag(tw.green600, '#fff', tw.green600, order.orderType === 'takeaway' ? 'PICKED UP' : 'DELIVERED');
-              else if (isUserCancelled) statusNode = tag(tw.red50, tw.red700, tw.red200, 'CANCELLED BY YOU');
-              else if (isCancelled) statusNode = tag(tw.red50, tw.red700, tw.red200, 'CANCELLED');
-              else if (order.orderType === 'takeaway' && (order.status === 'ready' || order.status === 'ready_for_pickup'))
-                statusNode = tag(tw.green600, '#fff', tw.green600, 'READY FOR PICKUP');
-              else
-                statusNode = tag(
-                  tw.amber50,
-                  tw.amber700,
-                  tw.amber200,
-                  (order.status === 'preparing' ? 'Preparing' : order.status === 'outForDelivery' ? 'Out for Delivery' : order.status === 'placed' ? 'Order Placed' : 'Confirmed').toUpperCase(),
-                );
-              const secondary = isRestaurantCancelled ? (
-                <View style={{ gap: 2 }}>
-                  {order.cancellationReason ? <Text style={styles.reason} numberOfLines={1}>Reason: {order.cancellationReason}</Text> : null}
-                  <Text style={styles.refund}>Refund processed in 24-48 hours</Text>
-                </View>
-              ) : paymentFailed ? (
-                <Text style={[styles.reason, { fontStyle: 'normal' }]}>Please try ordering again</Text>
-              ) : isDelivered && order.restaurantRating && (!order.deliveryPartnerId || order.deliveryPartnerRating) ? (
-                <View style={styles.row}>
-                  <Text style={styles.small}>Your rating:</Text>
-                  <View style={styles.ratePill}>
-                    <Text style={styles.rateText}>Food {order.restaurantRating}</Text>
-                    <Star size={10} color="#fff" fill="#fff" />
-                  </View>
-                  {order.deliveryPartnerId && order.deliveryPartnerRating ? (
-                    <View style={styles.ratePill}>
-                      <Text style={styles.rateText}>Delivery {order.deliveryPartnerRating}</Text>
-                      <Star size={10} color="#fff" fill="#fff" />
-                    </View>
-                  ) : null}
-                </View>
-              ) : isDelivered ? (
-                <Press onPress={() => handleOpenRating(order)} style={styles.row}>
-                  <Star size={14} color={tw.slate400} />
-                  <Text style={[styles.rateLink, poppins(700)]}>{order.orderType === 'takeaway' ? 'Rate Restaurant' : 'Rate Restaurant & Delivery'}</Text>
-                </Press>
-              ) : countdowns[order.id] > 0 ? (
-                <View style={styles.row}>
-                  <Clock size={12} color={GREEN} />
-                  <Text style={[styles.countdown, poppins(600)]}>
-                    {countdowns[order.id]} min{countdowns[order.id] !== 1 ? 's' : ''} remaining
-                  </Text>
-                </View>
-              ) : null;
+        {activeMenuOrderId === order.id ? (
+          <View style={styles.menu}>
+            <Button title="Share restaurant" icon={Share2} variant="outline" size="sm" fullWidth={false} onPress={() => handleShareRestaurant(order)} style={{ flex: 1 }} />
+            <Button title="Order details" icon={FileText} variant="outline" size="sm" fullWidth={false} onPress={() => handleViewOrderDetails(order)} style={{ flex: 1 }} />
+          </View>
+        ) : null}
 
+        <Divider dashed style={{ marginHorizontal: space.lg }} />
+
+        <View style={{ paddingHorizontal: space.lg, paddingVertical: space.md, gap: space.sm }}>
+          {order.items && order.items.length > 0 ? (
+            order.items.map((item, idx) => {
+              const total = (item.quantity || 1) * (item.price || 0);
               return (
-                <View key={order.id} style={[styles.card, { overflow: 'visible' }]}>
-                  <View style={styles.cardTop}>
-                    <View style={{ flexDirection: 'row', gap: 12, flex: 1, minWidth: 0 }}>
-                      <Image source={{ uri: restaurantImage }} style={styles.restImg} />
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <View style={styles.nameRow}>
-                          <Text style={styles.restName} numberOfLines={1}>{order.restaurant}</Text>
-                          {order.orderType === 'takeaway' ? (
-                            <View style={[styles.typeBadge, { backgroundColor: '#FEF3C7', borderColor: 'rgba(245,158,11,0.3)' }]}>
-                              <Text style={[styles.typeText, { color: '#D97706' }]}>🥡 TAKEAWAY (SELF-PICK)</Text>
-                            </View>
-                          ) : order.orderType === 'dining' ? (
-                            <View style={[styles.typeBadge, { backgroundColor: '#DBEAFE', borderColor: 'rgba(59,130,246,0.3)' }]}>
-                              <Text style={[styles.typeText, { color: '#2563EB' }]}>🍽️ DINING IN</Text>
-                            </View>
-                          ) : null}
-                        </View>
-                        <Text style={styles.orderIdText}>
-                          Order ID: <Text style={[{ color: tw.gray700 }, poppins(600)]}>{order.orderId || order.id}</Text>
-                        </Text>
-                        <Text style={styles.locText} numberOfLines={1}>{location}</Text>
-                        {order.deliveryPartnerName ? (
-                          <Text style={styles.delivery}>
-                            <Text style={poppins(500)}>Delivery:</Text> {order.deliveryPartnerName}
-                            {order.deliveryPartnerPhone ? ` | ${order.deliveryPartnerPhone}` : ''}
-                          </Text>
-                        ) : null}
-                        {order.restaurantId ? (
-                          <Press scale={0.97} onPress={() => navigateTo(`/user/restaurants/${order.restaurantId}`)} style={{ marginTop: 4, alignSelf: 'flex-start' }}>
-                            <Text style={[styles.viewMenu, poppins(500)]}>View menu {'>'}</Text>
-                          </Press>
-                        ) : null}
-                      </View>
-                    </View>
-                    <Press scale={0.9} onPress={() => setActiveMenuOrderId((c) => (c === order.id ? null : order.id))} style={{ padding: 4 }} accessibilityLabel="More">
-                      <MoreVertical size={20} color={tw.gray400} />
-                    </Press>
-                  </View>
-
-                  {activeMenuOrderId === order.id ? (
-                    <View style={styles.menu}>
-                      <Press scale={0.98} onPress={() => handleShareRestaurant(order)} style={styles.menuItem}>
-                        <Text style={styles.menuText}>Share restaurant</Text>
-                      </Press>
-                      <Press scale={0.98} onPress={() => handleViewOrderDetails(order)} style={styles.menuItem}>
-                        <Text style={styles.menuText}>Order details</Text>
-                      </Press>
-                    </View>
-                  ) : null}
-
-                  <View style={styles.dashed} />
-
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 8, gap: 8 }}>
-                    {order.items && order.items.length > 0 ? (
-                      order.items.map((item, idx) => {
-                        const total = (item.quantity || 1) * (item.price || 0);
-                        return (
-                          <View key={item._id || item.id || item.itemId || idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                            <VegMark veg={item.isVeg} />
-                            <View style={{ flex: 1, minWidth: 0 }}>
-                              <Text style={styles.itemName}>{item.quantity || 1} x {item.name}</Text>
-                              {item.variantName ? <Text style={styles.itemSub}>{item.variantName}</Text> : null}
-                              {item.description ? <Text style={styles.itemSub} numberOfLines={1}>{item.description}</Text> : null}
-                            </View>
-                            <Text style={styles.itemPrice}>{RUPEE}{total.toFixed(2)}</Text>
-                          </View>
-                        );
-                      })
-                    ) : (
-                      <Text style={{ fontSize: 14, color: tw.gray500, ...poppins(400) }}>No items found</Text>
-                    )}
-                  </View>
-
-                  <View style={styles.summary}>
-                    {order.pricing?.discount > 0 ? (
-                      <View style={styles.sumRow}>
-                        <Text style={{ color: tw.green600, fontSize: 11, ...poppins(400) }}>Discount Applied</Text>
-                        <Text style={{ color: tw.green600, fontSize: 11, ...poppins(500) }}>-{RUPEE}{order.pricing.discount.toFixed(2)}</Text>
-                      </View>
+                <View key={item._id || item.id || item.itemId || idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space.sm }}>
+                  <VegMark veg={item.isVeg} size={14} style={{ marginTop: 3 }} />
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[type.body, { color: color.text }]}>
+                      {item.quantity || 1} × {item.name}
+                    </Text>
+                    {item.variantName ? <Text style={[type.caption, { color: color.textMuted }]}>{item.variantName}</Text> : null}
+                    {item.description ? (
+                      <Text style={[type.caption, { color: color.textMuted }]} numberOfLines={1}>
+                        {item.description}
+                      </Text>
                     ) : null}
-                    <View style={styles.sumRow}>
-                      <Text style={{ fontSize: 12, color: tw.gray800, ...poppins(600) }}>Total Bill</Text>
-                      <Text style={{ fontSize: 16, color: tw.gray900, ...poppins(700) }}>{RUPEE}{order.total.toFixed(2)}</Text>
-                    </View>
                   </View>
-
-                  <View style={styles.sep} />
-
-                  <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4, gap: 12 }}>
-                    <View style={{ gap: 12 }}>
-                      <View style={[styles.row, { flexWrap: 'wrap', gap: 8 }]}>
-                        <View style={styles.placed}>
-                          <Text style={styles.placedText}>Placed: {formatDate(order.createdAt)}</Text>
-                        </View>
-                        <Text style={{ fontSize: 12, color: tw.gray700, ...poppins(600) }}>
-                          {order.payment?.method === 'cash' || order.payment?.method === 'cod' ? 'Cash on Delivery' : order.payment?.method === 'wallet' ? 'Wallet' : 'Online'}
-                        </Text>
-                        {order.payment?.status ? (
-                          <View style={[styles.payBadge, { backgroundColor: payBadge.bg, borderColor: payBadge.border }]}>
-                            <Text style={[styles.payBadgeText, { color: payBadge.color }]}>{isDelivered && isCodOrWallet ? 'PAID' : String(order.payment.status).toUpperCase()}</Text>
-                          </View>
-                        ) : null}
-                      </View>
-                      <View style={{ flexDirection: 'row' }}>{statusNode}</View>
-                    </View>
-
-                    <View style={[styles.row, { justifyContent: 'space-between', paddingTop: 4 }]}>
-                      <View style={{ flex: 1, minWidth: 0, paddingRight: 16 }}>{secondary}</View>
-                      <View style={[styles.row, { gap: 12, flexShrink: 0 }]}>
-                        <Press scale={0.97} onPress={() => navigateTo(isDelivered || isCancelled ? `/user/orders/${order.id}/details` : `/user/orders/${order.id}`)} style={styles.row}>
-                          <Text style={{ fontSize: 12, color: tw.gray600, ...poppins(700) }}>View Details</Text>
-                          <ChevronRight size={14} color={tw.gray600} />
-                        </Press>
-                        {isDelivered && !paymentFailed ? (
-                          <Press onPress={() => handleReorder(order)} style={styles.reorder}>
-                            <RotateCcw size={12} color="#fff" />
-                            <Text style={{ color: '#fff', fontSize: 12, ...poppins(700) }}>Reorder</Text>
-                          </Press>
-                        ) : null}
-                      </View>
-                    </View>
-                  </View>
+                  <Text style={[type.body, { color: color.text }]}>
+                    {RUPEE}
+                    {total.toFixed(2)}
+                  </Text>
                 </View>
               );
             })
+          ) : (
+            <Text style={[type.small, { color: color.textMuted }]}>No items found</Text>
           )}
         </View>
 
-        <View style={{ alignItems: 'center', marginTop: 32, marginBottom: 16 }}>
-          <Text style={styles.brand}>DIMA HASAO FOOD</Text>
-        </View>
-      </ScrollView>
-
-      <Dialog visible={ratingModal.open && !!ratingModal.order} onClose={handleCloseRating} backdrop="rgba(0,0,0,0.6)" blur={8} panelStyle={styles.rateDialog}>
-        <LinearGradient colors={[GREEN, DARK_GREEN]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-          <View style={[styles.row, { justifyContent: 'space-between', marginBottom: 8 }]}>
-            <View style={styles.row}>
-              <Star size={20} color="#fff" fill="#fff" />
-              <Text style={{ fontSize: 20, color: '#fff', ...poppins(700) }}>Rate Your Delivery</Text>
-            </View>
-            <Press scale={0.9} onPress={handleCloseRating} hitSlop={8}>
-              <X size={20} color="rgba(255,255,255,0.8)" />
-            </Press>
-          </View>
-          <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', ...poppins(400) }}>{ratingModal.order?.restaurant}</Text>
-        </LinearGradient>
-        <ScrollView style={{ maxHeight: 460 }} contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
-          <Text style={styles.rateLabel}>Restaurant rating (out of 5)</Text>
-          <Stars value={restRating} setValue={setRestRating} />
-          <TextInput multiline numberOfLines={2} value={restText} onChangeText={setRestText} placeholder="Restaurant feedback (optional)" placeholderTextColor={tw.gray400} style={styles.textarea} textAlignVertical="top" />
-          {modalHasDelivery ? (
-            <View style={{ marginTop: 24 }}>
-              <Text style={styles.rateLabel}>Delivery partner rating (out of 5)</Text>
-              <Stars value={delRating} setValue={setDelRating} />
-              <TextInput multiline numberOfLines={2} value={delText} onChangeText={setDelText} placeholder="Delivery partner feedback (optional)" placeholderTextColor={tw.gray400} style={styles.textarea} textAlignVertical="top" />
+        <View style={styles.summary}>
+          {order.pricing?.discount > 0 ? (
+            <View style={styles.sumRow}>
+              <Text style={[type.small, { color: color.success }]}>Discount applied</Text>
+              <Text style={[type.label, { color: color.success }]}>
+                −{RUPEE}
+                {order.pricing.discount.toFixed(2)}
+              </Text>
             </View>
           ) : null}
-          <Press onPress={handleSubmitRating} disabled={submitDisabled} style={[{ marginTop: 24, opacity: submitDisabled ? 0.5 : 1 }, shadow('0 10px 15px -3px rgba(10,77,43,0.3)')]}>
-            <LinearGradient colors={[GREEN, DARK_GREEN]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.submitBtn}>
-              {submitting ? (
-                <>
-                  <ActivityIndicator size="small" color="#fff" />
-                  <Text style={styles.submitText}>Submitting...</Text>
-                </>
-              ) : (
-                <>
-                  <Star size={20} color="#fff" fill="#fff" />
-                  <Text style={styles.submitText}>Submit Ratings</Text>
-                </>
-              )}
-            </LinearGradient>
-          </Press>
-          {submitDisabled ? <Text style={{ fontSize: 12, color: tw.red500, textAlign: 'center', marginTop: 8, ...poppins(400) }}>Please select all required ratings to continue</Text> : null}
+          <View style={styles.sumRow}>
+            <Text style={[type.bodyStrong, { color: color.text }]}>Total bill</Text>
+            <Text style={[type.price, { color: color.text }]}>
+              {RUPEE}
+              {order.total.toFixed(2)}
+            </Text>
+          </View>
+          <View style={[styles.row, { flexWrap: 'wrap' }]}>
+            <Text style={[type.caption, { color: color.textMuted }]}>
+              {formatDate(order.createdAt)} ·{' '}
+              {order.payment?.method === 'cash' || order.payment?.method === 'cod' ? 'Cash on Delivery' : order.payment?.method === 'wallet' ? 'Wallet' : 'Online'}
+            </Text>
+            {order.payment?.status ? <StatusBadge tone={payTone} label={isDelivered && isCodOrWallet ? 'Paid' : sentence(order.payment.status)} /> : null}
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          {secondary ? <View style={{ minWidth: 0 }}>{secondary}</View> : null}
+          <View style={[styles.row, { justifyContent: 'flex-end' }]}>
+            <Button
+              title="Details"
+              variant="ghost"
+              size="sm"
+              fullWidth={false}
+              iconRight={ChevronRight}
+              onPress={() => navigateTo(isDelivered || isCancelled ? `/user/orders/${order.id}/details` : `/user/orders/${order.id}`)}
+              accessibilityLabel="View details"
+              style={{ height: 44 }}
+            />
+            {isDelivered && !paymentFailed ? <Button title="Reorder" icon={RotateCcw} size="sm" fullWidth={false} onPress={() => handleReorder(order)} style={{ height: 40 }} /> : null}
+          </View>
+        </View>
+      </Card>
+    );
+  };
+
+  return (
+    <View style={styles.page}>
+      <Header goBack={goBack} />
+      <FlatList
+        data={filteredOrders}
+        keyExtractor={(o) => String(o.id)}
+        renderItem={renderOrder}
+        extraData={[activeMenuOrderId, countdowns]}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: bottomPad }}
+        initialNumToRender={6}
+        windowSize={7}
+        ListHeaderComponent={
+          <View style={styles.searchWrap}>
+            <Search size={20} color={color.textMuted} style={styles.searchIcon} />
+            <Field
+              placeholder="Search by restaurant or dish"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              accessibilityLabel="Search orders by restaurant or dish"
+              returnKeyType="search"
+              style={{ flex: 1 }}
+              inputStyle={{ paddingLeft: 44 }}
+            />
+          </View>
+        }
+        ListEmptyComponent={<EmptyState icon={Search} title="No orders found matching your search" />}
+        ListFooterComponent={
+          <Text style={styles.brand} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            DIMA HASAO FOOD
+          </Text>
+        }
+      />
+
+      <Dialog visible={ratingModal.open && !!ratingModal.order} onClose={handleCloseRating} backdrop={color.overlay} blur={8} panelStyle={styles.dialog}>
+        <View style={styles.rateHead}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[type.titleSerif, { color: color.goldOnDark }]} accessibilityRole="header">
+              Rate your order
+            </Text>
+            <Text style={[type.small, { color: color.textOnDarkMuted }]} numberOfLines={1}>
+              {ratingModal.order?.restaurant}
+            </Text>
+          </View>
+          <IconButton icon={X} label="Close" variant="inverse" onPress={handleCloseRating} />
+        </View>
+        <ScrollView style={{ maxHeight: 460 }} contentContainerStyle={{ padding: space.xl, gap: space.md }} keyboardShouldPersistTaps="handled">
+          <Text style={[type.label, { color: color.text }]}>Restaurant rating (out of 5)</Text>
+          <Stars value={restRating} setValue={setRestRating} label="Restaurant rating" />
+          <Field multiline value={restText} onChangeText={setRestText} placeholder="Restaurant feedback (optional)" accessibilityLabel="Restaurant feedback" inputStyle={{ minHeight: 72 }} />
+          {modalHasDelivery ? (
+            <>
+              <Text style={[type.label, { color: color.text, marginTop: space.md }]}>Delivery partner rating (out of 5)</Text>
+              <Stars value={delRating} setValue={setDelRating} label="Delivery partner rating" />
+              <Field multiline value={delText} onChangeText={setDelText} placeholder="Delivery partner feedback (optional)" accessibilityLabel="Delivery partner feedback" inputStyle={{ minHeight: 72 }} />
+            </>
+          ) : null}
+          <Button title={submitting ? 'Submitting...' : 'Submit ratings'} icon={submitting ? undefined : Star} size="lg" loading={submitting} disabled={submitDisabled} onPress={handleSubmitRating} style={{ marginTop: space.md }} />
+          {submitDisabled ? <Text style={[type.caption, { color: color.textMuted, textAlign: 'center' }]}>Please select all required ratings to continue</Text> : null}
         </ScrollView>
       </Dialog>
 
-      <Dialog visible={showShareModal && !!sharePayload} onClose={() => setShowShareModal(false)} backdrop="rgba(0,0,0,0.5)" blur={8} panelStyle={styles.shareDialog}>
+      <Dialog visible={showShareModal && !!sharePayload} onClose={() => setShowShareModal(false)} backdrop={color.overlay} blur={8} panelStyle={styles.dialog}>
         <View style={styles.shareHead}>
-          <View>
-            <Text style={{ fontSize: 16, color: tw.gray900, ...poppins(600) }}>Share restaurant</Text>
-            <Text style={{ fontSize: 12, color: tw.gray500, marginTop: 2, ...poppins(400) }}>Choose an app to share this restaurant</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+              Share restaurant
+            </Text>
+            <Text style={[type.small, { color: color.textMuted }]}>Choose an app to share this restaurant</Text>
           </View>
-          <Press scale={0.9} onPress={() => setShowShareModal(false)} accessibilityLabel="Close share modal" style={{ padding: 8 }}>
-            <X size={16} color={tw.gray500} />
-          </Press>
+          <IconButton icon={X} label="Close share modal" onPress={() => setShowShareModal(false)} />
         </View>
-        <View style={{ padding: 20, gap: 12 }}>
-          <Press onPress={async () => {
-            if (!sharePayload) return;
-            if (await tryNativeShare(sharePayload)) {
-              setShowShareModal(false);
-              toast.success('Shared successfully');
-            }
-          }} style={styles.systemShare}>
-            <Share2 size={16} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 14, ...poppins(600) }}>Share via apps</Text>
-          </Press>
+        <View style={{ padding: space.lg, gap: space.md }}>
+          <Button
+            title="Share via apps"
+            icon={Share2}
+            onPress={async () => {
+              if (!sharePayload) return;
+              if (await tryNativeShare(sharePayload)) {
+                setShowShareModal(false);
+                toast.success('Shared successfully');
+              }
+            }}
+          />
           <View style={styles.grid}>
-            {SHARE_TARGETS.map(([key, label, Icon, color]) => (
-              <Press key={key} scale={0.97} onPress={() => openShareTarget(key)} style={styles.gridItem}>
-                <Icon size={20} color={color} />
-                <Text style={styles.gridText}>{label}</Text>
+            {SHARE_TARGETS.map(([key, label, Icon]) => (
+              <Press key={key} scale={0.97} onPress={() => openShareTarget(key)} accessibilityLabel={label} style={styles.gridItem}>
+                <Icon size={20} color={color.primary} />
+                <Text style={[type.caption, { color: color.text }]}>{label}</Text>
               </Press>
             ))}
-            <Press scale={0.97} onPress={copyShareLink} style={styles.gridItem}>
-              <Copy size={20} color={tw.gray600} />
-              <Text style={styles.gridText}>Copy link</Text>
+            <Press scale={0.97} onPress={copyShareLink} accessibilityLabel="Copy link" style={styles.gridItem}>
+              <Copy size={20} color={color.primary} />
+              <Text style={[type.caption, { color: color.text }]}>Copy link</Text>
             </Press>
           </View>
         </View>
@@ -756,62 +728,23 @@ export default function Orders() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.gray50 },
-  header: { backgroundColor: '#fff', padding: 16, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: tw.gray200, ...shadow('xs') },
-  headerTitle: { marginLeft: 16, fontSize: 20, color: tw.gray800, ...poppins(600) },
-  searchWrap: { padding: 16, backgroundColor: '#fff', marginTop: 4, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, ...shadow('xs') },
-  searchInput: { flex: 1, marginLeft: 12, padding: 0, fontSize: 16, color: tw.gray600, ...poppins(400) },
-  emptyText: { fontSize: 16, color: tw.gray600, ...poppins(400) },
-  link: { color: GREEN, fontSize: 16 },
-  card: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray100, overflow: 'hidden', ...shadow('xs') },
-  cardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', padding: 16, paddingBottom: 8 },
-  restImg: { width: 48, height: 48, borderRadius: 8, backgroundColor: tw.gray200 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  restName: { fontSize: 16, color: tw.gray800, lineHeight: 20, flexShrink: 1, ...poppins(600) },
-  typeBadge: { paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999, borderWidth: 1 },
-  typeText: { fontSize: 9, letterSpacing: 0.9, ...poppins(800) },
-  orderIdText: { fontSize: 10, color: tw.gray500, marginTop: 2, ...poppins(400) },
-  locText: { fontSize: 11, color: tw.gray500, marginTop: 2, ...poppins(400) },
-  delivery: { fontSize: 12, color: tw.gray600, marginTop: 4, ...poppins(400) },
-  viewMenu: { fontSize: 12, color: GREEN },
-  menu: { position: 'absolute', right: 12, top: 40, width: 160, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, paddingVertical: 4, zIndex: 20, elevation: 8, ...shadow('lg') },
-  menuItem: { paddingHorizontal: 12, paddingVertical: 8 },
-  menuText: { fontSize: 12, color: tw.gray800, ...poppins(400) },
-  dashed: { borderTopWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200, marginHorizontal: 16, marginVertical: 4 },
-  veg: { width: 16, height: 16, borderWidth: 1, padding: 2, marginTop: 2 },
-  itemName: { fontSize: 14, color: tw.gray800, ...poppins(500) },
-  itemSub: { fontSize: 12, color: tw.gray500, marginTop: 2, ...poppins(400) },
-  itemPrice: { fontSize: 12, color: tw.gray800, ...poppins(600) },
-  summary: { paddingHorizontal: 12, paddingVertical: 8, backgroundColor: tw.gray50, borderRadius: 8, marginHorizontal: 12, marginBottom: 8, gap: 4 },
-  sumRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sep: { borderTopWidth: 1, borderColor: tw.gray100, marginHorizontal: 16, marginVertical: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  placed: { backgroundColor: tw.gray100, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(229,231,235,0.5)' },
-  placedText: { fontSize: 12, color: tw.gray700, ...poppins(600) },
-  payBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
-  payBadgeText: { fontSize: 10, letterSpacing: 0.5, ...poppins(700) },
-  statusBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1 },
-  statusText: { fontSize: 10, letterSpacing: 0.6, ...poppins(800) },
-  reason: { fontSize: 12, color: tw.red500, fontStyle: 'italic', ...poppins(500) },
-  refund: { fontSize: 10, color: tw.gray400, ...poppins(400) },
-  small: { fontSize: 12, color: tw.gray500, ...poppins(400) },
-  ratePill: { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: tw.green600, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  rateText: { fontSize: 10, color: '#fff', ...poppins(700) },
-  rateLink: { fontSize: 12, color: tw.slate500 },
-  countdown: { fontSize: 12, color: GREEN },
-  reorder: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: GREEN, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, ...shadow('xs') },
-  brand: { fontSize: 36, color: tw.gray200, fontStyle: 'italic', letterSpacing: -1.8, ...poppins(800) },
-  rateDialog: { width: '100%', maxWidth: 448, borderRadius: 24, backgroundColor: '#fff', overflow: 'hidden', ...shadow('2xl') },
-  rateLabel: { fontSize: 14, color: tw.gray900, marginBottom: 12, ...poppins(600) },
-  stars: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 12 },
-  textarea: { minHeight: 64, borderRadius: 12, borderWidth: 2, borderColor: tw.gray200, backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 8, fontSize: 14, color: tw.gray800, ...poppins(400) },
-  submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, paddingVertical: 14 },
-  submitText: { color: '#fff', fontSize: 16, ...poppins(700) },
-  shareDialog: { width: '100%', maxWidth: 384, borderRadius: 24, backgroundColor: '#fff', overflow: 'hidden', ...shadow('2xl') },
-  shareHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: tw.gray100, paddingHorizontal: 20, paddingVertical: 16 },
-  systemShare: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: GREEN, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  gridItem: { width: '30.5%', flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: tw.gray200, paddingHorizontal: 12, paddingVertical: 16, alignItems: 'center', gap: 8 },
-  gridText: { fontSize: 12, color: tw.gray700, ...poppins(500) },
+  page: { flex: 1, backgroundColor: color.bg },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.sm, paddingVertical: space.xs, minHeight: 56, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', marginBottom: space.xs },
+  searchIcon: { position: 'absolute', left: space.md + 2, zIndex: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, padding: space.lg, paddingBottom: space.md },
+  restImg: { width: 56, height: 56, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
+  menu: { flexDirection: 'row', gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.md },
+  summary: { marginHorizontal: space.md, marginBottom: space.md, padding: space.md, backgroundColor: color.surfaceMuted, borderRadius: radii.md, gap: space.xs },
+  sumRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md },
+  footer: { gap: space.xs, paddingHorizontal: space.lg, paddingBottom: space.md, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: color.border },
+  brand: { ...type.heroSerif, color: color.borderStrong, textAlign: 'center', marginTop: space.xxl },
+  dialog: { width: '100%', maxWidth: 448, borderRadius: radii.xl, backgroundColor: color.surface, overflow: 'hidden', ...elevation.sheet },
+  rateHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: color.primaryDeep, paddingLeft: space.xl, paddingRight: space.sm, paddingVertical: space.lg },
+  stars: { flexDirection: 'row', justifyContent: 'center', gap: space.xs },
+  star: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  shareHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderBottomWidth: 1, borderBottomColor: color.border, paddingLeft: space.xl, paddingRight: space.sm, paddingVertical: space.md },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  gridItem: { width: '30%', flexGrow: 1, minHeight: 72, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, padding: space.md, alignItems: 'center', justifyContent: 'center', gap: space.xs },
 });

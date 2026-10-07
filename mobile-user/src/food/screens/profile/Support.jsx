@@ -1,24 +1,25 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Building2, ChevronRight, HelpCircle, ShoppingBag } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Building2, HelpCircle, LifeBuoy, Search, ShoppingBag } from 'lucide-react-native';
 import { Press } from '../../../components/ui';
 import { toast } from '../../../lib/notify';
 import { readJson, sessionStore } from '../../../lib/storage';
 import { navigateTo } from '../../../lib/webRouter';
 import { authAPI, orderAPI, restaurantAPI, supportAPI } from '../../../api/food';
-import { Button, Card, CardContent, Input, Textarea } from '../../components/cart/ui';
-import { F } from '../../components/shell';
-import { poppins, shadow, tw } from '../../../theme';
+import { Button, Card, Chip, ListRow, SectionHeader, StatusBadge } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { FormField, PageHeader } from '../../components/profile/ProfileChrome';
+import { color, radii, space, type } from '../../../theme';
 
 const ORDER_ISSUES = ['Item missing', 'Wrong item', 'Not delivered', 'Payment issue'];
 const RESTAURANT_ISSUES = ['Bad service', 'Wrong info', 'Other'];
 
-const statusColors = (status) => {
+const statusTone = (status) => {
   const s = String(status || '').toLowerCase();
-  if (s === 'resolved' || s === 'closed') return [tw.green100, tw.green700];
-  if (s === 'open') return [tw.amber100, tw.amber700];
-  return [tw.slate100, tw.slate700];
+  if (s === 'resolved' || s === 'closed') return 'success';
+  if (s === 'open') return 'warning';
+  return 'neutral';
 };
 
 const getOrderLabel = (order) => {
@@ -59,21 +60,31 @@ function Notice({ children }) {
 }
 
 function SearchInput({ value, onChangeText, onFocus, onBlur, placeholder }) {
-  return <Input value={value} onChangeText={onChangeText} onFocus={onFocus} onBlur={onBlur} placeholder={placeholder} placeholderTextColor={tw.slate400} style={styles.search} />;
+  return (
+    <FormField
+      value={value}
+      onChangeText={onChangeText}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      placeholder={placeholder}
+      accessibilityLabel={placeholder}
+      left={<Search size={18} color={color.textMuted} />}
+    />
+  );
 }
 
 function Results({ items, labelOf, onPick, emptyText, keyOf }) {
   return (
     <View style={styles.results}>
       <ScrollView style={{ maxHeight: 250 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-        <View style={{ gap: 4 }}>
-          {items.map((it) => (
-            <Press key={keyOf(it)} scale={1} onPress={() => onPick(it)} accessibilityLabel={labelOf(it)} style={styles.resultRow}>
-              <Text style={styles.resultText}>{labelOf(it)}</Text>
-            </Press>
-          ))}
-          {items.length === 0 ? <Text style={styles.noMatch}>{emptyText}</Text> : null}
-        </View>
+        {items.map((it) => (
+          <Press key={keyOf(it)} scale={1} onPress={() => onPick(it)} accessibilityLabel={labelOf(it)} style={styles.resultRow}>
+            <Text style={styles.resultText} numberOfLines={2}>
+              {labelOf(it)}
+            </Text>
+          </Press>
+        ))}
+        {items.length === 0 ? <Text style={styles.noMatch}>{emptyText}</Text> : null}
       </ScrollView>
     </View>
   );
@@ -81,23 +92,16 @@ function Results({ items, labelOf, onPick, emptyText, keyOf }) {
 
 function SubmitRow({ onSubmit, disabled, submitting, onCancel }) {
   return (
-    <View style={{ gap: 12, marginTop: 16 }}>
-      <Press
-        onPress={onSubmit}
-        disabled={disabled}
-        scale={0.98}
-        accessibilityLabel="Submit Ticket"
-        style={[styles.submit, shadow('0 4px 14px rgba(220,38,38,0.25)'), disabled ? { opacity: 0.5 } : null]}
-      >
-        <Text style={styles.submitText}>{submitting ? 'Submitting...' : 'Submit Ticket'}</Text>
-      </Press>
-      <Button variant="outline" onPress={onCancel} style={styles.cancelBtn}>Cancel</Button>
+    <View style={{ gap: space.md, marginTop: space.sm }}>
+      <Button title={submitting ? 'Submitting...' : 'Submit Ticket'} onPress={onSubmit} disabled={disabled} loading={submitting} accessibilityLabel="Submit Ticket" />
+      <Button title="Cancel" variant="outline" onPress={onCancel} />
     </View>
   );
 }
 
 /** Port of pages/user/profile/Support.jsx. */
 export default function Support() {
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(() => sessionStore.getItem('support_step') || 'pick');
   const [type, setType] = useState(() => sessionStore.getItem('support_type') || '');
   const [orders, setOrders] = useState([]);
@@ -235,58 +239,48 @@ export default function Support() {
   const issueButtons = (list) => (
     <View style={styles.issueGrid}>
       {list.map((it) => (
-        <View key={it} style={{ width: '48.5%' }}>
-          <Button variant={issueType === it ? 'default' : 'outline'} onPress={() => setIssueType(it)} style={{ width: '100%' }}>{it}</Button>
-        </View>
+        <Chip key={it} label={it} selected={issueType === it} onPress={() => setIssueType(it)} style={{ height: 44 }} />
       ))}
     </View>
   );
 
-  return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#faf6ed' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Press onPress={handleTopBack} accessibilityLabel="Back" style={[styles.back, shadow('0 2px 10px rgba(0,0,0,0.05)')]}>
-            <ArrowLeft size={20} color={tw.slate800} />
-          </Press>
-          <Text style={styles.h1}>Help & Support</Text>
-        </View>
+  const goBackButton = (
+    <View style={styles.goBackRow}>
+      <Button title="Go Back" variant="outline" onPress={() => setStep('pick')} />
+    </View>
+  );
 
-        <Card style={[styles.heroCard, shadow('sm')]}>
-          <LinearGradient colors={['rgba(10,77,43,0.05)', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
-          <CardContent style={{ padding: 20 }}>
-            <View style={styles.blob} pointerEvents="none" />
+  return (
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: color.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <PageHeader title="Help & Support" onBack={handleTopBack} />
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom }]} keyboardShouldPersistTaps="handled">
+        <View style={styles.hero}>
+          <View style={styles.heroIcon}>
+            <LifeBuoy size={22} color={color.goldOnDark} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.heroTitle}>How can we help you?</Text>
             <Text style={styles.heroSub}>Raise a support ticket and track updates seamlessly.</Text>
-          </CardContent>
-        </Card>
+          </View>
+        </View>
 
-        <Card style={[styles.whiteCard, shadow('sm'), { marginBottom: 12 }]}>
-          <CardContent style={{ padding: 16, gap: 16 }}>
-            {step === 'pick' ? (
-              <View style={{ gap: 12 }}>
-                {PICKS.map(({ id, Icon, title, sub }) => (
-                  <Press key={id} scale={1} onPress={() => handlePick(id)} accessibilityLabel={title} style={styles.pick}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <View style={styles.pickIcon}>
-                        <Icon size={20} color={tw.slate700} />
-                      </View>
-                      <ChevronRight size={20} color={tw.slate300} />
-                    </View>
-                    <Text style={styles.pickTitle}>{title}</Text>
-                    <Text style={styles.pickSub}>{sub}</Text>
-                  </Press>
-                ))}
-              </View>
-            ) : null}
+        {step === 'pick' ? (
+          <Card padded={false} style={{ overflow: 'hidden' }}>
+            {PICKS.map(({ id, Icon, title, sub }, i) => (
+              <ListRow key={id} icon={Icon} title={title} subtitle={sub} onPress={() => handlePick(id)} divider={i < PICKS.length - 1} />
+            ))}
+          </Card>
+        ) : null}
 
+        {step !== 'pick' ? (
+          <Card style={{ gap: space.lg }}>
             {step === 'choose_order' ? (
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: space.md }}>
                 <StepHead title="Order Issue" sub="Select an order below to report your issue" />
                 {loadingOrders ? (
                   <Notice>Loading orders...</Notice>
                 ) : orders.length > 0 ? (
-                  <View style={{ gap: 8 }}>
+                  <View style={{ gap: space.sm }}>
                     <SearchInput
                       value={orderSearch}
                       onChangeText={setOrderSearch}
@@ -310,17 +304,15 @@ export default function Support() {
                 ) : (
                   <Notice>No recent orders found</Notice>
                 )}
-                <View style={styles.goBackRow}>
-                  <Button variant="outline" onPress={() => setStep('pick')} style={styles.goBack} textStyle={{ color: tw.slate700, ...poppins(600) }}>Go Back</Button>
-                </View>
+                {goBackButton}
               </View>
             ) : null}
 
             {step === 'order_issue' && selectedOrder ? (
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: space.md }}>
                 <StepHead title="Order Issue Details" sub="What went wrong with your order?" />
                 {issueButtons(ORDER_ISSUES)}
-                <Textarea placeholder="Describe the issue (optional)" value={description} onChangeText={setDescription} placeholderTextColor={tw.slate400} style={styles.area100} />
+                <FormField label="Details" placeholder="Describe the issue (optional)" value={description} onChangeText={setDescription} multiline />
                 <SubmitRow
                   onSubmit={() => submitTicket({ type: 'order', orderId: selectedOrder._id || selectedOrder.id, issueType, description })}
                   disabled={!issueType || submitting}
@@ -331,12 +323,12 @@ export default function Support() {
             ) : null}
 
             {step === 'choose_restaurant' ? (
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: space.md }}>
                 <StepHead title="Restaurant Issue" sub="Select a restaurant below to report your issue" />
                 {loadingRestaurants ? (
                   <Notice>Loading restaurants...</Notice>
                 ) : restaurants.length > 0 ? (
-                  <View style={{ gap: 8 }}>
+                  <View style={{ gap: space.sm }}>
                     <SearchInput
                       value={restaurantSearch}
                       onChangeText={setRestaurantSearch}
@@ -360,17 +352,15 @@ export default function Support() {
                 ) : (
                   <Notice>No restaurants found</Notice>
                 )}
-                <View style={styles.goBackRow}>
-                  <Button variant="outline" onPress={() => setStep('pick')} style={styles.goBack} textStyle={{ color: tw.slate700, ...poppins(600) }}>Go Back</Button>
-                </View>
+                {goBackButton}
               </View>
             ) : null}
 
             {step === 'restaurant_issue' && selectedRestaurant ? (
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: space.md }}>
                 <StepHead title="Restaurant Issue Details" sub="What went wrong with the restaurant?" />
                 {issueButtons(RESTAURANT_ISSUES)}
-                <Textarea placeholder="Describe the issue (optional)" value={description} onChangeText={setDescription} placeholderTextColor={tw.slate400} style={styles.area100} />
+                <FormField label="Details" placeholder="Describe the issue (optional)" value={description} onChangeText={setDescription} multiline />
                 <SubmitRow
                   onSubmit={() => submitTicket({ type: 'restaurant', restaurantId: selectedRestaurant._id || selectedRestaurant.id, issueType, description })}
                   disabled={!issueType || submitting}
@@ -381,10 +371,10 @@ export default function Support() {
             ) : null}
 
             {step === 'other_form' ? (
-              <View style={{ gap: 16 }}>
-                <Text style={styles.otherTitle}>Other Issue Details</Text>
-                <Input placeholder="Subject" placeholderTextColor={tw.slate400} value={subject} onChangeText={setSubject} style={styles.search} />
-                <Textarea placeholder="Describe your issue" placeholderTextColor={tw.slate400} value={description} onChangeText={setDescription} style={[styles.area100, { minHeight: 120 }]} />
+              <View style={{ gap: space.md }}>
+                <Text style={styles.stepTitle}>Other Issue Details</Text>
+                <FormField label="Subject" placeholder="Subject" value={subject} onChangeText={setSubject} />
+                <FormField label="Description" placeholder="Describe your issue" value={description} onChangeText={setDescription} multiline inputStyle={{ minHeight: 120 }} />
                 <SubmitRow
                   onSubmit={() => submitTicket({ type: 'other', issueType: subject || 'Other', description })}
                   disabled={!subject || submitting}
@@ -397,87 +387,61 @@ export default function Support() {
                 />
               </View>
             ) : null}
-          </CardContent>
-        </Card>
+          </Card>
+        ) : null}
 
-        <Card style={[styles.whiteCard, shadow('sm')]}>
-          <CardContent style={{ padding: 16 }}>
-            <View style={styles.ticketHead}>
-              <Text style={styles.ticketTitle}>My Tickets</Text>
-              <Text style={styles.count}>{tickets.length}</Text>
-            </View>
-            {loadingTickets ? (
-              <Text style={styles.muted}>Loading tickets...</Text>
-            ) : tickets.length === 0 ? (
-              <Text style={styles.muted}>No tickets yet</Text>
-            ) : (
-              <View style={{ gap: 8 }}>
-                {tickets.map((t, i) => {
-                  const [bg, color] = statusColors(t.status);
-                  return (
-                    <View key={t._id || t.id || i} style={styles.ticket}>
-                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.ticketLine}>{`#${String(t._id || t.id).slice(-6)} • ${t.type} • ${t.issueType}`}</Text>
-                          <Text style={styles.ticketDate}>{new Date(t.createdAt).toLocaleDateString()}</Text>
-                        </View>
-                        <View style={[styles.statusPill, { backgroundColor: bg }]}>
-                          <Text style={[styles.statusText, { color }]}>{t.status}</Text>
-                        </View>
-                      </View>
-                      {t.adminResponse ? <Text style={styles.reply}>Reply: {t.adminResponse}</Text> : null}
+        <View style={{ marginTop: space.md }}>
+          <View style={styles.ticketHead}>
+            <SectionHeader title="My Tickets" style={{ marginBottom: 0, flexShrink: 1 }} />
+            <StatusBadge label={String(tickets.length)} tone="neutral" />
+          </View>
+          {loadingTickets ? (
+            <Text style={styles.muted}>Loading tickets...</Text>
+          ) : tickets.length === 0 ? (
+            <Text style={styles.muted}>No tickets yet</Text>
+          ) : (
+            <View style={{ gap: space.sm }}>
+              {tickets.map((t, i) => (
+                <View key={t._id || t.id || i} style={styles.ticket}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.md }}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.ticketLine}>{`#${String(t._id || t.id).slice(-6)} • ${t.type} • ${t.issueType}`}</Text>
+                      <Text style={styles.ticketDate}>{new Date(t.createdAt).toLocaleDateString()}</Text>
                     </View>
-                  );
-                })}
-              </View>
-            )}
-          </CardContent>
-        </Card>
+                    <StatusBadge label={String(t.status || '').replace(/^\w/, (c) => c.toUpperCase())} tone={statusTone(t.status)} />
+                  </View>
+                  {t.adminResponse ? <Text style={styles.reply}>Reply: {t.adminResponse}</Text> : null}
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingVertical: 16, paddingBottom: 80 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
-  back: { height: 40, width: 40, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.slate100 },
-  h1: { marginLeft: 16, fontSize: 20, lineHeight: 28, color: tw.slate900, ...poppins(700) },
-  heroCard: { borderRadius: 16, borderColor: 'rgba(10,77,43,0.1)', overflow: 'hidden', marginBottom: 20, backgroundColor: '#fff' },
-  blob: { position: 'absolute', top: -40, right: -40, width: 128, height: 128, borderRadius: 64, backgroundColor: F.green, opacity: 0.06 },
-  heroTitle: { fontSize: 18, lineHeight: 28, color: tw.slate900, ...poppins(700) },
-  heroSub: { fontSize: 14, lineHeight: 20, color: tw.slate600, marginTop: 6, ...poppins(400) },
-  whiteCard: { backgroundColor: '#fff', borderRadius: 12, borderColor: tw.slate200 },
-  pick: { width: '100%', backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, borderRadius: 16, padding: 20 },
-  pickIcon: { backgroundColor: tw.slate50, borderRadius: 999, padding: 12 },
-  pickTitle: { marginTop: 16, fontSize: 16, lineHeight: 24, color: tw.slate900, ...poppins(700) },
-  pickSub: { marginTop: 6, fontSize: 14, lineHeight: 22.75, color: tw.slate500, ...poppins(400) },
-  stepHead: { borderBottomWidth: 1, borderBottomColor: tw.slate100, paddingBottom: 12, marginBottom: 16 },
-  stepTitle: { fontSize: 18, lineHeight: 28, color: tw.slate900, ...poppins(700) },
-  stepSub: { marginTop: 4, fontSize: 14, lineHeight: 20, color: tw.slate500, ...poppins(400) },
-  notice: { backgroundColor: tw.slate50, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: tw.slate100 },
-  noticeText: { fontSize: 14, lineHeight: 20, color: tw.slate500, textAlign: 'center', ...poppins(400) },
-  search: { height: 48, backgroundColor: tw.slate50, borderColor: tw.slate200, borderRadius: 12, fontSize: 16, color: tw.slate900, marginBottom: 12 },
-  results: { borderWidth: 1, borderColor: tw.slate200, borderRadius: 8, padding: 6, backgroundColor: tw.slate50 },
-  resultRow: { padding: 14, borderRadius: 8, borderWidth: 1, borderColor: 'transparent' },
-  resultText: { fontSize: 14, lineHeight: 20, color: tw.slate700, ...poppins(400) },
-  noMatch: { fontSize: 14, lineHeight: 20, color: tw.slate500, padding: 12, textAlign: 'center', ...poppins(400) },
-  goBackRow: { paddingTop: 16, marginTop: 8, borderTopWidth: 1, borderTopColor: tw.slate100 },
-  goBack: { width: '100%', height: 48, borderRadius: 12, borderColor: tw.slate200 },
-  issueGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  area100: { minHeight: 100, backgroundColor: tw.slate50, borderColor: tw.slate200, borderRadius: 12, fontSize: 16, lineHeight: 24, padding: 16, color: tw.slate900 },
-  submit: { height: 48, borderRadius: 12, backgroundColor: F.green, alignItems: 'center', justifyContent: 'center' },
-  submitText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) },
-  cancelBtn: { height: 48, borderRadius: 12, borderColor: tw.slate200, width: '100%' },
-  otherTitle: { fontSize: 16, lineHeight: 24, color: tw.slate900, ...poppins(600) },
-  ticketHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  ticketTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) },
-  count: { fontSize: 12, lineHeight: 16, color: tw.slate600, backgroundColor: tw.slate100, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, overflow: 'hidden', ...poppins(500) },
-  muted: { fontSize: 14, lineHeight: 20, color: tw.slate500, ...poppins(400) },
-  ticket: { borderWidth: 1, borderColor: tw.slate200, borderRadius: 8, padding: 12, backgroundColor: '#fff' },
-  ticketLine: { fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(600) },
-  ticketDate: { fontSize: 12, lineHeight: 16, color: tw.slate500, marginTop: 4, ...poppins(400) },
-  statusPill: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  statusText: { fontSize: 11, lineHeight: 16.5, ...poppins(600) },
-  reply: { fontSize: 12, lineHeight: 16, color: tw.slate600, marginTop: 8, ...poppins(400) },
+  content: { padding: space.lg, gap: space.md },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, borderRadius: radii.lg, backgroundColor: color.primaryDeep },
+  heroIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  heroTitle: { ...type.subheading, color: color.textInverse },
+  heroSub: { ...type.small, color: color.textOnDarkMuted, marginTop: space.xxs },
+  stepHead: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border, paddingBottom: space.md },
+  stepTitle: { ...type.heading, color: color.text },
+  stepSub: { marginTop: space.xxs, ...type.small, color: color.textSecondary },
+  notice: { backgroundColor: color.surfaceMuted, padding: space.lg, borderRadius: radii.md },
+  noticeText: { ...type.body, color: color.textMuted, textAlign: 'center' },
+  results: { borderWidth: 1, borderColor: color.border, borderRadius: radii.md, padding: space.xs, backgroundColor: color.surface },
+  resultRow: { minHeight: 48, justifyContent: 'center', paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radii.sm },
+  resultText: { ...type.body, color: color.text },
+  noMatch: { ...type.body, color: color.textMuted, padding: space.md, textAlign: 'center' },
+  goBackRow: { paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  issueGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  ticketHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, marginBottom: space.md },
+  muted: { ...type.body, color: color.textMuted },
+  ticket: { borderWidth: 1, borderColor: color.border, borderRadius: radii.lg, padding: space.md, backgroundColor: color.surface },
+  ticketLine: { ...type.bodyStrong, color: color.text },
+  ticketDate: { ...type.caption, color: color.textMuted, marginTop: space.xxs },
+  reply: { ...type.small, color: color.textSecondary, marginTop: space.sm },
 });

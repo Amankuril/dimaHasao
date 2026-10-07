@@ -2,30 +2,27 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronRight, Clock, Heart, Search, ShieldCheck, User, X } from 'lucide-react-native';
+import { CalendarClock, ChevronRight, Clock, Heart, LayoutGrid, Square, User, X } from 'lucide-react-native';
 import { BottomSheet } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { events } from '../../lib/events';
 import { localStore } from '../../lib/storage';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { shadow, tw } from '../../theme';
-import { fo, Pulse } from '../account/ui';
+import { Card, EmptyState, IconButton, SectionHeader, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
+import { Pulse } from '../account/ui';
 import { useTaxiHome } from '../hooks/useTaxiHome';
-import { normalizeAssetUrl } from '../context/SettingsContext';
 import { userService } from '../services/userService';
 import { DISTRICT_PLACES } from '../constants/districtPlaces';
 import LocationMapSection from '../components/home/LocationMapSection';
-import { useSettings } from '../context/SettingsContext';
+import { normalizeAssetUrl, useSettings } from '../context/SettingsContext';
 import SuperAppHomeHeader from '../components/home/SuperAppHomeHeader';
 import {
   SafeImage, airplaneIcon, bikeFallback, busFallback, busStationIcon, calculateDistanceKm, defaultSettings, deliveryFallback, fallbackCar, getDynamicImageSrc,
   parcelFallback, railwayIcon, seamlessHighwayBg, taxiFallback, toSource, truckFallback, yellowTaxiImg,
 } from '../components/home/homeShared';
 
-const BG = '#F8FAFC';
-const YELLOW = '#FFC400';
-const INK = '#0B1220';
 const RECENT_KEY = 'Appzeto 24:recentLocations';
 const active = (c) => c.status === 'active' || c.status === true;
 const byOrder = (a, b) => Number(a.order || 0) - Number(b.order || 0);
@@ -67,7 +64,7 @@ function RecentLocationsList({ navigate, routePrefix }) {
   }, [recentLocations]);
 
   return (
-    <View style={{ marginTop: 8, gap: 4 }}>
+    <Card padded={false}>
       {recentList.map((item, index) => (
         <View key={index}>
           <View style={styles.recentRow}>
@@ -75,12 +72,12 @@ function RecentLocationsList({ navigate, routePrefix }) {
               scale={0.99}
               onPress={() => navigate(`${routePrefix}/ride/select-location`, { state: { drop: item.address, dropCoords: item.lat && item.lon ? [item.lon, item.lat] : null, activeInput: 'drop' } })}
               accessibilityLabel={`Ride to ${item.name}`}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}
+              style={styles.recentMain}
             >
               <View style={styles.recentIcon}>
-                <Clock size={16} color={tw.slate500} />
+                <Clock size={18} color={color.primary} />
               </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={styles.flexText}>
                 <Text style={styles.recentName} numberOfLines={1}>{item.name}</Text>
                 <Text style={styles.recentAddr} numberOfLines={1}>
                   {item.distance ? `${item.distance} • ` : ''}
@@ -99,15 +96,15 @@ function RecentLocationsList({ navigate, routePrefix }) {
                 setRecentLocations(updated);
                 localStore.setItem(RECENT_KEY, JSON.stringify(updated));
               }}
-              style={{ paddingHorizontal: 4 }}
+              style={styles.heartBtn}
             >
-              <Heart size={16} color={item.favourite ? '#FF2056' : tw.slate400} fill={item.favourite ? '#FF2056' : 'none'} />
+              <Heart size={20} color={item.favourite ? color.danger : color.textMuted} fill={item.favourite ? color.danger : 'none'} />
             </Press>
           </View>
           {index < recentList.length - 1 ? <View style={styles.recentDivider} /> : null}
         </View>
       ))}
-    </View>
+    </Card>
   );
 }
 
@@ -154,12 +151,13 @@ const GRID_DEFAULT_EVERYTHING = [
   { id: '4', title: 'All Services', subtitle: 'All Services', image: '', route: '', order: 4, status: 'active' },
 ];
 
-/** The dark "Everything In Minutes" tile: text on the left, artwork bleeding off the right. */
+/** "Everything in minutes" tile: a white card with the artwork on the right; "All services" is the deep-green heritage tile. */
 function EverythingCard({ item, fallbackIcon, onPress }) {
   const title = item.title;
   const isAllServices = lower(title).includes('all services');
   const [failed, setFailed] = useState(false);
   const src = failed ? fallbackIcon : getDynamicImageSrc(item, fallbackIcon);
+  const showSub = lower(item.subtitle) !== lower(title) && item.subtitle;
   return (
     <Press
       scale={0.98}
@@ -168,28 +166,21 @@ function EverythingCard({ item, fallbackIcon, onPress }) {
         onPress();
       }}
       accessibilityLabel={`${title}${item.subtitle && lower(item.subtitle) !== lower(title) ? `, ${item.subtitle}` : ''}`}
-      style={styles.everything}
+      style={[styles.everything, isAllServices && styles.everythingDark]}
     >
+      <View style={styles.everythingText}>
+        <Text style={[styles.everythingTitle, isAllServices && { color: color.goldOnDark }]} numberOfLines={2}>{title}</Text>
+        {showSub ? <Text style={[styles.everythingSub, isAllServices && { color: color.textOnDarkMuted }]} numberOfLines={2}>{item.subtitle}</Text> : null}
+      </View>
       {isAllServices ? (
-        <View style={styles.everythingIconWrap}>
-          <View style={styles.allIcon}>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 22, gap: 4 }}>
-              {[YELLOW, tw.slate400, tw.slate400, tw.slate300].map((c, i) => (
-                <View key={i} style={{ width: 9, height: 9, borderRadius: 2.5, backgroundColor: c }} />
-              ))}
-            </View>
-          </View>
+        <View style={styles.allIcon}>
+          <LayoutGrid size={22} color={color.goldOnDark} />
         </View>
       ) : (
         <View style={styles.everythingImageWrap}>
-          <Image source={toSource(src)} onError={() => setFailed(true)} style={{ width: '190%', height: '100%' }} resizeMode="cover" />
+          <Image source={toSource(src)} onError={() => setFailed(true)} style={styles.everythingImage} resizeMode="contain" />
         </View>
       )}
-      <LinearGradient pointerEvents="none" colors={['#121821', '#121821', 'rgba(18,24,33,0)']} locations={[0, 0.52, 0.72]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
-      <View pointerEvents="none" style={styles.everythingText}>
-        {lower(item.subtitle) !== lower(title) ? <Text style={styles.everythingSub}>{item.subtitle}</Text> : null}
-        <Text style={styles.everythingTitle} numberOfLines={2}>{title}</Text>
-      </View>
     </Press>
   );
 }
@@ -263,12 +254,12 @@ function ServiceGrid({ navigate, onOpenAll, onLoadServices }) {
   const moduleIcon = (m, fallback) => (m ? normalizeAssetUrl(m.mobile_menu_icon) || fallback : fallback);
 
   return (
-    <View style={{ paddingVertical: 4 }}>
-      <Text style={styles.h2}>Everything In Minutes</Text>
+    <View>
+      <SectionHeader title="Everything in minutes" />
       {loading ? (
         <View style={styles.grid}>
           {[0, 1, 2, 3].map((i) => (
-            <Pulse key={i} style={{ width: '48.2%', height: 132, borderRadius: 24, backgroundColor: 'rgba(241,245,249,0.8)' }} />
+            <Pulse key={i} style={styles.gridSkeleton} />
           ))}
         </View>
       ) : (
@@ -285,7 +276,7 @@ function ServiceGrid({ navigate, onOpenAll, onLoadServices }) {
               else navigate('/taxi/user/ride/select-location', { state: { selectedCategory: isBike ? 'bike' : 'car', flow: 'ride', activeInput: 'drop' } });
             };
             return (
-              <View key={item.id || idx} style={{ width: '48.2%' }}>
+              <View key={item.id || idx} style={styles.gridCell}>
                 <EverythingCard item={item} fallbackIcon={fallbackIcon} onPress={onPress} />
               </View>
             );
@@ -320,7 +311,7 @@ function PromoCarousel({ promoBanners, currentPromoIndex, setCurrentPromoIndex, 
   };
 
   return (
-    <View style={{ paddingTop: 8 }}>
+    <View>
       <View style={styles.promo} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         <ScrollView
           ref={scroller}
@@ -339,11 +330,13 @@ function PromoCarousel({ promoBanners, currentPromoIndex, setCurrentPromoIndex, 
             return (
               <Press key={item.id || item._id || idx} scale={1} onPress={() => open(item)} accessibilityLabel={`${title}${item.subtitle ? `. ${item.subtitle}` : ''}`} style={{ width: width || 1, height: 150 }}>
                 <Image source={toSource(getDynamicImageSrc(item, fallbackImages[idx % fallbackImages.length]))} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                <LinearGradient colors={['#020618', 'rgba(2,6,24,0.8)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+                <LinearGradient colors={[color.primaryDeep, 'rgba(6,44,22,0.82)', 'rgba(6,44,22,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
                 <View style={styles.promoText}>
-                  <Text style={styles.promoTag}>SUPER SAVER</Text>
-                  <Text style={styles.promoTitle}>
-                    <Text style={{ color: YELLOW }}>{title.split(' ')[0].toUpperCase()}</Text> {title.split(' ').slice(1).join(' ').toUpperCase()}
+                  <View style={styles.promoTag}>
+                    <Text style={styles.promoTagText}>Super saver</Text>
+                  </View>
+                  <Text style={styles.promoTitle} numberOfLines={2}>
+                    <Text style={{ color: color.goldOnDark }}>{title.split(' ')[0]}</Text> {title.split(' ').slice(1).join(' ')}
                   </Text>
                   {item.subtitle ? <Text style={styles.promoSub} numberOfLines={2}>{item.subtitle}</Text> : null}
                 </View>
@@ -354,11 +347,11 @@ function PromoCarousel({ promoBanners, currentPromoIndex, setCurrentPromoIndex, 
         {promoBanners.length > 1 ? (
           <>
             <View style={styles.promoBar}>
-              <Animated.View style={{ height: '100%', backgroundColor: YELLOW, width: progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }} />
+              <Animated.View style={{ height: '100%', backgroundColor: color.gold, width: progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }} />
             </View>
             <View style={styles.promoDots}>
               {promoBanners.map((_, idx) => (
-                <Press key={idx} scale={1} hitSlop={8} onPress={() => setCurrentPromoIndex(idx)} accessibilityLabel={`Go to offer ${idx + 1}`} style={[styles.promoDot, idx === currentPromoIndex ? { backgroundColor: YELLOW, width: 18 } : null]} />
+                <Press key={idx} scale={1} hitSlop={8} onPress={() => setCurrentPromoIndex(idx)} accessibilityLabel={`Go to offer ${idx + 1}`} style={[styles.promoDot, idx === currentPromoIndex ? styles.promoDotOn : null]} />
               ))}
             </View>
           </>
@@ -370,11 +363,11 @@ function PromoCarousel({ promoBanners, currentPromoIndex, setCurrentPromoIndex, 
 
 function SectionSkeleton({ w, h, count, radius }) {
   return (
-    <View style={{ paddingTop: 8 }}>
-      <Pulse style={{ width: 80, height: 16, borderRadius: 6, backgroundColor: tw.slate200, marginBottom: 12 }} />
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+    <View>
+      <Pulse style={styles.skeletonTitle} />
+      <View style={{ flexDirection: 'row', gap: space.md }}>
         {Array.from({ length: count }, (_, i) => (
-          <Pulse key={i} style={{ width: w, height: h, borderRadius: radius, backgroundColor: tw.slate200 }} />
+          <Pulse key={i} style={{ width: w, height: h, borderRadius: radius, backgroundColor: color.surfaceMuted }} />
         ))}
       </View>
     </View>
@@ -416,26 +409,32 @@ export default function TaxiHome() {
   }, [ping]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: 110 + NAV_CLEARANCE + insets.bottom }}>
-        {/* Map with the header and the pickup pill on top of it */}
-        <View style={{ height: 240, backgroundColor: tw.slate200 }}>
-          {showDeferredSections ? <LocationMapSection /> : <Pulse style={{ flex: 1, backgroundColor: tw.slate200 }} />}
-          <View style={{ position: 'absolute', top: 16 + insets.top, left: 0, right: 0 }} pointerEvents="box-none">
-            <SuperAppHomeHeader />
+    <View style={styles.screen}>
+      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: space.xxl + NAV_CLEARANCE + insets.bottom }}>
+        {/* Location strip, then the map with the pickup card on top of it */}
+        <View>
+          <SuperAppHomeHeader />
+          <View style={styles.mapArea}>
+            {showDeferredSections ? <LocationMapSection /> : <Pulse style={{ flex: 1, backgroundColor: color.surfaceMuted }} />}
+            <Press scale={0.99} onPress={() => navigate(`${routePrefix}/ride/select-location`, { state: { activeInput: 'pickup', flow: 'ride' } })} accessibilityLabel={`Pickup: ${isLocationLoading ? 'finding your location' : pickupAddress}. Change`} style={styles.pickupPill}>
+              <View style={styles.pickupDot} />
+              <View style={styles.flexText}>
+                <Text style={styles.pickupLabel}>Pickup</Text>
+                <Text style={styles.pickupText} numberOfLines={1}>{isLocationLoading ? 'Pinning your current location...' : pickupAddress}</Text>
+              </View>
+              <Text style={styles.pickupChange}>Change</Text>
+            </Press>
           </View>
-          <Press scale={0.99} onPress={() => navigate(`${routePrefix}/ride/select-location`, { state: { activeInput: 'pickup', flow: 'ride' } })} accessibilityLabel={`Pickup: ${isLocationLoading ? 'finding your location' : pickupAddress}. Change`} style={styles.pickupPill}>
-            <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: '#168a45' }} />
-            <Text style={styles.pickupText} numberOfLines={1}>{isLocationLoading ? 'Pinning your current location...' : pickupAddress}</Text>
-            <Text style={styles.pickupChange}>CHANGE</Text>
-          </Press>
         </View>
 
-        {/* Search bar: sticks to the top while the sheet scrolls under it */}
+        {/* Drop search: sticks to the top while the page scrolls under it */}
         <View style={styles.searchWrap}>
           <Press scale={0.99} onPress={() => navigate(`${routePrefix}/ride/select-location`, { state: { activeInput: 'drop', flow: 'ride' } })} accessibilityRole="search" accessibilityLabel="Where do you want to go?" style={styles.search}>
-            <Search size={18} color={tw.slate900} strokeWidth={2.5} />
+            <View style={styles.dropMarker}>
+              <Square size={10} color={DROP} fill={DROP} />
+            </View>
             <Text style={styles.searchText} numberOfLines={1}>Where do you want to go?</Text>
+            <ChevronRight size={20} color={color.textMuted} />
           </Press>
         </View>
 
@@ -444,16 +443,16 @@ export default function TaxiHome() {
 
           {currentRide && lower(currentRide?.status) !== 'end_requested' ? (
             <Press scale={0.99} onPress={() => navigate(trackingPath, { state: currentRide })} accessibilityLabel={serviceType === 'rental' ? 'Active rental booking. View details' : 'Active ride. View details'} style={styles.activeRide}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                <View style={{ width: 8, height: 8 }}>
+              <View style={styles.activeRideLeft}>
+                <View style={{ width: 10, height: 10 }}>
                   <Animated.View style={[styles.pingDot, { opacity: ping.interpolate({ inputRange: [0, 1], outputRange: [0.75, 0] }), transform: [{ scale: ping.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }) }] }]} />
-                  <View style={[styles.pingDot, { backgroundColor: '#00BC7D' }]} />
+                  <View style={styles.pingDot} />
                 </View>
                 <Text style={styles.activeRideText} numberOfLines={1}>{serviceType === 'rental' ? 'You have an active rental booking' : 'You have an active ride'}</Text>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                <Text style={styles.activeRideCta}>View details</Text>
-                <ChevronRight size={14} color="#009966" />
+              <View style={styles.inlineLink}>
+                <Text style={styles.linkText}>View details</Text>
+                <ChevronRight size={16} color={color.primary} />
               </View>
             </Press>
           ) : null}
@@ -463,20 +462,14 @@ export default function TaxiHome() {
           ) : null}
 
           {settingsLoading ? (
-            <SectionSkeleton w={86} h={96} count={4} radius={20} />
+            <SectionSkeleton w={88} h={100} count={4} radius={radii.lg} />
           ) : sections?.enableExplore === false ? null : (
-            <View style={{ paddingTop: 4 }}>
-              <View style={styles.headRow}>
-                <Text style={[styles.h2, { marginBottom: 0 }]}>Explore</Text>
-                <Press scale={0.96} onPress={() => setIsAllServicesOpen(true)} accessibilityLabel="View all services" hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                  <Text style={styles.viewAll}>VIEW ALL</Text>
-                  <ChevronRight size={12} color={YELLOW} strokeWidth={3} />
-                </Press>
-              </View>
-              <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 12, paddingHorizontal: 4 }}>
+            <View>
+              <SectionHeader title="Explore" action="View all" onAction={() => setIsAllServicesOpen(true)} />
+              <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.hScroll}>
                 {exploreCards.map((card, idx) => (
                   <Press key={card.id || idx} scale={0.96} onPress={() => handleServiceClick(card)} accessibilityLabel={card.title} style={styles.exploreCard}>
-                    <SafeImage item={card} fallbackImage={exploreIcon(card.title)} style={{ width: 32, height: 32 }} />
+                    <SafeImage item={card} fallbackImage={exploreIcon(card.title)} style={{ width: 36, height: 36 }} />
                     <Text style={styles.exploreTitle} numberOfLines={2}>{card.title}</Text>
                   </Press>
                 ))}
@@ -485,30 +478,28 @@ export default function TaxiHome() {
           )}
 
           {settingsLoading ? (
-            <Pulse style={{ height: 140, borderRadius: 26, backgroundColor: tw.slate200, marginTop: 8 }} />
+            <Pulse style={styles.promoSkeleton} />
           ) : sections?.enablePromo === false || !promoBanners || promoBanners.length === 0 ? null : (
             <PromoCarousel promoBanners={promoBanners} currentPromoIndex={currentPromoIndex} setCurrentPromoIndex={setCurrentPromoIndex} setIsHoveringPromo={setIsHoveringPromo} navigate={navigate} routePrefix={routePrefix} />
           )}
 
           {settingsLoading ? (
-            <SectionSkeleton w={156} h={162} count={3} radius={24} />
+            <SectionSkeleton w={156} h={162} count={3} radius={radii.lg} />
           ) : sections?.enableGoPlaces === false ? null : (
-            <View style={{ paddingTop: 4 }}>
-              <View style={{ marginBottom: 10, marginLeft: 4 }}>
-                <Text style={[styles.h2, { marginBottom: 0 }]}>Go Places with Dima Hasao</Text>
-                <Text style={styles.goSub}>Fast bookings to key transit hubs</Text>
-              </View>
-              <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingBottom: 12, paddingHorizontal: 4 }}>
+            <View>
+              <SectionHeader title="Go places with Dima Hasao" style={{ marginBottom: space.xs }} />
+              <Text style={styles.goSub}>Fast bookings to key transit hubs</Text>
+              <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.hScroll}>
                 {goPlacesCards.map((card, idx) => (
                   <Press key={card.id || idx} scale={0.97} onPress={() => navigate(card.route || `${routePrefix}/ride/select-location`)} accessibilityLabel={`${card.title}. Book now`} style={styles.goCard}>
                     <View style={styles.goImage}>
                       <SafeImage item={card} fallbackImage={goPlacesIcon(card.title)} style={{ width: '100%', height: '100%' }} />
                     </View>
-                    <View style={{ padding: 12, flex: 1, justifyContent: 'space-between' }}>
+                    <View style={styles.goBody}>
                       <Text style={styles.goTitle} numberOfLines={2}>{card.title}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 10 }}>
-                        <Text style={styles.goCta}>Book Now</Text>
-                        <ChevronRight size={10} color={YELLOW} strokeWidth={3} />
+                      <View style={styles.inlineLink}>
+                        <Text style={styles.linkText}>Book now</Text>
+                        <ChevronRight size={16} color={color.primary} />
                       </View>
                     </View>
                   </Press>
@@ -517,78 +508,77 @@ export default function TaxiHome() {
             </View>
           )}
 
-          {settingsLoading ? (
-            <Pulse style={{ height: 140, borderRadius: 24, backgroundColor: tw.slate200, marginTop: 16 }} />
-          ) : sections?.enableFooter === false ? null : (
-            <View style={styles.footer}>
-              <Image source={toSource(getDynamicImageSrc(uiSettings?.footer || {}, seamlessHighwayBg))} style={StyleSheet.absoluteFill} resizeMode="cover" />
-              <LinearGradient colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.45)', 'rgba(255,255,255,0.8)']} style={StyleSheet.absoluteFill} />
-              <Text style={styles.footerHash}>{String(footer.hashtag || '').toUpperCase()}</Text>
-              <Text style={styles.footerLine1}>{String(footer.line1 || '').toUpperCase()}</Text>
-              <Text style={styles.footerLine2}>{String(footer.line2 || '').toUpperCase()}</Text>
-            </View>
-          )}
-
           {isScheduledAcceptedRide ? (
             <Press scale={0.99} onPress={() => navigate(trackingPath, { state: currentRide })} accessibilityLabel={`Scheduled ride confirmed. ${scheduledCountdown}`} style={styles.scheduled}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={styles.confirmed}>
-                  <ShieldCheck size={11} color="#FDC700" strokeWidth={3} />
-                  <Text style={styles.confirmedText}>CONFIRMED</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#FDC700' }} />
-                  <Text style={styles.confirmedText}>LIVE STATUS</Text>
+              <View style={styles.rowBetween}>
+                <StatusBadge label="Confirmed" tone="info" />
+                <View style={styles.liveRow}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveText}>Live status</Text>
                 </View>
               </View>
-              <View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.countdown}>{scheduledCountdown}</Text>
+              <View style={styles.countdownRow}>
+                <View style={styles.flexText}>
+                  <View style={styles.liveRow}>
+                    <CalendarClock size={18} color={color.goldOnDark} />
+                    <Text style={styles.countdown}>{scheduledCountdown}</Text>
+                  </View>
                   <Text style={styles.countdownDate}>{scheduledDateLabel}</Text>
                 </View>
                 <View style={styles.rideIcon}>
-                  <Image source={toSource(currentRideIcon)} style={{ width: 32, height: 32 }} resizeMode="contain" />
+                  <Image source={toSource(currentRideIcon)} style={{ width: 36, height: 36 }} resizeMode="contain" />
                 </View>
               </View>
               <View style={styles.driverRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                <View style={styles.activeRideLeft}>
                   <View style={styles.driverAvatar}>
-                    <User size={16} color="#FDC700" />
+                    <User size={18} color={color.primary} />
                   </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.driverLabel}>DRIVER & VEHICLE</Text>
+                  <View style={styles.flexText}>
+                    <Text style={styles.driverLabel}>Driver and vehicle</Text>
                     <Text style={styles.driverValue} numberOfLines={1}>
                       {driverName} • {vehicleLabel}
                     </Text>
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.driverLabel}>FARE</Text>
-                  <Text style={styles.driverValue}>₹{Number(currentRide?.fare || 0).toFixed(0)}</Text>
+                  <Text style={styles.driverLabel}>Fare</Text>
+                  <Text style={styles.driverFare}>₹{Number(currentRide?.fare || 0).toFixed(0)}</Text>
                 </View>
               </View>
             </Press>
           ) : null}
+
+          {settingsLoading ? (
+            <Pulse style={styles.promoSkeleton} />
+          ) : sections?.enableFooter === false ? null : (
+            <View style={styles.footer}>
+              <Image source={toSource(getDynamicImageSrc(uiSettings?.footer || {}, seamlessHighwayBg))} style={StyleSheet.absoluteFill} resizeMode="cover" />
+              <LinearGradient colors={['rgba(6,44,22,0.35)', 'rgba(6,44,22,0.75)', 'rgba(6,44,22,0.92)']} style={StyleSheet.absoluteFill} />
+              <Text style={styles.footerHash}>{String(footer.hashtag || '')}</Text>
+              <Text style={styles.footerLine1}>{String(footer.line1 || '')}</Text>
+              <Text style={styles.footerLine2}>{String(footer.line2 || '')}</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
-      <BottomSheet visible={isAllServicesOpen} onClose={() => setIsAllServicesOpen(false)} backdrop="rgba(0,0,0,0.7)" spring={{ stiffness: 240, damping: 26 }} panelStyle={[styles.allSheet, { height: height * 0.85, paddingBottom: 20 + insets.bottom }]}>
-        <Press scale={1} onPress={() => setIsAllServicesOpen(false)} accessibilityLabel="Close" style={{ alignItems: 'center', paddingBottom: 12 }}>
-          <View style={{ width: 48, height: 4, borderRadius: 2, backgroundColor: tw.slate200 }} />
+      <BottomSheet visible={isAllServicesOpen} onClose={() => setIsAllServicesOpen(false)} backdrop={color.overlay} spring={{ stiffness: 240, damping: 26 }} panelStyle={[styles.allSheet, { height: height * 0.85, paddingBottom: space.xl + insets.bottom }]}>
+        <Press scale={1} onPress={() => setIsAllServicesOpen(false)} accessibilityLabel="Close" style={styles.grabberHit}>
+          <View style={styles.grabber} />
         </Press>
         <View style={styles.allHead}>
-          <Text style={styles.allTitle}>All Services</Text>
-          <Press scale={0.95} onPress={() => setIsAllServicesOpen(false)} accessibilityLabel="Close all services" style={styles.allClose} hitSlop={8}>
-            <X size={16} color={tw.slate500} strokeWidth={2.5} />
-          </Press>
+          <Text style={styles.allTitle} accessibilityRole="header">All services</Text>
+          <IconButton icon={X} label="Close all services" variant="soft" onPress={() => setIsAllServicesOpen(false)} />
         </View>
-        <ScrollView style={{ flex: 1, marginTop: 20 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.allGrid}>
+        <ScrollView style={{ flex: 1, marginTop: space.lg }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.allGrid}>
+          {activeServices.length === 0 ? <EmptyState icon={LayoutGrid} title="No services yet" message="Taxi services for your area will show here." style={{ width: '100%' }} /> : null}
           {activeServices.map((service, index) => (
             <Press key={index} scale={0.95} onPress={() => handleServiceClick(service)} accessibilityLabel={service.label} style={styles.allItem}>
               <View style={styles.allIconBox}>
                 <Image source={toSource(service.icon)} style={{ width: 44, height: 44 }} resizeMode="contain" />
               </View>
-              <Text style={styles.allLabel}>{service.label}</Text>
+              <Text style={styles.allLabel} numberOfLines={2}>{service.label}</Text>
             </Press>
           ))}
         </ScrollView>
@@ -597,78 +587,128 @@ export default function TaxiHome() {
   );
 }
 
+/** Drop is marked with a red square everywhere in the ride flow; pickup is a brand-green dot. */
+const DROP = color.danger;
+
 const styles = StyleSheet.create({
-  pickupPill: { position: 'absolute', left: 16, right: 16, bottom: 36, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate200, ...shadow('0 8px 20px rgba(0,0,0,0.18)') },
-  pickupText: { flex: 1, fontSize: 12, lineHeight: 14, color: tw.slate800, ...fo(700) },
-  pickupChange: { fontSize: 10.5, lineHeight: 14, letterSpacing: 0.5, color: '#F0B100', borderLeftWidth: 1, borderLeftColor: 'rgba(226,232,240,0.5)', paddingLeft: 8, ...fo(900) },
-  searchWrap: { marginTop: -20, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6, backgroundColor: BG, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate200, ...shadow('sm') },
-  searchText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.slate900, ...fo(600) },
-  sheet: { paddingHorizontal: 16, gap: 12, backgroundColor: BG },
+  screen: { flex: 1, backgroundColor: color.bg },
+  flexText: { flex: 1, minWidth: 0 },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  inlineLink: { flexDirection: 'row', alignItems: 'center', gap: space.xxs, minHeight: 32 },
+  linkText: { ...type.label, color: color.primary },
+  bleed: { marginHorizontal: -space.lg },
+  hScroll: { gap: space.md, paddingHorizontal: space.lg, paddingBottom: space.xs },
 
-  recentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 12 },
-  recentIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.slate100, borderWidth: 1, borderColor: tw.slate200 },
-  recentName: { fontSize: 14, lineHeight: 17.5, color: INK, ...fo(700) },
-  recentAddr: { fontSize: 11, lineHeight: 16, color: '#64748B', marginTop: 4, ...fo(500) },
-  recentDivider: { borderBottomWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(226,232,240,0.8)', marginHorizontal: 8 },
+  mapArea: { height: 240, backgroundColor: color.surfaceMuted },
+  pickupPill: {
+    position: 'absolute', left: space.lg, right: space.lg, bottom: space.xl, minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: space.md,
+    borderRadius: radii.lg, paddingHorizontal: space.lg, paddingVertical: space.sm, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float,
+  },
+  pickupDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: color.primary, borderWidth: 2, borderColor: color.primarySoft },
+  pickupLabel: { ...type.caption, color: color.primary },
+  pickupText: { ...type.bodyStrong, color: color.text },
+  pickupChange: { ...type.label, color: color.primary, paddingLeft: space.md, borderLeftWidth: 1, borderLeftColor: color.border },
 
-  activeRide: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 16, borderWidth: 1, backgroundColor: 'rgba(236,253,245,0.4)', borderColor: 'rgba(208,250,229,0.6)', marginTop: 4 },
-  pingDot: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: '#00D492' },
-  activeRideText: { flex: 1, fontSize: 13, lineHeight: 16, color: tw.slate900, ...fo(700) },
-  activeRideCta: { fontSize: 12, lineHeight: 14, color: '#009966', ...fo(900) },
+  searchWrap: { paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.sm, backgroundColor: color.bg },
+  search: {
+    flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56, borderRadius: radii.lg, paddingHorizontal: space.lg,
+    backgroundColor: color.surface, borderWidth: 1.5, borderColor: color.primaryBorder, ...elevation.card,
+  },
+  dropMarker: { width: 24, height: 24, borderRadius: radii.sm, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center' },
+  searchText: { ...type.subheading, flex: 1, color: color.text },
+  sheet: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.xxl, backgroundColor: color.bg },
 
-  h2: { fontSize: 19, lineHeight: 24, letterSpacing: -0.475, color: tw.slate900, marginBottom: 10, ...fo(900) },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
-  everything: { height: 108, borderRadius: 22, overflow: 'hidden', backgroundColor: '#121821', borderWidth: 1, borderColor: 'rgba(63,63,70,0.4)' },
-  everythingImageWrap: { position: 'absolute', right: 0, bottom: 0, width: '70%', height: '100%', overflow: 'hidden' },
-  everythingIconWrap: { position: 'absolute', right: 8, bottom: 8, width: 72, height: 72, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
-  allIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(226,232,240,0.5)', borderWidth: 1, borderColor: 'rgba(203,213,225,0.3)' },
-  everythingText: { width: '65%', padding: 11 },
-  everythingSub: { fontSize: 11, lineHeight: 15, letterSpacing: 0.55, color: '#94A3B8', ...fo(700) },
-  everythingTitle: { marginTop: 4, fontSize: 15, lineHeight: 18.75, color: '#fff', ...fo(900) },
+  recentRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingLeft: space.lg, paddingRight: space.xs },
+  recentMain: { flexDirection: 'row', alignItems: 'center', gap: space.md, flex: 1, minWidth: 0, minHeight: 64, paddingVertical: space.sm },
+  recentIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', backgroundColor: color.primarySoft },
+  recentName: { ...type.bodyStrong, color: color.text },
+  recentAddr: { ...type.small, color: color.textMuted },
+  heartBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
+  recentDivider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginLeft: space.lg + 40 + space.md },
 
-  headRow: { marginBottom: 10, marginLeft: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  viewAll: { fontSize: 13, lineHeight: 18, letterSpacing: 0.65, color: YELLOW, ...fo(900) },
-  exploreCard: { width: 86, height: 96, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(226,232,240,0.8)', backgroundColor: '#F7F8FB', alignItems: 'center', justifyContent: 'center', padding: 8, ...shadow('sm') },
-  exploreTitle: { fontSize: 12, lineHeight: 15, letterSpacing: -0.3, color: INK, textAlign: 'center', marginTop: 8, ...fo(900) },
+  activeRide: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, paddingHorizontal: space.lg, minHeight: 56,
+    borderRadius: radii.lg, borderWidth: 1, backgroundColor: color.primarySoft, borderColor: color.primaryBorder, marginTop: -space.md,
+  },
+  activeRideLeft: { flexDirection: 'row', alignItems: 'center', gap: space.md, flex: 1, minWidth: 0 },
+  pingDot: { position: 'absolute', width: 10, height: 10, borderRadius: 5, backgroundColor: color.success },
+  activeRideText: { ...type.bodyStrong, flex: 1, color: color.text },
 
-  promo: { borderRadius: 22, overflow: 'hidden', backgroundColor: INK, borderWidth: 1, borderColor: 'rgba(226,232,240,0.6)', ...shadow('md') },
-  promoText: { ...StyleSheet.absoluteFill, justifyContent: 'center', padding: 24, paddingRight: '24%' },
-  promoTag: { alignSelf: 'flex-start', fontSize: 10, lineHeight: 15, letterSpacing: 1, color: YELLOW, backgroundColor: 'rgba(255,196,0,0.1)', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', marginBottom: 4, ...fo(900) },
-  promoTitle: { fontSize: 17, lineHeight: 21, color: '#F8FAFC', ...fo(900) },
-  promoSub: { fontSize: 11, lineHeight: 15, color: 'rgba(226,232,240,0.9)', marginTop: 4, ...fo(600) },
-  promoBar: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, backgroundColor: 'rgba(255,255,255,0.1)' },
-  promoDots: { position: 'absolute', right: 14, bottom: 10, flexDirection: 'row', gap: 6 },
-  promoDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.45)' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: space.md },
+  gridCell: { width: '48.4%' },
+  gridSkeleton: { width: '48.4%', height: 104, borderRadius: radii.lg, backgroundColor: color.surfaceMuted },
+  everything: {
+    height: 104, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.surface, borderWidth: 1, borderColor: color.border,
+    flexDirection: 'row', alignItems: 'stretch', ...elevation.card,
+  },
+  everythingDark: { backgroundColor: color.primaryDeep, borderColor: color.primaryDeep },
+  everythingText: { flex: 1, minWidth: 0, padding: space.md, justifyContent: 'center', gap: space.xxs },
+  everythingTitle: { ...type.subheading, color: color.text },
+  everythingSub: { ...type.caption, color: color.textMuted },
+  everythingImageWrap: { width: '38%', alignItems: 'center', justifyContent: 'center', paddingRight: space.sm },
+  everythingImage: { width: '100%', height: 72 },
+  allIcon: {
+    width: 44, height: 44, borderRadius: radii.md, alignSelf: 'center', marginRight: space.md, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: color.gold,
+  },
 
-  goSub: { fontSize: 11, lineHeight: 16, letterSpacing: 1.54, color: tw.slate400, marginTop: 6, ...fo(900) },
-  goCard: { width: 156, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(226,232,240,0.8)', backgroundColor: '#F7F8FB', overflow: 'hidden', ...shadow('sm') },
-  goImage: { height: 80, padding: 12, backgroundColor: 'rgba(226,232,240,0.3)', alignItems: 'center', justifyContent: 'center' },
-  goTitle: { fontSize: 14, lineHeight: 17.5, letterSpacing: -0.35, color: tw.slate800, ...fo(900) },
-  goCta: { fontSize: 11, lineHeight: 12, letterSpacing: 0.55, color: YELLOW, ...fo(900) },
+  exploreCard: {
+    width: 88, minHeight: 100, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface,
+    alignItems: 'center', justifyContent: 'center', padding: space.sm, gap: space.sm, ...elevation.card,
+  },
+  exploreTitle: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.text, textAlign: 'center' },
 
-  footer: { marginTop: 16, marginBottom: 24, minHeight: 420, paddingBottom: 128, padding: 32, borderRadius: 24, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: BG, borderTopWidth: 1, borderTopColor: tw.slate200, gap: 12 },
-  footerHash: { fontSize: 28, lineHeight: 30, letterSpacing: -0.7, color: INK, textAlign: 'center', ...fo(900) },
-  footerLine1: { fontSize: 13, lineHeight: 18, letterSpacing: 1.3, color: INK, textAlign: 'center', ...fo(900) },
-  footerLine2: { fontSize: 10, lineHeight: 15, letterSpacing: 1.6, color: '#64748B', textAlign: 'center', ...fo(700) },
+  promo: { borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.primaryDeep, ...elevation.card },
+  promoSkeleton: { height: 150, borderRadius: radii.lg, backgroundColor: color.surfaceMuted },
+  promoText: { ...StyleSheet.absoluteFill, justifyContent: 'center', padding: space.xl, paddingRight: '28%', gap: space.xs },
+  promoTag: { alignSelf: 'flex-start', backgroundColor: color.goldBright, paddingHorizontal: space.sm, height: 24, justifyContent: 'center', borderRadius: radii.pill },
+  promoTagText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.onGold },
+  promoTitle: { ...type.heading, color: color.textInverse },
+  promoSub: { ...type.small, color: color.textOnDarkMuted },
+  promoBar: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, backgroundColor: 'rgba(255,255,255,0.15)' },
+  promoDots: { position: 'absolute', right: space.md, bottom: space.sm, flexDirection: 'row', gap: space.sm },
+  promoDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.5)' },
+  promoDotOn: { width: 20, backgroundColor: color.gold },
 
-  scheduled: { marginTop: 8, borderRadius: 28, padding: 20, backgroundColor: tw.slate900, borderWidth: 1, borderColor: tw.slate800, ...shadow('xl') },
-  confirmed: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2, backgroundColor: 'rgba(253,199,0,0.1)' },
-  confirmedText: { fontSize: 9, lineHeight: 14, letterSpacing: 1.1, color: '#FDC700', ...fo(900) },
-  countdown: { fontSize: 24, lineHeight: 26, letterSpacing: -0.6, color: '#fff', ...fo(900) },
-  countdownDate: { marginTop: 6, fontSize: 12, lineHeight: 16, color: tw.slate400, ...fo(700) },
-  rideIcon: { width: 48, height: 48, borderRadius: 12, backgroundColor: '#020618', borderWidth: 1, borderColor: tw.slate800, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  driverRow: { marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderRadius: 12, padding: 10, backgroundColor: 'rgba(2,6,24,0.6)', borderWidth: 1, borderColor: tw.slate800 },
-  driverAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.slate900, borderWidth: 1, borderColor: tw.slate800, alignItems: 'center', justifyContent: 'center' },
-  driverLabel: { fontSize: 9, lineHeight: 10, letterSpacing: 1.26, color: tw.slate500, ...fo(600) },
-  driverValue: { marginTop: 2, fontSize: 12.5, lineHeight: 17, color: '#fff', ...fo(700) },
+  skeletonTitle: { width: 120, height: 18, borderRadius: radii.sm, backgroundColor: color.surfaceMuted, marginBottom: space.md },
+  goSub: { ...type.small, color: color.textMuted, marginBottom: space.md },
+  goCard: { width: 160, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, overflow: 'hidden', ...elevation.card },
+  goImage: { height: 84, padding: space.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  goBody: { padding: space.md, flex: 1, justifyContent: 'space-between', gap: space.sm },
+  goTitle: { ...type.bodyStrong, color: color.text },
 
-  allSheet: { backgroundColor: BG, borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 20, borderTopWidth: 1, borderTopColor: 'rgba(226,232,240,0.8)' },
-  allHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.slate100 },
-  allTitle: { fontSize: 19, lineHeight: 26, letterSpacing: -0.475, color: tw.slate900, ...fo(900) },
-  allClose: { padding: 6, borderRadius: 999, backgroundColor: tw.slate100 },
-  allGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 24, paddingVertical: 4 },
-  allItem: { width: '25%', alignItems: 'center' },
-  allIconBox: { width: 64, height: 64, borderRadius: 20, backgroundColor: '#121824', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(29,41,61,0.1)', ...shadow('md') },
-  allLabel: { fontSize: 10, lineHeight: 12.5, letterSpacing: 0.25, color: tw.slate800, textAlign: 'center', marginTop: 8, maxWidth: 76, ...fo(900) },
+  footer: {
+    minHeight: 220, padding: space.xxl, borderRadius: radii.lg, overflow: 'hidden', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: color.primaryDeep, gap: space.sm,
+  },
+  footerHash: { ...type.heroSerif, color: color.goldOnDark, textAlign: 'center' },
+  footerLine1: { ...type.subheading, color: color.textInverse, textAlign: 'center' },
+  footerLine2: { ...type.small, color: color.textOnDarkMuted, textAlign: 'center' },
+
+  scheduled: { borderRadius: radii.lg, padding: space.xl, backgroundColor: color.primaryDeep, borderWidth: 1, borderColor: color.gold, ...elevation.float },
+  liveRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.goldOnDark },
+  liveText: { ...type.caption, color: color.goldOnDark },
+  countdownRow: { marginTop: space.lg, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: space.md },
+  countdown: { ...type.priceLg, color: color.textInverse, flexShrink: 1 },
+  countdownDate: { ...type.small, marginTop: space.xs, color: color.textOnDarkMuted },
+  rideIcon: { width: 52, height: 52, borderRadius: radii.md, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  driverRow: {
+    marginTop: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, borderRadius: radii.md, padding: space.md,
+    backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)',
+  },
+  driverAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  driverLabel: { ...type.caption, color: color.textOnDarkMuted },
+  driverValue: { ...type.bodyStrong, color: color.textInverse },
+  driverFare: { ...type.price, color: color.goldOnDark },
+
+  allSheet: { backgroundColor: color.bg, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, paddingHorizontal: space.xl, paddingTop: space.sm, ...elevation.sheet },
+  grabberHit: { alignItems: 'center', justifyContent: 'center', height: 24 },
+  grabber: { width: 44, height: 4, borderRadius: 2, backgroundColor: color.borderStrong },
+  allHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: space.md, borderBottomWidth: 1, borderBottomColor: color.border },
+  allTitle: { ...type.heading, color: color.text },
+  allGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: space.xl, paddingVertical: space.xs },
+  allItem: { width: '25%', alignItems: 'center', gap: space.sm },
+  allIconBox: { width: 64, height: 64, borderRadius: radii.lg, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: color.border, ...elevation.card },
+  allLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.text, textAlign: 'center', maxWidth: 80 },
 });

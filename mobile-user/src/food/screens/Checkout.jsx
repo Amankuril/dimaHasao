@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, CheckCircle, CreditCard, MapPin, MessageSquare, ShoppingBag } from 'lucide-react-native';
+import { ArrowLeft, Banknote, CreditCard, MapPin, MessageSquare, Receipt, ShoppingBag, ShoppingCart } from 'lucide-react-native';
 import Image from '../../components/Img';
 import { Press } from '../../components/ui';
-import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
+import { Button, Card, EmptyState, IconButton, StatusBadge } from '../../components/ds';
+import { NAV_CLEARANCE, isImmersiveRoute } from '../../components/dh/AppBottomNav';
 import { useCart } from '../context/CartContext';
 import { useProfile } from '../context/ProfileContext';
 import { useOrders } from '../context/OrdersContext';
 import { adminAPI, userAPI } from '../../api/food';
 import { navigateTo } from '../../lib/webRouter';
 import { alert } from '../../lib/webShim';
-import { poppins, tw } from '../../theme';
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Textarea, UI } from '../components/cart/ui';
-import { F } from '../components/shell';
+import { color, radii, space, type } from '../../theme';
+import { BillRow, CtaBar, Divider, Field, Radio } from '../components/cart/parts';
 
 const getAddressId = (address) => address?.id || address?._id || '';
 
@@ -92,26 +92,24 @@ export default function Checkout() {
     }, 1500);
   };
 
-  const pad = { paddingBottom: 24 + NAV_CLEARANCE + insets.bottom };
-  const bg = ['rgba(255,247,237,0.3)', '#ffffff', 'rgba(255,247,237,0.2)'];
+  const pathname = usePathname();
+  const navClearance = isImmersiveRoute(pathname) ? insets.bottom : NAV_CLEARANCE + insets.bottom;
+
+  const header = (
+    <View style={styles.header}>
+      <IconButton icon={ArrowLeft} label="Back to cart" onPress={() => navigateTo('/user/cart')} />
+      <Text style={[type.heading, { color: color.text, flex: 1 }]} accessibilityRole="header">
+        Checkout
+      </Text>
+    </View>
+  );
 
   if (cart.length === 0) {
     return (
-      <LinearGradient colors={bg} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={[{ padding: 16 }, pad]}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Checkout</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-                <Text style={[styles.muted, { fontSize: 18, lineHeight: 28, marginBottom: 16 }]}>Your cart is empty</Text>
-                <Button onPress={() => navigateTo('/user/cart')}>Go to Cart</Button>
-              </View>
-            </CardContent>
-          </Card>
-        </ScrollView>
-      </LinearGradient>
+      <View style={styles.screen}>
+        {header}
+        <EmptyState icon={ShoppingCart} title="Your cart is empty" actionLabel="Go to cart" onAction={() => navigateTo('/user/cart')} />
+      </View>
     );
   }
 
@@ -119,98 +117,84 @@ export default function Checkout() {
   const disabled = isPlacingOrder || (orderType !== 'takeaway' && !selectedAddress) || !selectedPayment;
 
   return (
-    <LinearGradient colors={bg} style={{ flex: 1 }}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[{ padding: 16, gap: 24 }, pad]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <Button variant="ghost" icon onPress={() => navigateTo('/user/cart')} accessibilityLabel="Back to cart" style={{ width: 32, height: 32, borderRadius: 16 }}>
-            <ArrowLeft size={20} color={UI.foreground} />
-          </Button>
-          <Text style={styles.h1}>Checkout</Text>
-        </View>
-
+    <View style={styles.screen}>
+      {header}
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <Card>
-          <CardHeader>
-            <CardTitle row>
-              {orderType === 'takeaway' ? <ShoppingBag size={20} color={F.green} /> : <MapPin size={20} color={F.green} />}
-              <Text style={styles.cardTitleText}>{orderType === 'takeaway' ? 'Pickup Information' : 'Delivery Address'}</Text>
-            </CardTitle>
-          </CardHeader>
-          <CardContent style={{ gap: 16 }}>
-            {orderType === 'takeaway' ? (
-              <View style={[styles.opt, styles.optOn]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <ShoppingBag size={16} color={F.green} />
-                  <Text style={[styles.optTitle, { color: tw.orange900 }]}>Self-Pickup</Text>
-                </View>
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.orange800, ...poppins(400) }}>You&apos;ve selected self-pickup. Please collect your order from the restaurant.</Text>
-                <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: tw.orange100 }}>
-                  <Text style={{ fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.orange900, ...poppins(500) }}>RESTAURANT ADDRESS</Text>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, marginTop: 4, ...poppins(500) }}>{cart[0]?.restaurant || 'Selected Restaurant'}</Text>
-                  <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 4, ...poppins(400) }}>Collect your order once it&apos;s marked as ready.</Text>
-                </View>
-              </View>
-            ) : addresses.length > 0 ? (
-              <View style={{ gap: 12 }}>
-                {addresses.map((address) => {
-                  const id = getAddressId(address);
-                  const on = selectedAddressId === id;
-                  return (
-                    <Press
-                      key={id || `${address.label}-${address.street}-${address.city}`}
-                      scale={0.99}
-                      onPress={() => {
-                        setSelectedAddressId(id);
-                        if (id) setDefaultAddress(id);
-                      }}
-                      style={[styles.opt, on ? styles.optOn : null]}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                        <View style={{ flex: 1 }}>
-                          {address.isDefault ? (
-                            <Badge style={{ marginBottom: 8, backgroundColor: F.green }} textStyle={{ color: '#fff' }}>
-                              Default
-                            </Badge>
-                          ) : null}
-                          <Text style={styles.optText}>{addrString(address)}</Text>
-                        </View>
-                        {on ? <CheckCircle size={20} color={F.green} /> : null}
-                      </View>
-                    </Press>
-                  );
-                })}
-              </View>
-            ) : (
-              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
-                <Text style={[styles.muted, { marginBottom: 16, fontSize: 14 }]}>No addresses saved</Text>
-                <Button onPress={() => navigateTo('/user/cart/select-address', { state: { from: '/user/cart/checkout' } })}>Add Address</Button>
-              </View>
-            )}
-          </CardContent>
+          <CardTitle icon={orderType === 'takeaway' ? ShoppingBag : MapPin} title={orderType === 'takeaway' ? 'Pickup information' : 'Delivery address'} />
+          {orderType === 'takeaway' ? (
+            <View style={[styles.opt, styles.optOn]}>
+              <Text style={[type.bodyStrong, { color: color.text }]}>Self-pickup</Text>
+              <Text style={[type.small, { color: color.textSecondary, marginTop: 2 }]}>You&apos;ve selected self-pickup. Please collect your order from the restaurant.</Text>
+              <Divider style={{ marginVertical: space.md }} />
+              <Text style={[type.overline, { color: color.textMuted }]}>Restaurant</Text>
+              <Text style={[type.bodyStrong, { color: color.text, marginTop: space.xs }]} numberOfLines={2}>
+                {cart[0]?.restaurant || 'Selected Restaurant'}
+              </Text>
+              <Text style={[type.caption, { color: color.textMuted, marginTop: space.xs }]}>Collect your order once it&apos;s marked as ready.</Text>
+            </View>
+          ) : addresses.length > 0 ? (
+            <View style={{ gap: space.sm }} accessibilityRole="radiogroup">
+              {addresses.map((address) => {
+                const id = getAddressId(address);
+                const on = selectedAddressId === id;
+                return (
+                  <Press
+                    key={id || `${address.label}-${address.street}-${address.city}`}
+                    scale={0.99}
+                    onPress={() => {
+                      setSelectedAddressId(id);
+                      if (id) setDefaultAddress(id);
+                    }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: on }}
+                    accessibilityLabel={addrString(address)}
+                    style={[styles.opt, styles.optRow, on ? styles.optOn : null]}
+                  >
+                    <Radio checked={on} />
+                    <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+                      {address.isDefault ? <StatusBadge label="Default" tone="primary" /> : null}
+                      <Text style={[type.small, { color: color.text }]} numberOfLines={3}>
+                        {addrString(address)}
+                      </Text>
+                    </View>
+                  </Press>
+                );
+              })}
+            </View>
+          ) : (
+            <EmptyState
+              icon={MapPin}
+              title="No addresses saved"
+              actionLabel="Add address"
+              onAction={() => navigateTo('/user/cart/select-address', { state: { from: '/user/cart/checkout' } })}
+              style={{ paddingVertical: space.xxl }}
+            />
+          )}
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle row>
-              <CreditCard size={20} color={F.green} />
-              <Text style={styles.cardTitleText}>Payment Method</Text>
-            </CardTitle>
-          </CardHeader>
-          <CardContent style={{ gap: 12 }}>
+          <CardTitle icon={CreditCard} title="Payment method" />
+          <View style={{ gap: space.sm }} accessibilityRole="radiogroup">
             {orderType !== 'takeaway' || isTakeawayCodEnabled ? (
-              <Press scale={0.99} disabled={codBlocked} onPress={() => setSelectedPayment('cod')} style={[styles.opt, codBlocked ? { backgroundColor: tw.gray50, opacity: 0.6 } : selectedPayment === 'cod' ? styles.optOn : null]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                    <CreditCard size={20} color={codBlocked ? tw.gray400 : tw.gray500} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.optTitle}>Cash on Delivery</Text>
-                      {codBlocked ? (
-                        <Text style={{ fontSize: 12, lineHeight: 16, color: F.green, marginTop: 4, ...poppins(500) }}>Not available due to multiple cancellations</Text>
-                      ) : (
-                        <Text style={[styles.muted, { fontSize: 12, lineHeight: 16 }]}>Pay when you {orderType === 'takeaway' ? 'pickup' : 'receive'} your order</Text>
-                      )}
-                    </View>
-                  </View>
-                  {selectedPayment === 'cod' ? <CheckCircle size={20} color={F.green} /> : null}
+              <Press
+                scale={0.99}
+                disabled={codBlocked}
+                onPress={() => setSelectedPayment('cod')}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selectedPayment === 'cod', disabled: codBlocked }}
+                accessibilityLabel="Cash on Delivery"
+                style={[styles.opt, styles.optRow, codBlocked ? styles.optOff : selectedPayment === 'cod' ? styles.optOn : null]}
+              >
+                <Radio checked={selectedPayment === 'cod'} disabled={codBlocked} />
+                <Banknote size={20} color={codBlocked ? color.textDisabled : color.primary} />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.bodyStrong, { color: codBlocked ? color.textMuted : color.text }]}>Cash on Delivery</Text>
+                  {codBlocked ? (
+                    <Text style={[type.caption, { color: color.danger, marginTop: 2 }]}>Not available due to multiple cancellations</Text>
+                  ) : (
+                    <Text style={[type.small, { color: color.textMuted }]}>Pay when you {orderType === 'takeaway' ? 'pickup' : 'receive'} your order</Text>
+                  )}
                 </View>
               </Press>
             ) : null}
@@ -218,105 +202,120 @@ export default function Checkout() {
             {paymentMethods.map((payment) => {
               const on = selectedPayment === payment.id;
               return (
-                <Press key={payment.id} scale={0.99} onPress={() => setSelectedPayment(payment.id)} style={[styles.opt, on ? styles.optOn : null]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        {payment.isDefault ? (
-                          <Badge style={{ backgroundColor: F.green }} textStyle={{ color: '#fff' }}>
-                            Default
-                          </Badge>
-                        ) : null}
-                        <Badge outline textStyle={{ textTransform: 'capitalize' }}>
-                          {payment.type}
-                        </Badge>
-                      </View>
-                      <Text style={styles.optTitle}>{`**** **** **** ${payment.cardNumber}`}</Text>
-                      <Text style={[styles.muted, { fontSize: 14, lineHeight: 20 }]}>
-                        {payment.cardHolder}  Expires {payment.expiryMonth}/{String(payment.expiryYear || '').slice(-2)}
-                      </Text>
+                <Press
+                  key={payment.id}
+                  scale={0.99}
+                  onPress={() => setSelectedPayment(payment.id)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: on }}
+                  accessibilityLabel={`${payment.type} ending ${payment.cardNumber}`}
+                  style={[styles.opt, styles.optRow, on ? styles.optOn : null]}
+                >
+                  <Radio checked={on} />
+                  <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' }}>
+                      {payment.isDefault ? <StatusBadge label="Default" tone="primary" /> : null}
+                      <StatusBadge label={String(payment.type || '').replace(/^./, (ch) => ch.toUpperCase())} tone="neutral" />
                     </View>
-                    {on ? <CheckCircle size={20} color={F.green} /> : null}
+                    <Text style={[type.bodyStrong, { color: color.text }]}>{`**** **** **** ${payment.cardNumber}`}</Text>
+                    <Text style={[type.small, { color: color.textMuted }]}>
+                      {payment.cardHolder}  Expires {payment.expiryMonth}/{String(payment.expiryYear || '').slice(-2)}
+                    </Text>
                   </View>
                 </Press>
               );
             })}
 
-            <Button variant="outline" onPress={() => navigateTo('/user/profile/payments')} style={{ width: '100%' }}>
-              Manage Payment Methods
-            </Button>
-          </CardContent>
+            <Button title="Manage payment methods" variant="outline" onPress={() => navigateTo('/user/profile/payments')} />
+          </View>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle row>
-              <MessageSquare size={20} color={F.green} />
-              <Text style={styles.cardTitleText}>Add note for restaurant</Text>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea placeholder="E.g. Please make it extra spicy, or no onions..." value={restaurantNote} onChangeText={setRestaurantNote} style={{ minHeight: 100 }} />
-            <Text style={[styles.muted, { fontSize: 12, lineHeight: 16, marginTop: 8 }]}>Your request will be shared with the restaurant.</Text>
-          </CardContent>
+          <CardTitle icon={MessageSquare} title="Add note for restaurant" />
+          <Field
+            placeholder="E.g. Please make it extra spicy, or no onions..."
+            value={restaurantNote}
+            onChangeText={setRestaurantNote}
+            multiline
+            accessibilityLabel="Note for restaurant"
+            hint="Your request will be shared with the restaurant."
+          />
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Order Summary</CardTitle>
-          </CardHeader>
-          <CardContent style={{ gap: 16 }}>
-            <View style={{ gap: 12 }}>
-              {cart.map((item) => (
-                <View key={item.id} style={styles.sumRow}>
-                  <Image source={{ uri: item.image }} style={{ width: 64, height: 64, borderRadius: 8 }} resizeMode="cover" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, lineHeight: 20, color: UI.foreground, ...poppins(500) }}>{item.name}</Text>
-                    {item.variantName ? <Text style={[styles.muted, { fontSize: 12, lineHeight: 16 }]}>{item.variantName}</Text> : null}
-                    <Text style={[styles.muted, { fontSize: 12, lineHeight: 16 }]}>
-                      ₹{(item.price * 83).toFixed(0)} × {item.quantity}
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: UI.foreground, ...poppins(600) }}>₹{(item.price * 83 * item.quantity).toFixed(0)}</Text>
+          <CardTitle icon={Receipt} title="Order summary" />
+          <View style={{ gap: space.md }}>
+            {cart.map((item) => (
+              <View key={item.id} style={styles.sumRow}>
+                <Image source={{ uri: item.image }} style={styles.sumImg} resizeMode="cover" />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={2}>
+                    {item.name}
+                  </Text>
+                  {item.variantName ? <Text style={[type.caption, { color: color.textMuted }]}>{item.variantName}</Text> : null}
+                  <Text style={[type.caption, { color: color.textMuted }]}>
+                    ₹{(item.price * 83).toFixed(0)} × {item.quantity}
+                  </Text>
                 </View>
-              ))}
-            </View>
-            <View style={{ gap: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: UI.border }}>
-              <Row label="Subtotal" value={`₹${subtotal.toFixed(0)}`} />
-              {orderType !== 'takeaway' ? <Row label="Delivery Fee" value={`₹${deliveryFee.toFixed(0)}`} /> : null}
-              <Row label="Tax" value={`₹${tax.toFixed(0)}`} />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, borderTopColor: UI.border }}>
-                <Text style={{ fontSize: 18, lineHeight: 28, color: UI.foreground, ...poppins(700) }}>Total</Text>
-                <Text style={{ fontSize: 18, lineHeight: 28, color: F.green, ...poppins(700) }}>₹{total.toFixed(0)}</Text>
+                <Text style={[type.bodyStrong, { color: color.text }]}>₹{(item.price * 83 * item.quantity).toFixed(0)}</Text>
               </View>
-            </View>
-            <Press scale={0.98} disabled={disabled} onPress={handlePlaceOrder} accessibilityLabel="Place Order" style={[styles.place, disabled ? { opacity: 0.5 } : null]}>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) }}>{isPlacingOrder ? 'Placing Order...' : 'Place Order'}</Text>
-            </Press>
-          </CardContent>
+            ))}
+          </View>
+          <Divider style={{ marginVertical: space.lg }} />
+          <View style={{ gap: space.md }}>
+            <BillRow label="Subtotal" value={`₹${subtotal.toFixed(0)}`} />
+            {orderType !== 'takeaway' ? <BillRow label="Delivery fee" value={`₹${deliveryFee.toFixed(0)}`} /> : null}
+            <BillRow label="Tax" value={`₹${tax.toFixed(0)}`} />
+            <Divider />
+            <BillRow strong label="Total" value={`₹${total.toFixed(0)}`} />
+          </View>
         </Card>
       </ScrollView>
-    </LinearGradient>
+
+      <CtaBar extraBottom={navClearance}>
+        <View style={styles.ctaRow}>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
+            <Text style={[type.caption, { color: color.textMuted }]}>Total</Text>
+            <Text style={[type.price, { color: color.text }]} numberOfLines={1}>
+              ₹{total.toFixed(0)}
+            </Text>
+          </View>
+          <Button
+            title={isPlacingOrder ? 'Placing order...' : 'Place order'}
+            size="lg"
+            disabled={disabled}
+            loading={isPlacingOrder}
+            onPress={handlePlaceOrder}
+            accessibilityLabel="Place Order"
+            style={{ flex: 1 }}
+          />
+        </View>
+      </CtaBar>
+    </View>
   );
 }
 
-function Row({ label, value }) {
+function CardTitle({ icon: Icon, title }) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-      <Text style={[styles.muted, { fontSize: 14, lineHeight: 20 }]}>{label}</Text>
-      <Text style={{ fontSize: 14, lineHeight: 20, color: UI.foreground, ...poppins(400) }}>{value}</Text>
+    <View style={styles.cardTitle}>
+      <Icon size={20} color={color.primary} />
+      <Text style={[type.subheading, { color: color.text, flex: 1 }]} accessibilityRole="header">
+        {title}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  h1: { fontSize: 18, lineHeight: 28, color: UI.foreground, ...poppins(700) },
-  cardTitleText: { fontSize: 16, lineHeight: 16, color: UI.foreground, ...poppins(600) },
-  muted: { color: UI.mutedForeground, ...poppins(400) },
-  opt: { borderWidth: 2, borderColor: tw.gray200, borderRadius: 8, padding: 16 },
-  optOn: { borderColor: F.green, backgroundColor: tw.orange50 },
-  optTitle: { fontSize: 16, lineHeight: 24, color: UI.foreground, ...poppins(600) },
-  optText: { fontSize: 14, lineHeight: 20, color: UI.foreground, ...poppins(500) },
-  sumRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: UI.border },
-  place: { marginTop: 16, height: 44, borderRadius: 6, backgroundColor: F.green, alignItems: 'center', justifyContent: 'center' },
+  screen: { flex: 1, backgroundColor: color.bg },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.sm, paddingVertical: space.xs, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+  content: { padding: space.lg, gap: space.md, paddingBottom: space.xxl },
+  cardTitle: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.md },
+  opt: { borderWidth: 1.5, borderColor: color.border, borderRadius: radii.md, padding: space.md, backgroundColor: color.surface },
+  optRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56 },
+  optOn: { borderColor: color.primary, backgroundColor: color.primarySoft },
+  optOff: { backgroundColor: color.surfaceMuted, opacity: 0.7 },
+  sumRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  sumImg: { width: 56, height: 56, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
+  ctaRow: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
 });

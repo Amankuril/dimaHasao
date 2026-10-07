@@ -1,17 +1,20 @@
 import { Animated, Easing, Linking, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AlertTriangle, Calendar, CheckCircle2, Clock3, MessageCircle, Phone, ShieldCheck, Star, X } from 'lucide-react-native';
+import { AlertTriangle, Calendar, CheckCircle2, MessageCircle, Phone, ShieldCheck, Star, X } from 'lucide-react-native';
 import Image from '../../../../components/Img';
 import { Dialog } from '../../../../components/kit';
-import { Press } from '../../../../components/ui';
 import { Spinner } from '../../../../components/Loader';
-import { fo } from '../../../../taxi/account/ui';
+import { Button, IconButton, StatusBadge } from '../../../../components/ds';
 import { PinLocationMarker, toSrc, useLoop, useTrackViews } from '../../../../taxi/components/live/parts';
 import { useSearchingDriver } from '../../../../taxi/hooks/useSearchingDriver';
 import { HAS_VALID_GOOGLE_MAPS_KEY } from '../../../../taxi/utils/googleMaps';
 import { MAP_STYLE } from '../../../../taxi/components/live/mapStyle';
-import { tw } from '../../../../theme';
+import { color, elevation, radii, space, type } from '../../../../theme';
+
+/** Pickup = brand-green, drop = red, everywhere in the ride flow. */
+const PICKUP = color.primary;
+const DROP = color.danger;
 
 const CarIcon = require('../../../../../assets/taxi/icons/car.png');
 
@@ -48,7 +51,7 @@ function Dot({ index }) {
         styles.dot,
         {
           opacity: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.3, 1, 0.3] }),
-          backgroundColor: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['#e2e8f0', '#f97316', '#e2e8f0'] }),
+          backgroundColor: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [color.border, color.gold, color.border] }),
           transform: [{ scale: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.4, 1] }) }],
         },
       ]}
@@ -61,7 +64,7 @@ function Ping() {
   return (
     <View style={{ width: 8, height: 8 }}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.pingDot, { opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.75, 0] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 2] }) }] }]} />
-      <View style={[StyleSheet.absoluteFill, { borderRadius: 4, backgroundColor: tw.emerald500 }]} />
+      <View style={[StyleSheet.absoluteFill, { borderRadius: 4, backgroundColor: color.success }]} />
     </View>
   );
 }
@@ -73,14 +76,15 @@ export default function SearchingDriverScreen() {
   const { showCancelConfirm, setShowCancelConfirm, handleCancel, pickupPos, dropPos, availableVehicleMarkers, availableVehicleIcon, userHomeRoute, routePrefix } = h;
 
   if (isScheduledRide) {
-    const tone = scheduledStatus === 'scheduled' ? { bg: 'rgba(5,150,105,0.2)', fg: tw.emerald400 } : scheduledStatus === 'error' ? { bg: 'rgba(225,29,72,0.2)', fg: tw.rose400 } : { bg: 'rgba(37,99,235,0.2)', fg: tw.blue400 };
+    const schedTone = scheduledStatus === 'scheduled' ? 'success' : scheduledStatus === 'error' ? 'danger' : 'info';
+    const toneColors = { success: [color.successSoft, color.success], danger: [color.dangerSoft, color.danger], info: [color.infoSoft, color.info] }[schedTone];
     return (
       <View style={[styles.schedPage, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <View style={styles.schedCard}>
-          <View style={[styles.schedIcon, { backgroundColor: tone.bg }]}>
-            {scheduledStatus === 'scheduled' ? <CheckCircle2 size={26} color={tone.fg} /> : scheduledStatus === 'error' ? <AlertTriangle size={26} color={tone.fg} /> : <Spinner size={26} color={tone.fg} />}
+          <View style={[styles.schedIcon, { backgroundColor: toneColors[0] }]}>
+            {scheduledStatus === 'scheduled' ? <CheckCircle2 size={28} color={toneColors[1]} /> : scheduledStatus === 'error' ? <AlertTriangle size={28} color={toneColors[1]} /> : <Spinner size={28} color={toneColors[1]} />}
           </View>
-          <Text style={styles.schedTitle}>{scheduledStatus === 'scheduled' ? 'Ride scheduled' : scheduledStatus === 'error' ? 'Scheduling failed' : 'Scheduling your ride'}</Text>
+          <Text style={styles.schedTitle} accessibilityRole="header">{scheduledStatus === 'scheduled' ? 'Ride scheduled' : scheduledStatus === 'error' ? 'Scheduling failed' : 'Scheduling your ride'}</Text>
           <Text style={styles.schedSub}>
             {scheduledStatus === 'scheduled'
               ? 'Your booking has been saved. Drivers will be notified automatically at the scheduled time.'
@@ -89,21 +93,23 @@ export default function SearchingDriverScreen() {
                 : 'Saving your booking and preparing automatic driver notification.'}
           </Text>
           <View style={styles.schedBox}>
-            <View style={styles.row12}>
-              <Calendar size={16} color={tw.blue300} />
-              <Text style={styles.schedBoxLabel}>Scheduled For</Text>
+            <View style={styles.row8}>
+              <Calendar size={18} color={color.goldText} />
+              <Text style={styles.schedBoxLabel}>Scheduled for</Text>
             </View>
             <Text style={styles.schedWhen}>{formattedScheduledTime}</Text>
-            <View style={[styles.row12, { marginTop: 16 }]}>
-              <Clock3 size={15} color="rgba(255,255,255,0.65)" />
-              <Text style={styles.schedRoute} numberOfLines={2}>
-                {routeState.pickup || 'Pickup'} to {routeState.drop || 'Drop'}
-              </Text>
+            <View style={styles.schedRouteRows}>
+              <View style={styles.row8}>
+                <View style={styles.pickupDot} />
+                <Text style={styles.schedRoute} numberOfLines={2}>{routeState.pickup || 'Pickup'}</Text>
+              </View>
+              <View style={styles.row8}>
+                <View style={styles.dropSquare} />
+                <Text style={styles.schedRoute} numberOfLines={2}>{routeState.drop || 'Drop'}</Text>
+              </View>
             </View>
           </View>
-          <Press onPress={() => navigate(userHomeRoute, { replace: true })} style={styles.schedBtn}>
-            <Text style={styles.schedBtnText}>{scheduledStatus === 'error' ? 'Back to Home' : 'Done'}</Text>
-          </Press>
+          <Button title={scheduledStatus === 'error' ? 'Back to home' : 'Done'} size="lg" onPress={() => navigate(userHomeRoute, { replace: true })} style={{ marginTop: space.xxl }} />
         </View>
       </View>
     );
@@ -129,15 +135,15 @@ export default function SearchingDriverScreen() {
             rotateEnabled={false}
             pitchEnabled={false}
           >
-            <PinLocationMarker position={pickupPos} title="Pickup" color="#000000" zIndex={100} />
-            {dropPos ? <PinLocationMarker position={dropPos} title="Drop" color="#f97316" /> : null}
+            <PinLocationMarker position={pickupPos} title="Pickup" color={PICKUP} zIndex={100} />
+            {dropPos ? <PinLocationMarker position={dropPos} title="Drop" color={DROP} /> : null}
             {isSearching ? availableVehicleMarkers.map((m) => <BlinkingVehicle key={m.id} marker={m} iconSrc={vehicleSrc} />) : null}
             {dropPos ? (
-              <Polyline coordinates={[{ latitude: pickupPos.lat, longitude: pickupPos.lng }, { latitude: dropPos.lat, longitude: dropPos.lng }]} strokeColor="#0f172a" strokeWidth={2} lineDashPattern={[4, 6]} />
+              <Polyline coordinates={[{ latitude: pickupPos.lat, longitude: pickupPos.lng }, { latitude: dropPos.lat, longitude: dropPos.lng }]} strokeColor={color.primaryDeep} strokeWidth={2} lineDashPattern={[4, 6]} />
             ) : null}
           </MapView>
         ) : (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: tw.slate50 }]} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: color.surfaceMuted }]} />
         )}
 
         {isSearching ? (
@@ -148,34 +154,34 @@ export default function SearchingDriverScreen() {
           </View>
         ) : null}
 
-        <View style={[styles.routeCard, { top: insets.top + 12 }]} pointerEvents="none">
-          <Text style={styles.routeLabel}>CURRENT ROUTE</Text>
-          <Text style={styles.routeText} numberOfLines={1}>
-            {routeState.pickup || 'Pickup'} → {routeState.drop || 'Drop'}
-          </Text>
+        {/* Route card over the map */}
+        <View style={[styles.routeCard, { top: insets.top + space.md }]} pointerEvents="none">
+          <View style={styles.row8}>
+            <View style={styles.pickupDot} />
+            <Text style={styles.routeLabel}>Pickup</Text>
+            <Text style={styles.routeText} numberOfLines={1}>{routeState.pickup || 'Pickup'}</Text>
+          </View>
+          <View style={styles.routeDivider} />
+          <View style={styles.row8}>
+            <View style={styles.dropSquare} />
+            <Text style={styles.routeLabel}>Drop</Text>
+            <Text style={styles.routeText} numberOfLines={1}>{routeState.drop || 'Drop'}</Text>
+          </View>
         </View>
 
-        {isAccepted && rideOtp ? (
-          <View style={[styles.otpBox, { top: insets.top + 68 }]}>
-            <Text style={styles.otpText}>{rideOtp}</Text>
-            <Text style={styles.otpLabel}>Start OTP</Text>
-          </View>
-        ) : null}
-
         {isSearching || isAccepted ? (
-          <Press scale={0.9} onPress={() => setShowCancelConfirm(true)} style={[styles.closeBtn, { top: insets.top + 12 }]} accessibilityLabel="Cancel">
-            <X size={16} color={tw.slate900} strokeWidth={2.5} />
-          </Press>
+          <IconButton icon={X} label="Cancel ride" onPress={() => setShowCancelConfirm(true)} style={[styles.closeBtn, { top: insets.top + space.md }]} />
         ) : null}
       </View>
 
-      <View style={[styles.bottom, { bottom: Math.max(32, insets.bottom + 16) }]}>
+      <View style={[styles.bottom, { bottom: space.lg + insets.bottom }]}>
         {isSearching ? (
           <View style={styles.searchCard}>
             <View style={styles.grabber} />
-            <View style={{ alignItems: 'center', gap: 6 }}>
-              <Text style={styles.searchTitle}>Finding your ride</Text>
-              <Text style={styles.searchStatus}>{searchStatus}</Text>
+            <View style={{ alignItems: 'center', gap: space.sm }}>
+              <StatusBadge label="Searching" tone="warning" style={{ alignSelf: 'center' }} />
+              <Text style={styles.searchTitle} accessibilityRole="header">Finding your ride</Text>
+              <Text style={styles.searchStatus} accessibilityLiveRegion="polite">{searchStatus}</Text>
             </View>
             <View style={styles.dots}>
               {[0, 1, 2, 3].map((i) => (
@@ -183,21 +189,21 @@ export default function SearchingDriverScreen() {
               ))}
             </View>
             <View style={styles.pills}>
-              <View style={styles.row12}>
+              <View style={styles.row8}>
                 <View style={styles.pillIcon}>
                   <Ping />
                 </View>
-                <Text style={styles.pillText}>FAST MATCHING</Text>
+                <Text style={styles.pillText}>Fast matching</Text>
               </View>
-              <View style={{ width: 1, height: 32, backgroundColor: tw.slate200 }} />
-              <View style={styles.row12}>
-                <ShieldCheck size={20} color={tw.blue500} strokeWidth={2.5} />
-                <Text style={styles.pillText}>TOP SAFETY</Text>
+              <View style={styles.pillDivider} />
+              <View style={styles.row8}>
+                <View style={[styles.pillIcon, { backgroundColor: color.infoSoft }]}>
+                  <ShieldCheck size={18} color={color.info} />
+                </View>
+                <Text style={styles.pillText}>Top safety</Text>
               </View>
             </View>
-            <Press scale={0.98} onPress={() => setShowCancelConfirm(true)} style={styles.cancelSearch}>
-              <Text style={styles.cancelSearchText}>CANCEL SEARCH</Text>
-            </Press>
+            <Button title="Cancel search" variant="dangerSoft" onPress={() => setShowCancelConfirm(true)} />
           </View>
         ) : null}
 
@@ -205,72 +211,70 @@ export default function SearchingDriverScreen() {
           <View>
             <View style={styles.acceptCard}>
               <View style={styles.acceptBar}>
-                <View style={styles.checkDisc}>
-                  <CheckCircle2 size={12} color="#fff" strokeWidth={3} />
-                </View>
-                <Text style={styles.acceptBarText}>CAPTAIN CONFIRMED</Text>
+                <CheckCircle2 size={18} color={color.primary} />
+                <Text style={styles.acceptBarText}>Captain confirmed</Text>
               </View>
-              <View style={{ padding: 24 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <View style={{ flex: 1, paddingRight: 8 }}>
-                    <View style={[styles.row8, { marginBottom: 4 }]}>
+              <View style={{ padding: space.xl }}>
+                <View style={styles.driverTop}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={[styles.row8, { marginBottom: space.xs }]}>
                       <Text style={styles.driverName} numberOfLines={1}>
-                        {(driver.name || 'Vishal K.').toUpperCase()}
+                        {driver.name || 'Vishal K.'}
                       </Text>
                       <View style={styles.ratingPill}>
-                        <Star size={10} color={tw.yellow500} fill={tw.yellow500} />
+                        <Star size={12} color={color.gold} fill={color.gold} />
                         <Text style={styles.ratingText}>{driver.rating || '4.7'}</Text>
                       </View>
                     </View>
+                    <Text style={styles.plateLabel}>Vehicle number</Text>
                     <Text style={styles.plate} numberOfLines={1} adjustsFontSizeToFit>
                       {(driver.plate || 'MP13ZL3184').toUpperCase()}
                     </Text>
                     <View style={styles.vehiclePill}>
-                      <Text style={styles.vehiclePillText}>{vehicleLine}</Text>
+                      <Text style={styles.vehiclePillText} numberOfLines={1}>{vehicleLine}</Text>
                     </View>
                   </View>
                   <View style={{ width: 96, height: 80 }}>
                     <View style={styles.vehicleTile}>
-                      <Image source={vehicleSrc} style={{ width: 48, height: 48, opacity: 0.9, tintColor: '#fff' }} resizeMode="contain" />
+                      <Image source={vehicleSrc} style={{ width: 48, height: 48, tintColor: color.textInverse }} resizeMode="contain" />
                     </View>
                     <View style={styles.avatar}>
                       <Image source={{ uri: driverAvatar }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                     </View>
                   </View>
                 </View>
+                {rideOtp ? (
+                  <View style={styles.otpBox} accessible accessibilityLabel={`Start OTP ${String(rideOtp).split('').join(' ')}. Share it with your captain.`}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.otpLabel}>Start OTP</Text>
+                      <Text style={styles.otpHint}>Share with your captain at pickup</Text>
+                    </View>
+                    <Text style={styles.otpText}>{rideOtp}</Text>
+                  </View>
+                ) : null}
                 <View style={styles.actions}>
-                  <Press scale={0.96} onPress={() => Linking.openURL(`tel:${driver.phone}`).catch(() => {})} style={[styles.actionBtn, styles.callBtn]}>
-                    <Phone size={18} color={tw.slate900} strokeWidth={2.5} />
-                    <Text style={[styles.actionText, { color: tw.slate900 }]}>CALL</Text>
-                  </Press>
-                  <Press scale={0.96} onPress={() => navigate(`${routePrefix}/ride/chat`, { state: h.buildHistoryState({ driver }) })} style={[styles.actionBtn, styles.chatBtn]}>
-                    <MessageCircle size={18} color="#fff" strokeWidth={2.5} />
-                    <Text style={[styles.actionText, { color: '#fff' }]}>CHAT</Text>
-                  </Press>
+                  <Button title="Call" icon={Phone} variant="secondary" onPress={() => Linking.openURL(`tel:${driver.phone}`).catch(() => {})} accessibilityLabel="Call captain" style={{ flex: 1 }} />
+                  <Button title="Chat" icon={MessageCircle} onPress={() => navigate(`${routePrefix}/ride/chat`, { state: h.buildHistoryState({ driver }) })} accessibilityLabel="Chat with captain" style={{ flex: 1 }} />
                 </View>
               </View>
             </View>
             <View style={styles.arriving}>
               <Ping />
-              <Text style={styles.arrivingText}>CAPTAIN IS ARRIVING</Text>
+              <Text style={styles.arrivingText}>Captain is arriving</Text>
             </View>
           </View>
         ) : null}
       </View>
 
-      <Dialog visible={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} backdrop="rgba(0,0,0,0.5)" blur={8} panelStyle={styles.dialog}>
+      <Dialog visible={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} backdrop={color.overlay} blur={8} panelStyle={styles.dialog}>
         <View style={styles.dialogIcon}>
-          <AlertTriangle size={26} color={tw.red400} strokeWidth={2} />
+          <AlertTriangle size={26} color={color.danger} />
         </View>
-        <Text style={styles.dialogTitle}>Cancel ride?</Text>
+        <Text style={styles.dialogTitle} accessibilityRole="header">Cancel ride?</Text>
         <Text style={styles.dialogSub}>{"We're still searching. Stop looking?"}</Text>
-        <View style={{ gap: 10, alignSelf: 'stretch' }}>
-          <Press scale={0.97} onPress={handleCancel} style={styles.dialogYes}>
-            <Text style={styles.dialogYesText}>YES, CANCEL</Text>
-          </Press>
-          <Press scale={1} onPress={() => setShowCancelConfirm(false)} style={{ paddingVertical: 14, alignItems: 'center' }}>
-            <Text style={styles.dialogBack}>{isSearching ? 'KEEP SEARCHING' : 'GO BACK'}</Text>
-          </Press>
+        <View style={{ gap: space.sm, alignSelf: 'stretch' }}>
+          <Button title="Yes, cancel" variant="danger" onPress={handleCancel} />
+          <Button title={isSearching ? 'Keep searching' : 'Go back'} variant="ghost" onPress={() => setShowCancelConfirm(false)} />
         </View>
       </Dialog>
     </View>
@@ -278,74 +282,69 @@ export default function SearchingDriverScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.slate50, overflow: 'hidden' },
-  row12: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  row8: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  page: { flex: 1, backgroundColor: color.surfaceMuted, overflow: 'hidden' },
+  row8: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  pickupDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: PICKUP, borderWidth: 2, borderColor: color.primarySoft },
+  dropSquare: { width: 12, height: 12, borderRadius: 2, backgroundColor: DROP },
   // scheduled
-  schedPage: { flex: 1, backgroundColor: tw.slate950, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
-  schedCard: { width: '100%', borderRadius: 32, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 24, paddingVertical: 32, alignItems: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  schedIcon: { width: 64, height: 64, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  schedTitle: { marginTop: 20, ...fo(900), fontSize: 22, color: '#fff', textAlign: 'center' },
-  schedSub: { marginTop: 8, ...fo(700), fontSize: 13, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 21 },
-  schedBox: { marginTop: 24, alignSelf: 'stretch', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 16, paddingVertical: 16 },
-  schedBoxLabel: { ...fo(700), fontSize: 14, color: '#fff' },
-  schedWhen: { marginTop: 8, ...fo(900), fontSize: 18, color: '#fff' },
-  schedRoute: { flex: 1, ...fo(700), fontSize: 12, color: 'rgba(255,255,255,0.65)', letterSpacing: 1.9 },
-  schedBtn: { marginTop: 24, height: 48, alignSelf: 'stretch', borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  schedBtnText: { ...fo(900), fontSize: 14, color: tw.slate900, letterSpacing: 2.2 },
+  schedPage: { flex: 1, backgroundColor: color.bg, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
+  schedCard: { width: '100%', maxWidth: 480, borderRadius: radii.xl, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.xl, paddingVertical: space.xxl, alignItems: 'center', ...elevation.card },
+  schedIcon: { width: 64, height: 64, borderRadius: radii.lg, alignItems: 'center', justifyContent: 'center' },
+  schedTitle: { ...type.heading, marginTop: space.lg, color: color.text, textAlign: 'center' },
+  schedSub: { ...type.small, marginTop: space.sm, color: color.textSecondary, textAlign: 'center' },
+  schedBox: { marginTop: space.xl, alignSelf: 'stretch', borderRadius: radii.lg, backgroundColor: color.goldSoft, padding: space.lg },
+  schedBoxLabel: { ...type.label, color: color.goldText },
+  schedWhen: { ...type.price, marginTop: space.sm, color: color.text },
+  schedRouteRows: { marginTop: space.md, gap: space.sm },
+  schedRoute: { ...type.small, flex: 1, minWidth: 0, color: color.textSecondary },
   // map overlays
   rings: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
-  ring: { position: 'absolute', width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: 'rgba(251,146,60,0.4)', backgroundColor: 'rgba(251,146,60,0.05)', marginTop: -22 },
+  ring: { position: 'absolute', width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: 'rgba(202,168,62,0.5)', backgroundColor: 'rgba(202,168,62,0.06)', marginTop: -22 },
   vehicleBox: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center' },
-  vehicleRing: { position: 'absolute', width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(16,185,129,0.45)', backgroundColor: 'rgba(52,211,153,0.1)' },
+  vehicleRing: { position: 'absolute', width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: color.primaryBorder, backgroundColor: 'rgba(10,77,43,0.08)' },
   vehicleImg: { width: 36, height: 36 },
-  routeCard: { position: 'absolute', left: 16, right: 64, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 16, paddingHorizontal: 20, paddingVertical: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', boxShadow: '0 8px 32px rgba(15,23,42,0.12)' },
-  routeLabel: { ...fo(700), fontSize: 9, color: tw.slate400, letterSpacing: 0.9, lineHeight: 9, marginBottom: 4 },
-  routeText: { ...fo(800), fontSize: 13, color: tw.slate900, lineHeight: 16.6 },
-  otpBox: { position: 'absolute', left: 16, backgroundColor: '#fff', borderRadius: 12, padding: 12, minWidth: 70, borderWidth: 1, borderColor: tw.slate50, boxShadow: '0 4px 16px rgba(15,23,42,0.12)' },
-  otpText: { ...fo(800), fontSize: 18, color: '#1d4ed8', textAlign: 'center', letterSpacing: 0.9 },
-  otpLabel: { ...fo(700), fontSize: 10, color: tw.slate400, marginTop: 2, textAlign: 'center' },
-  closeBtn: { position: 'absolute', right: 16, width: 40, height: 40, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(15,23,42,0.10)' },
-  bottom: { position: 'absolute', left: 16, right: 16 },
+  routeCard: { position: 'absolute', left: space.lg, right: space.lg + 44 + space.sm, backgroundColor: color.surface, borderRadius: radii.lg, paddingHorizontal: space.lg, paddingVertical: space.md, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  routeLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.textMuted, width: 44 },
+  routeText: { ...type.bodyStrong, flex: 1, minWidth: 0, color: color.text },
+  routeDivider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginVertical: space.sm, marginLeft: 12 + space.sm },
+  closeBtn: { position: 'absolute', right: space.lg, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  bottom: { position: 'absolute', left: space.lg, right: space.lg },
   // searching card
-  searchCard: { borderRadius: 32, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 24, paddingTop: 12, paddingBottom: 24, gap: 20, boxShadow: '0 20px 50px rgba(0,0,0,0.12)' },
-  grabber: { width: 40, height: 6, borderRadius: 3, backgroundColor: tw.slate100, alignSelf: 'center', marginBottom: 8 },
-  searchTitle: { ...fo(800), fontSize: 22, color: tw.slate950, letterSpacing: -0.55 },
-  searchStatus: { ...fo(600), fontSize: 13, color: tw.slate400, textAlign: 'center', maxWidth: 260, lineHeight: 19.5 },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 10, paddingVertical: 4 },
+  searchCard: { borderRadius: radii.xl, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.xl, paddingTop: space.md, paddingBottom: space.xl, gap: space.lg, ...elevation.sheet },
+  grabber: { width: 44, height: 4, borderRadius: 2, backgroundColor: color.borderStrong, alignSelf: 'center' },
+  searchTitle: { ...type.heading, color: color.text },
+  searchStatus: { ...type.small, color: color.textSecondary, textAlign: 'center', maxWidth: 280 },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: space.sm + 2 },
   dot: { width: 10, height: 10, borderRadius: 5 },
-  pills: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderRadius: 24, backgroundColor: 'rgba(248,250,252,0.8)', borderWidth: 1, borderColor: tw.slate100 },
-  pillIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: tw.emerald50, alignItems: 'center', justifyContent: 'center' },
-  pillText: { ...fo(700), fontSize: 11, color: tw.slate700, letterSpacing: 0.55 },
-  cancelSearch: { paddingVertical: 18, borderRadius: 22, backgroundColor: tw.red50, borderWidth: 1, borderColor: 'rgba(254,226,226,0.5)', alignItems: 'center' },
-  cancelSearchText: { ...fo(800), fontSize: 13, color: tw.red500, letterSpacing: 1.3 },
+  pills: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: space.lg, paddingVertical: space.md, borderRadius: radii.lg, backgroundColor: color.bg, borderWidth: 1, borderColor: color.border },
+  pillIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: color.successSoft, alignItems: 'center', justifyContent: 'center' },
+  pillDivider: { width: 1, height: 32, backgroundColor: color.border },
+  pillText: { ...type.label, color: color.text },
   // accepted card
-  acceptCard: { overflow: 'hidden', borderRadius: 32, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, boxShadow: '0 24px 64px -12px rgba(15,23,42,0.18)' },
-  acceptBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: 'rgba(236,253,245,0.5)', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(209,250,229,0.5)' },
-  checkDisc: { width: 20, height: 20, borderRadius: 10, backgroundColor: tw.emerald500, alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(16,185,129,0.3)' },
-  acceptBarText: { ...fo(900), fontSize: 14, color: tw.emerald700, letterSpacing: 1.4 },
-  driverName: { flexShrink: 1, ...fo(900), fontSize: 14, color: tw.slate400, letterSpacing: 2.1 },
-  ratingPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(250,204,21,0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(250,204,21,0.2)' },
-  ratingText: { ...fo(900), fontSize: 11, color: tw.yellow700 },
-  plate: { ...fo(900), fontSize: 28, color: tw.slate900, letterSpacing: -1.4, lineHeight: 28, marginBottom: 16 },
-  vehiclePill: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, backgroundColor: tw.slate100, borderWidth: 1, borderColor: 'rgba(226,232,240,0.5)' },
-  vehiclePillText: { ...fo(900), fontSize: 12, color: tw.slate600 },
-  vehicleTile: { position: 'absolute', right: 0, top: 0, width: 80, height: 80, borderRadius: 24, backgroundColor: '#1d2333', borderWidth: 4, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
-  avatar: { position: 'absolute', left: -8, bottom: 0, width: 64, height: 64, borderRadius: 32, borderWidth: 4, borderColor: '#fff', backgroundColor: tw.slate200, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  actions: { marginTop: 28, flexDirection: 'row', gap: 16 },
-  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 22, paddingVertical: 18 },
-  callBtn: { backgroundColor: tw.slate50, borderWidth: 1, borderColor: 'rgba(226,232,240,0.6)' },
-  chatBtn: { backgroundColor: tw.slate950, boxShadow: '0 12px 24px rgba(15,23,42,0.15)' },
-  actionText: { ...fo(900), fontSize: 13, letterSpacing: 1.3, lineHeight: 13 },
-  arriving: { marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  arrivingText: { ...fo(900), fontSize: 12, color: tw.slate400, letterSpacing: 2.4, lineHeight: 12 },
-  pingDot: { borderRadius: 4, backgroundColor: tw.emerald400 },
+  acceptCard: { overflow: 'hidden', borderRadius: radii.xl, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.sheet },
+  acceptBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, backgroundColor: color.primarySoft, paddingVertical: space.md },
+  acceptBarText: { ...type.bodyStrong, color: color.primary },
+  driverTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.sm },
+  driverName: { ...type.subheading, flexShrink: 1, color: color.text },
+  ratingPill: { flexDirection: 'row', alignItems: 'center', gap: space.xs, backgroundColor: color.goldSoft, paddingHorizontal: space.sm, height: 24, borderRadius: radii.pill },
+  ratingText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
+  plateLabel: { ...type.caption, color: color.textMuted },
+  plate: { ...type.priceLg, color: color.text, marginBottom: space.sm },
+  vehiclePill: { alignSelf: 'flex-start', paddingHorizontal: space.md, height: 28, justifyContent: 'center', borderRadius: radii.pill, backgroundColor: color.surfaceMuted, maxWidth: '100%' },
+  vehiclePillText: { ...type.caption, color: color.textSecondary },
+  vehicleTile: { position: 'absolute', right: 0, top: 0, width: 80, height: 80, borderRadius: radii.lg, backgroundColor: color.primaryDeep, borderWidth: 3, borderColor: color.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...elevation.card },
+  avatar: { position: 'absolute', left: -8, bottom: 0, width: 60, height: 60, borderRadius: 30, borderWidth: 3, borderColor: color.surface, backgroundColor: color.surfaceMuted, overflow: 'hidden', ...elevation.card },
+  otpBox: { marginTop: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radii.lg, borderWidth: 1.5, borderColor: color.gold, backgroundColor: color.goldSoft, paddingHorizontal: space.lg, paddingVertical: space.md },
+  otpLabel: { ...type.bodyStrong, color: color.text },
+  otpHint: { ...type.caption, color: color.textSecondary },
+  otpText: { ...type.priceLg, fontSize: 30, lineHeight: 36, color: color.primary, letterSpacing: 4 },
+  actions: { marginTop: space.lg, flexDirection: 'row', gap: space.md },
+  arriving: { marginTop: space.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, alignSelf: 'center', backgroundColor: color.surface, borderRadius: radii.pill, paddingHorizontal: space.md, height: 32, ...elevation.card },
+  arrivingText: { ...type.label, color: color.primary },
+  pingDot: { borderRadius: 4, backgroundColor: color.success },
   // dialog
-  dialog: { width: '82%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 28, padding: 28, alignItems: 'center', alignSelf: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' },
-  dialogIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  dialogTitle: { ...fo(700), fontSize: 18, color: tw.slate900, marginBottom: 6 },
-  dialogSub: { ...fo(700), fontSize: 13, color: tw.slate400, marginBottom: 24, lineHeight: 21, textAlign: 'center' },
-  dialogYes: { backgroundColor: tw.slate900, paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
-  dialogYesText: { ...fo(700), fontSize: 13, color: '#fff', letterSpacing: 1.95 },
-  dialogBack: { ...fo(700), fontSize: 13, color: tw.slate400, letterSpacing: 1.95 },
+  dialog: { width: '86%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xxl, alignItems: 'center', alignSelf: 'center', ...elevation.sheet },
+  dialogIcon: { width: 56, height: 56, borderRadius: radii.lg, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.lg },
+  dialogTitle: { ...type.heading, color: color.text, marginBottom: space.xs },
+  dialogSub: { ...type.small, color: color.textSecondary, marginBottom: space.xl, textAlign: 'center' },
 });

@@ -7,7 +7,7 @@ import { API_ORIGIN } from '../../api/client';
 import { getSocketOrigin } from '../../shared/utils/socketOrigin';
 import { getGoogleMapsApiKey } from '../utils/googleMapsApiKey';
 import { localStore } from '../../lib/storage';
-import { poppins, shadow } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 
 const RIDER = require('../../../assets/food/map_rider.png');
 const MAP_STYLE = [
@@ -251,7 +251,7 @@ export default function DeliveryTrackingMap({ orderId, orderTrackingIds = [], re
     };
   }, [fullRoutePath, displayRider, normRest, normCust, isTakeaway]);
 
-  const remainingColor = isOrderPickedUp ? '#3b82f6' : '#22c55e';
+  const remainingColor = isOrderPickedUp ? color.info : color.success;
   const center = (isOrderPickedUp ? normCust : normRest) || { lat: 0, lng: 0 };
   const onRiderImage = useCallback(() => setRiderLoaded(true), []);
 
@@ -274,16 +274,16 @@ export default function DeliveryTrackingMap({ orderId, orderTrackingIds = [], re
         rotateEnabled={false}
         showsScale
       >
-        {traveledPath.length > 1 ? <Polyline coordinates={traveledPath.map(toCoord)} strokeColor="#9ca3af" strokeWidth={6} lineDashPattern={[1, 10]} lineCap="round" zIndex={6} /> : null}
+        {traveledPath.length > 1 ? <Polyline coordinates={traveledPath.map(toCoord)} strokeColor={color.textDisabled} strokeWidth={6} lineDashPattern={[1, 10]} lineCap="round" zIndex={6} /> : null}
         {remainingPath.length > 1 ? <Polyline coordinates={remainingPath.map(toCoord)} strokeColor={remainingColor} strokeWidth={6} zIndex={8} /> : null}
         {normRest ? (
           <Marker coordinate={toCoord(normRest)} anchor={{ x: 0.5, y: 1 }} tracksViewChanges={pinsTracking} zIndex={3}>
-            <Pin color="#0a4d2b" uri={isUri(restImg)} fallback="#FF6B35" />
+            <Pin color={color.primary} uri={isUri(restImg)} fallback={color.gold} />
           </Marker>
         ) : null}
         {normCust ? (
           <Marker coordinate={toCoord(normCust)} anchor={{ x: 0.5, y: 1 }} tracksViewChanges={pinsTracking} zIndex={3}>
-            <Pin color="#22c55e" uri={isUri(custImg)} fallback="#10B981" />
+            <Pin color={color.success} uri={isUri(custImg)} fallback={color.success} />
           </Marker>
         ) : null}
         {displayRider && !isTakeaway ? (
@@ -297,12 +297,12 @@ export default function DeliveryTrackingMap({ orderId, orderTrackingIds = [], re
 
       {riderLocation && currentEta && !isTakeaway ? (
         <View pointerEvents="none" style={styles.badge}>
-          <Text style={styles.badgeLabel}>ARRIVAL</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={[type.overline, { color: color.goldOnDark }]}>Arrival</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
             <Text style={styles.badgeEta}>{currentEta}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: 0.8 }}>
               <View style={styles.dot} />
-              <Navigation size={12} color="#fff" style={{ transform: [{ rotate: '45deg' }] }} />
+              <Navigation size={14} color={color.textInverse} style={{ transform: [{ rotate: '45deg' }] }} />
             </View>
           </View>
         </View>
@@ -312,15 +312,14 @@ export default function DeliveryTrackingMap({ orderId, orderTrackingIds = [], re
 }
 
 const styles = StyleSheet.create({
-  wrap: { width: '100%', height: '100%', overflow: 'hidden', borderRadius: 16, borderWidth: 1, borderColor: '#F3F4F6' },
-  pin: { width: 44, height: 44, borderRadius: 22, padding: 4, backgroundColor: '#fff', borderWidth: 2, overflow: 'hidden', ...shadow('xl') },
-  pinImg: { width: '100%', height: '100%', borderRadius: 18, backgroundColor: '#F9FAFB' },
+  wrap: { width: '100%', height: '100%', overflow: 'hidden', borderRadius: radii.lg, borderWidth: 1, borderColor: color.border },
+  pin: { width: 44, height: 44, borderRadius: 22, padding: 4, backgroundColor: color.surface, borderWidth: 2, overflow: 'hidden', ...elevation.float },
+  pinImg: { width: '100%', height: '100%', borderRadius: 18, backgroundColor: color.surfaceMuted },
   pinFallback: { flex: 1, borderRadius: 18 },
   pinTip: { width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderTopWidth: 8, borderLeftColor: 'transparent', borderRightColor: 'transparent', marginTop: -2 },
   rider: { width: 64, height: 64 },
   riderImg: { width: 64, height: 64 },
-  badge: { position: 'absolute', top: 16, left: 16, minWidth: 90, padding: 12, borderRadius: 16, backgroundColor: 'rgba(10,77,43,0.95)', borderWidth: 1, borderColor: 'rgba(251,146,60,0.5)', ...shadow('0 10px 30px rgba(249,115,22,0.4)') },
-  badgeLabel: { fontSize: 9, color: 'rgba(255,255,255,0.8)', letterSpacing: 1.8, marginBottom: 2, ...poppins(800) },
-  badgeEta: { fontSize: 20, color: '#fff', ...poppins(800) },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' },
+  badge: { position: 'absolute', top: space.md, left: space.md, minWidth: 96, paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radii.md, backgroundColor: color.primaryDeep, borderWidth: 1, borderColor: color.gold, ...elevation.float },
+  badgeEta: { ...type.price, color: color.textInverse },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.textInverse },
 });

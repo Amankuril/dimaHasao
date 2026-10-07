@@ -1,9 +1,10 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
+import { CreditCard } from 'lucide-react-native';
 import { useParams, navigateTo } from '../../../lib/webRouter';
 import { useProfile } from '../../context/ProfileContext';
 import PaymentForm from '../../components/profile/PaymentForm';
-import { Button, Card, CardContent, UI } from '../../components/cart/ui';
-import { poppins } from '../../../theme';
+import { EmptyState } from '../../../components/ds';
+import { color } from '../../../theme';
 
 /** Port of pages/user/profile/EditPayment.jsx. */
 export default function EditPayment() {
@@ -13,16 +14,9 @@ export default function EditPayment() {
 
   if (!payment) {
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: '#faf6ed' }} contentContainerStyle={{ padding: 16 }}>
-        <Card>
-          <CardContent style={{ paddingVertical: 8, alignItems: 'center' }}>
-            <Text style={styles.text}>Payment method not found</Text>
-            <View style={{ marginTop: 16 }}>
-              <Button onPress={() => navigateTo('/user/profile/payments')}>Back to Payment Methods</Button>
-            </View>
-          </CardContent>
-        </Card>
-      </ScrollView>
+      <View style={{ flex: 1, backgroundColor: color.bg, justifyContent: 'center' }}>
+        <EmptyState icon={CreditCard} title="Payment method not found" actionLabel="Back to Payment Methods" onAction={() => navigateTo('/user/profile/payments')} />
+      </View>
     );
   }
 
@@ -43,7 +37,3 @@ export default function EditPayment() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  text: { color: UI.mutedForeground, fontSize: 16, lineHeight: 24, ...poppins(400) },
-});

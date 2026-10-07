@@ -8,7 +8,7 @@ import { AlertTriangle, Check, ChevronDown, RefreshCw } from 'lucide-react-nativ
 import { Spinner } from './Loader';
 import { Press } from './ui';
 import { errorText } from '../lib/apiError';
-import { display, ff, radius, tw } from '../theme';
+import { color, ff, radii, space, tw, type } from '../theme';
 import { useAnimatedValue } from '../lib/useAnimatedValue';
 
 /** `bg-gradient-to-r ... bg-clip-text text-transparent` */
@@ -181,12 +181,12 @@ export function ErrorView({ error, onRetry, compact }) {
   return (
     <View style={[styles.errorWrap, compact && { paddingVertical: 24 }]}>
       <View style={styles.errorIcon}>
-        <AlertTriangle size={24} color={tw.red500} />
+        <AlertTriangle size={24} color={color.danger} />
       </View>
       <Text style={styles.errorText}>{errorText(error)}</Text>
       {onRetry ? (
         <Press onPress={onRetry} style={styles.retry} accessibilityLabel="Try again">
-          <RefreshCw size={14} color="#fff" />
+          <RefreshCw size={16} color={color.onPrimary} />
           <Text style={styles.retryText}>Try again</Text>
         </Press>
       ) : null}
@@ -199,7 +199,7 @@ export function AsyncView({ state, loading, empty, children, onRetry }) {
   if (state.loading && state.data === undefined) {
     return loading || (
       <View style={styles.loading}>
-        <Spinner size={32} color={tw.gray200} />
+        <Spinner size={32} color={color.primary} />
       </View>
     );
   }
@@ -219,10 +219,10 @@ const styles = StyleSheet.create({
   sheetWrap: { flex: 1, justifyContent: 'flex-end' },
   dialogWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
   errorWrap: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 24 },
-  errorIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  errorText: { fontSize: 13, lineHeight: 19, color: tw.gray500, textAlign: 'center', ...ff(600) },
-  retry: { marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: tw.gray900, paddingHorizontal: 18, height: 40, borderRadius: radius.pill },
-  retryText: { color: '#fff', fontSize: 12, textTransform: 'uppercase', ...display(800, 12) },
+  errorIcon: { width: 60, height: 60, borderRadius: radii.lg, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.md },
+  errorText: { ...type.body, color: color.textSecondary, textAlign: 'center' },
+  retry: { marginTop: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.primary, paddingHorizontal: space.xl, height: 48, borderRadius: radii.md },
+  retryText: { ...type.button, color: color.onPrimary },
   loading: { paddingVertical: 80, alignItems: 'center' },
   rupee: { fontFamily: 'NunitoSans_800ExtraBold', letterSpacing: 0 },
   selectSheet: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingTop: 8 },

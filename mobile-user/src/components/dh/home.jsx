@@ -10,7 +10,8 @@ import { StripeBorder } from './Header';
 import { useBooking } from '../../context/BookingContext';
 import { PLACES_DATA, WHY_VISIT_DATA } from '../../data/dh/tourismData';
 import { openExternal } from '../../lib/links';
-import { montserrat, poppins, shadow, tw } from '../../theme';
+import { Button, IconButton, SectionHeader, fa } from '../ds';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /** components/common/SearchBar.jsx — overlaps the hero's bottom edge. */
 export function SearchBar() {
@@ -39,7 +40,7 @@ export function SearchBar() {
     <View style={styles.searchWrap}>
       <StripeBorder height={5} style={styles.searchStripe} />
       <View style={styles.searchBox}>
-        <Fa name="fa-solid fa-magnifying-glass" size={12} color={tw.gray400} style={{ marginRight: 10 }} />
+        <Fa name="fa-solid fa-magnifying-glass" size={16} color={color.textMuted} />
         <TextInput
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -48,17 +49,15 @@ export function SearchBar() {
           onSubmitEditing={() => router.navigate('/app/places')}
           returnKeyType="search"
           placeholder="Search places, hotels, cabs..."
-          placeholderTextColor={tw.gray400}
+          placeholderTextColor={color.textMuted}
           style={styles.searchInput}
           accessibilityLabel="Search"
         />
         {searchQuery ? (
-          <Press onPress={() => setSearchQuery('')} style={{ padding: 4, marginRight: 4 }} accessibilityLabel="Clear search" hitSlop={8}>
-            <Fa name="fa-solid fa-xmark" size={10} color={tw.gray400} />
-          </Press>
+          <IconButton icon={fa('fa-solid fa-xmark')} label="Clear search" onPress={() => setSearchQuery('')} size={40} iconSize={16} iconColor={color.textMuted} />
         ) : null}
-        <Press onPress={handleVoiceSearch} scale={0.9} accessibilityLabel="Voice Search" style={[styles.mic, isListening && { backgroundColor: tw.red500 }]}>
-          <Fa name="fa-solid fa-microphone" size={12} color={isListening ? '#fff' : '#084524'} />
+        <Press onPress={handleVoiceSearch} scale={0.9} hitSlop={2} accessibilityLabel={isListening ? 'Listening' : 'Voice Search'} style={[styles.mic, isListening && { backgroundColor: color.danger }]}>
+          <Fa name="fa-solid fa-microphone" size={16} color={isListening ? color.textInverse : color.primary} />
         </Press>
       </View>
 
@@ -72,9 +71,10 @@ export function SearchBar() {
                 setSearchQuery('');
                 router.push(`/app/places/${place.id}`);
               }}
-              style={[styles.suggestion, i > 0 && { borderTopWidth: 1, borderTopColor: tw.gray100 }]}
+              accessibilityLabel={`${place.name}, ${place.location}`}
+              style={[styles.suggestion, i > 0 && styles.suggestionDivider]}
             >
-              <Image source={{ uri: place.mainImage }} style={styles.suggestionImg} />
+              <Image source={{ uri: place.mainImage }} style={styles.suggestionImg} accessibilityIgnoresInvertColors />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.suggestionName} numberOfLines={1}>{place.name}</Text>
                 <Text style={styles.suggestionLoc} numberOfLines={1}>{place.location}</Text>
@@ -88,28 +88,35 @@ export function SearchBar() {
   );
 }
 
-/** components/home/CategoryCard.jsx */
-export function CategoryCard({ title, subtitle, icon, image, buttonText, buttonBg = '#044E29', gradient = ['#10B981', '#059669', '#044E29'], overlay = '#059669', onPress }) {
+/**
+ * components/home/CategoryCard.jsx, in the one heritage treatment: a photo
+ * with a dark green scrim, a gold-edged icon badge, a gold Cinzel title and
+ * a sentence-case action line. Every module looks the same; identity comes
+ * from the photo and the icon, not from a colour.
+ */
+export function CategoryCard({ title, subtitle, icon, image, buttonText, onPress }) {
   return (
-    <Press onPress={onPress} scale={0.96} style={styles.cat} accessibilityLabel={`${title}. ${buttonText}`}>
-      <LinearGradient colors={gradient} style={StyleSheet.absoluteFill} />
-      <View style={styles.catImageWrap}>
-        <Image source={{ uri: image }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-        {/* The web fades the photo in with a mask; a gradient of the card colour does the same. */}
-        <LinearGradient colors={[overlay, `${overlay}66`, `${overlay}00`]} style={styles.catFadeTop} pointerEvents="none" />
-        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.4)']} style={styles.catFadeBottom} pointerEvents="none" />
+    <Press onPress={onPress} scale={0.97} style={styles.cat} accessibilityRole="button" accessibilityLabel={`${title}. ${subtitle}. ${buttonText}`}>
+      <Image source={{ uri: image }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors />
+      <LinearGradient colors={['rgba(6,44,22,0.15)', 'rgba(6,44,22,0.55)', 'rgba(6,44,22,0.94)']} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <View style={styles.catIcon}>
+        <Fa name={icon} size={18} color={color.goldOnDark} />
       </View>
-      <View style={styles.catTop}>
-        <View style={styles.catIcon}>
-          <Fa name={icon} size={14} color="#fff" />
+      <View style={styles.catBody}>
+        <View style={styles.catTitleRow}>
+          <Fa name="fa-solid fa-leaf" size={11} color={color.gold} />
+          <Text style={styles.catTitle} numberOfLines={2}>
+            {String(title).toUpperCase()}
+          </Text>
         </View>
-        <Text style={styles.catTitle}>{title}</Text>
-        <Text style={styles.catSub}>{subtitle}</Text>
-      </View>
-      <View style={{ paddingHorizontal: 10, paddingBottom: 12 }}>
-        <View style={[styles.catBtn, { backgroundColor: buttonBg }]}>
-          <Text style={styles.catBtnText}>{buttonText}</Text>
-          <Fa name="fa-solid fa-arrow-right" size={7.5} color="#fff" />
+        <Text style={styles.catSub} numberOfLines={2}>
+          {subtitle}
+        </Text>
+        <View style={styles.catAction}>
+          <Text style={styles.catActionText} numberOfLines={1}>
+            {buttonText}
+          </Text>
+          <Fa name="fa-solid fa-arrow-right" size={12} color={color.goldOnDark} />
         </View>
       </View>
     </Press>
@@ -117,11 +124,11 @@ export function CategoryCard({ title, subtitle, icon, image, buttonText, buttonB
 }
 
 const LINKS = [
-  { id: 'guide', label: 'Local Guide', icon: 'fa-solid fa-user-tie', bg: '#10B981' },
-  { id: 'events', label: 'Events &\nFestivals', icon: 'fa-solid fa-calendar-days', bg: '#F97316' },
-  { id: 'packages', label: 'Tour\nPackages', icon: 'fa-solid fa-suitcase-rolling', bg: '#3B82F6' },
-  { id: 'food', label: 'Food &\nCuisine', icon: 'fa-solid fa-bowl-food', bg: '#F43F5E' },
-  { id: 'emergency', label: 'Emergency\nHelp', icon: 'fa-solid fa-phone-volume', bg: '#EF4444' },
+  { id: 'guide', label: 'Local guide', icon: 'fa-solid fa-user-tie' },
+  { id: 'events', label: 'Festivals', icon: 'fa-solid fa-calendar-days' },
+  { id: 'packages', label: 'Packages', icon: 'fa-solid fa-suitcase-rolling' },
+  { id: 'food', label: 'Food & cuisine', icon: 'fa-solid fa-bowl-food' },
+  { id: 'emergency', label: 'SOS help', icon: 'fa-solid fa-phone-volume', danger: true },
 ];
 
 const MODAL_DETAILS = {
@@ -142,7 +149,7 @@ const MODAL_DETAILS = {
   },
 };
 
-/** components/home/QuickLinksGrid.jsx */
+/** components/home/QuickLinksGrid.jsx: one row of 44 px icon tiles with readable labels. */
 export function QuickLinksGrid() {
   const [activeModal, setActiveModal] = useState(null);
   const detail = activeModal ? MODAL_DETAILS[activeModal] : null;
@@ -157,12 +164,14 @@ export function QuickLinksGrid() {
   return (
     <>
       <View style={styles.quick}>
-        {LINKS.map((item, index) => (
-          <Press key={item.id} scale={0.92} onPress={() => onLink(item.id)} style={[styles.quickItem, index > 0 && styles.quickDivider]} accessibilityLabel={item.label.replace('\n', ' ')}>
-            <View style={[styles.quickIcon, { backgroundColor: item.bg }]}>
-              <Fa name={item.icon} size={11} color="#fff" />
+        {LINKS.map((item) => (
+          <Press key={item.id} scale={0.94} onPress={() => onLink(item.id)} style={styles.quickItem} accessibilityRole="button" accessibilityLabel={item.label}>
+            <View style={[styles.quickIcon, item.danger && { backgroundColor: color.dangerSoft }]}>
+              <Fa name={item.icon} size={18} color={item.danger ? color.danger : color.primary} />
             </View>
-            <Text style={styles.quickLabel}>{item.label}</Text>
+            <Text style={styles.quickLabel} numberOfLines={2}>
+              {item.label}
+            </Text>
           </Press>
         ))}
       </View>
@@ -170,23 +179,22 @@ export function QuickLinksGrid() {
       <Dialog visible={Boolean(detail)} onClose={() => setActiveModal(null)} panelStyle={styles.modal}>
         {detail ? (
           <>
-            <Press onPress={() => setActiveModal(null)} style={styles.modalClose} accessibilityLabel="Close">
-              <Fa name="fa-solid fa-xmark" size={12} color={tw.gray500} />
-            </Press>
-            <Text style={styles.modalTitle}>{detail.title}</Text>
+            <View style={styles.modalHead}>
+              <Text style={styles.modalTitle} accessibilityRole="header">
+                {detail.title}
+              </Text>
+              <IconButton icon={fa('fa-solid fa-xmark')} label="Close" onPress={() => setActiveModal(null)} variant="soft" size={40} iconSize={16} />
+            </View>
             <Text style={styles.modalDesc}>{detail.desc}</Text>
             <View style={styles.modalList}>
               {detail.items.map((it) => (
                 <View key={it} style={styles.modalRow}>
-                  <Fa name="fa-solid fa-circle-check" size={12} color={tw.emerald600} />
+                  <Fa name="fa-solid fa-circle-check" size={16} color={detail.isEmergency ? color.danger : color.primary} />
                   <Text style={styles.modalRowText}>{it}</Text>
                 </View>
               ))}
             </View>
-            <Press onPress={() => openExternal(detail.actionLink)} style={[styles.modalBtn, detail.isEmergency && { backgroundColor: tw.red600 }]}>
-              <Fa name="fa-solid fa-phone" size={12} color="#fff" />
-              <Text style={styles.modalBtnText}>{detail.actionText}</Text>
-            </Press>
+            <Button title={detail.actionText} icon={fa('fa-solid fa-phone')} variant={detail.isEmergency ? 'danger' : 'primary'} onPress={() => openExternal(detail.actionLink)} />
           </>
         ) : null}
       </Dialog>
@@ -197,22 +205,23 @@ export function QuickLinksGrid() {
 /** components/home/PromoBanner.jsx */
 export function PromoBanner() {
   return (
-    <View style={styles.promo}>
+    <Press scale={0.98} onPress={() => router.navigate('/app/places')} style={styles.promo} accessibilityRole="button" accessibilityLabel="Discover the untold beauty of Dima Hasao. Plan your trip now">
       <Image
         source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAu4pmPYVoooGutS4BGHL_h3AM91HWpb0p3I7_YN0nNkKK4xpIAkqN1ItQCz_Nsd7DbcowZqup9rTFIBowf5I0Jrs-It5TrdAccxzvRgaSof8HlnftQt9lj9LGKzYmk8zjtnKHKT-LCqDhuT2NBwxGfEZNfaUZp_KgB0pmGPOfzFx8k8fbx2PpkAiM0dtzfVKXnMWQIZep3NYZwMvUPV44vu4xjr9xNtuKhBw0r9VIi49A_dvZwhxmZ' }}
         style={StyleSheet.absoluteFill}
         resizeMode="cover"
+        accessibilityIgnoresInvertColors
       />
-      <LinearGradient colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <LinearGradient colors={['rgba(6,44,22,0.92)', 'rgba(6,44,22,0.6)', 'rgba(6,44,22,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <View style={styles.promoText}>
         <Text style={styles.promoTitle}>
-          DISCOVER THE{'\n'}UNTOLD BEAUTY OF{'\n'}
-          <Text style={{ color: tw.amber300 }}>DIMA HASAO</Text>
+          {'Discover the untold beauty of '}
+          <Text style={{ color: color.goldOnDark }}>Dima Hasao</Text>
         </Text>
-        <Press onPress={() => router.navigate('/app/places')} style={styles.promoBtn}>
-          <Text style={styles.promoBtnText}>Plan Your Trip Now</Text>
-          <Fa name="fa-solid fa-arrow-right" size={7} color="#fff" />
-        </Press>
+        <View style={styles.promoAction}>
+          <Text style={styles.promoActionText}>Plan your trip now</Text>
+          <Fa name="fa-solid fa-arrow-right" size={12} color={color.goldOnDark} />
+        </View>
       </View>
       <View style={styles.promoCircles} pointerEvents="none">
         <Image
@@ -224,7 +233,7 @@ export function PromoBanner() {
           style={[styles.promoCircle, { width: 60, height: 60, borderRadius: 30, marginLeft: -12 }]}
         />
       </View>
-    </View>
+    </Press>
   );
 }
 
@@ -234,14 +243,16 @@ export function WhyVisitGrid() {
   return (
     <>
       <View style={styles.why}>
-        <Text style={styles.whyTitle}>Why Visit Dima Hasao?</Text>
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          {WHY_VISIT_DATA.map((item, index) => (
-            <Press key={item.id} scale={0.93} onPress={() => setSelected(item)} style={[styles.whyItem, index > 0 && styles.whyDivider]}>
+        <SectionHeader title="Why visit Dima Hasao?" />
+        <View style={styles.whyRow}>
+          {WHY_VISIT_DATA.map((item) => (
+            <Press key={item.id} scale={0.94} onPress={() => setSelected(item)} style={styles.whyItem} accessibilityRole="button" accessibilityLabel={item.title}>
               <View style={styles.whyImgBox}>
                 <Image source={{ uri: item.image }} style={{ width: 40, height: 36 }} resizeMode="contain" />
               </View>
-              <Text style={styles.whyLabel}>{item.title}</Text>
+              <Text style={styles.whyLabel} numberOfLines={2}>
+                {item.title}
+              </Text>
             </Press>
           ))}
         </View>
@@ -250,20 +261,18 @@ export function WhyVisitGrid() {
       <Dialog visible={Boolean(selected)} onClose={() => setSelected(null)} panelStyle={styles.modal}>
         {selected ? (
           <>
-            <Press onPress={() => setSelected(null)} style={styles.modalClose} accessibilityLabel="Close">
-              <Fa name="fa-solid fa-xmark" size={12} color={tw.gray500} />
-            </Press>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <View style={styles.modalHead}>
               <Image source={{ uri: selected.image }} style={{ width: 48, height: 48 }} resizeMode="contain" />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.modalTitle, { fontSize: 14, lineHeight: 20, marginBottom: 0 }]}>{selected.title}</Text>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.modalTitle} accessibilityRole="header">
+                  {selected.title}
+                </Text>
                 {selected.subtitle ? <Text style={styles.whySub}>{selected.subtitle}</Text> : null}
               </View>
+              <IconButton icon={fa('fa-solid fa-xmark')} label="Close" onPress={() => setSelected(null)} variant="soft" size={40} iconSize={16} />
             </View>
-            <Text style={[styles.modalDesc, { marginBottom: 16 }]}>{selected.description}</Text>
-            <Press onPress={() => setSelected(null)} style={styles.modalBtn}>
-              <Text style={styles.modalBtnText}>Explore More</Text>
-            </Press>
+            <Text style={[styles.modalDesc, { marginBottom: space.lg }]}>{selected.description}</Text>
+            <Button title="Explore more" onPress={() => setSelected(null)} />
           </>
         ) : null}
       </Dialog>
@@ -272,58 +281,59 @@ export function WhyVisitGrid() {
 }
 
 const styles = StyleSheet.create({
-  searchWrap: { paddingHorizontal: 12, marginTop: -16, zIndex: 30 },
-  searchStripe: { position: 'absolute', left: 0, right: 0, top: '50%', marginTop: -2.5, opacity: 0.9 },
-  searchBox: { marginHorizontal: 6, backgroundColor: '#fff', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', borderWidth: 2.5, borderColor: '#084524', ...shadow('md') },
-  searchInput: { flex: 1, paddingVertical: 2, paddingHorizontal: 0, fontSize: 11, color: tw.gray800, height: 26, ...poppins(400) },
-  mic: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  suggestions: { position: 'absolute', left: 20, right: 20, top: 36, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.emerald100, overflow: 'hidden', zIndex: 50, ...shadow('2xl') },
-  suggestion: { padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  suggestionImg: { width: 32, height: 32, borderRadius: 8 },
-  suggestionName: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
-  suggestionLoc: { fontSize: 10, lineHeight: 15, color: tw.emerald700, ...poppins(400) },
-  suggestionDist: { fontSize: 9, color: tw.gray400, ...poppins(500) },
+  searchWrap: { paddingHorizontal: space.lg, marginTop: -28, zIndex: 30 },
+  searchStripe: { position: 'absolute', left: 0, right: 0, top: 26, opacity: 0.9 },
+  searchBox: {
+    height: 56, backgroundColor: color.surface, borderRadius: radii.pill, paddingLeft: space.lg, paddingRight: space.xs + 2, flexDirection: 'row', alignItems: 'center', gap: space.sm,
+    borderWidth: 2, borderColor: color.primary, ...elevation.float,
+  },
+  searchInput: { flex: 1, minWidth: 0, height: 52, paddingVertical: 0, paddingHorizontal: 0, ...type.body, color: color.text },
+  mic: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: color.primarySoft },
+  suggestions: { position: 'absolute', left: space.lg, right: space.lg, top: 60, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', zIndex: 50, ...elevation.float },
+  suggestion: { minHeight: 56, paddingHorizontal: space.md, paddingVertical: space.sm, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  suggestionDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  suggestionImg: { width: 40, height: 40, borderRadius: radii.sm, backgroundColor: color.surfaceMuted },
+  suggestionName: { ...type.bodyStrong, color: color.text },
+  suggestionLoc: { ...type.caption, color: color.textMuted },
+  suggestionDist: { ...type.caption, color: color.textMuted },
 
-  cat: { flex: 1, height: 248, borderRadius: 22, overflow: 'hidden', justifyContent: 'space-between', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', ...shadow('md') },
-  catTop: { alignItems: 'center', paddingTop: 14, paddingHorizontal: 6 },
-  catIcon: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  catTitle: { color: '#fff', fontSize: 11, lineHeight: 13.75, letterSpacing: -0.275, textAlign: 'center', ...montserrat(800) },
-  catSub: { color: 'rgba(255,255,255,0.9)', fontSize: 8.5, lineHeight: 10.6, marginTop: 2, textAlign: 'center', ...poppins(500) },
-  catImageWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, top: '34%', borderTopLeftRadius: 36, borderTopRightRadius: 36, overflow: 'hidden' },
-  catFadeTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 64, opacity: 0.9 },
-  catFadeBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 64 },
-  catBtn: { borderRadius: 999, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)', ...shadow('md') },
-  catBtnText: { color: '#fff', fontSize: 9, lineHeight: 13.5, ...poppins(700) },
+  cat: { flex: 1, height: 216, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.primaryDeep, justifyContent: 'space-between', ...elevation.card },
+  catIcon: {
+    margin: space.md, width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: color.gold, backgroundColor: 'rgba(6,44,22,0.7)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  catBody: { padding: space.md, gap: space.xs },
+  catTitleRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  catTitle: { ...type.sectionSerif, fontSize: 14, lineHeight: 19, letterSpacing: 0.6, color: color.goldOnDark, flexShrink: 1 },
+  catSub: { ...type.caption, color: 'rgba(255,255,255,0.88)' },
+  catAction: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, marginTop: space.xs, paddingTop: space.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(202,168,62,0.5)' },
+  catActionText: { ...type.label, color: color.goldOnDark, flexShrink: 1 },
 
-  quick: { marginHorizontal: 10, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(243,244,246,0.9)', paddingVertical: 6, paddingHorizontal: 8, flexDirection: 'row', gap: 4, ...shadow('xs') },
-  quickItem: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 2, borderRadius: 12 },
-  quickDivider: { borderLeftWidth: 1, borderLeftColor: tw.gray100, paddingLeft: 4 },
-  quickIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  quickLabel: { fontSize: 7.5, lineHeight: 9.4, textAlign: 'center', color: tw.gray800, marginTop: 2, ...poppins(600) },
+  quick: { marginHorizontal: space.lg, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, paddingVertical: space.md, paddingHorizontal: space.xs, flexDirection: 'row', ...elevation.card },
+  quickItem: { flex: 1, minWidth: 0, alignItems: 'center', gap: space.xs + 2, paddingHorizontal: 2 },
+  quickIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  quickLabel: { ...type.caption, color: color.text, textAlign: 'center' },
 
-  modal: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: tw.emerald100, ...shadow('2xl') },
-  modalClose: { position: 'absolute', top: 14, right: 14, width: 28, height: 28, borderRadius: 14, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
-  modalTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 4, paddingRight: 28, ...poppins(700) },
-  modalDesc: { fontSize: 12, lineHeight: 19.5, color: tw.gray600, marginBottom: 12, ...poppins(400) },
-  modalList: { gap: 6, marginBottom: 16, backgroundColor: 'rgba(236,253,245,0.5)', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(208,250,229,0.6)' },
-  modalRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  modalRowText: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray800, ...poppins(400) },
-  modalBtn: { paddingVertical: 10, borderRadius: 12, backgroundColor: '#0A3A22', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, ...shadow('md') },
-  modalBtnText: { color: '#fff', fontSize: 12, lineHeight: 16, ...poppins(700) },
+  modal: { width: '100%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xl, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  modalHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.sm },
+  modalTitle: { ...type.heading, color: color.text, flex: 1 },
+  modalDesc: { ...type.small, color: color.textSecondary, marginBottom: space.md },
+  modalList: { gap: space.sm, marginBottom: space.lg, backgroundColor: color.surfaceMuted, padding: space.md, borderRadius: radii.md },
+  modalRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+  modalRowText: { flex: 1, ...type.small, color: color.text },
 
-  promo: { marginHorizontal: 12, height: 120, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,214,167,0.4)', ...shadow('sm') },
-  promoText: { position: 'absolute', top: 0, bottom: 0, left: 0, width: '60%', padding: 14, justifyContent: 'center' },
-  promoTitle: { color: '#fff', fontSize: 12, lineHeight: 15, letterSpacing: -0.3, marginBottom: 8, ...poppins(800) },
-  promoBtn: { alignSelf: 'flex-start', backgroundColor: '#084524', paddingVertical: 4, paddingHorizontal: 12, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', ...shadow('md') },
-  promoBtnText: { color: '#fff', fontSize: 9, lineHeight: 13.5, ...poppins(700) },
-  promoCircles: { position: 'absolute', right: 12, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center' },
-  promoCircle: { borderWidth: 2, borderColor: '#fff', backgroundColor: '#fff' },
+  promo: { marginHorizontal: space.lg, height: 136, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.primaryDeep, ...elevation.card },
+  promoText: { position: 'absolute', top: 0, bottom: 0, left: 0, width: '62%', padding: space.lg, justifyContent: 'center', gap: space.sm },
+  promoTitle: { ...type.sectionSerif, color: color.textInverse },
+  promoAction: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  promoActionText: { ...type.label, color: color.goldOnDark },
+  promoCircles: { position: 'absolute', right: space.md, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center' },
+  promoCircle: { borderWidth: 2, borderColor: color.surface, backgroundColor: color.surface },
 
-  why: { marginHorizontal: 12, marginBottom: 96, backgroundColor: '#FCF8ED', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: 'rgba(255,214,167,0.7)', ...shadow('sm') },
-  whyTitle: { textAlign: 'center', color: tw.gray900, marginBottom: 10, fontSize: 12, lineHeight: 16, ...poppins(700) },
-  whyItem: { flex: 1, alignItems: 'center', padding: 4, borderRadius: 12 },
-  whyDivider: { borderLeftWidth: 1, borderLeftColor: 'rgba(255,214,167,0.9)' },
-  whyImgBox: { width: 40, height: 40, marginBottom: 4, alignItems: 'center', justifyContent: 'center' },
-  whyLabel: { fontSize: 8.5, lineHeight: 10.6, textAlign: 'center', color: tw.gray800, ...poppins(700) },
-  whySub: { fontSize: 11, lineHeight: 16.5, color: tw.emerald800, ...poppins(600) },
+  why: { marginHorizontal: space.lg, backgroundColor: color.surface, borderRadius: radii.lg, padding: space.lg, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  whyRow: { flexDirection: 'row', gap: space.xs },
+  whyItem: { flex: 1, minWidth: 0, alignItems: 'center', paddingVertical: space.xs, gap: space.xs + 2 },
+  whyImgBox: { width: 52, height: 52, borderRadius: radii.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  whyLabel: { ...type.caption, color: color.text, textAlign: 'center' },
+  whySub: { ...type.label, color: color.primary },
 });

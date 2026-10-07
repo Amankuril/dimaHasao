@@ -8,7 +8,7 @@ import { Press } from '../ui';
 import { BottomSheet } from '../kit';
 import { useAuth } from '../../context/AuthContext';
 import { useBooking } from '../../context/BookingContext';
-import { dh, poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /*
  * The one consumer bottom nav: port of shared/components/app/AppBottomNav.jsx
@@ -25,7 +25,7 @@ const EMBLEM =
 
 const ANCHORS = [
   { id: 'home', label: 'Home', icon: 'fa-solid fa-house', path: '/app' },
-  { id: 'bookings', label: 'My Bookings', icon: 'fa-regular fa-calendar-check', path: '/app/bookings' },
+  { id: 'bookings', label: 'Bookings', icon: 'fa-regular fa-calendar-check', path: '/app/bookings' },
   { id: 'center', isCenter: true, label: 'Explore', path: '/app/places' },
   { id: 'profile', label: 'Profile', icon: 'fa-regular fa-circle-user', path: '/app/profile' },
   { id: 'more', label: 'More', icon: 'fa-solid fa-ellipsis', path: '/app/more', isMore: true },
@@ -84,7 +84,7 @@ export function navStateFor(pathname, signedIn) {
 }
 
 /** Space a scrolling screen leaves so its last row clears the floating nav. */
-export const NAV_CLEARANCE = 72;
+export const NAV_CLEARANCE = 88;
 
 export default function AppBottomNav() {
   const pathname = usePathname();
@@ -130,15 +130,16 @@ export default function AppBottomNav() {
                 key={item.id}
                 scale={0.88}
                 onPress={() => (sheetMore ? setIsMoreOpen((o) => !o) : go(item.path))}
-                accessibilityLabel={item.label}
+                accessibilityLabel={item.id === 'bookings' && badge ? `${item.label}, ${badge} active` : item.label}
+                accessibilityRole="tab"
                 accessibilityState={{ selected: isActive }}
                 style={styles.item}
               >
                 <View style={styles.iconBox}>
-                  <Fa name={item.icon} size={14} color={isActive ? dh.navActive : 'rgba(255,255,255,0.85)'} />
+                  <Fa name={item.icon} size={18} color={isActive ? color.goldOnDark : 'rgba(255,255,255,0.85)'} />
                   {item.id === 'bookings' && badge ? (
                     <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{badge}</Text>
+                      <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
                     </View>
                   ) : null}
                 </View>
@@ -152,7 +153,7 @@ export default function AppBottomNav() {
         </View>
       </View>
 
-      <BottomSheet visible={isMoreOpen} onClose={() => setIsMoreOpen(false)} backdrop="rgba(0,0,0,0.5)" spring={{ stiffness: 380, damping: 34 }}>
+      <BottomSheet visible={isMoreOpen} onClose={() => setIsMoreOpen(false)} backdrop={color.overlay} spring={{ stiffness: 380, damping: 34 }}>
         <View style={[styles.sheet, { maxHeight: height * 0.72 }]}>
           <View style={styles.grabber}>
             <View style={styles.grabberBar} />
@@ -163,8 +164,10 @@ export default function AppBottomNav() {
                 <Text style={styles.sectionTitle}>{extrasTitle}</Text>
                 <View style={styles.grid4}>
                   {extras.map((item) => (
-                    <Press key={item.label} onPress={() => go(item.path)} style={styles.extra}>
-                      <Fa name={item.icon} size={16} color={tw.emerald800} />
+                    <Press key={item.label} onPress={() => go(item.path)} accessibilityLabel={item.label} style={styles.extra}>
+                      <View style={styles.extraIcon}>
+                        <Fa name={item.icon} size={18} color={color.primary} />
+                      </View>
                       <Text style={styles.extraText}>{item.label}</Text>
                     </Press>
                   ))}
@@ -176,15 +179,15 @@ export default function AppBottomNav() {
               <Text style={styles.sectionTitle}>Everything in Dima Hasao</Text>
               <View style={styles.grid2}>
                 {MODULES.map((item) => (
-                  <Press key={item.label} onPress={() => go(item.path)} style={styles.module}>
-                    <View style={{ width: 16, alignItems: 'center' }}>
-                      <Fa name={item.icon} size={14} color={tw.emerald800} />
+                  <Press key={item.label} onPress={() => go(item.path)} accessibilityLabel={item.label} style={styles.module}>
+                    <View style={styles.moduleIcon}>
+                      <Fa name={item.icon} size={16} color={color.primary} />
                     </View>
                     <Text style={styles.moduleText}>{item.label}</Text>
                   </Press>
                 ))}
               </View>
-              <Press onPress={() => go('/app/more')} style={styles.everything}>
+              <Press onPress={() => go('/app/more')} accessibilityLabel="Help, support and everything else" style={styles.everything}>
                 <Text style={styles.everythingText}>Help, support & everything else</Text>
               </Press>
             </View>
@@ -196,40 +199,42 @@ export default function AppBottomNav() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', paddingHorizontal: 10, zIndex: 50 },
+  wrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', paddingHorizontal: space.md, zIndex: 50 },
   nav: {
-    height: 48, backgroundColor: dh.nav, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 4,
-    borderWidth: 1, borderColor: 'rgba(0,96,69,0.5)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    ...shadow('nav'),
+    height: 64, backgroundColor: color.primaryPressed, borderRadius: radii.pill, paddingHorizontal: space.sm,
+    borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', flexDirection: 'row', alignItems: 'center',
+    ...elevation.float,
   },
-  item: { width: 52, alignItems: 'center', justifyContent: 'center' },
-  iconBox: { height: 16, alignItems: 'center', justifyContent: 'center' },
+  item: { flex: 1, height: 56, alignItems: 'center', justifyContent: 'center' },
+  iconBox: { height: 22, alignItems: 'center', justifyContent: 'center' },
   badge: {
-    position: 'absolute', top: -6, right: -8, width: 12, height: 12, borderRadius: 6, backgroundColor: dh.navActive,
-    borderWidth: 1, borderColor: dh.nav, alignItems: 'center', justifyContent: 'center',
+    position: 'absolute', top: -6, right: -12, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, backgroundColor: color.goldBright,
+    borderWidth: 2, borderColor: color.primaryPressed, alignItems: 'center', justifyContent: 'center',
   },
-  badgeText: { fontSize: 8, lineHeight: 10, color: '#000', ...poppins(800) },
-  label: { fontSize: 8.5, lineHeight: 8.5, marginTop: 2, letterSpacing: -0.2, color: 'rgba(255,255,255,0.8)', ...poppins(500) },
-  labelActive: { color: dh.navActive, ...poppins(600) },
-  lineSlot: { height: 2, width: 20, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
-  line: { width: 16, height: 1.8, borderRadius: 1, backgroundColor: dh.navActive },
-  centerSlot: { width: 56, height: 32, alignItems: 'center' },
+  badgeText: { fontSize: 11, lineHeight: 13, color: color.onGold, fontFamily: 'Poppins_700Bold' },
+  label: { ...type.caption, marginTop: 3, color: 'rgba(255,255,255,0.85)' },
+  labelActive: { color: color.goldOnDark, fontFamily: 'Poppins_600SemiBold' },
+  lineSlot: { height: 3, width: 20, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  line: { width: 18, height: 3, borderRadius: 2, backgroundColor: color.goldOnDark },
+  centerSlot: { width: 68, height: 56, alignItems: 'center' },
   centerBtn: {
-    position: 'absolute', top: -16, width: 58, height: 58, borderRadius: 29, backgroundColor: dh.nav, padding: 2,
-    borderWidth: 3.5, borderColor: dh.nav, alignItems: 'center', justifyContent: 'center', ...shadow('0 6px 20px rgba(0,0,0,0.55)'),
+    position: 'absolute', top: -18, width: 64, height: 64, borderRadius: 32, backgroundColor: color.primaryPressed, padding: 2,
+    borderWidth: 3, borderColor: color.gold, alignItems: 'center', justifyContent: 'center', ...elevation.float,
   },
-  emblem: { width: '100%', height: '100%', borderRadius: 29 },
-  sheet: { backgroundColor: dh.cream, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderTopColor: dh.border },
-  grabber: { paddingTop: 12, paddingBottom: 8, alignItems: 'center' },
-  grabberBar: { width: 40, height: 4, borderRadius: 2, backgroundColor: tw.gray300 },
-  section: { paddingHorizontal: 16, paddingBottom: 12 },
-  sectionTitle: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, textTransform: 'uppercase', color: tw.gray400, marginBottom: 8, ...poppins(700) },
-  grid4: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  extra: { width: '23%', flexGrow: 1, alignItems: 'center', gap: 6, padding: 10, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: dh.border },
-  extraText: { fontSize: 10, lineHeight: 12.5, textAlign: 'center', color: tw.gray700, ...poppins(600) },
-  grid2: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  module: { width: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: dh.border },
-  moduleText: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray800, ...poppins(600) },
-  everything: { marginTop: 12, paddingVertical: 10, borderRadius: 16, backgroundColor: dh.nav, alignItems: 'center' },
-  everythingText: { fontSize: 12, lineHeight: 16, color: tw.amber300, ...poppins(700) },
+  emblem: { width: '100%', height: '100%', borderRadius: 32 },
+  sheet: { backgroundColor: color.bg, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, borderTopWidth: 1, borderTopColor: color.border },
+  grabber: { paddingTop: space.md, paddingBottom: space.sm, alignItems: 'center' },
+  grabberBar: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.borderStrong },
+  section: { paddingHorizontal: space.lg, paddingBottom: space.lg },
+  sectionTitle: { ...type.overline, color: color.textMuted, marginBottom: space.sm },
+  grid4: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  extra: { width: '23%', flexGrow: 1, alignItems: 'center', gap: space.xs + 2, paddingVertical: space.md, paddingHorizontal: space.xs, borderRadius: radii.lg, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, minHeight: 84 },
+  extraIcon: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  extraText: { ...type.caption, textAlign: 'center', color: color.text },
+  grid2: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  module: { width: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm + 2, paddingHorizontal: space.md, minHeight: 56, borderRadius: radii.lg, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border },
+  moduleIcon: { width: 32, height: 32, borderRadius: radii.sm, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  moduleText: { ...type.label, flex: 1, color: color.text },
+  everything: { marginTop: space.md, minHeight: 48, justifyContent: 'center', borderRadius: radii.md, backgroundColor: color.primary, alignItems: 'center' },
+  everythingText: { ...type.button, color: color.goldOnDark },
 });

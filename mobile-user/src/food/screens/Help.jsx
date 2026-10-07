@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { ChevronDown, ChevronRight, Clock, CreditCard, HelpCircle, Mail, MessageCircle, Package, Phone, Search, Shield, Truck, User } from 'lucide-react-native';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePathname } from 'expo-router';
+import { NAV_CLEARANCE, isImmersiveRoute } from '../../components/dh/AppBottomNav';
+import { ChevronDown, Clock, CreditCard, HelpCircle, Mail, MessageCircle, Package, Phone, Search, Shield, Truck, User } from 'lucide-react-native';
 import { Press } from '../../components/ui';
+import { Button, EmptyState, SectionHeader } from '../../components/ds';
 import usePlatformSettings from '../../shared/hooks/usePlatformSettings';
 import { navigateTo } from '../../lib/webRouter';
 import { alert } from '../../lib/webShim';
-import { poppins, tw } from '../../theme';
-import { Card, HELP, HelpButton, HelpPage, helpText } from '../components/helpUi';
+import { color, radii, space, type } from '../../theme';
+import { Card, HelpPage, HelpRow, helpText } from '../components/helpUi';
+import { Field } from '../components/cart/parts';
 
-const GREEN = '#0a4d2b';
 const helpCategories = [
   {
-    id: 'ordering', title: 'Ordering', icon: Package, color: GREEN, bgColor: tw.orange50, description: 'Learn how to place and manage orders',
+    id: 'ordering', title: 'Ordering', icon: Package, description: 'Learn how to place and manage orders',
     topics: [
       { question: 'How do I place an order?', answer: 'To place an order, browse restaurants, add items to your cart, and proceed to checkout. Select your delivery address and payment method, then confirm your order.' },
       { question: 'Can I modify or cancel my order?', answer: 'You can modify or cancel your order within 5 minutes of placing it. After that, please contact support for assistance.' },
@@ -20,7 +24,7 @@ const helpCategories = [
     ],
   },
   {
-    id: 'payments', title: 'Payments', icon: CreditCard, color: GREEN, bgColor: tw.orange50, description: 'Payment methods and billing questions',
+    id: 'payments', title: 'Payments', icon: CreditCard, description: 'Payment methods and billing questions',
     topics: [
       { question: 'What payment methods do you accept?', answer: 'We accept all major credit cards, debit cards, digital wallets (Apple Pay, Google Pay), and cash on delivery in select areas.' },
       { question: 'Is my payment information secure?', answer: 'Yes, we use industry-standard encryption to protect your payment information. We never store your full card details.' },
@@ -29,8 +33,7 @@ const helpCategories = [
     ],
   },
   {
-    // the web's `text-#06381e` is not a valid class, so this icon keeps the default text colour
-    id: 'delivery', title: 'Delivery', icon: Truck, color: HELP.fg, bgColor: tw.orange50, description: 'Delivery times, fees, and tracking',
+    id: 'delivery', title: 'Delivery', icon: Truck, description: 'Delivery times, fees, and tracking',
     topics: [
       { question: 'What are your delivery times?', answer: 'Delivery times typically range from 30-60 minutes, depending on the restaurant and your location. Estimated time is shown before checkout.' },
       { question: 'How much is the delivery fee?', answer: 'Delivery fees vary by restaurant and distance, typically ranging from $2.99 to $5.99. The exact fee is shown before you place your order.' },
@@ -39,7 +42,7 @@ const helpCategories = [
     ],
   },
   {
-    id: 'account', title: 'Account & Profile', icon: User, color: GREEN, bgColor: tw.orange50, description: 'Manage your account and preferences',
+    id: 'account', title: 'Account & Profile', icon: User, description: 'Manage your account and preferences',
     topics: [
       { question: 'How do I update my profile?', answer: "Go to 'Profile' in the menu, then select 'Edit Profile' to update your name, email, phone number, and other information." },
       { question: 'How do I change my password?', answer: "Go to Profile > Settings > Security to change your password. You'll need to verify your current password first." },
@@ -48,7 +51,7 @@ const helpCategories = [
     ],
   },
   {
-    id: 'refunds', title: 'Refunds & Returns', icon: Shield, color: GREEN, bgColor: tw.orange50, description: 'Refund policy and return process',
+    id: 'refunds', title: 'Refunds & Returns', icon: Shield, description: 'Refund policy and return process',
     topics: [
       { question: 'What is your refund policy?', answer: 'We offer full refunds for cancelled orders, incorrect items, or quality issues reported within 24 hours of delivery.' },
       { question: 'How long do refunds take?', answer: "Refunds are typically processed within 5-7 business days, depending on your payment method. You'll receive a confirmation email." },
@@ -57,7 +60,7 @@ const helpCategories = [
     ],
   },
   {
-    id: 'general', title: 'General Questions', icon: HelpCircle, color: tw.gray600, bgColor: tw.gray50, description: 'Other frequently asked questions',
+    id: 'general', title: 'General Questions', icon: HelpCircle, description: 'Other frequently asked questions',
     topics: [
       { question: 'Do you offer discounts or promotions?', answer: "Yes! Check the 'Offers' section for current promotions, discount codes, and special deals from restaurants." },
       { question: 'How do I contact customer support?', answer: "You can contact us via phone, email, or live chat. Visit the 'Contact Support' section below for all contact options." },
@@ -68,6 +71,9 @@ const helpCategories = [
 ];
 
 export default function Help() {
+  const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const bottomPad = (isImmersiveRoute(pathname) ? 0 : NAV_CLEARANCE) + insets.bottom + space.xxl;
   const platform = usePlatformSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategory, setExpandedCategory] = useState(null);
@@ -76,164 +82,134 @@ export default function Help() {
   const filtered = helpCategories.filter((c) => c.title.toLowerCase().includes(q) || c.topics.some((t) => t.question.toLowerCase().includes(q) || t.answer.toLowerCase().includes(q)));
 
   const quick = [
-    { Icon: Package, bg: tw.yellow100, title: 'Track Your Order', sub: 'View order status', onPress: () => navigateTo('/user/orders') },
-    { Icon: User, bg: tw.orange100, title: 'Manage Account', sub: 'Update profile & settings', onPress: () => navigateTo('/user/profile') },
-    { Icon: MessageCircle, bg: tw.orange100, title: 'Contact Support', sub: 'Get help from our team' },
+    { Icon: Package, title: 'Track your order', sub: 'View order status', onPress: () => navigateTo('/user/orders') },
+    { Icon: User, title: 'Manage account', sub: 'Update profile & settings', onPress: () => navigateTo('/user/profile') },
+    { Icon: MessageCircle, title: 'Contact support', sub: 'Get help from our team' },
   ];
 
   return (
     <HelpPage>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        <View style={{ alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <Text style={helpText.h1}>Help Center</Text>
-          <Text style={[helpText.muted, { fontSize: 16, textAlign: 'center' }]}>Find answers to common questions or contact our support team</Text>
+      <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: bottomPad }} keyboardShouldPersistTaps="handled">
+        <View style={{ gap: space.xs, marginBottom: space.sm }}>
+          <Text style={[type.heroSerif, { color: color.primary }]} accessibilityRole="header">
+            Help centre
+          </Text>
+          <Text style={helpText.muted}>Find answers to common questions or contact our support team</Text>
         </View>
 
-        <Card>
-          <View style={{ padding: 16 }}>
-            <View style={{ justifyContent: 'center' }}>
-              <View style={{ position: 'absolute', left: 12, zIndex: 1 }}>
-                <Search size={20} color={HELP.muted} />
-              </View>
-              <TextInput
-                placeholder="Search for help topics, questions, or keywords..."
-                placeholderTextColor={HELP.muted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                numberOfLines={1}
-                style={styles.input}
-              />
-            </View>
-          </View>
+        <View style={{ justifyContent: 'center' }}>
+          <Search size={20} color={color.textMuted} style={styles.searchIcon} />
+          <Field
+            placeholder="Search help topics or keywords..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            accessibilityLabel="Search help topics"
+            returnKeyType="search"
+            inputStyle={{ paddingLeft: 44 }}
+          />
+        </View>
+
+        <Card style={{ overflow: 'hidden' }}>
+          {quick.map(({ Icon, title, sub, onPress }, i) => (
+            <HelpRow key={title} icon={Icon} title={title} subtitle={sub} onPress={onPress} last={i === quick.length - 1} />
+          ))}
         </Card>
 
-        <View style={{ gap: 16 }}>
-          {quick.map(({ Icon, bg, title, sub, onPress }) => (
-            <Press key={title} scale={0.98} onPress={onPress} disabled={!onPress} style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ padding: 8, backgroundColor: bg, borderRadius: 8 }}>
-                <Icon size={20} color={GREEN} />
-              </View>
-              <View>
-                <Text style={[helpText.title, { fontSize: 14 }]}>{title}</Text>
-                <Text style={[helpText.muted, { fontSize: 12 }]}>{sub}</Text>
-              </View>
-            </Press>
-          ))}
-        </View>
-
-        <View style={{ gap: 16 }}>
-          <Text style={{ fontSize: 20, color: HELP.fg, ...poppins(700) }}>Browse by Category</Text>
-          {filtered.length === 0 ? (
-            <Card>
-              <View style={{ paddingVertical: 48, alignItems: 'center', paddingHorizontal: 16 }}>
-                <HelpCircle size={64} color={HELP.muted} />
-                <Text style={{ fontSize: 18, color: HELP.fg, marginTop: 16, marginBottom: 8, ...poppins(600) }}>No results found</Text>
-                <Text style={[helpText.muted, { marginBottom: 16 }]}>Try searching with different keywords</Text>
-                <HelpButton onPress={() => setSearchQuery('')}>
-                  <Text style={helpText.btn}>Clear Search</Text>
-                </HelpButton>
-              </View>
-            </Card>
-          ) : (
-            filtered.map((category) => {
-              const Icon = category.icon;
-              const isExpanded = expandedCategory === category.id;
-              return (
-                <Card key={category.id}>
-                  <Press
-                    scale={0.99}
-                    onPress={() => {
-                      setExpandedCategory(isExpanded ? null : category.id);
-                      setExpandedQuestion(null);
-                    }}
-                    style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                      <View style={{ padding: 8, backgroundColor: category.bgColor, borderRadius: 8 }}>
-                        <Icon size={20} color={category.color} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 18, color: HELP.fg, ...poppins(600) }}>{category.title}</Text>
-                        <Text style={[helpText.muted, { fontSize: 14 }]}>{category.description}</Text>
-                      </View>
-                    </View>
-                    {isExpanded ? <ChevronDown size={20} color={HELP.muted} /> : <ChevronRight size={20} color={HELP.muted} />}
-                  </Press>
-                  {isExpanded ? (
-                    <View style={{ padding: 16, paddingTop: 0, gap: 12 }}>
-                      {category.topics.map((topic, i) => {
-                        const key = `${category.id}-${i}`;
-                        const open = expandedQuestion === key;
-                        return (
-                          <View key={key} style={styles.topic}>
-                            <Press scale={1} onPress={() => setExpandedQuestion(open ? null : key)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12 }}>
-                              <Text style={{ flex: 1, paddingRight: 16, color: HELP.fg, ...poppins(600) }}>{topic.question}</Text>
-                              {open ? <ChevronDown size={16} color={HELP.muted} /> : <ChevronRight size={16} color={HELP.muted} />}
-                            </Press>
-                            {open ? (
-                              <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: HELP.border, backgroundColor: 'rgba(245,243,236,0.3)' }}>
-                                <Text style={[helpText.muted, { fontSize: 16 }]}>{topic.answer}</Text>
-                              </View>
-                            ) : null}
-                          </View>
-                        );
-                      })}
-                    </View>
-                  ) : null}
-                </Card>
-              );
-            })
-          )}
-        </View>
-
-        <Card gold>
-          <View style={{ padding: 16, gap: 4 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <MessageCircle size={20} color={GREEN} />
-              <Text style={{ fontSize: 20, color: HELP.fg, ...poppins(600) }}>Still Need Help?</Text>
-            </View>
-            <Text style={[helpText.muted, { fontSize: 14 }]}>Our support team is here to assist you 24/7</Text>
-          </View>
-          <View style={{ padding: 16, gap: 16 }}>
-            <View style={styles.contact}>
-              <View style={styles.contactIcon}><Phone size={20} color={GREEN} /></View>
-              <View>
-                <Text style={[helpText.title, { marginBottom: 4 }]}>Phone Support</Text>
-                <Text style={[helpText.muted, { fontSize: 14, marginBottom: 8 }]}>Call us anytime</Text>
-                <Press scale={0.98} onPress={() => Linking.openURL('tel:+1-800-123-4567').catch(() => {})}>
-                  <Text style={styles.linkText}>+1 (800) 123-4567</Text>
+        <SectionHeader title="Browse by category" style={{ marginTop: space.lg, marginBottom: 0 }} />
+        {filtered.length === 0 ? (
+          <Card>
+            <EmptyState icon={HelpCircle} title="No results found" message="Try searching with different keywords" actionLabel="Clear search" onAction={() => setSearchQuery('')} />
+          </Card>
+        ) : (
+          filtered.map((category) => {
+            const Icon = category.icon;
+            const isExpanded = expandedCategory === category.id;
+            return (
+              <Card key={category.id} style={{ overflow: 'hidden' }}>
+                <Press
+                  scale={0.99}
+                  onPress={() => {
+                    setExpandedCategory(isExpanded ? null : category.id);
+                    setExpandedQuestion(null);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: isExpanded }}
+                  accessibilityLabel={category.title}
+                  style={styles.catRow}
+                >
+                  <View style={styles.iconTile}>
+                    <Icon size={20} color={color.primary} />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[type.subheading, { color: color.text }]}>{category.title}</Text>
+                    <Text style={helpText.muted}>{category.description}</Text>
+                  </View>
+                  <ChevronDown size={20} color={color.textMuted} style={{ transform: [{ rotate: isExpanded ? '180deg' : '0deg' }] }} />
                 </Press>
-              </View>
-            </View>
-            <View style={styles.contact}>
-              <View style={styles.contactIcon}><Mail size={20} color={GREEN} /></View>
-              <View style={{ flex: 1 }}>
-                <Text style={[helpText.title, { marginBottom: 4 }]}>Email Support</Text>
-                <Text style={[helpText.muted, { fontSize: 14, marginBottom: 8 }]}>We&apos;ll respond within 24 hours</Text>
-                {platform.supportEmail ? (
-                  <Press scale={0.98} onPress={() => Linking.openURL(`mailto:${platform.supportEmail}`).catch(() => {})}>
-                    <Text style={styles.linkText}>{platform.supportEmail}</Text>
-                  </Press>
-                ) : (
-                  <Text style={[helpText.muted, { fontSize: 14 }]}>Not configured yet</Text>
-                )}
-              </View>
-            </View>
-            <View style={styles.contact}>
-              <View style={styles.contactIcon}><MessageCircle size={20} color={GREEN} /></View>
-              <View>
-                <Text style={[helpText.title, { marginBottom: 4 }]}>Live Chat</Text>
-                <Text style={[helpText.muted, { fontSize: 14, marginBottom: 8 }]}>Available 24/7</Text>
-                <HelpButton style={{ alignSelf: 'flex-start', minHeight: 32, paddingHorizontal: 12, marginTop: 4 }} onPress={() => alert('Live chat would open here')}>
-                  <Text style={[helpText.btn, { fontSize: 13 }]}>Start Chat</Text>
-                </HelpButton>
-              </View>
-            </View>
-            <View style={{ paddingTop: 16, borderTopWidth: 1, borderTopColor: tw.yellow200 }}>
-              <Text style={[helpText.muted, { fontSize: 14 }]}>
-                <Clock size={16} color={HELP.muted} /> Average response time: Less than 5 minutes
-              </Text>
-            </View>
+                {isExpanded ? (
+                  <View style={{ paddingHorizontal: space.lg, paddingBottom: space.lg, gap: space.sm }}>
+                    {category.topics.map((topic, i) => {
+                      const key = `${category.id}-${i}`;
+                      const open = expandedQuestion === key;
+                      return (
+                        <View key={key} style={styles.topic}>
+                          <Press
+                            scale={1}
+                            onPress={() => setExpandedQuestion(open ? null : key)}
+                            accessibilityRole="button"
+                            accessibilityState={{ expanded: open }}
+                            accessibilityLabel={topic.question}
+                            style={styles.topicHead}
+                          >
+                            <Text style={[type.bodyStrong, { flex: 1, color: color.text }]}>{topic.question}</Text>
+                            <ChevronDown size={18} color={color.textMuted} style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }} />
+                          </Press>
+                          {open ? (
+                            <View style={styles.answer}>
+                              <Text style={[type.body, { color: color.textSecondary }]}>{topic.answer}</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
+              </Card>
+            );
+          })
+        )}
+
+        <Card gold style={{ marginTop: space.lg, padding: space.lg, gap: space.md }}>
+          <View style={{ gap: space.xs }}>
+            <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+              Still need help?
+            </Text>
+            <Text style={[type.small, { color: color.textSecondary }]}>Our support team is here to assist you 24/7</Text>
+          </View>
+          <Card style={{ overflow: 'hidden' }}>
+            <HelpRow
+              icon={Phone}
+              title="Phone support"
+              subtitle="Call us anytime · +1 (800) 123-4567"
+              onPress={() => Linking.openURL('tel:+1-800-123-4567').catch(() => {})}
+            />
+            <HelpRow
+              icon={Mail}
+              title="Email support"
+              subtitle={platform.supportEmail ? `We'll respond within 24 hours · ${platform.supportEmail}` : "We'll respond within 24 hours · Not configured yet"}
+              onPress={platform.supportEmail ? () => Linking.openURL(`mailto:${platform.supportEmail}`).catch(() => {}) : undefined}
+            />
+            <HelpRow
+              icon={MessageCircle}
+              title="Live chat"
+              subtitle="Available 24/7"
+              last
+              right={<Button title="Start chat" size="sm" variant="secondary" fullWidth={false} onPress={() => alert('Live chat would open here')} />}
+            />
+          </Card>
+          <View style={styles.row}>
+            <Clock size={16} color={color.textSecondary} />
+            <Text style={[type.small, { color: color.textSecondary, flex: 1 }]}>Average response time: Less than 5 minutes</Text>
           </View>
         </Card>
       </ScrollView>
@@ -242,9 +218,11 @@ export default function Help() {
 }
 
 const styles = StyleSheet.create({
-  input: { height: 48, paddingVertical: 0, borderWidth: 1, borderColor: HELP.border, borderRadius: 8, paddingLeft: 40, paddingRight: 12, fontSize: 16, color: HELP.fg, backgroundColor: 'transparent', ...poppins(400) },
-  topic: { borderWidth: 1, borderColor: HELP.border, borderRadius: 8, overflow: 'hidden' },
-  contact: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 16, backgroundColor: '#fff', borderRadius: 8 },
-  contactIcon: { padding: 8, backgroundColor: tw.orange100, borderRadius: 8 },
-  linkText: { fontSize: 14, color: HELP.primary, ...poppins(500) },
+  searchIcon: { position: 'absolute', left: space.md + 2, zIndex: 1, top: 14 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  catRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, minHeight: 72 },
+  iconTile: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  topic: { borderWidth: 1, borderColor: color.border, borderRadius: radii.md, overflow: 'hidden' },
+  topicHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, minHeight: 48 },
+  answer: { padding: space.md, borderTopWidth: 1, borderTopColor: color.border, backgroundColor: color.surfaceMuted },
 });

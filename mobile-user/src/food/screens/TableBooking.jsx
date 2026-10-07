@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, CalendarDays, Clock, Info, Minus, PauseCircle, Plus, UtensilsCrossed, Users } from 'lucide-react-native';
 import { diningAPI, restaurantAPI } from '../../api/food';
 import Loader from '../../components/Loader';
 import { Press } from '../../components/ui';
 import { toast } from '../../lib/notify';
 import { sessionStore } from '../../lib/storage';
 import { useLocation, useNavigate, useParams } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, Card, EmptyState, IconButton, SegmentedControl, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import useAppBackNavigation from '../hooks/useAppBackNavigation';
-import { F } from '../components/shell';
 import { BOOKING_DRAFT_KEY, gridCell, useNavClearance } from '../components/dining/TableShared';
 
 const buildDates = (count = 7) =>
@@ -82,8 +81,17 @@ const getMealPeriod = (slot) => {
 
 const getOfferLabel = (slot) => (getMealPeriod(slot) === 'lunch' ? 'Lunch' : 'Carnival');
 
-const PINK = '#ef8f98';
-const CORAL = '#d64f63';
+function CardTitle({ icon: Icon, title, right }) {
+  return (
+    <View style={styles.cardHead}>
+      <View style={styles.cardHeadLeft}>
+        <Icon size={18} color={color.primary} />
+        <Text style={styles.cardTitle}>{title}</Text>
+      </View>
+      {right}
+    </View>
+  );
+}
 
 export default function TableBooking() {
   const { slug } = useParams();
@@ -217,7 +225,12 @@ export default function TableBooking() {
   }, [availableSlots, selectedMealPeriod]);
 
   if (loading) return <Loader />;
-  if (!restaurant) return <Text style={styles.notFound}>Restaurant not found</Text>;
+  if (!restaurant)
+    return (
+      <View style={[styles.page, { justifyContent: 'center' }]}>
+        <EmptyState icon={UtensilsCrossed} title="Restaurant not found" actionLabel="Go back" onAction={goBack} />
+      </View>
+    );
 
   const isDiningEnabled = restaurant?.diningSettings?.isEnabled !== false;
   const canProceed = Boolean(isDiningEnabled && restaurant && selectedSlot && selectedDate && selectedGuests);
@@ -256,137 +269,165 @@ export default function TableBooking() {
     navigate('/food/user/dining/book-confirmation', { state: bookingDraft });
   };
 
-  const inner = Math.min(width, 448) - 32; // max-w-md px-4
-  const cardInner = inner - 32; // p-4
-  const guestCell = gridCell(cardInner, 5, 8);
-  const dateCell = gridCell(cardInner, 3, 12);
+  const inner = Math.min(width, 448) - space.lg * 2;
+  const cardInner = inner - space.lg * 2 - 2; // card padding + border
+  const dateCell = gridCell(cardInner, 3, space.sm);
   const sameDay = (a, b) => a.toDateString() === b.toDateString();
+
+  // Guest stepper: the same choices the guest grid allowed (not booked, not over the remaining seats).
+  const guestAllowed = (count) => count >= 1 && count <= maxCapacity && !(count <= occupiedSeats) && !(count > remainingSeats);
+  const guestOptions = Array.from({ length: maxCapacity }, (_, index) => index + 1).filter(guestAllowed);
+  const prevGuests = [...guestOptions].reverse().find((count) => count < selectedGuests);
+  const nextGuests = guestOptions.find((count) => count > selectedGuests);
+  const dateLabel = (date, index) => (index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : date.toLocaleDateString('en-IN', { weekday: 'long' }));
+  const selectedDateIndex = dates.slice(0, 3).findIndex((date) => sameDay(selectedDate, date));
+  const summary = [
+    `${selectedGuests} ${selectedGuests === 1 ? 'guest' : 'guests'}`,
+    selectedDateIndex >= 0 ? dateLabel(selectedDate, selectedDateIndex) : selectedDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+    selectedSlot,
+  ]
+    .filter(Boolean)
+    .join(' • ');
 
   return (
     <View style={styles.page}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 96 + clearance }} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={['#ffe7c6', '#fff1d7', '#f5f6fb']} style={styles.hero}>
-          <LinearGradient colors={['rgba(255,255,255,0.65)', 'rgba(255,255,255,0)']} style={styles.heroGlow} pointerEvents="none" />
-          <Press scale={0.95} onPress={goBack} accessibilityLabel="Back" style={styles.back}>
-            <ArrowLeft size={20} color="#383838" />
-          </Press>
-          <View style={{ marginTop: 24, alignItems: 'center' }}>
-            <Text style={styles.h1}>Book a table</Text>
-            <Text style={styles.sub}>{restaurant.name || restaurant.restaurantName}</Text>
-          </View>
-        </LinearGradient>
+      <View style={styles.top}>
+        <IconButton icon={ArrowLeft} label="Back" variant="soft" onPress={goBack} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.h1} accessibilityRole="header">
+            Book a table
+          </Text>
+          <Text style={styles.sub} numberOfLines={1}>
+            {restaurant.name || restaurant.restaurantName}
+          </Text>
+        </View>
+      </View>
 
+      <ScrollView contentContainerStyle={{ paddingBottom: 140 + clearance }} showsVerticalScrollIndicator={false}>
         <View style={styles.body}>
           {!isDiningEnabled ? (
-            <View style={[styles.card, styles.paused]}>
-              <Text style={styles.pausedTitle}>Dining bookings are paused by this restaurant.</Text>
-              <Text style={styles.pausedBody}>You can still view details, but new table bookings are disabled right now.</Text>
+            <View style={styles.paused}>
+              <PauseCircle size={20} color={color.warning} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.pausedTitle}>Dining bookings are paused by this restaurant.</Text>
+                <Text style={styles.pausedBody}>You can still view details, but new table bookings are disabled right now.</Text>
+              </View>
             </View>
           ) : null}
 
-          <View style={styles.card}>
-            <View style={styles.cardHead}>
-              <Text style={styles.cardTitle}>Select number of guests</Text>
-              <Text style={styles.left}>{remainingSeats} left</Text>
+          <Card>
+            <CardTitle icon={Users} title="Select number of guests" right={<StatusBadge label={`${remainingSeats} left`} tone={remainingSeats > 0 ? 'primary' : 'danger'} />} />
+            <View style={styles.stepper}>
+              <IconButton
+                icon={Minus}
+                label="Fewer guests"
+                variant="primary"
+                disabled={prevGuests == null}
+                onPress={() => prevGuests != null && setSelectedGuests(prevGuests)}
+              />
+              <View style={{ alignItems: 'center', minWidth: 96 }} accessibilityLiveRegion="polite">
+                <Text style={styles.stepValue}>{selectedGuests}</Text>
+                <Text style={styles.stepLabel}>{selectedGuests === 1 ? 'guest' : 'guests'}</Text>
+              </View>
+              <IconButton
+                icon={Plus}
+                label="More guests"
+                variant="primary"
+                disabled={nextGuests == null}
+                onPress={() => nextGuests != null && setSelectedGuests(nextGuests)}
+              />
             </View>
-            <View style={styles.grid}>
-              {Array.from({ length: maxCapacity }, (_, index) => {
-                const count = index + 1;
-                const isBooked = count <= occupiedSeats;
-                const isTooLarge = count > remainingSeats && !isBooked;
-                const selected = selectedGuests === count;
-                return (
-                  <Press
-                    key={count}
-                    scale={1}
-                    disabled={isBooked || isTooLarge}
-                    onPress={() => setSelectedGuests(count)}
-                    style={[
-                      styles.guest,
-                      { width: guestCell },
-                      selected ? styles.guestOn : isBooked ? styles.guestBooked : isTooLarge ? styles.guestLarge : null,
-                    ]}
-                  >
-                    <Text style={[styles.guestText, selected ? { color: CORAL } : isBooked ? { color: 'rgba(185,28,28,0.3)' } : isTooLarge ? { color: 'rgba(55,65,81,0.2)' } : null]}>
-                      {isBooked ? 'X' : count}
-                    </Text>
-                  </Press>
-                );
-              })}
-            </View>
-          </View>
+            <Text style={styles.stepHint}>
+              {occupiedSeats > 0 ? `${occupiedSeats} of ${maxCapacity} seats are already booked. ` : ''}
+              {`Up to ${remainingSeats} ${remainingSeats === 1 ? 'guest' : 'guests'} can book now.`}
+            </Text>
+          </Card>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Select date</Text>
-            <View style={[styles.grid, { marginTop: 16, gap: 12 }]}>
+          <Card>
+            <CardTitle icon={CalendarDays} title="Select date" />
+            <View style={styles.grid}>
               {dates.slice(0, 3).map((date, index) => {
                 const active = sameDay(selectedDate, date);
                 return (
-                  <Press key={date.toISOString()} scale={1} onPress={() => setSelectedDate(date)} style={[styles.dateBtn, { width: dateCell }, active ? styles.pinkOn : null]}>
-                    <Text style={styles.dateTop} numberOfLines={1}>
-                      {index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : date.toLocaleDateString('en-IN', { weekday: 'long' })}
+                  <Press
+                    key={date.toISOString()}
+                    scale={0.97}
+                    onPress={() => setSelectedDate(date)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={`${dateLabel(date, index)}, ${date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`}
+                    style={[styles.tile, { width: dateCell }, active ? styles.tileOn : null]}
+                  >
+                    <Text style={[styles.tileTop, active ? styles.tileTextOn : null]} numberOfLines={1}>
+                      {dateLabel(date, index)}
                     </Text>
-                    <Text style={styles.dateSub}>{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</Text>
+                    <Text style={[styles.tileSub, active ? styles.tileTextOn : null]}>{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</Text>
                   </Press>
                 );
               })}
             </View>
-          </View>
+          </Card>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Select time of day</Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
-              {[
-                { id: 'lunch', label: 'Lunch' },
-                { id: 'dinner', label: 'Dinner' },
-              ].map((period) => {
-                const active = selectedMealPeriod === period.id;
-                return (
-                  <Press key={period.id} scale={1} onPress={() => setSelectedMealPeriod(period.id)} style={[styles.period, active ? { borderColor: PINK, backgroundColor: '#fff' } : null]}>
-                    <Text style={[styles.periodText, active ? { color: CORAL } : null]}>{period.label}</Text>
-                  </Press>
-                );
-              })}
-            </View>
+          <Card>
+            <CardTitle icon={Clock} title="Select time of day" />
+            <SegmentedControl
+              options={[
+                { value: 'lunch', label: 'Lunch' },
+                { value: 'dinner', label: 'Dinner' },
+              ]}
+              value={selectedMealPeriod}
+              onChange={setSelectedMealPeriod}
+            />
 
-            <View style={[styles.grid, { marginTop: 16, gap: 12 }]}>
+            <View style={[styles.grid, { marginTop: space.lg }]}>
               {filteredSlots.length === 0 ? (
                 <View style={styles.noSlots}>
+                  <Clock size={22} color={color.textDisabled} />
                   <Text style={styles.noSlotsText}>No {selectedMealPeriod} slots available for the selected date.</Text>
                 </View>
               ) : (
                 filteredSlots.map((slot) => {
                   const active = selectedSlot === slot;
                   return (
-                    <Press key={slot} scale={1} onPress={() => setSelectedSlot(slot)} style={[styles.slot, { width: dateCell }, active ? styles.pinkOn : null]}>
-                      <Text style={styles.slotTop}>{slot}</Text>
-                      <Text style={styles.slotSub}>{getOfferLabel(slot)}</Text>
+                    <Press
+                      key={slot}
+                      scale={0.97}
+                      onPress={() => setSelectedSlot(slot)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`${slot}, ${getOfferLabel(slot)}`}
+                      style={[styles.tile, { width: dateCell }, active ? styles.tileOn : null]}
+                    >
+                      <Text style={[styles.tileTop, active ? styles.tileTextOn : null]}>{slot}</Text>
+                      <Text style={[styles.slotSub, active ? styles.tileTextOn : null]}>{getOfferLabel(slot)}</Text>
                     </Press>
                   );
                 })
               )}
             </View>
-          </View>
+          </Card>
 
-          <View style={[styles.card, { borderRadius: 18, paddingVertical: 20, alignItems: 'center' }]}>
+          <View style={styles.hintRow}>
+            <Info size={16} color={color.textMuted} />
             <Text style={styles.hint}>Select your preferred time slot to view available booking options</Text>
           </View>
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: 16 + clearance }]}>
-        <View style={{ width: '100%', maxWidth: 448, alignSelf: 'center' }}>
-          <Press scale={0.98} disabled={!canProceed} onPress={handleProceed} accessibilityLabel="Proceed" style={styles.ctaWrap}>
-            {canProceed ? (
-              <LinearGradient colors={[F.green, '#7f1010']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
-                <Text style={styles.ctaText}>Proceed to confirmation</Text>
-              </LinearGradient>
-            ) : (
-              <View style={[styles.cta, { backgroundColor: '#a4abba' }]}>
-                <Text style={[styles.ctaText, { opacity: 0.95 }]}>{!isDiningEnabled ? 'Dining paused' : 'Select a time slot to proceed'}</Text>
-              </View>
-            )}
-          </Press>
+      <View style={[styles.footer, { paddingBottom: space.md + clearance }]}>
+        <View style={{ width: '100%', maxWidth: 448, alignSelf: 'center', gap: space.sm }}>
+          {canProceed ? (
+            <Text style={styles.summary} numberOfLines={1}>
+              {summary}
+            </Text>
+          ) : null}
+          <Button
+            size="lg"
+            disabled={!canProceed}
+            onPress={handleProceed}
+            accessibilityLabel="Proceed"
+            title={canProceed ? 'Proceed to confirmation' : !isDiningEnabled ? 'Dining paused' : 'Select a time slot to proceed'}
+          />
         </View>
       </View>
     </View>
@@ -394,41 +435,32 @@ export default function TableBooking() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#f5f6fb' },
-  notFound: { padding: 24, textAlign: 'center', fontSize: 16, color: tw.gray900, ...poppins(400) },
-  hero: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 40, overflow: 'hidden' },
-  heroGlow: { position: 'absolute', left: 0, right: 0, top: 0, height: 96 },
-  back: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  h1: { fontSize: 30, lineHeight: 36, letterSpacing: -0.75, color: '#25314a', ...poppins(900) },
-  sub: { marginTop: 4, fontSize: 14, lineHeight: 20, color: '#636363', ...poppins(500) },
-  body: { width: '100%', maxWidth: 448, alignSelf: 'center', marginTop: -16, paddingHorizontal: 16, gap: 16 },
-  card: { backgroundColor: '#fff', borderRadius: 22, padding: 16, ...shadow('0 8px 24px rgba(15,23,42,0.06)') },
-  paused: { backgroundColor: tw.amber50, borderWidth: 1, borderColor: tw.amber200 },
-  pausedTitle: { fontSize: 14, lineHeight: 20, color: tw.amber900, ...poppins(600) },
-  pausedBody: { marginTop: 4, fontSize: 12, lineHeight: 16, color: tw.amber800, ...poppins(400) },
-  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
-  cardTitle: { fontSize: 14, lineHeight: 20, color: '#2f3545', ...poppins(500) },
-  left: { fontSize: 12, lineHeight: 16, color: F.green, backgroundColor: '#fdfafc', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, overflow: 'hidden', ...poppins(700) },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  guest: { height: 44, borderRadius: 12, borderWidth: 1, borderColor: '#ececf2', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  guestOn: { borderColor: PINK, backgroundColor: '#fffaf9', ...shadow('sm') },
-  guestBooked: { borderColor: 'rgba(127,29,29,0.2)', backgroundColor: 'rgba(127,29,29,0.1)' },
-  guestLarge: { borderColor: 'rgba(255,255,255,0.05)', backgroundColor: 'rgba(255,255,255,0.05)' },
-  guestText: { fontSize: 14, lineHeight: 20, color: '#444b5f', ...poppins(700) },
-  dateBtn: { borderRadius: 18, borderWidth: 1, borderColor: '#ececf2', backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 16, alignItems: 'center' },
-  pinkOn: { borderColor: PINK, backgroundColor: '#fffaf9' },
-  dateTop: { fontSize: 14, lineHeight: 20, color: '#444b5f', ...poppins(500) },
-  dateSub: { marginTop: 4, fontSize: 14, lineHeight: 20, color: '#7b8191', ...poppins(400) },
-  period: { borderRadius: 999, borderWidth: 1, borderColor: '#ececf2', backgroundColor: '#fafafc', paddingHorizontal: 16, paddingVertical: 8 },
-  periodText: { fontSize: 14, lineHeight: 20, color: '#666f82', ...poppins(500) },
-  slot: { borderRadius: 16, borderWidth: 1, borderColor: '#ececf2', backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 16, alignItems: 'center' },
-  slotTop: { fontSize: 14, lineHeight: 20, color: '#334155', ...poppins(500) },
-  slotSub: { marginTop: 4, fontSize: 12, lineHeight: 16, color: '#2d5ea8', ...poppins(500) },
-  noSlots: { width: '100%', borderRadius: 18, borderWidth: 1, borderStyle: 'dashed', borderColor: '#e5e7ef', paddingHorizontal: 16, paddingVertical: 32 },
-  noSlotsText: { textAlign: 'center', fontSize: 14, lineHeight: 20, color: '#7c8394', ...poppins(400) },
-  hint: { textAlign: 'center', fontSize: 14, lineHeight: 20, color: '#6f7687', ...poppins(400) },
-  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 70, backgroundColor: '#f5f6fb', borderTopWidth: 1, borderTopColor: '#e6e7ef', paddingHorizontal: 16, paddingTop: 16 },
-  ctaWrap: { borderRadius: 16, overflow: 'hidden' },
-  cta: { height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  ctaText: { fontSize: 18, lineHeight: 28, color: '#fff', ...poppins(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  top: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.sm, backgroundColor: color.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  h1: { ...type.heading, color: color.text },
+  sub: { ...type.small, color: color.textMuted },
+  body: { width: '100%', maxWidth: 448, alignSelf: 'center', padding: space.lg, gap: space.md },
+  paused: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start', backgroundColor: color.warningSoft, borderRadius: radii.lg, padding: space.lg },
+  pausedTitle: { ...type.bodyStrong, color: color.warning },
+  pausedBody: { marginTop: space.xxs, ...type.small, color: color.textSecondary },
+  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, marginBottom: space.lg },
+  cardHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 1 },
+  cardTitle: { ...type.subheading, color: color.text, flexShrink: 1 },
+  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: color.surfaceMuted, borderRadius: radii.md, padding: space.sm },
+  stepValue: { ...type.priceLg, color: color.text },
+  stepLabel: { ...type.caption, color: color.textMuted },
+  stepHint: { marginTop: space.sm, ...type.caption, color: color.textMuted },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  tile: { minHeight: 64, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.sm, paddingVertical: space.sm, alignItems: 'center', justifyContent: 'center' },
+  tileOn: { borderColor: color.primary, backgroundColor: color.primary, ...elevation.card },
+  tileTop: { ...type.bodyStrong, color: color.text },
+  tileSub: { marginTop: space.xxs, ...type.caption, color: color.textMuted },
+  tileTextOn: { color: color.onPrimary },
+  slotSub: { marginTop: space.xxs, ...type.caption, color: color.goldText },
+  noSlots: { width: '100%', alignItems: 'center', gap: space.sm, borderRadius: radii.md, borderWidth: 1, borderStyle: 'dashed', borderColor: color.borderStrong, paddingHorizontal: space.lg, paddingVertical: space.xxl },
+  noSlotsText: { textAlign: 'center', ...type.small, color: color.textMuted },
+  hintRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingHorizontal: space.xs },
+  hint: { flex: 1, ...type.small, color: color.textMuted },
+  summary: { ...type.label, color: color.textSecondary, textAlign: 'center' },
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 70, backgroundColor: color.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.md, ...elevation.sheet },
 });

@@ -6,6 +6,7 @@ import { Header, PatternDivider } from '../../components/dh/Header';
 import { useAuth } from '../../context/AuthContext';
 import { SettingsProvider, useSettings } from '../context/SettingsContext';
 import { UserThemeProvider } from '../context/UserThemeContext';
+import { color } from '../../theme';
 import { socketService } from '../api/socket';
 import taxiApi from '../api/client';
 import { clearCurrentRide } from '../services/currentRideService';
@@ -17,7 +18,7 @@ import { toast } from '../../lib/notify';
 /*
  * Web: TaxiApp.jsx. UserProtectedRoute (signed-out -> shared login), UserAccountInvalidationListener (socket
  * `account:deleted` / admin `chat:message`, `app:auth-stale`), UserUpcomingRideReminderBootstrap (scheduled rides,
- * every 10 minutes), SettingsProvider and UserThemeProvider. The page background is #EFF5FD (MainLayout).
+ * every 10 minutes), SettingsProvider and UserThemeProvider. The page background is the app's cream (color.bg).
  */
 const getPayload = (response) => response?.data?.data || response?.data || response || {};
 
@@ -103,12 +104,12 @@ export default function TaxiShell() {
       <UserThemeProvider>
         <Listeners />
         {/* Web: routes.jsx TaxiUserShell -> ModuleShell (module header + divider above every taxi screen). */}
-        <View style={{ flex: 1, backgroundColor: '#EFF5FD' }}>
+        <View style={{ flex: 1, backgroundColor: color.bg }}>
           <Header title="TAXI / AUTO" subtitle="Book your ride, travel with ease" rightAction="none" onBack={() => router.navigate('/app')} />
           <PatternDivider variant="green-gold" />
           <SafeAreaInsetsContext.Provider value={innerInsets}>
             <View style={{ flex: 1 }}>
-              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#EFF5FD' }, animation: 'fade', animationDuration: 120 }} />
+              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bg }, animation: 'fade', animationDuration: 120 }} />
             </View>
           </SafeAreaInsetsContext.Provider>
         </View>

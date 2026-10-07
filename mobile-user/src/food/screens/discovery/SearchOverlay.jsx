@@ -8,8 +8,9 @@ import { Press } from '../../../components/ui';
 import { searchAPI } from '../../../api/food';
 import { localStore } from '../../../lib/storage';
 import { getSearchOverlayValue, setSearchOverlayValue } from '../../components/shell';
-import { F } from '../../components/shell';
-import { poppins, tw } from '../../../theme';
+import { EmptyState, SectionHeader } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 const SEARCH_HISTORY_KEY = 'user_recent_searches_v1';
 
@@ -113,13 +114,13 @@ export default function SearchOverlay() {
     go(searchValue.trim());
   };
 
-  const cell = (width - 32 - 2 * 12) / 3;
+  const cell = (width - space.lg * 2 - 2 * space.md) / 3;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={[styles.header, { paddingTop: 16 }]}>
-        <View style={{ flex: 1 }}>
-          <Search size={20} color={F.green} strokeWidth={2.5} style={styles.sIcon} />
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <View style={styles.header}>
+        <View style={styles.field}>
+          <Search size={18} color={color.primary} strokeWidth={2.5} />
           <TextInput
             ref={inputRef}
             autoFocus
@@ -127,29 +128,25 @@ export default function SearchOverlay() {
             onChangeText={onChange}
             onSubmitEditing={submit}
             placeholder="Search dishes or restaurants"
-            placeholderTextColor={tw.gray400}
+            placeholderTextColor={color.textMuted}
             returnKeyType="search"
+            accessibilityLabel="Search dishes or restaurants"
             style={styles.input}
           />
-          <View style={styles.mic}>
-            <View style={{ width: 1, height: 24, backgroundColor: tw.gray200 }} />
-            <Press scale={0.9} onPress={() => inputRef.current?.focus()} accessibilityLabel="Voice search" style={{ padding: 10, borderRadius: 12 }}>
-              <Mic size={20} color={F.green} />
-            </Press>
-          </View>
+          <View style={styles.divider} />
+          <Press scale={0.9} onPress={() => inputRef.current?.focus()} accessibilityLabel="Voice search" style={styles.fieldBtn}>
+            <Mic size={20} color={color.primary} />
+          </Press>
         </View>
         <Press scale={0.9} onPress={onClose} accessibilityLabel="Close search" style={styles.close}>
-          <X size={20} color={tw.gray700} />
+          <X size={22} color={color.text} />
         </Press>
       </View>
 
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 24, paddingBottom: 96 + insets.bottom }}>
-        <View style={{ marginBottom: 24 }}>
-          <View style={styles.rHead}>
-            <Clock size={16} color={F.green} />
-            <Text style={styles.rTitle}>Recent Searches</Text>
-          </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom }}>
+        <View style={{ marginBottom: space.xxl }}>
+          <SectionHeader title="Recent searches" />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
             {recent.slice(0, 8).map((s) => (
               <Press
                 key={s}
@@ -158,17 +155,18 @@ export default function SearchOverlay() {
                   onChange(s);
                   inputRef.current?.focus();
                 }}
+                accessibilityRole="button"
                 accessibilityLabel={s}
                 style={styles.chip}
               >
-                <Clock size={12} color={F.green} />
-                <Text style={styles.chipText}>{s}</Text>
+                <Clock size={14} color={color.textSecondary} />
+                <Text style={styles.chipText} numberOfLines={1}>{s}</Text>
               </Press>
             ))}
           </View>
         </View>
 
-        <Text style={styles.h3}>{searchValue.trim() === '' ? 'Start typing to search dishes' : `Search Results (${filteredFoods.length})`}</Text>
+        <Text style={styles.h3} accessibilityRole="header">{searchValue.trim() === '' ? 'Start typing to search dishes' : `Search results (${filteredFoods.length})`}</Text>
         {filteredFoods.length > 0 ? (
           <View style={styles.grid}>
             {filteredFoods.map((food) => (
@@ -179,15 +177,16 @@ export default function SearchOverlay() {
                   saveRecent(food.name);
                   go(food.name);
                 }}
+                accessibilityRole="button"
                 accessibilityLabel={food.name}
-                style={{ width: cell, alignItems: 'center', gap: 8 }}
+                style={{ width: cell, alignItems: 'center', gap: space.sm }}
               >
                 <View style={[styles.circle, { width: cell, height: cell, borderRadius: cell / 2 }]}>
                   {food.image ? (
-                    <Image source={{ uri: food.image }} style={{ width: '100%', height: '100%', borderRadius: cell / 2 }} resizeMode="cover" />
+                    <Image source={{ uri: food.image }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                   ) : (
-                    <View style={{ flex: 1, borderRadius: cell / 2, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' }}>
-                      <Search size={20} color={tw.gray400} />
+                    <View style={{ flex: 1, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' }}>
+                      <Search size={20} color={color.textDisabled} />
                     </View>
                   )}
                 </View>
@@ -195,21 +194,17 @@ export default function SearchOverlay() {
               </Press>
             ))}
           </View>
-        ) : (
-          <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-            {loadingFoods ? (
-              <>
-                <ActivityIndicator size="large" color={tw.gray300} style={{ marginBottom: 16 }} />
-                <Text style={styles.eTitle}>Loading dishes from database...</Text>
-              </>
-            ) : (
-              <>
-                <Search size={48} color={tw.gray300} style={{ marginBottom: 16 }} />
-                <Text style={styles.eTitle}>{searchValue.trim() ? `No results found for "${searchValue}"` : 'No dishes found in database'}</Text>
-                <Text style={styles.eBody}>{searchValue.trim() ? 'Try a different search term' : 'Type a dish name to see matching results'}</Text>
-              </>
-            )}
+        ) : loadingFoods ? (
+          <View style={{ alignItems: 'center', paddingVertical: space.xxxl }} accessibilityRole="progressbar">
+            <ActivityIndicator size="large" color={color.primary} style={{ marginBottom: space.lg }} />
+            <Text style={styles.eTitle}>Loading dishes from database...</Text>
           </View>
+        ) : (
+          <EmptyState
+            icon={Search}
+            title={searchValue.trim() ? `No results found for "${searchValue}"` : 'No dishes found in database'}
+            message={searchValue.trim() ? 'Try a different search term' : 'Type a dish name to see matching results'}
+          />
         )}
       </ScrollView>
     </View>
@@ -217,19 +212,17 @@ export default function SearchOverlay() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingBottom: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray100, ...{ boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' } },
-  sIcon: { position: 'absolute', left: 20, top: 16, zIndex: 1 },
-  input: { height: 52, paddingLeft: 56, paddingRight: 64, borderWidth: 1, borderColor: tw.gray200, borderRadius: 16, fontSize: 16, color: tw.gray900, backgroundColor: '#fff', ...poppins(400) },
-  mic: { position: 'absolute', right: 8, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  close: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  rHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  rTitle: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(600) },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: tw.orange50, borderWidth: 1, borderColor: tw.orange200, ...{ boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' } },
-  chipText: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(500) },
-  h3: { fontSize: 18, lineHeight: 28, color: tw.gray900, marginBottom: 16, ...poppins(700) },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  circle: { padding: 4, backgroundColor: '#fff', ...{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)' } },
-  fName: { fontSize: 12, lineHeight: 16, color: tw.gray800, textAlign: 'center', paddingHorizontal: 4, ...poppins(600) },
-  eTitle: { fontSize: 16, lineHeight: 24, color: tw.gray600, textAlign: 'center', ...poppins(600) },
-  eBody: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginTop: 8, textAlign: 'center', ...poppins(400) },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingLeft: space.lg, paddingRight: space.xs, paddingVertical: space.sm, backgroundColor: color.bg, borderBottomWidth: 1, borderBottomColor: color.border },
+  field: { flex: 1, height: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.md, paddingRight: space.xxs, borderWidth: 1, borderColor: color.primaryBorder, borderRadius: radii.md, backgroundColor: color.surface },
+  input: { flex: 1, minWidth: 0, height: '100%', paddingVertical: 0, ...type.body, color: color.text, outlineWidth: 0 },
+  divider: { width: 1, height: 20, backgroundColor: color.border },
+  fieldBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  close: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: space.sm, height: 40, maxWidth: '100%', paddingHorizontal: space.md + 2, borderRadius: radii.pill, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border },
+  chipText: { ...type.label, color: color.textSecondary, flexShrink: 1 },
+  h3: { ...type.subheading, color: color.text, marginBottom: space.lg },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  circle: { overflow: 'hidden', borderWidth: 2, borderColor: color.border, backgroundColor: color.surface, ...elevation.card },
+  fName: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.text, textAlign: 'center', paddingHorizontal: space.xs },
+  eTitle: { ...type.bodyStrong, color: color.textSecondary, textAlign: 'center' },
 });

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, CheckCircle2, IndianRupee, MapPin, Share2, Ticket, X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ArrowLeft, CheckCircle2, Clock, ImageIcon, IndianRupee, MapPin, Share2, Star, Ticket, UtensilsCrossed, X } from 'lucide-react-native';
 import { API_ORIGIN } from '../../api/client';
 import { diningAPI, restaurantAPI } from '../../api/food';
 import Image from '../../components/Img';
@@ -10,13 +11,13 @@ import { Press } from '../../components/ui';
 import { events } from '../../lib/events';
 import { toast } from '../../lib/notify';
 import { useLocation, useNavigate, useParams } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, EmptyState, IconButton, SectionHeader, SegmentedControl, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import { useProfile } from '../context/ProfileContext';
 import useAppBackNavigation from '../hooks/useAppBackNavigation';
 import { isModuleAuthenticated } from '../utils/auth';
 import { getMenuFromResponse } from '../utils/menuItems';
 import { isVegMenuItem } from '../utils/vegMode';
-import { F } from '../components/shell';
 import { gridCell, useNavClearance } from '../components/dining/TableShared';
 
 const formatAddress = (restaurant) =>
@@ -96,7 +97,19 @@ const TOP_TABS = [
   { id: 'about', label: 'About', target: 'restaurant-about' },
 ];
 
-const TAB_BAR_H = 53;
+const TAB_BAR_H = 64;
+/** Dark scrim over the hero photo (primaryDeep). */
+const HERO_SCRIM = ['rgba(6,44,22,0)', 'rgba(6,44,22,0.35)', 'rgba(6,44,22,0.9)'];
+const ON_PHOTO_BTN = 'rgba(6,28,14,0.55)';
+
+function PhotoEmpty({ label, icon: Icon = ImageIcon }) {
+  return (
+    <View style={styles.menuEmpty}>
+      <Icon size={22} color={color.textDisabled} />
+      <Text style={styles.menuEmptyText}>{label}</Text>
+    </View>
+  );
+}
 
 function Photo({ uri, style, empty }) {
   const [failed, setFailed] = useState(false);
@@ -112,6 +125,8 @@ export default function DiningRestaurantDetails() {
   const navigate = useNavigate();
   const goBack = useAppBackNavigation();
   const clearance = useNavClearance();
+  // The sheet is a modal above the app nav, so it only clears the system inset.
+  const insets = useSafeAreaInsets();
   const { width: winW } = useWindowDimensions();
   const { vegMode } = useProfile();
   const routeRestaurant = location.state?.restaurant || null;
@@ -246,19 +261,16 @@ export default function DiningRestaurantDetails() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: '#f6f7fb' }]}>
-        <ActivityIndicator size="large" color={F.green} />
+      <View style={styles.center} accessibilityRole="progressbar" accessibilityLabel="Loading restaurant">
+        <ActivityIndicator size="large" color={color.primary} />
       </View>
     );
   }
 
   if (error || !restaurant) {
     return (
-      <View style={[styles.center, { backgroundColor: '#f6f7fb', gap: 16, paddingHorizontal: 16 }]}>
-        <Text style={styles.nfTitle}>Restaurant not found</Text>
-        <Press scale={0.95} onPress={goBack} style={styles.outlineBtn}>
-          <Text style={styles.outlineBtnText}>Go Back</Text>
-        </Press>
+      <View style={[styles.center, { paddingHorizontal: space.lg }]}>
+        <EmptyState icon={UtensilsCrossed} title="Restaurant not found" actionLabel="Go back" onAction={goBack} />
       </View>
     );
   }
@@ -343,71 +355,64 @@ export default function DiningRestaurantDetails() {
         ];
   const sheetCell = gridCell(W - 32, 4, 12);
 
+  const guestsBlocked = remainingSeats === 0 || selectedGuests > remainingSeats;
+
   return (
     <View style={styles.page}>
-      <ScrollView ref={scrollRef} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: 112 + clearance }} showsVerticalScrollIndicator={false}>
-        <View style={{ width: '100%', maxWidth: 448, alignSelf: 'center', backgroundColor: '#f6f7fb' }}>
+      <ScrollView ref={scrollRef} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: 96 + clearance }} showsVerticalScrollIndicator={false}>
+        <View style={{ width: '100%', maxWidth: 448, alignSelf: 'center', backgroundColor: color.bg }}>
           <View style={styles.hero}>
-            {heroImage ? (
-              <Photo uri={heroImage} />
-            ) : (
-              <LinearGradient colors={['#eadcc7', '#a09279', '#655749']} locations={[0, 0.58, 1]} style={StyleSheet.absoluteFill} />
-            )}
-            <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0.78)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+            {heroImage ? <Photo uri={heroImage} /> : <View style={[StyleSheet.absoluteFill, { backgroundColor: color.primaryDeep }]} />}
+            <LinearGradient colors={HERO_SCRIM} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
 
             <View style={styles.heroTop}>
-              <Press scale={0.9} onPress={goBack} accessibilityLabel="Back" style={styles.roundBtn}>
-                <ArrowLeft size={20} color="#fff" />
-              </Press>
-              <Press scale={0.9} onPress={handleShare} accessibilityLabel="Share" style={styles.roundBtn}>
-                <Share2 size={20} color="#fff" />
-              </Press>
+              <IconButton icon={ArrowLeft} label="Back" onPress={goBack} iconColor={color.textInverse} style={{ backgroundColor: ON_PHOTO_BTN }} />
+              <IconButton icon={Share2} label="Share" onPress={handleShare} iconColor={color.textInverse} style={{ backgroundColor: ON_PHOTO_BTN }} />
             </View>
 
             <View style={styles.heroBottom}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.heroName}>{restaurantName}</Text>
-                <Text style={styles.heroAddr}>{address}</Text>
-                <Text style={styles.heroCost}>
+                <Text style={styles.heroName} numberOfLines={2} accessibilityRole="header">
+                  {restaurantName}
+                </Text>
+                <Text style={styles.heroAddr} numberOfLines={2}>
+                  {address}
+                </Text>
+                <Text style={styles.heroCost} numberOfLines={2}>
                   {costForTwo}
-                  <Text style={{ color: 'rgba(255,255,255,0.65)' }}>{'  •  '}</Text>
+                  {'  •  '}
                   {cuisines}
                 </Text>
-                <View style={styles.openPill}>
-                  {isOpenNow ? <CheckCircle2 size={16} color="#48d597" /> : <View style={styles.closedDot} />}
-                  <Text style={[styles.openText, { color: isOpenNow ? '#48d597' : tw.red400 }]}>{isOpenNow ? 'Open now' : 'Closed'}</Text>
+                <View style={styles.openRow}>
+                  <StatusBadge icon={isOpenNow ? CheckCircle2 : X} label={isOpenNow ? 'Open now' : 'Closed'} tone={isOpenNow ? 'success' : 'danger'} />
                   {openingTime && closingTime ? (
-                    <>
-                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>|</Text>
-                      <Text style={styles.openText2}>
-                        {openingTime} to {closingTime}
-                      </Text>
-                    </>
+                    <Text style={styles.openText2} numberOfLines={1}>
+                      {openingTime} to {closingTime}
+                    </Text>
                   ) : null}
                 </View>
               </View>
-              <View style={styles.ratingCard}>
-                <View style={[styles.row, { justifyContent: 'center', gap: 4 }]}>
+              <View style={styles.ratingCard} accessibilityLabel={`Rated ${rating}, ${reviewCount} reviews`}>
+                <View style={[styles.row, { justifyContent: 'center', gap: space.xs }]}>
                   <Text style={styles.ratingNum}>{rating}</Text>
-                  <Text style={styles.ratingStar}>★</Text>
+                  <Star size={16} color={color.gold} fill={color.gold} />
                 </View>
-                <Text style={styles.ratingSub}>{reviewCount} Reviews</Text>
+                <Text style={styles.ratingSub}>{reviewCount} reviews</Text>
               </View>
             </View>
           </View>
 
-          <View style={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 4 }}>
-            <Press
-              scale={0.95}
+          <View style={{ paddingHorizontal: space.lg, paddingTop: space.lg }}>
+            <Button
+              title={isDiningEnabled ? 'Book a table' : 'Dining paused'}
+              icon={Ticket}
+              variant="secondary"
               onPress={handleOpenBookingSheet}
               disabled={!isDiningEnabled}
-              style={[styles.bookPill, isDiningEnabled ? null : styles.bookPillOff]}
-            >
-              <Ticket size={15} color={F.green} />
-              <Text style={[styles.bookPillText, isDiningEnabled ? null : { color: '#c06a79' }]}>{isDiningEnabled ? 'Book a table' : 'Dining paused'}</Text>
-            </Press>
+            />
             {!isDiningEnabled ? (
               <View style={styles.pausedBox}>
+                <Clock size={18} color={color.warning} />
                 <Text style={styles.pausedText}>Dining bookings are currently turned off by the restaurant.</Text>
               </View>
             ) : null}
@@ -415,50 +420,37 @@ export default function DiningRestaurantDetails() {
         </View>
 
         <View style={styles.tabsWrap}>
-          <View style={styles.tabs}>
-            {TOP_TABS.map((tab) => {
-              const on = activeTab === tab.id;
-              return (
-                <Press
-                  key={tab.id}
-                  scale={1}
-                  onPress={() => {
-                    setActiveTab(tab.id);
-                    scrollToSection(tab.target);
-                  }}
-                  style={[styles.tab, on ? styles.tabOn : null]}
-                >
-                  <Text style={[styles.tabText, on ? { color: '#2a2018' } : null]}>{tab.label}</Text>
-                </Press>
-              );
-            })}
-          </View>
+          <SegmentedControl
+            style={styles.tabs}
+            options={TOP_TABS.map((tab) => ({ value: tab.id, label: tab.label }))}
+            value={activeTab}
+            onChange={(id) => {
+              const tab = TOP_TABS.find((t) => t.id === id);
+              setActiveTab(id);
+              scrollToSection(tab.target);
+            }}
+          />
         </View>
 
-        <View style={{ width: '100%', maxWidth: 448, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 8 }}>
-          <View style={{ marginTop: 8 }} onLayout={mark('restaurant-menu')}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
-              <View>
-                <Text style={styles.h2}>Menu</Text>
+        <View style={{ width: '100%', maxWidth: 448, alignSelf: 'center', paddingHorizontal: space.lg, paddingTop: space.lg }}>
+          <View onLayout={mark('restaurant-menu')}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.md }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <SectionHeader title="Menu" style={{ marginBottom: space.xxs }} />
                 <Text style={styles.updated}>Last updated a month ago</Text>
               </View>
-              <Text style={styles.dishes}>{featuredSections.length || 2} dishes</Text>
+              <StatusBadge label={`${featuredSections.length || 2} dishes`} tone="gold" />
             </View>
-            <View style={[styles.grid, { marginTop: 16, gap: 12 }]}>
+            <View style={[styles.grid, { marginTop: space.lg, gap: space.md }]}>
               {menuCards.map((section, index) => (
                 <View key={section.id} style={[styles.menuCard, { width: menuCell }]}>
-                  <View style={{ width: '100%', aspectRatio: 0.88, backgroundColor: '#f7f1e7' }}>
-                    <Photo
-                      uri={menuPreviewImages[index]}
-                      empty={
-                        <View style={styles.menuEmpty}>
-                          <Text style={styles.menuEmptyText}>Menu preview</Text>
-                        </View>
-                      }
-                    />
+                  <View style={{ width: '100%', aspectRatio: 0.88, backgroundColor: color.surfaceMuted }}>
+                    <Photo uri={menuPreviewImages[index]} empty={<PhotoEmpty label="Menu preview" icon={UtensilsCrossed} />} />
                   </View>
-                  <View style={{ paddingHorizontal: 8, paddingTop: 8, paddingBottom: 12, alignItems: 'center' }}>
-                    <Text style={styles.menuTitle}>{section.title}</Text>
+                  <View style={{ padding: space.sm, paddingBottom: space.md, alignItems: 'center' }}>
+                    <Text style={styles.menuTitle} numberOfLines={1}>
+                      {section.title}
+                    </Text>
                     <Text style={styles.menuPages}>{section.pages} pages</Text>
                   </View>
                 </View>
@@ -467,44 +459,44 @@ export default function DiningRestaurantDetails() {
           </View>
 
           <View style={styles.section} onLayout={mark('restaurant-photos')}>
-            <Text style={styles.h2}>Photos</Text>
-            <View style={[styles.grid, { marginTop: 16, gap: 12 }]}>
+            <SectionHeader title="Photos" style={{ marginBottom: 0 }} />
+            <View style={[styles.grid, { marginTop: space.lg, gap: space.md }]}>
               {photos.map((image, index) => (
                 <View
                   key={`${image || 'placeholder'}-${index}`}
                   style={[styles.photo, index === 0 ? { width: '100%', aspectRatio: 1.72 } : { width: menuCell, aspectRatio: 1.08 }]}
                 >
-                  <Photo uri={image} empty={<View style={styles.menuEmpty}><Text style={styles.menuEmptyText}>Photo coming soon</Text></View>} />
+                  <Photo uri={image} empty={<PhotoEmpty label="Photo coming soon" />} />
                 </View>
               ))}
             </View>
           </View>
 
           <View style={styles.section} onLayout={mark('restaurant-about')}>
-            <Text style={styles.h2}>About the restaurant</Text>
+            <SectionHeader title="About the restaurant" style={{ marginBottom: 0 }} />
             <View style={styles.about}>
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: space.md }}>
                 <View style={styles.aboutRow}>
-                  <IndianRupee size={16} color="#f0b500" style={{ marginTop: 2 }} />
+                  <IndianRupee size={18} color={color.goldText} />
                   <Text style={styles.aboutText}>{costForTwo}</Text>
                 </View>
                 <View style={styles.aboutRow}>
-                  <View style={styles.dot} />
+                  <UtensilsCrossed size={18} color={color.textMuted} />
                   <Text style={styles.aboutText}>{cuisines}</Text>
                 </View>
                 <View style={styles.aboutRow}>
-                  <MapPin size={16} color={F.green} style={{ marginTop: 2 }} />
+                  <MapPin size={18} color={color.primary} />
                   <Text style={styles.aboutText}>{address}</Text>
                 </View>
               </View>
 
               <View style={styles.aboutDivider}>
-                <Text style={styles.h3}>Featured In</Text>
+                <Text style={styles.h3}>Featured in</Text>
                 <View style={styles.featured}>
-                  <View style={{ width: '100%', aspectRatio: 1.2, backgroundColor: '#efe8df' }}>
-                    <Photo uri={heroImage} empty={<View style={styles.menuEmpty}><Text style={styles.menuEmptyText}>Featured image</Text></View>} />
+                  <View style={{ width: '100%', aspectRatio: 1.2, backgroundColor: color.surfaceMuted }}>
+                    <Photo uri={heroImage} empty={<PhotoEmpty label="Featured image" />} />
                   </View>
-                  <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.72)']} style={styles.featuredLabel} pointerEvents="none">
+                  <LinearGradient colors={['rgba(6,44,22,0)', 'rgba(6,44,22,0.8)']} style={styles.featuredLabel} pointerEvents="none">
                     <Text style={styles.featuredText}>Pan-Asian Restaurants</Text>
                   </LinearGradient>
                 </View>
@@ -512,10 +504,10 @@ export default function DiningRestaurantDetails() {
 
               <View style={styles.aboutDivider}>
                 <Text style={styles.h3}>Facilities</Text>
-                <View style={[styles.grid, { marginTop: 12, columnGap: 16, rowGap: 12 }]}>
+                <View style={[styles.grid, { marginTop: space.md, columnGap: space.lg, rowGap: space.md }]}>
                   {facilities.slice(0, 6).map((facility) => (
-                    <View key={facility} style={[styles.row, { width: facilityCell, gap: 8 }]}>
-                      <View style={styles.ring} />
+                    <View key={facility} style={[styles.row, { width: facilityCell, gap: space.sm }]}>
+                      <CheckCircle2 size={16} color={color.primary} />
                       <Text style={[styles.aboutText, { flex: 1 }]}>{facility}</Text>
                     </View>
                   ))}
@@ -526,29 +518,25 @@ export default function DiningRestaurantDetails() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: 16 + clearance }]}>
+      <View style={[styles.footer, { paddingBottom: space.md + clearance }]}>
         <View style={{ width: '100%', maxWidth: 448, alignSelf: 'center' }}>
-          <Press scale={0.98} onPress={handleOpenBookingSheet} disabled={!isDiningEnabled} style={[styles.footBtn, isDiningEnabled ? null : styles.footBtnOff]}>
-            <Text style={[styles.footBtnText, isDiningEnabled ? null : { color: tw.gray400 }]}>{isDiningEnabled ? 'Book a table' : 'Dining paused'}</Text>
-          </Press>
+          <Button title={isDiningEnabled ? 'Book a table' : 'Dining paused'} size="lg" onPress={handleOpenBookingSheet} disabled={!isDiningEnabled} />
         </View>
       </View>
 
-      <BottomSheet visible={isBookingSheetOpen} onClose={() => setIsBookingSheetOpen(false)} backdrop="rgba(0,0,0,0.35)" panelStyle={[styles.sheet, { paddingBottom: 24 + clearance }]}>
+      <BottomSheet visible={isBookingSheetOpen} onClose={() => setIsBookingSheetOpen(false)} backdrop={color.overlay} panelStyle={[styles.sheet, { paddingBottom: space.xxl + insets.bottom }]}>
         <View style={styles.grab} />
         <View style={styles.sheetHead}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.sheetTitle}>Select number of guests</Text>
-            <Text style={styles.sheetSub}>
+            <Text style={[styles.sheetSub, remainingSeats > 0 ? null : { color: color.danger }]}>
               {remainingSeats > 0 ? `Only ${remainingSeats} out of ${maxCapacity} seats available now.` : 'Fully booked for now. Try later!'}
             </Text>
           </View>
-          <Press scale={0.95} onPress={() => setIsBookingSheetOpen(false)} accessibilityLabel="Close booking sheet" style={styles.sheetClose}>
-            <X size={16} color="#5b5b5b" />
-          </Press>
+          <IconButton icon={X} label="Close booking sheet" variant="soft" onPress={() => setIsBookingSheetOpen(false)} />
         </View>
 
-        <View style={[styles.grid, { gap: 12 }]}>
+        <View style={[styles.grid, { gap: space.md }]}>
           {Array.from({ length: maxCapacity }, (_, index) => {
             const count = index + 1;
             const isBooked = count <= occupiedSeats;
@@ -557,9 +545,11 @@ export default function DiningRestaurantDetails() {
             return (
               <Press
                 key={`sheet-${count}`}
-                scale={1}
+                scale={0.96}
                 disabled={isBooked || isTooLarge}
                 onPress={() => setSelectedGuests(count)}
+                accessibilityLabel={`${count} ${count === 1 ? 'guest' : 'guests'}${isBooked ? ', booked' : isTooLarge ? ', unavailable' : ''}`}
+                accessibilityState={{ selected, disabled: isBooked || isTooLarge }}
                 style={[
                   styles.num,
                   { width: sheetCell },
@@ -567,102 +557,70 @@ export default function DiningRestaurantDetails() {
                 ]}
               >
                 {isBooked ? (
-                  <View style={{ alignItems: 'center', gap: 2 }}>
-                    <Text style={styles.bookedTag}>BOOKED</Text>
-                    <Text style={[styles.numText, { color: tw.red400 }]}>{count}</Text>
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={[styles.numText, { color: color.danger }]}>{count}</Text>
+                    <Text style={styles.bookedTag}>Booked</Text>
                   </View>
                 ) : (
-                  <Text style={[styles.numText, selected ? { color: F.green } : isTooLarge ? { color: tw.gray300 } : null]}>{count}</Text>
+                  <Text style={[styles.numText, selected ? { color: color.onPrimary } : isTooLarge ? { color: color.textDisabled } : null]}>{count}</Text>
                 )}
               </Press>
             );
           })}
         </View>
 
-        <Press
-          scale={0.98}
-          onPress={handleContinueBooking}
-          disabled={remainingSeats === 0 || selectedGuests > remainingSeats}
-          style={[styles.continue, remainingSeats === 0 || selectedGuests > remainingSeats ? { backgroundColor: tw.gray200 } : null]}
-        >
-          <Text style={[styles.continueText, remainingSeats === 0 || selectedGuests > remainingSeats ? { color: tw.gray400 } : null]}>
-            {remainingSeats === 0 ? 'Fully Booked' : 'Continue'}
-          </Text>
-        </Press>
+        <Button title={remainingSeats === 0 ? 'Fully Booked' : 'Continue'} size="lg" onPress={handleContinueBooking} disabled={guestsBlocked} style={{ marginTop: space.xxl }} />
       </BottomSheet>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#f6f7fb' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  page: { flex: 1, backgroundColor: color.bg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.bg },
   row: { flexDirection: 'row', alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  nfTitle: { fontSize: 24, lineHeight: 32, color: '#23180f', textAlign: 'center', ...poppins(700) },
-  outlineBtn: { height: 40, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  outlineBtnText: { fontSize: 14, color: tw.gray900, ...poppins(500) },
-  hero: { height: 392, overflow: 'hidden' },
-  heroTop: { position: 'absolute', left: 0, right: 0, top: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12, paddingTop: 12 },
-  roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(81,88,106,0.75)', alignItems: 'center', justifyContent: 'center' },
-  heroBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingBottom: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 },
-  heroName: { fontSize: 36, lineHeight: 36, letterSpacing: -1.08, color: '#fff', ...poppins(900) },
-  heroAddr: { marginTop: 8, maxWidth: '94%', fontSize: 14, lineHeight: 20, color: 'rgba(255,255,255,0.92)', ...poppins(400) },
-  heroCost: { marginTop: 8, fontSize: 14, lineHeight: 20, color: 'rgba(255,255,255,0.9)', ...poppins(400) },
-  openPill: { marginTop: 8, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.28)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  closedDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: tw.red500 },
-  openText: { fontSize: 13, lineHeight: 20, ...poppins(500) },
-  openText2: { fontSize: 13, lineHeight: 20, color: '#fff', ...poppins(500) },
-  ratingCard: { marginBottom: 4, backgroundColor: '#fff', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', ...shadow('xl') },
-  ratingNum: { fontSize: 31, lineHeight: 31, color: '#1f2328', ...poppins(900) },
-  ratingStar: { fontSize: 18, lineHeight: 31, color: '#18b54f' },
-  ratingSub: { marginTop: 4, fontSize: 13, lineHeight: 16, color: '#6e7481', ...poppins(400) },
-  bookPill: { height: 52, borderRadius: 999, borderWidth: 1, borderColor: '#f1ebee', backgroundColor: '#fff', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, ...shadow('0 10px 24px rgba(15,23,42,0.05)') },
-  bookPillOff: { borderColor: '#f2d7da', backgroundColor: '#fff5f6', opacity: 0.8 },
-  bookPillText: { fontSize: 15, lineHeight: 22, color: '#2b2118', ...poppins(500) },
-  pausedBox: { marginTop: 12, borderRadius: 18, borderWidth: 1, borderColor: tw.amber200, backgroundColor: tw.amber50, paddingHorizontal: 16, paddingVertical: 12 },
-  pausedText: { fontSize: 14, lineHeight: 20, color: tw.amber800, ...poppins(400) },
-  tabsWrap: { backgroundColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 1, borderBottomColor: '#ececf3' },
-  tabs: { width: '100%', maxWidth: 448, alignSelf: 'center', paddingHorizontal: 12, paddingVertical: 8, flexDirection: 'row', justifyContent: 'center', gap: 8 },
-  tab: { borderRadius: 999, borderWidth: 1, borderColor: '#ece9e1', backgroundColor: '#fafafa', paddingHorizontal: 20, paddingVertical: 8 },
-  tabOn: { borderColor: F.green, backgroundColor: '#fff' },
-  tabText: { fontSize: 14, lineHeight: 20, color: '#8b8881', ...poppins(400) },
-  h2: { fontSize: 28, lineHeight: 28, color: '#23180f', ...poppins(900) },
-  h3: { fontSize: 20, lineHeight: 28, color: '#23180f', ...poppins(600) },
-  updated: { marginTop: 8, fontSize: 13, lineHeight: 20, color: '#e19135', ...poppins(400) },
-  dishes: { backgroundColor: '#fff3e6', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, overflow: 'hidden', fontSize: 12, lineHeight: 16, color: '#e58a2c', ...poppins(600) },
-  menuCard: { borderRadius: 18, borderWidth: 1, borderColor: '#ede8dd', backgroundColor: '#fff', overflow: 'hidden' },
-  menuEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3eadf' },
-  menuEmptyText: { fontSize: 14, lineHeight: 20, color: '#a28868', ...poppins(500) },
-  menuTitle: { fontSize: 16, lineHeight: 20, color: '#2b2218', ...poppins(500) },
-  menuPages: { marginTop: 4, fontSize: 12, lineHeight: 16, color: '#7f7a73', ...poppins(400) },
-  section: { marginTop: 20, borderTopWidth: 1, borderTopColor: '#e8e8ef', paddingTop: 16 },
-  photo: { borderRadius: 18, overflow: 'hidden', backgroundColor: '#f6efe4' },
-  about: { marginTop: 16, borderRadius: 18, borderWidth: 1, borderColor: '#ececf4', backgroundColor: '#fafbff', padding: 16 },
-  aboutRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  aboutText: { flex: 1, fontSize: 14, lineHeight: 22.75, color: '#5f6474', ...poppins(400) },
-  dot: { marginTop: 7, width: 8, height: 8, borderRadius: 4, backgroundColor: '#8a8f9d' },
-  aboutDivider: { marginTop: 20, borderTopWidth: 1, borderTopColor: '#e8e8ef', paddingTop: 16 },
-  featured: { marginTop: 12, borderRadius: 16, overflow: 'hidden', backgroundColor: '#fff', ...shadow('sm') },
-  featuredLabel: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12, paddingTop: 40 },
-  featuredText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) },
-  ring: { width: 7, height: 7, borderRadius: 4, borderWidth: 1, borderColor: '#8a8f9d' },
-  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 30, backgroundColor: 'rgba(255,255,255,0.95)', borderTopWidth: 1, borderTopColor: '#ebe5da', paddingHorizontal: 16, paddingTop: 16 },
-  footBtn: { height: 48, borderRadius: 16, borderWidth: 1, borderColor: '#FEE2E2', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  footBtnOff: { borderColor: tw.gray200, backgroundColor: tw.gray50, opacity: 0.8 },
-  footBtnText: { fontSize: 17, lineHeight: 28, color: F.green, ...poppins(500) },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 16, paddingTop: 16, ...shadow('0 -20px 60px rgba(15,23,42,0.18)') },
-  grab: { alignSelf: 'center', width: 56, height: 6, borderRadius: 3, backgroundColor: '#e7e5e4', marginBottom: 16 },
-  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
-  sheetTitle: { fontSize: 20, lineHeight: 28, color: '#23180f', ...poppins(900) },
-  sheetSub: { marginTop: 4, fontSize: 14, lineHeight: 20, color: '#7b6651', ...poppins(400) },
-  sheetClose: { width: 36, height: 36, borderRadius: 18, backgroundColor: F.cream, alignItems: 'center', justifyContent: 'center' },
-  num: { borderRadius: 16, borderWidth: 1, borderColor: '#ece7de', backgroundColor: '#fff', paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  numOn: { borderColor: F.green, backgroundColor: '#fdfafc', transform: [{ scale: 1.02 }], ...shadow('sm') },
-  numBooked: { borderColor: tw.red100, backgroundColor: tw.red50, opacity: 0.7 },
-  numLarge: { borderColor: tw.gray100, backgroundColor: tw.gray50 },
-  numText: { fontSize: 14, lineHeight: 20, color: '#23180f', ...poppins(700) },
-  bookedTag: { fontSize: 10, lineHeight: 15, letterSpacing: -0.5, opacity: 0.6, color: tw.red400, ...poppins(900) },
-  continue: { marginTop: 24, height: 48, borderRadius: 16, backgroundColor: F.green, alignItems: 'center', justifyContent: 'center' },
-  continueText: { fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) },
+  hero: { aspectRatio: 1.1, maxHeight: 400, overflow: 'hidden', backgroundColor: color.primaryDeep },
+  heroTop: { position: 'absolute', left: 0, right: 0, top: 0, flexDirection: 'row', justifyContent: 'space-between', padding: space.md },
+  heroBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: space.lg, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: space.md },
+  heroName: { ...type.heroSerif, color: color.textInverse },
+  heroAddr: { marginTop: space.xs, ...type.small, color: 'rgba(255,255,255,0.92)' },
+  heroCost: { marginTop: space.xs, ...type.small, color: 'rgba(255,255,255,0.92)' },
+  openRow: { marginTop: space.sm, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.sm },
+  openText2: { ...type.caption, color: color.textInverse },
+  ratingCard: { backgroundColor: color.surface, borderRadius: radii.lg, paddingHorizontal: space.md, paddingVertical: space.sm, alignItems: 'center', ...elevation.float },
+  ratingNum: { ...type.price, color: color.text },
+  ratingSub: { ...type.caption, color: color.textMuted },
+  pausedBox: { marginTop: space.md, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, borderRadius: radii.md, backgroundColor: color.warningSoft, padding: space.md },
+  pausedText: { flex: 1, ...type.small, color: color.warning },
+  tabsWrap: { backgroundColor: color.bg, paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  tabs: { width: '100%', maxWidth: 448 - space.lg * 2, alignSelf: 'center' },
+  h3: { ...type.subheading, color: color.text },
+  updated: { ...type.caption, color: color.textMuted },
+  menuCard: { borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, overflow: 'hidden', ...elevation.card },
+  menuEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.xs, backgroundColor: color.surfaceMuted },
+  menuEmptyText: { ...type.caption, color: color.textMuted },
+  menuTitle: { ...type.bodyStrong, color: color.text },
+  menuPages: { ...type.caption, color: color.textMuted },
+  section: { marginTop: space.xxl, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingTop: space.xxl },
+  photo: { borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.surfaceMuted },
+  about: { marginTop: space.lg, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, padding: space.lg, ...elevation.card },
+  aboutRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  aboutText: { flex: 1, minWidth: 0, ...type.body, color: color.textSecondary },
+  aboutDivider: { marginTop: space.xl, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingTop: space.lg },
+  featured: { marginTop: space.md, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.surfaceMuted },
+  featuredLabel: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: space.md, paddingTop: space.xxxl },
+  featuredText: { ...type.bodyStrong, color: color.textInverse },
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 30, backgroundColor: color.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.md },
+  sheet: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, paddingHorizontal: space.lg, paddingTop: space.md, ...elevation.sheet },
+  grab: { alignSelf: 'center', width: 48, height: 5, borderRadius: 3, backgroundColor: color.borderStrong, marginBottom: space.lg },
+  sheetHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.md, marginBottom: space.lg },
+  sheetTitle: { ...type.heading, color: color.text },
+  sheetSub: { marginTop: space.xxs, ...type.small, color: color.textSecondary },
+  num: { minHeight: 56, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  numOn: { borderColor: color.primary, backgroundColor: color.primary },
+  numBooked: { borderColor: color.dangerSoft, backgroundColor: color.dangerSoft },
+  numLarge: { borderColor: color.border, backgroundColor: color.surfaceMuted },
+  numText: { ...type.subheading, color: color.text },
+  bookedTag: { ...type.caption, color: color.danger },
 });

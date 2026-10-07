@@ -3,12 +3,12 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } fro
 import { IndianRupee, X } from 'lucide-react-native';
 import { Dialog } from '../../../components/kit';
 import { Press } from '../../../components/ui';
-import { Spinner } from '../../../components/Loader';
+import { Button, IconButton } from '../../../components/ds';
 import { userAPI } from '../../../api/food';
 import { initRazorpayPayment } from '../../../lib/razorpay';
 import { getCompanyNameAsync } from '../../utils/businessSettings';
 import { toast } from '../../../lib/notify';
-import { poppins, shadow, tw } from '../../../theme';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 const QUICK = [100, 250, 500, 1000, 2000, 5000];
 
@@ -112,61 +112,74 @@ export default function AddMoneyModal({ open, onOpenChange, onSuccess }) {
   const disabled = !amount || busy || parseFloat(amount) < 1;
 
   return (
-    <Dialog visible={open} onClose={handleClose} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.panel}>
+    <Dialog visible={open} onClose={handleClose} backdrop={color.overlay} panelStyle={styles.panel}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.body}>
-          <Press scale={0.9} onPress={handleClose} disabled={busy} accessibilityLabel="Close add money modal" style={[styles.close, busy ? { opacity: 0.5 } : null]}>
-            <X size={20} color={tw.gray400} />
-          </Press>
-          <View style={{ paddingRight: 40, alignItems: 'center', gap: 6 }}>
-            <Text style={styles.title}>Add Money to Wallet</Text>
-            <Text style={styles.desc}>Enter the amount you want to add to your wallet</Text>
+          <View style={styles.head}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+                Add money to wallet
+              </Text>
+              <Text style={[type.small, { color: color.textMuted }]}>Enter the amount you want to add to your wallet</Text>
+            </View>
+            <IconButton icon={X} label="Close add money modal" variant="soft" disabled={busy} onPress={handleClose} style={{ marginTop: -space.xs }} />
           </View>
 
-          <View style={{ gap: 24, paddingTop: 20 }}>
-            <View style={{ gap: 8 }}>
-              <Text style={styles.label}>Enter Amount</Text>
+          <View style={{ gap: space.xl, paddingTop: space.lg }}>
+            <View style={{ gap: space.sm }}>
+              <Text style={[type.label, { color: color.text }]}>Enter amount</Text>
               <View>
                 <View style={styles.rupee}>
-                  <IndianRupee size={20} color={tw.gray400} />
+                  <IndianRupee size={20} color={color.textMuted} />
                 </View>
                 <TextInput
                   value={amount}
                   onChangeText={handleAmountChange}
                   placeholder="Enter amount"
-                  placeholderTextColor={tw.gray400}
+                  placeholderTextColor={color.textDisabled}
                   keyboardType="decimal-pad"
                   editable={!busy}
+                  accessibilityLabel="Amount in rupees"
                   style={styles.input}
                 />
               </View>
-              <Text style={styles.hint}>Minimum: {'₹'}1 | Maximum: {'₹'}50,000</Text>
+              <Text style={[type.caption, { color: color.textMuted }]}>Minimum: {'₹'}1 | Maximum: {'₹'}50,000</Text>
             </View>
 
-            <View style={{ gap: 8 }}>
-              <Text style={styles.label}>Quick Select</Text>
-              <View style={styles.grid}>
+            <View style={{ gap: space.sm }}>
+              <Text style={[type.label, { color: color.text }]}>Quick select</Text>
+              <View style={styles.grid} accessibilityRole="radiogroup">
                 {QUICK.map((q) => {
                   const on = amount === q.toString();
                   return (
-                    <Press key={q} scale={0.97} disabled={busy} onPress={() => setAmount(q.toString())} accessibilityLabel={`${q} rupees`} style={[styles.quick, on ? styles.quickOn : null, busy ? { opacity: 0.5 } : null]}>
-                      <Text style={[styles.quickText, on ? { color: '#fff' } : null]}>{'₹'}{q}</Text>
+                    <Press
+                      key={q}
+                      scale={0.97}
+                      disabled={busy}
+                      onPress={() => setAmount(q.toString())}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: on, disabled: busy }}
+                      accessibilityLabel={`${q} rupees`}
+                      style={[styles.quick, on ? styles.quickOn : null, busy ? { opacity: 0.5 } : null]}
+                    >
+                      <Text style={[type.bodyStrong, { color: on ? color.onPrimary : color.text }]}>
+                        {'₹'}
+                        {q.toLocaleString('en-IN')}
+                      </Text>
                     </Press>
                   );
                 })}
               </View>
             </View>
 
-            <Press scale={0.98} onPress={handleAddMoney} disabled={disabled} accessibilityLabel="Add money" style={[styles.cta, disabled ? { opacity: 0.5 } : null]}>
-              {busy ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Spinner size={16} />
-                  <Text style={styles.ctaText}>{loading ? 'Processing...' : 'Opening Payment Gateway...'}</Text>
-                </View>
-              ) : (
-                <Text style={styles.ctaText}>{`Add ₹${amount || '0'}`}</Text>
-              )}
-            </Press>
+            <Button
+              title={busy ? (loading ? 'Processing...' : 'Opening payment gateway...') : `Add ₹${amount || '0'}`}
+              size="lg"
+              loading={busy}
+              disabled={disabled}
+              onPress={handleAddMoney}
+              accessibilityLabel="Add money"
+            />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -175,19 +188,12 @@ export default function AddMoneyModal({ open, onOpenChange, onSuccess }) {
 }
 
 const styles = StyleSheet.create({
-  panel: { width: '100%', maxWidth: 352, backgroundColor: '#fff', borderRadius: 24, borderWidth: 1, borderColor: tw.gray200, overflow: 'hidden', ...shadow('lg') },
-  body: { padding: 20 },
-  close: { position: 'absolute', right: 16, top: 16, padding: 8, borderRadius: 999, zIndex: 2 },
-  title: { fontSize: 20, lineHeight: 28, color: tw.gray900, textAlign: 'center', ...poppins(700) },
-  desc: { fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', ...poppins(400) },
-  label: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  rupee: { position: 'absolute', left: 12, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 },
-  input: { height: 48, paddingLeft: 40, paddingRight: 12, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, fontSize: 18, color: tw.gray900, ...poppins(400) },
-  hint: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  quick: { width: '31.5%', height: 40, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  quickOn: { backgroundColor: '#18181B', borderColor: '#18181B' },
-  quickText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  cta: { height: 48, borderRadius: 8, backgroundColor: tw.green600, alignItems: 'center', justifyContent: 'center' },
-  ctaText: { fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(600) },
+  panel: { width: '100%', maxWidth: 380, backgroundColor: color.surface, borderRadius: radii.xl, overflow: 'hidden', ...elevation.sheet },
+  body: { padding: space.xl },
+  head: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  rupee: { position: 'absolute', left: space.md, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 },
+  input: { height: 52, paddingLeft: 40, paddingRight: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, ...type.price, lineHeight: undefined, color: color.text },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  quick: { width: '31%', flexGrow: 1, height: 44, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  quickOn: { backgroundColor: color.primary, borderColor: color.primary },
 });

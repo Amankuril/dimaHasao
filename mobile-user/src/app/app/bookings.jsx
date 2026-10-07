@@ -1,30 +1,43 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Image from '../../components/Img';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Fa from '../../components/Fa';
 import { Press } from '../../components/ui';
+import { SectionHeader, StatusBadge } from '../../components/ds';
 import { Header, PatternDivider } from '../../components/dh/Header';
+import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { GreenButton, Panel, StateBlock, dhs } from '../../components/dh/ui';
 import { useBooking } from '../../context/BookingContext';
 import { groupPasses } from '../../api/dh/festivalApi';
 import { openExternal } from '../../lib/links';
-import { dh, montserrat, poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 
 // Web: DimaHasao/pages/MyBookingsScreen.jsx (/app/bookings?tab=)
 
 const TAB_IDS = ['rides', 'hotels', 'food', 'tours', 'festivals'];
 
+/** DESIGN_SYSTEM state → tone, matched on the status word the context hands over. */
+const statusTone = (status) => {
+  const v = String(status || '').toLowerCase();
+  if (/cancel|fail|reject|expire|refused/.test(v)) return 'danger';
+  if (/complete|deliver|paid|approve|refund|checked.?out|finish|success/.test(v)) return 'success';
+  if (/pend|process|prepar|search|await|unpaid|hold/.test(v)) return 'warning';
+  if (/book|confirm|placed|accept|ongoing|on the way|live|active|arriv|started|checked.?in|upcoming/.test(v)) return 'info';
+  return 'neutral';
+};
+
 function Status({ children }) {
-  return <Text style={styles.status}>{children}</Text>;
+  return <StatusBadge label={String(children || '')} tone={statusTone(children)} />;
 }
 
-/** The cream two-column facts grid inside each card. */
+/** The two-column facts grid inside each card. */
 function Facts({ items }) {
   return (
     <View style={styles.facts}>
       {items.filter(Boolean).map(([label, value, opts]) => (
-        <View key={label} style={{ width: opts?.wide ? '100%' : '50%', paddingRight: 8, marginBottom: 8 }}>
+        <View key={label} style={{ width: opts?.wide ? '100%' : '50%', paddingRight: space.sm, marginBottom: space.sm }}>
           <Text style={styles.factLabel}>{label}</Text>
           <Text style={[styles.factValue, opts?.style]} numberOfLines={opts?.wrap ? undefined : 1}>
             {value}
@@ -37,19 +50,15 @@ function Facts({ items }) {
 
 function Total({ label, amount }) {
   return (
-    <Text style={styles.totalLabel}>
-      {label} <Text style={styles.totalValue}>₹{Number(amount || 0).toLocaleString('en-IN')}</Text>
-    </Text>
+    <View style={{ flexShrink: 1 }}>
+      <Text style={styles.totalLabel}>{label}</Text>
+      <Text style={styles.totalValue}>₹{Number(amount || 0).toLocaleString('en-IN')}</Text>
+    </View>
   );
 }
 
 function SmallButton({ icon, title, onPress, disabled }) {
-  return (
-    <Press scale={0.96} onPress={onPress} disabled={disabled} style={[styles.smallBtn, disabled && { opacity: 0.4 }]} accessibilityLabel={title}>
-      <Fa name={icon} size={10} color={tw.amber300} />
-      <Text style={styles.smallBtnText}>{title}</Text>
-    </Press>
-  );
+  return <GreenButton size="sm" variant="secondary" fullWidth={false} icon={icon} title={title} onPress={onPress} disabled={disabled} style={styles.smallBtn} />;
 }
 
 function Thumb({ uri }) {
@@ -58,6 +67,7 @@ function Thumb({ uri }) {
 
 export default function MyBookingsScreen() {
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const { bookings, hotelBookings, foodOrders, tourBookings, festivalBookings, showToast, refreshAllBookings, bookingsLoading } = useBooking();
   const [activeTab, setActiveTab] = useState(() => (TAB_IDS.includes(params.tab) ? params.tab : 'rides'));
   const tabsRef = useRef(null);
@@ -99,14 +109,250 @@ export default function MyBookingsScreen() {
     { id: 'festivals', label: `Passes (${festivalBookings.length})`, icon: 'fa-solid fa-ticket' },
   ];
 
+  const renderRide = (b) => (
+    <Panel key={b.id} pad={0} style={{ overflow: 'hidden' }}>
+      <Press scale={0.99} onPress={() => openRide(b)} accessibilityLabel={`Ride to ${b.placeName}, ${b.status}${b.isLive ? '. Track ride' : '. View receipt'}`} style={styles.cardTap}>
+        <View style={styles.cardHead}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.kicker} numberOfLines={1}>
+              {b.date} • ID: {b.id}
+            </Text>
+            <Text style={styles.title} numberOfLines={2}>
+              {b.placeName}
+            </Text>
+          </View>
+          <Status>{b.status}</Status>
+        </View>
+        <Facts
+          items={[
+            ['Pickup', b.pickup],
+            ['Transport', `${b.transport} (${b.vehicleNo})`, { style: { color: color.primary } }],
+            ['Driver', b.driverName],
+            ['Ride OTP', b.otp, { style: { ...type.bodyStrong, letterSpacing: 2, color: color.goldText } }],
+          ]}
+        />
+      </Press>
+      <View style={[styles.cardFoot, { marginHorizontal: space.lg, paddingBottom: space.lg }]}>
+        <Total label="Total fare" amount={b.fare} />
+        <View style={[dhs.row, { gap: space.sm }]}>
+          {b.isLive ? (
+            <Press onPress={() => openRide(b)} accessibilityLabel="Track ride" style={styles.track}>
+              <Text style={styles.trackText}>Track ride</Text>
+              <Fa name="fa-solid fa-chevron-right" size={12} color={color.primary} />
+            </Press>
+          ) : null}
+          <SmallButton icon="fa-solid fa-phone" title="Call driver" disabled={!b.driverPhone} onPress={() => (b.driverPhone ? openExternal(`tel:${b.driverPhone}`) : showToast('No driver assigned yet'))} />
+        </View>
+      </View>
+    </Panel>
+  );
+
+  const renderHotel = (hb) => (
+    <Panel key={hb.id} style={{ gap: space.md }}>
+      <View style={{ flexDirection: 'row', gap: space.md }}>
+        <Thumb uri={hb.image} />
+        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+          <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm, alignItems: 'flex-start' }]}>
+            <Text style={[styles.kicker, { flexShrink: 1 }]} numberOfLines={1}>
+              ID: {hb.id}
+            </Text>
+            <Status>{hb.status}</Status>
+          </View>
+          <Text style={styles.title} numberOfLines={2}>
+            {hb.hotelName}
+          </Text>
+          <Text style={styles.sub} numberOfLines={1}>
+            {hb.roomName}
+          </Text>
+        </View>
+      </View>
+      <Facts
+        items={[
+          ['Check-in', hb.checkIn],
+          ['Check-out', hb.checkOut],
+          ['Guests', hb.guests],
+          ['Payment', hb.paymentStatus],
+        ]}
+      />
+      <View style={styles.cardFoot}>
+        <Total label="Total amount" amount={hb.totalAmount} />
+        <SmallButton icon="fa-solid fa-file-invoice" title="Invoice" onPress={() => showToast(`Digital Invoice for ${hb.id} sent to SMS/WhatsApp 📄`)} />
+      </View>
+    </Panel>
+  );
+
+  const renderFood = (fo) => (
+    <Panel key={fo.id} style={{ gap: space.md }}>
+      <View style={styles.cardHead}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.kicker} numberOfLines={1}>
+            {fo.orderTime} • ID: {fo.id}
+          </Text>
+          <Text style={styles.title} numberOfLines={2}>
+            {fo.restaurantName}
+          </Text>
+        </View>
+        <Status>{fo.status}</Status>
+      </View>
+      <View style={[styles.facts, { flexDirection: 'column', gap: space.xs + 2, paddingBottom: space.md }]}>
+        {fo.items.map((it, idx) => (
+          <View key={idx} style={[dhs.row, { justifyContent: 'space-between', gap: space.sm }]}>
+            <Text style={styles.item}>
+              {it.quantity} × {it.name}
+            </Text>
+            <Text style={[styles.item, { flex: 0, ...type.bodyStrong, color: color.text }]}>₹{it.price * it.quantity}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={styles.cardFoot}>
+        <Total label="Total paid" amount={fo.totalAmount} />
+        <SmallButton icon="fa-solid fa-location-crosshairs" title="Track order" onPress={() => router.push(`/food/user/orders/${fo.id}`)} />
+      </View>
+    </Panel>
+  );
+
+  const renderPass = (group) => (
+    <Panel key={group.key} style={{ gap: space.md }}>
+      <View style={{ flexDirection: 'row', gap: space.md }}>
+        <Thumb uri={group.image} />
+        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+          <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm, alignItems: 'flex-start' }]}>
+            <Text style={[styles.kicker, { flexShrink: 1 }]} numberOfLines={1}>
+              ID: {group.id}
+            </Text>
+            <Status>{group.status}</Status>
+          </View>
+          <Text style={styles.title} numberOfLines={2}>
+            {group.festivalName}
+          </Text>
+          <Text style={styles.sub} numberOfLines={1}>
+            {group.categoryLabel}
+          </Text>
+        </View>
+      </View>
+      <Facts
+        items={[
+          ['Dates', group.dates, { wrap: true }],
+          ['Passes', `${group.ticketCount} ${group.ticketCount === 1 ? 'ticket' : 'tickets'}`],
+        ]}
+      />
+      {/* One row per pass: each category is scanned on its own at the gate. */}
+      <View style={{ gap: space.sm }}>
+        {group.passes.map((pass) => (
+          <View key={pass.id} style={styles.pass}>
+            <Fa name="fa-solid fa-qrcode" size={20} color={pass.qrCode ? color.text : color.textDisabled} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              {group.passes.length > 1 ? (
+                <Text style={styles.passName} numberOfLines={1}>
+                  {pass.ticketCount} × {pass.ticketCategory}
+                </Text>
+              ) : null}
+              <Text style={styles.passCode} numberOfLines={1}>
+                {pass.qrCode || 'Awaiting payment'}
+              </Text>
+            </View>
+            <SmallButton icon="fa-solid fa-qrcode" title="QR" disabled={!pass.qrCode} onPress={() => showToast(`QR Pass ${pass.qrCode} ready for entry gate scan! 🎟️`)} />
+          </View>
+        ))}
+      </View>
+      <View style={styles.cardFoot}>
+        <Total label="Paid" amount={group.totalAmount} />
+        {group.passes.length > 1 ? <Text style={styles.passTypes}>{`${group.passes.length} pass types · one payment`}</Text> : null}
+      </View>
+    </Panel>
+  );
+
+  const renderTour = (tb) => (
+    <Panel key={tb.id} style={{ gap: space.md }}>
+      <View style={{ flexDirection: 'row', gap: space.md }}>
+        <Thumb uri={tb.image} />
+        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+          <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm, alignItems: 'flex-start' }]}>
+            <Text style={[styles.kicker, { flexShrink: 1 }]} numberOfLines={1}>
+              ID: {tb.id}
+            </Text>
+            <Status>{tb.status}</Status>
+          </View>
+          <Text style={styles.title} numberOfLines={2}>
+            {tb.packageTitle}
+          </Text>
+          <Text style={styles.sub} numberOfLines={1}>
+            {tb.duration}
+          </Text>
+        </View>
+      </View>
+      <Facts
+        items={[
+          ['Travel date', tb.travelDate, { wrap: true }],
+          ['Travellers', tb.travelers, { wrap: true }],
+          ['Your operator', tb.operatorName, { wide: true, style: { color: color.primary } }],
+          tb.pickupPoint ? ['Pickup', tb.pickupPoint, { wide: true, wrap: true }] : null,
+        ]}
+      />
+      <View style={styles.cardFoot}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Total label="Paid online" amount={tb.paidOnline} />
+          {tb.collectedInPerson > 0 ? (
+            <Text style={[styles.due, { color: color.success }]}>₹{tb.collectedInPerson.toLocaleString('en-IN')} paid to the operator</Text>
+          ) : tb.balanceDue > 0 ? (
+            <Text style={styles.due}>₹{tb.balanceDue.toLocaleString('en-IN')} due to the operator</Text>
+          ) : null}
+        </View>
+        <SmallButton
+          icon="fa-solid fa-phone"
+          title="Call operator"
+          onPress={() => (tb.operatorPhone ? openExternal(`tel:${tb.operatorPhone}`) : showToast('No contact number on file for this operator'))}
+        />
+      </View>
+    </Panel>
+  );
+
+  const TAB_VIEW = {
+    rides: {
+      data: bookings,
+      render: renderRide,
+      key: (b) => b.id,
+      empty: <StateBlock icon="fa-solid fa-car-side" title="No active rides" text="You haven't booked any taxi or auto rides yet." actionLabel="Book a taxi now" onAction={() => router.navigate('/taxi/user')} />,
+    },
+    hotels: {
+      data: hotelBookings,
+      render: renderHotel,
+      key: (hb) => hb.id,
+      empty: <StateBlock icon="fa-solid fa-hotel" title="No hotel reservations" text="You haven't booked any hotel stays or homestays yet." actionLabel="Explore stays in Haflong" onAction={() => router.navigate('/app/hotels')} />,
+    },
+    food: {
+      data: foodOrders,
+      render: renderFood,
+      key: (fo) => fo.id,
+      empty: <StateBlock icon="fa-solid fa-utensils" title="No food orders yet" text="Order traditional Dimasa food & bakes." actionLabel="Explore restaurants" onAction={() => router.navigate('/food/user')} />,
+    },
+    tours: { data: tourBookings, render: renderTour, key: (tb) => tb.id, title: 'Guided tour packages' },
+    festivals: { data: festivalBookings.length > 0 ? groupPasses(festivalBookings) : [], render: renderPass, key: (g) => g.key, title: 'Festival & event passes' },
+  };
+  const view = TAB_VIEW[activeTab] || TAB_VIEW.rides;
+
+  const toursOrPassesEmpty = (
+    <View style={dhs.stateCard}>
+      <View style={dhs.stateIcon}>
+        <Fa name="fa-solid fa-ticket" size={26} color={color.primary} />
+      </View>
+      <Text style={dhs.stateTitle}>{activeTab === 'festivals' ? 'No festival passes yet' : 'No tour bookings yet'}</Text>
+      <Text style={dhs.stateText}>Explore Falcon Festival passes or guided hill treks.</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: space.sm, flexWrap: 'wrap', marginTop: space.sm }}>
+        <GreenButton title="View festivals" fullWidth={false} onPress={() => router.navigate('/app/festivals')} />
+        <GreenButton title="View tour packages" tone="gray" fullWidth={false} onPress={() => router.navigate('/app/packages')} />
+      </View>
+    </View>
+  );
+
   return (
     <View style={dhs.page}>
       <Header title="MY BOOKINGS" subtitle="Manage rides, stays, food & festival passes" showBack rightAction="none" />
       <PatternDivider variant="green-gold" />
 
-      <View style={{ paddingHorizontal: 12, paddingTop: 12 }}>
+      <View style={{ paddingHorizontal: space.lg, paddingTop: space.md }}>
         <View style={styles.tabStrip}>
-          <ScrollView ref={tabsRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4, padding: 4 }}>
+          <ScrollView ref={tabsRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4, padding: 4 }} accessibilityRole="tablist">
             {bookingTabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -119,10 +365,11 @@ export default function MyBookingsScreen() {
                   }}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: isActive }}
+                  accessibilityLabel={tab.label}
                   style={[styles.tab, isActive && styles.tabActive]}
                 >
-                  <Fa name={tab.icon} size={10} color={isActive ? dh.nav : tw.stone400} />
-                  <Text style={[styles.tabText, isActive && { color: dh.nav, ...poppins(800) }]}>{tab.label}</Text>
+                  <Fa name={tab.icon} size={14} color={isActive ? color.primary : color.textMuted} />
+                  <Text style={[styles.tabText, isActive && { color: color.primary }]}>{tab.label}</Text>
                 </Press>
               );
             })}
@@ -130,280 +377,48 @@ export default function MyBookingsScreen() {
         </View>
       </View>
 
-      <ScrollView
+      <FlatList
+        key={activeTab}
+        data={view.data}
+        keyExtractor={view.key}
+        renderItem={({ item }) => view.render(item)}
+        ItemSeparatorComponent={Separator}
+        ListHeaderComponent={view.title && view.data.length > 0 ? <SectionHeader title={view.title} /> : null}
+        ListEmptyComponent={view.empty || toursOrPassesEmpty}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 14, gap: 12, paddingBottom: 112 }}
-        refreshControl={<RefreshControl refreshing={bookingsLoading} onRefresh={refreshAllBookings} colors={[dh.nav]} />}
-      >
-        {activeTab === 'rides' ? (
-          bookings.length > 0 ? (
-            bookings.map((b) => (
-              <Press key={b.id} scale={0.99} onPress={() => openRide(b)} accessibilityLabel={`Ride to ${b.placeName}, ${b.status}`}>
-                <Panel style={{ gap: 12 }}>
-                  <View style={styles.cardHead}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.kicker}>
-                        {b.date} • ID: {b.id}
-                      </Text>
-                      <Text style={styles.title}>{b.placeName}</Text>
-                    </View>
-                    <Status>{b.status}</Status>
-                  </View>
-                  <Facts
-                    items={[
-                      ['PICKUP:', b.pickup],
-                      ['TRANSPORT:', `${b.transport} (${b.vehicleNo})`, { style: { color: tw.emerald800 } }],
-                      ['DRIVER:', b.driverName, { style: { color: tw.gray800, ...poppins(500) } }],
-                      ['RIDE OTP:', b.otp, { style: { color: tw.amber700, fontFamily: 'monospace', fontWeight: '700' } }],
-                    ]}
-                  />
-                  <View style={[dhs.row, { justifyContent: 'space-between', paddingTop: 4 }]}>
-                    <Text style={styles.totalLabel}>
-                      TOTAL FARE: <Text style={styles.totalValue}>₹{b.fare}</Text>
-                    </Text>
-                    <View style={[dhs.row, { gap: 8 }]}>
-                      {b.isLive ? (
-                        <View style={[dhs.row, { gap: 4 }]}>
-                          <Text style={styles.track}>Track ride</Text>
-                          <Fa name="fa-solid fa-chevron-right" size={9} color={dh.nav} />
-                        </View>
-                      ) : null}
-                      <SmallButton icon="fa-solid fa-phone" title="Call Driver" disabled={!b.driverPhone} onPress={() => (b.driverPhone ? openExternal(`tel:${b.driverPhone}`) : showToast('No driver assigned yet'))} />
-                    </View>
-                  </View>
-                </Panel>
-              </Press>
-            ))
-          ) : (
-            <StateBlock
-              style={{ paddingVertical: 56 }}
-              icon="fa-solid fa-car-side"
-              title="No Active Rides"
-              text="You haven't booked any taxi or auto rides yet."
-              actionLabel="Book a Taxi Now"
-              onAction={() => router.navigate('/taxi/user')}
-            />
-          )
-        ) : null}
-
-        {activeTab === 'hotels' ? (
-          hotelBookings.length > 0 ? (
-            hotelBookings.map((hb) => (
-              <Panel key={hb.id} style={{ gap: 12 }}>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <Thumb uri={hb.image} />
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={[dhs.row, { justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }]}>
-                      <Text style={[styles.kicker, { flexShrink: 1 }]} numberOfLines={1}>ID: {hb.id}</Text>
-                      <Status>{hb.status}</Status>
-                    </View>
-                    <Text style={[styles.title, { marginTop: 2 }]} numberOfLines={1}>{hb.hotelName}</Text>
-                    <Text style={styles.sub}>{hb.roomName}</Text>
-                  </View>
-                </View>
-                <Facts
-                  items={[
-                    ['CHECK-IN:', hb.checkIn],
-                    ['CHECK-OUT:', hb.checkOut],
-                    ['GUESTS:', hb.guests, { style: { color: tw.gray800, ...poppins(500) } }],
-                    ['PAYMENT:', hb.paymentStatus, { style: { color: tw.emerald800 } }],
-                  ]}
-                />
-                <View style={styles.cardFoot}>
-                  <Total label="TOTAL AMOUNT:" amount={hb.totalAmount} />
-                  <SmallButton icon="fa-solid fa-file-invoice" title="Invoice" onPress={() => showToast(`Digital Invoice for ${hb.id} sent to SMS/WhatsApp 📄`)} />
-                </View>
-              </Panel>
-            ))
-          ) : (
-            <StateBlock
-              style={{ paddingVertical: 56 }}
-              icon="fa-solid fa-hotel"
-              title="No Hotel Reservations"
-              text="You haven't booked any hotel stays or homestays yet."
-              actionLabel="Explore Stays in Haflong"
-              onAction={() => router.navigate('/app/hotels')}
-            />
-          )
-        ) : null}
-
-        {activeTab === 'food' ? (
-          foodOrders.length > 0 ? (
-            foodOrders.map((fo) => (
-              <Panel key={fo.id} style={{ gap: 12 }}>
-                <View style={[styles.cardHead, { paddingBottom: 8 }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.kicker}>
-                      {fo.orderTime} • ID: {fo.id}
-                    </Text>
-                    <Text style={styles.title}>{fo.restaurantName}</Text>
-                  </View>
-                  <Status>{fo.status}</Status>
-                </View>
-                <View style={[styles.facts, { flexDirection: 'column', gap: 4, paddingBottom: 10 }]}>
-                  {fo.items.map((it, idx) => (
-                    <View key={idx} style={[dhs.row, { justifyContent: 'space-between', gap: 8 }]}>
-                      <Text style={styles.item}>
-                        {it.quantity} × {it.name}
-                      </Text>
-                      <Text style={[styles.item, { flex: 0, color: tw.gray900, ...poppins(600) }]}>₹{it.price * it.quantity}</Text>
-                    </View>
-                  ))}
-                </View>
-                <View style={styles.cardFoot}>
-                  <Total label="TOTAL PAID:" amount={fo.totalAmount} />
-                  <SmallButton icon="fa-solid fa-location-crosshairs" title="Track Order" onPress={() => router.push(`/food/user/orders/${fo.id}`)} />
-                </View>
-              </Panel>
-            ))
-          ) : (
-            <StateBlock
-              style={{ paddingVertical: 56 }}
-              icon="fa-solid fa-utensils"
-              title="No Food Orders Yet"
-              text="Order traditional Dimasa food & bakes."
-              actionLabel="Explore Restaurants"
-              onAction={() => router.navigate('/food/user')}
-            />
-          )
-        ) : null}
-
-        {activeTab === 'festivals' && festivalBookings.length > 0 ? (
-          <>
-            <Text style={styles.groupTitle}>FESTIVAL &amp; EVENT PASSES</Text>
-            {groupPasses(festivalBookings).map((group) => (
-              <Panel key={group.key} style={{ gap: 12 }}>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <Thumb uri={group.image} />
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={[dhs.row, { justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }]}>
-                      <Text style={[styles.kicker, { flexShrink: 1 }]} numberOfLines={1}>ID: {group.id}</Text>
-                      <Status>{group.status}</Status>
-                    </View>
-                    <Text style={[styles.title, { marginTop: 2 }]} numberOfLines={1}>{group.festivalName}</Text>
-                    <Text style={styles.sub}>{group.categoryLabel}</Text>
-                  </View>
-                </View>
-                <Facts
-                  items={[
-                    ['DATES:', group.dates, { style: { color: tw.gray700 }, wrap: true }],
-                    ['PASSES:', `${group.ticketCount} ${group.ticketCount === 1 ? 'Ticket' : 'Tickets'}`, { style: { color: tw.gray700 } }],
-                  ]}
-                />
-                {/* One row per pass: each category is scanned on its own at the gate. */}
-                <View style={{ gap: 6 }}>
-                  {group.passes.map((pass) => (
-                    <View key={pass.id} style={styles.pass}>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        {group.passes.length > 1 ? (
-                          <Text style={styles.passName} numberOfLines={1}>
-                            {pass.ticketCount} × {pass.ticketCategory}
-                          </Text>
-                        ) : null}
-                        <Text style={styles.passCode} numberOfLines={1}>{pass.qrCode || 'Awaiting payment'}</Text>
-                      </View>
-                      <SmallButton icon="fa-solid fa-qrcode" title="QR" disabled={!pass.qrCode} onPress={() => showToast(`QR Pass ${pass.qrCode} ready for entry gate scan! 🎟️`)} />
-                    </View>
-                  ))}
-                </View>
-                <View style={styles.cardFoot}>
-                  <Total label="PAID:" amount={group.totalAmount} />
-                  <Text style={styles.passTypes}>{group.passes.length > 1 ? `${group.passes.length} pass types · one payment` : ''}</Text>
-                </View>
-              </Panel>
-            ))}
-          </>
-        ) : null}
-
-        {activeTab === 'tours' && tourBookings.length > 0 ? (
-          <>
-            <Text style={styles.groupTitle}>GUIDED TOUR PACKAGES</Text>
-            {tourBookings.map((tb) => (
-              <Panel key={tb.id} style={{ gap: 12 }}>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <Thumb uri={tb.image} />
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={[dhs.row, { justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }]}>
-                      <Text style={[styles.kicker, { flexShrink: 1 }]} numberOfLines={1}>ID: {tb.id}</Text>
-                      <Status>{tb.status}</Status>
-                    </View>
-                    <Text style={[styles.title, { marginTop: 2 }]} numberOfLines={1}>{tb.packageTitle}</Text>
-                    <Text style={styles.sub}>{tb.duration}</Text>
-                  </View>
-                </View>
-                <Facts
-                  items={[
-                    ['TRAVEL DATE:', tb.travelDate, { style: { color: tw.gray700 }, wrap: true }],
-                    ['TRAVELERS:', tb.travelers, { style: { color: tw.gray700 }, wrap: true }],
-                    ['YOUR OPERATOR:', tb.operatorName, { wide: true, style: { color: tw.emerald900 } }],
-                    tb.pickupPoint ? ['PICKUP:', tb.pickupPoint, { wide: true, style: { color: tw.gray700 }, wrap: true }] : null,
-                  ]}
-                />
-                <View style={styles.cardFoot}>
-                  <View style={{ flex: 1 }}>
-                    <Total label="PAID ONLINE:" amount={tb.paidOnline} />
-                    {tb.collectedInPerson > 0 ? (
-                      <Text style={[styles.due, { color: tw.emerald700 }]}>₹{tb.collectedInPerson.toLocaleString('en-IN')} paid to the operator</Text>
-                    ) : tb.balanceDue > 0 ? (
-                      <Text style={styles.due}>₹{tb.balanceDue.toLocaleString('en-IN')} due to the operator</Text>
-                    ) : null}
-                  </View>
-                  <SmallButton
-                    icon="fa-solid fa-phone"
-                    title="Call Operator"
-                    onPress={() => (tb.operatorPhone ? openExternal(`tel:${tb.operatorPhone}`) : showToast('No contact number on file for this operator'))}
-                  />
-                </View>
-              </Panel>
-            ))}
-          </>
-        ) : null}
-
-        {(activeTab === 'tours' || activeTab === 'festivals') && (activeTab === 'festivals' ? festivalBookings : tourBookings).length === 0 ? (
-          <View style={[dhs.stateCard, { paddingVertical: 56 }]}>
-            <Fa name="fa-solid fa-ticket" size={36} color={tw.gray300} />
-            <Text style={dhs.stateTitle}>{activeTab === 'festivals' ? 'No Festival Passes Yet' : 'No Tour Bookings Yet'}</Text>
-            <Text style={dhs.stateText}>Explore Falcon Festival passes or guided hill treks.</Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <GreenButton title="View Festivals" onPress={() => router.navigate('/app/festivals')} style={shadow('sm')} />
-              <Press scale={0.96} onPress={() => router.navigate('/app/packages')} style={styles.whiteBtn}>
-                <Text style={styles.whiteBtnText}>View Tour Packages</Text>
-              </Press>
-            </View>
-          </View>
-        ) : null}
-      </ScrollView>
+        contentContainerStyle={{ padding: space.lg, paddingBottom: NAV_CLEARANCE + insets.bottom + space.lg }}
+        refreshControl={<RefreshControl refreshing={bookingsLoading} onRefresh={refreshAllBookings} colors={[color.primary]} tintColor={color.primary} />}
+      />
     </View>
   );
 }
 
+const Separator = () => <View style={{ height: space.md }} />;
+
 const styles = StyleSheet.create({
-  tabStrip: { backgroundColor: '#EDE8DC', borderRadius: 16, borderWidth: 1, borderColor: '#DFD6C4', overflow: 'hidden', ...shadow('xs') },
-  tab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: 'transparent' },
-  tabActive: { backgroundColor: '#fff', borderColor: 'rgba(223,214,196,0.8)', ...shadow('xs') },
-  tabText: { fontSize: 11, lineHeight: 16.5, color: tw.stone600, ...poppins(600) },
-  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, borderBottomWidth: 1, borderBottomColor: tw.gray100, paddingBottom: 10 },
-  kicker: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, color: tw.gray400, textTransform: 'uppercase', ...poppins(700) },
-  title: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  sub: { fontSize: 12, lineHeight: 16, color: tw.emerald800, ...poppins(600) },
-  status: { fontSize: 10, lineHeight: 15, color: tw.emerald800, backgroundColor: tw.emerald100, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', ...poppins(700) },
-  facts: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: dh.cream, padding: 10, paddingBottom: 2, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(229,221,195,0.6)' },
-  factLabel: { fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(500) },
-  factValue: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(600) },
-  item: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(400) },
-  cardFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  totalLabel: { fontSize: 10, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  totalValue: { fontSize: 14, color: tw.gray900, ...montserrat(700) },
-  track: { fontSize: 11, lineHeight: 16.5, color: dh.nav, ...poppins(700) },
-  smallBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: dh.nav, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, ...shadow('xs') },
-  smallBtnText: { fontSize: 12, lineHeight: 16, color: tw.amber300, ...poppins(600) },
-  thumb: { width: 64, height: 64, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray100 },
-  groupTitle: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.gray500, paddingHorizontal: 4, ...montserrat(700) },
-  pass: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8 },
-  passName: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(600) },
-  passCode: { fontSize: 10, lineHeight: 15, color: tw.gray400, fontFamily: 'monospace' },
-  passTypes: { fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(400) },
-  due: { fontSize: 10, lineHeight: 15, color: tw.amber700, ...poppins(600) },
-  whiteBtn: { backgroundColor: '#fff', borderWidth: 1, borderColor: dh.border, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, ...shadow('sm') },
-  whiteBtnText: { fontSize: 12, lineHeight: 16.8, color: tw.gray800, ...poppins(700) },
+  tabStrip: { backgroundColor: color.surfaceMuted, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, overflow: 'hidden' },
+  tab: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, paddingHorizontal: space.md, borderRadius: radii.sm + 2 },
+  tabActive: { backgroundColor: color.surface, ...elevation.card },
+  tabText: { ...type.label, color: color.textSecondary },
+  cardTap: { padding: space.lg, paddingBottom: space.md, gap: space.md },
+  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: space.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border, paddingBottom: space.md },
+  kicker: { ...type.caption, color: color.textMuted },
+  title: { ...type.subheading, color: color.text },
+  sub: { ...type.label, color: color.primary },
+  facts: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: color.surfaceMuted, padding: space.md, paddingBottom: space.xs, borderRadius: radii.md },
+  factLabel: { ...type.caption, color: color.textMuted },
+  factValue: { ...type.bodyStrong, color: color.text },
+  item: { flex: 1, ...type.small, color: color.textSecondary },
+  cardFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm, paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  totalLabel: { ...type.caption, color: color.textMuted },
+  totalValue: { ...type.price, fontSize: 16, lineHeight: 22, color: color.text },
+  track: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.xs },
+  trackText: { ...type.label, color: color.primary },
+  smallBtn: { height: 40 },
+  thumb: { width: 72, height: 72, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
+  pass: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, backgroundColor: color.surfaceMuted, borderRadius: radii.md, paddingHorizontal: space.md, paddingVertical: space.sm },
+  passName: { ...type.label, color: color.text },
+  passCode: { ...type.caption, color: color.textSecondary, fontFamily: 'monospace' },
+  passTypes: { ...type.caption, color: color.textMuted, flexShrink: 1, textAlign: 'right' },
+  due: { ...type.caption, color: color.warning },
 });

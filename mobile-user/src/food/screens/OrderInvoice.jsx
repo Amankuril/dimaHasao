@@ -1,24 +1,21 @@
-/* eslint-disable react-hooks/static-components -- small stateless row helpers declared next to the data they read */
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePathname } from 'expo-router';
+import { NAV_CLEARANCE, isImmersiveRoute } from '../../components/dh/AppBottomNav';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { ArrowLeft, Download, FileText, Printer } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { AlertCircle, ArrowLeft, Download, FileText, Printer } from 'lucide-react-native';
 import Image from '../../components/Img';
-import { Press } from '../../components/ui';
 import { Spinner } from '../../components/Loader';
+import { Button, Card, EmptyState, IconButton, StatusBadge } from '../../components/ds';
 import { orderAPI } from '../../api/food';
 import { useOrders } from '../context/OrdersContext';
 import { useCompanyName } from '../hooks/useCompanyName';
 import { useParams, navigateTo } from '../../lib/webRouter';
 import { toast } from '../../lib/notify';
-import { poppins, shadow, tw } from '../../theme';
-import { F } from '../components/shell';
-
-const GREEN = '#0a4d2b';
-const MUTED = '#78665a';
-const BORDER = '#e6e1d3';
+import { color, radii, space, type } from '../../theme';
+import { BillRow, Divider } from '../components/cart/parts';
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -72,15 +69,10 @@ function invoiceHtml(order, companyName) {
   </body></html>`;
 }
 
-function Btn({ children, onPress, primary, style }) {
-  return (
-    <Press onPress={onPress} style={[styles.btn, primary ? { backgroundColor: GREEN, borderColor: GREEN } : null, style]}>
-      {children}
-    </Press>
-  );
-}
-
 export default function OrderInvoice() {
+  const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const bottomPad = (isImmersiveRoute(pathname) ? 0 : NAV_CLEARANCE) + insets.bottom + space.xxl;
   const companyName = useCompanyName();
   const { orderId } = useParams();
   const { getOrderById } = useOrders();
@@ -106,20 +98,17 @@ export default function OrderInvoice() {
 
   if (loading) {
     return (
-      <View style={[styles.page, { alignItems: 'center', paddingTop: 80 }]}>
+      <View style={[styles.page, { alignItems: 'center', paddingTop: 80 }]} accessibilityRole="progressbar">
         <Spinner size={32} />
-        <Text style={[styles.muted, { marginTop: 16 }]}>Generating invoice...</Text>
+        <Text style={[type.body, { color: color.textSecondary, marginTop: space.lg }]}>Generating invoice...</Text>
       </View>
     );
   }
 
   if (error || !order) {
     return (
-      <View style={[styles.page, { alignItems: 'center', paddingTop: 80, paddingHorizontal: 16 }]}>
-        <Text style={{ fontSize: 18, color: tw.gray900, marginBottom: 16, ...poppins(700) }}>{error || 'Order Not Found'}</Text>
-        <Btn primary onPress={() => navigateTo('/user/orders')}>
-          <Text style={[styles.btnText, { color: '#fff' }]}>Back to Orders</Text>
-        </Btn>
+      <View style={[styles.page, { paddingTop: space.xxl }]}>
+        <EmptyState icon={AlertCircle} title={error || 'Order not found'} actionLabel="Back to orders" onAction={() => navigateTo('/user/orders')} />
       </View>
     );
   }
@@ -150,138 +139,110 @@ export default function OrderInvoice() {
   const total = order.total ?? order.pricing?.total;
   const addr = order.address || order.deliveryAddress || {};
   const R = '₹';
-  const TotalLine = ({ label, value, color }) => (
-    <View style={styles.totalLine}>
-      <Text style={[styles.totalText, color ? { color } : null]}>{label}</Text>
-      <Text style={[styles.totalText, color ? { color } : null]}>{value}</Text>
-    </View>
-  );
+  const st = String(order.status || '').toLowerCase();
+  const statusTone = st.includes('cancel') || st === 'failed' ? 'danger' : st === 'delivered' || st === 'completed' ? 'success' : st === 'preparing' || st === 'pending' ? 'warning' : 'info';
 
   return (
-    <LinearGradient colors={['rgba(254,252,232,0.3)', '#ffffff', 'rgba(255,247,237,0.2)']} style={styles.page}>
-      <ScrollView contentContainerStyle={{ padding: 12, gap: 16, paddingBottom: 40 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-            <Press scale={0.9} onPress={() => navigateTo(`/user/orders/${orderId}`)} style={styles.back} accessibilityLabel="Back">
-              <ArrowLeft size={16} color={tw.gray900} />
-            </Press>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 18, color: tw.gray900, ...poppins(700) }}>Invoice</Text>
-              <Text style={[styles.muted, { fontSize: 14 }]} numberOfLines={1}>Order {order.id}</Text>
-            </View>
-          </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Btn onPress={handlePrint} style={{ height: 36, paddingHorizontal: 12 }}>
-              <Printer size={12} color={tw.gray900} />
-            </Btn>
-            <Btn primary onPress={handlePdf} style={{ height: 36, paddingHorizontal: 12 }}>
-              <Download size={12} color="#fff" />
-              <Text style={[styles.btnText, { color: '#fff', fontSize: 12 }]}>PDF</Text>
-            </Btn>
-          </View>
+    <View style={styles.page}>
+      <View style={styles.header}>
+        <IconButton icon={ArrowLeft} label="Back" onPress={() => navigateTo(`/user/orders/${orderId}`)} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+            Invoice
+          </Text>
+          <Text style={[type.small, { color: color.textMuted }]} numberOfLines={1}>
+            Order {order.id}
+          </Text>
         </View>
-
-        <View style={styles.card}>
-          <View style={{ borderBottomWidth: 2, borderBottomColor: GREEN, paddingBottom: 20, marginBottom: 0 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <FileText size={24} color={GREEN} />
-              <Text style={{ fontSize: 20, color: GREEN, ...poppins(700) }}>INVOICE</Text>
-            </View>
-            <View style={{ gap: 12 }}>
-              <View>
-                <Text style={[styles.muted, { fontSize: 12 }]}>{companyName}</Text>
-                <Text style={[styles.muted, { fontSize: 12 }]}>Food Delivery Platform</Text>
+        <IconButton icon={Printer} label="Print invoice" variant="soft" onPress={handlePrint} />
+        <IconButton icon={Download} label="Download PDF" variant="primary" onPress={handlePdf} />
+      </View>
+      <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: bottomPad }}>
+        <Card>
+          <View style={styles.top}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={styles.row}>
+                <FileText size={22} color={color.primary} />
+                <Text style={[type.titleSerif, { color: color.primary }]}>Invoice</Text>
               </View>
-              <View style={styles.statusBadge}>
-                <Text style={{ color: '#fff', fontSize: 14, ...poppins(600) }}>{String(order.status || '').toUpperCase()}</Text>
-              </View>
+              <Text style={[type.small, { color: color.textMuted, marginTop: space.xs }]}>{companyName}</Text>
+              <Text style={[type.caption, { color: color.textMuted }]}>Food Delivery Platform</Text>
             </View>
+            <StatusBadge tone={statusTone} label={String(order.status || '').replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase())} />
           </View>
 
-          <View style={{ marginTop: 16, gap: 16 }}>
+          <View style={{ marginTop: space.lg, gap: space.lg }}>
             <View>
-              <Text style={styles.h3}>Bill To:</Text>
-              <Text style={styles.small}>{addr.street}</Text>
-              {addr.additionalDetails ? <Text style={styles.small}>{addr.additionalDetails}</Text> : null}
-              <Text style={styles.small}>
+              <Text style={[type.label, { color: color.text, marginBottom: space.xs }]}>Bill to</Text>
+              <Text style={[type.small, { color: color.textSecondary }]}>{addr.street}</Text>
+              {addr.additionalDetails ? <Text style={[type.small, { color: color.textSecondary }]}>{addr.additionalDetails}</Text> : null}
+              <Text style={[type.small, { color: color.textSecondary }]}>
                 {addr.city}, {addr.state} {addr.zipCode}
               </Text>
             </View>
-            <View>
-              <Text style={styles.h3}>Invoice Details:</Text>
-              <Text style={styles.small}><Text style={poppins(700)}>Invoice #:</Text> {order.id}</Text>
-              <Text style={styles.small}><Text style={poppins(700)}>Date:</Text> {formatDate(order.createdAt)}</Text>
-              <Text style={styles.small}><Text style={poppins(700)}>Payment:</Text> {order.paymentMethod?.type?.toUpperCase() || 'Card'}</Text>
+            <View style={{ gap: space.xs }}>
+              <Text style={[type.label, { color: color.text }]}>Invoice details</Text>
+              <BillRow label="Invoice #" value={String(order.id || '')} />
+              <BillRow label="Date" value={formatDate(order.createdAt)} />
+              <BillRow label="Payment" value={order.paymentMethod?.type?.toUpperCase() || 'Card'} />
             </View>
           </View>
 
-          <View style={{ marginTop: 16 }}>
-            <Text style={[styles.h3, { marginBottom: 12 }]}>Order Items:</Text>
-            <View style={[styles.tr, { borderBottomColor: BORDER }]}>
-              <Text style={[styles.th, { flex: 1 }]}>Item</Text>
-              <Text style={[styles.th, { textAlign: 'right' }]}>Total</Text>
-            </View>
+          <Divider style={{ marginVertical: space.lg }} />
+          <Text style={[type.label, { color: color.text, marginBottom: space.sm }]}>Order items</Text>
+          <View style={{ gap: space.md }}>
             {items.map((item, idx) => (
-              <View key={item.id || idx} style={[styles.tr, { paddingVertical: 8 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                  <Image source={{ uri: item.image }} style={{ width: 32, height: 32, borderRadius: 4 }} resizeMode="cover" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, color: tw.gray900, ...poppins(500) }}>{item.name}</Text>
-                    {item.variantName ? <Text style={{ fontSize: 12, color: tw.gray500, ...poppins(400) }}>{item.variantName}</Text> : null}
-                    <Text style={[styles.muted, { fontSize: 12 }]}>Qty: {item.quantity} × {R}{money(item.price)}</Text>
-                  </View>
+              <View key={item.id || idx} style={styles.itemRow}>
+                <Image source={{ uri: item.image }} style={styles.itemImg} resizeMode="cover" />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.bodyStrong, { color: color.text }]}>{item.name}</Text>
+                  {item.variantName ? <Text style={[type.caption, { color: color.textMuted }]}>{item.variantName}</Text> : null}
+                  <Text style={[type.caption, { color: color.textMuted }]}>
+                    Qty {item.quantity} × {R}
+                    {money(item.price)}
+                  </Text>
                 </View>
-                <Text style={{ fontSize: 12, color: tw.gray900, ...poppins(500) }}>{R}{money(item.price * item.quantity)}</Text>
+                <Text style={[type.bodyStrong, { color: color.text }]}>
+                  {R}
+                  {money(item.price * item.quantity)}
+                </Text>
               </View>
             ))}
           </View>
 
-          <View style={{ marginTop: 16 }}>
-            <TotalLine label="Subtotal:" value={`${R}${money(sub)}`} />
-            {pack > 0 ? <TotalLine label="Packaging Fee:" value={`${R}${money(pack)}`} /> : null}
-            {plat > 0 ? <TotalLine label="Platform Fee:" value={`${R}${money(plat)}`} /> : null}
-            <TotalLine label="Delivery Fee:" value={`${R}${money(del)}`} />
-            <TotalLine label="GST:" value={`${R}${money(tax)}`} />
-            <TotalLine label="Discount:" value={`${R}${money(Math.abs(Number(disc || 0)))}`} color={tw.green600} />
-            <View style={styles.grand}>
-              <Text style={styles.grandText}>Total:</Text>
-              <Text style={styles.grandText}>{R}{money(total)}</Text>
-            </View>
+          <Divider dashed style={{ marginVertical: space.lg }} />
+          <View style={{ gap: space.md }}>
+            <BillRow label="Subtotal" value={`${R}${money(sub)}`} />
+            {pack > 0 ? <BillRow label="Packaging fee" value={`${R}${money(pack)}`} /> : null}
+            {plat > 0 ? <BillRow label="Platform fee" value={`${R}${money(plat)}`} /> : null}
+            <BillRow label="Delivery fee" value={`${R}${money(del)}`} />
+            <BillRow label="GST" value={`${R}${money(tax)}`} />
+            <BillRow label="Discount" tone="success" value={`−${R}${money(Math.abs(Number(disc || 0)))}`} />
+            <Divider />
+            <BillRow strong label="Total" value={`${R}${money(total)}`} />
           </View>
 
-          <View style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: BORDER, alignItems: 'center' }}>
-            <Text style={[styles.muted, { fontSize: 12 }]}>Thank you for your order!</Text>
-            <Text style={[styles.muted, { fontSize: 12, marginTop: 4, textAlign: 'center' }]}>For any queries, please contact our support team.</Text>
+          <View style={styles.thanks}>
+            <Text style={[type.small, { color: color.textMuted, textAlign: 'center' }]}>Thank you for your order!</Text>
+            <Text style={[type.caption, { color: color.textMuted, textAlign: 'center' }]}>For any queries, please contact our support team.</Text>
           </View>
-        </View>
+        </Card>
 
-        <View style={{ gap: 8 }}>
-          <Btn onPress={() => navigateTo(`/user/orders/${orderId}`)} style={{ height: 40 }}>
-            <Text style={styles.btnText}>Track Order</Text>
-          </Btn>
-          <Btn onPress={() => navigateTo('/user/orders')} style={{ height: 40 }}>
-            <Text style={styles.btnText}>Back to Orders</Text>
-          </Btn>
+        <View style={{ flexDirection: 'row', gap: space.md }}>
+          <Button title="Back to orders" variant="outline" onPress={() => navigateTo('/user/orders')} style={{ flex: 1 }} />
+          <Button title="Track order" variant="secondary" onPress={() => navigateTo(`/user/orders/${orderId}`)} style={{ flex: 1 }} />
         </View>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: F.cream },
-  muted: { color: MUTED, fontSize: 14, ...poppins(400) },
-  back: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 36, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: BORDER, backgroundColor: '#fff', ...shadow('xs') },
-  btnText: { fontSize: 14, color: tw.gray900, ...poppins(500) },
-  card: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: BORDER, padding: 16, ...shadow('sm') },
-  statusBadge: { alignSelf: 'flex-start', backgroundColor: GREEN, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
-  h3: { fontSize: 14, color: tw.gray900, marginBottom: 8, ...poppins(700) },
-  small: { fontSize: 12, color: tw.gray900, ...poppins(400) },
-  tr: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: BORDER, paddingHorizontal: 8, paddingVertical: 4 },
-  th: { fontSize: 12, color: tw.gray900, ...poppins(600) },
-  totalLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  totalText: { fontSize: 12, color: tw.gray700, ...poppins(400) },
-  grand: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8, marginTop: 8, borderTopWidth: 2, borderTopColor: GREEN },
-  grandText: { fontSize: 16, color: tw.gray900, ...poppins(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, paddingVertical: space.xs, minHeight: 56, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  top: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingBottom: space.lg, borderBottomWidth: 2, borderBottomColor: color.primary },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  itemImg: { width: 40, height: 40, borderRadius: radii.sm, backgroundColor: color.surfaceMuted },
+  thanks: { marginTop: space.xl, paddingTop: space.lg, borderTopWidth: 1, borderTopColor: color.border, gap: 2 },
 });

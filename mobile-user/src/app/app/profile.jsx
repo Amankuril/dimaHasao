@@ -1,19 +1,24 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Image from '../../components/Img';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Fa from '../../components/Fa';
 import { Press } from '../../components/ui';
 import { Dialog } from '../../components/kit';
+import { Button, Card, IconButton, ListRow, SectionHeader, SegmentedControl, StatusBadge, fa } from '../../components/ds';
+
 import { Header, PatternDivider } from '../../components/dh/Header';
+import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { ModuleAccordion } from '../../components/dh/ModuleAccordion';
-import { dhs } from '../../components/dh/ui';
+import { Field, dhs } from '../../components/dh/ui';
 import { useBooking } from '../../context/BookingContext';
 import { PLACES_DATA } from '../../data/dh/tourismData';
 import { MODULE_SECTIONS, PLATFORM_ACCOUNT, VEG_MODE_KEY, VEG_MODE_OPTION_KEY } from '../../data/moduleSections';
 import { localStore } from '../../lib/storage';
-import { dh, poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
+
+const FA_CHEVRON = fa('fa-solid fa-chevron-right');
 
 // Web: DimaHasao/pages/ProfileScreen.jsx (/app/profile)
 
@@ -32,36 +37,8 @@ const readVegChoice = () => {
   return localStore.getItem(VEG_MODE_OPTION_KEY) === 'pure-veg' ? 'pure-veg' : 'all';
 };
 
-function LinkRow({ icon, iconColor = tw.emerald700, label, sub, onPress }) {
-  return (
-    <Press scale={0.99} onPress={onPress} style={styles.linkRow} accessibilityLabel={sub ? `${label}. ${sub}` : label}>
-      <View style={[dhs.row, { gap: 12, flex: 1, minWidth: 0 }]}>
-        <View style={{ width: 20 }}>
-          <Fa name={icon} size={16} color={iconColor} />
-        </View>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.linkLabel} numberOfLines={1}>{label}</Text>
-          {sub ? <Text style={styles.linkSub} numberOfLines={1}>{sub}</Text> : null}
-        </View>
-      </View>
-      <Fa name="fa-solid fa-chevron-right" size={12} color={tw.gray400} />
-    </Press>
-  );
-}
-
-function CardTitle({ icon, iconColor = tw.emerald700, children, right, style }) {
-  return (
-    <View style={[dhs.row, { justifyContent: 'space-between' }, style]}>
-      <View style={[dhs.row, { gap: 6 }]}>
-        <Fa name={icon} size={12} color={iconColor} />
-        <Text style={styles.cardTitle}>{children}</Text>
-      </View>
-      {right}
-    </View>
-  );
-}
-
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const { user, logout, favorites, bookings, showToast, saveLocalProfile } = useBooking();
   const [selectedLang, setSelectedLang] = useState('English');
   const [isEditing, setIsEditing] = useState(false);
@@ -79,25 +56,20 @@ export default function ProfileScreen() {
 
   const renderVegControl = (row) => (
     <View style={styles.veg}>
-      <View style={[dhs.row, { gap: 12 }]}>
-        <View style={{ width: 16, alignItems: 'center' }}>
-          <Fa name={row.icon} size={12} color={tw.emerald700} />
+      <View style={[dhs.row, { gap: space.md }]}>
+        <View style={styles.vegIcon}>
+          <Fa name={row.icon} size={16} color={color.primary} />
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.linkLabel}>{row.label}</Text>
           <Text style={styles.linkSub}>{row.sub}</Text>
         </View>
       </View>
-      <View style={{ flexDirection: 'row', gap: 6 }}>
-        {VEG_CHOICES.map((choice) => {
-          const active = vegChoice === choice.id;
-          return (
-            <Press key={choice.id} scale={0.96} onPress={() => applyVegChoice(choice)} accessibilityState={{ selected: active }} style={[styles.vegBtn, active && styles.vegBtnActive]}>
-              <Text style={[styles.vegBtnText, active && { color: tw.amber300 }]}>{choice.label}</Text>
-            </Press>
-          );
-        })}
-      </View>
+      <SegmentedControl
+        options={VEG_CHOICES.map((choice) => ({ value: choice.id, label: choice.label }))}
+        value={vegChoice}
+        onChange={(id) => applyVegChoice(VEG_CHOICES.find((choice) => choice.id === id))}
+      />
     </View>
   );
 
@@ -119,171 +91,144 @@ export default function ProfileScreen() {
       <Header title="TOURIST PROFILE" subtitle="Manage your profile & preferences" showBack rightAction="none" />
       <PatternDivider variant="green-gold" />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 96 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: space.lg, gap: space.xxl, paddingBottom: NAV_CLEARANCE + insets.bottom + space.lg }}>
         <View style={styles.userCard}>
-          <LinearGradient colors={['#0A2E12', '#0F441B', '#186A43']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-          <View style={[dhs.row, { justifyContent: 'space-between', gap: 8 }]}>
-            <View style={[dhs.row, { gap: 14, flex: 1, minWidth: 0 }]}>
+          <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm }]}>
+            <View style={[dhs.row, { gap: space.md, flex: 1, minWidth: 0 }]}>
               <View style={styles.avatarWrap}>
                 <Image source={{ uri: AVATAR }} style={styles.avatar} />
               </View>
-              <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start' }}>
-                <Text style={styles.userName} numberOfLines={1}>{user.name}</Text>
-                <Text style={styles.userPhone} numberOfLines={1}>{user.phone || '+91 98765 43210'}</Text>
-                <View style={styles.verified}>
-                  <Fa name="fa-solid fa-certificate" size={9} color={tw.amber400} />
-                  <Text style={styles.verifiedText}>Verified Tourist Explorer</Text>
-                </View>
+              <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 2 }}>
+                <Text style={styles.userName} numberOfLines={1}>
+                  {user.name}
+                </Text>
+                <Text style={styles.userPhone} numberOfLines={1}>
+                  {user.phone || '+91 98765 43210'}
+                </Text>
+                <StatusBadge label="Verified tourist explorer" tone="gold" icon={fa('fa-solid fa-certificate')} style={{ marginTop: space.xs }} />
               </View>
             </View>
-            <Press
+            <IconButton
+              icon={fa('fa-solid fa-pen-to-square')}
+              label="Edit Profile"
+              variant="inverse"
+              iconSize={18}
               onPress={() => {
                 setEditName(user.name);
                 setEditPhone(user.phone || '+91 98765 43210');
                 setIsEditing(true);
               }}
-              style={styles.editBtn}
-              accessibilityLabel="Edit Profile"
-            >
-              <Fa name="fa-solid fa-pen-to-square" size={12} color="#fff" />
-            </Press>
+            />
           </View>
 
           <View style={styles.metrics}>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>BOOKED RIDES</Text>
               <Text style={styles.metricValue}>{bookings.length}</Text>
+              <Text style={styles.metricLabel}>Booked rides</Text>
             </View>
             <View style={[styles.metric, styles.metricMid]}>
-              <Text style={styles.metricLabel}>SAVED WISHLIST</Text>
               <Text style={styles.metricValue}>{favoritePlaces.length}</Text>
+              <Text style={styles.metricLabel}>Saved wishlist</Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>MEMBER TIER</Text>
               <Text style={styles.metricValue}>Gold</Text>
+              <Text style={styles.metricLabel}>Member tier</Text>
             </View>
           </View>
         </View>
 
         {/* One identity above, each module's own account screens below it. */}
-        <View style={{ gap: 10 }}>
-          <CardTitle icon="fa-solid fa-layer-group" style={{ paddingHorizontal: 4 }} right={<Text style={styles.hint}>One account, every service</Text>}>
-            YOUR SERVICES
-          </CardTitle>
+        <View style={{ gap: space.md }}>
+          <View>
+            <SectionHeader title="Your services" style={{ marginBottom: space.xs }} />
+            <Text style={styles.hint}>One account, every service</Text>
+          </View>
           {MODULE_SECTIONS.map((section) => (
             <ModuleAccordion key={section.id} section={section} rows={section.account} onNavigate={(path) => router.navigate(path)} renderControl={renderVegControl} />
           ))}
         </View>
 
-        <View style={[styles.card, { gap: 4 }]}>
-          <CardTitle icon="fa-solid fa-circle-info" style={{ marginBottom: 8 }}>
-            HELP &amp; FEEDBACK
-          </CardTitle>
-          {PLATFORM_ACCOUNT.map((row) => (
-            <LinkRow key={row.path} icon={row.icon} label={row.label} sub={row.sub} onPress={() => router.navigate(row.path)} />
-          ))}
+        <View>
+          <SectionHeader title="Help & feedback" />
+          <Card padded={false}>
+            {PLATFORM_ACCOUNT.map((row, i) => (
+              <ListRow chevronIcon={FA_CHEVRON} key={row.path} icon={fa(row.icon)} title={row.label} subtitle={row.sub} onPress={() => router.navigate(row.path)} divider={i < PLATFORM_ACCOUNT.length - 1} />
+            ))}
+          </Card>
         </View>
 
-        <View style={styles.card}>
-          <CardTitle
-            icon="fa-solid fa-heart"
-            iconColor={tw.red500}
-            style={{ marginBottom: 12 }}
-            right={
-              favoritePlaces.length > 0 ? (
-                <Text onPress={() => router.navigate('/app/places')} style={styles.viewAll} accessibilityRole="link">
-                  View All &gt;
-                </Text>
-              ) : null
-            }
-          >
-            SAVED WISHLIST ({favoritePlaces.length})
-          </CardTitle>
-          {favoritePlaces.length > 0 ? (
-            <View style={{ gap: 10 }}>
-              {favoritePlaces.map((p) => (
-                <Press key={p.id} scale={0.98} onPress={() => router.push(`/app/places/${p.id}`)} style={styles.fav}>
+        <View>
+          <SectionHeader
+            title={`Saved wishlist (${favoritePlaces.length})`}
+            action={favoritePlaces.length > 0 ? 'View all' : undefined}
+            onAction={() => router.navigate('/app/places')}
+          />
+          <Card padded={false}>
+            {favoritePlaces.length > 0 ? (
+              favoritePlaces.map((p, i) => (
+                <Press key={p.id} scale={0.99} onPress={() => router.push(`/app/places/${p.id}`)} style={[styles.fav, i < favoritePlaces.length - 1 && styles.favDivider]} accessibilityLabel={`${p.name}, ${p.location}. Explore`}>
                   <Image source={{ uri: p.mainImage }} style={styles.favImg} />
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.favName} numberOfLines={1}>{p.name}</Text>
-                    <Text style={styles.linkSub} numberOfLines={1}>{p.location}</Text>
+                    <Text style={styles.favName} numberOfLines={1}>
+                      {p.name}
+                    </Text>
+                    <Text style={styles.linkSub} numberOfLines={1}>
+                      {p.location}
+                    </Text>
                   </View>
-                  <Text style={styles.explore}>Explore →</Text>
+                  <Text style={styles.explore}>Explore</Text>
+                  <Fa name="fa-solid fa-chevron-right" size={14} color={color.primary} />
                 </Press>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.empty}>No saved destinations yet. Tap the heart icon on any place to save!</Text>
-          )}
+              ))
+            ) : (
+              <View style={styles.empty}>
+                <Fa name="fa-regular fa-heart" size={22} color={color.textMuted} />
+                <Text style={styles.emptyText}>No saved destinations yet. Tap the heart icon on any place to save it.</Text>
+              </View>
+            )}
+          </Card>
         </View>
 
-        <View style={[styles.card, { gap: 4 }]}>
-          <CardTitle icon="fa-solid fa-sliders" style={{ marginBottom: 8 }}>
-            ACCOUNT SHORTCUTS
-          </CardTitle>
-          <LinkRow icon="fa-regular fa-calendar-check" iconColor={tw.blue600} label="My Booked Rides" onPress={() => router.navigate('/app/bookings')} />
-          <LinkRow icon="fa-solid fa-map-location-dot" label="Explore Attractions" onPress={() => router.navigate('/app/places')} />
-          <LinkRow icon="fa-solid fa-compass" iconColor={tw.amber600} label="All Tourism Services & Guides" onPress={() => router.navigate('/app/more')} />
+        <View>
+          <SectionHeader title="Account shortcuts" />
+          <Card padded={false}>
+            <ListRow chevronIcon={FA_CHEVRON} icon={fa('fa-regular fa-calendar-check')} iconTone="info" title="My Booked Rides" onPress={() => router.navigate('/app/bookings')} divider />
+            <ListRow chevronIcon={FA_CHEVRON} icon={fa('fa-solid fa-map-location-dot')} title="Explore Attractions" onPress={() => router.navigate('/app/places')} divider />
+            <ListRow chevronIcon={FA_CHEVRON} icon={fa('fa-solid fa-compass')} iconTone="gold" title="All Tourism Services & Guides" onPress={() => router.navigate('/app/more')} />
+          </Card>
         </View>
 
-        <View style={styles.card}>
-          <CardTitle icon="fa-solid fa-language" style={{ marginBottom: 12 }}>
-            LANGUAGE PREFERENCE
-          </CardTitle>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {['English', 'Dimasa', 'Assamese'].map((lang) => {
-              const active = selectedLang === lang;
-              return (
-                <Press
-                  key={lang}
-                  scale={0.96}
-                  onPress={() => {
-                    setSelectedLang(lang);
-                    showToast(`Language switched to ${lang}`);
-                  }}
-                  accessibilityState={{ selected: active }}
-                  style={[styles.lang, active && styles.langActive]}
-                >
-                  <Text style={[styles.langText, active && { color: tw.amber300 }]}>{lang}</Text>
-                </Press>
-              );
-            })}
-          </View>
+        <View>
+          <SectionHeader title="Language preference" />
+          <SegmentedControl
+            options={LANGS.map((lang) => ({ value: lang, label: lang }))}
+            value={selectedLang}
+            onChange={(lang) => {
+              setSelectedLang(lang);
+              showToast(`Language switched to ${lang}`);
+            }}
+          />
         </View>
 
         {user.isLoggedIn ? (
-          <Press scale={0.98} onPress={handleLogout} style={styles.logout} accessibilityLabel="Log Out">
-            <Fa name="fa-solid fa-right-from-bracket" size={12} color={tw.red600} />
-            <Text style={styles.logoutText}>Log Out</Text>
-          </Press>
+          <Button title="Log out" variant="dangerSoft" icon={fa('fa-solid fa-right-from-bracket')} onPress={handleLogout} accessibilityLabel="Log Out" />
         ) : (
-          <Press scale={0.98} onPress={() => router.replace('/app/login')} style={styles.signIn}>
-            <Fa name="fa-solid fa-right-to-bracket" size={12} color="#fff" />
-            <Text style={[styles.logoutText, { color: '#fff' }]}>Sign In / Register</Text>
-          </Press>
+          <Button title="Sign in / Register" icon={fa('fa-solid fa-right-to-bracket')} onPress={() => router.replace('/app/login')} />
         )}
       </ScrollView>
 
       <Dialog visible={isEditing} onClose={() => setIsEditing(false)} panelStyle={styles.modal}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={[dhs.row, { justifyContent: 'space-between', marginBottom: 16 }]}>
-            <Text style={styles.modalTitle}>Edit Tourist Profile</Text>
-            <Press onPress={() => setIsEditing(false)} style={styles.modalClose} accessibilityLabel="Close">
-              <Fa name="fa-solid fa-xmark" size={12} color={tw.gray600} />
-            </Press>
+          <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm, marginBottom: space.lg }]}>
+            <Text style={styles.modalTitle} accessibilityRole="header">
+              Edit tourist profile
+            </Text>
+            <IconButton icon={fa('fa-solid fa-xmark')} label="Close" variant="soft" size={40} iconSize={16} onPress={() => setIsEditing(false)} />
           </View>
-          <View style={{ gap: 12 }}>
-            <View>
-              <Text style={styles.modalLabel}>Full Name</Text>
-              <TextInput value={editName} onChangeText={setEditName} style={styles.modalInput} autoCapitalize="words" accessibilityLabel="Full Name" />
-            </View>
-            <View>
-              <Text style={styles.modalLabel}>Phone Number</Text>
-              <TextInput value={editPhone} onChangeText={setEditPhone} style={styles.modalInput} keyboardType="phone-pad" accessibilityLabel="Phone Number" />
-            </View>
-            <Press scale={0.97} onPress={handleSaveProfile} style={styles.save}>
-              <Text style={styles.saveText}>Save Changes</Text>
-            </Press>
+          <View style={{ gap: space.md }}>
+            <Field label="Full name" value={editName} onChangeText={setEditName} autoCapitalize="words" autoComplete="name" accessibilityLabel="Full Name" />
+            <Field label="Phone number" value={editPhone} onChangeText={setEditPhone} keyboardType="phone-pad" autoComplete="tel" accessibilityLabel="Phone Number" />
+            <Button title="Save changes" onPress={handleSaveProfile} style={{ marginTop: space.xs }} />
           </View>
         </KeyboardAvoidingView>
       </Dialog>
@@ -291,47 +236,31 @@ export default function ProfileScreen() {
   );
 }
 
+const LANGS = ['English', 'Dimasa', 'Assamese'];
+
 const styles = StyleSheet.create({
-  userCard: { borderRadius: 16, padding: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,185,0,0.2)', ...shadow('lg') },
-  avatarWrap: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: tw.amber400, padding: 2, overflow: 'hidden', backgroundColor: '#061C0A' },
+  userCard: { borderRadius: radii.lg, padding: space.xl, backgroundColor: color.primaryDeep, borderWidth: 1, borderColor: 'rgba(202,168,62,0.45)', ...elevation.card },
+  avatarWrap: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: color.gold, padding: 2, overflow: 'hidden', backgroundColor: color.primaryDeep },
   avatar: { width: '100%', height: '100%', borderRadius: 30 },
-  userName: { fontSize: 16, lineHeight: 24, color: tw.amber300, ...poppins(700) },
-  userPhone: { fontSize: 12, lineHeight: 16, color: tw.emerald200, marginTop: 2, ...poppins(400) },
-  verified: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, backgroundColor: 'rgba(255,185,0,0.2)', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,185,0,0.3)' },
-  verifiedText: { fontSize: 10, lineHeight: 15, color: tw.amber300, ...poppins(600) },
-  editBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  metrics: { flexDirection: 'row', marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
-  metric: { flex: 1, alignItems: 'center' },
-  metricMid: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  metricLabel: { fontSize: 10, lineHeight: 15, color: tw.emerald200, textAlign: 'center', ...poppins(400) },
-  metricValue: { fontSize: 16, lineHeight: 24, color: tw.amber300, ...poppins(700) },
-  hint: { fontSize: 9, lineHeight: 13.5, color: tw.gray500, ...poppins(400) },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: dh.border, ...shadow('xs') },
-  cardTitle: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.gray800, ...poppins(700) },
-  linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: 10, borderRadius: 12 },
-  linkLabel: { fontSize: 12, lineHeight: 16, color: tw.gray800, ...poppins(600) },
-  linkSub: { fontSize: 10, lineHeight: 13.75, color: tw.gray500, ...poppins(400) },
-  veg: { padding: 10, borderRadius: 12, backgroundColor: dh.cream, borderWidth: 1, borderColor: 'rgba(229,221,195,0.7)', gap: 8 },
-  vegBtn: { flex: 1, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', alignItems: 'center' },
-  vegBtnActive: { backgroundColor: '#0A3A22', borderColor: '#0A3A22' },
-  vegBtnText: { fontSize: 10, lineHeight: 15, color: tw.gray600, ...poppins(700) },
-  viewAll: { fontSize: 10, lineHeight: 15, color: tw.blue600, ...poppins(600) },
-  fav: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, borderRadius: 12, backgroundColor: tw.gray50, borderWidth: 1, borderColor: 'rgba(243,244,246,0.8)' },
-  favImg: { width: 48, height: 48, borderRadius: 8 },
-  favName: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
-  explore: { fontSize: 10, lineHeight: 15, color: tw.emerald800, ...poppins(700) },
-  empty: { fontSize: 12, lineHeight: 16, color: tw.gray400, textAlign: 'center', paddingVertical: 16, fontStyle: 'italic', ...poppins(400) },
-  lang: { flex: 1, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray50, alignItems: 'center' },
-  langActive: { backgroundColor: '#0A3A22', borderColor: '#0A3A22' },
-  langText: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(600) },
-  logout: { paddingVertical: 12, backgroundColor: tw.red50, borderRadius: 12, borderWidth: 1, borderColor: tw.red200, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  logoutText: { fontSize: 12, lineHeight: 16, color: tw.red600, ...poppins(700) },
-  signIn: { paddingVertical: 12, backgroundColor: '#0A3A22', borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, ...shadow('sm') },
-  modal: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: tw.emerald100, ...shadow('2xl') },
-  modalTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  modalClose: { width: 28, height: 28, borderRadius: 14, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  modalLabel: { fontSize: 12, lineHeight: 16, color: tw.gray700, marginBottom: 4, ...poppins(600) },
-  modalInput: { height: 36, borderWidth: 1, borderColor: tw.gray300, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 0, fontSize: 12, color: tw.gray900, ...poppins(400) },
-  save: { paddingVertical: 10, backgroundColor: '#0A3A22', borderRadius: 12, alignItems: 'center', ...shadow('sm') },
-  saveText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(700) },
+  userName: { ...type.heading, color: color.goldOnDark },
+  userPhone: { ...type.small, color: color.textOnDarkMuted },
+  metrics: { flexDirection: 'row', marginTop: space.lg, paddingTop: space.lg, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.12)' },
+  metric: { flex: 1, alignItems: 'center', gap: 2 },
+  metricMid: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
+  metricLabel: { ...type.caption, color: color.textOnDarkMuted, textAlign: 'center' },
+  metricValue: { ...type.price, color: color.goldOnDark },
+  hint: { ...type.caption, color: color.textMuted },
+  linkLabel: { ...type.bodyStrong, color: color.text },
+  linkSub: { ...type.caption, color: color.textMuted },
+  veg: { padding: space.md, borderRadius: radii.md, backgroundColor: color.surfaceMuted, gap: space.md },
+  vegIcon: { width: 32, height: 32, borderRadius: radii.sm, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  fav: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md },
+  favDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  favImg: { width: 48, height: 48, borderRadius: radii.sm, backgroundColor: color.surfaceMuted },
+  favName: { ...type.bodyStrong, color: color.text },
+  explore: { ...type.label, color: color.primary },
+  empty: { alignItems: 'center', gap: space.sm, paddingVertical: space.xl, paddingHorizontal: space.xl },
+  emptyText: { ...type.small, color: color.textMuted, textAlign: 'center' },
+  modal: { width: '100%', maxWidth: 400, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xl, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  modalTitle: { ...type.heading, color: color.text, flex: 1 },
 });

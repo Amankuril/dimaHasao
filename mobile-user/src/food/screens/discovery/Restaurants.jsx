@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Clock, Heart, MapPin, Star } from 'lucide-react-native';
+import { ChevronRight, Clock, Heart, MapPin, Star, Store } from 'lucide-react-native';
 import Image from '../../../components/Img';
 import { Press } from '../../../components/ui';
 import { restaurantAPI } from '../../../api/food';
@@ -12,9 +12,10 @@ import { useLocation } from '../../hooks/useLocation';
 import { useDelayedLoading } from '../../hooks/useDelayedLoading';
 import { filterRestaurantsForVegMode } from '../../utils/vegMode';
 import { normalizeImageUrl } from '../../utils/common';
-import { RestaurantGridSkeleton } from '../../components/discovery/bits';
-import { F } from '../../components/shell';
-import { poppins, tw } from '../../../theme';
+import { RestaurantGridSkeleton, PageBar } from '../../components/discovery/bits';
+import { EmptyState } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 const pickRestaurantImage = (restaurant) => {
   const candidates = [
@@ -84,89 +85,93 @@ export default function Restaurants() {
     };
   }, [zoneId, orderType]);
 
-  return (
-    <View style={{ flex: 1, backgroundColor: '#FFFEF8' }}>
-      <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 96 + insets.bottom, paddingHorizontal: 12 }}>
-        <View style={styles.head}>
-          <Press scale={0.9} onPress={() => router.navigate('/food/user')} accessibilityLabel="Back" style={styles.back}>
-            <ArrowLeft size={16} color={tw.gray900} />
-          </Press>
-          <Text style={styles.title}>All Restaurants</Text>
-        </View>
-
-        {showSkeleton ? (
-          <RestaurantGridSkeleton count={4} />
-        ) : visible.length === 0 ? (
-          <Text style={styles.empty}>No restaurants available right now.</Text>
-        ) : (
-          <View style={{ gap: 12, paddingTop: 8 }}>
-            {visible.map((r) => {
-              const favorite = isFavorite(r.slug);
-              const toggle = () => {
-                if (favorite) removeFavorite(r.slug);
-                else addFavorite({ slug: r.slug, name: r.name, cuisine: r.cuisine, rating: r.rating, deliveryTime: r.deliveryTime, distance: r.distance, priceRange: r.priceRange, image: r.image });
-              };
-              return (
-                <Press key={r.id} scale={0.99} onPress={() => router.push(`/food/user/restaurants/${r.slug}`)} accessibilityLabel={r.name} style={styles.card}>
-                  <View style={styles.cardBody}>
-                    <View style={{ flex: 1, justifyContent: 'space-between', gap: 8, padding: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                        <View style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-                          <Text style={styles.name} numberOfLines={2}>{r.name}</Text>
-                          <Text style={styles.cuisine} numberOfLines={1}>{r.cuisine}</Text>
-                          <View style={styles.rating}>
-                            <Star size={12} color={tw.yellow400} fill={tw.yellow400} />
-                            <Text style={styles.ratingText}>{r.rating.toFixed(1)}</Text>
-                          </View>
-                        </View>
-                        <Press scale={0.9} onPress={toggle} accessibilityLabel={favorite ? 'Remove from favorites' : 'Add to favorites'} style={styles.heart}>
-                          <Heart size={16} color={favorite ? tw.red500 : tw.gray400} fill={favorite ? tw.red500 : 'none'} />
-                        </Press>
-                      </View>
-                      <View style={styles.foot}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1, flexWrap: 'wrap' }}>
-                          <View style={styles.meta}>
-                            <Clock size={12} color={tw.gray600} />
-                            <Text style={styles.metaText}>{r.deliveryTime}</Text>
-                          </View>
-                          <View style={styles.meta}>
-                            <MapPin size={12} color={tw.gray600} />
-                            <Text style={styles.metaText}>{r.distance}</Text>
-                          </View>
-                        </View>
-                        <View style={styles.order}>
-                          <Text style={styles.orderText}>Order Now</Text>
-                        </View>
-                      </View>
-                    </View>
-                    <Image source={{ uri: r.image || 'https://via.placeholder.com/400x300?text=Restaurant' }} style={styles.img} resizeMode="cover" />
-                  </View>
-                </Press>
-              );
-            })}
+  const renderItem = ({ item: r }) => {
+    const favorite = isFavorite(r.slug);
+    const toggle = () => {
+      if (favorite) removeFavorite(r.slug);
+      else addFavorite({ slug: r.slug, name: r.name, cuisine: r.cuisine, rating: r.rating, deliveryTime: r.deliveryTime, distance: r.distance, priceRange: r.priceRange, image: r.image });
+    };
+    return (
+      <View style={styles.card}>
+        <Press scale={0.99} onPress={() => router.push(`/food/user/restaurants/${r.slug}`)} accessibilityRole="button" accessibilityLabel={`${r.name}, rated ${r.rating.toFixed(1)}`} style={styles.cardBody}>
+          <View style={styles.cardText}>
+            <View style={{ paddingRight: 40 }}>
+              <Text style={styles.name} numberOfLines={2}>{r.name}</Text>
+              <Text style={styles.cuisine} numberOfLines={1}>{r.cuisine}</Text>
+              <View style={styles.rating}>
+                <Star size={12} color={color.goldText} fill={color.gold} strokeWidth={0} />
+                <Text style={styles.ratingText}>{r.rating.toFixed(1)}</Text>
+              </View>
+            </View>
+            <View style={styles.foot}>
+              <View style={styles.metaWrap}>
+                <View style={styles.meta}>
+                  <Clock size={13} color={color.textSecondary} />
+                  <Text style={styles.metaText}>{r.deliveryTime}</Text>
+                </View>
+                <View style={styles.meta}>
+                  <MapPin size={13} color={color.textSecondary} />
+                  <Text style={styles.metaText}>{r.distance}</Text>
+                </View>
+              </View>
+              <View style={styles.order}>
+                <Text style={styles.orderText}>Order now</Text>
+                <ChevronRight size={14} color={color.primary} />
+              </View>
+            </View>
           </View>
-        )}
-      </ScrollView>
+          {r.image ? (
+            <Image source={{ uri: r.image }} style={styles.img} resizeMode="cover" />
+          ) : (
+            <View style={[styles.img, styles.imgEmpty]}>
+              <Store size={28} color={color.textDisabled} />
+            </View>
+          )}
+        </Press>
+        <Press scale={0.9} onPress={toggle} accessibilityRole="button" accessibilityState={{ selected: favorite }} accessibilityLabel={favorite ? 'Remove from favorites' : 'Add to favorites'} style={styles.heart}>
+          <Heart size={18} color={favorite ? color.primary : color.textMuted} fill={favorite ? color.primary : 'none'} />
+        </Press>
+      </View>
+    );
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <PageBar title="All restaurants" onBack={() => router.navigate('/food/user')} />
+      {showSkeleton ? (
+        <View style={{ padding: space.lg }}>
+          <RestaurantGridSkeleton count={4} />
+        </View>
+      ) : (
+        <FlatList
+          data={visible}
+          keyExtractor={(r) => String(r.id)}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom }}
+          ListEmptyComponent={<EmptyState icon={Store} title="No restaurants available right now." />}
+          initialNumToRender={8}
+          windowSize={7}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  head: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  back: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  empty: { paddingVertical: 64, textAlign: 'center', fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  card: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, overflow: 'hidden', paddingBottom: 4 },
-  cardBody: { flexDirection: 'row', minHeight: 120 },
-  name: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 4, ...poppins(600) },
-  cuisine: { fontSize: 12, lineHeight: 16, color: tw.gray600, marginBottom: 8, ...poppins(500) },
-  rating: { flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', gap: 4, backgroundColor: tw.yellow50, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
-  ratingText: { fontSize: 12, lineHeight: 16, color: tw.yellow700, ...poppins(700) },
-  heart: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray200 },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(500) },
-  order: { backgroundColor: F.green, height: 28, paddingHorizontal: 12, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
-  orderText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(500) },
-  img: { width: 144, backgroundColor: tw.gray100 },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.card },
+  cardBody: { flexDirection: 'row', minHeight: 136 },
+  cardText: { flex: 1, minWidth: 0, justifyContent: 'space-between', gap: space.sm, padding: space.md },
+  name: { ...type.subheading, color: color.text },
+  cuisine: { ...type.caption, color: color.textMuted, marginTop: space.xxs, marginBottom: space.sm },
+  rating: { flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', gap: space.xs, height: 24, paddingHorizontal: space.sm, borderRadius: radii.pill, backgroundColor: color.goldSoft },
+  ratingText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
+  heart: { position: 'absolute', top: space.xs, right: 132, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: color.border, flexWrap: 'wrap' },
+  metaWrap: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 1, flexWrap: 'wrap' },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  metaText: { ...type.caption, color: color.textSecondary },
+  order: { flexDirection: 'row', alignItems: 'center', gap: space.xxs },
+  orderText: { ...type.label, color: color.primary },
+  img: { width: 124, backgroundColor: color.surfaceMuted },
+  imgEmpty: { alignItems: 'center', justifyContent: 'center' },
 });

@@ -1,23 +1,21 @@
 import { Component, useEffect, useMemo } from 'react';
-import { ActivityIndicator, Animated, Easing, Modal, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated, Easing, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { usePathname } from 'expo-router';
 import {
-  ArrowLeft, Bike, Calendar, Check, ChevronRight, Clock, MapPin, MessageSquare, Navigation, Phone, Receipt, RefreshCw, Share2, Shield, ShoppingBag, Star,
+  AlertCircle, ArrowLeft, Bike, Calendar, Check, ChevronRight, Clock, MapPin, MessageSquare, Navigation, Phone, Receipt, RefreshCw, Share2, Shield, ShoppingBag, Star,
   Store, User, Users, UtensilsCrossed, X,
 } from 'lucide-react-native';
 import Image from '../../components/Img';
 import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
+import { Button, Card, EmptyState, IconButton, StatusBadge } from '../../components/ds';
+import { NAV_CLEARANCE, isImmersiveRoute } from '../../components/dh/AppBottomNav';
 import { useOrderTracking } from '../hooks/pages/useOrderTracking';
 import DeliveryTrackingMap from '../components/DeliveryTrackingMap';
+import { BillRow, Divider, Field, Radio } from '../components/cart/parts';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
-import { F } from '../components/shell';
-
-const BLUE = { 50: '#EFF6FF', 100: '#DBEAFE', 500: '#2B7FFF', 600: '#155DFC', 700: '#1447E6', 900: '#1C398E' };
-const EMERALD = { 50: '#ECFDF5', 100: '#D0FAE5', 700: '#007A55', 900: '#004F3B' };
-const YELLOW = '#FDC700';
+import { color, elevation, radii, space, tone as tones, type } from '../../theme';
 
 const toPoint = (coords) => {
   if (!Array.isArray(coords) || coords.length < 2) return null;
@@ -37,7 +35,8 @@ class MapErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <View style={styles.mapFallback}>
-          <Text style={styles.mapFallbackText}>Live map unavailable right now</Text>
+          <MapPin size={22} color={color.textMuted} />
+          <Text style={[type.small, { color: color.textSecondary, textAlign: 'center' }]}>Live map unavailable right now</Text>
         </View>
       );
     }
@@ -72,10 +71,10 @@ function DeliveryMap({ orderId, order, fallbackCustomerCoords, userLiveCoords, o
   const ids = useMemo(() => [order?.orderId, order?.mongoId, order?._id, orderId, order?.id].filter(Boolean), [order?.orderId, order?.mongoId, order?._id, orderId, order?.id]);
 
   if (!orderId || !order || !effectiveRestaurant || !effectiveCustomer) {
-    return <LinearGradient colors={[tw.gray100, tw.gray200]} style={{ height: 300 }} />;
+    return <View style={[styles.mapBox, { backgroundColor: color.surfaceMuted }]} />;
   }
   return (
-    <View style={{ height: 300 }}>
+    <View style={styles.mapBox}>
       <DeliveryTrackingMap orderId={orderId} orderTrackingIds={ids} restaurantCoords={effectiveRestaurant} customerCoords={effectiveCustomer} order={order} onEtaUpdate={onEtaUpdate} />
     </View>
   );
@@ -99,36 +98,50 @@ function Pulse({ children, style }) {
 /** Takeaway / dining orders have no rider to follow: an illustration panel stands where the map would be. */
 function PickupPanel({ dining, ready }) {
   return (
-    <LinearGradient colors={dining ? ['#0f172a', '#1e293b'] : ['#06381e', '#0a4d2b']} style={styles.pickupPanel}>
-      <Text style={styles.pickupKicker}>{dining ? 'DINING - TABLE SERVICE' : 'ORDER, EAT, ENJOY!'}</Text>
-      <Pulse style={styles.pickupIcon}>{dining ? <UtensilsCrossed size={44} color="#fff" /> : <ShoppingBag size={44} color="#fff" />}</Pulse>
-      <Text style={styles.pickupTitle}>{dining ? 'Food will be served at your table' : 'With Takeaway Self PickUp'}</Text>
-      <Text style={styles.pickupSub}>{dining ? 'Sit back and relax. Our server will bring your fresh hot meal directly to you shortly.' : ready ? 'Please collect your order from the counter' : 'We will let you know when it is ready'}</Text>
-    </LinearGradient>
+    <View style={styles.pickupPanel}>
+      <Text style={[type.overline, { color: color.gold }]}>{dining ? 'Dining · table service' : 'Order, eat, enjoy'}</Text>
+      <Pulse style={styles.pickupIcon}>{dining ? <UtensilsCrossed size={40} color={color.goldOnDark} /> : <ShoppingBag size={40} color={color.goldOnDark} />}</Pulse>
+      <Text style={[type.heading, { color: color.textInverse, textAlign: 'center' }]}>{dining ? 'Food will be served at your table' : 'With takeaway self pickup'}</Text>
+      <Text style={[type.small, { color: color.textOnDarkMuted, textAlign: 'center', marginTop: space.xs }]}>
+        {dining ? 'Sit back and relax. Our server will bring your fresh hot meal directly to you shortly.' : ready ? 'Please collect your order from the counter' : 'We will let you know when it is ready'}
+      </Text>
+    </View>
   );
 }
 
 function SectionItem({ Icon, iconNode, title, subtitle, onPress, showArrow = true, last }) {
   return (
-    <Press scale={onPress ? 0.99 : 1} disabled={!onPress} onPress={onPress} accessibilityLabel={`${title}${subtitle ? `, ${subtitle}` : ''}`} style={[styles.sectionItem, last ? { borderBottomWidth: 0 } : null]}>
-      <View style={styles.sectionIcon}>{iconNode || <Icon size={20} color={tw.gray600} />}</View>
+    <Press
+      scale={onPress ? 0.99 : 1}
+      disabled={!onPress}
+      onPress={onPress}
+      accessibilityLabel={`${title}${subtitle ? `, ${subtitle}` : ''}`}
+      style={[styles.sectionItem, last ? { borderBottomWidth: 0 } : null]}
+    >
+      <View style={styles.sectionIcon}>{iconNode || <Icon size={20} color={color.primary} />}</View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={styles.sectionTitle} numberOfLines={1}>{title}</Text>
-        {subtitle ? <Text style={styles.sectionSub} numberOfLines={1}>{subtitle}</Text> : null}
+        <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={1}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text style={[type.small, { color: color.textSecondary }]} numberOfLines={3}>
+            {subtitle}
+          </Text>
+        ) : null}
       </View>
-      {showArrow ? <ChevronRight size={20} color={tw.gray400} /> : null}
+      {showArrow ? <ChevronRight size={20} color={color.textDisabled} /> : null}
     </Press>
   );
 }
 
-function Stars({ value, size = 14, onChange }) {
+function Stars({ value, size = 14, onChange, label }) {
   return (
-    <View style={{ flexDirection: 'row', gap: onChange ? 12 : 2, justifyContent: 'center' }}>
+    <View style={{ flexDirection: 'row', gap: onChange ? space.xs : 2, justifyContent: 'center' }} accessibilityRole={onChange ? 'radiogroup' : undefined} accessibilityLabel={label || `${value || 0} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((star) => {
         const on = star <= (value || 0);
-        const icon = <Star size={size} color={on ? YELLOW : tw.gray200} fill={on ? YELLOW : 'none'} />;
+        const icon = <Star size={size} color={on ? color.gold : color.borderStrong} fill={on ? color.gold : 'none'} />;
         return onChange ? (
-          <Press key={star} scale={0.9} onPress={() => onChange(star)} accessibilityRole="radio" accessibilityState={{ checked: value === star }} accessibilityLabel={`${star} star${star > 1 ? 's' : ''}`} style={{ padding: 4 }}>
+          <Press key={star} scale={0.9} onPress={() => onChange(star)} accessibilityRole="radio" accessibilityState={{ checked: value === star }} accessibilityLabel={`${star} star${star > 1 ? 's' : ''}`} style={styles.starBtn}>
             {icon}
           </Press>
         ) : (
@@ -139,11 +152,24 @@ function Stars({ value, size = 14, onChange }) {
   );
 }
 
-function BillRow({ label, value, color }) {
+/** Vertical step timeline: done steps green with a tick, the current step ringed, later steps muted. */
+function Timeline({ steps, current }) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text style={[styles.billLabel, color ? { color, ...poppins(500) } : null]}>{label}</Text>
-      <Text style={[styles.billValue, color ? { color } : null]}>{value}</Text>
+    <View style={{ marginTop: space.lg }} accessibilityRole="list">
+      {steps.map((label, i) => {
+        const done = i < current;
+        const now = i === current;
+        const last = i === steps.length - 1;
+        return (
+          <View key={label} style={styles.tlRow} accessible accessibilityLabel={`${label}${done ? ', done' : now ? ', current step' : ''}`}>
+            <View style={styles.tlRail}>
+              <View style={[styles.tlDot, done && styles.tlDotDone, now && styles.tlDotNow]}>{done ? <Check size={12} color={color.onPrimary} strokeWidth={3} /> : null}</View>
+              {!last ? <View style={[styles.tlLine, done && { backgroundColor: color.primary }]} /> : null}
+            </View>
+            <Text style={[now ? type.bodyStrong : type.body, { color: done || now ? color.text : color.textMuted, paddingBottom: last ? 0 : space.md }]}>{label}</Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -157,6 +183,7 @@ const addressLine = (address) => {
 /** Port of pages/user/orders/OrderTracking.jsx (logic: useOrderTracking). */
 export default function OrderTracking() {
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
   const { height } = useWindowDimensions();
   const t = useOrderTracking();
   const {
@@ -179,21 +206,17 @@ export default function OrderTracking() {
 
   if (loading) {
     return (
-      <View style={styles.center} accessibilityRole="progressbar" accessibilityLabel="Loading order details">
-        <ActivityIndicator size="large" color={tw.gray600} />
-        <Text style={styles.centerText}>Loading order details...</Text>
+      <View style={[styles.screen, { alignItems: 'center', justifyContent: 'center', padding: space.lg }]} accessibilityRole="progressbar" accessibilityLabel="Loading order details">
+        <ActivityIndicator size="large" color={color.primary} />
+        <Text style={[type.body, { color: color.textSecondary, marginTop: space.lg }]}>Loading order details...</Text>
       </View>
     );
   }
 
   if (error || !order) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.notFound}>Order Not Found</Text>
-        <Text style={[styles.centerText, { marginTop: 0, marginBottom: 24 }]}>{error || "The order you're looking for doesn't exist."}</Text>
-        <Press scale={0.97} onPress={() => navigate('/user/orders')} accessibilityLabel="Back to Orders" style={styles.darkBtn}>
-          <Text style={styles.darkBtnText}>Back to Orders</Text>
-        </Press>
+      <View style={[styles.screen, { justifyContent: 'center' }]}>
+        <EmptyState icon={AlertCircle} title="Order not found" message={error || "The order you're looking for doesn't exist."} actionLabel="Back to orders" onAction={() => navigate('/user/orders')} />
       </View>
     );
   }
@@ -219,7 +242,7 @@ export default function OrderTracking() {
     },
     on_way: { title: 'Out for delivery', subtitle: eta == null ? 'Rider is out for delivery' : eta <= 0 ? 'Arriving soon' : `Arriving in ${eta} mins`, iconType: 'rider' },
     at_drop: { title: 'Arrived at location', subtitle: 'Please come to the door', iconType: 'rider' },
-    delivered: { title: order?.orderType === 'takeaway' ? 'Picked UP' : 'Order delivered', subtitle: order?.orderType === 'takeaway' ? 'Thank you for ordering!' : 'Enjoy your meal!', iconType: 'delivered' },
+    delivered: { title: order?.orderType === 'takeaway' ? 'Picked up' : 'Order delivered', subtitle: order?.orderType === 'takeaway' ? 'Thank you for ordering!' : 'Enjoy your meal!', iconType: 'delivered' },
     cancelled: {
       title: order?.orderType === 'takeaway' ? 'Takeaway order cancelled' : order?.orderType === 'dining' ? 'Dining order cancelled' : 'Order cancelled',
       subtitle: order?.cancellationReason || 'This order has been cancelled',
@@ -236,65 +259,85 @@ export default function OrderTracking() {
   const scheduledWaiting = isScheduledOrder && ['placed', 'confirmed'].includes(orderStatus);
   const active = orderStatus !== 'delivered' && orderStatus !== 'cancelled';
   const takeaway = order?.orderType === 'takeaway';
-  const headerColor = currentStatus.red ? tw.red600 : tw.green600;
   const safety = () => navigate('/user/profile/report-safety-emergency', { state: { returnTo: location.pathname } });
   const payMethod = String(order?.payment?.method || order?.paymentMethod || '').toLowerCase();
   const payStatus = String(order?.payment?.status || '').toLowerCase();
   const isRazorpayPaid = payMethod === 'razorpay' && ['paid', 'authorized', 'captured', 'settled', 'refunded'].includes(payStatus);
   const statusIcon = {
-    rider: { bg: BLUE[50], node: <Bike size={30} color={BLUE[600]} /> },
-    cancelled: { bg: tw.red50, node: <X size={36} color={tw.red500} /> },
-    delivered: { bg: tw.green50, node: <Check size={36} color={tw.green500} /> },
-    food: { bg: tw.orange50, node: <Receipt size={34} color={tw.orange500} /> },
+    rider: { tone: 'info', Icon: Bike },
+    cancelled: { tone: 'danger', Icon: X },
+    delivered: { tone: 'success', Icon: Check },
+    food: { tone: 'warning', Icon: UtensilsCrossed },
   }[currentStatus.iconType];
+  // Badge word + tone for the current status (DESIGN_SYSTEM state table).
+  const badge = {
+    placed: { tone: 'info', label: 'Placed' },
+    confirmed: { tone: 'info', label: 'Placed' },
+    preparing: { tone: 'warning', label: 'Preparing' },
+    assigned: { tone: 'warning', label: 'Rider assigned' },
+    at_pickup: { tone: 'warning', label: 'Rider at restaurant' },
+    ready: pickup ? { tone: 'primary', label: 'Ready' } : { tone: 'info', label: 'Picking up' },
+    on_way: { tone: 'info', label: 'On the way' },
+    at_drop: { tone: 'info', label: 'Arrived' },
+    delivered: { tone: 'success', label: takeaway ? 'Picked up' : 'Delivered' },
+    cancelled: { tone: 'danger', label: 'Cancelled' },
+  }[orderStatus] || { tone: 'info', label: 'Placed' };
+  // Step timeline (display only, derived from orderStatus).
+  const steps = pickup ? ['Order placed', 'Preparing', 'Ready for pickup', order?.orderType === 'dining' ? 'Served' : 'Picked up'] : ['Order placed', 'Preparing', 'On the way', 'Delivered'];
+  const stepIndex = { placed: 0, confirmed: 0, preparing: 1, assigned: 1, at_pickup: 1, ready: pickup ? 2 : 1, on_way: 2, at_drop: 2, delivered: 4 }[orderStatus] ?? 0;
+  const showRefresh = scheduledWaiting || !['at_pickup', 'ready', 'on_way', 'at_drop', 'delivered'].includes(orderStatus);
+  const refreshBtn = (
+    <IconButton icon={RefreshCw} label="Refresh order status" variant="soft" onPress={handleRefresh}>
+      {null}
+    </IconButton>
+  );
 
   return (
-    <View style={{ flex: 1, backgroundColor: tw.gray100 }}>
-      <View style={{ backgroundColor: headerColor }}>
-        <View style={styles.nav}>
-          <Press scale={0.9} onPress={handleBackClick} accessibilityLabel="Go back" style={styles.navBtn}>
-            <ArrowLeft size={24} color="#fff" />
-          </Press>
-          <Text style={styles.navTitle} numberOfLines={1} accessibilityRole="header">{order.restaurant}</Text>
-          <Press scale={0.9} onPress={handleShare} accessibilityLabel="Share order" style={styles.navBtn}>
-            <Share2 size={20} color="#fff" />
-          </Press>
-        </View>
-
-        {scheduledWaiting ? (
-          <View style={{ paddingHorizontal: 16, paddingBottom: 20, alignItems: 'center' }}>
-            <View style={[styles.pill, { paddingVertical: 6, marginBottom: 12 }]}>
-              <Clock size={16} color="#fff" />
-              <Text style={[styles.pillText, poppins(600)]}>Scheduled Order</Text>
-            </View>
-            <Text style={[styles.statusTitle, { marginBottom: 8 }]}>Order Scheduled</Text>
-            <View style={[styles.pill, { paddingHorizontal: 20, paddingVertical: 10 }]}>
-              <Calendar size={16} color="#fff" />
-              <Text style={styles.pillText}>{scheduledDateFormatted}</Text>
-              <Press scale={0.9} onPress={handleRefresh} accessibilityLabel="Refresh order status" hitSlop={10}>
-                <Animated.View style={{ transform: [{ rotate }] }}>
-                  <RefreshCw size={16} color="#fff" />
-                </Animated.View>
-              </Press>
-            </View>
-            <Text style={styles.scheduledNote}>The restaurant will start preparing your order closer to the scheduled time</Text>
-          </View>
-        ) : !['at_pickup', 'ready', 'on_way', 'at_drop', 'delivered'].includes(orderStatus) ? (
-          <View style={{ paddingHorizontal: 16, paddingBottom: 16, alignItems: 'center' }}>
-            <Text style={[styles.statusTitle, { marginBottom: 12 }]}>{currentStatus.title}</Text>
-            <View style={styles.pill}>
-              <Text style={[styles.pillText, { flexShrink: 1 }]}>{currentStatus.subtitle}</Text>
-              <Press scale={0.9} onPress={handleRefresh} accessibilityLabel="Refresh order status" hitSlop={10}>
-                <Animated.View style={{ transform: [{ rotate }] }}>
-                  <RefreshCw size={16} color="#fff" />
-                </Animated.View>
-              </Press>
-            </View>
-          </View>
-        ) : null}
+    <View style={styles.screen}>
+      <View style={styles.header}>
+        <IconButton icon={ArrowLeft} label="Go back" onPress={handleBackClick} />
+        <Text style={[type.heading, { color: color.text, flex: 1 }]} numberOfLines={1} accessibilityRole="header">
+          {order.restaurant}
+        </Text>
+        <IconButton icon={Share2} label="Share order" onPress={handleShare} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: (isImmersiveRoute(pathname) ? 0 : NAV_CLEARANCE) + insets.bottom + space.xxl }}>
+        {/* Status */}
+        <Card>
+          {scheduledWaiting ? (
+            <>
+              <View style={styles.statusTop}>
+                <StatusBadge tone="info" icon={Clock} label="Scheduled order" />
+                <Animated.View style={{ transform: [{ rotate }] }}>{refreshBtn}</Animated.View>
+              </View>
+              <Text style={[type.heading, { color: color.text, marginTop: space.sm }]}>Order scheduled</Text>
+              <View style={[styles.row, { marginTop: space.xs }]}>
+                <Calendar size={16} color={color.primary} />
+                <Text style={[type.bodyStrong, { color: color.text }]}>{scheduledDateFormatted}</Text>
+              </View>
+              <Text style={[type.small, { color: color.textMuted, marginTop: space.sm }]}>The restaurant will start preparing your order closer to the scheduled time</Text>
+            </>
+          ) : (
+            <>
+              <View style={styles.statusTop}>
+                <View style={[styles.statusIcon, { backgroundColor: tones[statusIcon.tone].bg }]}>
+                  <statusIcon.Icon size={26} color={tones[statusIcon.tone].fg} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+                  <StatusBadge tone={badge.tone} label={badge.label} />
+                  <Text style={[type.heading, { color: color.text }]} accessibilityLiveRegion="polite">
+                    {currentStatus.title}
+                  </Text>
+                </View>
+                {showRefresh ? <Animated.View style={{ transform: [{ rotate }] }}>{refreshBtn}</Animated.View> : null}
+              </View>
+              <Text style={[type.body, { color: currentStatus.red ? color.danger : color.textSecondary, marginTop: space.sm }]}>{currentStatus.subtitle}</Text>
+              {orderStatus !== 'cancelled' ? <Timeline steps={steps} current={stepIndex} /> : null}
+            </>
+          )}
+        </Card>
+
         {!isDeliveredOrder && orderStatus !== 'cancelled' && !scheduledWaiting ? (
           pickup ? (
             <PickupPanel dining={order?.orderType === 'dining'} ready={orderStatus === 'ready'} />
@@ -305,419 +348,406 @@ export default function OrderTracking() {
           )
         ) : null}
 
-        <View style={{ padding: 16, gap: 16 }}>
-          {customerDeliveryOtp && active ? (
-            <View style={[styles.otp, takeaway ? { backgroundColor: EMERALD[50], borderColor: EMERALD[100] } : null]}>
-              <Text style={[styles.otpLabel, takeaway ? { color: EMERALD[700] } : null]}>{takeaway ? 'TAKEAWAY OTP' : 'DELIVERY OTP'}</Text>
-              <Text style={[styles.otpCode, takeaway ? { color: EMERALD[900] } : null]} selectable>{customerDeliveryOtp}</Text>
-              <Text style={[styles.otpNote, takeaway ? { color: EMERALD[700] } : null]}>
-                {takeaway ? 'Share this 4-digit OTP with the restaurant at the counter to verify and complete your pick-up.' : 'Share this 4-digit OTP with your delivery partner at drop-off.'}
-              </Text>
-            </View>
-          ) : null}
-
-          {takeaway && orderStatus !== 'ready' && active ? (
-            <View style={styles.takeawayCard}>
-              <View style={styles.takeawayIcon}>
-                <ShoppingBag size={20} color={tw.orange600} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.takeawayTitle}>Takeaway / Self Pickup</Text>
-                <Text style={styles.takeawayBody}>
-                  {orderStatus === 'preparing' ? "Your order is being prepared. We'll notify you when it's ready." : 'Waiting for the restaurant to accept and prepare your order.'}
-                </Text>
-              </View>
-            </View>
-          ) : null}
-
-          {['at_pickup', 'ready', 'on_way', 'at_drop', 'delivered'].includes(orderStatus) ? (
-            <View style={[styles.card, { padding: 12, flexDirection: 'row', alignItems: 'center', gap: 16 }]}>
-              <View style={[styles.statusIcon, { backgroundColor: statusIcon.bg }]}>{statusIcon.node}</View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.statusCardTitle}>{currentStatus.title}</Text>
-                <Text style={styles.statusCardSub}>{currentStatus.subtitle}</Text>
-              </View>
-            </View>
-          ) : null}
-
-          {orderStatus === 'delivered' && !isOrderRated ? (
-            <Press scale={isLocalRated ? 1 : 0.99} disabled={isLocalRated} onPress={handleOpenRating} accessibilityLabel={isLocalRated ? 'Feedback received' : 'Rate your order'} style={[styles.card, styles.rateCard]}>
-              <View style={styles.rateIcon}>
-                <Star size={32} color={F.green} fill={F.green} />
-              </View>
-              <Text style={styles.rateTitle}>{isLocalRated ? 'Feedback Received' : 'Enjoyed your food?'}</Text>
-              <Text style={styles.rateBody}>
-                {isLocalRated ? 'Thank you for rating your experience! Your feedback has been submitted.' : `Rate your experience with ${order?.restaurant || 'The Restaurant'} and help us improve!`}
-              </Text>
-              <View style={[styles.rateBtn, isLocalRated ? { backgroundColor: tw.gray300 } : null]}>
-                <Text style={[styles.rateBtnText, isLocalRated ? { color: tw.gray500 } : null]}>{isLocalRated ? 'Submitted' : 'Give Rating'}</Text>
-              </View>
-            </Press>
-          ) : null}
-
-          {orderStatus === 'delivered' && isOrderRated ? (
-            <View style={[styles.card, { padding: 20, borderWidth: 1, borderColor: tw.gray100 }]}>
-              <View style={styles.feedbackHead}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tw.green500 }} />
-                  <Text style={styles.feedbackTitle}>Your Feedback</Text>
-                </View>
-                <Text style={styles.feedbackDone}>RATING SUBMITTED</Text>
-              </View>
-              <View style={{ gap: 16 }}>
-                <View style={styles.feedbackRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.feedbackName}>{order?.restaurant || 'Food & Restaurant'}</Text>
-                    {order?.ratings?.restaurant?.comment ? <Text style={styles.feedbackComment} numberOfLines={1}>&quot;{order.ratings.restaurant.comment}&quot;</Text> : null}
-                  </View>
-                  <Stars value={order?.ratings?.restaurant?.rating || order?.restaurantRating} />
-                </View>
-                {hasDeliveryPartner ? (
-                  <View style={styles.feedbackRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.feedbackName}>Delivery Service</Text>
-                      {order?.ratings?.deliveryPartner?.comment ? <Text style={styles.feedbackComment} numberOfLines={1}>&quot;{order.ratings.deliveryPartner.comment}&quot;</Text> : null}
-                    </View>
-                    <Stars value={order?.ratings?.deliveryPartner?.rating || order?.deliveryPartnerRating} />
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          ) : null}
-
-          {order?.deliveryPartnerId ? (
-            <View style={styles.card}>
-              <View style={styles.partnerRow}>
-                <View style={styles.partnerAvatar}>
-                  {order.deliveryPartner?.avatar ? <Image source={{ uri: order.deliveryPartner.avatar }} style={{ width: '100%', height: '100%' }} /> : <Bike size={26} color={BLUE[600]} />}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.sectionTitle}>{order.deliveryPartner?.name || 'Delivery Partner'}</Text>
-                  <Text style={styles.sectionSub}>{orderStatus === 'delivered' ? 'Delivered your order' : 'Your delivery partner is arriving'}</Text>
-                </View>
-                <Press scale={0.9} onPress={handleCallRider} accessibilityLabel="Call delivery partner" style={[styles.roundAction, { backgroundColor: BLUE[50] }]}>
-                  <Phone size={20} color={BLUE[600]} />
-                </Press>
-              </View>
-              {order?.note ? (
-                <View style={styles.riderNote}>
-                  <MessageSquare size={16} color={BLUE[500]} style={{ marginTop: 2 }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.riderNoteLabel}>INSTRUCTION FOR RIDER</Text>
-                    <Text style={styles.riderNoteText}>&quot;{order.note}&quot;</Text>
-                  </View>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
-
-          {active && !pickup ? (
-            <>
-              <Press scale={0.99} onPress={safety} accessibilityLabel="Learn about delivery partner safety" style={[styles.card, { padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
-                <Shield size={24} color={tw.gray600} />
-                <Text style={[styles.sectionTitle, { flex: 1 }]}>Learn about delivery partner safety</Text>
-                <ChevronRight size={20} color={tw.gray400} />
-              </Press>
-              <View style={styles.detailsBanner}>
-                <Text style={styles.detailsBannerText}>All your delivery details in one place 🥡</Text>
-              </View>
-            </>
-          ) : null}
-
-          {!takeaway ? (
-            <View style={styles.card}>
-              <SectionItem
-                Icon={User}
-                title={order?.userName || order?.userId?.fullName || order?.userId?.name || profile?.fullName || profile?.name || 'Customer'}
-                subtitle={order?.userPhone || order?.userId?.phone || profile?.phone || defaultAddress?.phone || 'Phone number not available'}
-                showArrow={false}
-              />
-              <SectionItem
-                iconNode={order?.orderType === 'dining' ? <Users size={20} color={BLUE[600]} /> : <MapPin size={22} color={tw.green600} fill={tw.green100} />}
-                title={order?.orderType === 'dining' ? 'Dining / Table Service' : 'Delivery at Location'}
-                subtitle={order?.orderType === 'dining' ? 'Enjoy your food in the restaurant. Table service.' : addressLine(order?.address) || addressLine(defaultAddress) || 'Add delivery address'}
-                showArrow={false}
-                last={!(!isAdminAccepted && active && order?.orderType !== 'dining')}
-              />
-              {!isAdminAccepted && active && order?.orderType !== 'dining' ? (
-                <SectionItem
-                  last
-                  Icon={MessageSquare}
-                  title={order?.note ? 'Edit delivery instructions' : 'Add delivery instructions'}
-                  subtitle={order?.note ? order.note.substring(0, 35) + (order.note.length > 35 ? '...' : '') : ''}
-                  onPress={() => {
-                    setDeliveryInstructions(order?.note || '');
-                    setIsInstructionsModalOpen(true);
-                  }}
-                />
-              ) : null}
-            </View>
-          ) : null}
-
-          <View style={styles.card}>
-            <View style={styles.partnerRow}>
-              <View style={[styles.partnerAvatar, { backgroundColor: tw.orange100, borderWidth: 0 }]}>
-                <Store size={26} color={tw.orange600} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.sectionTitle}>{order.restaurant}</Text>
-                <Text style={[styles.sectionSub, { flexShrink: 1 }]}>{order.restaurantAddress || 'Restaurant location'}</Text>
-              </View>
-              <View style={{ gap: 8 }}>
-                <Press scale={0.9} onPress={handleOpenDirections} accessibilityLabel="Get directions to the restaurant" style={[styles.roundAction, { backgroundColor: tw.orange50 }]}>
-                  <Navigation size={20} color={F.green} />
-                </Press>
-                <Press scale={0.9} onPress={handleCallRestaurant} accessibilityLabel="Call restaurant" style={[styles.roundAction, { backgroundColor: tw.orange50 }]}>
-                  <Phone size={20} color={F.green} />
-                </Press>
-              </View>
-            </View>
-            <Press scale={0.99} onPress={() => setShowOrderDetails(true)} accessibilityLabel="View order details" style={{ padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-              <Receipt size={20} color={tw.gray500} style={{ marginTop: 2 }} />
-              <View style={{ flex: 1, marginTop: 8, gap: 4 }}>
-                {order?.items?.map((item, index) => (
-                  <View key={index} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <View style={styles.vegBox}>
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: tw.green600 }} />
-                    </View>
-                    <Text style={styles.itemLine}>
-                      {item.quantity} x {item.name}
-                      {item.variantName ? ` (${item.variantName})` : ''}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-              <ChevronRight size={20} color={tw.gray400} />
-            </Press>
+        {customerDeliveryOtp && active ? (
+          <View style={styles.otp}>
+            <Text style={[type.overline, { color: color.goldText }]}>{takeaway ? 'Takeaway OTP' : 'Delivery OTP'}</Text>
+            <Text style={styles.otpCode} selectable accessibilityLabel={`OTP ${String(customerDeliveryOtp).split('').join(' ')}`}>
+              {customerDeliveryOtp}
+            </Text>
+            <Text style={[type.small, { color: color.textSecondary }]}>
+              {takeaway ? 'Share this 4-digit OTP with the restaurant at the counter to verify and complete your pick-up.' : 'Share this 4-digit OTP with your delivery partner at drop-off.'}
+            </Text>
           </View>
+        ) : null}
 
-          {!isAdminAccepted && active ? (
-            <View style={{ gap: 12 }}>
-              <Press scale={0.98} onPress={handleCancelOrder} accessibilityLabel="Cancel order" style={styles.cancelOrder}>
-                <Text style={styles.cancelOrderText}>Cancel Order</Text>
-              </Press>
-              <Text style={styles.cancelNote}>You can cancel your order until the restaurant accepts it.</Text>
+        {takeaway && orderStatus !== 'ready' && active ? (
+          <Card style={styles.inlineCard}>
+            <View style={styles.roundIcon}>
+              <ShoppingBag size={20} color={color.primary} />
             </View>
-          ) : null}
-        </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[type.bodyStrong, { color: color.text }]}>Takeaway / self pickup</Text>
+              <Text style={[type.small, { color: color.textSecondary, marginTop: 2 }]}>
+                {orderStatus === 'preparing' ? "Your order is being prepared. We'll notify you when it's ready." : 'Waiting for the restaurant to accept and prepare your order.'}
+              </Text>
+            </View>
+          </Card>
+        ) : null}
+
+        {orderStatus === 'delivered' && !isOrderRated ? (
+          <Card style={styles.rateCard}>
+            <View style={[styles.statusIcon, { backgroundColor: color.goldSoft }]}>
+              <Star size={28} color={color.gold} fill={color.gold} />
+            </View>
+            <Text style={[type.heading, { color: color.text, marginTop: space.md }]}>{isLocalRated ? 'Feedback received' : 'Enjoyed your food?'}</Text>
+            <Text style={[type.small, { color: color.textSecondary, textAlign: 'center', marginTop: space.xs, maxWidth: 300 }]}>
+              {isLocalRated ? 'Thank you for rating your experience! Your feedback has been submitted.' : `Rate your experience with ${order?.restaurant || 'The Restaurant'} and help us improve!`}
+            </Text>
+            {isLocalRated ? (
+              <StatusBadge tone="success" icon={Check} label="Submitted" style={{ marginTop: space.lg, alignSelf: 'center' }} />
+            ) : (
+              <Button title="Give rating" fullWidth={false} onPress={handleOpenRating} style={{ marginTop: space.lg, alignSelf: 'center', minWidth: 200 }} />
+            )}
+          </Card>
+        ) : null}
+
+        {orderStatus === 'delivered' && isOrderRated ? (
+          <Card>
+            <View style={[styles.row, { justifyContent: 'space-between', marginBottom: space.md }]}>
+              <Text style={[type.subheading, { color: color.text }]}>Your feedback</Text>
+              <StatusBadge tone="success" icon={Check} label="Rating submitted" />
+            </View>
+            <View style={{ gap: space.md }}>
+              <View style={styles.feedbackRow}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.label, { color: color.text }]} numberOfLines={1}>
+                    {order?.restaurant || 'Food & Restaurant'}
+                  </Text>
+                  {order?.ratings?.restaurant?.comment ? (
+                    <Text style={[type.caption, { color: color.textMuted }]} numberOfLines={2}>
+                      &quot;{order.ratings.restaurant.comment}&quot;
+                    </Text>
+                  ) : null}
+                </View>
+                <Stars value={order?.ratings?.restaurant?.rating || order?.restaurantRating} />
+              </View>
+              {hasDeliveryPartner ? (
+                <View style={styles.feedbackRow}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[type.label, { color: color.text }]}>Delivery service</Text>
+                    {order?.ratings?.deliveryPartner?.comment ? (
+                      <Text style={[type.caption, { color: color.textMuted }]} numberOfLines={2}>
+                        &quot;{order.ratings.deliveryPartner.comment}&quot;
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Stars value={order?.ratings?.deliveryPartner?.rating || order?.deliveryPartnerRating} />
+                </View>
+              ) : null}
+            </View>
+          </Card>
+        ) : null}
+
+        {order?.deliveryPartnerId ? (
+          <Card padded={false}>
+            <View style={styles.partnerRow}>
+              <View style={styles.avatar}>
+                {order.deliveryPartner?.avatar ? <Image source={{ uri: order.deliveryPartner.avatar }} style={{ width: '100%', height: '100%' }} /> : <Bike size={24} color={color.primary} />}
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={1}>
+                  {order.deliveryPartner?.name || 'Delivery Partner'}
+                </Text>
+                <Text style={[type.small, { color: color.textSecondary }]}>{orderStatus === 'delivered' ? 'Delivered your order' : 'Your delivery partner is arriving'}</Text>
+              </View>
+              <IconButton icon={Phone} label="Call delivery partner" variant="primary" onPress={handleCallRider} />
+            </View>
+            {order?.note ? (
+              <View style={styles.note}>
+                <MessageSquare size={16} color={color.primary} style={{ marginTop: 2 }} />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.caption, { color: color.textMuted }]}>Instruction for rider</Text>
+                  <Text style={[type.small, { color: color.text }]}>&quot;{order.note}&quot;</Text>
+                </View>
+              </View>
+            ) : null}
+          </Card>
+        ) : null}
+
+        {active && !pickup ? (
+          <Card padded={false}>
+            <SectionItem Icon={Shield} title="Learn about delivery partner safety" onPress={safety} last />
+          </Card>
+        ) : null}
+
+        {active && !pickup ? <Text style={[type.overline, { color: color.textMuted, marginTop: space.sm }]}>All your delivery details in one place</Text> : null}
+
+        {!takeaway ? (
+          <Card padded={false}>
+            <SectionItem
+              Icon={User}
+              title={order?.userName || order?.userId?.fullName || order?.userId?.name || profile?.fullName || profile?.name || 'Customer'}
+              subtitle={order?.userPhone || order?.userId?.phone || profile?.phone || defaultAddress?.phone || 'Phone number not available'}
+              showArrow={false}
+            />
+            <SectionItem
+              Icon={order?.orderType === 'dining' ? Users : MapPin}
+              title={order?.orderType === 'dining' ? 'Dining / table service' : 'Delivery at location'}
+              subtitle={order?.orderType === 'dining' ? 'Enjoy your food in the restaurant. Table service.' : addressLine(order?.address) || addressLine(defaultAddress) || 'Add delivery address'}
+              showArrow={false}
+              last={!(!isAdminAccepted && active && order?.orderType !== 'dining')}
+            />
+            {!isAdminAccepted && active && order?.orderType !== 'dining' ? (
+              <SectionItem
+                last
+                Icon={MessageSquare}
+                title={order?.note ? 'Edit delivery instructions' : 'Add delivery instructions'}
+                subtitle={order?.note ? order.note.substring(0, 35) + (order.note.length > 35 ? '...' : '') : ''}
+                onPress={() => {
+                  setDeliveryInstructions(order?.note || '');
+                  setIsInstructionsModalOpen(true);
+                }}
+              />
+            ) : null}
+          </Card>
+        ) : null}
+
+        <Card padded={false}>
+          <View style={styles.partnerRow}>
+            <View style={styles.avatar}>
+              <Store size={24} color={color.primary} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={2}>
+                {order.restaurant}
+              </Text>
+              <Text style={[type.small, { color: color.textSecondary }]} numberOfLines={2}>
+                {order.restaurantAddress || 'Restaurant location'}
+              </Text>
+            </View>
+            <IconButton icon={Navigation} label="Get directions to the restaurant" variant="primary" onPress={handleOpenDirections} />
+            <IconButton icon={Phone} label="Call restaurant" variant="primary" onPress={handleCallRestaurant} />
+          </View>
+          <Press scale={0.99} onPress={() => setShowOrderDetails(true)} accessibilityLabel="View order details" style={styles.itemsRow}>
+            <Receipt size={20} color={color.primary} />
+            <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+              {order?.items?.map((item, index) => (
+                <Text key={index} style={[type.body, { color: color.text }]}>
+                  <Text style={{ color: color.textMuted }}>{item.quantity} × </Text>
+                  {item.name}
+                  {item.variantName ? ` (${item.variantName})` : ''}
+                </Text>
+              ))}
+              <Text style={[type.label, { color: color.primary }]}>View order details</Text>
+            </View>
+            <ChevronRight size={20} color={color.textDisabled} />
+          </Press>
+        </Card>
+
+        {!isAdminAccepted && active ? (
+          <View style={{ gap: space.sm, marginTop: space.sm }}>
+            <Button title="Cancel order" variant="dangerSoft" onPress={handleCancelOrder} accessibilityLabel="Cancel order" />
+            <Text style={[type.caption, { color: color.textMuted, textAlign: 'center' }]}>You can cancel your order until the restaurant accepts it.</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       {/* "Order Placed!" interstitial */}
       <Modal visible={!!showConfirmation} animationType="fade" statusBarTranslucent onRequestClose={() => {}}>
-        <View style={styles.confirm}>
+        <View style={[styles.confirm, { paddingBottom: insets.bottom }]}>
           <View style={styles.confirmCheck}>
-            <Check size={48} color="#fff" strokeWidth={3} />
+            <Check size={48} color={color.onPrimary} strokeWidth={3} />
           </View>
-          <Text style={styles.confirmTitle}>{isScheduledOrder ? 'Order Scheduled!' : 'Order Placed!'}</Text>
-          <Text style={styles.confirmBody}>{isScheduledOrder ? `Scheduled for ${scheduledDateFormatted}` : 'Waiting for the restaurant to accept your order'}</Text>
-          <ActivityIndicator size="small" color={F.green} style={{ marginTop: 32 }} />
-          <Text style={styles.confirmLoading}>Loading order details...</Text>
-          <Press scale={0.98} onPress={safety} accessibilityLabel="Learn about delivery partner safety" style={styles.confirmSafety}>
-            <Shield size={16} color={F.green} />
-            <Text style={styles.confirmSafetyText}>Learn about delivery partner safety</Text>
-          </Press>
+          <Text style={[type.heroSerif, { color: color.primary, marginTop: space.xxl, textAlign: 'center' }]}>{isScheduledOrder ? 'Order scheduled' : 'Order placed'}</Text>
+          <Text style={[type.body, { color: color.textSecondary, marginTop: space.sm, textAlign: 'center' }]}>
+            {isScheduledOrder ? `Scheduled for ${scheduledDateFormatted}` : 'Waiting for the restaurant to accept your order'}
+          </Text>
+          <ActivityIndicator size="small" color={color.primary} style={{ marginTop: space.xxxl }} />
+          <Text style={[type.small, { color: color.textMuted, marginTop: space.md }]}>Loading order details...</Text>
+          <Button title="Learn about delivery partner safety" icon={Shield} variant="ghost" onPress={safety} style={{ marginTop: space.xxxl }} />
         </View>
       </Modal>
 
       {/* Cancel order */}
-      <Dialog visible={showCancelDialog} onClose={() => !isCancelling && setShowCancelDialog(false)} panelStyle={styles.dialog}>
-        <Text style={styles.dialogTitle}>Cancel Order</Text>
-        <View style={{ gap: 20, paddingVertical: 24 }}>
-          {isRazorpayPaid ? (
-            <View style={styles.refundBox}>
-              <Text style={styles.refundTitle}>Refund preference</Text>
-              {[
-                ['source', 'Refund to original payment method (5-7 working days)'],
-                ['wallet', 'Refund to wallet (instant credit)'],
-              ].map(([value, label]) => {
-                const on = refundDestination === value;
-                return (
-                  <Press key={value} scale={0.99} disabled={isCancelling} onPress={() => setRefundDestination(value)} accessibilityRole="radio" accessibilityState={{ checked: on }} style={styles.refundOpt}>
-                    <View style={[styles.radio, on ? { borderColor: F.green } : null]}>{on ? <View style={styles.radioDot} /> : null}</View>
-                    <Text style={styles.refundOptText}>{label}</Text>
-                  </Press>
-                );
-              })}
+      <Dialog visible={showCancelDialog} onClose={() => !isCancelling && setShowCancelDialog(false)} backdrop={color.overlay} panelStyle={styles.dialog}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'position' : undefined}>
+          <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+            Cancel order
+          </Text>
+          <View style={{ gap: space.lg, paddingTop: space.lg }}>
+            {isRazorpayPaid ? (
+              <View style={{ gap: space.sm }} accessibilityRole="radiogroup">
+                <Text style={[type.label, { color: color.text }]}>Refund preference</Text>
+                {[
+                  ['source', 'Refund to original payment method (5-7 working days)'],
+                  ['wallet', 'Refund to wallet (instant credit)'],
+                ].map(([value, label]) => {
+                  const on = refundDestination === value;
+                  return (
+                    <Press
+                      key={value}
+                      scale={0.99}
+                      disabled={isCancelling}
+                      onPress={() => setRefundDestination(value)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: on }}
+                      accessibilityLabel={label}
+                      style={[styles.radioRow, on ? styles.radioRowOn : null]}
+                    >
+                      <Radio checked={on} />
+                      <Text style={[type.small, { flex: 1, color: color.text }]}>{label}</Text>
+                    </Press>
+                  );
+                })}
+              </View>
+            ) : null}
+            <Field
+              label="Reason for cancellation"
+              value={cancellationReason}
+              onChangeText={setCancellationReason}
+              placeholder="e.g., Changed my mind, Wrong address, etc."
+              multiline
+              editable={!isCancelling}
+              accessibilityLabel="Reason for cancellation"
+            />
+            <View style={{ flexDirection: 'row', gap: space.md }}>
+              <Button
+                title="Keep order"
+                variant="outline"
+                disabled={isCancelling}
+                onPress={() => {
+                  setShowCancelDialog(false);
+                  setCancellationReason('');
+                  setRefundDestination('source');
+                }}
+                accessibilityLabel="Keep order"
+                style={{ flex: 1 }}
+              />
+              <Button
+                title={isCancelling ? 'Cancelling...' : 'Cancel order'}
+                variant="danger"
+                loading={isCancelling}
+                disabled={isCancelling || !cancellationReason.trim()}
+                onPress={handleConfirmCancel}
+                accessibilityLabel="Confirm cancellation"
+                style={{ flex: 1 }}
+              />
             </View>
-          ) : null}
-          <TextInput
-            value={cancellationReason}
-            onChangeText={setCancellationReason}
-            placeholder="e.g., Changed my mind, Wrong address, etc."
-            placeholderTextColor={tw.gray400}
-            multiline
-            editable={!isCancelling}
-            textAlignVertical="top"
-            accessibilityLabel="Reason for cancellation"
-            style={[styles.textarea, { minHeight: 100, borderWidth: 2, borderColor: tw.gray300 }, isCancelling ? { backgroundColor: tw.gray100 } : null]}
-          />
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <Press
-              scale={0.98}
-              disabled={isCancelling}
-              onPress={() => {
-                setShowCancelDialog(false);
-                setCancellationReason('');
-                setRefundDestination('source');
-              }}
-              accessibilityLabel="Keep order"
-              style={[styles.dialogBtn, styles.outline]}
-            >
-              <Text style={styles.outlineText}>Cancel</Text>
-            </Press>
-            <Press scale={0.98} disabled={isCancelling || !cancellationReason.trim()} onPress={handleConfirmCancel} accessibilityLabel="Confirm cancellation" style={[styles.dialogBtn, { backgroundColor: tw.red600 }, isCancelling || !cancellationReason.trim() ? { opacity: 0.5 } : null]}>
-              {isCancelling ? <ActivityIndicator size="small" color="#fff" /> : null}
-              <Text style={styles.dialogBtnText}>{isCancelling ? 'Cancelling...' : 'Confirm Cancellation'}</Text>
-            </Press>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Dialog>
 
       {/* Order details */}
-      <Dialog visible={showOrderDetails} onClose={() => setShowOrderDetails(false)} panelStyle={[styles.dialog, { padding: 0, overflow: 'hidden' }]}>
-        <View style={styles.detailsHead}>
-          <Text style={styles.dialogTitle}>Order Details</Text>
+      <Dialog visible={showOrderDetails} onClose={() => setShowOrderDetails(false)} backdrop={color.overlay} panelStyle={[styles.dialog, { padding: 0, overflow: 'hidden' }]}>
+        <View style={styles.dialogHead}>
+          <Text style={[type.heading, { color: color.text, flex: 1 }]} accessibilityRole="header">
+            Order details
+          </Text>
+          <IconButton icon={X} label="Close order details" onPress={() => setShowOrderDetails(false)} />
         </View>
-        <ScrollView style={{ maxHeight: height * 0.6 }} contentContainerStyle={{ padding: 24, paddingTop: 16, gap: 24 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+        <ScrollView style={{ maxHeight: height * 0.6 }} contentContainerStyle={{ padding: space.xl, gap: space.xl }}>
+          <View style={[styles.row, { gap: space.lg, flexWrap: 'wrap' }]}>
             <View>
-              <Text style={styles.metaLabel}>DATE & TIME</Text>
-              <Text style={styles.metaValue}>
+              <Text style={[type.caption, { color: color.textMuted }]}>Date & time</Text>
+              <Text style={[type.bodyStrong, { color: color.text }]}>
                 {order?.createdAt ? new Date(order.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A'}
               </Text>
             </View>
-            <View style={{ width: 1, height: 32, backgroundColor: tw.gray100 }} />
             <View>
-              <Text style={styles.metaLabel}>STATUS</Text>
-              <Text style={[styles.metaValue, { color: tw.green600, ...poppins(700) }]}>{String(order?.status === 'placed' ? 'order placed' : order?.status?.replace('_', ' ') || '').toUpperCase()}</Text>
+              <Text style={[type.caption, { color: color.textMuted, marginBottom: 2 }]}>Status</Text>
+              <StatusBadge tone={badge.tone} label={String(order?.status === 'placed' ? 'order placed' : order?.status?.replace('_', ' ') || '').replace(/^./, (ch) => ch.toUpperCase())} />
             </View>
           </View>
 
           {order?.note ? (
-            <View style={styles.detailsNote}>
-              <MessageSquare size={20} color={F.green} style={{ marginTop: 2 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.detailsNoteLabel}>DELIVERY INSTRUCTIONS</Text>
-                <Text style={styles.detailsNoteText}>{order.note}</Text>
+            <View style={styles.note}>
+              <MessageSquare size={18} color={color.primary} style={{ marginTop: 2 }} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[type.caption, { color: color.textMuted }]}>Delivery instructions</Text>
+                <Text style={[type.small, { color: color.text }]}>{order.note}</Text>
               </View>
             </View>
           ) : null}
 
-          <View>
-            <Text style={[styles.metaLabel, { fontSize: 14, marginBottom: 12, ...poppins(500) }]}>ORDER ITEMS</Text>
-            <View style={{ gap: 16 }}>
-              {order?.items?.map((item, index) => (
-                <View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
-                  <View style={[styles.vegBox, { width: 20, height: 20, marginTop: 2 }]}>
-                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: tw.green600 }} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.detailItemName}>{item.name}</Text>
-                    {item.variantName ? <Text style={styles.sectionSub}>{item.variantName}</Text> : null}
-                    <Text style={styles.sectionSub}>Quantity: {item.quantity}</Text>
-                  </View>
-                  <Text style={styles.detailItemName}>₹{((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}</Text>
+          <View style={{ gap: space.md }}>
+            <Text style={[type.label, { color: color.text }]}>Order items</Text>
+            {order?.items?.map((item, index) => (
+              <View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space.md }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.bodyStrong, { color: color.text }]}>{item.name}</Text>
+                  {item.variantName ? <Text style={[type.caption, { color: color.textMuted }]}>{item.variantName}</Text> : null}
+                  <Text style={[type.caption, { color: color.textMuted }]}>Quantity: {item.quantity}</Text>
                 </View>
-              ))}
-            </View>
+                <Text style={[type.bodyStrong, { color: color.text }]}>₹{((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}</Text>
+              </View>
+            ))}
           </View>
 
           <View style={styles.bill}>
-            <Text style={styles.billTitle}>BILL SUMMARY</Text>
-            <BillRow label="Item Total" value={`₹${Number(order?.subtotal || 0).toFixed(2)}`} />
-            {Number(order?.packagingFee) > 0 ? <BillRow label="Packaging Charges" value={`₹${Number(order.packagingFee).toFixed(2)}`} /> : null}
-            {Number(order?.platformFee) > 0 ? <BillRow label="Platform Fee" value={`₹${Number(order.platformFee).toFixed(2)}`} /> : null}
-            {!pickup ? <BillRow label="Delivery Fee" value={`₹${Number(order?.deliveryFee || 0).toFixed(2)}`} /> : null}
+            <Text style={[type.label, { color: color.text }]}>Bill summary</Text>
+            <BillRow label="Item total" value={`₹${Number(order?.subtotal || 0).toFixed(2)}`} />
+            {Number(order?.packagingFee) > 0 ? <BillRow label="Packaging charges" value={`₹${Number(order.packagingFee).toFixed(2)}`} /> : null}
+            {Number(order?.platformFee) > 0 ? <BillRow label="Platform fee" value={`₹${Number(order.platformFee).toFixed(2)}`} /> : null}
+            {!pickup ? <BillRow label="Delivery fee" value={`₹${Number(order?.deliveryFee || 0).toFixed(2)}`} /> : null}
             <BillRow label="GST" value={`₹${Number(order?.gst || 0).toFixed(2)}`} />
-            {Number(order?.discount) > 0 ? <BillRow label="Discount Applied" value={`-₹${Number(order.discount).toFixed(2)}`} color={tw.green600} /> : null}
-            <View style={styles.billTotalRow}>
-              <Text style={styles.billPaid}>
-                Paid{' '}
-                {['cash', 'cod'].includes(String(order?.payment?.method || order?.paymentMethod || 'online').toLowerCase()) ? (
-                  <Text style={{ color: tw.gray500 }}>(COD)</Text>
-                ) : (
-                  <Text style={{ color: tw.green600 }}>(Online)</Text>
-                )}
-              </Text>
-              <Text style={styles.billTotal}>₹{Number(order?.totalAmount || 0).toFixed(2)}</Text>
-            </View>
+            {Number(order?.discount) > 0 ? <BillRow label="Discount applied" tone="success" value={`−₹${Number(order.discount).toFixed(2)}`} /> : null}
+            <Divider />
+            <BillRow
+              strong
+              label={`Paid ${['cash', 'cod'].includes(String(order?.payment?.method || order?.paymentMethod || 'online').toLowerCase()) ? '(COD)' : '(Online)'}`}
+              value={`₹${Number(order?.totalAmount || 0).toFixed(2)}`}
+            />
           </View>
 
           {order?.paymentMethod ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Shield size={16} color={tw.gray600} />
-                <Text style={[styles.billLabel, poppins(500)]}>Payment Method</Text>
+            <View style={[styles.row, { justifyContent: 'space-between' }]}>
+              <View style={styles.row}>
+                <Shield size={16} color={color.textSecondary} />
+                <Text style={[type.body, { color: color.textSecondary }]}>Payment method</Text>
               </View>
-              <Text style={styles.payMethod}>{String(order.paymentMethod).toUpperCase()}</Text>
+              <Text style={[type.bodyStrong, { color: color.text }]}>{String(order.paymentMethod).toUpperCase()}</Text>
             </View>
           ) : null}
         </ScrollView>
-        <View style={{ padding: 24, borderTopWidth: 1, borderTopColor: tw.gray100 }}>
-          <Press scale={0.98} onPress={() => setShowOrderDetails(false)} accessibilityLabel="Close order details" style={[styles.dialogBtn, { flex: 0, backgroundColor: tw.gray900, height: 48 }]}>
-            <Text style={styles.dialogBtnText}>Okay</Text>
-          </Press>
+        <View style={{ padding: space.lg, borderTopWidth: 1, borderTopColor: color.border }}>
+          <Button title="Okay" onPress={() => setShowOrderDetails(false)} accessibilityLabel="Close order details" />
         </View>
       </Dialog>
 
       {/* Delivery instructions */}
-      <Dialog visible={isInstructionsModalOpen} onClose={() => setIsInstructionsModalOpen(false)} panelStyle={[styles.dialog, { borderRadius: 24 }]}>
-        <Text style={[styles.dialogTitle, { marginBottom: 8 }]}>Delivery Instructions</Text>
-        <View style={{ gap: 16 }}>
-          <Text style={styles.sectionSub}>Add instructions for the delivery partner to help them find your address or know where to leave your order.</Text>
-          <TextInput
-            value={deliveryInstructions}
-            onChangeText={setDeliveryInstructions}
-            placeholder="E.g. Ring the doorbell, leave at the front desk..."
-            placeholderTextColor={tw.slate400}
-            multiline
-            textAlignVertical="top"
-            accessibilityLabel="Delivery instructions"
-            style={[styles.textarea, { minHeight: 120, fontSize: 16 }]}
-          />
-          <Press scale={0.98} disabled={isUpdatingInstructions} onPress={handleUpdateInstructions} accessibilityLabel="Save instructions" style={[styles.dialogBtn, { flex: 0, backgroundColor: F.green, height: 48 }]}>
-            {isUpdatingInstructions ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.dialogBtnText}>Save Instructions</Text>}
-          </Press>
-        </View>
+      <Dialog visible={isInstructionsModalOpen} onClose={() => setIsInstructionsModalOpen(false)} backdrop={color.overlay} panelStyle={styles.dialog}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'position' : undefined}>
+          <Text style={[type.heading, { color: color.text, marginBottom: space.sm }]} accessibilityRole="header">
+            Delivery instructions
+          </Text>
+          <View style={{ gap: space.lg }}>
+            <Text style={[type.small, { color: color.textSecondary }]}>Add instructions for the delivery partner to help them find your address or know where to leave your order.</Text>
+            <Field value={deliveryInstructions} onChangeText={setDeliveryInstructions} placeholder="E.g. Ring the doorbell, leave at the front desk..." multiline accessibilityLabel="Delivery instructions" inputStyle={{ minHeight: 120 }} />
+            <Button title="Save instructions" loading={isUpdatingInstructions} disabled={isUpdatingInstructions} onPress={handleUpdateInstructions} accessibilityLabel="Save instructions" />
+          </View>
+        </KeyboardAvoidingView>
       </Dialog>
 
       {/* Rating */}
-      <Dialog visible={showRatingModal} onClose={() => setShowRatingModal(false)} panelStyle={[styles.dialog, { borderRadius: 24, padding: 0 }]}>
-        <ScrollView style={{ maxHeight: height * 0.85 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 24, gap: 24 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Star size={24} color={F.green} fill={F.green} />
-            <Text style={styles.dialogTitle}>Rate your Experience</Text>
+      <Dialog visible={showRatingModal} onClose={() => setShowRatingModal(false)} backdrop={color.overlay} panelStyle={[styles.dialog, { padding: 0 }]}>
+        <ScrollView style={{ maxHeight: height * 0.85 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.xl, gap: space.xl }}>
+          <View style={styles.row}>
+            <Star size={22} color={color.gold} fill={color.gold} />
+            <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+              Rate your experience
+            </Text>
           </View>
-          <View style={{ gap: 12 }}>
-            <View style={styles.rateHead}>
-              <Text style={styles.rateQ}>How was the food?</Text>
-              <Text style={[styles.rateTag, { backgroundColor: tw.orange50, color: tw.orange600 }]}>Restaurant</Text>
+          <View style={{ gap: space.md }}>
+            <View style={[styles.row, { justifyContent: 'space-between' }]}>
+              <Text style={[type.subheading, { color: color.text }]}>How was the food?</Text>
+              <StatusBadge tone="neutral" label="Restaurant" />
             </View>
-            <Stars size={40} value={selectedRestaurantRating} onChange={setSelectedRestaurantRating} />
-            <TextInput value={restaurantFeedbackText} onChangeText={setRestaurantFeedbackText} placeholder="Write a quick review for the food (optional)" placeholderTextColor={tw.slate400} multiline textAlignVertical="top" accessibilityLabel="Review for the food" style={[styles.textarea, { minHeight: 80 }]} />
+            <Stars size={32} value={selectedRestaurantRating} onChange={setSelectedRestaurantRating} label="Food rating" />
+            <Field value={restaurantFeedbackText} onChangeText={setRestaurantFeedbackText} placeholder="Write a quick review for the food (optional)" multiline accessibilityLabel="Review for the food" inputStyle={{ minHeight: 80 }} />
           </View>
           {hasDeliveryPartner ? (
-            <View style={{ gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: tw.gray100 }}>
-              <View style={styles.rateHead}>
-                <Text style={styles.rateQ}>How was the delivery?</Text>
-                <Text style={[styles.rateTag, { backgroundColor: BLUE[50], color: BLUE[600] }]}>Delivery</Text>
+            <View style={{ gap: space.md, paddingTop: space.lg, borderTopWidth: 1, borderTopColor: color.border }}>
+              <View style={[styles.row, { justifyContent: 'space-between' }]}>
+                <Text style={[type.subheading, { color: color.text }]}>How was the delivery?</Text>
+                <StatusBadge tone="neutral" label="Delivery" />
               </View>
-              <Stars size={40} value={selectedDeliveryRating} onChange={setSelectedDeliveryRating} />
-              <TextInput value={deliveryFeedbackText} onChangeText={setDeliveryFeedbackText} placeholder={`How was ${order?.deliveryPartnerName || 'the rider'}? (optional)`} placeholderTextColor={tw.slate400} multiline textAlignVertical="top" accessibilityLabel="Review for the delivery" style={[styles.textarea, { minHeight: 80 }]} />
+              <Stars size={32} value={selectedDeliveryRating} onChange={setSelectedDeliveryRating} label="Delivery rating" />
+              <Field
+                value={deliveryFeedbackText}
+                onChangeText={setDeliveryFeedbackText}
+                placeholder={`How was ${order?.deliveryPartnerName || 'the rider'}? (optional)`}
+                multiline
+                accessibilityLabel="Review for the delivery"
+                inputStyle={{ minHeight: 80 }}
+              />
             </View>
           ) : null}
-          <View>
+          <View style={{ gap: space.xs }}>
             {(() => {
               const off = submittingRating || selectedRestaurantRating === null || (hasDeliveryPartner && selectedDeliveryRating === null);
-              return (
-                <Press scale={0.98} disabled={off} onPress={handleSubmitRating} accessibilityLabel="Submit feedback" style={[styles.dialogBtn, { flex: 0, backgroundColor: F.green, height: 56, borderRadius: 16 }, off ? { opacity: 0.5 } : null]}>
-                  {submittingRating ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.dialogBtnText}>Submit Feedback</Text>}
-                </Press>
-              );
+              return <Button title="Submit feedback" size="lg" loading={submittingRating} disabled={off} onPress={handleSubmitRating} accessibilityLabel="Submit feedback" />;
             })()}
-            <Press scale={0.98} onPress={() => setShowRatingModal(false)} accessibilityLabel="Maybe later" style={{ paddingVertical: 12 }}>
-              <Text style={styles.later}>Maybe later</Text>
-            </Press>
+            <Button title="Maybe later" variant="ghost" onPress={() => setShowRatingModal(false)} accessibilityLabel="Maybe later" />
           </View>
         </ScrollView>
       </Dialog>
@@ -726,110 +756,46 @@ export default function OrderTracking() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  centerText: { fontSize: 16, lineHeight: 24, color: tw.gray600, marginTop: 16, textAlign: 'center', ...poppins(400) },
-  notFound: { fontSize: 18, lineHeight: 28, color: tw.gray900, marginBottom: 16, ...poppins(700) },
-  darkBtn: { backgroundColor: tw.gray900, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
-  darkBtnText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) },
+  screen: { flex: 1, backgroundColor: color.bg },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, paddingVertical: space.xs, minHeight: 56, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
 
-  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-  navBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  navTitle: { flex: 1, textAlign: 'center', fontSize: 18, lineHeight: 28, color: '#fff', ...poppins(600) },
-  statusTitle: { fontSize: 24, lineHeight: 32, color: '#fff', textAlign: 'center', ...poppins(700) },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, maxWidth: '100%' },
-  pillText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) },
-  scheduledNote: { fontSize: 12, lineHeight: 16, color: 'rgba(255,255,255,0.8)', marginTop: 12, textAlign: 'center', ...poppins(400) },
+  statusTop: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  statusIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  tlRow: { flexDirection: 'row', gap: space.md },
+  tlRail: { width: 22, alignItems: 'center' },
+  tlDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: color.borderStrong, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  tlDotDone: { backgroundColor: color.primary, borderColor: color.primary },
+  tlDotNow: { borderColor: color.primary, borderWidth: 6 },
+  tlLine: { flex: 1, width: 2, minHeight: 14, backgroundColor: color.border, marginVertical: 2 },
 
-  mapFallback: { height: 300, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  mapFallbackText: { fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', paddingHorizontal: 16, ...poppins(400) },
-  pickupPanel: { height: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
-  pickupKicker: { fontSize: 11, lineHeight: 16, letterSpacing: 2.2, color: 'rgba(255,255,255,0.7)', ...poppins(700) },
-  pickupIcon: { width: 96, height: 96, borderRadius: 48, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginVertical: 20 },
-  pickupTitle: { fontSize: 20, lineHeight: 28, color: '#fff', textAlign: 'center', ...poppins(700) },
-  pickupSub: { fontSize: 13, lineHeight: 19, color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginTop: 4, ...poppins(400) },
+  mapBox: { height: 280, borderRadius: radii.lg, overflow: 'hidden', borderWidth: 1, borderColor: color.border },
+  mapFallback: { height: 280, borderRadius: radii.lg, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center', gap: space.sm, padding: space.lg },
+  pickupPanel: { minHeight: 260, borderRadius: radii.lg, backgroundColor: color.primaryDeep, alignItems: 'center', justifyContent: 'center', padding: space.xxl },
+  pickupIcon: { width: 88, height: 88, borderRadius: 44, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', alignItems: 'center', justifyContent: 'center', marginVertical: space.xl },
 
-  card: { backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', ...shadow('sm') },
-  otp: { borderRadius: 12, padding: 16, borderWidth: 1, backgroundColor: BLUE[50], borderColor: BLUE[100], ...shadow('sm') },
-  otpLabel: { fontSize: 12, lineHeight: 16, letterSpacing: 0.3, color: BLUE[700], ...poppins(600) },
-  otpCode: { fontSize: 24, lineHeight: 32, letterSpacing: 2.4, color: BLUE[900], marginTop: 4, ...poppins(800) },
-  otpNote: { fontSize: 12, lineHeight: 16, color: BLUE[700], marginTop: 4, ...poppins(400) },
-  takeawayCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: tw.orange50, borderWidth: 1, borderColor: tw.orange100, borderRadius: 12, padding: 16, ...shadow('sm') },
-  takeawayIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.orange100, alignItems: 'center', justifyContent: 'center' },
-  takeawayTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  takeawayBody: { fontSize: 12, lineHeight: 19.5, color: tw.gray600, marginTop: 4, ...poppins(400) },
-  statusIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.gray100 },
-  statusCardTitle: { fontSize: 16, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  statusCardSub: { fontSize: 14, lineHeight: 19, color: tw.gray500, marginTop: 4, ...poppins(400) },
+  otp: { borderRadius: radii.lg, padding: space.lg, borderWidth: 1, borderColor: color.gold, backgroundColor: color.goldSoft, gap: space.xs },
+  otpCode: { ...type.priceLg, fontSize: 32, lineHeight: 40, letterSpacing: 8, color: color.text },
+  inlineCard: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  roundIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
 
-  rateCard: { padding: 24, alignItems: 'center', borderWidth: 2, borderColor: 'rgba(10,77,43,0.1)' },
-  rateIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(10,77,43,0.1)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  rateTitle: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  rateBody: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginTop: 8, marginBottom: 24, maxWidth: 280, textAlign: 'center', ...poppins(400) },
-  rateBtn: { width: 200, height: 48, borderRadius: 12, backgroundColor: F.green, alignItems: 'center', justifyContent: 'center' },
-  rateBtnText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
-  feedbackHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray50 },
-  feedbackTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  feedbackDone: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.gray400, opacity: 0.5, ...poppins(700) },
-  feedbackRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  feedbackName: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(600) },
-  feedbackComment: { fontSize: 10, lineHeight: 15, color: tw.gray500, fontStyle: 'italic', marginTop: 2, ...poppins(400) },
+  rateCard: { alignItems: 'center', paddingVertical: space.xxl },
+  feedbackRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+  starBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
 
-  partnerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderBottomWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200 },
-  partnerAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: BLUE[50], overflow: 'hidden', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: BLUE[100] },
-  roundAction: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  riderNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: 'rgba(239,246,255,0.5)', padding: 12, margin: 16, marginTop: 12, borderRadius: 8, borderWidth: 1, borderColor: BLUE[100] },
-  riderNoteLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, color: BLUE[600], marginBottom: 2, ...poppins(700) },
-  riderNoteText: { fontSize: 12, lineHeight: 19.5, color: tw.gray700, ...poppins(500) },
-  detailsBanner: { backgroundColor: '#FEFCE8', borderRadius: 12, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: tw.gray200 },
-  detailsBannerText: { fontSize: 14, lineHeight: 20, color: '#894B00', ...poppins(500) },
-  sectionItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderBottomWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200 },
-  sectionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  sectionTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(500) },
-  sectionSub: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  vegBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: tw.green600, alignItems: 'center', justifyContent: 'center' },
-  itemLine: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
-  cancelOrder: { height: 48, borderRadius: 12, backgroundColor: tw.red600, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  cancelOrderText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) },
-  cancelNote: { fontSize: 10, lineHeight: 15, color: tw.gray400, textAlign: 'center', paddingHorizontal: 16, ...poppins(400) },
+  partnerRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.lg, paddingRight: space.sm, borderBottomWidth: 1, borderStyle: 'dashed', borderColor: color.border },
+  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: color.primarySoft, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  note: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, backgroundColor: color.surfaceMuted, padding: space.md, margin: space.lg, borderRadius: radii.md },
+  sectionItem: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, minHeight: 64, borderBottomWidth: 1, borderStyle: 'dashed', borderColor: color.border },
+  sectionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  itemsRow: { padding: space.lg, flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
 
-  confirm: { flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  confirmCheck: { width: 96, height: 96, borderRadius: 48, backgroundColor: tw.green500, alignItems: 'center', justifyContent: 'center' },
-  confirmTitle: { fontSize: 24, lineHeight: 32, color: tw.gray900, marginTop: 24, ...poppins(700) },
-  confirmBody: { fontSize: 16, lineHeight: 24, color: tw.gray600, marginTop: 8, textAlign: 'center', ...poppins(400) },
-  confirmLoading: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginTop: 12, ...poppins(400) },
-  confirmSafety: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 48, paddingTop: 32, borderTopWidth: 1, borderTopColor: tw.gray100, alignSelf: 'stretch', justifyContent: 'center' },
-  confirmSafetyText: { fontSize: 14, lineHeight: 20, color: F.green, ...poppins(500) },
+  confirm: { flex: 1, backgroundColor: color.bg, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xxxl },
+  confirmCheck: { width: 96, height: 96, borderRadius: 48, backgroundColor: color.success, alignItems: 'center', justifyContent: 'center', ...elevation.float },
 
-  dialog: { width: '95%', maxWidth: 600, backgroundColor: '#fff', borderRadius: 16, padding: 24, ...shadow('2xl') },
-  dialogTitle: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  dialogBtn: { flex: 1, height: 44, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12 },
-  dialogBtnText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
-  outline: { borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff' },
-  outlineText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  refundBox: { gap: 8, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray50, padding: 16 },
-  refundTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, marginBottom: 4, ...poppins(600) },
-  refundOpt: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 6, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8 },
-  refundOptText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) },
-  radio: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: tw.gray400, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
-  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: F.green },
-  textarea: { borderWidth: 1, borderColor: tw.gray200, borderRadius: 12, backgroundColor: tw.gray50, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: tw.gray800, ...poppins(400) },
-  detailsHead: { padding: 24, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  metaLabel: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.gray500, ...poppins(400) },
-  metaValue: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  detailsNote: { flexDirection: 'row', gap: 12, backgroundColor: 'rgba(255,247,237,0.5)', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: tw.orange100 },
-  detailsNoteLabel: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: F.green, marginBottom: 4, ...poppins(700) },
-  detailsNoteText: { fontSize: 14, lineHeight: 22.75, color: tw.gray800, textTransform: 'capitalize', ...poppins(500) },
-  detailItemName: { fontSize: 16, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  bill: { backgroundColor: tw.gray50, borderRadius: 12, padding: 16, gap: 12 },
-  billTitle: { fontSize: 14, lineHeight: 20, letterSpacing: 0.7, color: tw.gray900, ...poppins(700) },
-  billLabel: { fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
-  billValue: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  billTotalRow: { paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray200, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  billPaid: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  billTotal: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  payMethod: { fontSize: 14, lineHeight: 20, letterSpacing: 0.35, color: tw.gray900, ...poppins(700) },
-  rateHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  rateQ: { fontSize: 16, lineHeight: 24, color: tw.gray800, ...poppins(600) },
-  rateTag: { fontSize: 12, lineHeight: 16, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', ...poppins(500) },
-  later: { fontSize: 14, lineHeight: 20, color: tw.gray400, textAlign: 'center', ...poppins(500) },
+  dialog: { width: '100%', maxWidth: 520, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xl, ...elevation.sheet },
+  dialogHead: { flexDirection: 'row', alignItems: 'center', paddingLeft: space.xl, paddingRight: space.sm, paddingVertical: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  radioRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 52, borderRadius: radii.md, borderWidth: 1.5, borderColor: color.border, padding: space.md },
+  radioRowOn: { borderColor: color.primary, backgroundColor: color.primarySoft },
+  bill: { backgroundColor: color.surfaceMuted, borderRadius: radii.md, padding: space.lg, gap: space.md },
 });

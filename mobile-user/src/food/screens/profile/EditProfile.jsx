@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
-import { ArrowLeft, Camera, ChevronDown, Image as ImageIcon, Pencil, X } from 'lucide-react-native';
+import { Camera, Check, ChevronDown, Image as ImageIcon, Pencil, ShieldCheck, Trash2, X } from 'lucide-react-native';
 import Image from '../../../components/Img';
 import { BottomSheet } from '../../../components/kit';
 import { Press } from '../../../components/ui';
@@ -16,8 +15,10 @@ import { openCamera, openGallery } from '../../../lib/images';
 import { localStore } from '../../../lib/storage';
 import { toast } from '../../../lib/notify';
 import { navigateTo } from '../../../lib/webRouter';
-import { poppins, shadow, tw } from '../../../theme';
-import { F } from '../../components/shell';
+import { Button, Card, IconButton, ListRow, StatusBadge } from '../../../components/ds';
+import { NAV_CLEARANCE } from '../../../components/dh/AppBottomNav';
+import { PageHeader } from '../../components/profile/ProfileChrome';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 const PROFILE_AVATAR = require('../../../../assets/food/profile_avatar.webp');
 const EDIT_PROFILE_DRAFT_KEY = 'user_edit_profile_draft';
@@ -59,12 +60,12 @@ const buildFormDataFromProfile = (profile = {}) => ({
 const hasImage = (value) => typeof value === 'string' && value.trim() !== '' && value !== 'null' && value !== 'undefined';
 const validateEmail = (value) => (!value ? '' : EMAIL_REGEX.test(value) ? '' : 'Please enter a valid email');
 
-/** `<fieldset><legend>`: a bordered box with its label sitting on the top edge. */
-function Fieldset({ legend, focused, disabled, children, style }) {
+/** Label-above field box (48 px), primary border when focused. */
+function Fieldset({ legend, focused, disabled, error, children, style }) {
   return (
-    <View style={[styles.fieldset, focused ? styles.fieldsetFocus : null, disabled ? { opacity: 0.7 } : null, style]}>
+    <View style={[{ gap: space.xs }, style]}>
       <Text style={styles.legend}>{legend}</Text>
-      {children}
+      <View style={[styles.fieldset, focused ? styles.fieldsetFocus : null, error ? { borderColor: color.danger } : null, disabled ? styles.fieldsetDisabled : null]}>{children}</View>
     </View>
   );
 }
@@ -202,146 +203,128 @@ export default function EditProfile() {
   const genderLabel = genderOptions.find((o) => o.value === formData.gender)?.label;
 
   return (
-    <View style={{ flex: 1, backgroundColor: F.cream }}>
-      <View style={styles.header}>
-        <Press scale={0.92} onPress={goBack} accessibilityLabel="Go back" style={styles.back} hitSlop={6}>
-          <ArrowLeft size={20} color={tw.gray700} />
-        </Press>
-        <Text style={styles.title} accessibilityRole="header">Your Profile</Text>
-      </View>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: color.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <PageHeader title="Your Profile" onBack={goBack} />
 
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 32 + 80, paddingBottom: 112 + insets.bottom }}>
-        <View style={styles.card}>
-          <View pointerEvents="none" style={styles.hump}>
-            <Svg width={320} height={50} viewBox="0 0 320 50">
-              <Path d="M0 50 C 50 50, 70 0, 92 0 L 228 0 C 250 0, 270 50, 320 50 Z" fill="#fff" />
-            </Svg>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, paddingBottom: NAV_CLEARANCE + space.xxl + insets.bottom }}>
+        <View style={styles.avatarWrap}>
+          <View style={styles.avatar}>
+            <Image source={previewUri ? { uri: previewUri } : PROFILE_AVATAR} style={{ width: '100%', height: '100%' }} accessibilityLabel={formData.name || 'User'} />
           </View>
-
-          <View style={styles.avatarWrap}>
-            <View style={styles.avatar}>
-              <Image source={previewUri ? { uri: previewUri } : PROFILE_AVATAR} style={{ width: '100%', height: '100%' }} accessibilityLabel={formData.name || 'User'} />
-            </View>
-            <Press
-              scale={0.92}
-              disabled={isUploadingImage}
-              onPress={() => (showImage ? setPhotoMenuOpen(true) : setPhotoPickerOpen(true))}
-              accessibilityLabel="Change profile photo"
-              style={[styles.pencil, isUploadingImage ? { opacity: 0.5 } : null]}
-              hitSlop={8}
-            >
-              {isUploadingImage ? <ActivityIndicator size="small" color={F.green} /> : <Pencil size={18} color={F.green} strokeWidth={2.5} />}
-            </Press>
-          </View>
-
-          <View style={{ gap: 16, paddingTop: 24 }}>
-            <Fieldset legend="Name" focused={focus === 'name'}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TextInput
-                  value={formData.name}
-                  onChangeText={(text) => handleChange('name', text)}
-                  onFocus={() => setFocus('name')}
-                  onBlur={() => setFocus('')}
-                  autoCapitalize="words"
-                  returnKeyType="next"
-                  onSubmitEditing={() => emailRef.current?.focus()}
-                  accessibilityLabel="Name"
-                  style={styles.input}
-                />
-                {formData.name ? (
-                  <Press scale={0.9} onPress={() => handleChange('name', '')} accessibilityLabel="Clear name" hitSlop={10}>
-                    <X size={16} color={tw.gray400} />
-                  </Press>
-                ) : null}
-              </View>
-            </Fieldset>
-
-            <View>
-              <Fieldset legend="Email" focused={focus === 'email'}>
-                <TextInput
-                  ref={emailRef}
-                  value={formData.email}
-                  onChangeText={(text) => handleChange('email', text)}
-                  onFocus={() => setFocus('email')}
-                  onBlur={() => setFocus('')}
-                  placeholder="yourname@example.com"
-                  placeholderTextColor={tw.gray400}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="done"
-                  accessibilityLabel="Email"
-                  style={styles.input}
-                />
-              </Fieldset>
-              {fieldErrors.email ? <Text style={styles.error}>{fieldErrors.email}</Text> : null}
-            </View>
-
-            <Fieldset legend="Phone Number" disabled>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingBottom: 4 }}>
-                <Text style={styles.phone}>{formData.mobile ? `+91 ${formData.mobile}` : '+91'}</Text>
-                <Text style={styles.verified}>VERIFIED</Text>
-              </View>
-            </Fieldset>
-
-            <Fieldset legend="Gender" focused={genderOpen}>
-              <Press scale={1} onPress={() => setGenderOpen(true)} accessibilityRole="combobox" accessibilityLabel={`Gender, ${genderLabel || 'not selected'}`} style={styles.select}>
-                <Text style={[styles.selectText, genderLabel ? null : { color: tw.gray400 }]}>{genderLabel || 'Select gender'}</Text>
-                <ChevronDown size={16} color={tw.gray400} />
-              </Press>
-            </Fieldset>
-          </View>
-
-          <Press scale={0.98} disabled={disabled} onPress={handleUpdate} accessibilityLabel="Update profile" accessibilityState={{ disabled, busy: isSaving }} style={[styles.submit, disabled ? { backgroundColor: 'rgba(10,77,43,0.7)', elevation: 0, shadowOpacity: 0 } : null]}>
-            {isSaving ? <ActivityIndicator size="small" color="#fff" /> : null}
-            <Text style={styles.submitText}>{isSaving ? 'Saving...' : 'Update profile'}</Text>
+          <Press
+            scale={0.92}
+            disabled={isUploadingImage}
+            onPress={() => (showImage ? setPhotoMenuOpen(true) : setPhotoPickerOpen(true))}
+            accessibilityLabel="Change profile photo"
+            style={[styles.pencil, isUploadingImage ? { opacity: 0.5 } : null]}
+          >
+            {isUploadingImage ? <ActivityIndicator size="small" color={color.onPrimary} /> : <Pencil size={18} color={color.onPrimary} strokeWidth={2.5} />}
           </Press>
         </View>
+
+        <Card style={{ gap: space.lg }}>
+          <Fieldset legend="Name" focused={focus === 'name'}>
+            <TextInput
+              value={formData.name}
+              onChangeText={(text) => handleChange('name', text)}
+              onFocus={() => setFocus('name')}
+              onBlur={() => setFocus('')}
+              autoCapitalize="words"
+              returnKeyType="next"
+              onSubmitEditing={() => emailRef.current?.focus()}
+              accessibilityLabel="Name"
+              placeholder="Your name"
+              placeholderTextColor={color.textMuted}
+              style={styles.input}
+            />
+            {formData.name ? <IconButton icon={X} iconSize={16} size={36} label="Clear name" iconColor={color.textMuted} onPress={() => handleChange('name', '')} /> : null}
+          </Fieldset>
+
+          <View style={{ gap: space.xs }}>
+            <Fieldset legend="Email" focused={focus === 'email'} error={fieldErrors.email}>
+              <TextInput
+                ref={emailRef}
+                value={formData.email}
+                onChangeText={(text) => handleChange('email', text)}
+                onFocus={() => setFocus('email')}
+                onBlur={() => setFocus('')}
+                placeholder="yourname@example.com"
+                placeholderTextColor={color.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+                accessibilityLabel="Email"
+                style={styles.input}
+              />
+            </Fieldset>
+            {fieldErrors.email ? <Text style={styles.error}>{fieldErrors.email}</Text> : null}
+          </View>
+
+          <Fieldset legend="Phone Number" disabled>
+            <Text style={[styles.input, styles.phone]}>{formData.mobile ? `+91 ${formData.mobile}` : '+91'}</Text>
+            <StatusBadge icon={ShieldCheck} label="Verified" tone="success" style={{ alignSelf: 'center' }} />
+          </Fieldset>
+
+          <Fieldset legend="Gender" focused={genderOpen}>
+            <Press scale={1} onPress={() => setGenderOpen(true)} accessibilityRole="combobox" accessibilityLabel={`Gender, ${genderLabel || 'not selected'}`} style={styles.select}>
+              <Text style={[styles.selectText, genderLabel ? null : { color: color.textMuted }]}>{genderLabel || 'Select gender'}</Text>
+              <ChevronDown size={18} color={color.textMuted} />
+            </Press>
+          </Fieldset>
+
+          <Button
+            title={isSaving ? 'Saving...' : 'Update profile'}
+            size="lg"
+            loading={isSaving}
+            disabled={disabled}
+            onPress={handleUpdate}
+            accessibilityLabel="Update profile"
+            style={{ marginTop: space.sm }}
+          />
+        </Card>
       </ScrollView>
 
       {/* Delete / change photo (web: dropdown under the pencil) */}
-      <BottomSheet visible={photoMenuOpen} onClose={() => setPhotoMenuOpen(false)} panelStyle={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
-        <Press
-          scale={0.98}
+      <BottomSheet visible={photoMenuOpen} onClose={() => setPhotoMenuOpen(false)} backdrop={color.overlay} panelStyle={[styles.sheet, { paddingBottom: space.lg + insets.bottom }]}>
+        <View style={styles.grab} />
+        <ListRow
+          icon={Trash2}
+          tone="danger"
+          title="Delete Photo"
           onPress={() => {
             setPhotoMenuOpen(false);
             setProfileImage('');
             setImagePreview('');
             setPendingImageFile(null);
           }}
-          accessibilityLabel="Delete photo"
-          style={styles.menuBtn}
-        >
-          <Text style={[styles.menuText, { color: F.green }]}>Delete Photo</Text>
-        </Press>
-        <Press
-          scale={0.98}
+          chevron={false}
+          style={styles.sheetRow}
+        />
+        <ListRow
+          icon={Camera}
+          title="Change photo"
           onPress={() => {
             setPhotoMenuOpen(false);
             setPhotoPickerOpen(true);
           }}
-          accessibilityLabel="Change photo"
-          style={styles.menuBtn}
-        >
-          <Text style={styles.menuText}>Change photo</Text>
-        </Press>
+          chevron={false}
+          style={styles.sheetRow}
+        />
       </BottomSheet>
 
       {/* Camera or gallery */}
-      <BottomSheet visible={photoPickerOpen} onClose={() => setPhotoPickerOpen(false)} panelStyle={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+      <BottomSheet visible={photoPickerOpen} onClose={() => setPhotoPickerOpen(false)} backdrop={color.overlay} panelStyle={[styles.sheet, { paddingBottom: space.lg + insets.bottom }]}>
+        <View style={styles.grab} />
         <Text style={styles.sheetTitle}>Update profile photo</Text>
         <Text style={styles.sheetBody}>Choose how you want to upload your profile photo.</Text>
-        <Press scale={0.98} onPress={() => pickPhoto('camera')} accessibilityLabel="Take a photo" style={styles.sourceRow}>
-          <Camera size={20} color={F.green} />
-          <Text style={styles.sourceText}>Camera</Text>
-        </Press>
-        <Press scale={0.98} onPress={() => pickPhoto('gallery')} accessibilityLabel="Choose from gallery" style={styles.sourceRow}>
-          <ImageIcon size={20} color={F.green} />
-          <Text style={styles.sourceText}>Gallery</Text>
-        </Press>
+        <ListRow icon={Camera} title="Camera" onPress={() => pickPhoto('camera')} chevron={false} style={styles.sheetRow} />
+        <ListRow icon={ImageIcon} title="Gallery" onPress={() => pickPhoto('gallery')} chevron={false} style={styles.sheetRow} />
       </BottomSheet>
 
-      <BottomSheet visible={genderOpen} onClose={() => setGenderOpen(false)} panelStyle={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+      <BottomSheet visible={genderOpen} onClose={() => setGenderOpen(false)} backdrop={color.overlay} panelStyle={[styles.sheet, { paddingBottom: space.lg + insets.bottom }]}>
+        <View style={styles.grab} />
+        <Text style={styles.sheetTitle}>Gender</Text>
         {genderOptions.map((option) => {
           const on = formData.gender === option.value;
           return (
@@ -350,48 +333,42 @@ export default function EditProfile() {
               scale={0.99}
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
+              accessibilityLabel={option.label}
               onPress={() => {
                 handleChange('gender', option.value);
                 setGenderOpen(false);
               }}
-              style={[styles.option, on ? { backgroundColor: tw.gray100 } : null]}
+              style={[styles.option, on ? styles.optionOn : null]}
             >
-              <Text style={styles.optionText}>{option.label}</Text>
+              <Text style={[styles.optionText, on ? { color: color.primary } : null]}>{option.label}</Text>
+              {on ? <Check size={18} color={color.primary} /> : null}
             </Press>
           );
         })}
       </BottomSheet>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  back: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(600) },
-  card: { backgroundColor: '#fff', borderRadius: 32, paddingTop: 64, paddingBottom: 32, paddingHorizontal: 16, borderWidth: 1, borderColor: 'rgba(243,244,246,0.5)', ...shadow('0 2px 20px rgba(0,0,0,0.04)') },
-  hump: { position: 'absolute', top: -49, left: 0, right: 0, alignItems: 'center', height: 50, overflow: 'hidden' },
-  avatarWrap: { position: 'absolute', top: -105, alignSelf: 'center', width: 112, height: 112 },
-  avatar: { width: 112, height: 112, borderRadius: 56, borderWidth: 4, borderColor: '#fff', overflow: 'hidden', backgroundColor: '#FFF5E6', ...shadow('sm') },
-  pencil: { position: 'absolute', bottom: 4, right: 4, width: 32, height: 32, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: tw.gray100, ...shadow('md') },
-  fieldset: { borderWidth: 1, borderColor: tw.gray300, borderRadius: 14, paddingHorizontal: 12, paddingBottom: 8, paddingTop: 10 },
-  fieldsetFocus: { borderColor: F.green, borderWidth: 1.5 },
-  legend: { position: 'absolute', top: -10, left: 10, backgroundColor: '#fff', paddingHorizontal: 4, fontSize: 13, lineHeight: 19.5, letterSpacing: 0.325, color: tw.gray400, ...poppins(400) },
-  input: { flex: 1, paddingVertical: 0, paddingBottom: 4, minHeight: 28, fontSize: 16, color: tw.gray800, ...poppins(500) },
-  error: { fontSize: 12, lineHeight: 16, color: tw.red600, marginTop: 4, ...poppins(400) },
-  phone: { fontSize: 16, lineHeight: 24, color: tw.gray500, ...poppins(500) },
-  verified: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, color: '#007A55', backgroundColor: '#D0FAE5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, overflow: 'hidden', ...poppins(700) },
-  select: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 32 },
-  selectText: { fontSize: 16, lineHeight: 24, color: tw.gray800, ...poppins(500) },
-  submit: { marginTop: 32, marginBottom: 8, height: 52, borderRadius: 12, backgroundColor: F.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, ...shadow('md') },
-  submitText: { fontSize: 15, lineHeight: 22, color: '#fff', ...poppins(600) },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 16, gap: 8 },
-  menuBtn: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 20, backgroundColor: '#E5E7EB', alignItems: 'center' },
-  menuText: { fontSize: 15.5, lineHeight: 22, letterSpacing: 0.4, color: tw.gray900, ...poppins(500) },
-  sheetTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(600) },
-  sheetBody: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginBottom: 8, ...poppins(400) },
-  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200 },
-  sourceText: { fontSize: 15, lineHeight: 22, color: tw.gray900, ...poppins(500) },
-  option: { paddingVertical: 12, paddingHorizontal: 12, borderRadius: 12 },
-  optionText: { fontSize: 15, lineHeight: 22, color: tw.gray900, ...poppins(500) },
+  avatarWrap: { alignSelf: 'center', width: 112, height: 112, marginTop: space.sm, marginBottom: space.xl },
+  avatar: { width: 112, height: 112, borderRadius: 56, borderWidth: 3, borderColor: color.gold, overflow: 'hidden', backgroundColor: color.goldSoft, ...elevation.card },
+  pencil: { position: 'absolute', bottom: 0, right: 0, width: 44, height: 44, borderRadius: 22, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: color.bg },
+  legend: { ...type.label, color: color.text },
+  fieldset: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, paddingLeft: space.md, paddingRight: space.xs, backgroundColor: color.surface },
+  fieldsetFocus: { borderColor: color.primary, borderWidth: 1.5 },
+  fieldsetDisabled: { backgroundColor: color.surfaceMuted, paddingRight: space.md },
+  input: { flex: 1, minWidth: 0, minHeight: 46, paddingVertical: 0, ...type.body, color: color.text },
+  error: { ...type.small, color: color.danger },
+  phone: { color: color.textSecondary, lineHeight: 46 },
+  select: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 46, paddingRight: space.sm },
+  selectText: { ...type.body, color: color.text },
+  sheet: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, padding: space.lg, gap: space.xs, ...elevation.sheet },
+  grab: { alignSelf: 'center', width: 48, height: 5, borderRadius: 3, backgroundColor: color.borderStrong, marginBottom: space.md },
+  sheetRow: { paddingHorizontal: space.sm, borderRadius: radii.md },
+  sheetTitle: { ...type.heading, color: color.text },
+  sheetBody: { ...type.small, color: color.textSecondary, marginBottom: space.sm },
+  option: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.md, borderRadius: radii.md },
+  optionOn: { backgroundColor: color.primarySoft },
+  optionText: { ...type.body, color: color.text },
 });

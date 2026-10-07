@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppState, FlatList, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ArrowLeft, Calendar, Clock, MapPin, Star, Users, Utensils, X } from 'lucide-react-native';
 import { diningAPI } from '../../api/food';
 import Image from '../../components/Img';
@@ -9,14 +9,14 @@ import { Press } from '../../components/ui';
 import { events } from '../../lib/events';
 import { toast } from '../../lib/notify';
 import { navigateTo } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, EmptyState, IconButton, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import useAppBackNavigation from '../hooks/useAppBackNavigation';
-import { F } from '../components/shell';
 import { formatBookingAddress, formatShortDate, useNavClearance } from '../components/dining/TableShared';
 
 const getStatusLabel = (status) => {
   const key = String(status || '').toLowerCase();
-  if (key === 'pending') return 'Approval Reqd';
+  if (key === 'pending') return 'Awaiting approval';
   if (key === 'accepted' || key === 'confirmed') return 'Confirmed';
   if (key === 'checked-in') return 'Checked-in';
   if (key === 'completed') return 'Completed';
@@ -24,14 +24,14 @@ const getStatusLabel = (status) => {
   return String(status || 'unknown');
 };
 
-const getStatusBadge = (status) => {
+/** Booking status → design-system tone (DESIGN_SYSTEM.md state table). */
+const getStatusTone = (status) => {
   const key = String(status || '').toLowerCase();
-  if (key === 'pending') return { bg: tw.amber100, fg: tw.amber700 };
-  if (key === 'accepted' || key === 'confirmed') return { bg: tw.green100, fg: tw.green700, bold: true };
-  if (key === 'checked-in') return { bg: F.cream, fg: F.green };
-  if (key === 'completed') return { bg: tw.blue100, fg: tw.blue700 };
-  if (key === 'cancelled') return { bg: tw.red100, fg: tw.red700 };
-  return { bg: tw.slate100, fg: tw.slate700 };
+  if (key === 'pending') return 'warning';
+  if (key === 'accepted' || key === 'confirmed' || key === 'checked-in') return 'info';
+  if (key === 'completed') return 'success';
+  if (key === 'cancelled') return 'danger';
+  return 'neutral';
 };
 
 function ReviewModal({ booking, onClose, onSubmit }) {
@@ -50,50 +50,54 @@ function ReviewModal({ booking, onClose, onSubmit }) {
   };
 
   return (
-    <Dialog visible onClose={onClose} backdrop="rgba(0,0,0,0.5)" blur={8} panelStyle={styles.modal}>
+    <Dialog visible onClose={onClose} backdrop={color.overlay} blur={8} panelStyle={styles.modal}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.modalHead}>
           <Text style={styles.modalTitle}>Review your experience</Text>
-          <Press scale={0.9} onPress={onClose} accessibilityLabel="Close" style={{ padding: 8, borderRadius: 999 }}>
-            <X size={20} color={tw.slate400} />
-          </Press>
+          <IconButton icon={X} label="Close" onPress={onClose} />
         </View>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 24, gap: 24 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.xl, gap: space.xl }}>
           <View style={{ alignItems: 'center' }}>
             <Text style={styles.how}>How was your visit to {booking.restaurant?.name}?</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: space.xs }} accessibilityRole="radiogroup">
               {[1, 2, 3, 4, 5].map((star) => (
-                <Press key={star} scale={0.9} onPress={() => setRating(star)} accessibilityLabel={`${star} star`} style={{ padding: 4 }}>
-                  <Star size={40} color={star <= rating ? tw.yellow400 : tw.slate200} fill={star <= rating ? tw.yellow400 : 'none'} />
+                <Press
+                  key={star}
+                  scale={0.9}
+                  onPress={() => setRating(star)}
+                  accessibilityLabel={`${star} star`}
+                  accessibilityState={{ selected: star === rating }}
+                  style={styles.star}
+                >
+                  <Star size={36} color={star <= rating ? color.gold : color.borderStrong} fill={star <= rating ? color.gold : 'none'} />
                 </Press>
               ))}
             </View>
           </View>
-          <View style={{ gap: 8 }}>
+          <View style={{ gap: space.xs }}>
             <Text style={styles.feedback}>Share your feedback</Text>
             <TextInput
               value={comment}
               onChangeText={setComment}
               placeholder="Write about the food, service, and atmosphere..."
-              placeholderTextColor={tw.gray400}
+              placeholderTextColor={color.textMuted}
               multiline
               textAlignVertical="top"
+              accessibilityLabel="Share your feedback"
               style={styles.textarea}
             />
           </View>
-          <Press scale={0.95} disabled={submitting} onPress={handleSubmit} style={[styles.submit, submitting ? { opacity: 0.5 } : null]}>
-            <Text style={styles.submitText}>{submitting ? 'Submitting...' : 'Submit Review'}</Text>
-          </Press>
+          <Button title={submitting ? 'Submitting...' : 'Submit review'} loading={submitting} onPress={handleSubmit} />
         </ScrollView>
       </KeyboardAvoidingView>
     </Dialog>
   );
 }
 
-function Chip({ icon, children }) {
+function Chip({ icon: Icon, children }) {
   return (
     <View style={styles.chip}>
-      {icon}
+      <Icon size={14} color={color.textSecondary} />
       <Text style={styles.chipText}>{children}</Text>
     </View>
   );
@@ -151,100 +155,89 @@ export default function MyBookings() {
 
   if (loading) return <Loader />;
 
+  const renderBooking = ({ item: booking }) => {
+    const image = booking.restaurant?.image || booking.restaurant?.profileImage?.url || '';
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardTop}>
+          <View style={styles.thumb}>
+            {image ? <Image source={{ uri: image }} style={{ width: '100%', height: '100%' }} resizeMode="cover" /> : <Utensils size={24} color={color.textDisabled} />}
+          </View>
+          <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+            <Text style={styles.name} numberOfLines={2}>
+              {booking.restaurant?.name}
+            </Text>
+            <StatusBadge label={getStatusLabel(booking.status)} tone={getStatusTone(booking.status)} />
+            <View style={[styles.row, { gap: space.xs, alignItems: 'flex-start' }]}>
+              <MapPin size={14} color={color.textMuted} style={{ marginTop: 2 }} />
+              <Text style={styles.addr} numberOfLines={2}>
+                {formatBookingAddress(booking.restaurant?.location)}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={[styles.row, { gap: space.sm, flexWrap: 'wrap' }]}>
+          <Chip icon={Calendar}>{formatShortDate(booking.date) || 'Invalid Date'}</Chip>
+          <Chip icon={Clock}>{booking.timeSlot}</Chip>
+          <Chip icon={Users}>{booking.guests} Guests</Chip>
+        </View>
+
+        {booking.status === 'completed' ? <Button title="Rate & review" icon={Star} variant="secondary" size="sm" onPress={() => setSelectedBooking(booking)} style={{ minHeight: 44 }} /> : null}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.page}>
       <View style={styles.header}>
-        <Press scale={1} onPress={goBack} accessibilityLabel="Back" hitSlop={8}>
-          <ArrowLeft size={24} color={tw.gray700} />
-        </Press>
-        <Text style={styles.title}>My Table Bookings</Text>
+        <IconButton icon={ArrowLeft} label="Back" variant="soft" onPress={goBack} />
+        <Text style={styles.title} accessibilityRole="header">
+          My table bookings
+        </Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 + clearance, gap: 16 }}>
-        {bookings.length > 0 ? (
-          bookings.map((booking) => {
-            const badge = getStatusBadge(booking.status);
-            return (
-              <View key={booking._id} style={styles.card}>
-                <View style={styles.thumb}>
-                  <Image source={{ uri: booking.restaurant?.image || booking.restaurant?.profileImage?.url || '' }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                    <Text style={styles.name} numberOfLines={1}>
-                      {booking.restaurant?.name}
-                    </Text>
-                    <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-                      <Text style={[styles.badgeText, { color: badge.fg }, badge.bold ? poppins(700) : null]}>{getStatusLabel(booking.status)}</Text>
-                    </View>
-                  </View>
-                  <View style={[styles.row, { gap: 4, marginTop: 2 }]}>
-                    <MapPin size={12} color={tw.gray500} />
-                    <Text style={styles.addr} numberOfLines={1}>
-                      {formatBookingAddress(booking.restaurant?.location)}
-                    </Text>
-                  </View>
-
-                  <View style={[styles.row, { gap: 16, marginTop: 12, flexWrap: 'wrap' }]}>
-                    <Chip icon={<Calendar size={12} color={tw.gray600} />}>{formatShortDate(booking.date) || 'Invalid Date'}</Chip>
-                    <Chip icon={<Clock size={12} color={tw.gray600} />}>{booking.timeSlot}</Chip>
-                    <Chip icon={<Users size={12} color={tw.gray600} />}>{booking.guests} Guests</Chip>
-                  </View>
-
-                  {booking.status === 'completed' ? (
-                    <Press scale={1} onPress={() => setSelectedBooking(booking)} style={styles.rate}>
-                      <Text style={styles.rateText}>RATE & REVIEW</Text>
-                    </Press>
-                  ) : null}
-                </View>
-              </View>
-            );
-          })
-        ) : (
-          <View style={{ alignItems: 'center', paddingVertical: 80 }}>
-            <View style={styles.emptyIcon}>
-              <Utensils size={32} color={tw.slate300} />
-            </View>
-            <Text style={styles.emptyTitle}>No bookings yet</Text>
-            <Text style={styles.emptyBody}>Book your favorite restaurant for a great dining experience!</Text>
-            <Press scale={1} onPress={() => navigateTo('/dining')} style={[styles.book, shadow('0 10px 15px -3px #FFC9C9, 0 4px 6px -4px #FFC9C9')]}>
-              <Text style={styles.bookText}>Book a table</Text>
-            </Press>
-          </View>
-        )}
-      </ScrollView>
+      <FlatList
+        data={bookings}
+        keyExtractor={(booking, i) => String(booking._id ?? i)}
+        renderItem={renderBooking}
+        ItemSeparatorComponent={Separator}
+        contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxl + clearance, flexGrow: 1 }}
+        ListEmptyComponent={
+          <EmptyState
+            icon={Utensils}
+            title="No bookings yet"
+            message="Book your favorite restaurant for a great dining experience!"
+            actionLabel="Book a table"
+            onAction={() => navigateTo('/dining')}
+          />
+        }
+      />
 
       {selectedBooking ? <ReviewModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} onSubmit={handleReviewSubmit} /> : null}
     </View>
   );
 }
 
+const Separator = () => <View style={{ height: space.md }} />;
+
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.slate50 },
+  page: { flex: 1, backgroundColor: color.bg },
   row: { flexDirection: 'row', alignItems: 'center' },
-  header: { backgroundColor: '#fff', padding: 16, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: tw.gray200, ...shadow('sm') },
-  title: { marginLeft: 16, fontSize: 20, lineHeight: 28, color: tw.gray800, ...poppins(600) },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.slate100, flexDirection: 'row', alignItems: 'flex-start', gap: 16, ...shadow('sm') },
-  thumb: { width: 80, height: 80, borderRadius: 12, overflow: 'hidden', backgroundColor: tw.slate100 },
-  name: { flex: 1, fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
-  badgeText: { fontSize: 12, lineHeight: 16, ...poppins(500) },
-  addr: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: tw.slate100, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  chipText: { fontSize: 11, lineHeight: 16.5, color: tw.gray600, ...poppins(700) },
-  rate: { marginTop: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red100, alignItems: 'center' },
-  rateText: { fontSize: 11, lineHeight: 16.5, color: tw.red600, ...poppins(700) },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  emptyTitle: { fontSize: 18, lineHeight: 28, color: tw.gray800, ...poppins(700) },
-  emptyBody: { marginTop: 8, fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', ...poppins(400) },
-  book: { marginTop: 24, backgroundColor: tw.red500, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 12 },
-  bookText: { fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) },
-  modal: { width: 380, maxWidth: '92%', maxHeight: '90%', backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', ...shadow('2xl') },
-  modalHead: { padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: tw.slate100 },
-  modalTitle: { fontSize: 20, lineHeight: 28, color: tw.slate900, ...poppins(700) },
-  how: { fontSize: 14, lineHeight: 20, color: tw.slate500, marginBottom: 12, textAlign: 'center', ...poppins(500) },
-  feedback: { fontSize: 14, lineHeight: 20, color: tw.slate700, ...poppins(700) },
-  textarea: { height: 128, padding: 16, borderRadius: 16, backgroundColor: tw.slate50, fontSize: 14, color: tw.slate900, ...poppins(400) },
-  submit: { height: 48, borderRadius: 16, backgroundColor: tw.red500, alignItems: 'center', justifyContent: 'center', ...shadow('0 10px 15px -3px #FFC9C9, 0 4px 6px -4px #FFC9C9') },
-  submitText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
+  header: { backgroundColor: color.surface, paddingHorizontal: space.lg, paddingVertical: space.sm, flexDirection: 'row', alignItems: 'center', gap: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  title: { flex: 1, ...type.heading, color: color.text },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.lg, borderWidth: 1, borderColor: color.border, gap: space.md, ...elevation.card },
+  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  thumb: { width: 72, height: 72, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  name: { ...type.subheading, color: color.text },
+  addr: { flex: 1, ...type.small, color: color.textMuted },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: space.xs, backgroundColor: color.surfaceMuted, paddingHorizontal: space.sm + 2, height: 28, borderRadius: radii.pill },
+  chipText: { ...type.caption, color: color.textSecondary },
+  modal: { width: 380, maxWidth: '92%', maxHeight: '90%', backgroundColor: color.surface, borderRadius: radii.xl, overflow: 'hidden', ...elevation.float },
+  modalHead: { paddingLeft: space.xl, paddingRight: space.sm, paddingVertical: space.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  modalTitle: { flex: 1, ...type.heading, color: color.text },
+  how: { ...type.body, color: color.textSecondary, marginBottom: space.md, textAlign: 'center' },
+  star: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  feedback: { ...type.label, color: color.text },
+  textarea: { height: 128, padding: space.md, borderRadius: radii.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...type.body, color: color.text },
 });

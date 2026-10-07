@@ -2,30 +2,34 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Image from '../../../components/Img';
 import { router, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Fa from '../../../components/Fa';
 import { Press } from '../../../components/ui';
-import Skeleton from '../../../components/Skeleton';
+import { Button, fa } from '../../../components/ds';
+import { Pulse, StateBlock } from '../../../components/dh/ui';
 import { Header, PatternDivider } from '../../../components/dh/Header';
 import { GalleryViewer, TransportSelector } from '../../../components/dh/places';
 import { fetchDestinationById } from '../../../api/dh/toursApi';
-import { poppins, shadow, tw } from '../../../theme';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 // Web: DimaHasao/pages/TouristPlaceDetail.jsx (/app/places/:id)
 
-function Meta({ icon, color, label, value }) {
+function Meta({ icon, label, value }) {
   return (
     <View style={styles.meta}>
-      <Fa name={icon} size={14} color={color} style={{ marginTop: 2 }} />
-      <View style={{ flex: 1 }}>
+      <View style={styles.metaIcon}>
+        <Fa name={icon} size={16} color={color.primary} />
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={styles.metaLabel}>{label}</Text>
-        <Text style={styles.metaValue}>{value}</Text>
+        <Text style={styles.metaValue}>{value || '—'}</Text>
       </View>
     </View>
   );
 }
 
 export default function TouristPlaceDetail() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const [place, setPlace] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,12 +57,12 @@ export default function TouristPlaceDetail() {
       <View style={styles.page}>
         <Header title="TOURIST PLACES" subtitle="Loading destination" showBack rightAction="none" />
         <PatternDivider variant="native" />
-        <View style={[styles.main, { padding: 16, gap: 12, flex: 1 }]}>
-          <Skeleton style={{ height: 208, borderRadius: 16, backgroundColor: tw.gray200 }} />
+        <View style={styles.loading} accessibilityLabel="Loading destination">
+          <Pulse style={{ height: 220, borderRadius: radii.lg }} />
           {[0, 1].map((n) => (
             <View key={n} style={styles.skeletonCard}>
-              <Skeleton style={{ height: 14, width: '50%', borderRadius: 4, backgroundColor: tw.gray200 }} />
-              <Skeleton style={{ height: 12, borderRadius: 4, backgroundColor: tw.gray100 }} />
+              <Pulse style={{ height: 16, width: '50%' }} />
+              <Pulse tone={100} style={{ height: 13 }} />
             </View>
           ))}
         </View>
@@ -72,13 +76,7 @@ export default function TouristPlaceDetail() {
       <View style={styles.page}>
         <Header title="TOURIST PLACES" showBack rightAction="none" />
         <PatternDivider variant="native" />
-        <View style={[styles.main, { flex: 1, padding: 24, alignItems: 'center', gap: 12 }]}>
-          <Fa name="fa-solid fa-mountain" size={36} color={tw.gray300} style={{ marginTop: 40 }} />
-          <Text style={styles.gone}>This destination is not available</Text>
-          <Press onPress={() => router.replace('/app/places')} style={styles.goneBtn}>
-            <Text style={styles.goneBtnText}>See All Places</Text>
-          </Press>
-        </View>
+        <StateBlock card={false} icon="fa-solid fa-mountain" title="This destination is not available" actionLabel="See all places" onAction={() => router.replace('/app/places')} />
       </View>
     );
   }
@@ -96,97 +94,98 @@ export default function TouristPlaceDetail() {
       <Header title="TOURIST PLACES" subtitle="Explore the Beauty of Dima Hasao" showBack rightAction="favorite" placeId={place.id} />
       <PatternDivider variant="native" />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={styles.main}>
-          <GalleryViewer place={place} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        <GalleryViewer place={place} />
 
-          <View style={{ paddingHorizontal: 16, paddingVertical: 20, gap: 20 }}>
-            <View style={[styles.section, { gap: 16 }]}>
-              <View>
-                <Text style={styles.h2}>About {place.name}</Text>
-                {place.aboutDetails?.length ? (
-                  place.aboutDetails.map((para, idx) => (
-                    <Text key={idx} style={[styles.para, idx < place.aboutDetails.length - 1 && { marginBottom: 8 }]}>
-                      {para}
-                    </Text>
-                  ))
-                ) : (
-                  <Text style={styles.para}>{place.description}</Text>
-                )}
-              </View>
-
-              <View style={styles.metaBox}>
-                <Meta icon="fa-solid fa-location-dot" color={tw.red600} label="LOCATION" value={place.fullAddress} />
-                <Meta icon="fa-solid fa-cloud-sun" color={tw.emerald700} label="BEST TIME TO VISIT" value={place.bestTime} />
-                <Meta icon="fa-solid fa-camera-retro" color={tw.teal700} label="IDEAL FOR" value={place.idealFor} />
-              </View>
+        <View style={styles.body}>
+          <View style={[styles.section, { gap: space.lg }]}>
+            <View style={{ gap: space.sm }}>
+              <Text style={styles.h2} accessibilityRole="header">
+                About {place.name}
+              </Text>
+              {place.aboutDetails?.length ? (
+                place.aboutDetails.map((para, idx) => (
+                  <Text key={idx} style={styles.para}>
+                    {para}
+                  </Text>
+                ))
+              ) : (
+                <Text style={styles.para}>{place.description}</Text>
+              )}
             </View>
 
-            <TransportSelector place={place} />
+            <View style={styles.metaBox}>
+              <Meta icon="fa-solid fa-location-dot" label="Location" value={place.fullAddress} />
+              <Meta icon="fa-solid fa-cloud-sun" label="Best time to visit" value={place.bestTime} />
+              <Meta icon="fa-solid fa-camera-retro" label="Ideal for" value={place.idealFor} />
+            </View>
+          </View>
 
-            {place.packages?.length > 0 ? (
-              <View style={[styles.section, { gap: 12 }]}>
-                <View style={styles.rowGap}>
-                  <Fa name="fa-solid fa-suitcase-rolling" size={14} color={tw.emerald700} />
-                  <Text style={styles.h3}>Guided tours that visit here</Text>
-                </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 4 }}>
-                  {place.packages.map((pkg) => (
-                    <Press key={pkg.id} scale={0.98} onPress={() => router.push(`/app/packages/${pkg.id}`)} style={styles.pkg}>
-                      <Image source={{ uri: pkg.heroImage }} style={styles.pkgImg} resizeMode="cover" />
-                      <View style={{ padding: 10, gap: 4 }}>
-                        <Text style={styles.pkgTitle} numberOfLines={2}>
-                          {pkg.title}
-                        </Text>
-                        <Text style={styles.pkgDuration}>{pkg.duration}</Text>
-                        <Text style={styles.pkgPrice}>
-                          ₹{pkg.pricePerPerson.toLocaleString('en-IN')}
-                          <Text style={styles.pkgPer}> /person</Text>
-                        </Text>
-                      </View>
-                    </Press>
-                  ))}
-                </ScrollView>
-              </View>
-            ) : null}
+          <TransportSelector place={place} />
 
-            <View style={styles.section}>
-              <View style={[styles.rowGap, { marginBottom: 12 }]}>
-                <Fa name="fa-solid fa-leaf" size={16} color={tw.emerald700} />
-                <Text style={[styles.h2, { marginBottom: 0 }]}>Local Guide Recommendations</Text>
-              </View>
-              <View style={{ gap: 10, marginBottom: 16 }}>
-                {place.guideTips?.map((tip, idx) => (
-                  <View key={idx} style={styles.tip}>
-                    <Fa name="fa-solid fa-circle-check" size={14} color={tw.emerald600} style={{ marginTop: 2 }} />
-                    <Text style={styles.tipText}>{tip}</Text>
-                  </View>
-                ))}
-              </View>
-              <View style={styles.sunset}>
-                <Image source={{ uri: place.guideSunsetImage || place.mainImage }} style={styles.sunsetImg} resizeMode="cover" accessibilityLabel="Sunset View" />
-                <Text style={styles.sunsetText}>
-                  Enjoy the view, Respect the nature{'\n'}
-                  <Text style={styles.sunsetStrong}>Love Dima Hasao!</Text>
+          {place.packages?.length > 0 ? (
+            <View style={[styles.section, { gap: space.md }]}>
+              <View style={styles.rowGap}>
+                <Fa name="fa-solid fa-suitcase-rolling" size={16} color={color.primary} />
+                <Text style={styles.h3} accessibilityRole="header">
+                  Guided tours that visit here
                 </Text>
               </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.md, paddingBottom: space.xs }}>
+                {place.packages.map((pkg) => (
+                  <Press key={pkg.id} scale={0.98} onPress={() => router.push(`/app/packages/${pkg.id}`)} style={styles.pkg} accessibilityLabel={`${pkg.title}, ${pkg.duration}, ₹${pkg.pricePerPerson.toLocaleString('en-IN')} per person`}>
+                    <Image source={{ uri: pkg.heroImage }} style={styles.pkgImg} resizeMode="cover" />
+                    <View style={{ padding: space.md, gap: space.xs }}>
+                      <Text style={styles.pkgTitle} numberOfLines={2}>
+                        {pkg.title}
+                      </Text>
+                      <Text style={styles.pkgDuration}>{pkg.duration}</Text>
+                      <Text style={styles.pkgPrice}>
+                        ₹{pkg.pricePerPerson.toLocaleString('en-IN')}
+                        <Text style={styles.pkgPer}> /person</Text>
+                      </Text>
+                    </View>
+                  </Press>
+                ))}
+              </ScrollView>
             </View>
+          ) : null}
 
-            <View style={styles.cta}>
-              <LinearGradient colors={['#0A3A22', tw.emerald900]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.ctaKicker}>Ready to visit {place.name}?</Text>
-                <Text style={styles.ctaTitle}>Book an auto or cab to get here</Text>
-              </View>
-              <Press scale={0.92} onPress={handleBookDirect} style={styles.ctaBtn}>
-                <Text style={styles.ctaBtnText}>Book Ride →</Text>
-              </Press>
+          <View style={styles.section}>
+            <View style={[styles.rowGap, { marginBottom: space.md }]}>
+              <Fa name="fa-solid fa-leaf" size={16} color={color.gold} />
+              <Text style={styles.h3} accessibilityRole="header">
+                Local guide recommendations
+              </Text>
             </View>
+            <View style={{ gap: space.md, marginBottom: space.lg }}>
+              {place.guideTips?.map((tip, idx) => (
+                <View key={idx} style={styles.tip}>
+                  <Fa name="fa-solid fa-circle-check" size={16} color={color.primary} style={{ marginTop: 2 }} />
+                  <Text style={styles.tipText}>{tip}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.sunset}>
+              <Image source={{ uri: place.guideSunsetImage || place.mainImage }} style={styles.sunsetImg} resizeMode="cover" accessibilityLabel="Sunset View" />
+              <Text style={styles.sunsetText}>Enjoy the view, respect the nature</Text>
+              <Text style={styles.sunsetStrong}>Love Dima Hasao!</Text>
+            </View>
+          </View>
+
+          <View style={styles.cta}>
+            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+              <Text style={styles.ctaKicker} numberOfLines={2}>
+                Ready to visit {place.name}?
+              </Text>
+              <Text style={styles.ctaTitle}>Book an auto or cab to get here</Text>
+            </View>
+            <Button title="Book ride" variant="gold" fullWidth={false} iconRight={fa('fa-solid fa-arrow-right')} onPress={handleBookDirect} />
           </View>
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Plan your trip, stay safe and{'\n'}enjoy the beauty of Dima Hasao!</Text>
+        <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
+          <Text style={styles.footerText}>Plan your trip, stay safe and enjoy the beauty of Dima Hasao!</Text>
         </View>
       </ScrollView>
     </View>
@@ -194,38 +193,35 @@ export default function TouristPlaceDetail() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#0B2E13' },
-  main: { backgroundColor: '#FDFBF7' },
-  skeletonCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.gray100, gap: 8 },
-  gone: { fontSize: 14, lineHeight: 20, color: tw.gray800, ...poppins(700) },
-  goneBtn: { backgroundColor: '#0A3A2A', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 },
-  goneBtnText: { fontSize: 12, lineHeight: 16, color: tw.amber200, ...poppins(700) },
-  section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  h2: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 8, flexShrink: 1, ...poppins(700) },
-  h3: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  para: { fontSize: 12, lineHeight: 19.5, color: tw.gray700, ...poppins(400) },
-  metaBox: { gap: 10, backgroundColor: 'rgba(255,247,237,0.6)', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: tw.orange100 },
-  meta: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  metaLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 0.25, color: tw.gray900, ...poppins(700) },
-  metaValue: { fontSize: 12, lineHeight: 16.5, color: tw.gray600, ...poppins(400) },
-  rowGap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  pkg: { width: 176, backgroundColor: '#FDF5E6', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,214,167,0.7)', overflow: 'hidden' },
-  pkgImg: { height: 96, width: '100%', backgroundColor: tw.gray200 },
-  pkgTitle: { fontSize: 12, lineHeight: 16.5, color: tw.gray900, ...poppins(700) },
-  pkgDuration: { fontSize: 10, lineHeight: 15, color: tw.gray500, ...poppins(400) },
-  pkgPrice: { fontSize: 14, lineHeight: 20, color: tw.emerald900, ...poppins(900) },
-  pkgPer: { fontSize: 10, color: tw.gray400, ...poppins(500) },
-  tip: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  tipText: { flex: 1, fontSize: 12, lineHeight: 16.5, color: tw.gray700, ...poppins(400) },
-  sunset: { paddingTop: 12, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  sunsetImg: { height: 144, borderRadius: 12, marginBottom: 8, backgroundColor: tw.gray200 },
-  sunsetText: { textAlign: 'center', fontSize: 12, lineHeight: 18, color: tw.gray600, ...poppins(500) },
-  sunsetStrong: { fontSize: 14, color: tw.gray900, ...poppins(700) },
-  cta: { borderRadius: 16, overflow: 'hidden', padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, ...shadow('lg') },
-  ctaKicker: { fontSize: 12, lineHeight: 16, color: tw.amber300, ...poppins(500) },
-  ctaTitle: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
-  ctaBtn: { backgroundColor: tw.amber400, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, ...shadow('sm') },
-  ctaBtnText: { fontSize: 12, lineHeight: 16, color: '#000', ...poppins(700) },
-  footer: { backgroundColor: '#0B2E13', paddingVertical: 16, alignItems: 'center', borderTopWidth: 1, borderTopColor: tw.emerald900 },
-  footerText: { fontSize: 12, lineHeight: 16, color: tw.amber300, textAlign: 'center', fontStyle: 'italic', fontFamily: 'serif' },
+  page: { flex: 1, backgroundColor: color.bg },
+  loading: { flex: 1, padding: space.lg, gap: space.md },
+  skeletonCard: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.lg, borderWidth: 1, borderColor: color.border, gap: space.sm },
+  body: { padding: space.lg, paddingTop: space.xl, gap: space.xxl, flexGrow: 1 },
+  section: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.lg, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  h2: { ...type.heading, color: color.primary },
+  h3: { ...type.subheading, color: color.text, flexShrink: 1 },
+  para: { ...type.body, color: color.textSecondary },
+  metaBox: { gap: space.md, backgroundColor: color.surfaceMuted, padding: space.md, borderRadius: radii.md },
+  meta: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  metaIcon: { width: 36, height: 36, borderRadius: radii.sm, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  metaLabel: { ...type.label, color: color.text },
+  metaValue: { ...type.small, color: color.textSecondary },
+  rowGap: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  pkg: { width: 196, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden' },
+  pkgImg: { aspectRatio: 16 / 9, width: '100%', backgroundColor: color.surfaceMuted },
+  pkgTitle: { ...type.bodyStrong, color: color.text },
+  pkgDuration: { ...type.caption, color: color.textMuted },
+  pkgPrice: { ...type.price, fontSize: 16, color: color.primary },
+  pkgPer: { ...type.caption, color: color.textMuted },
+  tip: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  tipText: { flex: 1, ...type.body, color: color.textSecondary },
+  sunset: { paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, alignItems: 'center' },
+  sunsetImg: { width: '100%', aspectRatio: 16 / 9, borderRadius: radii.md, marginBottom: space.sm, backgroundColor: color.surfaceMuted },
+  sunsetText: { ...type.small, color: color.textSecondary, textAlign: 'center' },
+  sunsetStrong: { ...type.bodyStrong, color: color.primary, textAlign: 'center' },
+  cta: { borderRadius: radii.lg, backgroundColor: color.primaryDeep, padding: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, ...elevation.card },
+  ctaKicker: { ...type.small, color: color.goldOnDark },
+  ctaTitle: { ...type.bodyStrong, color: color.textInverse },
+  footer: { backgroundColor: color.primaryDeep, paddingTop: space.lg, paddingHorizontal: space.xl, alignItems: 'center', marginTop: space.xxl },
+  footerText: { ...type.tagline, color: color.textOnDarkMuted, textAlign: 'center' },
 });

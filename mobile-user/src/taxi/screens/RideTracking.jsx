@@ -2,19 +2,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, Linking, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import { AlertTriangle, ChevronLeft, Clock3, MessageCircle, Phone, Share2, Shield, Star } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeft, Clock3, LifeBuoy, MessageCircle, Phone, Share2, Shield, Star } from 'lucide-react-native';
 import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { shadow, tw } from '../../theme';
-import { fo } from '../account/ui';
+import { Button, IconButton, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import { useRideTracking } from '../hooks/useRideTracking';
 import { MAP_STYLE } from '../components/live/mapStyle';
 import { CircleLocationMarker, toSrc } from '../components/live/parts';
 import { fallbackCar } from '../components/home/homeShared';
 
-const EMERALD = { 50: '#ECFDF5', 100: '#D0FAE5', 700: '#007A55' };
-const AMBER = { 50: '#FFFBEB', 100: '#FEF3C6', 500: '#FE9A00', 600: '#E17100' };
+/** Pickup = brand green, drop = red, everywhere in the ride flow. */
+const PICKUP = color.primary;
+const DROP = color.danger;
 const DRAWER_HIDDEN = 420;
 
 function Icon({ src, style, tint }) {
@@ -55,14 +56,17 @@ export default function RideTracking() {
     if (url) Linking.openURL(url).catch(() => {});
   };
   const actions = [
-    { id: 'call', Icon: Phone, label: 'CALL', onPress: handleCallDriver },
-    { id: 'chat', Icon: MessageCircle, label: 'CHAT', onPress: openRideChat },
-    { id: 'share', Icon: Share2, label: 'SHARE', onPress: handleShare },
-    { id: 'help', Icon: AlertTriangle, label: 'HELP', onPress: () => navigate(routeSupport) },
+    { id: 'call', Icon: Phone, label: 'Call', a11y: 'Call captain', tone: 'primary', onPress: handleCallDriver },
+    { id: 'chat', Icon: MessageCircle, label: 'Chat', a11y: 'Chat with captain', tone: 'primary', onPress: openRideChat },
+    { id: 'share', Icon: Share2, label: 'Share', a11y: 'Share ride', tone: 'neutral', onPress: handleShare },
+    { id: 'help', Icon: LifeBuoy, label: 'Help', a11y: 'Help', tone: 'neutral', onPress: () => navigate(routeSupport) },
   ];
+  // Display only: the same status line as before, now as a word + colour badge.
+  const statusLabel = tripStatus === 'arrived' ? 'Reached destination' : tripStatus === 'started' || tripStatus === 'ongoing' ? 'Trip started' : driverSubtitle;
+  const statusTone = tripStatus === 'arrived' ? 'success' : tripStatus === 'cancelled' ? 'danger' : 'info';
 
   return (
-    <View style={{ flex: 1, backgroundColor: tw.slate200 }}>
+    <View style={styles.screen}>
       <MapView
         ref={map}
         provider={PROVIDER_GOOGLE}
@@ -74,91 +78,93 @@ export default function RideTracking() {
         onMapReady={() => setMap(map.current)}
         initialRegion={{ latitude: driverCoord?.latitude ?? destCoord?.latitude ?? 25.17, longitude: driverCoord?.longitude ?? destCoord?.longitude ?? 93.03, latitudeDelta: 0.03, longitudeDelta: 0.03 }}
       >
-        {path.length > 1 ? <Polyline coordinates={path} strokeColor="rgba(17,24,39,0.9)" strokeWidth={5} /> : null}
+        {path.length > 1 ? <Polyline coordinates={path} strokeColor={color.primaryDeep} strokeWidth={5} /> : null}
         {driverCoord ? (
           <Marker coordinate={driverCoord} title="Driver" anchor={{ x: 0.5, y: 0.5 }} flat rotation={Number(displayDriverHeading) || 0} tracksViewChanges={false}>
             <Icon src={vehicleIcon} style={{ width: 40, height: 40 }} />
           </Marker>
         ) : null}
-        {destCoord ? <CircleLocationMarker position={activeDestination} title={dropPhase ? 'Drop' : 'Pickup'} color={dropPhase ? '#ef4444' : '#10b981'} /> : null}
+        {destCoord ? <CircleLocationMarker position={activeDestination} title={dropPhase ? 'Drop' : 'Pickup'} color={dropPhase ? DROP : PICKUP} /> : null}
       </MapView>
 
-      <Press scale={0.9} onPress={() => navigate(routeHome)} accessibilityLabel="Back to taxi home" style={[styles.back, { top: 32 + insets.top }]}>
-        <ChevronLeft size={18} color={tw.slate900} strokeWidth={2.5} />
-      </Press>
-      <View style={[styles.routeBar, { top: 32 + insets.top }]}>
-        <Text style={styles.routeBarText} numberOfLines={1}>
-          {pickupLabel} → {dropLabel}
-        </Text>
+      {/* Overlays over the map, stacked instead of hard-coded offsets */}
+      <View style={[styles.topStack, { top: space.md + insets.top }]} pointerEvents="box-none">
+        <View style={styles.topRow} pointerEvents="box-none">
+          <IconButton icon={ArrowLeft} label="Back to taxi home" onPress={() => navigate(routeHome)} style={styles.back} />
+          <View style={styles.routeBar}>
+            <View style={styles.routeLine}>
+              <View style={styles.pickupDot} />
+              <Text style={styles.routeBarText} numberOfLines={1}>{pickupLabel}</Text>
+            </View>
+            <View style={styles.routeLine}>
+              <View style={styles.dropSquare} />
+              <Text style={styles.routeBarText} numberOfLines={1}>{dropLabel}</Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.topRow} pointerEvents="box-none">
+          {routeError ? (
+            <View style={styles.routeNote}>
+              <Text style={styles.routeNoteLabel}>Route</Text>
+              <Text style={styles.routeNoteText}>Using fallback path while directions load.</Text>
+            </View>
+          ) : null}
+          <Press scale={0.95} onPress={() => navigate(routeSos)} accessibilityLabel="Safety" style={styles.safety}>
+            <Shield size={16} color={color.danger} />
+            <Text style={styles.safetyText}>Safety</Text>
+          </Press>
+        </View>
+        {isScheduledUpcoming ? (
+          <View style={styles.scheduled}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.kicker}>Scheduled ride</Text>
+              <Text style={styles.scheduledDate}>{scheduledDateLabel}</Text>
+              <Text style={styles.scheduledBody}>
+                {hasLiveDriverLocation ? 'Your driver has started sharing location for this pickup.' : 'Driver assigned. We will light up live movement here as pickup time gets closer.'}
+              </Text>
+            </View>
+            <View style={styles.countdown}>
+              <Text style={styles.tiny}>Countdown</Text>
+              <Text style={styles.countdownValue}>{scheduledCountdown || 'Ready'}</Text>
+            </View>
+          </View>
+        ) : null}
       </View>
-      <Press scale={0.95} onPress={() => navigate(routeSos)} accessibilityLabel="Safety" style={[styles.safety, { top: 96 + insets.top }]}>
-        <Shield size={13} color="#2B7FFF" strokeWidth={2.5} />
-        <Text style={styles.safetyText}>SAFETY</Text>
-      </Press>
-      {routeError ? (
-        <View style={[styles.routeNote, { top: 96 + insets.top }]}>
-          <Text style={styles.routeNoteLabel}>ROUTE</Text>
-          <Text style={styles.routeNoteText}>Using fallback path while directions load.</Text>
-        </View>
-      ) : null}
-      {isScheduledUpcoming ? (
-        <View style={[styles.scheduled, { top: 132 + insets.top }]}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.scheduledKicker}>SCHEDULED RIDE</Text>
-            <Text style={styles.scheduledDate}>{scheduledDateLabel}</Text>
-            <Text style={styles.scheduledBody}>
-              {hasLiveDriverLocation ? 'Your driver has started sharing location for this pickup.' : 'Driver assigned. We will light up live movement here as pickup time gets closer.'}
-            </Text>
-          </View>
-          <View style={styles.countdown}>
-            <Text style={[styles.tiny, { color: EMERALD[700] }]}>COUNTDOWN</Text>
-            <Text style={styles.countdownValue}>{scheduledCountdown || 'Ready'}</Text>
-          </View>
-        </View>
-      ) : null}
 
       {shareToast ? (
-        <View style={[styles.toast, { top: 16 + insets.top }]} accessibilityLiveRegion="polite">
+        <View style={[styles.toast, { top: space.lg + insets.top }]} accessibilityLiveRegion="polite">
           <Text style={styles.toastText}>Ride details copied!</Text>
         </View>
       ) : null}
 
       <Animated.View style={[styles.sheet, { transform: [{ translateY: y }] }]} onLayout={(e) => setSheetHeight(e.nativeEvent.layout.height)}>
-        <Press scale={1} onPress={() => setDrawerOpen(!drawerOpen)} accessibilityLabel={drawerOpen ? 'Collapse ride details' : 'Expand ride details'} hitSlop={12} style={{ paddingTop: 10, paddingBottom: 14 }}>
+        <Press scale={1} onPress={() => setDrawerOpen(!drawerOpen)} accessibilityLabel={drawerOpen ? 'Collapse ride details' : 'Expand ride details'} hitSlop={12} style={styles.grabberHit}>
           <View style={styles.grabber} />
         </Press>
 
-        <View style={{ paddingHorizontal: 16, paddingBottom: 24 + insets.bottom, gap: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-            <View style={{ flexDirection: 'row', gap: 12, flex: 1, minWidth: 0 }}>
-              <View>
-                <View style={styles.driverPhoto}>
-                  {driverImage ? (
-                    <Image source={toSrc(driverImage)} onError={() => setDriverImageBroken(true)} style={{ width: '100%', height: '100%', opacity: 0.9 }} accessibilityLabel={driver.name || 'Driver'} />
-                  ) : (
-                    <Text style={styles.initials}>{getInitials(driver.name)}</Text>
-                  )}
-                </View>
-                <View style={styles.carBadge}>
-                  <Icon src={vehicleIcon} style={{ width: 14, height: 14 }} tint="#fff" />
-                </View>
-                <View style={styles.ratingBadge}>
-                  <Star size={9} color={tw.slate900} fill={tw.slate900} />
-                  <Text style={styles.ratingText}>{driver.rating || '4.9'}</Text>
-                </View>
+        <View style={[styles.sheetBody, { paddingBottom: space.xl + insets.bottom }]}>
+          <View style={styles.driverRow}>
+            <View>
+              <View style={styles.driverPhoto}>
+                {driverImage ? (
+                  <Image source={toSrc(driverImage)} onError={() => setDriverImageBroken(true)} style={{ width: '100%', height: '100%' }} accessibilityLabel={driver.name || 'Driver'} />
+                ) : (
+                  <Text style={styles.initials}>{getInitials(driver.name)}</Text>
+                )}
               </View>
-              <View style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
-                <Text style={styles.driverName} numberOfLines={1}>{driver.name || 'Driver'}</Text>
-                <Text style={styles.driverStatus}>{tripStatus === 'arrived' ? 'Reached destination' : tripStatus === 'started' || tripStatus === 'ongoing' ? 'Trip started' : driverSubtitle}</Text>
-                <Text style={styles.plate} numberOfLines={1}>
-                  {String(driver.plate || '').toUpperCase()}
-                  {driver.plate ? ' · ' : ''}
-                  {String(vehicleLabel || '').toUpperCase()}
-                </Text>
+              <View style={styles.ratingBadge}>
+                <Star size={11} color={color.onGold} fill={color.onGold} />
+                <Text style={styles.ratingText}>{driver.rating || '4.9'}</Text>
               </View>
             </View>
+            <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
+              <Text style={styles.driverName} numberOfLines={1}>{driver.name || 'Driver'}</Text>
+              <StatusBadge label={statusLabel} tone={statusTone} />
+              {driver.plate ? <Text style={styles.plate} numberOfLines={1} accessibilityLabel={`Vehicle number ${driver.plate}`}>{String(driver.plate).toUpperCase()}</Text> : null}
+              {vehicleLabel ? <Text style={styles.plateSub} numberOfLines={1}>{vehicleLabel}</Text> : null}
+            </View>
             {otp ? (
-              <View style={styles.otp} accessibilityLabel={`OTP ${String(otp).split('').join(' ')}`}>
+              <View style={styles.otp} accessible accessibilityLabel={`OTP ${String(otp).split('').join(' ')}`}>
                 <Text style={styles.otpLabel}>OTP</Text>
                 <Text style={styles.otpValue} selectable>{otp}</Text>
               </View>
@@ -168,14 +174,14 @@ export default function RideTracking() {
           {isScheduledRide ? (
             <View style={styles.plan}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[styles.tiny, { color: EMERALD[700], letterSpacing: 2 }]}>TRIP PLAN</Text>
+                <Text style={styles.kicker}>Trip plan</Text>
                 <Text style={styles.scheduledDate}>{scheduledDateLabel}</Text>
                 <Text style={styles.scheduledBody}>
                   {isScheduledUpcoming ? 'We will switch from booking mode to live pickup tracking automatically as your slot approaches.' : 'Your scheduled ride is now in its live service window.'}
                 </Text>
               </View>
-              <View style={[styles.countdown, { backgroundColor: '#fff' }]}>
-                <Text style={styles.tiny}>STATUS</Text>
+              <View style={[styles.countdown, { backgroundColor: color.surface }]}>
+                <Text style={styles.tiny}>Status</Text>
                 <Text style={styles.countdownValue}>{isScheduledUpcoming ? scheduledCountdown || 'Ready' : 'Live now'}</Text>
               </View>
             </View>
@@ -183,28 +189,28 @@ export default function RideTracking() {
 
           {isWaitingForOtp ? (
             <View style={styles.waiting}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={styles.waitingTop}>
+                <View style={styles.waitingLeft}>
                   <View style={styles.waitingIcon}>
-                    <Clock3 size={18} color={AMBER[500]} strokeWidth={2.5} />
+                    <Clock3 size={20} color={color.warning} />
                   </View>
                   <View>
-                    <Text style={[styles.tiny, { color: AMBER[600], letterSpacing: 2 }]}>WAITING CLOCK</Text>
+                    <Text style={[styles.tiny, { color: color.warning }]}>Waiting clock</Text>
                     <Text style={styles.waitingClock}>{formatTimerClock(waitingElapsedSeconds)}</Text>
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.tiny}>FREE LEFT</Text>
+                  <Text style={styles.tiny}>Free left</Text>
                   <Text style={styles.countdownValue}>{formatTimerClock(freeWaitingRemainingSeconds)}</Text>
                 </View>
               </View>
-              <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+              <View style={styles.waitingCells}>
                 <View style={styles.waitingCell}>
-                  <Text style={styles.tiny}>FREE BEFORE RIDE</Text>
+                  <Text style={styles.tiny}>Free before ride</Text>
                   <Text style={styles.countdownValue}>{formatWholeMinutes(freeWaitingBeforeMinutes)}</Text>
                 </View>
                 <View style={styles.waitingCell}>
-                  <Text style={styles.tiny}>WAITING CHARGE</Text>
+                  <Text style={styles.tiny}>Waiting charge</Text>
                   <Text style={styles.countdownValue}>
                     Rs {waitingChargePerMinute}/min
                     {waitingChargeableMinutes > 0 ? ` • ${waitingChargeableMinutes} billable` : ''}
@@ -219,45 +225,45 @@ export default function RideTracking() {
               {hasVehiclePhoto ? (
                 <Image source={toSrc(vehicleImage)} onError={() => setVehicleImageBroken(true)} style={{ width: '100%', height: '100%' }} resizeMode="contain" accessibilityLabel={vehicleLabel} />
               ) : (
-                <Icon src={vehicleIcon} style={{ width: 24, height: 24, opacity: 0.6 }} />
+                <Icon src={vehicleIcon} style={{ width: 28, height: 28 }} />
               )}
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={[styles.tiny, { marginBottom: 2 }]}>VEHICLE</Text>
+              <Text style={styles.tiny}>Vehicle</Text>
               <Text style={styles.vehicleName} numberOfLines={1}>{vehicleLabel}</Text>
               {vehicleDetails ? <Text style={styles.vehicleSub} numberOfLines={1}>{vehicleDetails}</Text> : null}
             </View>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            {actions.map(({ id, Icon: ActionIcon, label, onPress }) => (
-              <Press key={id} scale={0.94} onPress={onPress} accessibilityLabel={label.charAt(0) + label.slice(1).toLowerCase()} style={styles.action}>
-                <ActionIcon size={18} color={tw.slate800} strokeWidth={2} />
+          <View style={styles.actions}>
+            {actions.map(({ id, Icon: ActionIcon, label, a11y, tone: t, onPress }) => (
+              <Press key={id} scale={0.94} onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y} style={styles.action}>
+                <View style={[styles.actionIcon, t === 'primary' ? { backgroundColor: color.primarySoft } : null]}>
+                  <ActionIcon size={20} color={t === 'primary' ? color.primary : color.text} />
+                </View>
                 <Text style={styles.actionText}>{label}</Text>
               </Press>
             ))}
           </View>
 
           <View style={styles.footer}>
-            <View>
-              <Text style={[styles.tiny, { marginBottom: 4 }]}>TOTAL FARE</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={styles.fare}>Rs {fare}.00</Text>
-                <Text style={styles.payMethod}>{String(paymentMethod || '').toUpperCase()}</Text>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.tiny}>Total fare</Text>
+              <View style={styles.fareRow}>
+                <Text style={styles.fare}>₹{fare}.00</Text>
+                {paymentMethod ? <StatusBadge label={String(paymentMethod)} tone="neutral" style={{ alignSelf: 'center' }} /> : null}
               </View>
             </View>
-            <Press scale={0.96} onPress={() => setShowCancelConfirm(true)} accessibilityLabel="Cancel ride" style={styles.cancel}>
-              <Text style={styles.cancelText}>CANCEL</Text>
-            </Press>
+            <Button title="Cancel" variant="dangerSoft" fullWidth={false} onPress={() => setShowCancelConfirm(true)} accessibilityLabel="Cancel ride" />
           </View>
         </View>
       </Animated.View>
 
       {/* Share the ride */}
-      <Dialog visible={shareSheetOpen} onClose={() => setShareSheetOpen(false)} backdrop="rgba(2,6,24,0.45)" panelStyle={styles.share}>
-        <Text style={[styles.tiny, { fontSize: 11, letterSpacing: 2.4 }]}>SHARE RIDE</Text>
-        <Text style={styles.shareTitle}>Send trip details</Text>
-        <Text style={styles.shareBody}>Choose how you want to share this ongoing ride.</Text>
+      <Dialog visible={shareSheetOpen} onClose={() => setShareSheetOpen(false)} backdrop={color.overlay} panelStyle={styles.share}>
+        <Text style={styles.kicker}>Share ride</Text>
+        <Text style={styles.dialogTitle}>Send trip details</Text>
+        <Text style={styles.dialogBody}>Choose how you want to share this ongoing ride.</Text>
         <View style={styles.shareGrid}>
           {[
             ['System share', 'Open phone share apps', handleShare],
@@ -271,94 +277,91 @@ export default function RideTracking() {
             </Press>
           ))}
         </View>
-        <Press scale={0.98} onPress={() => setShareSheetOpen(false)} accessibilityLabel="Close" style={styles.shareClose}>
-          <Text style={styles.shareCloseText}>CLOSE</Text>
-        </Press>
+        <Button title="Close" variant="outline" onPress={() => setShareSheetOpen(false)} style={{ marginTop: space.lg }} />
       </Dialog>
 
       {/* Cancel confirmation */}
-      <Dialog visible={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.confirm}>
+      <Dialog visible={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} backdrop={color.overlay} panelStyle={styles.confirm}>
         <View style={styles.confirmIcon}>
-          <AlertTriangle size={26} color="#FF6467" strokeWidth={2} />
+          <AlertTriangle size={26} color={color.danger} />
         </View>
-        <Text style={styles.confirmTitle}>Cancel your ride?</Text>
-        <Text style={styles.confirmBody}>Your captain is already on the way.</Text>
-        <Press scale={0.97} onPress={handleCancelRide} accessibilityLabel="Yes, cancel the ride" style={styles.confirmYes}>
-          <Text style={styles.confirmYesText}>YES, CANCEL</Text>
-        </Press>
-        <Press scale={0.97} onPress={() => setShowCancelConfirm(false)} accessibilityLabel="No, go back" style={{ paddingVertical: 14, alignSelf: 'stretch' }}>
-          <Text style={styles.confirmNo}>NO, GO BACK</Text>
-        </Press>
+        <Text style={[styles.dialogTitle, { textAlign: 'center' }]} accessibilityRole="header">Cancel your ride?</Text>
+        <Text style={[styles.dialogBody, { textAlign: 'center', marginBottom: space.xl }]}>Your captain is already on the way.</Text>
+        <Button title="Yes, cancel" variant="danger" onPress={handleCancelRide} accessibilityLabel="Yes, cancel the ride" />
+        <Button title="No, go back" variant="ghost" onPress={() => setShowCancelConfirm(false)} accessibilityLabel="No, go back" style={{ marginTop: space.sm }} />
       </Dialog>
     </View>
   );
 }
 
-const glass = { backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' };
 const styles = StyleSheet.create({
-  back: { position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', ...glass, ...shadow('0 4px 14px rgba(15,23,42,0.10)') },
-  routeBar: { position: 'absolute', left: 64, right: 16, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, ...glass, ...shadow('0 4px 14px rgba(15,23,42,0.08)') },
-  routeBarText: { fontSize: 11, lineHeight: 16, color: tw.slate500, ...fo(900) },
-  safety: { position: 'absolute', right: 16, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, ...glass, ...shadow('0 4px 14px rgba(15,23,42,0.08)') },
-  safetyText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, color: tw.slate700, ...fo(700) },
-  routeNote: { position: 'absolute', left: 16, borderRadius: 12, borderWidth: 1, borderColor: AMBER[100], backgroundColor: 'rgba(255,255,255,0.92)', paddingHorizontal: 12, paddingVertical: 8, maxWidth: '58%' },
-  routeNoteLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.slate400, ...fo(700) },
-  routeNoteText: { fontSize: 11, lineHeight: 16, color: tw.slate700, ...fo(700) },
-  scheduled: { position: 'absolute', left: 16, right: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: 18, borderWidth: 1, borderColor: EMERALD[100], backgroundColor: 'rgba(255,255,255,0.94)', paddingHorizontal: 16, paddingVertical: 12, ...shadow('0 10px 28px rgba(16,185,129,0.12)') },
-  scheduledKicker: { fontSize: 10, lineHeight: 15, letterSpacing: 2, color: EMERALD[700], ...fo(900) },
-  scheduledDate: { marginTop: 4, fontSize: 15, lineHeight: 20, letterSpacing: -0.375, color: '#020618', ...fo(900) },
-  scheduledBody: { marginTop: 4, fontSize: 11, lineHeight: 16, color: tw.slate500, ...fo(700) },
-  countdown: { borderRadius: 16, backgroundColor: EMERALD[50], paddingHorizontal: 12, paddingVertical: 8, alignItems: 'flex-end' },
-  countdownValue: { marginTop: 4, fontSize: 13, lineHeight: 18, color: '#020618', ...fo(900) },
-  tiny: { fontSize: 9, lineHeight: 12, letterSpacing: 1.6, color: tw.slate400, ...fo(900) },
-  toast: { position: 'absolute', alignSelf: 'center', backgroundColor: tw.slate900, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14, zIndex: 60, ...shadow('xl') },
-  toastText: { fontSize: 12, lineHeight: 16, color: '#fff', ...fo(900) },
+  screen: { flex: 1, backgroundColor: color.surfaceMuted },
+  topStack: { position: 'absolute', left: space.lg, right: space.lg, gap: space.sm },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  back: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  routeBar: { flex: 1, minWidth: 0, borderRadius: radii.lg, paddingHorizontal: space.md, paddingVertical: space.sm, gap: space.xxs, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  routeLine: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  pickupDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: PICKUP },
+  dropSquare: { width: 10, height: 10, borderRadius: 2, backgroundColor: DROP },
+  routeBarText: { ...type.label, flex: 1, minWidth: 0, color: color.text },
+  safety: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, paddingHorizontal: space.md, minHeight: 40, borderRadius: radii.pill, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float },
+  safetyText: { ...type.label, color: color.danger },
+  routeNote: { flexShrink: 1, borderRadius: radii.md, borderWidth: 1, borderColor: color.warningSoft, backgroundColor: color.surface, paddingHorizontal: space.md, paddingVertical: space.sm, ...elevation.card },
+  routeNoteLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.warning },
+  routeNoteText: { ...type.caption, color: color.text },
+  scheduled: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, borderRadius: radii.lg, borderWidth: 1, borderColor: color.primaryBorder, backgroundColor: color.surface, padding: space.md, ...elevation.float },
+  kicker: { ...type.overline, color: color.goldText },
+  scheduledDate: { ...type.subheading, marginTop: space.xs, color: color.text },
+  scheduledBody: { ...type.caption, marginTop: space.xs, color: color.textSecondary },
+  countdown: { borderRadius: radii.md, backgroundColor: color.primarySoft, paddingHorizontal: space.md, paddingVertical: space.sm, alignItems: 'flex-end' },
+  countdownValue: { ...type.bodyStrong, marginTop: space.xxs, color: color.text },
+  tiny: { ...type.caption, color: color.textMuted },
+  toast: { position: 'absolute', alignSelf: 'center', backgroundColor: color.primaryDeep, paddingHorizontal: space.xl, paddingVertical: space.md, borderRadius: radii.pill, zIndex: 60, ...elevation.float },
+  toastText: { ...type.label, color: color.textInverse },
 
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, borderTopWidth: 1, borderTopColor: 'rgba(241,245,249,0.5)', ...shadow('0 -12px 44px rgba(15,23,42,0.12)') },
-  grabber: { width: 48, height: 6, borderRadius: 3, backgroundColor: 'rgba(226,232,240,0.6)', alignSelf: 'center' },
-  driverPhoto: { width: 62, height: 62, borderRadius: 20, backgroundColor: '#1d2333', overflow: 'hidden', alignItems: 'center', justifyContent: 'center', ...shadow('0 8px 20px rgba(15,23,42,0.15)') },
-  initials: { fontSize: 21, color: 'rgba(255,255,255,0.9)', ...fo(900) },
-  carBadge: { position: 'absolute', top: -4, right: -4, width: 24, height: 24, borderRadius: 8, backgroundColor: '#111827', borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  ratingBadge: { position: 'absolute', bottom: -4, right: -4, flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#FDC700', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, borderWidth: 2, borderColor: '#fff' },
-  ratingText: { fontSize: 9, lineHeight: 12, color: tw.slate900, ...fo(900) },
-  driverName: { fontSize: 17, lineHeight: 21, letterSpacing: -0.425, color: tw.slate900, ...fo(900) },
-  driverStatus: { fontSize: 13, lineHeight: 18, letterSpacing: -0.325, color: '#f97316', marginTop: 4, ...fo(900) },
-  plate: { fontSize: 11, lineHeight: 16, letterSpacing: 1.5, color: tw.slate400, marginTop: 2, ...fo(700) },
-  otp: { backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate200, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', minWidth: 80, ...shadow('sm') },
-  otpLabel: { fontSize: 9, lineHeight: 10, letterSpacing: 1.6, color: '#FF6900', marginBottom: 4, ...fo(900) },
-  otpValue: { fontSize: 18, lineHeight: 20, letterSpacing: -0.9, color: tw.slate900, ...fo(900) },
-  plan: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 22, borderWidth: 1, borderColor: EMERALD[100], backgroundColor: 'rgba(236,253,245,0.7)', padding: 16 },
-  waiting: { borderRadius: 24, borderWidth: 1, borderColor: AMBER[100], backgroundColor: 'rgba(255,251,235,0.7)', padding: 16 },
-  waitingIcon: { width: 44, height: 44, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  waitingClock: { marginTop: 4, fontSize: 22, lineHeight: 26, letterSpacing: -0.55, color: tw.slate900, ...fo(900) },
-  waitingCell: { flex: 1, borderRadius: 16, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 12, ...shadow('sm') },
-  vehicle: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 22, backgroundColor: 'rgba(248,250,252,0.4)', borderWidth: 1, borderColor: 'rgba(248,250,252,0.8)', padding: 12 },
-  vehiclePhoto: { width: 48, height: 48, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(241,245,249,0.5)', alignItems: 'center', justifyContent: 'center', padding: 8, overflow: 'hidden', ...shadow('sm') },
-  vehicleName: { fontSize: 15, lineHeight: 19, color: tw.slate900, ...fo(900) },
-  vehicleSub: { fontSize: 12, lineHeight: 16, color: tw.slate500, marginTop: 2, ...fo(700) },
-  action: { flex: 1, alignItems: 'center', gap: 8, paddingVertical: 12, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(241,245,249,0.6)', ...shadow('0 2px 8px rgba(15,23,42,0.03)') },
-  actionText: { fontSize: 9, lineHeight: 10, letterSpacing: 0.9, color: tw.slate500, ...fo(900) },
-  footer: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.slate50 },
-  fare: { fontSize: 19, lineHeight: 22, letterSpacing: -0.475, color: '#020618', ...fo(900) },
-  payMethod: { fontSize: 9, lineHeight: 12, letterSpacing: 0.45, color: tw.slate600, backgroundColor: tw.slate100, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(226,232,240,0.5)', overflow: 'hidden', ...fo(900) },
-  cancel: { backgroundColor: '#fff', borderWidth: 2, borderColor: tw.slate50, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 18, ...shadow('0 8px 20px rgba(239,68,68,0.08)') },
-  cancelText: { fontSize: 11, lineHeight: 16, letterSpacing: 1.76, color: tw.red500, ...fo(900) },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, ...elevation.sheet },
+  grabberHit: { paddingTop: space.sm + 2, paddingBottom: space.md },
+  grabber: { width: 44, height: 5, borderRadius: 3, backgroundColor: color.borderStrong, alignSelf: 'center' },
+  sheetBody: { paddingHorizontal: space.lg, gap: space.md },
+  driverRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  driverPhoto: { width: 60, height: 60, borderRadius: radii.lg, backgroundColor: color.primaryDeep, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  initials: { ...type.heading, color: color.goldOnDark },
+  ratingBadge: { position: 'absolute', bottom: -6, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: color.goldBright, paddingHorizontal: space.xs + 2, height: 20, borderRadius: radii.pill, borderWidth: 2, borderColor: color.surface },
+  ratingText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.onGold },
+  driverName: { ...type.subheading, color: color.text },
+  plate: { ...type.price, fontSize: 20, color: color.text, marginTop: space.xxs },
+  plateSub: { ...type.caption, color: color.textSecondary },
+  otp: { borderWidth: 1.5, borderColor: color.gold, backgroundColor: color.goldSoft, borderRadius: radii.lg, paddingHorizontal: space.md, paddingVertical: space.sm, alignItems: 'center', justifyContent: 'center', minWidth: 88 },
+  otpLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
+  otpValue: { ...type.priceLg, color: color.primary, letterSpacing: 2 },
+  plan: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radii.lg, borderWidth: 1, borderColor: color.primaryBorder, backgroundColor: color.primarySoft, padding: space.lg },
+  waiting: { borderRadius: radii.lg, borderWidth: 1, borderColor: color.warningSoft, backgroundColor: color.warningSoft, padding: space.lg },
+  waitingTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
+  waitingLeft: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  waitingIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  waitingClock: { ...type.priceLg, color: color.text },
+  waitingCells: { flexDirection: 'row', gap: space.md, marginTop: space.md },
+  waitingCell: { flex: 1, borderRadius: radii.md, backgroundColor: color.surface, padding: space.md },
+  vehicle: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radii.lg, backgroundColor: color.bg, borderWidth: 1, borderColor: color.border, padding: space.md },
+  vehiclePhoto: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, alignItems: 'center', justifyContent: 'center', padding: space.sm, overflow: 'hidden' },
+  vehicleName: { ...type.bodyStrong, color: color.text },
+  vehicleSub: { ...type.caption, color: color.textSecondary },
+  actions: { flexDirection: 'row', gap: space.sm },
+  action: { flex: 1, alignItems: 'center', gap: space.xs, paddingVertical: space.sm, minHeight: 72, borderRadius: radii.md },
+  actionIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  actionText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.text },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, paddingTop: space.md, borderTopWidth: 1, borderTopColor: color.border },
+  fareRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  fare: { ...type.priceLg, color: color.text },
 
-  share: { width: '100%', maxWidth: 448, borderRadius: 28, backgroundColor: '#fff', padding: 20, ...shadow('2xl') },
-  shareTitle: { marginTop: 8, fontSize: 20, lineHeight: 28, letterSpacing: -0.5, color: tw.slate900, ...fo(900) },
-  shareBody: { marginTop: 4, fontSize: 12, lineHeight: 16, color: tw.slate500, ...fo(700) },
-  shareGrid: { marginTop: 20, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
-  shareCell: { width: '48%', borderRadius: 18, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, padding: 16 },
-  shareCellTitle: { fontSize: 13, lineHeight: 18, color: tw.slate900, ...fo(900) },
-  shareCellSub: { marginTop: 4, fontSize: 11, lineHeight: 16, color: tw.slate500, ...fo(700) },
-  shareClose: { marginTop: 16, height: 48, borderRadius: 18, backgroundColor: tw.slate900, alignItems: 'center', justifyContent: 'center' },
-  shareCloseText: { fontSize: 12, lineHeight: 16, letterSpacing: 1.9, color: '#fff', ...fo(900) },
+  share: { width: '100%', maxWidth: 448, borderRadius: radii.xl, backgroundColor: color.surface, padding: space.xl, ...elevation.sheet },
+  dialogTitle: { ...type.heading, marginTop: space.xs, color: color.text },
+  dialogBody: { ...type.small, marginTop: space.xs, color: color.textSecondary },
+  shareGrid: { marginTop: space.lg, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: space.md },
+  shareCell: { width: '48%', minHeight: 72, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.bg, padding: space.lg },
+  shareCellTitle: { ...type.bodyStrong, color: color.text },
+  shareCellSub: { ...type.caption, marginTop: space.xxs, color: color.textMuted },
 
-  confirm: { width: '82%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 28, padding: 28, alignItems: 'center', ...shadow('2xl') },
-  confirmIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  confirmTitle: { fontSize: 18, lineHeight: 28, color: tw.slate900, marginBottom: 6, ...fo(700) },
-  confirmBody: { fontSize: 13, lineHeight: 21, color: tw.slate400, marginBottom: 24, textAlign: 'center', ...fo(700) },
-  confirmYes: { alignSelf: 'stretch', backgroundColor: tw.slate900, paddingVertical: 14, borderRadius: 16, alignItems: 'center', marginBottom: 10 },
-  confirmYesText: { fontSize: 13, lineHeight: 18, letterSpacing: 1.3, color: '#fff', ...fo(700) },
-  confirmNo: { fontSize: 13, lineHeight: 18, letterSpacing: 1.3, color: tw.slate400, textAlign: 'center', ...fo(700) },
+  confirm: { width: '86%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xxl, alignItems: 'stretch', ...elevation.sheet },
+  confirmIcon: { width: 56, height: 56, borderRadius: radii.lg, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.lg, alignSelf: 'center' },
 });

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Fa from '../Fa';
 import { Press } from '../ui';
 import { useBooking } from '../../context/BookingContext';
-import { cinzel, dh, playfair, shadow, tw } from '../../theme';
+import { color, elevation, space, type } from '../../theme';
 
 /** Web: navigate(-1). Falls back to the home screen when there is no history. */
 export function goBack(fallback = '/app') {
@@ -25,29 +25,30 @@ export function Header({
   placeId = null,
   onSearchClick,
   onBack,
+  right,
 }) {
   const insets = useSafeAreaInsets();
   const { favorites, toggleFavorite } = useBooking();
   const isFav = placeId ? favorites.includes(placeId) : false;
 
   return (
-    <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+    <View style={[styles.header, { paddingTop: insets.top + space.xs }]}>
       <View style={styles.row}>
         {showBack ? (
-          <Press scale={0.88} onPress={onBack || (() => goBack())} accessibilityLabel="Go Back" style={styles.iconBtn} hitSlop={10}>
-            <Fa name="fa-solid fa-arrow-left" size={16} color="#fff" />
+          <Press scale={0.88} onPress={onBack || (() => goBack())} accessibilityLabel="Go Back" style={styles.iconBtn}>
+            <Fa name="fa-solid fa-arrow-left" size={18} color={color.textInverse} />
           </Press>
         ) : (
-          <View style={{ width: 24 }} />
+          <View style={styles.side} />
         )}
 
         <View style={styles.center}>
           <View style={styles.titleRow}>
-            <Fa name="fa-solid fa-leaf" size={10} color={tw.amber400} />
-            <Text style={styles.title} numberOfLines={1}>
+            <Fa name="fa-solid fa-leaf" size={11} color={color.gold} />
+            <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
               {String(title).toUpperCase()}
             </Text>
-            <Fa name="fa-solid fa-leaf" size={10} color={tw.amber400} />
+            <Fa name="fa-solid fa-leaf" size={11} color={color.gold} />
           </View>
           {subtitle ? (
             <Text style={styles.subtitle} numberOfLines={1}>
@@ -56,17 +57,21 @@ export function Header({
           ) : null}
         </View>
 
-        <View style={styles.right}>
-          {rightAction === 'search' ? (
-            <Press scale={0.88} onPress={onSearchClick || (() => router.navigate('/app/places'))} accessibilityLabel="Search" style={styles.iconBtn} hitSlop={10}>
-              <Fa name="fa-solid fa-magnifying-glass" size={16} color="#fff" />
-            </Press>
-          ) : null}
-          {rightAction === 'favorite' && placeId ? (
-            <Press scale={0.85} onPress={() => toggleFavorite(placeId)} accessibilityLabel="Toggle Favorite" style={styles.iconBtn} hitSlop={10}>
-              <Fa name={isFav ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} size={16} color={isFav ? tw.red500 : '#fff'} />
-            </Press>
-          ) : null}
+        <View style={styles.side}>
+          {right ?? (
+            <>
+              {rightAction === 'search' ? (
+                <Press scale={0.88} onPress={onSearchClick || (() => router.navigate('/app/places'))} accessibilityLabel="Search" style={styles.iconBtn}>
+                  <Fa name="fa-solid fa-magnifying-glass" size={18} color={color.textInverse} />
+                </Press>
+              ) : null}
+              {rightAction === 'favorite' && placeId ? (
+                <Press scale={0.85} onPress={() => toggleFavorite(placeId)} accessibilityLabel={isFav ? 'Remove from favourites' : 'Add to favourites'} style={styles.iconBtn}>
+                  <Fa name={isFav ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} size={18} color={isFav ? '#F87171' : color.textInverse} />
+                </Press>
+              ) : null}
+            </>
+          )}
         </View>
       </View>
     </View>
@@ -111,12 +116,13 @@ export function StripeBorder({ height = 6, colors = STRIPES, band = 10, style })
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: dh.header, paddingHorizontal: 14, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(0,79,59,0.5)', zIndex: 40, ...shadow('md') },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  iconBtn: { padding: 4, alignItems: 'center', justifyContent: 'center' },
-  center: { flex: 1, paddingHorizontal: 8, alignItems: 'center' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, maxWidth: '100%' },
-  title: { flexShrink: 1, fontSize: 14, lineHeight: 20, letterSpacing: 1.4, color: tw.amber300, ...cinzel() },
-  subtitle: { fontSize: 10, lineHeight: 15, marginTop: 2, color: 'rgba(254,243,198,0.9)', ...playfair(400, true) },
-  right: { width: 24, alignItems: 'flex-end' },
+  header: { backgroundColor: color.primaryDeep, paddingHorizontal: space.xs, paddingBottom: space.sm, zIndex: 40, ...elevation.card },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 52 },
+  // 44 px targets on both sides keep the title optically centred.
+  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
+  side: { minWidth: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
+  center: { flex: 1, paddingHorizontal: space.xs, alignItems: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, maxWidth: '100%' },
+  title: { flexShrink: 1, ...type.titleSerif, color: color.goldOnDark },
+  subtitle: { ...type.tagline, marginTop: 1, color: color.textOnDarkMuted, textAlign: 'center' },
 });

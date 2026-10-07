@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Linking, PanResponder, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   AlertCircle, ArrowLeft, Bookmark, Check, ChevronDown, Clock, Copy, Flame, Info, Mail, MapPin, MessageCircle, Minus, MoreVertical, Phone, Plus,
   RotateCcw, Search, Send, Share2, SlidersHorizontal, Star, Store, Utensils, X, Zap,
@@ -15,9 +14,10 @@ import { getRestaurantAvailabilityStatus } from '../utils/restaurantAvailability
 import { getDefaultFoodVariant, getFoodDisplayPrice, getFoodVariants, hasFoodVariants } from '../utils/foodVariants';
 import { ScallopBadge } from '../components/RestaurantCard';
 import CartPill from '../components/CartPill';
-import { F } from '../components/shell';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, StatusBadge } from '../../components/ds';
+import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
+import { color, elevation, radii, space, type } from '../../theme';
 
 const DISH_FALLBACK = require('../../../assets/food/dish_fallback.webp');
 const FSSAI_LOGO = require('../../../assets/food/fssai.png');
@@ -32,27 +32,28 @@ function DishImg({ uri, style }) {
 function CategoryThumb({ category, size, radius, fontSize }) {
   const [failed, setFailed] = useState(false);
   if (category.image && !failed) {
-    return <Image source={{ uri: category.image }} onError={() => setFailed(true)} style={{ width: size, height: size, borderRadius: radius, borderWidth: 1, borderColor: radius > 12 ? 'rgba(255,255,255,0.7)' : tw.gray200 }} />;
+    return <Image source={{ uri: category.image }} onError={() => setFailed(true)} style={{ width: size, height: size, borderRadius: radius, borderWidth: 1, borderColor: color.border }} />;
   }
   return (
-    <View style={{ width: size, height: size, borderRadius: radius, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontSize, color: tw.gray500, ...poppins(700) }}>{(category.name?.charAt(0) || 'C').toUpperCase()}</Text>
+    <View style={{ width: size, height: size, borderRadius: radius, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ ...type.label, fontFamily: 'Poppins_700Bold', fontSize: Math.max(12, fontSize), lineHeight: Math.max(16, fontSize + 4), color: color.textSecondary }}>{(category.name?.charAt(0) || 'C').toUpperCase()}</Text>
     </View>
   );
 }
 
-function DietMark({ veg, color }) {
-  const c = color || (veg ? tw.green600 : tw.red600);
+/** FSSAI veg / non-veg mark: square outline with a filled dot, always in the FSSAI colours. */
+function DietMark({ veg, size = 16 }) {
+  const c = veg ? color.veg : color.nonVeg;
   return (
-    <View style={[styles.diet, { borderColor: c }]}>
-      <View style={{ flex: 1, borderRadius: 999, backgroundColor: c }} />
+    <View accessibilityLabel={veg ? 'Veg' : 'Non-veg'} style={[styles.diet, { width: size, height: size, borderColor: c }]}>
+      <View style={{ flex: 1, borderRadius: radii.pill, backgroundColor: c }} />
     </View>
   );
 }
 
 function IconButton({ onPress, label, children }) {
   return (
-    <Press scale={0.94} onPress={onPress} accessibilityLabel={label} style={styles.roundBtn} hitSlop={4}>
+    <Press scale={0.94} onPress={onPress} accessibilityLabel={label} style={styles.roundBtn}>
       {children}
     </Press>
   );
@@ -61,23 +62,23 @@ function IconButton({ onPress, label, children }) {
 function Stepper({ quantity, disabled, onMinus, onPlus, name }) {
   return (
     <View style={[styles.stepper, disabled ? styles.addDisabled : null]}>
-      <Press scale={0.9} disabled={disabled} onPress={onMinus} accessibilityLabel={`Remove one ${name}`} hitSlop={10}>
-        <Minus size={14} color={disabled ? tw.gray400 : F.green} />
+      <Press scale={0.9} disabled={disabled} onPress={onMinus} accessibilityLabel={`Remove one ${name}`} hitSlop={6} style={styles.stepperBtn}>
+        <Minus size={16} color={disabled ? color.textDisabled : color.onPrimary} strokeWidth={2.75} />
       </Press>
-      <Text style={[styles.stepperQty, disabled ? { color: tw.gray400 } : null]}>{quantity}</Text>
-      <Press scale={0.9} disabled={disabled} onPress={onPlus} accessibilityLabel={`Add one more ${name}`} hitSlop={10}>
-        <Plus size={14} color={disabled ? tw.gray400 : F.green} strokeWidth={3} />
+      <Text style={[styles.stepperQty, disabled ? { color: color.textDisabled } : null]} accessibilityLabel={`${quantity} in cart`}>{quantity}</Text>
+      <Press scale={0.9} disabled={disabled} onPress={onPlus} accessibilityLabel={`Add one more ${name}`} hitSlop={6} style={styles.stepperBtn}>
+        <Plus size={16} color={disabled ? color.textDisabled : color.onPrimary} strokeWidth={2.75} />
       </Press>
     </View>
   );
 }
 
-function SheetOption({ active, onPress, children, tone = 'blue', style }) {
+function SheetOption({ active, onPress, children, tone = 'brand', style }) {
+  // veg / nonVeg only for the veg and non-veg filters (FSSAI meaning).
   const tones = {
-    blue: { borderColor: tw.blue500 || '#2B7FFF', backgroundColor: tw.blue50 || '#EFF6FF' },
-    green: { borderColor: tw.green600, backgroundColor: tw.green50 },
-    red: { borderColor: tw.red600, backgroundColor: tw.red50 },
-    brand: { borderColor: F.green, backgroundColor: F.cream },
+    brand: { borderColor: color.primary, backgroundColor: color.primarySoft },
+    veg: { borderColor: color.veg, backgroundColor: color.surface },
+    nonVeg: { borderColor: color.nonVeg, backgroundColor: color.surface },
   };
   return (
     <Press scale={0.98} onPress={onPress} accessibilityRole="checkbox" accessibilityState={{ checked: !!active }} style={[styles.sheetOpt, active ? tones[tone] : null, style]}>
@@ -131,7 +132,7 @@ function FloatingMenuButton({ bottom, onPress }) {
       style={[styles.menuFab, { bottom, transform: pos.getTranslateTransform() }]}
     >
       <Press scale={0.95} onPress={() => !moved.current && onPress()} accessibilityLabel="Open menu categories" style={styles.menuFabBtn}>
-        <Utensils size={20} color="#fff" />
+        <Utensils size={18} color={color.goldOnDark} />
         <Text style={styles.menuFabText}>Menu</Text>
       </Press>
     </Animated.View>
@@ -140,21 +141,21 @@ function FloatingMenuButton({ bottom, onPress }) {
 
 function DetailSkeleton() {
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff', padding: 16, gap: 16 }} accessibilityRole="progressbar" accessibilityLabel="Loading restaurant">
+    <View style={{ flex: 1, backgroundColor: color.bg, padding: space.lg, gap: space.lg }} accessibilityRole="progressbar" accessibilityLabel="Loading restaurant">
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Skeleton style={{ width: 40, height: 40, borderRadius: 20 }} />
-        <Skeleton style={{ width: 120, height: 40, borderRadius: 20 }} />
+        <Skeleton style={[styles.sk, { width: 44, height: 44, borderRadius: 22 }]} />
+        <Skeleton style={[styles.sk, { width: 120, height: 44, borderRadius: 22 }]} />
       </View>
-      <Skeleton style={{ height: 150, borderRadius: 24 }} />
-      <Skeleton style={{ height: 44, borderRadius: 12 }} />
+      <Skeleton style={[styles.sk, { height: 150, borderRadius: radii.lg }]} />
+      <Skeleton style={[styles.sk, { height: 44, borderRadius: radii.md }]} />
       {[0, 1, 2].map((i) => (
-        <View key={i} style={{ flexDirection: 'row', gap: 16 }}>
-          <View style={{ flex: 1, gap: 8 }}>
-            <Skeleton style={{ height: 20, width: '70%', borderRadius: 10 }} />
-            <Skeleton style={{ height: 16, width: '30%', borderRadius: 8 }} />
-            <Skeleton style={{ height: 14, width: '90%', borderRadius: 7 }} />
+        <View key={i} style={{ flexDirection: 'row', gap: space.lg }}>
+          <View style={{ flex: 1, gap: space.sm }}>
+            <Skeleton style={[styles.sk, { height: 18, width: '70%' }]} />
+            <Skeleton style={[styles.sk, { height: 14, width: '30%' }]} />
+            <Skeleton style={[styles.sk, { height: 14, width: '90%' }]} />
           </View>
-          <Skeleton style={{ width: 128, height: 128, borderRadius: 16 }} />
+          <Skeleton style={[styles.sk, { width: 120, height: 120, borderRadius: radii.lg }]} />
         </View>
       ))}
     </View>
@@ -212,12 +213,12 @@ export default function RestaurantDetails() {
     const isNotFoundError = restaurantError === 'Restaurant not found';
     return (
       <View style={styles.centerPage}>
-        <AlertCircle size={48} color={isNetworkError ? F.green : tw.red500} />
-        <Text style={styles.errTitle}>{isNetworkError ? 'Connection Error' : isNotFoundError ? 'Restaurant not found' : 'Error'}</Text>
+        <View style={styles.errIcon}>
+          <AlertCircle size={28} color={isNetworkError ? color.primary : color.danger} />
+        </View>
+        <Text style={styles.errTitle} accessibilityRole="header">{isNetworkError ? 'Connection error' : isNotFoundError ? 'Restaurant not found' : 'Error'}</Text>
         <Text style={styles.errBody}>{isNetworkError ? 'Please check your internet connection and try again.' : restaurantError}</Text>
-        <Press scale={0.97} onPress={goBack} accessibilityLabel="Go back" style={styles.outlineBtn}>
-          <Text style={styles.outlineBtnText}>Go Back</Text>
-        </Press>
+        <Button title="Go back" variant="outline" size="sm" fullWidth={false} onPress={goBack} />
       </View>
     );
   }
@@ -225,11 +226,11 @@ export default function RestaurantDetails() {
   if (!restaurant) {
     return (
       <View style={styles.centerPage}>
-        <AlertCircle size={48} color={tw.red500} />
-        <Text style={[styles.errBody, { marginTop: 16 }]}>Restaurant not found</Text>
-        <Press scale={0.97} onPress={goBack} accessibilityLabel="Go back" style={styles.outlineBtn}>
-          <Text style={styles.outlineBtnText}>Go Back</Text>
-        </Press>
+        <View style={styles.errIcon}>
+          <AlertCircle size={28} color={color.danger} />
+        </View>
+        <Text style={styles.errTitle} accessibilityRole="header">Restaurant not found</Text>
+        <Button title="Go back" variant="outline" size="sm" fullWidth={false} onPress={goBack} style={{ marginTop: space.lg }} />
       </View>
     );
   }
@@ -252,20 +253,20 @@ export default function RestaurantDetails() {
     const provides = services.length === 1 ? 'Provides delivery' : services.length === 2 ? `Provides both ${services[0]} & ${services[1]}` : `Provides ${services[0]}, ${services[1]} & ${services[2]}`;
 
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: tw.gray50 }} contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
-        <View style={{ padding: 16 }}>
+      <ScrollView style={{ flex: 1, backgroundColor: color.bg }} contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + space.xxl + insets.bottom }}>
+        <View style={{ paddingHorizontal: space.lg, paddingTop: space.md }}>
           <IconButton onPress={() => setShowMoreInfo(false)} label="Back to menu">
-            <ArrowLeft size={20} color={tw.gray900} />
+            <ArrowLeft size={20} color={color.text} />
           </IconButton>
         </View>
-        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+        <View style={{ paddingHorizontal: space.lg, paddingTop: space.md }}>
           <View style={styles.infoCard}>
             <Text style={styles.infoName} accessibilityRole="header">{restaurant?.name || 'Restaurant Name'}</Text>
             <Text style={styles.infoAddress}>{restaurant?.location || ''}</Text>
             {phone ? (
               <View style={styles.infoCall}>
                 <Press scale={0.95} onPress={() => Linking.openURL(`tel:${phone}`).catch(() => {})} accessibilityLabel={`Call ${restaurant?.name}`} style={styles.callBtn}>
-                  <Phone size={20} color={F.green} />
+                  <Phone size={20} color={color.primary} />
                 </Press>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.infoCallTitle}>Contact to restaurant</Text>
@@ -273,30 +274,30 @@ export default function RestaurantDetails() {
                 </View>
               </View>
             ) : null}
-            <View style={{ paddingTop: 16, borderTopWidth: 1, borderTopColor: tw.gray100, gap: 12 }}>
+            <View style={{ paddingTop: space.lg, borderTopWidth: 1, borderTopColor: color.border, gap: space.md }}>
               <View style={styles.infoLine}>
-                <Clock size={16} color={tw.gray500} />
+                <Clock size={16} color={color.textMuted} />
                 <Text style={styles.infoLineText}>
-                  <Text style={{ color: availabilityStatus?.isOpen ? tw.green600 : tw.red600, ...poppins(600) }}>{availabilityStatus?.isOpen ? 'Open now' : 'Closed now'}</Text>
+                  <Text style={{ color: availabilityStatus?.isOpen ? color.success : color.warning, fontFamily: 'Poppins_600SemiBold' }}>{availabilityStatus?.isOpen ? 'Open now' : 'Closed now'}</Text>
                   {availabilityStatus?.isOpen && availabilityStatus?.closingTime ? ` • Closes ${formatTimeLabel(availabilityStatus.closingTime)}` : ''}
                   {!availabilityStatus?.isOpen && availabilityStatus?.openingTime ? ` • Opens at ${formatTimeLabel(availabilityStatus.openingTime)}` : ''}
                 </Text>
               </View>
               <View style={styles.infoLine}>
-                <Store size={16} color={tw.gray500} />
+                <Store size={16} color={color.textMuted} />
                 <Text style={styles.infoLineText}>{provides}</Text>
               </View>
             </View>
           </View>
 
-          <View style={[styles.infoCard, { marginTop: 16, gap: 16 }]}>
+          <View style={[styles.infoCard, { marginTop: space.md, gap: space.lg }]}>
             <View style={gstNumber || fssaiNumber ? styles.legalRow : null}>
-              <Text style={styles.legalLabel}>LEGAL NAME</Text>
+              <Text style={styles.legalLabel}>Legal name</Text>
               <Text style={styles.legalValue}>{ownerName || 'Not Provided'}</Text>
             </View>
             {gstNumber ? (
               <View style={fssaiNumber ? styles.legalRow : null}>
-                <Text style={styles.legalLabel}>GST NUMBER</Text>
+                <Text style={styles.legalLabel}>GST number</Text>
                 <Text style={[styles.legalValue, { letterSpacing: 0.4 }]}>{maskGST(gstNumber)}</Text>
               </View>
             ) : null}
@@ -308,9 +309,7 @@ export default function RestaurantDetails() {
             ) : null}
           </View>
 
-          <Press scale={0.98} onPress={() => setShowMoreInfo(false)} accessibilityLabel="Go back to menu" style={styles.backToMenu}>
-            <Text style={styles.backToMenuText}>Go back to menu</Text>
-          </Press>
+          <Button title="Go back to menu" onPress={() => setShowMoreInfo(false)} style={{ marginTop: space.xxl }} />
         </View>
       </ScrollView>
     );
@@ -347,38 +346,38 @@ export default function RestaurantDetails() {
       <View key={item.id} style={[styles.dish, !isLast && !highlighted ? styles.dishBorder : null, highlighted ? styles.dishHighlight : null]}>
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-            <View style={{ marginTop: 4 }}>
-              <DietMark veg={isVeg} color={sub ? (isVeg ? '#8CC63F' : F.green) : undefined} />
+            <View style={{ marginTop: 3 }}>
+              <DietMark veg={isVeg} />
             </View>
-            <Text style={styles.dishName}>{item.name}</Text>
+            <Text style={styles.dishName} numberOfLines={3}>{item.name}</Text>
           </View>
-          <View style={{ marginTop: 4, gap: 2 }}>
+          <View style={{ marginTop: space.xs, gap: space.xxs }}>
             {hasFoodVariants(item) ? <Text style={styles.startingFrom}>Starting from</Text> : null}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.sm }}>
               <Text style={styles.dishPrice}>
                 {RUPEE}
                 {Math.round(getFoodDisplayPrice(item))}
               </Text>
               {item.preparationTime && String(item.preparationTime).trim() ? (
                 <View style={styles.prep}>
-                  <Clock size={12} color={tw.gray500} />
+                  <Clock size={12} color={color.textSecondary} />
                   <Text style={styles.prepText}>{String(item.preparationTime).trim()}</Text>
                 </View>
               ) : null}
             </View>
           </View>
           {item.description ? <Text style={styles.dishDesc} numberOfLines={2}>{item.description}</Text> : null}
-          <View style={{ flexDirection: 'row', gap: 16, marginTop: 12 }}>
-            <Press scale={0.92} onPress={() => handleBookmarkClick(item)} accessibilityLabel={favorite ? `Remove ${item.name} from bookmarks` : `Bookmark ${item.name}`} style={[styles.miniBtn, favorite ? { borderColor: tw.red500, backgroundColor: tw.red50 } : null]} hitSlop={6}>
-              <Bookmark size={18} color={favorite ? tw.red500 : tw.gray600} fill={favorite ? tw.red500 : 'none'} />
+          <View style={{ flexDirection: 'row', gap: space.sm, marginTop: space.md }}>
+            <Press scale={0.92} onPress={() => handleBookmarkClick(item)} accessibilityLabel={favorite ? `Remove ${item.name} from bookmarks` : `Bookmark ${item.name}`} accessibilityState={{ selected: !!favorite }} style={[styles.miniBtn, favorite ? styles.miniBtnOn : null]} hitSlop={4}>
+              <Bookmark size={18} color={favorite ? color.primary : color.textSecondary} fill={favorite ? color.primary : 'none'} />
             </Press>
-            <Press scale={0.92} onPress={() => handleShareClick(item)} accessibilityLabel={`Share ${item.name}`} style={styles.miniBtn} hitSlop={6}>
-              <Share2 size={18} color={tw.gray600} />
+            <Press scale={0.92} onPress={() => handleShareClick(item)} accessibilityLabel={`Share ${item.name}`} style={styles.miniBtn} hitSlop={4}>
+              <Share2 size={18} color={color.textSecondary} />
             </Press>
           </View>
         </View>
 
-        <View style={{ width: 128, height: 136 }}>
+        <View style={{ width: 120, height: 136 }}>
           <Press scale={0.98} onPress={() => handleItemClick(item)} accessibilityLabel={`View ${item.name} details`} style={styles.dishImgWrap}>
             <DishImg uri={item.image} style={{ width: '100%', height: '100%' }} />
           </Press>
@@ -393,8 +392,8 @@ export default function RestaurantDetails() {
                 accessibilityLabel={`Add ${item.name}`}
                 style={[styles.add, shouldShowGrayscale ? styles.addDisabled : null]}
               >
-                <Text style={[styles.addText, shouldShowGrayscale ? { color: tw.gray400 } : null]}>ADD</Text>
-                <Plus size={14} color={shouldShowGrayscale ? tw.gray400 : F.green} strokeWidth={3} />
+                <Text style={[styles.addText, shouldShowGrayscale ? { color: color.textDisabled } : null]}>Add</Text>
+                <Plus size={16} color={shouldShowGrayscale ? color.textDisabled : color.primary} strokeWidth={2.75} />
               </Press>
             )}
           </View>
@@ -408,31 +407,32 @@ export default function RestaurantDetails() {
   const rawHasAnyDish = rawSections.some(
     (sec) => (Array.isArray(sec?.items) && sec.items.length > 0) || (Array.isArray(sec?.subsections) && sec.subsections.some((sub) => Array.isArray(sub?.items) && sub.items.length > 0)),
   );
-  const fabBottom = (itemCount > 0 ? 150 : 80) + insets.bottom;
+  // Above the app nav, and above the cart pill when one shows.
+  const fabBottom = (itemCount > 0 ? NAV_CLEARANCE + 76 : NAV_CLEARANCE) + insets.bottom;
   const anyFabBlockingSheet = showFilterSheet || showMenuSheet || showMenuOptionsSheet;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       <View style={{ flex: 1, opacity: shouldShowGrayscale ? 0.75 : 1 }}>
         <View style={styles.topBar}>
           <IconButton onPress={goBack} label="Go back">
-            <ArrowLeft size={20} color={tw.gray900} />
+            <ArrowLeft size={20} color={color.text} />
           </IconButton>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flex: 1, justifyContent: 'flex-end' }}>
             {!showSearch ? (
               <Press scale={0.96} onPress={() => setShowSearch(true)} accessibilityLabel="Search for dishes" style={styles.searchPill}>
-                <Search size={16} color={tw.gray900} />
+                <Search size={18} color={color.primary} />
                 <Text style={styles.searchPillText}>Search</Text>
               </Press>
             ) : (
               <View style={styles.searchBox}>
-                <Search size={16} color={tw.gray400} />
+                <Search size={18} color={color.textMuted} />
                 <TextInput
                   autoFocus
                   value={searchQuery}
                   onChangeText={setSearchQuery}
-                  placeholder="Search for dishes..."
-                  placeholderTextColor={tw.gray400}
+                  placeholder="Search for dishes"
+                  placeholderTextColor={color.textMuted}
                   returnKeyType="search"
                   autoCorrect={false}
                   accessibilityLabel="Search for dishes"
@@ -450,34 +450,35 @@ export default function RestaurantDetails() {
                       setShowSearch(false);
                     }}
                     accessibilityLabel="Clear search"
+                    style={styles.clearX}
                   >
-                    <X size={16} color={tw.gray400} />
+                    <X size={16} color={color.textSecondary} />
                   </Press>
                 ) : null}
               </View>
             )}
             <IconButton onPress={() => setShowMenuOptionsSheet(true)} label="More options">
-              <MoreVertical size={20} color={tw.gray900} />
+              <MoreVertical size={20} color={color.text} />
             </IconButton>
           </View>
         </View>
 
-        <ScrollView ref={scroller} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 190 + insets.bottom }}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 12 }}>
+        <ScrollView ref={scroller} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + 140 + insets.bottom }}>
+          <View style={{ paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.md }}>
             <View style={styles.summary}>
-              <LinearGradient colors={['#0a4d2b', '#8a4b77', '#b36b8f']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.summaryBar} />
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+              <View style={styles.summaryBar} />
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space.md }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={styles.name} accessibilityRole="header">{restaurant?.name || 'Unknown Restaurant'}</Text>
-                  <View style={[styles.rowC, { marginTop: 4, gap: 8 }]}>
-                    <Utensils size={16} color={tw.gray700} />
-                    <Text style={styles.summaryText}>{restaurant?.topCategory || restaurant?.cuisine || 'Multi-cuisine'}</Text>
+                  <View style={[styles.rowC, { marginTop: space.xs, gap: space.sm }]}>
+                    <Utensils size={16} color={color.textSecondary} />
+                    <Text style={[styles.summaryText, { flex: 1 }]} numberOfLines={1}>{restaurant?.topCategory || restaurant?.cuisine || 'Multi-cuisine'}</Text>
                   </View>
                 </View>
-                <View style={{ alignItems: 'center' }}>
+                <View style={{ alignItems: 'flex-end' }}>
                   <View style={styles.ratingPill}>
-                    <Star size={12} color="#fff" fill="#fff" />
-                    <Text style={styles.ratingPillText}>{Number(restaurant?.rating || 0) > 0 ? Number(restaurant.rating).toFixed(1) : 'NEW'}</Text>
+                    <Star size={13} color={color.goldText} fill={Number(restaurant?.rating || 0) > 0 ? color.gold : 'none'} strokeWidth={Number(restaurant?.rating || 0) > 0 ? 0 : 2} />
+                    <Text style={styles.ratingPillText}>{Number(restaurant?.rating || 0) > 0 ? Number(restaurant.rating).toFixed(1) : 'New'}</Text>
                   </View>
                   <Text style={styles.ratingCount}>
                     {Number(restaurant?.rating || 0) > 0
@@ -489,28 +490,19 @@ export default function RestaurantDetails() {
                 </View>
               </View>
 
-              <View style={[styles.rowC, { gap: 12 }]}>
-                <Press scale={0.98} onPress={() => setShowLocationSheet(true)} accessibilityLabel="Restaurant address and outlets" style={[styles.rowC, { flex: 1, gap: 4, minWidth: 0 }]}>
-                  <MapPin size={16} color={tw.gray700} />
-                  <Text style={[styles.summaryText, { flexShrink: 1 }]} numberOfLines={1}>
+              <View style={[styles.rowC, { gap: space.md }]}>
+                <Press scale={0.98} onPress={() => setShowLocationSheet(true)} accessibilityLabel="Restaurant address and outlets" style={[styles.rowC, styles.locLink]}>
+                  <MapPin size={16} color={color.textSecondary} />
+                  <Text style={[styles.summaryText, { flex: 1 }]} numberOfLines={1}>
                     {restaurant?.distance || '1.2 km'} | {restaurant?.location || 'Location'}
                   </Text>
-                  <ChevronDown size={16} color={tw.gray500} />
+                  <ChevronDown size={16} color={color.primary} />
                 </Press>
-                <View style={[styles.openBadge, isRestaurantOffline ? { backgroundColor: '#EC003F' } : null]}>
-                  {isRestaurantOffline ? (
-                    <Text style={styles.openBadgeText}>Offline</Text>
-                  ) : (
-                    <>
-                      <Text style={styles.openBadgeText}>Open</Text>
-                      <Text style={styles.openBadgeText}>now</Text>
-                    </>
-                  )}
-                </View>
+                {isRestaurantOffline ? <StatusBadge label="Offline" tone="warning" icon={AlertCircle} /> : <StatusBadge label="Open now" tone="success" icon={Clock} />}
               </View>
 
-              <View style={[styles.rowC, { gap: 8 }]}>
-                <Clock size={16} color={tw.gray700} />
+              <View style={[styles.rowC, { gap: space.sm }]}>
+                <Clock size={16} color={color.textSecondary} />
                 <Text style={styles.summaryText}>{restaurant?.deliveryTime || '25-30 mins'}</Text>
               </View>
             </View>
@@ -523,17 +515,17 @@ export default function RestaurantDetails() {
 
             {restaurantHasDishes && coupons && coupons.length > 0 ? (
               <Press scale={0.99} onPress={() => setShowOffersSheet(true)} accessibilityLabel={`${coupons.length} offer${coupons.length > 1 ? 's' : ''} available`} style={styles.offerStrip}>
-                <View style={[styles.rowC, { flex: 1, gap: 8, marginRight: 16 }]}>
-                  <ScallopBadge size={24} />
+                <View style={[styles.rowC, { flex: 1, gap: space.sm, marginRight: space.md }]}>
+                  <ScallopBadge size={24} color={color.goldText} />
                   <Animated.Text numberOfLines={1} style={[styles.offerStripText, { opacity: couponFade }]}>
                     {formatCouponStripText(coupons[currentCouponIndex])}
                   </Animated.Text>
                 </View>
-                <View style={[styles.rowC, { gap: 4 }]}>
+                <View style={[styles.rowC, { gap: space.xs }]}>
                   <Text style={styles.offerCount}>
                     {coupons.length} offer{coupons.length > 1 ? 's' : ''}
                   </Text>
-                  <ChevronDown size={16} color={tw.gray500} />
+                  <ChevronDown size={16} color={color.goldText} />
                 </View>
               </Press>
             ) : null}
@@ -541,13 +533,13 @@ export default function RestaurantDetails() {
 
           {hasSections ? (
             <View style={styles.filterBar}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ paddingHorizontal: 16 }}>
-                <View style={{ gap: 8 }}>
-                  <View style={[styles.rowC, { gap: 8 }]}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled contentContainerStyle={{ paddingHorizontal: space.lg }}>
+                <View style={{ gap: space.sm }}>
+                  <View style={[styles.rowC, { gap: space.sm }]}>
                     <Press scale={0.97} onPress={() => setShowFilterSheet(true)} accessibilityLabel={`Filters${activeFilterCount ? `, ${activeFilterCount} active` : ''}`} style={styles.smBtn}>
-                      <SlidersHorizontal size={16} color={tw.gray900} />
+                      <SlidersHorizontal size={16} color={color.text} />
                       <Text style={styles.smBtnText}>Filters</Text>
-                      <ChevronDown size={12} color={tw.gray900} />
+                      <ChevronDown size={14} color={color.text} />
                       {activeFilterCount > 0 ? (
                         <View style={styles.filterCount}>
                           <Text style={styles.filterCountText}>{activeFilterCount}</Text>
@@ -560,11 +552,11 @@ export default function RestaurantDetails() {
                       accessibilityRole="checkbox"
                       accessibilityState={{ checked: filters.vegNonVeg === 'veg' }}
                       accessibilityLabel="Veg only"
-                      style={[styles.smBtn, { borderRadius: 999 }, filters.vegNonVeg === 'veg' ? { borderColor: tw.green600, backgroundColor: tw.green50 } : null]}
+                      style={[styles.smBtn, filters.vegNonVeg === 'veg' ? { borderColor: color.veg, borderWidth: 1.5 } : null]}
                     >
-                      <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: tw.green600 }} />
-                      <Text style={[styles.smBtnText, filters.vegNonVeg === 'veg' ? { color: tw.green700, ...poppins(700) } : null]}>Veg</Text>
-                      {filters.vegNonVeg === 'veg' ? <X size={12} color={tw.gray600} /> : null}
+                      <DietMark veg size={14} />
+                      <Text style={[styles.smBtnText, filters.vegNonVeg === 'veg' ? { color: color.veg } : null]}>Veg</Text>
+                      {filters.vegNonVeg === 'veg' ? <X size={14} color={color.textSecondary} /> : null}
                     </Press>
                     {!vegMode ? (
                       <Press
@@ -573,26 +565,26 @@ export default function RestaurantDetails() {
                         accessibilityRole="checkbox"
                         accessibilityState={{ checked: filters.vegNonVeg === 'non-veg' }}
                         accessibilityLabel="Non-veg only"
-                        style={[styles.smBtn, { borderRadius: 999 }, filters.vegNonVeg === 'non-veg' ? { borderColor: tw.red600, backgroundColor: tw.red50 } : null]}
+                        style={[styles.smBtn, filters.vegNonVeg === 'non-veg' ? { borderColor: color.nonVeg, borderWidth: 1.5 } : null]}
                       >
-                        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: tw.red600 }} />
-                        <Text style={[styles.smBtnText, filters.vegNonVeg === 'non-veg' ? { color: tw.red600 } : null]}>Non-veg</Text>
-                        {filters.vegNonVeg === 'non-veg' ? <X size={12} color={tw.gray600} /> : null}
+                        <DietMark veg={false} size={14} />
+                        <Text style={[styles.smBtnText, filters.vegNonVeg === 'non-veg' ? { color: color.nonVeg } : null]}>Non-veg</Text>
+                        {filters.vegNonVeg === 'non-veg' ? <X size={14} color={color.textSecondary} /> : null}
                       </Press>
                     ) : null}
                   </View>
 
                   {menuCategories.length > 0 ? (
-                    <View style={[styles.rowC, { gap: 8 }]}>
-                      <Press scale={0.97} onPress={() => setSelectedMenuCategory('all')} accessibilityRole="tab" accessibilityState={{ selected: selectedMenuCategory === 'all' }} style={[styles.catChip, selectedMenuCategory === 'all' ? styles.catChipOn : null]}>
-                        <Text style={[styles.catChipText, selectedMenuCategory === 'all' ? { color: F.green } : null]}>All</Text>
+                    <View style={[styles.rowC, { gap: space.sm }]}>
+                      <Press scale={0.97} onPress={() => setSelectedMenuCategory('all')} accessibilityRole="tab" accessibilityLabel="All" accessibilityState={{ selected: selectedMenuCategory === 'all' }} style={[styles.catChip, selectedMenuCategory === 'all' ? styles.catChipOn : null]}>
+                        <Text style={[styles.catChipText, selectedMenuCategory === 'all' ? { color: color.onPrimary } : null]}>All</Text>
                       </Press>
                       {menuCategories.map((category) => {
                         const on = selectedMenuCategory === category.id;
                         return (
                           <Press key={category.id} scale={0.97} onPress={() => setSelectedMenuCategory(category.id)} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={category.name} style={[styles.catChip, on ? styles.catChipOn : null]}>
-                            <CategoryThumb category={category} size={24} radius={12} fontSize={10} />
-                            <Text style={[styles.catChipText, on ? { color: F.green } : null]}>{category.name}</Text>
+                            <CategoryThumb category={category} size={26} radius={13} fontSize={12} />
+                            <Text style={[styles.catChipText, on ? { color: color.onPrimary } : null]}>{category.name}</Text>
                           </Press>
                         );
                       })}
@@ -604,7 +596,7 @@ export default function RestaurantDetails() {
           ) : null}
 
           <View
-            style={{ paddingHorizontal: 16, paddingVertical: 24, gap: 24 }}
+            style={{ paddingHorizontal: space.lg, paddingVertical: space.xxl, gap: space.xxl }}
             onLayout={(e) => {
               menuTop.current = e.nativeEvent.layout.y;
             }}
@@ -619,9 +611,9 @@ export default function RestaurantDetails() {
             {filteredSections.length === 0 && !hasUserAppliedFilters && !loadingMenuItems ? (
               <View style={styles.emptyMenu}>
                 <View style={styles.emptyMenuIcon}>
-                  <Utensils size={48} color={tw.gray400} />
+                  <Utensils size={28} color={color.primary} />
                 </View>
-                <Text style={styles.emptyMenuTitle}>{vegMode && rawHasAnyDish ? 'No Veg Dishes Available' : 'Menu Coming Soon'}</Text>
+                <Text style={styles.emptyMenuTitle}>{vegMode && rawHasAnyDish ? 'No veg dishes available' : 'Menu coming soon'}</Text>
                 <Text style={styles.emptyMenuBody}>
                   {vegMode && rawHasAnyDish
                     ? `${restaurant?.name || 'This restaurant'} doesn't have any veg dishes on their menu right now.`
@@ -650,15 +642,15 @@ export default function RestaurantDetails() {
                   onLayout={(e) => {
                     sectionTops.current[originalIndex] = e.nativeEvent.layout.y;
                   }}
-                  style={{ gap: 4 }}
+                  style={styles.sectionCard}
                 >
                   <Press scale={1} onPress={() => toggleExpanded(originalIndex)} accessibilityRole="button" accessibilityState={{ expanded: isExpanded }} accessibilityLabel={title} style={styles.sectionHead}>
-                    <View style={{ flex: 1, gap: 4 }}>
+                    <View style={{ flex: 1, gap: space.xxs, minWidth: 0 }}>
                       <Text style={styles.sectionTitle}>{title}</Text>
                       {section.subtitle ? <Text style={styles.sectionSubtitle}>{section.subtitle}</Text> : null}
                     </View>
-                    <View style={{ padding: 4, transform: [{ rotate: isExpanded ? '0deg' : '-90deg' }] }}>
-                      <ChevronDown size={20} color={tw.gray600} />
+                    <View style={{ padding: space.xs, transform: [{ rotate: isExpanded ? '0deg' : '-90deg' }] }}>
+                      <ChevronDown size={20} color={color.primary} />
                     </View>
                   </Press>
 
@@ -666,9 +658,9 @@ export default function RestaurantDetails() {
                     <Text style={styles.noRecommended}>No dish recommended</Text>
                   ) : null}
                   {isExpanded && loadingMenuItems ? (
-                    <View style={{ gap: 12, paddingHorizontal: 4, paddingVertical: 8 }}>
-                      <Skeleton style={{ height: 96, borderRadius: 16 }} />
-                      <Skeleton style={{ height: 96, borderRadius: 16 }} />
+                    <View style={{ gap: space.md, paddingHorizontal: space.lg, paddingBottom: space.lg }}>
+                      <Skeleton style={[styles.sk, { height: 96, borderRadius: radii.md }]} />
+                      <Skeleton style={[styles.sk, { height: 96, borderRadius: radii.md }]} />
                     </View>
                   ) : null}
 
@@ -683,18 +675,18 @@ export default function RestaurantDetails() {
                   ) : null}
 
                   {isExpanded && sectionSubsections.length > 0 ? (
-                    <View style={{ gap: 16 }}>
+                    <View>
                       {sectionSubsections.map((subsection, subIndex) => {
                         const subsectionKey = `${originalIndex}-${subIndex}`;
                         const isSubsectionExpanded = expandedSections.has(subsectionKey);
                         const subsectionItems = toRenderableArray(subsection?.items);
                         const subTitle = subsection?.name || subsection?.title || 'Subsection';
                         return (
-                          <View key={subIndex} style={{ gap: 16 }}>
-                            <Press scale={1} onPress={() => toggleExpanded(subsectionKey)} accessibilityRole="button" accessibilityState={{ expanded: isSubsectionExpanded }} accessibilityLabel={subTitle} style={styles.sectionHead}>
+                          <View key={subIndex}>
+                            <Press scale={1} onPress={() => toggleExpanded(subsectionKey)} accessibilityRole="button" accessibilityState={{ expanded: isSubsectionExpanded }} accessibilityLabel={subTitle} style={[styles.sectionHead, styles.subHead]}>
                               <Text style={[styles.subTitle, { flex: 1 }]}>{subTitle}</Text>
-                              <View style={{ padding: 4, transform: [{ rotate: isSubsectionExpanded ? '0deg' : '-90deg' }] }}>
-                                <ChevronDown size={16} color={tw.gray500} />
+                              <View style={{ padding: space.xs, transform: [{ rotate: isSubsectionExpanded ? '0deg' : '-90deg' }] }}>
+                                <ChevronDown size={18} color={color.textSecondary} />
                               </View>
                             </Press>
                             {isSubsectionExpanded && subsectionItems.length > 0 ? (
@@ -722,7 +714,7 @@ export default function RestaurantDetails() {
                 <Image source={FSSAI_LOGO} style={{ width: '100%', height: '100%' }} resizeMode="contain" accessibilityLabel="FSSAI" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fssaiLabel}>LICENSE NO.</Text>
+                <Text style={styles.fssaiLabel}>License no.</Text>
                 <Text style={styles.fssaiValue}>{fssaiReg}</Text>
               </View>
             </View>
@@ -731,11 +723,14 @@ export default function RestaurantDetails() {
       </View>
 
       {!anyFabBlockingSheet && filteredSections.length > 0 ? <FloatingMenuButton bottom={fabBottom} onPress={() => setShowMenuSheet(true)} /> : null}
-      <CartPill bottomOffset={80} linkTo="/food/user/cart" />
+      <CartPill bottomOffset={NAV_CLEARANCE} linkTo="/food/user/cart" />
 
       {/* Menu categories */}
       <BottomSheet visible={showMenuSheet} onClose={() => setShowMenuSheet(false)} spring={{ stiffness: 400, damping: 30 }} panelStyle={[styles.sheet, { maxHeight: height * 0.85 }]}>
-        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24, gap: 4 }}>
+        <View style={styles.sheetHead}>
+          <Text style={styles.sheetTitle} accessibilityRole="header">Menu</Text>
+        </View>
+        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ paddingHorizontal: space.sm, paddingVertical: space.sm, gap: space.xxs }}>
           {menuCategories.map((category, index) => (
             <Press
               key={index}
@@ -751,129 +746,122 @@ export default function RestaurantDetails() {
               }}
               style={styles.menuRow}
             >
-              <View style={[styles.rowC, { gap: 12, flex: 1, minWidth: 0 }]}>
-                <CategoryThumb category={category} size={40} radius={12} fontSize={14} />
+              <View style={[styles.rowC, { gap: space.md, flex: 1, minWidth: 0 }]}>
+                <CategoryThumb category={category} size={40} radius={radii.md} fontSize={14} />
                 <Text style={styles.menuRowName} numberOfLines={1}>{category.name}</Text>
               </View>
               <Text style={styles.menuRowCount}>{category.count}</Text>
             </Press>
           ))}
         </ScrollView>
-        <View style={[styles.sheetFoot, { paddingBottom: 16 + insets.bottom }]}>
-          <Press scale={0.98} onPress={() => setShowMenuSheet(false)} accessibilityLabel="Close menu" style={styles.primaryBtn}>
-            <X size={16} color="#fff" />
-            <Text style={styles.primaryBtnText}>Close</Text>
-          </Press>
+        <View style={[styles.sheetFoot, { paddingBottom: space.lg + insets.bottom }]}>
+          <Button title="Close" variant="secondary" icon={X} accessibilityLabel="Close menu" onPress={() => setShowMenuSheet(false)} />
         </View>
       </BottomSheet>
 
       {/* Filters and sorting */}
       <BottomSheet visible={showFilterSheet} onClose={() => setShowFilterSheet(false)} spring={{ stiffness: 400, damping: 30 }} panelStyle={[styles.sheet, { height: height * 0.8 }]}>
         <View style={styles.sheetHead}>
-          <Text style={styles.sheetTitle}>Filters and Sorting</Text>
-          <Press scale={0.9} onPress={() => setShowFilterSheet(false)} accessibilityLabel="Close filters" style={{ padding: 8 }}>
-            <X size={20} color={tw.gray600} />
+          <Text style={styles.sheetTitle} accessibilityRole="header">Filters and sorting</Text>
+          <Press scale={0.9} onPress={() => setShowFilterSheet(false)} accessibilityLabel="Close filters" style={styles.closeBtn}>
+            <X size={20} color={color.text} />
           </Press>
         </View>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 16 }}>
-          <View style={{ gap: 8 }}>
-            <Text style={styles.filterHeading}>Sort by:</Text>
-            <View style={{ gap: 6 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: space.lg, paddingVertical: space.lg, gap: space.xl }}>
+          <View style={{ gap: space.sm }}>
+            <Text style={styles.filterHeading}>Sort by</Text>
+            <View style={{ gap: space.sm }}>
               <SheetOption active={filters.sortBy === 'low-to-high'} onPress={() => setFilters((prev) => ({ ...prev, sortBy: prev.sortBy === 'low-to-high' ? null : 'low-to-high' }))}>
-                <Text style={[styles.sheetOptText, filters.sortBy === 'low-to-high' ? { color: tw.blue700 || '#1447E6' } : null]}>Price - low to high</Text>
+                <Text style={[styles.sheetOptText, filters.sortBy === 'low-to-high' ? styles.sheetOptTextOn : null]}>Price - low to high</Text>
               </SheetOption>
               <SheetOption active={filters.sortBy === 'high-to-low'} onPress={() => setFilters((prev) => ({ ...prev, sortBy: prev.sortBy === 'high-to-low' ? null : 'high-to-low' }))}>
-                <Text style={[styles.sheetOptText, filters.sortBy === 'high-to-low' ? { color: tw.blue700 || '#1447E6' } : null]}>Price - high to low</Text>
+                <Text style={[styles.sheetOptText, filters.sortBy === 'high-to-low' ? styles.sheetOptTextOn : null]}>Price - high to low</Text>
               </SheetOption>
             </View>
           </View>
-          <View style={{ gap: 8 }}>
-            <Text style={styles.filterHeading}>Veg/Non-veg preference:</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <SheetOption tone="green" style={{ flex: 1 }} active={filters.vegNonVeg === 'veg'} onPress={() => setFilters((prev) => ({ ...prev, vegNonVeg: prev.vegNonVeg === 'veg' ? null : 'veg' }))}>
-                <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: tw.green600 }} />
-                <Text style={[styles.sheetOptText, poppins(500), filters.vegNonVeg === 'veg' ? { color: tw.green700 } : null]}>Veg</Text>
+          <View style={{ gap: space.sm }}>
+            <Text style={styles.filterHeading}>Veg / non-veg preference</Text>
+            <View style={{ flexDirection: 'row', gap: space.sm }}>
+              <SheetOption tone="veg" style={{ flex: 1 }} active={filters.vegNonVeg === 'veg'} onPress={() => setFilters((prev) => ({ ...prev, vegNonVeg: prev.vegNonVeg === 'veg' ? null : 'veg' }))}>
+                <DietMark veg />
+                <Text style={[styles.sheetOptText, filters.vegNonVeg === 'veg' ? { color: color.veg, fontFamily: 'Poppins_600SemiBold' } : null]}>Veg</Text>
               </SheetOption>
               {!vegMode ? (
-                <SheetOption tone="red" style={{ flex: 1 }} active={filters.vegNonVeg === 'non-veg'} onPress={() => setFilters((prev) => ({ ...prev, vegNonVeg: prev.vegNonVeg === 'non-veg' ? null : 'non-veg' }))}>
-                  <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: tw.red600 }} />
-                  <Text style={[styles.sheetOptText, poppins(500), filters.vegNonVeg === 'non-veg' ? { color: tw.red600 } : null]}>Non-veg</Text>
+                <SheetOption tone="nonVeg" style={{ flex: 1 }} active={filters.vegNonVeg === 'non-veg'} onPress={() => setFilters((prev) => ({ ...prev, vegNonVeg: prev.vegNonVeg === 'non-veg' ? null : 'non-veg' }))}>
+                  <DietMark veg={false} />
+                  <Text style={[styles.sheetOptText, filters.vegNonVeg === 'non-veg' ? { color: color.nonVeg, fontFamily: 'Poppins_600SemiBold' } : null]}>Non-veg</Text>
                 </SheetOption>
               ) : null}
             </View>
           </View>
-          <View style={{ gap: 8 }}>
-            <Text style={styles.filterHeading}>Top picks:</Text>
+          <View style={{ gap: space.sm }}>
+            <Text style={styles.filterHeading}>Top picks</Text>
             <SheetOption tone="brand" active={filters.highlyReordered} onPress={() => setFilters((prev) => ({ ...prev, highlyReordered: !prev.highlyReordered }))}>
-              <RotateCcw size={16} color={filters.highlyReordered ? F.green : tw.gray700} />
-              <Text style={[styles.sheetOptText, poppins(500), filters.highlyReordered ? { color: F.green } : null]}>Highly reordered</Text>
+              <RotateCcw size={16} color={filters.highlyReordered ? color.primary : color.textSecondary} />
+              <Text style={[styles.sheetOptText, filters.highlyReordered ? styles.sheetOptTextOn : null]}>Highly reordered</Text>
             </SheetOption>
           </View>
-          <View style={{ gap: 8 }}>
-            <Text style={styles.filterHeading}>Dietary preference:</Text>
-            <SheetOption tone="red" active={filters.spicy} onPress={() => setFilters((prev) => ({ ...prev, spicy: !prev.spicy }))}>
-              <Flame size={16} color={filters.spicy ? tw.red700 : tw.gray700} />
-              <Text style={[styles.sheetOptText, poppins(500), filters.spicy ? { color: tw.red700 } : null]}>Spicy</Text>
+          <View style={{ gap: space.sm }}>
+            <Text style={styles.filterHeading}>Dietary preference</Text>
+            <SheetOption tone="brand" active={filters.spicy} onPress={() => setFilters((prev) => ({ ...prev, spicy: !prev.spicy }))}>
+              <Flame size={16} color={filters.spicy ? color.primary : color.textSecondary} />
+              <Text style={[styles.sheetOptText, filters.spicy ? styles.sheetOptTextOn : null]}>Spicy</Text>
             </SheetOption>
           </View>
         </ScrollView>
-        <View style={[styles.sheetFoot, styles.rowC, { justifyContent: 'space-between', paddingTop: 12, paddingBottom: 12 + insets.bottom }]}>
-          <Press scale={0.96} onPress={() => setFilters({ sortBy: null, vegNonVeg: null, highlyReordered: false, spicy: false })} accessibilityLabel="Clear all filters" hitSlop={8}>
-            <Text style={styles.clearAll}>Clear All</Text>
-          </Press>
-          <Press scale={0.97} onPress={() => setShowFilterSheet(false)} accessibilityLabel="Apply filters" style={styles.applyBtn}>
-            <Text style={styles.applyBtnText}>Apply{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}</Text>
-          </Press>
+        <View style={[styles.sheetFoot, styles.rowC, { gap: space.md, paddingBottom: space.lg + insets.bottom }]}>
+          <Button title="Clear all" variant="outline" accessibilityLabel="Clear all filters" onPress={() => setFilters({ sortBy: null, vegNonVeg: null, highlyReordered: false, spicy: false })} style={{ flex: 1 }} />
+          <Button title={`Apply${activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}`} accessibilityLabel="Apply filters" onPress={() => setShowFilterSheet(false)} style={{ flex: 1 }} />
         </View>
       </BottomSheet>
 
       {/* Address / outlets */}
-      <Dialog visible={showLocationSheet} onClose={() => setShowLocationSheet(false)} backdrop="rgba(0,0,0,0.4)" panelStyle={[styles.locDialog, { maxHeight: height * 0.8 }]}>
+      <Dialog visible={showLocationSheet} onClose={() => setShowLocationSheet(false)} backdrop={color.overlay} panelStyle={[styles.locDialog, { maxHeight: height * 0.8 }]}>
         <View style={styles.locHead}>
-          <Text style={[styles.sheetTitle, { flex: 1, ...poppins(700) }]}>{restaurant?.name || 'Unknown Restaurant'}</Text>
-          <Press scale={0.9} onPress={() => setShowLocationSheet(false)} accessibilityLabel="Close" style={{ padding: 6 }}>
-            <X size={16} color={tw.gray400} />
+          <Text style={[styles.sheetTitle, { flex: 1 }]} accessibilityRole="header">{restaurant?.name || 'Unknown Restaurant'}</Text>
+          <Press scale={0.9} onPress={() => setShowLocationSheet(false)} accessibilityLabel="Close" style={styles.closeBtn}>
+            <X size={20} color={color.text} />
           </Press>
         </View>
-        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ paddingHorizontal: space.lg, paddingBottom: space.lg }}>
           {Array.isArray(restaurant?.outlets) && restaurant.outlets.length > 0 ? (
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: space.sm }}>
               {restaurant.outlets.map((outlet, i) => (
                 <View key={outlet?.id || i} style={styles.outlet}>
                   {outlet?.isNearest ? (
                     <View style={styles.nearest}>
-                      <Zap size={14} color={F.green} fill={F.green} />
+                      <Zap size={14} color={color.goldText} fill={color.gold} />
                       <Text style={styles.nearestText}>Nearest available outlet</Text>
                     </View>
                   ) : null}
                   <Text style={styles.outletName}>{outlet?.location || 'Location'}</Text>
-                  <View style={[styles.rowC, { justifyContent: 'space-between', gap: 16 }]}>
-                    <View style={[styles.rowC, { gap: 12 }]}>
-                      <View style={[styles.rowC, { gap: 4 }]}>
-                        <Clock size={14} color={tw.gray600} />
+                  <View style={[styles.rowC, { justifyContent: 'space-between', gap: space.lg }]}>
+                    <View style={[styles.rowC, { gap: space.md, flexShrink: 1, flexWrap: 'wrap' }]}>
+                      <View style={[styles.rowC, { gap: space.xs }]}>
+                        <Clock size={14} color={color.textSecondary} />
                         <Text style={styles.outletMeta}>{outlet?.deliveryTime || '25-30 mins'}</Text>
                       </View>
-                      <View style={[styles.rowC, { gap: 4 }]}>
-                        <MapPin size={14} color={tw.gray600} />
+                      <View style={[styles.rowC, { gap: space.xs }]}>
+                        <MapPin size={14} color={color.textSecondary} />
                         <Text style={styles.outletMeta}>{outlet?.distance || '1.2 km'}</Text>
                       </View>
                     </View>
-                    <View style={{ alignItems: 'flex-end', gap: 2 }}>
-                      <View style={[styles.rowC, { gap: 4 }]}>
-                        <Star size={14} color="#8CC63F" fill="#8CC63F" />
-                        <Text style={[styles.outletMeta, { color: tw.gray900, ...poppins(500) }]}>{outlet?.rating ? outlet.rating : 'NEW'}</Text>
+                    <View style={{ alignItems: 'flex-end', gap: space.xxs }}>
+                      <View style={[styles.rowC, { gap: space.xs }]}>
+                        <Star size={14} color={color.goldText} fill={color.gold} strokeWidth={0} />
+                        <Text style={[styles.outletMeta, { color: color.goldText, fontFamily: 'Poppins_600SemiBold' }]}>{outlet?.rating ? outlet.rating : 'New'}</Text>
                       </View>
-                      <Text style={[styles.outletMeta, { color: tw.gray500 }]}>{ratingCountLabel(outlet?.reviews)}</Text>
+                      <Text style={[styles.outletMeta, { color: color.textMuted }]}>{ratingCountLabel(outlet?.reviews)}</Text>
                     </View>
                   </View>
                 </View>
               ))}
             </View>
           ) : (
-            <View style={{ paddingTop: 4, paddingBottom: 12 }}>
-              <Text style={styles.addrLabel}>RESTAURANT ADDRESS</Text>
+            <View style={{ paddingTop: space.xs, paddingBottom: space.md }}>
+              <Text style={styles.addrLabel}>Restaurant address</Text>
               <View style={styles.addrBox}>
-                <MapPin size={16} color={tw.red500} style={{ marginTop: 2 }} />
+                <MapPin size={16} color={color.primary} style={{ marginTop: 2 }} />
                 <Text style={styles.addrText}>{restaurant?.location || 'Address not available'}</Text>
               </View>
             </View>
@@ -883,19 +871,19 @@ export default function RestaurantDetails() {
 
       {/* Manage collections */}
       <BottomSheet visible={showManageCollections} onClose={() => setShowManageCollections(false)} spring={{ stiffness: 400, damping: 30 }} panelStyle={styles.sheet}>
-        <View style={[styles.sheetHead, { paddingTop: 24, paddingBottom: 16 }]}>
-          <Text style={[styles.sheetTitle, poppins(700)]}>Manage Collections</Text>
-          <Press scale={0.9} onPress={() => setShowManageCollections(false)} accessibilityLabel="Close" style={styles.darkClose}>
-            <X size={16} color="#fff" />
+        <View style={styles.sheetHead}>
+          <Text style={styles.sheetTitle} accessibilityRole="header">Manage collections</Text>
+          <Press scale={0.9} onPress={() => setShowManageCollections(false)} accessibilityLabel="Close" style={styles.closeBtn}>
+            <X size={20} color={color.text} />
           </Press>
         </View>
-        <View style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 8 }}>
+        <View style={{ padding: space.lg, gap: space.sm }}>
           <View style={styles.collRow}>
             <View style={styles.collIcon}>
-              <Bookmark size={24} color={tw.red500} fill={tw.red500} />
+              <Bookmark size={22} color={color.primary} fill={color.primary} />
             </View>
-            <View style={{ flex: 1 }}>
-              <View style={[styles.rowC, { justifyContent: 'space-between' }]}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={[styles.rowC, { justifyContent: 'space-between', gap: space.md }]}>
                 <Text style={styles.collName}>Bookmarks</Text>
                 <Press
                   scale={0.9}
@@ -908,9 +896,9 @@ export default function RestaurantDetails() {
                     removeDishFavorite(selectedItem.id, restaurantKey);
                     setShowManageCollections(false);
                   }}
-                  style={[styles.check, selectedItem ? null : { borderColor: tw.red500, backgroundColor: tw.red500 }]}
+                  style={[styles.check, selectedItem ? null : { opacity: 0.6 }]}
                 >
-                  <Check size={12} color="#fff" strokeWidth={3} />
+                  <Check size={14} color={color.onPrimary} strokeWidth={3} />
                 </Press>
               </View>
               <Text style={styles.collCount}>
@@ -919,47 +907,45 @@ export default function RestaurantDetails() {
             </View>
           </View>
           <Press scale={0.98} onPress={() => setShowManageCollections(false)} accessibilityLabel="Create new Collection" style={styles.collRow}>
-            <View style={styles.collIcon}>
-              <Plus size={24} color={tw.red500} />
+            <View style={[styles.collIcon, { backgroundColor: color.surfaceMuted }]}>
+              <Plus size={22} color={color.primary} />
             </View>
-            <Text style={[styles.collName, { flex: 1 }]}>Create new Collection</Text>
+            <Text style={[styles.collName, { flex: 1 }]}>Create new collection</Text>
           </Press>
         </View>
-        <View style={[styles.sheetFoot, { paddingBottom: 16 + insets.bottom }]}>
-          <Press scale={0.98} onPress={() => setShowManageCollections(false)} accessibilityLabel="Done" style={[styles.primaryBtn, { paddingVertical: 12, borderRadius: 8 }]}>
-            <Text style={styles.primaryBtnText}>Done</Text>
-          </Press>
+        <View style={[styles.sheetFoot, { paddingBottom: space.lg + insets.bottom }]}>
+          <Button title="Done" variant="secondary" onPress={() => setShowManageCollections(false)} />
         </View>
       </BottomSheet>
 
       {/* Dish detail */}
-      <Dialog visible={!!(showItemDetail && selectedItem)} onClose={closeItemDetail} backdrop="rgba(0,0,0,0.5)" panelStyle={[styles.itemDialog, { maxHeight: height * 0.9 }]}>
+      <Dialog visible={!!(showItemDetail && selectedItem)} onClose={closeItemDetail} backdrop={color.overlay} panelStyle={[styles.itemDialog, { maxHeight: height * 0.9 }]}>
         {selectedItem ? (
           <>
-            <View style={{ height: 256, backgroundColor: tw.gray100 }}>
+            <View style={{ height: 240, backgroundColor: color.surfaceMuted }}>
               <DishImg uri={selectedItem.displayImage || selectedItem.image} style={{ width: '100%', height: '100%' }} />
               <Press scale={0.9} onPress={closeItemDetail} accessibilityLabel="Close" style={styles.itemClose}>
-                <X size={20} color="#fff" />
+                <X size={20} color={color.textInverse} />
               </Press>
             </View>
-            <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: 16 }}>
-              <View style={[styles.rowC, { gap: 8, marginBottom: 12 }]}>
-                <View style={[styles.itemDiet, selectedItem.foodType === 'Veg' ? { borderColor: tw.green600, backgroundColor: tw.green50 } : { borderColor: tw.red600, backgroundColor: tw.red50 }]}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: selectedItem.foodType === 'Veg' ? tw.green600 : tw.red600 }} />
+            <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: space.lg }}>
+              <View style={[styles.rowC, { gap: space.sm, marginBottom: space.md, alignItems: 'flex-start' }]}>
+                <View style={{ marginTop: 5 }}>
+                  <DietMark veg={selectedItem.foodType === 'Veg'} size={18} />
                 </View>
-                <Text style={styles.itemName}>{selectedItem.name}</Text>
+                <Text style={styles.itemName} accessibilityRole="header">{selectedItem.name}</Text>
               </View>
               {selectedItem.description ? <Text style={styles.itemDesc}>{selectedItem.description}</Text> : null}
-              {selectedItem.notEligibleForCoupons ? <Text style={styles.itemNoCoupon}>NOT ELIGIBLE FOR COUPONS</Text> : null}
+              {selectedItem.notEligibleForCoupons ? <StatusBadge label="Not eligible for coupons" tone="neutral" style={{ marginBottom: space.lg }} /> : null}
               {hasFoodVariants(selectedItem) ? (
-                <View style={{ marginBottom: 16 }}>
+                <View style={{ marginBottom: space.lg }}>
                   <Text style={styles.variantTitle}>Choose a variant</Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
                     {getFoodVariants(selectedItem).map((variant) => {
                       const on = String(selectedVariantId || '') === String(variant.id);
                       return (
-                        <Press key={variant.id} scale={0.97} onPress={() => setSelectedVariantId(variant.id)} accessibilityRole="radio" accessibilityState={{ checked: on }} style={[styles.variant, on ? { borderColor: tw.red500, backgroundColor: tw.red50 } : null]}>
-                          <Text style={[styles.variantText, on ? { color: tw.red600 } : null]}>
+                        <Press key={variant.id} scale={0.97} onPress={() => setSelectedVariantId(variant.id)} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`${variant.name}, ${RUPEE}${Math.round(variant.price)}`} style={[styles.variant, on ? styles.variantOn : null]}>
+                          <Text style={[styles.variantText, on ? { color: color.onPrimary } : null]}>
                             {variant.name} · {RUPEE}
                             {Math.round(variant.price)}
                           </Text>
@@ -977,12 +963,12 @@ export default function RestaurantDetails() {
               return (
                 <View style={styles.itemFoot}>
                   <View style={[styles.itemQty, shouldShowGrayscale ? { opacity: 0.5 } : null]}>
-                    <Press scale={0.9} hitSlop={8} disabled={qty === 0 || shouldShowGrayscale} onPress={() => updateItemQuantity(selectedItem, shown - 1, null, variant)} accessibilityLabel="Decrease quantity">
-                      <Minus size={20} color={qty === 0 || shouldShowGrayscale ? tw.gray300 : tw.gray600} />
+                    <Press scale={0.9} disabled={qty === 0 || shouldShowGrayscale} onPress={() => updateItemQuantity(selectedItem, shown - 1, null, variant)} accessibilityLabel="Decrease quantity" style={styles.itemQtyBtn}>
+                      <Minus size={20} color={qty === 0 || shouldShowGrayscale ? color.textDisabled : color.primary} />
                     </Press>
-                    <Text style={[styles.itemQtyText, shouldShowGrayscale ? { color: tw.gray400 } : null]}>{shown}</Text>
-                    <Press scale={0.9} hitSlop={8} disabled={shouldShowGrayscale} onPress={() => updateItemQuantity(selectedItem, shown + 1, null, variant)} accessibilityLabel="Increase quantity">
-                      <Plus size={20} color={shouldShowGrayscale ? tw.gray300 : tw.gray600} />
+                    <Text style={[styles.itemQtyText, shouldShowGrayscale ? { color: color.textDisabled } : null]}>{shown}</Text>
+                    <Press scale={0.9} disabled={shouldShowGrayscale} onPress={() => updateItemQuantity(selectedItem, shown + 1, null, variant)} accessibilityLabel="Increase quantity" style={styles.itemQtyBtn}>
+                      <Plus size={20} color={shouldShowGrayscale ? color.textDisabled : color.primary} />
                     </Press>
                   </View>
                   <Press
@@ -993,12 +979,13 @@ export default function RestaurantDetails() {
                       closeItemDetail();
                     }}
                     accessibilityLabel={qty > 0 ? 'Update cart' : 'Add item'}
-                    style={[styles.itemAdd, shouldShowGrayscale ? { backgroundColor: tw.gray300, opacity: 0.5 } : null]}
+                    accessibilityState={{ disabled: shouldShowGrayscale }}
+                    style={[styles.itemAdd, shouldShowGrayscale ? { backgroundColor: color.surfaceMuted } : null]}
                   >
-                    <Text style={[styles.itemAddText, shouldShowGrayscale ? { color: tw.gray500 } : null]} numberOfLines={1}>
+                    <Text style={[styles.itemAddText, shouldShowGrayscale ? { color: color.textMuted } : null]} numberOfLines={1}>
                       {qty > 0 ? 'Update cart' : hasFoodVariants(selectedItem) ? 'Add' : 'Add item'}
                     </Text>
-                    <Text style={[styles.itemAddText, { fontSize: 14, ...poppins(700) }, shouldShowGrayscale ? { color: tw.gray500 } : null]} numberOfLines={1}>
+                    <Text style={[styles.itemAddText, { fontFamily: 'Poppins_700Bold' }, shouldShowGrayscale ? { color: color.textMuted } : null]} numberOfLines={1}>
                       {hasFoodVariants(selectedItem) ? `${variant?.name || 'Default'} · ${RUPEE}${Math.round(variant?.price || selectedItem.price)}` : `${RUPEE}${Math.round(selectedItem.price)}`}
                     </Text>
                   </Press>
@@ -1011,16 +998,16 @@ export default function RestaurantDetails() {
 
       {/* Restaurant options */}
       <BottomSheet visible={showMenuOptionsSheet} onClose={() => setShowMenuOptionsSheet(false)} spring={{ stiffness: 400, damping: 30 }} panelStyle={[styles.sheet, { maxHeight: height * 0.7 }]}>
-        <View style={[styles.sheetHead, { paddingTop: 24, paddingBottom: 16 }]}>
-          <Text style={[styles.sheetTitle, poppins(700)]}>{restaurant?.name || 'Unknown Restaurant'}</Text>
+        <View style={styles.sheetHead}>
+          <Text style={[styles.sheetTitle, { flex: 1 }]} accessibilityRole="header" numberOfLines={2}>{restaurant?.name || 'Unknown Restaurant'}</Text>
         </View>
-        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: 16 }}>
-          <Press scale={0.99} onPress={handleAddToCollection} style={styles.optRow}>
-            <Bookmark size={20} color={tw.gray700} />
+        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: space.sm }}>
+          <Press scale={0.99} onPress={handleAddToCollection} accessibilityRole="button" style={styles.optRow}>
+            <Bookmark size={20} color={color.primary} />
             <Text style={styles.optText}>{isFavorite(restaurant?.slug || slug || '') ? 'Remove from Collection' : 'Add to Collection'}</Text>
           </Press>
-          <Press scale={0.99} onPress={handleShareRestaurant} style={styles.optRow}>
-            <Share2 size={20} color={tw.gray700} />
+          <Press scale={0.99} onPress={handleShareRestaurant} accessibilityRole="button" style={styles.optRow}>
+            <Share2 size={20} color={color.primary} />
             <Text style={styles.optText}>Share this restaurant</Text>
           </Press>
           <Press
@@ -1029,9 +1016,10 @@ export default function RestaurantDetails() {
               setShowMenuOptionsSheet(false);
               setShowMoreInfo(true);
             }}
+            accessibilityRole="button"
             style={styles.optRow}
           >
-            <Info size={20} color={tw.gray700} />
+            <Info size={20} color={color.primary} />
             <Text style={styles.optText}>See more about this restaurant</Text>
           </Press>
           <Text style={styles.disclaimer}>
@@ -1043,26 +1031,26 @@ export default function RestaurantDetails() {
                 <Image source={FSSAI_LOGO} style={{ width: '100%', height: '100%' }} resizeMode="contain" accessibilityLabel="FSSAI" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.optFssaiLabel}>LIC. NO.</Text>
+                <Text style={styles.optFssaiLabel}>Lic. no.</Text>
                 <Text style={styles.optFssaiValue}>{fssaiReg}</Text>
               </View>
             </View>
           ) : null}
         </ScrollView>
-        <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 8 + insets.bottom }}>
-          <View style={{ width: 48, height: 4, borderRadius: 2, backgroundColor: tw.gray300 }} />
+        <View style={{ alignItems: 'center', paddingTop: space.sm, paddingBottom: space.sm + insets.bottom }}>
+          <View style={{ width: 48, height: 4, borderRadius: 2, backgroundColor: color.borderStrong }} />
         </View>
       </BottomSheet>
 
       {/* Share */}
-      <Dialog visible={!!(showShareModal && sharePayload)} onClose={() => setShowShareModal(false)} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.shareDialog}>
+      <Dialog visible={!!(showShareModal && sharePayload)} onClose={() => setShowShareModal(false)} backdrop={color.overlay} panelStyle={styles.shareDialog}>
         <View style={styles.shareHead}>
-          <Text style={[styles.sheetTitle, { flex: 1 }]}>Share</Text>
-          <Press scale={0.9} onPress={() => setShowShareModal(false)} accessibilityLabel="Close share modal" style={{ padding: 4 }} hitSlop={8}>
-            <X size={16} color={tw.gray600} />
+          <Text style={[styles.sheetTitle, { flex: 1 }]} accessibilityRole="header">Share</Text>
+          <Press scale={0.9} onPress={() => setShowShareModal(false)} accessibilityLabel="Close share modal" style={styles.closeBtn}>
+            <X size={20} color={color.text} />
           </Press>
         </View>
-        <View style={{ paddingHorizontal: 20, paddingVertical: 16, gap: 8 }}>
+        <View style={{ padding: space.lg, gap: space.sm }}>
           {[
             { key: 'system', label: 'Share via system apps', Icon: Share2, onPress: handleSystemShareFromModal },
             { key: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle, onPress: () => openShareTarget('whatsapp') },
@@ -1071,7 +1059,7 @@ export default function RestaurantDetails() {
             { key: 'copy', label: 'Copy link', Icon: Copy, onPress: copyShareLink },
           ].map(({ key, label, Icon, onPress }) => (
             <Press key={key} scale={0.99} onPress={onPress} accessibilityLabel={label} style={styles.shareRow}>
-              <Icon size={20} color={tw.gray700} />
+              <Icon size={20} color={color.primary} />
               <Text style={styles.shareRowText}>{label}</Text>
             </Press>
           ))}
@@ -1079,27 +1067,27 @@ export default function RestaurantDetails() {
       </Dialog>
 
       {/* Offers */}
-      <BottomSheet visible={showOffersSheet} onClose={() => setShowOffersSheet(false)} backdrop="rgba(0,0,0,0.6)" panelStyle={[styles.sheet, { maxHeight: height * 0.8 }]}>
-        <View style={[styles.sheetHead, { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 16, borderBottomColor: tw.gray100 }]}>
-          <Text style={[styles.offersTitle, { flex: 1 }]}>Offers at {restaurant?.name || 'this restaurant'}</Text>
-          <Press scale={0.9} onPress={() => setShowOffersSheet(false)} accessibilityLabel="Close coupons" style={styles.darkClose}>
-            <X size={16} color="#fff" />
+      <BottomSheet visible={showOffersSheet} onClose={() => setShowOffersSheet(false)} backdrop={color.overlay} panelStyle={[styles.sheet, { maxHeight: height * 0.8 }]}>
+        <View style={styles.sheetHead}>
+          <Text style={[styles.sheetTitle, { flex: 1 }]} accessibilityRole="header">Offers at {restaurant?.name || 'this restaurant'}</Text>
+          <Press scale={0.9} onPress={() => setShowOffersSheet(false)} accessibilityLabel="Close coupons" style={styles.closeBtn}>
+            <X size={20} color={color.text} />
           </Press>
         </View>
-        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 24 + insets.bottom, gap: 12 }}>
-          <Text style={styles.addrLabel}>RESTAURANT COUPONS</Text>
+        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxl + insets.bottom, gap: space.md }}>
+          <Text style={styles.addrLabel}>Restaurant coupons</Text>
           {coupons.map((coupon, idx) => (
             <View key={coupon.couponCode || idx} style={styles.coupon}>
-              <ScallopBadge size={40} />
+              <ScallopBadge size={40} color={color.goldText} />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.couponTitle}>{formatCouponTitle(coupon)}</Text>
                 <Text style={styles.couponCode}>
-                  Use code <Text style={{ color: tw.gray700, ...poppins(600) }}>{coupon.couponCode}</Text>
+                  Use code <Text style={{ color: color.text, fontFamily: 'Poppins_600SemiBold' }}>{coupon.couponCode}</Text>
                 </Text>
-                <View style={{ flexDirection: 'row', marginTop: 14 }}>
+                <View style={{ flexDirection: 'row', marginTop: space.md }}>
                   <Press scale={0.96} onPress={() => handleCopyCoupon(coupon.couponCode)} accessibilityLabel={`Copy coupon code ${coupon.couponCode}`} style={styles.copyBox}>
                     <Text style={styles.copyBoxText}>{coupon.couponCode}</Text>
-                    <Copy size={12} color={tw.blue600 || '#155DFC'} />
+                    <Copy size={14} color={color.primary} />
                   </Press>
                 </View>
               </View>
@@ -1113,167 +1101,164 @@ export default function RestaurantDetails() {
 
 const styles = StyleSheet.create({
   rowC: { flexDirection: 'row', alignItems: 'center' },
-  centerPage: { flex: 1, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
-  errTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, marginTop: 16, marginBottom: 4, ...poppins(600) },
-  errBody: { fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', marginBottom: 16, ...poppins(400) },
-  outlineBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', ...shadow('sm') },
-  outlineBtnText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
+  sk: { backgroundColor: color.surfaceMuted, borderRadius: radii.sm },
+  centerPage: { flex: 1, backgroundColor: color.bg, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xxl },
+  errIcon: { width: 60, height: 60, borderRadius: radii.lg, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  errTitle: { ...type.subheading, color: color.text, marginTop: space.lg, marginBottom: space.xs, textAlign: 'center' },
+  errBody: { ...type.small, color: color.textSecondary, textAlign: 'center', marginBottom: space.lg },
 
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, backgroundColor: '#fff' },
-  roundBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  searchPill: { height: 40, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 8, ...shadow('sm') },
-  searchPillText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  searchBox: { flex: 1, height: 40, borderRadius: 20, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, ...shadow('sm') },
-  searchInput: { flex: 1, paddingVertical: 0, fontSize: 14, color: tw.gray900, ...poppins(400) },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.sm, backgroundColor: color.bg },
+  roundBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', ...elevation.card },
+  searchPill: { height: 44, paddingHorizontal: space.lg, borderRadius: 22, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, flexDirection: 'row', alignItems: 'center', gap: space.sm, ...elevation.card },
+  searchPillText: { ...type.label, color: color.text },
+  searchBox: { flex: 1, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.primary, backgroundColor: color.surface, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.md, paddingRight: space.xs },
+  searchInput: { flex: 1, minWidth: 0, height: '100%', paddingVertical: 0, ...type.body, color: color.text, outlineWidth: 0 },
+  clearX: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 
-  summary: { borderRadius: 24, borderWidth: 1, borderColor: tw.gray100, backgroundColor: '#fff', padding: 16, gap: 16, overflow: 'hidden', ...shadow('0 16px 40px rgba(15,23,42,0.08)') },
-  summaryBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 6 },
-  name: { fontSize: 24, lineHeight: 30, color: tw.gray900, ...poppins(700) },
-  summaryText: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) },
-  ratingPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: '#257d3c', ...shadow('sm') },
-  ratingPillText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
-  ratingCount: { marginTop: 4, fontSize: 12, lineHeight: 16, color: tw.gray500, textAlign: 'center', ...poppins(400) },
-  openBadge: { alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: '#257d3c', ...shadow('sm') },
-  openBadgeText: { fontSize: 10, lineHeight: 12.5, color: '#fff', ...poppins(700) },
-  offlineNote: { borderRadius: 8, borderWidth: 1, borderColor: '#FFCCD3', backgroundColor: '#FFF1F2', paddingHorizontal: 12, paddingVertical: 8 },
-  offlineNoteText: { fontSize: 14, lineHeight: 20, color: '#C70036', ...poppins(400) },
-  offerStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, marginBottom: 12, ...shadow('sm') },
-  offerStripText: { flex: 1, fontSize: 12, lineHeight: 20, color: tw.gray800, ...poppins(600) },
-  offerCount: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(600) },
+  summary: { borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, padding: space.lg, paddingTop: space.lg + 4, gap: space.md, overflow: 'hidden', ...elevation.card },
+  summaryBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 4, backgroundColor: color.gold },
+  name: { ...type.heading, fontSize: 20, lineHeight: 28, color: color.text },
+  summaryText: { ...type.small, color: color.textSecondary },
+  locLink: { flex: 1, gap: space.xs + 2, minWidth: 0, minHeight: 44 },
+  ratingPill: { flexDirection: 'row', alignItems: 'center', gap: space.xs, height: 28, borderRadius: radii.pill, paddingHorizontal: space.sm + 2, backgroundColor: color.goldSoft, borderWidth: 1, borderColor: color.border },
+  ratingPillText: { ...type.label, color: color.goldText },
+  ratingCount: { marginTop: space.xs, ...type.caption, color: color.textMuted, textAlign: 'right' },
+  offlineNote: { borderRadius: radii.md, borderWidth: 1, borderColor: color.warningSoft, backgroundColor: color.warningSoft, paddingHorizontal: space.md, paddingVertical: space.sm + 2 },
+  offlineNoteText: { ...type.small, color: color.warning },
+  offerStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48, borderWidth: 1, borderColor: color.border, backgroundColor: color.goldSoft, paddingHorizontal: space.md + 2, paddingVertical: space.sm + 2, borderRadius: radii.md },
+  offerStripText: { flex: 1, ...type.label, color: color.text },
+  offerCount: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
 
-  filterBar: { borderTopWidth: 1, borderBottomWidth: 1, borderColor: tw.gray200, paddingVertical: 12, marginTop: 12 },
-  smBtn: { height: 36, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: tw.gray300, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 6 },
-  smBtnText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  filterCount: { position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, backgroundColor: tw.red500, alignItems: 'center', justifyContent: 'center' },
-  filterCountText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) },
-  catChip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, borderWidth: 1, borderColor: tw.gray300, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 6 },
-  catChipOn: { borderColor: F.green, backgroundColor: 'rgba(10,77,43,0.08)' },
-  catChipText: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(600) },
+  filterBar: { borderTopWidth: 1, borderBottomWidth: 1, borderColor: color.border, paddingVertical: space.md, marginTop: space.lg, backgroundColor: color.surface },
+  smBtn: { height: 40, paddingHorizontal: space.md + 2, borderRadius: radii.pill, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  smBtnText: { ...type.label, color: color.text },
+  filterCount: { position: 'absolute', top: -6, right: -6, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
+  filterCountText: { ...type.caption, lineHeight: 14, fontFamily: 'Poppins_700Bold', color: color.onPrimary },
+  catChip: { flexDirection: 'row', alignItems: 'center', gap: space.sm, height: 40, borderRadius: radii.pill, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingLeft: space.xs + 2, paddingRight: space.md + 2, minWidth: 48, justifyContent: 'center' },
+  catChipOn: { borderColor: color.primary, backgroundColor: color.primary },
+  catChipText: { ...type.label, color: color.text },
 
-  noMatch: { borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray300, backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 32, alignItems: 'center' },
-  noMatchTitle: { fontSize: 14, lineHeight: 20, color: tw.gray700, textAlign: 'center', ...poppins(500) },
-  noMatchBody: { fontSize: 12, lineHeight: 16, color: tw.gray500, textAlign: 'center', marginTop: 8, ...poppins(400) },
-  emptyMenu: { alignItems: 'center', paddingVertical: 64, paddingHorizontal: 16 },
-  emptyMenuIcon: { backgroundColor: tw.gray100, padding: 24, borderRadius: 999, marginBottom: 24 },
-  emptyMenuTitle: { fontSize: 20, lineHeight: 28, color: tw.gray800, marginBottom: 8, textAlign: 'center', ...poppins(700) },
-  emptyMenuBody: { fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', maxWidth: 320, ...poppins(400) },
+  noMatch: { borderRadius: radii.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: color.borderStrong, backgroundColor: color.surface, paddingHorizontal: space.xl, paddingVertical: space.xxxl, alignItems: 'center' },
+  noMatchTitle: { ...type.bodyStrong, color: color.text, textAlign: 'center' },
+  noMatchBody: { ...type.small, color: color.textMuted, textAlign: 'center', marginTop: space.sm },
+  emptyMenu: { alignItems: 'center', paddingVertical: space.xxxl * 2, paddingHorizontal: space.lg },
+  emptyMenuIcon: { width: 60, height: 60, borderRadius: radii.lg, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.lg },
+  emptyMenuTitle: { ...type.subheading, color: color.text, marginBottom: space.xs, textAlign: 'center' },
+  emptyMenuBody: { ...type.small, color: color.textMuted, textAlign: 'center', maxWidth: 320 },
 
-  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  sectionSubtitle: { fontSize: 14, lineHeight: 20, color: tw.blue600 || '#155DFC', textDecorationLine: 'underline', ...poppins(400) },
-  subTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) },
-  noRecommended: { fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', paddingVertical: 32, ...poppins(400) },
+  sectionCard: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.card },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, minHeight: 56, paddingHorizontal: space.lg, paddingVertical: space.md },
+  sectionTitle: { ...type.sectionSerif, color: color.primary },
+  sectionSubtitle: { ...type.small, color: color.textMuted },
+  subHead: { borderTopWidth: 1, borderTopColor: color.border, minHeight: 48, backgroundColor: color.bg },
+  subTitle: { ...type.bodyStrong, color: color.text },
+  noRecommended: { ...type.small, color: color.textMuted, textAlign: 'center', paddingVertical: space.xxl },
 
-  dish: { flexDirection: 'row', gap: 16, padding: 16 },
-  dishBorder: { borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  dishHighlight: { backgroundColor: 'rgba(251,44,54,0.06)', borderRadius: 16, borderWidth: 2, borderColor: 'rgba(231,0,11,0.8)' },
-  diet: { width: 16, height: 16, borderWidth: 2, borderRadius: 2, padding: 2 },
-  dishName: { flex: 1, fontSize: 18, lineHeight: 22.5, color: tw.gray800, ...poppins(700) },
-  startingFrom: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(500) },
-  dishPrice: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) },
-  prep: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: tw.gray100, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
-  prepText: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(500) },
-  dishDesc: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginTop: 4, ...poppins(400) },
-  miniBtn: { padding: 6, borderWidth: 1, borderColor: tw.gray300, borderRadius: 8 },
-  dishImgWrap: { width: 128, height: 128, borderRadius: 16, overflow: 'hidden', backgroundColor: tw.gray100, ...shadow('sm') },
+  dish: { flexDirection: 'row', gap: space.lg, padding: space.lg, borderTopWidth: 1, borderTopColor: color.border },
+  dishBorder: {},
+  dishHighlight: { backgroundColor: color.goldSoft, borderWidth: 2, borderColor: color.gold, borderRadius: radii.md, margin: space.xs },
+  diet: { borderWidth: 1.5, borderRadius: 3, padding: 2, backgroundColor: color.surface },
+  dishName: { flex: 1, ...type.subheading, color: color.text },
+  startingFrom: { ...type.caption, color: color.textMuted },
+  dishPrice: { ...type.bodyStrong, fontSize: 15, color: color.text },
+  prep: { flexDirection: 'row', alignItems: 'center', gap: space.xs, backgroundColor: color.surfaceMuted, paddingHorizontal: space.sm, height: 24, borderRadius: radii.pill },
+  prepText: { ...type.caption, color: color.textSecondary },
+  dishDesc: { ...type.small, color: color.textMuted, marginTop: space.xs },
+  miniBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: color.border, borderRadius: radii.md, backgroundColor: color.surface },
+  miniBtnOn: { borderColor: color.primaryBorder, backgroundColor: color.primarySoft },
+  dishImgWrap: { width: 120, height: 120, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted },
   addWrap: { position: 'absolute', bottom: 0, left: 0, right: 0, alignItems: 'center' },
-  add: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fff', borderWidth: 1, borderColor: F.green, paddingHorizontal: 24, paddingVertical: 6, borderRadius: 8, ...shadow('md') },
-  addText: { fontSize: 16, lineHeight: 24, color: F.green, ...poppins(700) },
-  addDisabled: { backgroundColor: tw.gray50, borderColor: tw.gray300, opacity: 0.5 },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fff', borderWidth: 1, borderColor: F.green, paddingHorizontal: 16, paddingVertical: 6, borderRadius: 8, ...shadow('md') },
-  stepperQty: { marginHorizontal: 8, fontSize: 14, lineHeight: 24, color: F.green, ...poppins(700) },
+  add: { minWidth: 96, height: 38, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs, backgroundColor: color.surface, borderWidth: 1.5, borderColor: color.primary, paddingHorizontal: space.lg, borderRadius: radii.md, ...elevation.card },
+  addText: { ...type.button, color: color.primary },
+  addDisabled: { backgroundColor: color.surfaceMuted, borderColor: color.border, opacity: 0.7 },
+  stepper: { minWidth: 104, height: 38, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: color.primary, borderWidth: 1.5, borderColor: color.primary, borderRadius: radii.md, ...elevation.card },
+  stepperBtn: { width: 34, height: '100%', alignItems: 'center', justifyContent: 'center' },
+  stepperQty: { minWidth: 20, textAlign: 'center', ...type.button, color: color.onPrimary },
 
-  fssai: { flexDirection: 'row', alignItems: 'center', gap: 16, marginHorizontal: 16, marginTop: 8, padding: 16, borderTopWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200, borderRadius: 12, backgroundColor: 'rgba(249,250,251,0.3)' },
-  fssaiLogo: { width: 80, height: 48, backgroundColor: '#fff', borderRadius: 8, padding: 6, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  fssaiLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.gray400, marginBottom: 4, ...poppins(700) },
-  fssaiValue: { fontSize: 14, lineHeight: 20, letterSpacing: 0.35, color: tw.gray600, fontFamily: 'monospace', fontWeight: '600' },
+  fssai: { flexDirection: 'row', alignItems: 'center', gap: space.lg, marginHorizontal: space.lg, padding: space.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: color.borderStrong, borderRadius: radii.md, backgroundColor: color.surface },
+  fssaiLogo: { width: 80, height: 48, backgroundColor: color.surface, borderRadius: radii.sm, padding: 6, borderWidth: 1, borderColor: color.border },
+  fssaiLabel: { ...type.overline, color: color.textMuted, marginBottom: space.xxs },
+  fssaiValue: { ...type.bodyStrong, color: color.textSecondary, letterSpacing: 0.35 },
 
   menuFab: { position: 'absolute', left: 0, zIndex: 40 },
-  menuFabBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#5a5e66', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 22, ...shadow('lg') },
-  menuFabText: { fontSize: 17, lineHeight: 24, letterSpacing: 0.4, color: '#fff', ...poppins(500) },
+  menuFabBtn: { flexDirection: 'row', alignItems: 'center', gap: space.sm, height: 48, backgroundColor: color.primaryDeep, borderWidth: 1, borderColor: color.gold, paddingHorizontal: space.xl, borderRadius: radii.pill, ...elevation.float },
+  menuFabText: { ...type.button, color: color.textInverse },
 
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' },
-  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  sheetTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(600) },
-  sheetFoot: { borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 16, paddingTop: 16, backgroundColor: '#fff' },
-  primaryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: F.green, paddingVertical: 16, borderRadius: 12, ...shadow('lg') },
-  primaryBtnText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
-  menuRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 8, borderRadius: 8, gap: 12 },
-  menuRowName: { flexShrink: 1, fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(500) },
-  menuRowCount: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  filterHeading: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  sheetOpt: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, borderWidth: 2, borderColor: tw.gray200, backgroundColor: '#fff' },
-  sheetOptText: { fontSize: 16, lineHeight: 24, color: tw.gray700, ...poppins(400) },
-  clearAll: { fontSize: 14, lineHeight: 20, color: tw.red600, ...poppins(500) },
-  applyBtn: { backgroundColor: F.green, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
-  applyBtnText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
-  darkClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.gray700, alignItems: 'center', justifyContent: 'center' },
+  sheet: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, overflow: 'hidden' },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, minHeight: 60, paddingLeft: space.lg, paddingRight: space.sm, paddingVertical: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  sheetTitle: { ...type.heading, color: color.text },
+  closeBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  sheetFoot: { borderTopWidth: 1, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.lg, backgroundColor: color.surface },
+  menuRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56, paddingVertical: space.sm, paddingHorizontal: space.sm, borderRadius: radii.md, gap: space.md },
+  menuRowName: { flexShrink: 1, ...type.body, fontFamily: 'Poppins_500Medium', color: color.text },
+  menuRowCount: { ...type.small, color: color.textMuted },
+  filterHeading: { ...type.subheading, color: color.text },
+  sheetOpt: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 48, paddingHorizontal: space.lg, paddingVertical: space.sm, borderRadius: radii.md, borderWidth: 1.5, borderColor: color.border, backgroundColor: color.surface },
+  sheetOptText: { ...type.body, color: color.text },
+  sheetOptTextOn: { color: color.primary, fontFamily: 'Poppins_600SemiBold' },
 
-  locDialog: { width: '88%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', ...shadow('2xl') },
-  locHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 },
-  outlet: { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff' },
-  nearest: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: F.cream, borderRadius: 6 },
-  nearestText: { fontSize: 12, lineHeight: 16, color: F.green, ...poppins(600) },
-  outletName: { fontSize: 14, lineHeight: 20, color: tw.gray900, marginBottom: 8, ...poppins(600) },
-  outletMeta: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  addrLabel: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.gray400, marginBottom: 8, ...poppins(600) },
-  addrBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12, borderRadius: 12, backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray100 },
-  addrText: { flex: 1, fontSize: 14, lineHeight: 22.75, color: tw.gray700, ...poppins(400) },
+  locDialog: { width: '90%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden', ...elevation.sheet },
+  locHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.lg, paddingRight: space.sm, paddingTop: space.sm, paddingBottom: space.sm },
+  outlet: { padding: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  nearest: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: space.xs + 2, marginBottom: space.sm, paddingHorizontal: space.sm, height: 24, backgroundColor: color.goldSoft, borderRadius: radii.pill },
+  nearestText: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.goldText },
+  outletName: { ...type.bodyStrong, color: color.text, marginBottom: space.sm },
+  outletMeta: { ...type.caption, color: color.textSecondary },
+  addrLabel: { ...type.overline, color: color.textMuted, marginBottom: space.sm },
+  addrBox: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, padding: space.md, borderRadius: radii.md, backgroundColor: color.surfaceMuted, borderWidth: 1, borderColor: color.border },
+  addrText: { flex: 1, ...type.body, color: color.textSecondary },
 
-  collRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 8 },
-  collIcon: { width: 48, height: 48, borderRadius: 8, backgroundColor: tw.pink100, alignItems: 'center', justifyContent: 'center' },
-  collName: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(500) },
-  collCount: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginTop: 4, ...poppins(400) },
-  check: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: tw.green500, backgroundColor: tw.green500, alignItems: 'center', justifyContent: 'center' },
+  collRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, minHeight: 64, borderRadius: radii.md },
+  collIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  collName: { ...type.subheading, color: color.text },
+  collCount: { ...type.small, color: color.textMuted, marginTop: space.xxs },
+  check: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: color.primary, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
 
-  itemDialog: { width: '100%', maxWidth: 450, backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', ...shadow('2xl') },
-  itemClose: { position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(16,24,40,0.9)', alignItems: 'center', justifyContent: 'center', ...shadow('md') },
-  itemDiet: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  itemName: { flex: 1, fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  itemDesc: { fontSize: 14, lineHeight: 22.75, color: tw.gray600, marginBottom: 16, ...poppins(400) },
-  itemNoCoupon: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginBottom: 16, ...poppins(500) },
-  variantTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, marginBottom: 8, ...poppins(600) },
-  variant: { borderRadius: 999, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 6 },
-  variantText: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  itemFoot: { flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 12, paddingVertical: 16, backgroundColor: '#fff' },
-  itemQty: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 2, borderColor: tw.gray300, borderRadius: 8, paddingHorizontal: 8, height: 44, backgroundColor: '#fff' },
-  itemQtyText: { minWidth: 24, textAlign: 'center', fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(600) },
-  itemAdd: { flex: 1, height: 44, borderRadius: 8, backgroundColor: tw.red500, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 4 },
-  itemAddText: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) },
+  itemDialog: { width: '100%', maxWidth: 450, backgroundColor: color.surface, borderRadius: radii.xl, overflow: 'hidden', ...elevation.sheet },
+  itemClose: { position: 'absolute', top: space.md, right: space.md, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(17,17,17,0.72)', alignItems: 'center', justifyContent: 'center' },
+  itemName: { flex: 1, ...type.heading, color: color.text },
+  itemDesc: { ...type.body, color: color.textSecondary, marginBottom: space.lg },
+  variantTitle: { ...type.label, color: color.text, marginBottom: space.sm },
+  variant: { minHeight: 40, justifyContent: 'center', borderRadius: radii.pill, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.md + 2 },
+  variantOn: { borderColor: color.primary, backgroundColor: color.primary },
+  variantText: { ...type.label, color: color.text },
+  itemFoot: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderTopWidth: 1, borderTopColor: color.border, paddingHorizontal: space.lg, paddingVertical: space.lg, backgroundColor: color.surface },
+  itemQty: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: color.border, borderRadius: radii.md, height: 48, backgroundColor: color.surface },
+  itemQtyBtn: { width: 44, height: '100%', alignItems: 'center', justifyContent: 'center' },
+  itemQtyText: { minWidth: 24, textAlign: 'center', ...type.subheading, color: color.text },
+  itemAdd: { flex: 1, height: 48, borderRadius: radii.md, backgroundColor: color.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingHorizontal: space.sm },
+  itemAddText: { flexShrink: 1, ...type.button, fontSize: 14, color: color.onPrimary },
 
-  optRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 8, paddingVertical: 12, borderRadius: 8 },
-  optText: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(400) },
-  disclaimer: { marginTop: 24, paddingHorizontal: 8, fontSize: 12, lineHeight: 19.5, color: tw.gray500, ...poppins(400) },
-  optFssai: { marginTop: 16, paddingHorizontal: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: tw.gray100, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: 0.8, marginBottom: 8 },
-  optFssaiLogo: { width: 56, height: 32, backgroundColor: '#fff', borderRadius: 4, padding: 4, borderWidth: 1, borderColor: tw.gray100 },
-  optFssaiLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 0.25, color: tw.gray500, ...poppins(500) },
-  optFssaiValue: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(600) },
+  optRow: { flexDirection: 'row', alignItems: 'center', gap: space.lg, minHeight: 52, paddingHorizontal: space.sm, paddingVertical: space.md, borderRadius: radii.md },
+  optText: { ...type.body, color: color.text, flexShrink: 1 },
+  disclaimer: { marginTop: space.lg, paddingHorizontal: space.sm, ...type.caption, fontFamily: 'Poppins_400Regular', lineHeight: 18, color: color.textMuted },
+  optFssai: { marginTop: space.lg, marginHorizontal: space.sm, paddingTop: space.lg, borderTopWidth: 1, borderTopColor: color.border, flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.sm },
+  optFssaiLogo: { width: 56, height: 32, backgroundColor: color.surface, borderRadius: 4, padding: 4, borderWidth: 1, borderColor: color.border },
+  optFssaiLabel: { ...type.caption, color: color.textMuted },
+  optFssaiValue: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.textSecondary },
 
-  shareDialog: { width: '92%', maxWidth: 448, backgroundColor: '#fff', borderRadius: 16, ...shadow('2xl') },
-  shareHead: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  shareRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 12, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200 },
-  shareRowText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
+  shareDialog: { width: '92%', maxWidth: 448, backgroundColor: color.surface, borderRadius: radii.lg, ...elevation.sheet },
+  shareHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingLeft: space.xl, paddingRight: space.sm, paddingTop: space.sm, paddingBottom: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border },
+  shareRowText: { ...type.bodyStrong, color: color.text },
 
-  offersTitle: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  coupon: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, borderWidth: 1, borderColor: tw.gray100, borderRadius: 16, padding: 16, backgroundColor: '#fff', ...shadow('sm') },
-  couponTitle: { fontSize: 16, lineHeight: 20, color: tw.gray950, ...poppins(700) },
-  couponCode: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 4, ...poppins(400) },
-  copyBox: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.blue200 || '#BEDBFF', backgroundColor: 'rgba(239,246,255,0.5)', borderRadius: 8 },
-  copyBoxText: { fontSize: 12, lineHeight: 16, color: tw.blue600 || '#155DFC', ...poppins(700) },
+  coupon: { flexDirection: 'row', alignItems: 'flex-start', gap: space.lg, borderWidth: 1, borderColor: color.border, borderRadius: radii.lg, padding: space.lg, backgroundColor: color.surface, ...elevation.card },
+  couponTitle: { ...type.subheading, color: color.text },
+  couponCode: { ...type.caption, fontFamily: 'Poppins_400Regular', color: color.textMuted, marginTop: space.xs },
+  copyBox: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 40, paddingHorizontal: space.md, borderWidth: 1, borderStyle: 'dashed', borderColor: color.primaryBorder, backgroundColor: color.primarySoft, borderRadius: radii.md },
+  copyBoxText: { ...type.label, fontFamily: 'Poppins_700Bold', color: color.primary, letterSpacing: 0.5 },
 
-  infoCard: { backgroundColor: '#fff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  infoName: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  infoAddress: { fontSize: 14, lineHeight: 22.75, color: tw.gray500, marginTop: 8, paddingBottom: 16, ...poppins(400) },
-  infoCall: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  callBtn: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: tw.red200, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  infoCallTitle: { fontSize: 14, lineHeight: 20, color: tw.gray800, ...poppins(600) },
-  infoCallBody: { fontSize: 12, lineHeight: 19.5, color: tw.gray500, marginTop: 2, ...poppins(400) },
-  infoLine: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  infoLineText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) },
-  legalRow: { paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  legalLabel: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.gray400, ...poppins(500) },
-  legalValue: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginTop: 4, ...poppins(600) },
-  fssaiNo: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginTop: 6, ...poppins(500) },
-  backToMenu: { marginTop: 32, backgroundColor: F.green, paddingVertical: 14, borderRadius: 12, alignItems: 'center', ...shadow('md') },
-  backToMenuText: { fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) },
+  infoCard: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.xl, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  infoName: { ...type.heading, color: color.text },
+  infoAddress: { ...type.small, color: color.textSecondary, marginTop: space.sm, paddingBottom: space.lg },
+  infoCall: { flexDirection: 'row', alignItems: 'center', gap: space.md + 2, paddingVertical: space.lg, borderTopWidth: 1, borderTopColor: color.border },
+  callBtn: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: color.primaryBorder, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  infoCallTitle: { ...type.bodyStrong, color: color.text },
+  infoCallBody: { ...type.caption, fontFamily: 'Poppins_400Regular', lineHeight: 18, color: color.textMuted, marginTop: space.xxs },
+  infoLine: { flexDirection: 'row', alignItems: 'center', gap: space.sm + 2 },
+  infoLineText: { flex: 1, ...type.body, color: color.textSecondary },
+  legalRow: { paddingBottom: space.md, borderBottomWidth: 1, borderBottomColor: color.border },
+  legalLabel: { ...type.overline, color: color.textMuted },
+  legalValue: { ...type.subheading, color: color.text, marginTop: space.xs },
+  fssaiNo: { ...type.small, fontFamily: 'Poppins_500Medium', color: color.textSecondary, marginTop: space.xs + 2 },
 });
