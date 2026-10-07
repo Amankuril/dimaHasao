@@ -57,9 +57,12 @@ export async function persistDriverFcmToken(fcmToken) {
 export const clearSavedFcmToken = () => localStore.removeItem(FCM_TOKEN_KEY);
 
 const linkOf = (response) => {
-  const data = response?.notification?.request?.content?.data || {};
+  const request = response?.notification?.request;
+  const data = { ...(request?.trigger?.remoteMessage?.data || {}), ...(request?.content?.data || {}) };
   const link = String(data.link || data.url || data.route || '').trim();
-  return link.startsWith('/') && link !== '/' ? link : '';
+  if (link.startsWith('/') && link !== '/') return link;
+  // A ride-request push opens Home, where the request popup shows, even when the sender did not include a link.
+  return String(data.type || '') === 'ride_request' ? '/taxi/driver/home' : '';
 };
 
 /** Mounted once in the driver shell: keeps the token saved while signed in and opens a tapped notification's link. */

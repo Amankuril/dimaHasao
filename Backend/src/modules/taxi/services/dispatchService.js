@@ -699,6 +699,7 @@ const emitRideRequestToDrivers = async ({
   dispatchVehicleTypeIds = [],
   dispatchConfig,
   attemptIndex = 0,
+  skipPush = false,
 }) => {
   if (!ride || !targetDrivers.length) {
     return;
@@ -745,6 +746,9 @@ const emitRideRequestToDrivers = async ({
     });
   }
 
+  // A replay to a driver who was already pushed (app reopened from the notification) must not push again.
+  if (skipPush) return;
+
   sendPushNotificationToEntities({
     driverIds: targetDrivers.map((driver) => String(driver._id)),
     title: 'New ride request',
@@ -753,6 +757,7 @@ const emitRideRequestToDrivers = async ({
       : 'A new booking is waiting for your response.',
     data: {
       type: 'ride_request',
+      link: '/taxi/driver/home',
       rideId: String(ride._id),
       serviceType: ride.serviceType || 'ride',
       userId: String(ride.userId?._id || ride.userId || ''),
@@ -1366,12 +1371,12 @@ export const notifyLateAvailableDriver = async (driverId) => {
 
       const dispatchState = getDispatchState(rideId);
 
-      if (
-        dispatchState.notifiedDriverIds.includes(driverKey) ||
-        dispatchState.rejectedDriverIds.includes(driverKey)
-      ) {
+      if (dispatchState.rejectedDriverIds.includes(driverKey)) {
         continue;
       }
+      // Already offered this ride (the request arrived while the app was closed): replay it on reconnect so the
+      // popup shows when the driver opens the app from the notification. No state change and no second push.
+      const alreadyNotified = dispatchState.notifiedDriverIds.includes(driverKey);
 
       const attemptIndex = Number.isInteger(dispatchState.radiusIndex) ? dispatchState.radiusIndex : 0;
       const radius = getAttemptRadiusMeters(
@@ -1393,6 +1398,20 @@ export const notifyLateAvailableDriver = async (driverId) => {
       const effectiveRadius = Number.isFinite(searchRadiusMeters) && searchRadiusMeters > 0
         ? searchRadiusMeters
         : radius;
+
+      if (alreadyNotified) {
+        await emitRideRequestToDrivers({
+          ride,
+          targetDrivers: [matchedDriver],
+          zone,
+          effectiveRadius,
+          dispatchVehicleTypeIds,
+          dispatchConfig,
+          attemptIndex,
+          skipPush: true,
+        });
+        continue;
+      }
 
       const nextNotifiedDriverIds = [...dispatchState.notifiedDriverIds, driverKey];
       const nextDriverIds = dispatchConfig.dispatchType === 'broadcast'

@@ -77,7 +77,7 @@ const buildDeliveryOrderNotification = (orderData = {}) => {
       itemCount > 0
         ? `${itemCount} item${itemCount === 1 ? '' : 's'} - ₹${total.toFixed(2)}`
         : 'A new order is available to accept',
-    data: { orderId, targetUrl: '/food/delivery' },
+    data: { orderId, targetUrl: '/food/delivery/orders', link: '/food/delivery/orders' },
   };
 };
 

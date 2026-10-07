@@ -195,9 +195,12 @@ export function finalizeDeliveryPendingSubmission(phone, { fcmToken, platform, s
 }
 
 const linkOf = (response) => {
-  const data = response?.notification?.request?.content?.data || {};
-  const link = String(data.link || data.url || '').trim();
-  return link.startsWith('/food/delivery') ? link : '';
+  const request = response?.notification?.request;
+  const data = { ...(request?.trigger?.remoteMessage?.data || {}), ...(request?.content?.data || {}) };
+  const link = String(data.link || data.url || data.targetUrl || '').trim();
+  if (link.startsWith('/food/delivery')) return link;
+  // A new-order push opens the Orders tab even when the sender did not include a link.
+  return String(data.type || '') === 'new_order' ? '/food/delivery/orders' : '';
 };
 
 /**

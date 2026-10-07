@@ -443,6 +443,7 @@ export async function tryAutoAssign(orderId, options = {}) {
               channelId: 'delivery_orders_v2',
               data: {
                 type: 'new_order',
+                link: '/food/delivery/orders',
                 orderId: order.order_id || order._id.toString(),
                 orderMongoId: order._id.toString(),
               },
