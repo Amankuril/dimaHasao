@@ -153,6 +153,8 @@ const normalizeDataMap = (data = {}) => {
     return result;
 };
 
+const RING_CHANNELS = new Set(['ride_requests_v2', 'delivery_orders_v2']);
+
 const buildMessagePayload = (payload = {}, token) => {
     const notification = {
         title: sanitizeString(payload.title || payload.notification?.title || 'New notification'),
@@ -177,14 +179,25 @@ const buildMessagePayload = (payload = {}, token) => {
         message.data = data;
     }
 
+    // Channels the mobile apps create with a bundled ringing sound; any other value keeps the default channel.
+    const ringChannel = RING_CHANNELS.has(payload.channelId) ? payload.channelId : null;
     message.android = {
         priority: 'high',
-        notification: {
-            channel_id: 'default',
-            sound: 'default',
-            default_vibrate_timings: true,
-            default_light_settings: true
-        }
+        notification: ringChannel
+            ? {
+                  channel_id: ringChannel,
+                  sound: ringChannel === 'ride_requests_v2' ? 'ride_request_alert.mp3' : 'restaurant_alert.mp3',
+                  default_vibrate_timings: true,
+                  default_light_settings: true,
+                  notification_priority: 'PRIORITY_MAX',
+                  visibility: 'PUBLIC'
+              }
+            : {
+                  channel_id: 'default',
+                  sound: 'default',
+                  default_vibrate_timings: true,
+                  default_light_settings: true
+              }
     };
 
     message.webpush = {

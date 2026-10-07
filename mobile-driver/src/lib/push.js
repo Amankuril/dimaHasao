@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import taxiApi from '../driver/api/client';
 import { localStore } from './storage';
 import { navigateTo } from './webRouter';
+import { ensureNotificationChannel } from '../driver/utils/rideRequestAlertSound';
 
 /*
  * Push for the driver app, standing in for Taxi/shared/push/nativeFcmBridge.js. The token is the device's
@@ -26,6 +27,7 @@ async function getDeviceToken() {
   if (Platform.OS !== 'android') return '';
   try {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, { name: 'Ride requests and updates', importance: Notifications.AndroidImportance.MAX, sound: 'default' });
+    await ensureNotificationChannel();
     let perm = await Notifications.getPermissionsAsync();
     if (!perm.granted && perm.canAskAgain !== false) perm = await Notifications.requestPermissionsAsync();
     if (!perm.granted) return '';

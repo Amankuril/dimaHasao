@@ -173,7 +173,10 @@ const sendPushToTargets = async ({
       },
       android: {
         priority: 'high',
-        notification: image ? { imageUrl: image } : undefined,
+        notification:
+          safeData.type === 'ride_request'
+            ? { channelId: 'ride_requests_v2', sound: 'ride_request_alert.mp3', priority: 'max', visibility: 'public', ...(image ? { imageUrl: image } : {}) }
+            : image ? { imageUrl: image } : undefined,
       },
       webpush: {
         notification: {

@@ -69,7 +69,8 @@
         {
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#0A4D2B",
-          "defaultChannel": "default"
+          "defaultChannel": "default",
+          "sounds": ["./assets/media/restaurant_alert.mp3"]
         }
       ]
     ],

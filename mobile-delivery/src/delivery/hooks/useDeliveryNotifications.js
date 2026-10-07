@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import * as Notifications from 'expo-notifications';
 import { API_ORIGIN, getAuthToken } from '../../api/client';
+import { ORDER_ALERT_CHANNEL_ID } from '../push';
 import { deliveryApi as deliveryAPI } from '../../api/delivery';
 import { dispatchNotificationInboxRefresh } from './useNotificationInbox';
 import { useDeliveryStore, resolveOrderKey, ordersShareIdentity } from '../store/useDeliveryStore';
@@ -357,8 +358,8 @@ export const useDeliveryNotifications = () => {
       if (!perm.granted) return;
       const n = buildDeliveryOrderNotification(orderData);
       await Notifications.scheduleNotificationAsync({
-        content: { title: n.title, body: n.body, data: n.data, sound: true },
-        trigger: null,
+        content: { title: n.title, body: n.body, data: n.data, sound: 'restaurant_alert.mp3', priority: Notifications.AndroidNotificationPriority.MAX },
+        trigger: { channelId: ORDER_ALERT_CHANNEL_ID },
       });
     } catch (error) {
       debugLog('Background order notification failed:', error);

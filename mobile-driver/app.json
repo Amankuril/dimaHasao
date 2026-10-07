@@ -58,7 +58,8 @@
         {
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#6366F1",
-          "defaultChannel": "default"
+          "defaultChannel": "default",
+          "sounds": ["./assets/audio/ride_request_alert.mp3"]
         }
       ]
     ],

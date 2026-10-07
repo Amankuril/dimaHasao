@@ -13,7 +13,8 @@ import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
  */
 const ALERT_SOUND = require('../../../assets/audio/ride-request-alert.mp3');
 
-const REQUEST_CHANNEL_ID = 'ride_requests';
+// A channel's sound cannot change once created, hence _v2. The backend addresses ride-request pushes to this id.
+export const REQUEST_CHANNEL_ID = 'ride_requests_v2';
 const VIBRATION_PATTERN = [0, 400, 180, 400];
 const VIBRATION_INTERVAL_MS = 1800;
 const RETRY_DELAY_MS = 900;
@@ -96,16 +97,18 @@ const bindLifecycleListeners = () => {
   AppState.addEventListener('change', handleLifecycleResume);
 };
 
-const ensureNotificationChannel = async () => {
+export const ensureNotificationChannel = async () => {
   if (channelReady || Platform.OS !== 'android') return;
   channelReady = true;
   await Notifications.setNotificationChannelAsync(REQUEST_CHANNEL_ID, {
     name: 'New ride requests',
     importance: Notifications.AndroidImportance.MAX,
-    sound: 'default',
-    vibrationPattern: [0, 400, 180, 400],
+    sound: 'ride_request_alert.mp3',
+    vibrationPattern: [0, 400, 180, 400, 180, 400],
     enableVibration: true,
+    bypassDnd: true,
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    audioAttributes: { usage: Notifications.AndroidAudioUsage.ALARM, contentType: Notifications.AndroidAudioContentType.SONIFICATION },
   }).catch(() => {});
 };
 
@@ -120,7 +123,7 @@ const presentBackgroundNotification = async ({ fare, pickup } = {}) => {
       content: {
         title: 'New ride request',
         body: [fare, pickup].filter(Boolean).join(' - ') || 'Open the app to accept the ride.',
-        sound: 'default',
+        sound: 'ride_request_alert.mp3',
         priority: Notifications.AndroidNotificationPriority.MAX,
         data: { link: '/taxi/driver/home' },
       },

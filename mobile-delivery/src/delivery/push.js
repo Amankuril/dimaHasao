@@ -31,13 +31,30 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
 });
 
+// New-order offers ring with the bundled alert tone (res/raw, added by the expo-notifications plugin in app.json).
+// The backend addresses these pushes to this channel id (firebase.service.js). A channel's sound cannot be changed
+// once created, hence the _v2 id.
+export const ORDER_ALERT_CHANNEL_ID = 'delivery_orders_v2';
+
 const ensureChannel = () =>
-  Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-    name: 'Orders and updates',
-    importance: Notifications.AndroidImportance.MAX,
-    sound: 'default',
-    vibrationPattern: [0, 250, 250, 250],
-  }).catch(() => {});
+  Promise.all([
+    Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+      name: 'Orders and updates',
+      importance: Notifications.AndroidImportance.MAX,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+    }),
+    Notifications.setNotificationChannelAsync(ORDER_ALERT_CHANNEL_ID, {
+      name: 'New order alerts',
+      importance: Notifications.AndroidImportance.MAX,
+      sound: 'restaurant_alert.mp3',
+      vibrationPattern: [0, 400, 200, 400, 200, 400],
+      enableVibration: true,
+      bypassDnd: true,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      audioAttributes: { usage: Notifications.AndroidAudioUsage.ALARM, contentType: Notifications.AndroidAudioContentType.SONIFICATION },
+    }),
+  ]).catch(() => {});
 
 const getSavedToken = (m) => localStore.getItem(TOKEN_KEY(m)) || '';
 const setSavedToken = (m, t) => t && localStore.setItem(TOKEN_KEY(m), t);

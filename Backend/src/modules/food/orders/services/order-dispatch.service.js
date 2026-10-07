@@ -440,6 +440,7 @@ export async function tryAutoAssign(orderId, options = {}) {
             {
               title: 'New order assigned!',
               body: `You have 60 seconds to accept Order #${order.order_id || order._id}.`,
+              channelId: 'delivery_orders_v2',
               data: {
                 type: 'new_order',
                 orderId: order.order_id || order._id.toString(),
