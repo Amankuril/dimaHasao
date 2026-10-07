@@ -1,4 +1,5 @@
 import { FoodRestaurant } from '../models/restaurant.model.js';
+import { toPublicRestaurant } from '../../shared/publicRestaurant.js';
 import { uploadImageBuffer, deleteReplacedAssets } from '../../../../services/storage.service.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import mongoose from 'mongoose';
@@ -1467,7 +1468,10 @@ export const uploadRestaurantMenuImages = async (restaurantId, files = []) => {
 };
 
 export const listApprovedRestaurants = async (query = {}) => {
-    const limit = Math.min(Math.max(parseInt(query.limit, 10) || 40, 1), 1000);
+    const limit = Math.min(Math.max(parseInt(query.limit, 10) || 40, 1), 300);
+    // Public endpoint, so a 1000-row page was a cheap way to load the database.
+    // 300 rather than 100 because the web "all restaurants" page asks for 300
+    // in one unpaginated call.
     const page = Math.max(parseInt(query.page, 10) || 1, 1);
     const skip = (page - 1) * limit;
 
@@ -1822,7 +1826,7 @@ export const getApprovedRestaurantByIdOrSlug = async (idOrSlug, userId = null, c
     const timingsDoc = await FoodRestaurantOutletTimings.findOne({ restaurantId: doc._id }).lean();
 
     const result = {
-        ...doc,
+        ...toPublicRestaurant(doc),
         rating: normalizeRatingValue(doc.rating),
         totalRatings: normalizeTotalRatingsValue(doc.totalRatings),
         hasOrderedBefore,

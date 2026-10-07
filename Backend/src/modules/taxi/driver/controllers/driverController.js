@@ -54,7 +54,8 @@ import {
   summarizePhonePePayload,
   summarizePhonePeRequestBody,
 } from "../../services/paymentDiagnostics.js";
-import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
+import { verifyPaymentSignature } from '../../../../core/payments/razorpay.service.js';
+import { assertClaimIsOwn, paymentClaimKey, withPaymentClaim } from '../../services/paymentClaimService.js';
 import { taxiRazorpayRequest } from "../../services/razorpayClient.js";
 
 const generateDriverReferralCode = (driver) => {
@@ -704,10 +705,17 @@ const refreshDriverPaymentCollection = async (ride) => {
       providerPayload?.amount_received ||
       0,
   );
-  const expectedAmount = Number(collection.amount || 0) * 100;
+  /*
+   * Paid means the provider actually received at least what this ride owes.
+   * A provider status of "paid" alone used to be enough, which a cheaper
+   * collection (see createDriverPaymentQr) could reach.
+   */
+  const expectedAmount = Math.round(
+    Math.max(Number(collection.amount || 0), Number(ride?.fare || 0)) * 100,
+  );
   const isProviderAmountPaid = expectedAmount > 0 && receivedAmount >= expectedAmount;
   const providerStatus = normalizeCollectionStatus(providerPayload?.status);
-  const isPaid = PAYMENT_PAID_STATUSES.has(providerStatus) || isProviderAmountPaid;
+  const isPaid = isProviderAmountPaid;
   const nextStatus = isPaid ? "paid" : providerStatus;
   const nextCollection = {
     provider: "razorpay",
@@ -793,61 +801,18 @@ const serializeDriverScheduledRide = (ride = {}, currentDriverId = "") => ({
     ? {
         id: String(ride.userId._id || ""),
         name: ride.userId.name || "Customer",
-        phone: ride.userId.phone || "",
+        // Open scheduled rides are listed to every eligible driver in the
+        // area; the rider's number is only shared with the one who took it.
+        phone:
+          ride.driverId && String(ride.driverId) === String(currentDriverId || "")
+            ? ride.userId.phone || ""
+            : "",
         countryCode: ride.userId.countryCode || "",
       }
     : null,
   createdAt: ride.createdAt || null,
   updatedAt: ride.updatedAt || null,
 });
-
-export const registerDriver = async (req, res) => {
-  const { name, phone, password, vehicleType, location } = req.body;
-
-  if (!name || !phone || !password || !vehicleType || !location) {
-    throw new ApiError(
-      400,
-      "name, phone, password, vehicleType and location are required",
-    );
-  }
-
-  const existingDriver = await Driver.findOne({ phone });
-
-  if (existingDriver) {
-    throw new ApiError(409, "Phone number is already registered");
-  }
-
-  const coordinates = normalizePoint(location, "location");
-  const zone = await findZoneByPickup(coordinates);
-
-  const driver = await Driver.create({
-    name,
-    phone,
-    password: await hashPassword(password),
-    vehicleType,
-    approve: true,
-    status: "approved",
-    zoneId: zone?._id || null,
-    location: toPoint(coordinates, "location"),
-  });
-
-  const token = signAccessToken({ sub: String(driver._id), role: "driver" });
-
-  res.status(201).json({
-    success: true,
-    data: {
-      token,
-      driver: {
-        id: driver._id,
-        name: driver.name,
-        phone: driver.phone,
-        vehicleType: driver.vehicleType,
-        rating: driver.rating,
-        status: driver.status,
-      },
-    },
-  });
-};
 
 export const loginDriver = async (req, res) => {
   const { phone, password } = req.body;
@@ -1067,12 +1032,12 @@ export const getDriverNotifications = async (req, res) => {
     send_to: { $in: ["all", "drivers"] },
   };
 
+  // Every notification is sent for one service location (the field is
+  // required). The old $or also matched send_to "all"/"drivers" — which the
+  // base query already demands — so the location never narrowed anything and
+  // drivers saw every location's broadcasts.
   if (serviceLocationId) {
-    query.$or = [
-      { service_location_id: serviceLocationId },
-      { send_to: "all" },
-      { send_to: "drivers" },
-    ];
+    query.service_location_id = serviceLocationId;
   }
 
   const notifications = await Notification.find(query)
@@ -1508,9 +1473,14 @@ export const updateCurrentDriverDocument = async (req, res) => {
     "",
   ).trim().toLowerCase();
 
+  /*
+   * Only what a driver legitimately supplies is read from the body: the image,
+   * file name, number and dates. The whole body.document used to be spread in,
+   * and status/verificationStatus/reviewStatus were taken from it, so a driver
+   * could mark their own document "approved". Review fields are the admin's.
+   */
   const updatedDocument = {
     ...(typeof existingDocument === "object" ? existingDocument : {}),
-    ...(typeof document === "object" ? document : {}),
     key: documentKey,
     fileName: String(document.fileName || documentKey).trim(),
     fileNames: [String(document.fileName || documentKey).trim()],
@@ -1569,22 +1539,36 @@ export const updateCurrentDriverDocument = async (req, res) => {
     expiryDate: String(document.expiryDate || document.expiry_date || existingDocument.expiryDate || existingDocument.expiry_date || "").trim(),
     expiry_date: String(document.expiryDate || document.expiry_date || existingDocument.expiryDate || existingDocument.expiry_date || "").trim(),
     expiresAt: String(document.expiryDate || document.expiry_date || existingDocument.expiryDate || existingDocument.expiry_date || "").trim(),
-    status: document.status ? String(document.status).trim() : "pending",
-    verificationStatus: document.verificationStatus ? String(document.verificationStatus).trim() : "pending",
-    reviewStatus: document.reviewStatus ? String(document.reviewStatus).trim() : "pending",
-    comment: document.comment !== undefined ? String(document.comment || "").trim() : "",
-    remarks: document.remarks !== undefined ? String(document.remarks || "").trim() : "",
-    reason: document.reason !== undefined ? String(document.reason || "").trim() : "",
-    admin_comment: document.admin_comment !== undefined ? String(document.admin_comment || "").trim() : "",
-    rejection_reason: document.rejection_reason !== undefined ? String(document.rejection_reason || "").trim() : "",
+    status: "pending",
+    verificationStatus: "pending",
+    approvalStatus: "pending",
+    reviewStatus: "pending",
+    comment: "",
+    remarks: "",
+    reason: "",
+    admin_comment: "",
+    rejection_reason: "",
     reviewedAt: null,
     reverificationRequestedAt: new Date().toISOString(),
   };
+
+  const documentChanged =
+    String(existingDocument.previewUrl || existingDocument.secureUrl || existingDocument.url || "") !== updatedDocument.previewUrl ||
+    String(existingDocument.identifyNumber || existingDocument.identify_number || existingDocument.documentNumber || existingDocument.document_number || "").trim().toUpperCase() !== updatedDocument.identifyNumber ||
+    String(existingDocument.expiryDate || existingDocument.expiry_date || "").trim() !== updatedDocument.expiryDate;
 
   driver.documents = {
     ...(driver.documents || {}),
     [documentKey]: updatedDocument,
   };
+
+  // Same rule as updateDriverVehicle: an approved driver whose documents
+  // change goes back to admin review rather than keeping the old approval.
+  if (documentChanged && driver.approve !== false && String(driver.status || "").toLowerCase() !== "pending") {
+    driver.approve = false;
+    driver.status = "pending";
+    driver.isOnline = false;
+  }
 
   driver.markModified("documents");
   await driver.save();
@@ -1762,37 +1746,7 @@ export const createDriverWithdrawalRequest = async (req, res) => {
   });
 };
 
-export const topUpMyWallet = async (req, res) => {
-  const amount = Number(req.body.amount);
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    throw new ApiError(400, "amount must be greater than zero");
-  }
-
-  const result = await topUpDriverWallet({
-    driverId: req.auth.sub,
-    amount,
-    metadata: {
-      source: req.body.source || "manual",
-      referenceId: req.body.referenceId || null,
-    },
-  });
-
-  const payload = {
-    wallet: result.wallet,
-    transaction: result.transaction,
-  };
-
-  emitToDriver(req.auth.sub, "driver:wallet:updated", payload);
-
-  res.json({
-    success: true,
-    data: payload,
-  });
-};
-
 export const createDriverPaymentQr = async (req, res) => {
-  const amountInPaise = normalizePaymentAmount(req.body.amount);
   const rideId = String(req.body.rideId || "").trim();
 
   if (!rideId) {
@@ -1803,11 +1757,28 @@ export const createDriverPaymentQr = async (req, res) => {
     _id: rideId,
     driverId: req.auth.sub,
   })
-    .select("_id fare paymentMethod serviceType driverPaymentCollection");
+    .select("_id fare status paymentMethod serviceType driverPaymentCollection");
 
   if (!ride) {
     throw new ApiError(404, "Ride not found for this driver");
   }
+
+  if (ride.status === RIDE_STATUS.CANCELLED) {
+    throw new ApiError(409, "Ride was cancelled");
+  }
+
+  // Re-issuing would overwrite the verified-paid record the wallet settles on.
+  if (PAYMENT_PAID_STATUSES.has(normalizeCollectionStatus(ride.driverPaymentCollection?.status))) {
+    throw new ApiError(409, "Payment for this ride is already collected");
+  }
+
+  /*
+   * The amount is the ride's fare, not whatever the driver sends. A QR for ₹1
+   * that the driver paid themselves used to be enough to mark the ride paid
+   * online, and settlement then credited the full fare to their wallet.
+   * req.body.amount is still accepted from older apps but ignored.
+   */
+  const amountInPaise = normalizePaymentAmount(ride.fare);
 
   let payload;
 
@@ -2168,7 +2139,7 @@ export const createDriverWalletTopupOrder = async (req, res) => {
         },
         notes: {
           driverId,
-          source: "driver_wallet_topup",
+          source: DRIVER_WALLET_TOPUP_SOURCE,
         },
       },
       keyId,
@@ -2197,7 +2168,7 @@ export const createDriverWalletTopupOrder = async (req, res) => {
       amount: amountPaise,
       currency: "INR",
       receipt,
-      notes: { driverId },
+      notes: { driverId, source: DRIVER_WALLET_TOPUP_SOURCE },
     },
     keyId,
     keySecret,
@@ -2213,6 +2184,24 @@ export const createDriverWalletTopupOrder = async (req, res) => {
       callbackUrl,
     },
   });
+};
+
+const DRIVER_WALLET_TOPUP_SOURCE = "driver_wallet_topup";
+
+/*
+ * Whether a Razorpay order/link was created as a driver wallet top-up. The
+ * driver's own fare-collection QR links (source driver_collect_amount, with a
+ * rideId) and riders' ride-payment orders both carry this driverId too, so the
+ * owner alone let a driver re-claim the fare a rider paid them by QR as a
+ * wallet top-up. Orders minted before `source` was set on them carried only
+ * { driverId } and are still accepted on that shape.
+ */
+const isDriverWalletTopupNotes = (notes = {}) => {
+  if (notes?.rideId) {
+    return false;
+  }
+  const source = String(notes?.source || "");
+  return source === DRIVER_WALLET_TOPUP_SOURCE || (!source && !notes?.kind && !notes?.userId);
 };
 
 const DRIVER_RAZORPAY_PAYMENT_SUCCESS_STATUSES = new Set(["authorized", "captured", "paid"]);
@@ -2253,15 +2242,14 @@ const verifyAndApplyDriverRazorpayWalletTopup = async ({
       throw new ApiError(400, "Payment verification signature is required");
     }
 
-    // Shared digest helper; the secret stays taxi's own admin-configured
+    // Shared constant-time check; the secret stays taxi's own admin-configured
     // gateway credential rather than the platform env key.
-    const expectedSignature = computeExpectedSignature({
+    if (!verifyPaymentSignature({
       orderId: effectiveOrderId,
       paymentId: normalizedPaymentId,
+      signature: normalizedSignature,
       secret: keySecret,
-    });
-
-    if (expectedSignature !== normalizedSignature) {
+    })) {
       throw new ApiError(400, "Invalid payment signature");
     }
 
@@ -2271,6 +2259,10 @@ const verifyAndApplyDriverRazorpayWalletTopup = async ({
       keyId,
       keySecret,
     });
+
+    if (!isDriverWalletTopupNotes(order?.notes)) {
+      throw new ApiError(400, "This Razorpay order is not a wallet top-up");
+    }
 
     amountPaise = Number(order?.amount);
     resolvedDriverId = String(order?.notes?.driverId || "").trim();
@@ -2319,26 +2311,55 @@ const verifyAndApplyDriverRazorpayWalletTopup = async ({
       throw new ApiError(400, "Payment link callback reference did not match");
     }
 
+    // The link's own notes decide what it was for (see isDriverWalletTopupNotes).
+    if (!paymentLink?.id || !isDriverWalletTopupNotes(paymentLink?.notes)) {
+      throw new ApiError(400, "This Razorpay payment link is not a wallet top-up");
+    }
+
+    // The payment must be one made against this link, not any successful
+    // payment (linkPaymentId above falls back to the payment's own id).
+    const linkPaymentIds = (Array.isArray(paymentLink?.payments) ? paymentLink.payments : [])
+      .map((item) => String(item?.payment_id || item?.id || "").trim())
+      .filter(Boolean);
+    const paymentBelongsToLink =
+      linkPaymentIds.includes(normalizedPaymentId) ||
+      (Boolean(paymentLink?.order_id) && String(payment?.order_id || "") === String(paymentLink.order_id));
+    if (!paymentBelongsToLink) {
+      throw new ApiError(400, "Payment link callback does not match the payment id");
+    }
+
     effectiveOrderId = String(payment?.order_id || "").trim();
     amountPaise = Number(payment?.amount || paymentLink?.amount_paid || paymentLink?.amount || 0);
-    resolvedDriverId = String(paymentLink?.notes?.driverId || payment?.notes?.driverId || "").trim();
+    resolvedDriverId = String(paymentLink?.notes?.driverId || "").trim();
   }
 
   if (!Number.isFinite(amountPaise) || amountPaise <= 0) {
     throw new ApiError(400, "Invalid order amount");
   }
 
-  const effectiveDriverId = String(requestedDriverId || resolvedDriverId).trim();
-
-  if (!effectiveDriverId) {
+  // The order/link's own notes are the owner; an ownerless one used to be
+  // credited to whoever verified it.
+  if (!resolvedDriverId) {
     throw new ApiError(400, "Driver reference is missing from this Razorpay order");
   }
 
-  if (requestedDriverId && resolvedDriverId && requestedDriverId !== resolvedDriverId) {
+  if (requestedDriverId && String(requestedDriverId) !== resolvedDriverId) {
     throw new ApiError(403, "This Razorpay order does not belong to the authenticated driver");
   }
 
+  const effectiveDriverId = resolvedDriverId;
   const amount = Math.round(amountPaise) / 100;
+  const alreadyCreditedResponse = async () => {
+    const driver = await Driver.findById(effectiveDriverId);
+    return {
+      driverId: effectiveDriverId,
+      wallet: driver ? await serializeDriverWallet(driver) : null,
+      transaction: null,
+      alreadyCredited: true,
+    };
+  };
+
+  // Payments credited before claims existed are only recorded here.
   const alreadyCredited = await WalletTransaction.findOne({
     driverId: effectiveDriverId,
     "metadata.providerPaymentId": normalizedPaymentId,
@@ -2347,26 +2368,31 @@ const verifyAndApplyDriverRazorpayWalletTopup = async ({
     .lean();
 
   if (alreadyCredited) {
-    const driver = await Driver.findById(effectiveDriverId);
-    return {
-      driverId: effectiveDriverId,
-      wallet: driver ? await serializeDriverWallet(driver) : null,
-      transaction: null,
-      alreadyCredited: true,
-    };
+    return alreadyCreditedResponse();
   }
 
-  const result = await topUpDriverWallet({
-    driverId: effectiveDriverId,
-    amount,
-    metadata: {
-      source: "razorpay",
-      provider: "razorpay",
-      providerOrderId: effectiveOrderId,
-      providerPaymentId: normalizedPaymentId,
-      providerPaymentLinkId: normalizedPaymentLinkId,
-    },
-  });
+  const claimOwner = { purpose: DRIVER_WALLET_TOPUP_SOURCE, ownerRole: "driver", ownerId: effectiveDriverId };
+  const claim = await withPaymentClaim(
+    { key: paymentClaimKey("razorpay", normalizedPaymentId), ...claimOwner },
+    () => topUpDriverWallet({
+      driverId: effectiveDriverId,
+      amount,
+      metadata: {
+        source: "razorpay",
+        provider: "razorpay",
+        providerOrderId: effectiveOrderId,
+        providerPaymentId: normalizedPaymentId,
+        providerPaymentLinkId: normalizedPaymentLinkId,
+      },
+    }),
+  );
+
+  if (!claim.claimed) {
+    assertClaimIsOwn(claim.existing, claimOwner);
+    return alreadyCreditedResponse();
+  }
+
+  const result = claim.result;
 
   const payload = {
     wallet: result.wallet,
@@ -2594,6 +2620,16 @@ export const verifyDriverPhonePeWalletTopup = async (req, res) => {
   });
 
   if (paymentState === "COMPLETED") {
+    /*
+     * PhonePe's status call does not say whose order this was, so any completed
+     * order id (another driver's, a rider's) used to be credited to the
+     * caller. Ours are minted as DWAL<time><last 8 of the driver id>.
+     */
+    const compactDriverId = String(driverId || "").replace(/[^a-zA-Z0-9]/g, "").slice(-8) || "drv";
+    if (!merchantTransactionId.startsWith("DWAL") || !merchantTransactionId.endsWith(compactDriverId)) {
+      throw new ApiError(403, "This PhonePe order does not belong to the authenticated driver");
+    }
+
     const alreadyCredited = await WalletTransaction.findOne({
       driverId,
       $or: [
@@ -2606,16 +2642,24 @@ export const verifyDriverPhonePeWalletTopup = async (req, res) => {
 
     let result = null;
     if (!alreadyCredited) {
-      result = await topUpDriverWallet({
-        driverId,
-        amount,
-        metadata: {
-          source: "phonepe",
-          provider: "phonepe",
-          providerOrderId: merchantTransactionId,
-          providerPaymentId: paymentId,
-        },
-      });
+      const claimOwner = { purpose: DRIVER_WALLET_TOPUP_SOURCE, ownerRole: "driver", ownerId: String(driverId) };
+      const claim = await withPaymentClaim(
+        { key: paymentClaimKey("phonepe", merchantTransactionId), ...claimOwner },
+        () => topUpDriverWallet({
+          driverId,
+          amount,
+          metadata: {
+            source: "phonepe",
+            provider: "phonepe",
+            providerOrderId: merchantTransactionId,
+            providerPaymentId: paymentId,
+          },
+        }),
+      );
+      if (!claim.claimed) {
+        assertClaimIsOwn(claim.existing, claimOwner);
+      }
+      result = claim.claimed ? claim.result : null;
     }
 
     const driver = await Driver.findById(driverId);
@@ -2716,7 +2760,7 @@ export const getDriverPaymentQrStatus = async (req, res) => {
   const ride = await Ride.findOne({
     _id: rideId,
     driverId: req.auth.sub,
-  }).select("_id driverPaymentCollection");
+  }).select("_id fare driverPaymentCollection");
 
   if (!ride) {
     throw new ApiError(404, "Ride not found for this driver");

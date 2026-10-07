@@ -11,7 +11,11 @@ export const BASE = process.env.QA_BASE_URL || 'http://localhost:5000/api/v1';
 
 export const request = (method, path, { token, body, headers = {}, raw } = {}) =>
   new Promise((resolve) => {
-    const url = new URL(path.startsWith('http') ? path : BASE + path);
+    // Stored assets come back root-relative (/uploads/…); those live beside
+    // the API, not under it.
+    const url = new URL(path.startsWith('http') ? path
+      : /^\/uploads\/[^/]+\.[a-z0-9]+$/i.test(path) ? new URL(BASE).origin + path
+      : BASE + path);
     const payload = raw !== undefined ? raw : (body === undefined ? null : JSON.stringify(body));
 
     const req = http.request(

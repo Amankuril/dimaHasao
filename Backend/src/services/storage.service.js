@@ -4,6 +4,9 @@ import crypto from 'crypto';
 import sharp from 'sharp';
 import { config } from '../config/env.js';
 import { ValidationError } from '../core/auth/errors.js';
+import UploadedAsset from '../core/uploads/asset.model.js';
+import { currentActor } from '../utils/requestContext.js';
+import { logger } from '../utils/logger.js';
 
 const UPLOADS_ROOT = config.uploadsRoot;
 const usesRemoteStore = () => Boolean(config.uploadRemoteOrigin) && config.nodeEnv !== 'production';
@@ -158,11 +161,56 @@ export const resolveStoredFilename = async (urlOrPublicId) => {
     }
 };
 
+/*
+ * Ownership, for every file however it was uploaded.
+ *
+ * Only POST /v1/uploads/image used to record who uploaded a file; the many
+ * module flows that call this service directly recorded nothing. And every
+ * "replace this image" path — replaceUrl, deleteReplacedAssets after a
+ * profile or menu edit — deleted whatever stored file a URL named, with no
+ * check of whose it was. Setting your own profile image to another
+ * restaurant's FSSAI scan, then changing it, deleted their file.
+ *
+ * So: record the uploader on every store, and inside a request only delete a
+ * file the caller uploaded (or as an admin). Files with no ownership row
+ * predate this and are left in place for non-admins — an orphaned file is
+ * recoverable, a deleted one is not. Work outside a request (startup jobs,
+ * scripts) is server-side and unrestricted.
+ */
+const recordOwner = async (publicId, url, folder, bytes) => {
+    const actor = currentActor();
+    if (!actor?.id || !/^[a-f0-9]{24}$/i.test(actor.id)) return;
+    try {
+        await UploadedAsset.updateOne(
+            { publicId },
+            { $setOnInsert: { publicId, url, folder, bytes, uploadedBy: actor.id, uploaderRole: actor.role || null } },
+            { upsert: true },
+        );
+    } catch (err) {
+        logger.warn(`[storage] Could not record owner of ${publicId}: ${err.message}`);
+    }
+};
+
+const mayDeleteAsset = async (urlOrPublicId) => {
+    const actor = currentActor();
+    if (!actor || actor.trusted || actor.isAdmin) return true;
+    if (!actor.id) return false;
+    const filename = await resolveStoredFilename(urlOrPublicId);
+    if (!filename) return false;
+    const base = filename.replace(/\.[^.]+$/, '');
+    const row = await UploadedAsset.findOne({ publicId: { $in: [filename, base] } })
+        .select('uploadedBy')
+        .lean()
+        .catch(() => null);
+    return Boolean(row?.uploadedBy) && String(row.uploadedBy) === actor.id;
+};
+
 const writeBufferToDisk = async (data, folder, ext) => {
     await ensureRoot();
     const base = `${flattenFolder(folder)}_${randomId()}`;
     const filename = `${base}.${ext}`;
     await fs.promises.writeFile(path.join(UPLOADS_ROOT, filename), data);
+    await recordOwner(base, buildAssetUrl(filename), folder, data.length);
     return {
         secure_url: buildAssetUrl(filename),
         url: buildAssetUrl(filename),
@@ -285,6 +333,11 @@ export const storeFileBuffer = async (buffer, folder = 'uploads', originalName =
 export const deleteStoredAsset = async (urlOrPublicId) => {
     const url = extractAssetUrl(urlOrPublicId);
     if (!url) return false;
+    if (!(await mayDeleteAsset(url))) {
+        const actor = currentActor();
+        logger.warn(`[storage] Refused to delete ${url} for ${actor?.role || 'anonymous'}:${actor?.id || '-'} — not the uploader`);
+        return false;
+    }
     if (usesRemoteStore()) {
         try {
             return await deleteRemoteAsset(url);

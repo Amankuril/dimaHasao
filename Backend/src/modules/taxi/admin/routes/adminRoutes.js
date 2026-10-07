@@ -338,10 +338,12 @@ adminRouter.patch('/admin/integration-settings/mail', updateMailSettings);
 adminRouter.get('/admin/general-settings/:category', getGeneralSettingsCategory);
 adminRouter.patch('/admin/general-settings/:category', updateGeneralSettingsCategory);
 
+// The reads stay public (the apps show these screens before sign-in); the
+// writes sit outside the /admin auth mount, so they were open to anyone.
 adminRouter.get('/on-boarding', getUserOnboarding);
-adminRouter.post('/on-boarding', createOnboardingScreen);
-adminRouter.patch('/on-boarding/:id', updateOnboardingScreen);
-adminRouter.delete('/on-boarding/:id', deleteOnboardingScreen);
+adminRouter.post('/on-boarding', authenticate(['admin']), createOnboardingScreen);
+adminRouter.patch('/on-boarding/:id', authenticate(['admin']), updateOnboardingScreen);
+adminRouter.delete('/on-boarding/:id', authenticate(['admin']), deleteOnboardingScreen);
 adminRouter.get('/on-boarding-driver', getDriverOnboarding);
 
 adminRouter.get('/admin/reports/user/download', downloadUserReport);

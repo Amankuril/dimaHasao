@@ -87,7 +87,6 @@ export const mirrorRideRealtimeState = async (ridePayload = {}) => {
     arrivedAt: ridePayload.arrivedAt || null,
     startedAt: ridePayload.startedAt || null,
     completedAt: ridePayload.completedAt || null,
-    otp: ridePayload.otp || '',
     pricingSnapshot: ridePayload.pricingSnapshot || null,
     driverPaymentCollection: ridePayload.driverPaymentCollection || null,
     feedback: ridePayload.feedback || null,

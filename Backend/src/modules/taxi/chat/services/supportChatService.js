@@ -614,18 +614,19 @@ export const broadcastSupportMessage = (message) => {
     message,
   });
 
-  if (message.sender.role !== 'admin') {
-    chatIo.to(getSupportRoleRoom(message.sender.role)).emit('chat:conversation-updated', {
-      conversationKey: message.conversationKey,
-      message,
-    });
-  }
-
-  if (message.receiver.role !== 'admin') {
-    chatIo.to(getSupportRoleRoom(message.receiver.role)).emit('chat:conversation-updated', {
-      conversationKey: message.conversationKey,
-      message,
-    });
+  /*
+   * Only the admin role room gets every conversation. The rider/driver
+   * conversation-updated used to go to chat:role:user / chat:role:driver —
+   * every connected rider or driver — carrying the message and both parties'
+   * names and phones. Each non-admin party gets it in their own room instead.
+   */
+  for (const party of [message.sender, message.receiver]) {
+    if (party?.role && party.role !== 'admin' && party.id) {
+      chatIo.to(getSupportParticipantRoom(party.role, party.id)).emit('chat:conversation-updated', {
+        conversationKey: message.conversationKey,
+        message,
+      });
+    }
   }
 };
 
@@ -653,5 +654,5 @@ export const broadcastSupportConversationDeleted = (payload) => {
   chatIo.to(getSupportParticipantRoom('admin', parsed.adminId)).emit('chat:conversation-deleted', nextPayload);
   chatIo.to(getSupportParticipantRoom(parsed.peerRole, parsed.peerId)).emit('chat:conversation-deleted', nextPayload);
   chatIo.to(getSupportRoleRoom('admin')).emit('chat:conversation-deleted', nextPayload);
-  chatIo.to(getSupportRoleRoom(parsed.peerRole)).emit('chat:conversation-deleted', nextPayload);
+  // No peer role-room broadcast: the peer already got it in their participant room above.
 };

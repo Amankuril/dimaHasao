@@ -82,7 +82,7 @@ export const registerRideSocketHandlers = ({ io, socket, onAsync }) => {
       });
 
       if (activeRide && String(activeRide._id) === String(ride._id)) {
-        const payload = serializeRideRealtime(activeRide);
+        const payload = serializeRideRealtime(activeRide, { viewerRole: socket.auth.role });
         socket.emit(SOCKET_EVENTS.RIDE_STATE, payload);
         setImmediate(() => {
           mirrorRideRealtimeState(payload).catch(() => {});
@@ -111,7 +111,7 @@ export const registerRideSocketHandlers = ({ io, socket, onAsync }) => {
         room,
         rejoined: true,
       });
-      const payload = serializeRideRealtime(ride);
+      const payload = serializeRideRealtime(ride, { viewerRole: socket.auth.role });
       socket.emit(SOCKET_EVENTS.RIDE_STATE, payload);
       setImmediate(() => {
         mirrorRideRealtimeState(payload).catch(() => {});
@@ -182,7 +182,7 @@ export const registerRideSocketHandlers = ({ io, socket, onAsync }) => {
 
   socket.on(
     SOCKET_EVENTS.RIDE_STATUS_UPDATE,
-    onAsync(socket, async ({ rideId, status, paymentMethod }) => {
+    onAsync(socket, async ({ rideId, status, paymentMethod, otp }) => {
       if (socket.auth.role !== 'driver') {
         throw new Error('Only drivers can update ride status');
       }
@@ -198,6 +198,7 @@ export const registerRideSocketHandlers = ({ io, socket, onAsync }) => {
         driverId: socket.auth.sub,
         nextStatus: status,
         paymentMethod,
+        otp,
       });
       const populatedRide = await getRideDetails(rideId);
 

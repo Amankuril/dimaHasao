@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 
 const orderItemSchema = new mongoose.Schema(
@@ -341,12 +342,38 @@ orderSchema.index({ 'dispatch.status': 1, orderStatus: 1, updatedAt: -1 });
 orderSchema.index({ 'dispatch.deliveryPartnerId': 1, 'dispatch.status': 1, updatedAt: -1 });
 orderSchema.index({ 'payment.status': 1, createdAt: -1 });
 orderSchema.index({ 'payment.method': 1, createdAt: -1 });
+// Restaurant order list: { restaurantId } sorted by createdAt, often without an
+// orderStatus filter, which the { restaurantId, orderStatus, createdAt } index
+// cannot serve as a sort.
+orderSchema.index({ restaurantId: 1, createdAt: -1 });
+/*
+ * One Razorpay payment pays for one order. createOrder checks this up front;
+ * the index closes the race where two requests replaying the same payment both
+ * pass that check. Partial so the many orders with no payment id (COD, wallet,
+ * legacy '') are not all "duplicates" of each other.
+ */
+orderSchema.index(
+    { 'payment.razorpay.paymentId': 1 },
+    {
+        unique: true,
+        partialFilterExpression: { 'payment.razorpay.paymentId': { $type: 'string', $gt: '' } }
+    }
+);
+
+/*
+ * FOD- + 6 timestamp digits + 4 random digits. The old 4 + 3 digits gave only
+ * 900 ids per 10-second window, so busy periods hit the unique index and the
+ * order failed to save. createOrder also retries on a clash.
+ */
+const generateOrderCode = () => {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = crypto.randomInt(1000, 10000);
+    return `FOD-${timestamp}${random}`;
+};
 
 orderSchema.pre('save', async function (next) {
     if (!this.order_id) {
-        const timestamp = Date.now().toString().slice(-4);
-        const random = Math.floor(100 + Math.random() * 900);
-        this.order_id = `FOD-${timestamp}${random}`;
+        this.order_id = generateOrderCode();
     }
     // Synchronize camelCase alias to satisfy unique index 'orderId_1'
     if (this.order_id) {
@@ -354,8 +381,11 @@ orderSchema.pre('save', async function (next) {
     }
     // Auto-generate takeaway OTP for active states if missing
     if (this.orderType === 'takeaway' && ['preparing', 'ready_for_pickup'].includes(this.orderStatus)) {
-        if (!this.deliveryOtp) {
-            this.deliveryOtp = String(Math.floor(1000 + Math.random() * 9000));
+        // deliveryOtp is select:false, so on a document loaded without
+        // '+deliveryOtp' it reads as empty even when one exists. Generating then
+        // overwrote the OTP the customer had already been shown.
+        if (!this.deliveryOtp && (this.isNew || this.isSelected('deliveryOtp'))) {
+            this.deliveryOtp = String(crypto.randomInt(1000, 10000));
         }
         if (!this.deliveryVerification || !this.deliveryVerification.dropOtp || !this.deliveryVerification.dropOtp.required) {
             this.deliveryVerification = {

@@ -5,6 +5,7 @@ import Offer from '../models/Offer.js';
 import PlatformSettings from '../models/PlatformSettings.js';
 import { quoteStay, claimAvailability, releaseAvailability } from '../services/bookingPricing.service.js';
 import { buildInvoice } from '../services/invoiceService.js';
+import { istCalendarDay } from '../utils/nightlyPricing.js';
 import AvailabilityLedger from '../models/AvailabilityLedger.js';
 import Wallet from '../models/Wallet.js';
 import Transaction from '../models/Transaction.js';
@@ -137,6 +138,30 @@ export const getBookingQuote = async (req, res) => {
 };
 
 export const createBooking = async (req, res) => {
+  /*
+   * Inventory and wallet money taken by this request before the booking is
+   * saved. Every early return and every throw after the claim must give them
+   * back: an "Insufficient wallet balance" or a gateway failure used to leave
+   * the room held forever by a booking that was never written.
+   */
+  let heldLedgerId = null;
+  let debitedUserWallet = null;
+  let debitedAmount = 0;
+  let bookingSaved = false;
+  const rollback = async (bookingRef) => {
+    if (bookingSaved) return;
+    if (heldLedgerId) {
+      await AvailabilityLedger.deleteOne({ _id: heldLedgerId }).catch((e) => console.error('Release held inventory failed:', e.message));
+      heldLedgerId = null;
+    }
+    if (debitedUserWallet && debitedAmount > 0) {
+      await debitedUserWallet
+        .credit(debitedAmount, `Reversal of unfinished booking #${bookingRef}`, bookingRef, 'refund')
+        .catch((e) => console.error('Wallet reversal for unfinished booking failed:', e.message));
+      debitedUserWallet = null;
+    }
+  };
+
   try {
     const {
       propertyId,
@@ -145,7 +170,6 @@ export const createBooking = async (req, res) => {
       checkOutDate,
       guests,
       paymentMethod,
-      paymentDetails,
       bookingUnit,
       couponCode,
       useWallet,
@@ -210,7 +234,9 @@ export const createBooking = async (req, res) => {
       // quoteStay returns totals, not the parsed dates, so parse them here.
       checkIn: new Date(checkInDate),
       checkOut: new Date(checkOutDate),
-      units: 1, // one booking takes one unit; there is no multi-room field on this payload
+      // The rooms the quote priced. This claimed 1 and a second ledger row for
+      // `units` was written after save, so every booking consumed units + 1.
+      units,
       roomType,
     });
 
@@ -223,6 +249,7 @@ export const createBooking = async (req, res) => {
         totalInventory: claim.totalInventory,
       });
     }
+    heldLedgerId = claim.ledgerId;
 
     const bookingId = `BK-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -275,18 +302,47 @@ export const createBooking = async (req, res) => {
       paymentStatus: 'pending'
     });
 
-    // Handle Wallet Payment (Partial or Full)
-    if (paymentMethod === 'wallet' || (useWallet && walletDeduction > 0)) {
-      const wallet = await Wallet.findOne({ partnerId: req.user._id, role: 'user' });
-      const deductionAmount = walletDeduction || totalAmount;
+    /*
+     * How much of the bill the guest's wallet covers.
+     *
+     * Paying by wallet always takes the whole total. A part-payment must be a
+     * real amount no larger than the bill: `walletDeduction` is client input,
+     * and a token 1 used to settle a 'wallet' booking of any size, while a
+     * negative or overlong value distorted what the gateway was asked for.
+     */
+    let walletAmount = 0;
+    if (paymentMethod === 'wallet') {
+      walletAmount = totalAmount;
+    } else if (useWallet && walletDeduction !== undefined && walletDeduction !== null && ['online', 'razorpay'].includes(paymentMethod)) {
+      const requested = Number(walletDeduction);
+      if (!Number.isFinite(requested) || requested <= 0 || requested > totalAmount) {
+        await rollback(bookingId);
+        return res.status(400).json({ message: 'Invalid wallet amount for this booking' });
+      }
+      walletAmount = requested;
+    }
+    const gatewayAmount = totalAmount - walletAmount;
 
-      if (!wallet || wallet.balance < deductionAmount) {
+    // Handle Wallet Payment (Partial or Full)
+    if (walletAmount > 0) {
+      const wallet = await Wallet.findOne({ partnerId: req.user._id, role: 'user' });
+      if (!wallet) {
+        await rollback(bookingId);
         return res.status(400).json({ message: 'Insufficient wallet balance' });
       }
 
-      await wallet.debit(deductionAmount, `Booking #${bookingId}`, bookingId, 'booking');
+      // The model's debit refuses an overdraft atomically, so a concurrent
+      // spend cannot slip between a balance check and the debit.
+      try {
+        await wallet.debit(walletAmount, `Booking #${bookingId}`, bookingId, 'booking');
+      } catch (err) {
+        await rollback(bookingId);
+        return res.status(400).json({ message: 'Insufficient wallet balance' });
+      }
+      debitedUserWallet = wallet;
+      debitedAmount = walletAmount;
 
-      if (paymentMethod === 'wallet' || (['online', 'razorpay'].includes(paymentMethod) && (totalAmount - (walletDeduction || 0) <= 0))) {
+      if (gatewayAmount <= 0) {
         booking.paymentStatus = 'paid';
 
         // --- DISTRIBUTE TO PARTNER & ADMIN (Immediate Settlement for Wallet Payment) ---
@@ -345,60 +401,55 @@ export const createBooking = async (req, res) => {
     }
 
     // Handle Online Payment (Razorpay)
+    //
+    // A booking is only ever marked paid here by money this server took (the
+    // wallet above) or, later, by a verified gateway payment. There used to be
+    // a branch that trusted `paymentDetails.paymentId` from the request body
+    // as proof of payment, so any string confirmed the stay as paid.
     let razorpayOrder = null;
     if (paymentMethod === 'razorpay' || paymentMethod === 'online') {
-      if (paymentDetails && paymentDetails.paymentId) {
-        // Already paid (Legacy check)
-        booking.paymentStatus = 'paid';
-        booking.paymentId = paymentDetails.paymentId;
-      } else {
-        // Initiate New Payment
-        booking.bookingStatus = 'pending'; // Pending until payment
-        booking.paymentStatus = 'pending';
+      if (gatewayAmount > 0) {
+        try {
+          // Shared client — see core/payments/razorpay.service.js
+          const instance = getRazorpayClient();
+          if (!instance) throw new Error('Razorpay is not configured');
 
-        // Calculate amount to pay via Gateway
-        const amountToPay = totalAmount - (useWallet ? (walletDeduction || 0) : 0);
+          const options = {
+            amount: Math.round(gatewayAmount * 100), // amount in paisa
+            currency: PaymentConfig.currency || "INR",
+            receipt: bookingId,
+            notes: {
+              bookingId: booking._id.toString(),
+              userId: req.user._id.toString(),
+              propertyId: propertyId.toString(),
+              roomTypeId: roomTypeId.toString(),
+              bookingUnit: (bookingUnit || 'room').toString(),
+              rooms: units.toString(), // Pass rooms count for ledger
+              // Store financial info for verification consistency
+              adminCommission: adminCommission.toString(),
+              partnerPayout: partnerPayout.toString(),
+              taxes: taxes.toString(),
+              discount: discountAmount.toString(),
+              totalAmount: totalAmount.toString(),
+              walletUsedAmount: walletAmount.toString(),
+              type: 'booking_init'
+            }
+          };
 
-        if (amountToPay > 0) {
-          try {
-            // Shared client — see core/payments/razorpay.service.js
-            const instance = getRazorpayClient();
+          razorpayOrder = await instance.orders.create(options);
 
-            const options = {
-              amount: Math.round(amountToPay * 100), // amount in paisa
-              currency: PaymentConfig.currency || "INR",
-              receipt: bookingId,
-              notes: {
-                bookingId: booking._id.toString(),
-                userId: req.user._id.toString(),
-                propertyId: propertyId.toString(),
-                roomTypeId: roomTypeId.toString(),
-                bookingUnit: (bookingUnit || 'room').toString(),
-                rooms: units.toString(), // Pass rooms count for ledger
-                // Store financial info for verification consistency
-                adminCommission: adminCommission.toString(),
-                partnerPayout: partnerPayout.toString(),
-                taxes: taxes.toString(),
-                discount: discountAmount.toString(),
-                totalAmount: totalAmount.toString(),
-                type: 'booking_init'
-              }
-            };
-
-            razorpayOrder = await instance.orders.create(options);
-
-            // Set status to awaiting_payment so it doesn't show in user's list until paid
-            booking.bookingStatus = 'awaiting_payment';
-            booking.paymentStatus = 'pending';
-          } catch (error) {
-            console.error("Razorpay Order Creation Failed:", error);
-            return res.status(500).json({ message: "Failed to initiate payment gateway" });
-          }
-        } else {
-          // Fully paid by wallet (Covered by loop above, but double check status)
-          booking.paymentStatus = 'paid';
-          booking.bookingStatus = 'confirmed';
+          // Set status to awaiting_payment so it doesn't show in user's list until paid
+          booking.bookingStatus = 'awaiting_payment';
+          booking.paymentStatus = 'pending';
+        } catch (error) {
+          console.error("Razorpay Order Creation Failed:", error);
+          await rollback(bookingId);
+          return res.status(500).json({ message: "Failed to initiate payment gateway" });
         }
+      } else {
+        // Fully paid by wallet above.
+        booking.paymentStatus = 'paid';
+        booking.bookingStatus = 'confirmed';
       }
     }
 
@@ -454,27 +505,15 @@ export const createBooking = async (req, res) => {
     }
 
     await booking.save();
+    bookingSaved = true;
 
     // Point the inventory claim at the booking now that it has an id, so the
     // existing cancellation cleanup (which deletes by referenceId) releases it.
+    // That claim is the booking's only inventory row — a second one used to be
+    // created here, double-counting every booking against the room type.
     if (claim.ledgerId) {
       await AvailabilityLedger.updateOne({ _id: claim.ledgerId }, { $set: { referenceId: booking._id } });
     }
-
-    // Update Inventory (Block Room) - Only if confirmed (Pay at Hotel or Paid)
-    // If Razorpay pending, we still block inventory to avoid race conditions? 
-    // Usually yes, with a timeout. For now, we block it.
-    await AvailabilityLedger.create({
-      propertyId,
-      roomTypeId,
-      inventoryType: booking.bookingUnit || 'room',
-      source: 'platform',
-      referenceId: booking._id,
-      startDate: new Date(checkInDate),
-      endDate: new Date(checkOutDate),
-      units: units, // Use 'units' here (rooms count)
-      createdBy: 'system'
-    });
 
     // Increment Offer Usage if applied and confirmed
     if (appliedCoupon && booking.bookingStatus === 'confirmed') {
@@ -502,6 +541,7 @@ export const createBooking = async (req, res) => {
     // quoteStay raises the "no rooms left" / "bad dates" cases with a
     // statusCode. Those used to be inline 400s and must stay 400s, or the guest
     // sees "Server error" when they simply asked for more rooms than exist.
+    await rollback('unsaved');
     const status = error.statusCode || 500;
     if (status === 500) console.error('Create Booking Error:', error);
     res.status(status).json({ message: error.message || 'Server error creating booking' });
@@ -660,11 +700,31 @@ export const cancelBooking = async (req, res) => {
       return res.status(400).json({ message: 'Booking already cancelled' });
     }
 
-    // Update Status
-    booking.bookingStatus = 'cancelled';
-    booking.cancellationReason = req.body.reason || 'User cancelled';
-    booking.cancelledAt = new Date();
-    await booking.save();
+    /*
+     * Claim the cancellation atomically, and only before the stay starts.
+     *
+     * This was read-then-save and only refused 'cancelled', so a checked-out
+     * or completed stay could still be cancelled for a full refund, and two
+     * concurrent cancels both passed the check and both refunded. The status
+     * precondition makes exactly one request win.
+     */
+    const CANCELLABLE = ['pending', 'awaiting_payment', 'confirmed'];
+    if (!CANCELLABLE.includes(booking.bookingStatus)) {
+      return res.status(400).json({ message: `A ${booking.bookingStatus.replace(/_/g, ' ')} booking cannot be cancelled` });
+    }
+    const wasPaid = booking.paymentStatus === 'paid';
+    const claimed = await Booking.findOneAndUpdate(
+      { _id: booking._id, bookingStatus: { $in: CANCELLABLE } },
+      { $set: { bookingStatus: 'cancelled', cancellationReason: req.body.reason || 'User cancelled', cancelledAt: new Date() } },
+      { new: true }
+    );
+    if (!claimed) {
+      return res.status(409).json({ message: 'Booking was already cancelled or has changed state' });
+    }
+    booking.set({ bookingStatus: claimed.bookingStatus, cancellationReason: claimed.cancellationReason, cancelledAt: claimed.cancelledAt });
+    booking.unmarkModified('bookingStatus');
+    booking.unmarkModified('cancellationReason');
+    booking.unmarkModified('cancelledAt');
 
     // --- WALLET REVERSAL LOGIC ---
     // Pay at Hotel: Reverse Commission Deduction (Refund Partner, Debit Admin)
@@ -709,7 +769,7 @@ export const cancelBooking = async (req, res) => {
     }
 
     // 1. Refund User (If paid)
-    if (booking.paymentStatus === 'paid') {
+    if (wasPaid) {
       // A Razorpay-paid booking only had its commission reversed here — the
       // guest's money never actually came back, because nothing called the
       // real refund (POST /api/payments/refund/:bookingId, processRefund in
@@ -723,12 +783,15 @@ export const cancelBooking = async (req, res) => {
       if (isGatewayPayment) {
         try {
           const instance = getRazorpayClient();
+          // No amount: Razorpay refunds what was actually captured. Sending
+          // totalAmount failed whenever less was charged (wallet part-payment,
+          // the test-key cap) and fell through to crediting the full total.
           await instance.payments.refund(booking.paymentId, {
-            amount: Math.round(booking.totalAmount * 100),
             notes: { reason: booking.cancellationReason, bookingId: booking._id.toString() },
           });
+          await Booking.updateOne({ _id: booking._id }, { $set: { paymentStatus: 'refunded' } });
           booking.paymentStatus = 'refunded';
-          await booking.save();
+          booking.unmarkModified('paymentStatus');
           refundedViaGateway = true;
         } catch (err) {
           console.error('Razorpay refund failed during booking cancellation:', err.message);
@@ -754,7 +817,10 @@ export const cancelBooking = async (req, res) => {
     // 2. Deduct Partner (If payout was credited)
     // We assume payout is credited on 'confirmed'/'paid'. 
     // Check if Partner Payout > 0
-    if (booking.partnerPayout > 0 && booking.paymentStatus === 'paid') {
+    // wasPaid, not the live status: a gateway refund above has already moved
+    // it to 'refunded', which skipped both reversals and left the partner and
+    // admin holding money the guest got back.
+    if (booking.partnerPayout > 0 && wasPaid) {
       const fullBooking = await Booking.findById(booking._id).populate('propertyId');
       if (fullBooking.propertyId && fullBooking.propertyId.partnerId) {
         const partnerWallet = await Wallet.findOne({ partnerId: fullBooking.propertyId.partnerId, role: 'partner' });
@@ -774,7 +840,7 @@ export const cancelBooking = async (req, res) => {
     }
 
     // 3. Deduct Admin (Commission + Tax)
-    if (booking.paymentStatus === 'paid') {
+    if (wasPaid) {
       const adminDeduction = (booking.adminCommission || 0) + (booking.taxes || 0);
       if (adminDeduction > 0) {
         const adminWallet = await Wallet.findOne({ role: 'admin' });
@@ -876,10 +942,31 @@ export const markBookingNoShow = async (req, res) => {
       return res.status(200).json({ success: true, message: 'Booking is already marked as No Show.', booking });
     }
 
+    /*
+     * Only a confirmed stay whose check-in day has arrived can be a no-show,
+     * and only once.
+     *
+     * This was read-then-save with no status rule, so a cancelled, checked-out
+     * or not-yet-due booking could be marked too, and two concurrent requests
+     * (or a re-mark after a status flip) each ran the commission reversal
+     * below again. The conditional update lets exactly one request through.
+     */
+    if (booking.bookingStatus !== 'confirmed') {
+      return res.status(400).json({ message: 'Only a confirmed booking can be marked as No Show.' });
+    }
+    if (istCalendarDay(new Date()) < istCalendarDay(booking.checkInDate)) {
+      return res.status(400).json({ message: 'A booking can only be marked as No Show from its check-in date.' });
+    }
+    const claimed = await Booking.findOneAndUpdate(
+      { _id: booking._id, bookingStatus: 'confirmed' },
+      { $set: { bookingStatus: 'no_show' } },
+      { new: true }
+    );
+    if (!claimed) {
+      return res.status(409).json({ message: 'Booking has changed state. Please refresh.' });
+    }
     booking.bookingStatus = 'no_show';
-    // If No Show, should we cancel payment status? 
-    // Usually No Show means they didn't come.
-    await booking.save();
+    booking.unmarkModified('bookingStatus');
 
     // REVERSE DEDUCTION (Pay At Hotel)
     // "partner ke wallet se tax and fees plus admin commission deduct hua h voh uske wallet me vps se credit ho jayega"

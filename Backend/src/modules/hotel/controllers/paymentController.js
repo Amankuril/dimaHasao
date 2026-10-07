@@ -43,6 +43,20 @@ try {
   console.error("Razorpay Init Failed:", err.message);
 }
 
+const isAdminCaller = (user) => ['admin', 'superadmin'].includes(String(user?.role || '').toLowerCase());
+
+/** The guest who made the booking, or an admin. */
+const canActOnBooking = (user, booking) =>
+  Boolean(user) && (String(booking.userId) === String(user._id) || isAdminCaller(user));
+
+/** Statuses in which a captured payment may still confirm the stay. */
+const PAYABLE_BOOKING_STATUSES = ['pending', 'awaiting_payment', 'confirmed'];
+
+const populateForConfirmation = (id) => Booking.findById(id)
+  .populate('propertyId')
+  .populate('roomTypeId')
+  .populate('userId', 'name email phone');
+
 /**
  * @desc    Create Razorpay order for booking payment
  * @route   POST /api/payments/create-order
@@ -52,7 +66,9 @@ export const createPaymentOrder = async (req, res) => {
   try {
     const { bookingId } = req.body;
     const booking = await Booking.findById(bookingId);
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    // Only the guest who booked (or an admin) may open a payment for it. 404
+    // rather than 403, so an outsider cannot probe which booking ids exist.
+    if (!booking || !canActOnBooking(req.user, booking)) return res.status(404).json({ message: 'Booking not found' });
     if (booking.paymentStatus === 'paid') return res.status(400).json({ message: 'Booking already paid' });
 
     let amountInPaise = Math.round(booking.totalAmount * 100);
@@ -121,95 +137,84 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: 'Invalid payment signature' });
     }
 
-    let booking;
-
-    if (bookingId) {
-      // --- LEGACY FLOW (Pre-Existing Booking) ---
-      booking = await Booking.findById(bookingId);
-      if (!booking) return res.status(404).json({ message: 'Booking not found' });
-
-      booking.paymentStatus = 'paid';
-      booking.bookingStatus = 'confirmed';
-      booking.paymentId = razorpay_payment_id;
-      booking.paymentMethod = 'razorpay';
-      await booking.save();
-
-    } else {
-      // --- NEW FLOW (Deferred Creation) ---
-      // Fetch Order to retrieve Notes containing booking details
-      const order = await razorpay.orders.fetch(razorpay_order_id);
-      if (!order || !order.notes || order.notes.type !== 'booking_init') {
-        // Fallback: If notes missing, we can't create booking properly.
-        // But we have payment. This is a critical edge case.
-        return res.status(400).json({ message: 'Order context missing. Cannot create booking.' });
-      }
-
-      const notes = order.notes;
-
-      // Fetch Booking Property to get Type
-      const property = await Property.findById(notes.propertyId).select('propertyType');
-      const propertyType = property ? property.propertyType : 'Hotel';
-
-      const newBookingId = 'BK' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-
-      booking = await Booking.create({
-        userId: notes.userId,
-        bookingId: newBookingId,
-        propertyId: notes.propertyId,
-        propertyType: propertyType,
-        roomTypeId: notes.roomTypeId,
-        bookingUnit: notes.bookingUnit,
-        checkInDate: notes.checkInDate,
-        checkOutDate: notes.checkOutDate,
-        totalNights: Number(notes.totalNights),
-        guests: JSON.parse(notes.guests),
-        pricePerNight: Number(notes.pricePerNight),
-        baseAmount: Number(notes.baseAmount),
-        extraCharges: Number(notes.extraCharges),
-        taxes: Number(notes.taxes),
-        discount: Number(notes.discount),
-        couponCode: notes.couponCode || null,
-        adminCommission: Number(notes.adminCommission),
-        partnerPayout: Number(notes.partnerPayout),
-        totalAmount: Number(notes.totalAmount),
-        paymentStatus: 'paid', // Immediately Paid
-        bookingStatus: 'confirmed',
-        paymentMethod: 'online', // or 'razorpay'
-        paymentId: razorpay_payment_id,
-        amountPaid: Number(notes.totalAmount), // Full amount paid
-        remainingAmount: 0 // Full amount paid
-      });
-
-      const walletUsedAmount = Number(notes.walletUsedAmount) || 0;
-      // Debit User Wallet if used (Partial Online Payment)
-      if (walletUsedAmount > 0) {
-        const userWallet = await Wallet.findOne({ partnerId: notes.userId, role: 'user' });
-        if (userWallet) {
-          await userWallet.debit(walletUsedAmount, `Partial Wallet Payment for Booking #${newBookingId}`, newBookingId, 'booking_payment');
-        }
-      }
-
-      // Ledger created in bookingController
-      // await AvailabilityLedger.create({...});
-
-      // Increment Offer Usage
-      if (notes.couponCode) {
-        await Offer.findOneAndUpdate({ code: notes.couponCode }, { $inc: { usageCount: 1 } });
-      }
+    /*
+     * Bind the payment to the booking it was taken for.
+     *
+     * A valid signature only proves Razorpay took money against *some* order of
+     * ours. This used to mark whichever bookingId the body named as paid, and
+     * credit the partner and admin wallets every time it was called — so one
+     * cheap payment could confirm any booking, anyone's, and replaying it
+     * minted wallet money. Every order this module creates carries
+     * notes.bookingId (createBooking and createPaymentOrder), so that, not the
+     * request body, decides the booking.
+     */
+    let order;
+    try {
+      order = await razorpay.orders.fetch(razorpay_order_id);
+    } catch (err) {
+      console.error('Verify Payment: order fetch failed:', err.message);
+      return res.status(502).json({ message: 'Could not confirm this payment with the gateway. Please retry.' });
     }
 
-    // --- PREPARE PAYMENT DATA FOR WALLET CREDIT ---
-    // Extract financial details safely from either 'notes' (New Flow) or 'booking' (Legacy Flow)
-    const paymentMeta = {};
-    if (typeof notes !== 'undefined') {
-      paymentMeta.partnerPayout = Number(notes.partnerPayout);
-      paymentMeta.adminCommission = Number(notes.adminCommission);
-      paymentMeta.taxes = Number(notes.taxes);
-    } else if (booking) {
-      paymentMeta.partnerPayout = booking.partnerPayout;
-      paymentMeta.adminCommission = booking.adminCommission;
-      paymentMeta.taxes = booking.taxes;
+    const orderBookingId = String(order?.notes?.bookingId || '');
+    if (!orderBookingId || !mongoose.Types.ObjectId.isValid(orderBookingId)) {
+      return res.status(400).json({ message: 'This payment is not linked to a booking' });
     }
+    if (bookingId && String(bookingId) !== orderBookingId) {
+      return res.status(400).json({ message: 'This payment belongs to a different booking' });
+    }
+
+    const existing = await Booking.findById(orderBookingId);
+    if (!existing || !canActOnBooking(req.user, existing)) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    /*
+     * Claim the payment atomically. Only the request that flips the booking to
+     * paid goes on to credit wallets and notify; a replay or a concurrent
+     * duplicate finds it already paid and gets the same answer without moving
+     * money again. A booking that was cancelled while the guest was paying is
+     * not resurrected — its room has already been released.
+     */
+    const claimed = await Booking.findOneAndUpdate(
+      {
+        _id: existing._id,
+        paymentStatus: { $nin: ['paid', 'refunded'] },
+        bookingStatus: { $in: PAYABLE_BOOKING_STATUSES },
+      },
+      { $set: { paymentStatus: 'paid', bookingStatus: 'confirmed', paymentId: razorpay_payment_id, paymentMethod: 'razorpay' } },
+      { new: true }
+    );
+
+    if (!claimed) {
+      const current = await Booking.findById(existing._id).select('paymentStatus paymentId bookingStatus');
+      if (current?.paymentStatus === 'paid' && current.paymentId === razorpay_payment_id) {
+        return res.json({
+          success: true,
+          message: 'Payment verified successfully',
+          booking: await populateForConfirmation(existing._id),
+        });
+      }
+      if (current?.paymentStatus === 'paid') {
+        return res.status(409).json({ message: 'This booking is already paid' });
+      }
+      console.error(`[Payment] Captured ${razorpay_payment_id} for booking ${existing._id} in status ${current?.bookingStatus}; needs a refund`);
+      return res.status(409).json({ message: 'This booking can no longer be confirmed. Your payment will be refunded — please contact support.' });
+    }
+
+    const booking = claimed;
+
+    // Coupons on online bookings were never counted (createBooking only counts
+    // them for bookings confirmed at creation), so count it on confirmation.
+    if (booking.couponCode) {
+      await Offer.findOneAndUpdate({ code: booking.couponCode }, { $inc: { usageCount: 1 } }).catch((e) => console.error('Offer usage update failed:', e.message));
+    }
+
+    const paymentMeta = {
+      partnerPayout: booking.partnerPayout,
+      adminCommission: booking.adminCommission,
+      taxes: booking.taxes,
+    };
 
     // --- PARTNER WALLET CREDIT LOGIC (Common) ---
     try {
@@ -268,10 +273,7 @@ export const verifyPayment = async (req, res) => {
     } catch (err) { console.error("Admin Wallet Credit Failed", err); }
 
     // Return full populated booking for confirmation page
-    const populatedBooking = await Booking.findById(booking._id)
-      .populate('propertyId')
-      .populate('roomTypeId')
-      .populate('userId', 'name email phone');
+    const populatedBooking = await populateForConfirmation(booking._id);
 
     // TRIGGER NOTIFICATIONS (ONLINE PAYMENT SUCCESS)
     try {
@@ -392,6 +394,9 @@ export const getPaymentDetails = async (req, res) => {
   try {
     const { paymentId } = req.params;
 
+    // Admin only (enforced on the route): a raw gateway payment carries the
+    // payer's contact details, and this looked up any payment id for any
+    // signed-in caller.
     const payment = await razorpay.payments.fetch(paymentId);
 
     res.json({
@@ -408,27 +413,67 @@ export const getPaymentDetails = async (req, res) => {
 /**
  * @desc    Process refund
  * @route   POST /api/payments/refund/:bookingId
- * @access  Private
+ * @access  Admin
+ *
+ * Any signed-in user could call this for any booking, choose the refund
+ * amount, and repeat it; the partner and admin also kept the payout and
+ * commission for money that went back. Now: admin only (route), one refund per
+ * booking (atomic claim on 'paid'), Razorpay refunds what it actually
+ * captured, and the wallet credits made at payment time are reversed the way
+ * cancelBooking reverses them.
  */
 export const processRefund = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { amount, reason } = req.body;
-    const booking = await Booking.findById(bookingId);
+    const { reason } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(String(bookingId))) return res.status(404).json({ message: 'Booking not found' });
+    const booking = await Booking.findById(bookingId).populate('propertyId', 'partnerId');
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
     if (booking.paymentStatus !== 'paid') return res.status(400).json({ message: 'Booking not paid' });
-    const refundAmount = Math.round((amount || booking.totalAmount) * 100);
     const paymentId = booking.paymentId;
     if (!paymentId) return res.status(400).json({ message: 'Payment ID not found on booking' });
-    const refund = await razorpay.payments.refund(paymentId, {
-      amount: refundAmount,
-      notes: { reason, bookingId: booking._id.toString() }
-    });
-    booking.paymentStatus = 'refunded';
-    booking.bookingStatus = 'cancelled';
-    booking.cancellationReason = reason;
-    booking.cancelledAt = new Date();
-    await booking.save();
+
+    const previous = {
+      bookingStatus: booking.bookingStatus,
+      cancellationReason: booking.cancellationReason,
+      cancelledAt: booking.cancelledAt,
+    };
+    const claimed = await Booking.findOneAndUpdate(
+      { _id: booking._id, paymentStatus: 'paid', paymentId },
+      { $set: { paymentStatus: 'refunded', bookingStatus: 'cancelled', cancellationReason: reason, cancelledAt: new Date() } },
+      { new: true }
+    );
+    if (!claimed) return res.status(409).json({ message: 'Booking was already refunded or has changed state' });
+
+    let refund;
+    try {
+      refund = await razorpay.payments.refund(paymentId, {
+        notes: { reason, bookingId: booking._id.toString() }
+      });
+    } catch (err) {
+      // Nothing went back to the guest, so put the booking back as it was.
+      await Booking.updateOne({ _id: booking._id, paymentStatus: 'refunded' }, { $set: { paymentStatus: 'paid', ...previous } });
+      throw err;
+    }
+
+    // Reverse what verifyPayment credited (overdraft-allowed categories, so a
+    // partner who already withdrew still carries the debt).
+    const partnerId = booking.propertyId?.partnerId;
+    if (booking.partnerPayout > 0 && partnerId) {
+      const partnerWallet = await Wallet.findOne({ partnerId, role: 'partner' });
+      if (partnerWallet) {
+        await partnerWallet.debit(booking.partnerPayout, `Reversal (Refund) for Booking #${booking.bookingId}`, booking.bookingId, 'refund_deduction')
+          .catch((err) => console.error('Partner Refund Deduction Failed:', err.message));
+      }
+    }
+    const adminDeduction = (booking.adminCommission || 0) + (booking.taxes || 0);
+    if (adminDeduction > 0) {
+      const adminWallet = await Wallet.findOne({ role: 'admin' });
+      if (adminWallet) {
+        await adminWallet.debit(adminDeduction, `Reversal (Refund) for Booking #${booking.bookingId}`, booking.bookingId, 'refund_deduction')
+          .catch((err) => console.error('Admin Refund Deduction Failed:', err.message));
+      }
+    }
 
     await AvailabilityLedger.deleteMany({
       source: 'platform',

@@ -30,7 +30,8 @@ import {
 } from "../../admin/services/adminService.js";
 
 
-import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
+import { verifyPaymentSignature } from '../../../../core/payments/razorpay.service.js';
+import { assertClaimIsOwn, paymentClaimKey, withPaymentClaim } from '../../services/paymentClaimService.js';
 import { taxiRazorpayRequest } from '../../services/razorpayClient.js';
 import {
   buildPaymentRequestContext,
@@ -575,19 +576,10 @@ const creditUserWalletByReference = async ({ userId, amount, title, referenceKey
 
   await ensureUserWallet(userId);
 
-  const existingTransaction = await UserWallet.findOne({
-    userId,
-    'transactions.referenceKey': normalizedReferenceKey,
-  })
-    .select('_id')
-    .lean();
-
-  if (existingTransaction) {
-    return 'existing';
-  }
-
-  await UserWallet.updateOne(
-    { userId },
+  // The reference-key check is part of the write itself: a separate findOne
+  // first let two concurrent rewards both see "not credited yet".
+  const result = await UserWallet.updateOne(
+    { userId, 'transactions.referenceKey': { $ne: normalizedReferenceKey } },
     {
       $inc: { balance: normalizedAmount },
       $push: {
@@ -605,6 +597,10 @@ const creditUserWalletByReference = async ({ userId, amount, title, referenceKey
       },
     },
   );
+
+  if (!result.matchedCount) {
+    return 'existing';
+  }
 
   return 'credited';
 };
@@ -641,64 +637,6 @@ const processSignupReferralRewards = async ({ user, referrer }) => {
     user.referralRewardGrantedAt = user.referralRewardGrantedAt || new Date();
     await user.save();
   }
-};
-
-export const registerUser = async (req, res) => {
-  const name = toCleanString(req.body.name);
-  const phone = normalizePhone(req.body.phone);
-  const email = normalizeEmail(req.body.email);
-  const countryCode = toCleanString(req.body.countryCode) || '+91';
-  const gender = normalizeGender(req.body.gender);
-  const profileImage = toCleanString(req.body.profileImage);
-  const governmentIdProof = normalizeGovernmentIdProof(req.body.governmentIdProof || {}, { required: false });
-  const referralCode = normalizeReferralCode(req.body.referralCode);
-
-  validateName(name);
-  validatePhone(phone);
-  validateEmail(email);
-
-  const existingUser = await User.findOne({ phone });
-
-  const referrer = referralCode ? await findUserByReferralCode(referralCode) : null;
-
-  if (referralCode && !referrer) {
-    throw new ApiError(400, 'Invalid referral code');
-  }
-
-  if (existingUser && !canRestoreUserForSignup(existingUser)) {
-    throw new ApiError(409, 'Phone number is already registered');
-  }
-
-  const userPayload = await buildReactivatedUserPayload({
-    req,
-    name,
-    phone,
-    email,
-    countryCode,
-    gender,
-    profileImage,
-    governmentIdProof,
-    referrer,
-  });
-
-  const user = existingUser
-    ? await User.findByIdAndUpdate(existingUser._id, { $set: userPayload }, { new: true, runValidators: true })
-    : await User.create(userPayload);
-
-  if (!String(user.referralCode || '').trim()) {
-    user.referralCode = generateUserReferralCode(user);
-    await user.save();
-  }
-
-  if (referrer?._id) {
-    await User.updateOne({ _id: referrer._id }, { $inc: { referralCount: 1 } });
-    await processSignupReferralRewards({ user, referrer });
-  }
-
-  res.status(201).json({
-    success: true,
-    data: createUserSession(user),
-  });
 };
 
 const serializeUserNotification = (item = {}) => ({
@@ -849,34 +787,6 @@ export const loginUser = async (req, res) => {
   res.json({
     success: true,
     data: createUserSession(user),
-  });
-};
-
-export const verifyUserPhoneForOtpLogin = async (req, res) => {
-  const phone = normalizePhone(req.body.phone);
-  validatePhone(phone);
-
-  const user = await User.findOne({ phone }).lean();
-
-  if (!user || user.deletedAt) {
-    res.json({
-      success: true,
-      data: {
-        exists: false,
-        user: null,
-      },
-    });
-    return;
-  }
-
-  ensureUserCanLogin(user);
-
-  res.json({
-    success: true,
-    data: {
-      exists: true,
-      ...createUserSession(user),
-    },
   });
 };
 
@@ -1055,44 +965,6 @@ export const getUserWallet = async (req, res) => {
   res.json({
     success: true,
     data: buildUserWalletPayload({ ...wallet, transactions }),
-  });
-};
-
-export const topupUserWallet = async (req, res) => {
-  const amount = normalizeMoneyAmount(req.body?.amount);
-  const userId = req.auth?.sub;
-  const user = await User.findById(userId).select('_id').lean();
-
-  if (!user) {
-    throw new ApiError(404, 'User not found');
-  }
-
-  const tx = {
-    kind: 'credit',
-    amount,
-    title: 'Wallet Refilled',
-    provider: 'manual',
-  };
-
-  await ensureUserWallet(userId);
-
-  await UserWallet.updateOne(
-    { userId },
-    {
-      $inc: { balance: amount },
-      $push: { transactions: { $each: [tx], $slice: -50 } },
-    },
-  );
-
-  const updatedWallet = await UserWallet.findOne({ userId }).select('balance transactions').slice('transactions', -10).lean();
-  const updatedWalletWithRefund = updatedWallet
-    ? { ...updatedWallet, refundWallet: Number(updatedWallet.refundWallet || 0) }
-    : updatedWallet;
-  const transactions = Array.isArray(updatedWallet?.transactions) ? updatedWallet.transactions : [];
-
-  res.status(201).json({
-    success: true,
-    data: buildUserWalletPayload({ ...updatedWalletWithRefund, transactions }),
   });
 };
 
@@ -1318,7 +1190,7 @@ export const createRazorpayWalletTopupOrder = async (req, res) => {
       amount: amountPaise,
       currency: 'INR',
       receipt,
-      notes: { userId },
+      notes: { userId, purpose: USER_WALLET_TOPUP_PURPOSE },
     },
     keyId,
     keySecret,
@@ -1334,6 +1206,37 @@ export const createRazorpayWalletTopupOrder = async (req, res) => {
       callbackUrl,
     },
   });
+};
+
+const USER_WALLET_TOPUP_PURPOSE = 'user_wallet_topup';
+
+/*
+ * Whether a Razorpay order was created as this user's wallet top-up. Ride
+ * payment and tip orders carry the same userId in their notes, so the owner
+ * alone is not enough: without the purpose check one payment could be spent
+ * on a ride and credited to the wallet too. Orders created before `purpose`
+ * existed carried only { userId } and are still accepted on that shape.
+ */
+const isUserWalletTopupOrder = (notes = {}) => {
+  if (String(notes?.purpose || '') === USER_WALLET_TOPUP_PURPOSE) {
+    return true;
+  }
+  return !notes?.purpose && !notes?.rideId && !notes?.source && !notes?.kind && !notes?.driverId;
+};
+
+/*
+ * Credits the wallet only if no transaction in it already carries this payment
+ * id — in the same write, so two concurrent verifies cannot both credit.
+ */
+const creditUserWalletOnce = async ({ userId, amount, tx }) => {
+  await ensureUserWallet(userId);
+  await UserWallet.updateOne(
+    { userId, 'transactions.providerPaymentId': { $ne: tx.providerPaymentId } },
+    {
+      $inc: { balance: amount },
+      $push: { transactions: { $each: [tx], $slice: -50 } },
+    },
+  );
 };
 
 const verifyAndApplyUserRazorpayWalletTopup = async ({
@@ -1352,15 +1255,14 @@ const verifyAndApplyUserRazorpayWalletTopup = async ({
 
   const { keyId, keySecret } = await resolveRazorpayCredentials();
 
-  // Shared digest helper; the secret stays taxi's own admin-configured
+  // Shared constant-time check; the secret stays taxi's own admin-configured
   // gateway credential rather than the platform env key.
-  const expectedSignature = computeExpectedSignature({
+  if (!verifyPaymentSignature({
     orderId: normalizedOrderId,
     paymentId: normalizedPaymentId,
+    signature: normalizedSignature,
     secret: keySecret,
-  });
-
-  if (expectedSignature !== normalizedSignature) {
+  })) {
     throw new ApiError(400, 'Invalid payment signature');
   }
 
@@ -1376,45 +1278,44 @@ const verifyAndApplyUserRazorpayWalletTopup = async ({
     throw new ApiError(400, 'Invalid order amount');
   }
 
+  /*
+   * The order's own notes decide whose wallet this is. An order with no owner
+   * used to be credited to whoever verified it, and the unauthenticated
+   * callback trusted it outright.
+   */
   const orderUserId = String(order?.notes?.userId || '').trim();
-  const effectiveUserId = String(requestedUserId || orderUserId).trim();
 
-  if (!effectiveUserId) {
-    throw new ApiError(400, 'User reference is missing from this Razorpay order');
+  if (!orderUserId || !isUserWalletTopupOrder(order?.notes)) {
+    throw new ApiError(400, 'This Razorpay order is not a wallet top-up');
   }
 
-  if (requestedUserId && orderUserId && requestedUserId !== orderUserId) {
+  if (requestedUserId && String(requestedUserId) !== orderUserId) {
     throw new ApiError(403, 'This Razorpay order does not belong to the authenticated user');
   }
 
+  const effectiveUserId = orderUserId;
   const amount = Math.round(amountPaise) / 100;
+  const claimOwner = { purpose: USER_WALLET_TOPUP_PURPOSE, ownerRole: 'user', ownerId: effectiveUserId };
 
-  await ensureUserWallet(effectiveUserId);
-
-  const alreadyCredited = await UserWallet.findOne({
-    userId: effectiveUserId,
-    'transactions.providerPaymentId': normalizedPaymentId,
-  })
-    .select('_id')
-    .lean();
-
-  if (!alreadyCredited) {
-    const tx = {
-      kind: 'credit',
+  const claim = await withPaymentClaim(
+    { key: paymentClaimKey('razorpay', normalizedPaymentId), ...claimOwner },
+    () => creditUserWalletOnce({
+      userId: effectiveUserId,
       amount,
-      title: 'Wallet Refilled',
-      provider: 'razorpay',
-      providerOrderId: normalizedOrderId,
-      providerPaymentId: normalizedPaymentId,
-    };
-
-    await UserWallet.updateOne(
-      { userId: effectiveUserId },
-      {
-        $inc: { balance: amount },
-        $push: { transactions: { $each: [tx], $slice: -50 } },
+      tx: {
+        kind: 'credit',
+        amount,
+        title: 'Wallet Refilled',
+        provider: 'razorpay',
+        providerOrderId: normalizedOrderId,
+        providerPaymentId: normalizedPaymentId,
       },
-    );
+    }),
+  );
+
+  if (!claim.claimed) {
+    // A retry of the same top-up is answered with the wallet; anything else is a replay.
+    assertClaimIsOwn(claim.existing, claimOwner);
   }
 
   const wallet = await UserWallet.findOne({ userId: effectiveUserId })
@@ -1613,36 +1514,38 @@ export const verifyPhonePeWalletTopup = async (req, res) => {
   });
 
   if (paymentState === 'COMPLETED') {
-    await ensureUserWallet(userId);
-
-    const alreadyCredited = await UserWallet.findOne({
-      userId,
-      $or: [
-        { 'transactions.providerPaymentId': paymentId },
-        { 'transactions.providerOrderId': merchantTransactionId },
-      ],
-    })
-      .select('_id')
-      .lean();
-
-    if (!alreadyCredited) {
-      const tx = {
-        kind: 'credit',
-        amount,
-        title: 'Wallet Refilled',
-        provider: 'phonepe',
-        providerOrderId: merchantTransactionId,
-        providerPaymentId: paymentId,
-      };
-
-      await UserWallet.updateOne(
-        { userId },
-        {
-          $inc: { balance: amount },
-          $push: { transactions: { $each: [tx], $slice: -50 } },
-        },
-      );
+    /*
+     * PhonePe's status call says nothing about who the order was for, so any
+     * completed order id — another rider's top-up, a driver's — used to be
+     * credited to whoever asked. Our order ids are minted as
+     * UWAL<time><last 8 of the user id>, which ties one to its owner.
+     */
+    const compactUserId = String(userId || '').replace(/[^a-zA-Z0-9]/g, '').slice(-8) || 'usr';
+    if (!merchantTransactionId.startsWith('UWAL') || !merchantTransactionId.endsWith(compactUserId)) {
+      throw new ApiError(403, 'This PhonePe order does not belong to the authenticated user');
     }
+
+    const claimOwner = { purpose: USER_WALLET_TOPUP_PURPOSE, ownerRole: 'user', ownerId: String(userId) };
+    const claim = await withPaymentClaim(
+      // Keyed on our order id: one PhonePe order is one top-up.
+      { key: paymentClaimKey('phonepe', merchantTransactionId), ...claimOwner },
+      () => creditUserWalletOnce({
+        userId,
+        amount,
+        tx: {
+          kind: 'credit',
+          amount,
+          title: 'Wallet Refilled',
+          provider: 'phonepe',
+          providerOrderId: merchantTransactionId,
+          providerPaymentId: paymentId,
+        },
+      }),
+    );
+    if (!claim.claimed) {
+      assertClaimIsOwn(claim.existing, claimOwner);
+    }
+    const alreadyCredited = !claim.claimed;
 
     const wallet = await UserWallet.findOne({ userId })
       .select('balance refundWallet transactions')

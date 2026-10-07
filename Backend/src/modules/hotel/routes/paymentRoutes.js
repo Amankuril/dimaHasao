@@ -6,7 +6,7 @@ import {
   getPaymentDetails,
   processRefund
 } from '../controllers/paymentController.js';
-import { protect } from '../middlewares/authMiddleware.js';
+import { protect, authorizedRoles } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -20,9 +20,9 @@ router.post('/verify', protect, verifyPayment);
 router.post('/webhook', handleWebhook);
 
 // Get payment details
-router.get('/:paymentId', protect, getPaymentDetails);
+router.get('/:paymentId', protect, authorizedRoles('admin', 'superadmin'), getPaymentDetails);
 
 // Process refund
-router.post('/refund/:bookingId', protect, processRefund);
+router.post('/refund/:bookingId', protect, authorizedRoles('admin', 'superadmin'), processRefund);
 
 export default router;

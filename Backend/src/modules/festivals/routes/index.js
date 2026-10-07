@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware, requireAdmin } from '../../../core/auth/auth.middleware.js';
 import { loadAdmin } from '../../../core/admin/admin.controller.js';
+import { enforceAdminFeatureAccess } from '../../../core/admin/adminFeatureAccess.middleware.js';
 import { protect } from '../../tours/middlewares/authMiddleware.js';
 import {
   getPublicFestivals,
@@ -38,7 +39,10 @@ festivalsRouter.get('/health', (_req, res) => res.json({ success: true, module: 
 
 /* Admin — declared before '/:id' so "admin" is never read as a festival id. */
 const admin = Router();
-admin.use(authMiddleware, requireAdmin, loadAdmin);
+// The sub-admin feature gate was missing here, so any admin — a food-only
+// sub-admin included — could create and delete festivals and cancel bookings.
+// Festivals sit in the tours section, so a 'tours.festivals' grant is needed.
+admin.use(authMiddleware, requireAdmin, loadAdmin, enforceAdminFeatureAccess('tours', { addPrefix: '/festivals' }));
 admin.get('/', getAdminFestivals);
 admin.post('/', createFestival);
 admin.get('/bookings', getAdminBookings);

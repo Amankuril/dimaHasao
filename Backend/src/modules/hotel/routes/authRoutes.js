@@ -1,6 +1,6 @@
 import express from 'express';
 import { adminLogin, getMe, updateProfile, updateAdminProfile, registerPartner, updateFcmToken, uploadDocs, deleteDoc, uploadDocsBase64 } from '../controllers/authController.js';
-import { protect } from '../middlewares/authMiddleware.js';
+import { protect, optionalProtect } from '../middlewares/authMiddleware.js';
 import { uploadDocuments } from '../utils/multer.js';
 
 const router = express.Router();
@@ -10,9 +10,12 @@ const router = express.Router();
 router.post('/partner/register', registerPartner);
 
 // Upload routes for partner registration
-router.post('/partner/upload-docs', uploadDocuments.array('files', 5), uploadDocs);
-router.post('/partner/upload-docs-base64', uploadDocsBase64); // Flutter camera upload
-router.post('/partner/delete-doc', deleteDoc);
+// Still reachable before an account exists (the signup wizard uploads KYC
+// scans first). optionalProtect identifies a signed-in caller so the storage
+// service records them as the uploader, which is what delete-doc checks.
+router.post('/partner/upload-docs', optionalProtect, uploadDocuments.array('files', 5), uploadDocs);
+router.post('/partner/upload-docs-base64', optionalProtect, uploadDocsBase64); // Flutter camera upload
+router.post('/partner/delete-doc', optionalProtect, deleteDoc);
 
 router.post('/admin/login', adminLogin);
 router.get('/me', protect, getMe);

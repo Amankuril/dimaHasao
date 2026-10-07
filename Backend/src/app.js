@@ -11,6 +11,7 @@ import { responseTimeLogger } from './middleware/responseTimeLogger.js';
 import { requestIdMiddleware } from './middleware/requestId.js';
 import { healthCheck } from './config/health.js';
 import { config } from './config/env.js';
+import { deployWebhookHandler } from './routes/deployWebhook.js';
 
 const getCorsOrigins = () => {
     const parsed = String(config.socketCorsOrigin || '')
@@ -78,7 +79,7 @@ app.use(express.json({
     limit: config.requestJsonLimit,
     verify: (req, res, buf) => {
         // ✅ Store rawBody for signature verification (Razorpay Webhooks)
-        if (req.originalUrl && req.originalUrl.includes('/webhook/razorpay')) {
+        if (req.originalUrl && (req.originalUrl.includes('/webhook/razorpay') || req.originalUrl === '/api/deploy')) {
             req.rawBody = buf;
         }
     }
@@ -119,6 +120,9 @@ if (config.serveUploadsFromNode || config.nodeEnv !== 'production') {
 
 // Optional: log API response time (method, path, status, duration) - no sensitive data
 app.use('/api', responseTimeLogger);
+
+// Signed GitHub deploy hook; disabled unless DEPLOY_WEBHOOK_SECRET is set.
+app.post('/api/deploy', deployWebhookHandler);
 
 // API Routes
 app.use('/api', routes);

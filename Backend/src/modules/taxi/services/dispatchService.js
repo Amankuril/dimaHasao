@@ -1,3 +1,4 @@
+import { ApiError } from '../../../utils/ApiError.js';
 import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import { runRedisCommand } from '../../../infrastructure/redis/redisClient.js';
@@ -630,6 +631,23 @@ export const restartRideDispatchWithLatestFare = async (rideId) => {
   await startDispatchFlow(ride);
 };
 
+/**
+ * Whether this ride was offered to this driver — from this process's dispatch
+ * state, or the persisted tracking when another instance ran the dispatch.
+ */
+export const wasDriverNotifiedForRide = async (rideId, driverId) => {
+  if (!rideId || !mongoose.Types.ObjectId.isValid(String(rideId))) {
+    return false;
+  }
+
+  if (getDispatchState(rideId).notifiedDriverIds.map(String).includes(String(driverId))) {
+    return true;
+  }
+
+  const ride = await Ride.findById(rideId).select('dispatchTracking.notifiedDriverIds').lean();
+  return getPersistedDispatchTracking(ride || {}).notifiedDriverIds.includes(String(driverId));
+};
+
 const getDispatchState = (rideId) => {
   const rideKey = String(rideId);
   const state = activeDispatches.get(rideKey) || {};
@@ -697,7 +715,9 @@ const emitRideRequestToDrivers = async ({
       user: {
         id: ride.userId?._id ? String(ride.userId._id) : String(ride.userId || ''),
         name: ride.userId?.name || 'Customer',
-        phone: ride.userId?.phone || '',
+        // Every notified driver gets this, not just the one who accepts — the
+        // rider's number is shared only after assignment (GET /rides/active/me).
+        phone: '',
         countryCode: ride.userId?.countryCode || '',
       },
       pickupLocation: ride.pickupLocation,
@@ -872,7 +892,7 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
     stopDispatchFlow(rideId, { releaseLease: false });
 
     if (ride.status === RIDE_STATUS.COMPLETED || ride.liveStatus === RIDE_LIVE_STATUS.COMPLETED) {
-      throw new Error('Completed rides cannot be cancelled');
+      throw new ApiError(409, 'Completed rides cannot be cancelled');
     }
 
     if (ride.status === RIDE_STATUS.CANCELLED || ride.liveStatus === RIDE_LIVE_STATUS.CANCELLED) {
@@ -881,16 +901,32 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
       return ride;
     }
 
+    /*
+     * Once the rider has given the PIN and the trip is moving, it ends by
+     * completion, not cancellation. Cancelling an ongoing ride used to be
+     * allowed, and with an empty wallet the fee debit simply didn't apply —
+     * so a rider could take most of a trip and cancel it for free, leaving
+     * the driver unpaid.
+     */
+    if (
+      ride.status === RIDE_STATUS.ONGOING ||
+      [RIDE_LIVE_STATUS.STARTED, RIDE_LIVE_STATUS.ARRIVED].includes(ride.liveStatus)
+    ) {
+      throw new ApiError(409, 'This trip has already started and can no longer be cancelled');
+    }
+
     cancellationSettlement = await settleUserCancellationFee(ride, session);
 
     ride.status = RIDE_STATUS.CANCELLED;
     ride.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
     await ride.save({ session });
 
-    await Promise.all([
-      User.findByIdAndUpdate(ride.userId, { currentRideId: null }, { session }),
-      ride.driverId ? Driver.findByIdAndUpdate(ride.driverId, { isOnRide: false }, { session }) : Promise.resolve(),
-    ]);
+    // Sequential: operations sharing one transaction session must not run
+    // concurrently (the driver rejects parallel ops on a session).
+    await User.findByIdAndUpdate(ride.userId, { currentRideId: null }, { session });
+    if (ride.driverId) {
+      await Driver.findByIdAndUpdate(ride.driverId, { isOnRide: false }, { session });
+    }
 
     await session.commitTransaction();
   } catch (error) {
@@ -985,11 +1021,11 @@ export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
     const isScheduledRide = scheduledAt && Number.isFinite(scheduledAt.getTime()) && scheduledAt.getTime() > Date.now();
 
     if (!isScheduledRide) {
-      throw new Error('Only upcoming scheduled rides can be cancelled by the driver');
+      throw new ApiError(409, 'Only upcoming scheduled rides can be cancelled by the driver');
     }
 
     if (ride.status === RIDE_STATUS.COMPLETED || ride.liveStatus === RIDE_LIVE_STATUS.COMPLETED) {
-      throw new Error('Completed rides cannot be cancelled');
+      throw new ApiError(409, 'Completed rides cannot be cancelled');
     }
 
     if (ride.status === RIDE_STATUS.CANCELLED || ride.liveStatus === RIDE_LIVE_STATUS.CANCELLED) {
@@ -1004,10 +1040,11 @@ export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
     ride.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
     await ride.save({ session });
 
-    await Promise.all([
-      User.findByIdAndUpdate(ride.userId, { currentRideId: null }, { session }),
-      ride.driverId ? Driver.findByIdAndUpdate(ride.driverId, { isOnRide: false }, { session }) : Promise.resolve(),
-    ]);
+    // Sequential for the same reason as cancelRideByUser.
+    await User.findByIdAndUpdate(ride.userId, { currentRideId: null }, { session });
+    if (ride.driverId) {
+      await Driver.findByIdAndUpdate(ride.driverId, { isOnRide: false }, { session });
+    }
 
     await session.commitTransaction();
   } catch (error) {
@@ -1211,6 +1248,8 @@ const dispatchAttempt = async (rideId, attemptIndex = 0) => {
   }
 };
 
+const MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
+
 export const startDispatchFlow = async (ride, { forceRestart = false } = {}) => {
   if (!ride?._id) {
     return;
@@ -1231,12 +1270,24 @@ export const startDispatchFlow = async (ride, { forceRestart = false } = {}) => 
   const delayMs = scheduledAt ? scheduledAt.getTime() - Date.now() : 0;
   if (scheduledAt && Number.isFinite(delayMs) && delayMs > 0) {
     const rideId = String(ride._id);
+    /*
+     * setTimeout holds at most 2^31-1 ms (~24.8 days); anything longer fires
+     * after 1 ms, which dispatched rides booked a month out immediately. Long
+     * waits are taken in steps, re-arming until the real time arrives.
+     */
+    const isLongWait = delayMs > MAX_TIMER_DELAY_MS;
     const timer = setTimeout(() => {
       scheduledDispatchTimers.delete(rideId);
+      if (isLongWait) {
+        startDispatchFlow(ride, { forceRestart: true }).catch((error) => {
+          console.error('Scheduled dispatch re-arm failed', error);
+        });
+        return;
+      }
       dispatchAttempt(ride._id, 0).catch((error) => {
         console.error('Scheduled dispatch failed', error);
       });
-    }, delayMs);
+    }, Math.min(delayMs, MAX_TIMER_DELAY_MS));
 
     scheduledDispatchTimers.set(rideId, timer);
     return;
@@ -1451,7 +1502,7 @@ export const notifyRideAccepted = async (ride) => {
     status: populatedRide.status,
     liveStatus: populatedRide.liveStatus,
     acceptedAt: populatedRide.acceptedAt,
-    otp: populatedRide.otp || '',
+    // No start PIN here: the driver gets it from the rider, and the server checks it.
   });
 
   emitToRoom(getRideRoom(populatedRide._id), 'rideRequestClosed', {

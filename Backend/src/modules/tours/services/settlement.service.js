@@ -19,23 +19,42 @@
  * @returns {Promise<{booking: Object, movement: null}>}
  */
 export const settleBookingAdvance = async (booking, { paymentId, paymentMethod } = {}) => {
-  if (booking.paymentStatus !== 'pending') {
-    const error = new Error('This booking has already been settled');
-    error.statusCode = 400;
+  /*
+   * Claimed atomically: only a still-unpaid, still-open booking moves to paid.
+   *
+   * This was check-then-save on the loaded document, so two concurrent
+   * verifies both passed the 'pending' check, and a booking cancelled while
+   * the traveller sat on the checkout page was quietly confirmed again.
+   */
+  const set = {
+    amountPaid: booking.totalAmount,
+    paymentStatus: 'paid',
+    bookingStatus: 'confirmed',
+  };
+  if (paymentId || booking.paymentId) set.paymentId = paymentId || booking.paymentId;
+  if (paymentMethod) set.paymentMethod = paymentMethod;
+
+  const Model = booking.constructor;
+  const settled = await Model.findOneAndUpdate(
+    { _id: booking._id, paymentStatus: 'pending', bookingStatus: { $in: ['pending', 'confirmed'] } },
+    { $set: set },
+    { new: true }
+  );
+
+  if (!settled) {
+    const current = await Model.findById(booking._id).select('paymentStatus bookingStatus');
+    const error = new Error(
+      current?.paymentStatus === 'pending'
+        ? 'This booking can no longer be paid for'
+        : 'This booking has already been settled'
+    );
+    error.statusCode = current?.paymentStatus === 'pending' ? 409 : 400;
     throw error;
   }
 
-  booking.paymentId = paymentId || booking.paymentId;
-  if (paymentMethod) booking.paymentMethod = paymentMethod;
-  booking.amountPaid = booking.totalAmount;
-  booking.paymentStatus = 'paid';
-  booking.bookingStatus = 'confirmed';
-
-  await booking.save();
-
   // Kept in the return shape so callers that logged the wallet movement keep
   // working; there is simply never a movement now.
-  return { booking, movement: null };
+  return { booking: settled, movement: null };
 };
 
 /**

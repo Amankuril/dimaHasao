@@ -372,6 +372,8 @@ export async function listDiningCategoriesPublic() {
     return categories.map(mapCategory);
 }
 
+const PUBLIC_DINING_LIST_CAP = 500;
+
 export async function listDiningRestaurantsPublic(query = {}) {
     const filter = { isEnabled: true };
     const categoryValue = String(query.category || '').trim();
@@ -399,10 +401,12 @@ export async function listDiningRestaurantsPublic(query = {}) {
     const restaurantAndConditions = [];
 
     if (cityValue) {
+        // Escaped: raw user input as a regex is a ReDoS vector on a public route.
+        const cityPattern = cityValue.slice(0, 80).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         restaurantAndConditions.push({
             $or: [
-                { city: { $regex: cityValue, $options: 'i' } },
-                { 'location.city': { $regex: cityValue, $options: 'i' } }
+                { city: { $regex: cityPattern, $options: 'i' } },
+                { 'location.city': { $regex: cityPattern, $options: 'i' } }
             ]
         });
     }
@@ -418,10 +422,16 @@ export async function listDiningRestaurantsPublic(query = {}) {
     const diningDocs = await FoodDiningRestaurant.find(filter)
         .populate({
             path: 'restaurantId',
-            select: 'restaurantName restaurantNameNormalized ownerName ownerPhone profileImage coverImages menuImages cuisines location area city zoneId status rating diningSettings estimatedDeliveryTime estimatedDeliveryTimeMinutes featuredDish featuredPrice offer openingTime closingTime openDays isAcceptingOrders costForTwo pureVegRestaurant',
+            // No ownerName/ownerPhone: this is an unauthenticated list, and the
+            // owner's personal number is not the restaurant's public contact.
+            select: 'restaurantName restaurantNameNormalized profileImage coverImages menuImages cuisines location area city zoneId status rating diningSettings estimatedDeliveryTime estimatedDeliveryTimeMinutes featuredDish featuredPrice offer openingTime closingTime openDays isAcceptingOrders costForTwo pureVegRestaurant',
             match: restaurantMatch
         })
         .populate('categoryIds', 'name slug imageUrl')
+        // Unpaginated public list: bounded so one request cannot pull the
+        // whole collection. The zone match is applied by populate *after* this
+        // limit, so the cap is generous — it counts dining docs in all zones.
+        .limit(PUBLIC_DINING_LIST_CAP)
         .lean();
 
     const enabledDocs = diningDocs.filter((doc) => doc.restaurantId);

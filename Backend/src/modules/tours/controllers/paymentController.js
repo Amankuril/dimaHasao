@@ -104,6 +104,28 @@ export const verifyPayment = async (req, res) => {
     const booking = await findOwnBooking(req.params.id, req.user._id);
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
 
+    /*
+     * The signature only proves a payment against *some* order of ours — any
+     * module's. It used to confirm whichever of the caller's bookings the URL
+     * named, so one small payment could settle a bigger booking. The order
+     * createPaymentOrder opened carries this booking's id in its notes.
+     */
+    let order;
+    try {
+      order = await getRazorpayClient().orders.fetch(razorpay_order_id);
+    } catch (err) {
+      console.error('Tours verify: order fetch failed:', err.message);
+      return res.status(502).json({ success: false, message: 'Could not confirm this payment with the gateway. Please retry.' });
+    }
+    if (order?.notes?.module !== 'tours' || String(order?.notes?.bookingId || '') !== String(booking.bookingId)) {
+      return res.status(400).json({ success: false, message: 'This payment belongs to a different booking' });
+    }
+
+    // A repeat of a verify that already succeeded answers the same way.
+    if (booking.paymentStatus === 'paid' && booking.paymentId === razorpay_payment_id) {
+      return res.json({ success: true, message: 'Payment confirmed', booking, movement: null });
+    }
+
     const settled = await settleBookingAdvance(booking, {
       paymentId: razorpay_payment_id,
       paymentMethod: 'razorpay',

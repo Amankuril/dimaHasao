@@ -210,8 +210,31 @@ export const registerFoodAuthAudiences = () => {
             }
         },
 
+        /*
+         * A partner the admin has not approved gets no session. assertCanLogin
+         * only looks at isActive/isBlocked, so pending and rejected partners
+         * were being handed a DELIVERY_PARTNER token and could take orders. The
+         * pre-OTP-service login answered with this pendingApproval shape
+         * instead, and both delivery apps still branch on it before looking for
+         * a token, so it is returned here rather than thrown — the app then
+         * shows its "pending verification" / "rejected" screen.
+         */
         issueSession: async (partner, ctx) => {
             await saveFcmToken(FoodDeliveryPartner, partner, ctx);
+
+            if (partner.status && partner.status !== 'approved') {
+                const isRejected = partner.status === 'rejected';
+                return {
+                    pendingApproval: true,
+                    isRejected,
+                    rejectionReason: isRejected ? partner.rejectionReason || null : null,
+                    message: isRejected
+                        ? partner.rejectionReason
+                            ? `Your account was rejected: ${partner.rejectionReason}`
+                            : 'Your delivery account was not approved. Please contact support.'
+                        : 'Your account is pending admin verification. You will be notified once approved.',
+                };
+            }
 
             const payload = { userId: partner._id.toString(), role: ROLES.DELIVERY_PARTNER };
             const accessToken = signAccessToken(payload);

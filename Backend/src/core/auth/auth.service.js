@@ -29,22 +29,15 @@ const ROLES = {
   ADMIN: "ADMIN",
 };
 
-const DEFAULT_CREDENTIALS = {
-  adminEmail: String(process.env.DEFAULT_ADMIN_EMAIL || "admin@tourismdimahasao.in")
-    .trim()
-    .toLowerCase(),
-  adminPassword: String(
-    process.env.DEFAULT_ADMIN_PASSWORD || "Dima Hasao@2026",
-  ),
-  userPhone: String(process.env.DEFAULT_USER_PHONE || "7974161582"),
-  restaurantPhone: String(process.env.DEFAULT_RESTAURANT_PHONE || "7974161582"),
-  deliveryPhone: String(process.env.DEFAULT_DELIVERY_PHONE || "7610416911"),
+/** Constant-time string compare; hashing first makes the lengths equal. */
+const otpMatches = (expected, given) => {
+  const a = crypto.createHash("sha256").update(String(expected)).digest();
+  const b = crypto.createHash("sha256").update(String(given)).digest();
+  return crypto.timingSafeEqual(a, b);
 };
 
 const normalizePhone10 = (value) => String(value || "").replace(/\D/g, "").slice(-10);
 
-const isDefaultPhone = (inputPhone, defaultPhone) =>
-  normalizePhone10(inputPhone) === normalizePhone10(defaultPhone);
 const previewToken = (token) => {
   const normalized = String(token || "").trim();
   if (!normalized) return "<empty>";
@@ -296,25 +289,11 @@ export const adminLogin = async (email, password) => {
   const normalizedEmail = String(email).trim().toLowerCase();
   let admin = await FoodAdmin.findOne({ email: normalizedEmail });
 
-  // Auto-provision default admin account (no manual seed needed).
-  if (
-    !admin &&
-    normalizedEmail === DEFAULT_CREDENTIALS.adminEmail &&
-    password === DEFAULT_CREDENTIALS.adminPassword
-  ) {
-    admin = await FoodAdmin.create({
-      email: DEFAULT_CREDENTIALS.adminEmail,
-      password: DEFAULT_CREDENTIALS.adminPassword,
-      name: "Dima Hasao Admin",
-      isActive: true,
-      active: true,
-      adminLevel: ADMIN_LEVELS.PLATFORM_SUPERADMIN,
-      admin_type: "superadmin",
-      permissions: ["*"],
-      servicesAccess: ["food", "taxi"],
-    });
-  }
-
+  // A default superadmin used to be auto-created here on the first login with
+  // a hardcoded email and password (both in git). On any database where that
+  // email did not exist yet — production included — anyone could log in as a
+  // brand-new platform superadmin. Admins are created by
+  // scripts/seed-super-admin.js or from the admin panel.
   if (!admin) {
     throw new AuthError("Invalid credentials");
   }
@@ -322,6 +301,13 @@ export const adminLogin = async (email, password) => {
   const isMatch = await admin.comparePassword(password);
   if (!isMatch) {
     throw new AuthError("Invalid credentials");
+  }
+
+  // Checked after the password so the response does not reveal which emails
+  // belong to disabled accounts. /v1/admin already refused these; login did
+  // not, so a deactivated admin could still sign in to every other panel.
+  if (admin.isActive === false) {
+    throw new AuthError("This admin account has been deactivated");
   }
 
   const payload = { userId: admin._id.toString(), role: "ADMIN" };
@@ -384,20 +370,7 @@ export const verifyRestaurantOtpAndLogin = async (phone, otp, fcmToken, platform
     ],
   });
   let restaurantDoc = restaurant;
-  if (!restaurantDoc && isDefaultPhone(phone, DEFAULT_CREDENTIALS.restaurantPhone)) {
-    // Auto-provision default restaurant account for configured default phone.
-    restaurantDoc = await FoodRestaurant.create({
-      restaurantName: "Dima Hasao Demo Restaurant",
-      ownerName: "Dima Hasao Restaurant Owner",
-      ownerEmail: "",
-      ownerPhone: normalizePhone10(DEFAULT_CREDENTIALS.restaurantPhone),
-      primaryContactNumber: normalizePhone10(DEFAULT_CREDENTIALS.restaurantPhone),
-      city: "Bhopal",
-      state: "Madhya Pradesh",
-      status: "approved",
-      approvedAt: new Date(),
-    });
-  }
+
   if (!restaurantDoc) {
     // Phone has been successfully verified, but no restaurant exists yet.
     // Frontend will use this to redirect into registration/onboarding.
@@ -491,18 +464,7 @@ export const verifyDeliveryOtpAndLogin = async (phone, otp, fcmToken, platform) 
     ],
   });
 
-  if (!deliveryPartner && isDefaultPhone(phone, DEFAULT_CREDENTIALS.deliveryPhone)) {
-    // Auto-provision default delivery account for configured default phone.
-    deliveryPartner = await FoodDeliveryPartner.create({
-      name: "Dima Hasao Delivery Partner",
-      phone: normalizePhone10(DEFAULT_CREDENTIALS.deliveryPhone),
-      city: "Bhopal",
-      state: "Madhya Pradesh",
-      vehicleType: "bike",
-      status: "approved",
-      approvedAt: new Date(),
-    });
-  }
+
 
   if (!deliveryPartner) {
     return { needsRegistration: true, phone };
@@ -860,14 +822,22 @@ export const requestAdminForgotPasswordOtp = async (email) => {
     throw new ValidationError("Email is required");
   }
 
+  const genericResponse = {
+    success: true,
+    message: "If this email is registered, you will receive an OTP shortly.",
+  };
+
+  // Same answer for unknown emails, so this cannot be used to discover which
+  // addresses are admin accounts.
   const admin = await FoodAdmin.findOne({ email: normalizedEmail });
   if (!admin) {
-    throw new AuthError("This email is not registered as an admin account.");
+    return genericResponse;
   }
 
-  const otp = config.useDefaultOtp
-    ? "123456"
-    : String(crypto.randomInt(100000, 999999));
+  // Always random. USE_DEFAULT_OTP used to make this a fixed "123456", which —
+  // with that flag on in production — let anyone reset any admin's password,
+  // the superadmin's included. The flag is for consumer phone OTP testing only.
+  const otp = String(crypto.randomInt(100000, 1000000));
   const ttlMs = (config.otpExpiryMinutes || 10) * 60 * 1000;
   const expiresAt = new Date(Date.now() + ttlMs);
 
@@ -877,21 +847,14 @@ export const requestAdminForgotPasswordOtp = async (email) => {
     { upsert: true, new: true },
   );
 
-  if (config.useDefaultOtp) {
-    logger.info(`Admin reset OTP for ${normalizedEmail}: ${otp}`);
-  }
-
   const sent = await sendAdminResetOtpEmail(normalizedEmail, otp);
-  if (!sent && !config.useDefaultOtp) {
+  if (!sent) {
     logger.warn(
       `Admin OTP not sent by email to ${normalizedEmail}; check SMTP config.`,
     );
   }
 
-  return {
-    success: true,
-    message: "If this email is registered, you will receive an OTP shortly.",
-  };
+  return genericResponse;
 };
 
 /** Admin forgot password: verify OTP and set new password in one call. */
@@ -915,12 +878,19 @@ export const resetAdminPasswordWithOtp = async (email, otp, newPassword) => {
     await record.deleteOne();
     throw new AuthError("OTP has expired. Please request a new code.");
   }
-  if (record.attempts >= (config.otpMaxAttempts || 5)) {
+  // Count the attempt atomically before comparing. Incrementing in memory and
+  // saving after let parallel guesses all read the same low count and blow
+  // straight past the limit.
+  const maxAttempts = config.otpMaxAttempts || 5;
+  const counted = await AdminResetOtp.findOneAndUpdate(
+    { _id: record._id, attempts: { $lt: maxAttempts } },
+    { $inc: { attempts: 1 } },
+    { new: true },
+  );
+  if (!counted) {
     throw new AuthError("Too many attempts. Please request a new code.");
   }
-  record.attempts += 1;
-  if (record.otp !== otpStr) {
-    await record.save();
+  if (!otpMatches(counted.otp, otpStr)) {
     throw new AuthError("Invalid OTP.");
   }
 
@@ -975,6 +945,14 @@ export const refreshAccessToken = async (token) => {
     const u = await FoodUser.findById(payload.userId).select("isActive").lean();
     if (!u || u.isActive === false) {
       throw new AuthError("User account is deactivated");
+    }
+  }
+  // Same for admins: a deleted or disabled admin kept minting fresh ADMIN
+  // tokens from a still-valid refresh token.
+  if (payload?.role === "ADMIN") {
+    const a = await FoodAdmin.findById(payload.userId).select("isActive").lean();
+    if (!a || a.isActive === false) {
+      throw new AuthError("Admin account is deactivated");
     }
   }
 

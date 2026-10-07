@@ -225,6 +225,15 @@ export const createBooking = async (req, res) => {
  */
 export const settleAdvance = async (req, res) => {
   try {
+    // Confirming without taking money is a development convenience. Keys going
+    // missing on the live server (a bad deploy, an env typo) must not turn it
+    // into free trips, so production refuses it outright.
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(503).json({
+        success: false,
+        message: 'Online payment is unavailable right now. Please try again later.',
+      });
+    }
     if (isRazorpayConfigured()) {
       return res.status(400).json({
         success: false,

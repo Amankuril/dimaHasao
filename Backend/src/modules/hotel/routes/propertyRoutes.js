@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, authorizedRoles } from '../middlewares/authMiddleware.js';
+import { protect, authorizedRoles, optionalProtect } from '../middlewares/authMiddleware.js';
 import {
   createProperty,
   updateProperty,
@@ -17,7 +17,8 @@ const router = express.Router();
 
 router.get('/', getPublicProperties);
 router.get('/my', protect, authorizedRoles('partner', 'admin'), getMyProperties);
-router.get('/:id', getPropertyDetails);
+// optionalProtect: owners and admins see their non-live listings and KYC documents.
+router.get('/:id', optionalProtect, getPropertyDetails);
 
 router.post('/', protect, authorizedRoles('partner', 'admin'), createProperty);
 router.put('/:id', protect, authorizedRoles('partner', 'admin'), updateProperty);

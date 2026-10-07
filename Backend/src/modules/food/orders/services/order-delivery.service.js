@@ -362,6 +362,56 @@ async function syncRazorpayQrPayment(orderDoc) {
   return updatedTx?.payment || payment;
 }
 
+/*
+ * An offer is visible to every online rider in the zone, most of whom will
+ * never take it. Until a rider accepts, they get what an offer card needs —
+ * restaurant, payout, cash amount, area and an approximate drop point for the
+ * distance estimate — but not the customer's name, phone, email, street
+ * address, delivery note or payment identifiers. The accept response carries
+ * the full order once it is theirs.
+ */
+const roundCoord = (value) => (Number.isFinite(Number(value)) ? Math.round(Number(value) * 1000) / 1000 : value);
+
+function redactOfferForRider(order) {
+  const address = order?.deliveryAddress || {};
+  const coords = address?.location?.coordinates;
+  const pricing = order?.pricing || {};
+  const payment = order?.payment || {};
+  // Populated → its _id; a bare ObjectId also exposes itself as `_id`.
+  const userRef = order?.userId?._id || undefined;
+
+  const redacted = {
+    ...order,
+    userId: userRef ? { _id: userRef } : undefined,
+    customerName: undefined,
+    customerPhone: undefined,
+    note: undefined,
+    deliveryAddress: {
+      label: address.label || '',
+      city: address.city || '',
+      state: address.state || '',
+      zipCode: address.zipCode || '',
+      ...(Array.isArray(coords) && coords.length >= 2
+        ? { location: { type: 'Point', coordinates: [roundCoord(coords[0]), roundCoord(coords[1])] } }
+        : {}),
+    },
+    payment: {
+      method: payment.method,
+      status: payment.status,
+      amountDue: payment.amountDue,
+    },
+    pricing: {
+      total: pricing.total,
+      deliveryFee: pricing.deliveryFee,
+      currency: pricing.currency,
+    },
+    amounts: undefined,
+    statusHistory: undefined,
+  };
+  delete redacted.deliveryOtp;
+  return redacted;
+}
+
 export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
   const { page, limit, skip } = buildPaginationOptions(query);
   const [partnerCapacity, orderCapacity, partner] = await Promise.all([
@@ -436,17 +486,23 @@ export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
     : [];
   const txByOrderId = new Map(txRows.map((t) => [String(t.orderId), t]));
 
+  const isOwnAcceptedOrder = (order) =>
+    String(order?.dispatch?.status || '').toLowerCase() === 'accepted' &&
+    String(order?.dispatch?.deliveryPartnerId || '') === String(deliveryPartnerId);
+
   const enriched = (docs || []).map((doc) => {
     const tx = txByOrderId.get(String(doc?._id)) || null;
-    if (!tx) return doc;
-    return {
-      ...doc,
-      paymentMethod: tx.payment?.method || tx.paymentMethod || doc.paymentMethod,
-      payment: tx.payment || doc.payment,
-      pricing: tx.pricing || doc.pricing,
-      amounts: tx.amounts || doc.amounts,
-      transactionStatus: tx.status || doc.transactionStatus,
-    };
+    const merged = !tx
+      ? doc
+      : {
+          ...doc,
+          paymentMethod: tx.payment?.method || tx.paymentMethod || doc.paymentMethod,
+          payment: tx.payment || doc.payment,
+          pricing: tx.pricing || doc.pricing,
+          amounts: tx.amounts || doc.amounts,
+          transactionStatus: tx.status || doc.transactionStatus,
+        };
+    return isOwnAcceptedOrder(merged) ? merged : redactOfferForRider(merged);
   });
 
   const isRestaurantInPartnerZone = (order) => {
@@ -793,49 +849,85 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
   return responseOrder;
 }
 
+/** Stages a rider may collect an order from. */
+const PICKUP_FROM_STATUSES = ['preparing', 'ready_for_pickup', 'reached_pickup'];
+
 export async function rejectOrderDelivery(orderId, deliveryPartnerId) {
   const identity = buildOrderIdentityFilter(orderId);
   if (!identity) throw new ValidationError('Order id required');
 
-  const order = await FoodOrder.findOne(identity).select('+deliveryOtp');
+  const order = await FoodOrder.findOne(identity);
   if (!order) throw new NotFoundError('Order not found');
   if (order.dispatch.deliveryPartnerId?.toString() !== deliveryPartnerId.toString()) {
     throw new ForbiddenError('Not your order');
   }
 
-  const offer = order.dispatch.offeredTo.find(
-    (item) =>
-      String(item.partnerId) === String(deliveryPartnerId) &&
-      item.action === 'offered',
-  );
-  if (offer) offer.action = 'rejected';
+  /*
+   * A rider can hand back an offer, or an accepted order they have not picked
+   * up yet. Once the food is with them (or the order is finished) "reject"
+   * would orphan it: it went back to unassigned and was re-dispatched while the
+   * first rider still held it. The update is conditional on the same state so
+   * a pickup or cancel racing this request cannot be undone by it.
+   */
+  const REJECTABLE_ORDER_STATUSES = ['created', 'confirmed', 'preparing', 'ready_for_pickup', 'reached_pickup'];
+  const dispatchStatus = String(order.dispatch?.status || '');
+  if (!['assigned', 'accepted'].includes(dispatchStatus) || !REJECTABLE_ORDER_STATUSES.includes(order.orderStatus)) {
+    throw new ValidationError('This order can no longer be rejected');
+  }
 
-  order.dispatch.status = 'unassigned';
-  order.dispatch.deliveryPartnerId = undefined;
-  order.dispatch.assignedAt = undefined;
-  order.dispatch.acceptedAt = undefined;
-  pushStatusHistory(order, {
-    byRole: 'DELIVERY_PARTNER',
-    byId: deliveryPartnerId,
-    from: 'assigned',
-    to: 'unassigned',
-    note: 'Rejected',
-  });
-  await order.save();
+  const partnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
+  const updated = await FoodOrder.findOneAndUpdate(
+    {
+      _id: order._id,
+      'dispatch.deliveryPartnerId': partnerId,
+      'dispatch.status': { $in: ['assigned', 'accepted'] },
+      orderStatus: { $in: REJECTABLE_ORDER_STATUSES },
+    },
+    {
+      $set: {
+        'dispatch.status': 'unassigned',
+      },
+      $unset: {
+        'dispatch.deliveryPartnerId': 1,
+        'dispatch.assignedAt': 1,
+        'dispatch.acceptedAt': 1,
+      },
+      $push: {
+        statusHistory: {
+          at: new Date(),
+          byRole: 'DELIVERY_PARTNER',
+          byId: partnerId,
+          from: dispatchStatus || 'assigned',
+          to: 'unassigned',
+          note: 'Rejected',
+        },
+      },
+    },
+    { new: true },
+  );
+  if (!updated) throw new ValidationError('This order can no longer be rejected');
+
+  // Mark this rider's offer rejected so re-dispatch below skips them. Separate
+  // from the claim above because older orders may have no offeredTo array, and
+  // a positional update on a missing array would fail the whole write.
+  await FoodOrder.updateOne(
+    { _id: updated._id, 'dispatch.offeredTo': { $elemMatch: { partnerId, action: 'offered' } } },
+    { $set: { 'dispatch.offeredTo.$.action': 'rejected' } },
+  ).catch((error) => logger.warn(`Marking offer rejected failed for ${updated._id}: ${error?.message || error}`));
 
   enqueueOrderEvent('delivery_rejected', {
-    orderMongoId: order._id?.toString?.(),
-    orderId: order._id.toString(),
+    orderMongoId: updated._id?.toString?.(),
+    orderId: updated._id.toString(),
     deliveryPartnerId,
   });
 
   void dispatchService
-    .tryAutoAssign(order._id)
+    .tryAutoAssign(updated._id)
     .catch((error) =>
       logger.error(`SmartDispatch: Auto-assign after reject failed: ${error.message}`),
     );
 
-  return order.toObject();
+  return sanitizeOrderForExternal(updated);
 }
 
 export async function confirmReachedPickupDelivery(orderId, deliveryPartnerId) {
@@ -856,7 +948,7 @@ export async function confirmReachedPickupDelivery(orderId, deliveryPartnerId) {
   const currentPhase = order.deliveryState?.currentPhase || '';
   const currentStatus = order.deliveryState?.status || '';
   if (currentPhase === 'at_pickup' || currentStatus === 'reached_pickup') {
-    return order.toObject();
+    return sanitizeOrderForExternal(order);
   }
 
   const from = currentStatus || currentPhase || order.orderStatus;
@@ -916,12 +1008,13 @@ export async function confirmReachedPickupDelivery(orderId, deliveryPartnerId) {
     deliveryPhase: order.deliveryState?.currentPhase,
     deliveryStatus: order.deliveryState?.status,
   });
-  return order.toObject();
+  return sanitizeOrderForExternal(order);
 }
 
 export async function confirmPickupDelivery(orderId, deliveryPartnerId, billImageUrl) {
   const identity = buildOrderIdentityFilter(orderId);
-  const order = await FoodOrder.findOne(identity).select('+deliveryOtp');
+  if (!identity) throw new NotFoundError('Order not found');
+  const order = await FoodOrder.findOne(identity);
   if (!order) throw new NotFoundError('Order not found');
   if (
     order.dispatch?.deliveryPartnerId?.toString() !== deliveryPartnerId.toString()
@@ -934,24 +1027,14 @@ export async function confirmPickupDelivery(orderId, deliveryPartnerId, billImag
   if (!isStatusAdvance(from, nextStatus)) {
       throw new ValidationError(`Order is already at status '${from}'. Cannot re-mark as '${nextStatus}'.`);
   }
-  order.orderStatus = nextStatus;
-  order.deliveryState = {
-    ...(order.deliveryState?.toObject?.() || order.deliveryState || {}),
-    currentPhase: 'en_route_to_delivery',
-    status: 'picked_up',
-    pickedUpAt: new Date(),
-    billImageUrl,
-  };
-
-  // OTP should be generated/sent only when rider explicitly requests it at drop.
-
-  pushStatusHistory(order, {
-    byRole: 'DELIVERY_PARTNER',
-    byId: deliveryPartnerId,
-    from,
-    to: 'picked_up',
-    note: 'Order picked up',
-  });
+  // Only the rider who accepted the order can collect it, and only from the
+  // restaurant stages — not straight out of "created" before anyone accepted.
+  if (order.dispatch?.status !== 'accepted') {
+    throw new ValidationError('Accept the order before confirming pickup');
+  }
+  if (!PICKUP_FROM_STATUSES.includes(from)) {
+    throw new ValidationError(`Order cannot be picked up while '${from}'`);
+  }
 
   try {
     await ensureRiderEarningOnOrder(order);
@@ -959,16 +1042,58 @@ export async function confirmPickupDelivery(orderId, deliveryPartnerId, billImag
     logger.warn(`ensureRiderEarningOnOrder on pickup failed: ${err?.message || err}`);
   }
 
-  await order.save();
+  // OTP should be generated/sent only when rider explicitly requests it at drop.
 
-  emitOrderUpdate(order, deliveryPartnerId);
+  // Conditional on the status and rider checked above, so a restaurant/admin
+  // cancel landing in between is not overwritten by the pickup.
+  const set = {
+    orderStatus: nextStatus,
+    deliveryState: {
+      ...(order.deliveryState?.toObject?.() || order.deliveryState || {}),
+      currentPhase: 'en_route_to_delivery',
+      status: 'picked_up',
+      pickedUpAt: new Date(),
+      billImageUrl,
+    },
+    riderEarning: order.riderEarning,
+    platformProfit: order.platformProfit,
+  };
+  if (order.isModified('deliveryAddress')) set.deliveryAddress = order.deliveryAddress;
+
+  const updated = await FoodOrder.findOneAndUpdate(
+    {
+      _id: order._id,
+      orderStatus: from,
+      'dispatch.status': 'accepted',
+      'dispatch.deliveryPartnerId': new mongoose.Types.ObjectId(deliveryPartnerId),
+    },
+    {
+      $set: set,
+      $push: {
+        statusHistory: {
+          at: new Date(),
+          byRole: 'DELIVERY_PARTNER',
+          byId: deliveryPartnerId,
+          from,
+          to: 'picked_up',
+          note: 'Order picked up',
+        },
+      },
+    },
+    { new: true },
+  );
+  if (!updated) {
+    throw new ValidationError('Order status changed in the meantime; please refresh');
+  }
+
+  emitOrderUpdate(updated, deliveryPartnerId);
   enqueueOrderEvent('picked_up', {
-    orderMongoId: order._id?.toString?.(),
-    orderId: order._id.toString(),
+    orderMongoId: updated._id?.toString?.(),
+    orderId: updated._id.toString(),
     deliveryPartnerId,
     billImageUrl: billImageUrl || null,
   });
-  return order.toObject();
+  return sanitizeOrderForExternal(updated);
 }
 
 export async function confirmReachedDropDelivery(orderId, deliveryPartnerId) {
@@ -1062,6 +1187,7 @@ export async function confirmReachedDropDelivery(orderId, deliveryPartnerId) {
 
 export async function verifyDropOtpDelivery(orderId, deliveryPartnerId, otp) {
   const identity = buildOrderIdentityFilter(orderId);
+  if (!identity) throw new NotFoundError('Order not found');
   const order = await FoodOrder.findOne(identity).select('+deliveryOtp');
   if (!order) throw new NotFoundError('Order not found');
   if (
@@ -1115,9 +1241,13 @@ export async function verifyDropOtpDelivery(orderId, deliveryPartnerId, otp) {
   return { order: sanitizeOrderForExternal(order) };
 }
 
+/** Where a delivery can be completed from: the food is with the rider. */
+const DELIVERABLE_FROM_STATUSES = ['picked_up', 'reached_drop'];
+
 export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
   const identity = buildOrderIdentityFilter(orderId);
-  const order = await FoodOrder.findOne(identity).select('+deliveryOtp');
+  if (!identity) throw new NotFoundError('Order not found');
+  let order = await FoodOrder.findOne(identity).select('+deliveryOtp');
   if (!order) throw new NotFoundError('Order not found');
   if (
     order.dispatch?.deliveryPartnerId?.toString() !== deliveryPartnerId.toString()
@@ -1125,39 +1255,48 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
     throw new ForbiddenError('Not your order');
   }
 
-  const { otp, ratings, paymentMethod: selectedPaymentMethod } = body;
+  // `ratings` is deliberately not read: ratings belong to the customer
+  // (submitOrderRatings). Taking them from the rider's body let a rider write
+  // their own and the restaurant's score.
+  const { otp, paymentMethod: selectedPaymentMethod } = body;
 
-  // 1. Handover OTP Verification
-  if (
-    otp &&
-    order.deliveryVerification?.dropOtp?.required &&
-    !order.deliveryVerification?.dropOtp?.verified
-  ) {
-    const orderWithSecret = await FoodOrder.findById(order._id).select('+deliveryOtp');
-    if (isOtpMatch(orderWithSecret?.deliveryOtp, otp)) {
-      order.deliveryVerification.dropOtp.verified = true;
-      order.markModified('deliveryVerification.dropOtp.verified');
-    } else {
-      throw new ValidationError('Invalid handover OTP provided.');
-    }
-  }
-
-  if (
-    order.deliveryVerification?.dropOtp?.required &&
-    !order.deliveryVerification?.dropOtp?.verified &&
-    !otp
-  ) {
-    throw new ValidationError(
-      'Customer handover OTP is required. Verify the OTP from the customer before completing delivery.',
-    );
-  }
-
+  /*
+   * Preconditions for handing over. The old check was only "status can move
+   * forward", so a rider could mark an order delivered straight from
+   * "preparing", without having accepted it, and — when dropOtp.required had
+   * never been set — without any OTP. The real app always goes reached-drop
+   * (which issues the OTP) → verify-drop-otp → complete, so requiring all of
+   * that blocks nothing legitimate.
+   */
   const from = order.orderStatus;
   const nextStatus = 'delivered';
   if (!isStatusAdvance(from, nextStatus)) {
       throw new ValidationError(`Order is already at status '${from}'. Cannot re-mark as '${nextStatus}'.`);
   }
-  
+  if (!DELIVERABLE_FROM_STATUSES.includes(from)) {
+    throw new ValidationError('Confirm pickup before completing delivery');
+  }
+  if (order.dispatch?.status !== 'accepted') {
+    throw new ValidationError('Accept the order before completing delivery');
+  }
+
+  // Handover OTP: must be verified now or earlier, whatever `required` says.
+  if (!order.deliveryVerification?.dropOtp?.verified) {
+    if (!normalizeOtpValue(order.deliveryOtp)) {
+      throw new ValidationError(
+        'OTP verification is not active for this order. Confirm reached drop first.',
+      );
+    }
+    if (!otp) {
+      throw new ValidationError(
+        'Customer handover OTP is required. Verify the OTP from the customer before completing delivery.',
+      );
+    }
+    if (!isOtpMatch(order.deliveryOtp, otp)) {
+      throw new ValidationError('Invalid handover OTP provided.');
+    }
+  }
+
   // 2. Financial Context Resolution
   const tx = await FoodTransaction.findOne({ orderId: order._id }).lean();
   const prevPayStatus = String(tx?.payment?.status || order?.payment?.status || 'cod_pending');
@@ -1166,12 +1305,20 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
   /**
    * Final Payment Method Logic:
    * - If rider chose 'qr', we force 'razorpay_qr'.
-   * - If rider chose 'cash', we force 'cash'. 
+   * - If rider chose 'cash', we force 'cash'.
    * - Otherwise, we keep the original method.
+   *
+   * The override only applies to orders collected at the door (cash or the
+   * collect QR). On a prepaid order it would relabel an online/wallet payment
+   * as cash the rider "collected", which then counts against their cash limit
+   * and the ledger.
    */
   let finalPayMethod = payMethod;
-  if (selectedPaymentMethod === 'qr') finalPayMethod = 'razorpay_qr';
-  else if (selectedPaymentMethod === 'cash') finalPayMethod = 'cash';
+  const isCollectedAtDoor = ['cash', 'razorpay_qr'].includes(String(payMethod).toLowerCase());
+  if (isCollectedAtDoor) {
+    if (selectedPaymentMethod === 'qr') finalPayMethod = 'razorpay_qr';
+    else if (selectedPaymentMethod === 'cash') finalPayMethod = 'cash';
+  }
 
   // 3. QR Payment Verification (Blocking)
   if (finalPayMethod === 'razorpay_qr') {
@@ -1190,36 +1337,50 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
     );
   }
 
-  // Update memory object before saving order so that DB is correctly updated
-  if (!order.payment) order.payment = {};
-  order.payment.status = 'paid';
-  order.payment.method = finalPayMethod;
-
-  // 5. Update Order State
-  order.orderStatus = 'delivered';
-  order.deliveryState = {
-    ...(order.deliveryState?.toObject?.() || order.deliveryState || {}),
-    currentPhase: 'delivered',
-    status: 'delivered',
-    deliveredAt: new Date(),
+  // 5. Update Order State — conditional on everything checked above, so two
+  // completes (double tap, retry) or a cancel in between cannot both win.
+  const set = {
+    orderStatus: 'delivered',
+    'payment.status': 'paid',
+    'payment.method': finalPayMethod,
+    'deliveryVerification.dropOtp.verified': true,
+    deliveryState: {
+      ...(order.deliveryState?.toObject?.() || order.deliveryState || {}),
+      currentPhase: 'delivered',
+      status: 'delivered',
+      deliveredAt: new Date(),
+    },
+    riderEarning: order.riderEarning,
+    platformProfit: order.platformProfit,
   };
+  if (order.isModified('deliveryAddress')) set.deliveryAddress = order.deliveryAddress;
 
-  if (ratings) {
-    order.ratings = {
-      ...(order.ratings?.toObject?.() || order.ratings || {}),
-      ...ratings,
-    };
+  const delivered = await FoodOrder.findOneAndUpdate(
+    {
+      _id: order._id,
+      orderStatus: from,
+      'dispatch.status': 'accepted',
+      'dispatch.deliveryPartnerId': new mongoose.Types.ObjectId(deliveryPartnerId),
+    },
+    {
+      $set: set,
+      $push: {
+        statusHistory: {
+          at: new Date(),
+          byRole: 'DELIVERY_PARTNER',
+          byId: deliveryPartnerId,
+          from,
+          to: 'delivered',
+          note: `Delivery completed using ${finalPayMethod}.`,
+        },
+      },
+    },
+    { new: true },
+  );
+  if (!delivered) {
+    throw new ValidationError('Order status changed in the meantime; please refresh');
   }
-
-  pushStatusHistory(order, {
-    byRole: 'DELIVERY_PARTNER',
-    byId: deliveryPartnerId,
-    from,
-    to: 'delivered',
-    note: `Delivery completed using ${finalPayMethod}.`,
-  });
-
-  await order.save();
+  order = delivered;
 
   // Reset COD Cancellation Count on any successful delivery
   if (order.userId) {
@@ -1279,7 +1440,6 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
       note: `Rider finalized payment as ${finalPayMethod}. Order is now delivered.`,
     });
   } catch (txErr) {
-    import('fs').then(fs => fs.appendFileSync('c:\\Users\\princeb\\.gemini\\antigravity-ide\\brain\\6e556dc8-03b6-43c7-8fad-7c0a061a566e\\scratch\\txErr.log', txErr.stack + '\\n'));
     logger.error(`Failed to update transaction status for order ${order._id}:`, txErr);
   }
 
@@ -1298,35 +1458,18 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
 }
 
 
+/**
+ * Generic rider status update. No client calls it — the apps use the
+ * dedicated reached-pickup / confirm-pickup / reached-drop / complete endpoints —
+ * but it accepted any forward status, so a rider could mark an order
+ * "delivered" without the handover OTP or "cancelled_by_restaurant" outright.
+ * Only pickup is honoured now, through the same checks as confirm-pickup.
+ */
 export async function updateOrderStatusDelivery(orderId, deliveryPartnerId, orderStatus) {
-  const identity = buildOrderIdentityFilter(orderId);
-  if (!identity) throw new ValidationError('Order id required');
-
-  const order = await FoodOrder.findOne(identity).select('+deliveryOtp');
-  if (!order) throw new NotFoundError('Order not found');
-  if (order.dispatch.deliveryPartnerId?.toString() !== deliveryPartnerId.toString()) {
-    throw new ForbiddenError('Not your order');
+  if (orderStatus !== 'picked_up') {
+    throw new ValidationError(
+      'Riders can only mark an order picked up here; use the delivery flow to complete it',
+    );
   }
-
-  const from = order.orderStatus;
-  if (!isStatusAdvance(from, orderStatus)) {
-      throw new ValidationError(`Current order status '${from}' is further ahead than '${orderStatus}'. Order cannot be moved backwards.`);
-  }
-  order.orderStatus = orderStatus;
-  pushStatusHistory(order, {
-    byRole: 'DELIVERY_PARTNER',
-    byId: deliveryPartnerId,
-    from,
-    to: orderStatus,
-  });
-  await order.save();
-
-  enqueueOrderEvent('delivery_status_updated', {
-    orderMongoId: order._id?.toString?.(),
-    orderId: order._id.toString(),
-    deliveryPartnerId,
-    from,
-    to: orderStatus,
-  });
-  return order.toObject();
+  return confirmPickupDelivery(orderId, deliveryPartnerId, undefined);
 }

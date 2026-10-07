@@ -1,9 +1,9 @@
-import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { FoodOrder } from '../../../modules/food/orders/models/order.model.js';
 import * as foodTransactionService from '../../../modules/food/orders/services/foodTransaction.service.js';
 import { config } from '../../../config/env.js';
 import { logger } from '../../../utils/logger.js';
+import { verifyWebhookSignature } from '../razorpay.service.js';
 
 /**
  * ✅ NEW: Centralized Razorpay Webhook Handler (Core Layer)
@@ -19,12 +19,8 @@ export const handleRazorpayWebhook = async (req, res) => {
         return res.status(400).send('Invalid signature');
     }
 
-    const expected = crypto
-        .createHmac('sha256', secret)
-        .update(req.rawBody)
-        .digest('hex');
-
-    if (expected !== signature) {
+    // Shared constant-time check over the raw bytes Razorpay signed.
+    if (!verifyWebhookSignature({ body: req.rawBody, signature, secret })) {
         logger.warn('Razorpay Webhook: Signature verification failed.');
         return res.status(400).send('Invalid signature');
     }

@@ -1,6 +1,4 @@
 import http from 'http';
-import crypto from 'crypto';
-import { exec } from 'child_process';
 
 import app from './src/app.js';
 import { config } from './src/config/env.js';
@@ -96,30 +94,6 @@ const startServer = async () => {
         } else if (config.bullmqEnabled && !config.redisEnabled) {
             logger.warn('BullMQ is enabled but Redis is disabled. Queue initialization skipped.');
         }
-
-        app.post('/api/deploy', (req, res) => {
-            const signature = req.headers['x-hub-signature-256'];
-            const secret = 'mysecret123';
-
-            const hash = 'sha256=' + crypto
-                .createHmac('sha256', secret)
-                .update(JSON.stringify(req.body))
-                .digest('hex');
-
-            if (signature !== hash) {
-                return res.status(403).send('Unauthorized');
-            }
-
-            exec('cd ~ && ./deploy.sh', (err, stdout, stderr) => {
-                if (err) {
-                    console.error(err);
-                    return res.send('Deploy failed');
-                }
-
-                console.log(stdout);
-                res.send('Deploy success');
-            });
-        });
 
         // 6. Start the HTTP server
 

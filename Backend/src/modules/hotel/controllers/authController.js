@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import fs from 'fs';
 import emailService from '../services/emailService.js';
 import notificationService from '../services/notificationService.js';
 import Admin, { findPlatformAdmins } from '../models/Admin.js';
@@ -135,7 +137,7 @@ export const registerPartner = async (req, res) => {
     }
 
     // Generate random password for partner (they'll login via OTP)
-    const randomPassword = Math.random().toString(36).slice(-8);
+    const randomPassword = crypto.randomBytes(12).toString('base64url');
     const passwordHash = await bcrypt.hash(randomPassword, 10);
 
     // Create Partner directly with pending approval
@@ -278,7 +280,7 @@ export const verifyOtp = async (req, res) => {
         email,
         role: 'user',
         isVerified: true,
-        password: await bcrypt.hash(Math.random().toString(36), 10)
+        password: await bcrypt.hash(crypto.randomBytes(24).toString('base64url'), 10)
       });
       isRegistration = true;
     }
@@ -745,6 +747,10 @@ export const uploadDocs = async (req, res) => {
   } catch (error) {
     console.error('Upload Docs Error:', error);
     res.status(500).json({ message: error.message || 'Upload failed' });
+  } finally {
+    // The uploader removes multer's temp copy only after a successful store;
+    // a failed or rejected file used to stay in the temp dir for good.
+    await Promise.all((req.files || []).map((file) => fs.promises.unlink(file.path).catch(() => {})));
   }
 };
 
@@ -761,8 +767,28 @@ export const deleteDoc = async (req, res) => {
       return res.status(400).json({ message: 'Public ID is required' });
     }
 
+    /*
+     * Only a signed-in caller deleting a file it uploaded (or an admin).
+     *
+     * This route is open so the signup wizard can call it before an account
+     * exists, and it deleted whatever stored file a publicId named — any KYC
+     * scan, property photo or menu image on the platform. The storage service
+     * now checks the uploader too, but an anonymous caller is refused here
+     * outright: nothing proves which file is theirs. The wizard clears the
+     * field locally either way; an orphaned upload is recoverable, a deleted
+     * one is not.
+     */
+    if (!req.user) {
+      return res.status(401).json({ message: 'Sign in to remove an uploaded document' });
+    }
+
+    // The storage service refuses (returns false) a file this caller did not
+    // upload. Say so, rather than answering 200 as though it were deleted.
     const result = await deleteFromCloudinary(publicId);
-    res.json(result);
+    if (!result.deleted) {
+      return res.status(403).json({ ...result, success: false, message: 'This document could not be removed' });
+    }
+    res.json({ ...result, success: true });
   } catch (error) {
     console.error('Delete Doc Error:', error);
     res.status(500).json({ message: error.message || 'Delete failed' });
@@ -782,6 +808,11 @@ export const uploadDocsBase64 = async (req, res) => {
 
     if (!images || !Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ message: 'No images provided' });
+    }
+    // Same ceiling as the multipart route (5 files); this public route took
+    // an unbounded array.
+    if (images.length > 5) {
+      return res.status(400).json({ message: 'Upload at most 5 images at a time' });
     }
 
     const uploadPromises = images.map(async (img, index) => {

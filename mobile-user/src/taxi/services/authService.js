@@ -19,7 +19,6 @@ export const userAuthService = {
   updateCurrentUser: (payload) => api.patch('/users/me', payload, withUserAuth()),
   getCurrentUser: () => api.get('/users/me', withUserAuth()),
   getWallet: () => api.get('/users/wallet', withUserAuth()),
-  topupWallet: (amount) => api.post('/users/wallet/topup', { amount }, withUserAuth()),
   transferWallet: (phone, amount) => api.post('/users/wallet/transfer', { phone, amount }, withUserAuth()),
   transferWalletToDriver: (phone, amount) => api.post('/users/wallet/transfer/driver', { phone, amount }, withUserAuth()),
   createWalletTopupOrder: (amount) => api.post('/users/wallet/razorpay/order', { amount }, withUserAuth()),

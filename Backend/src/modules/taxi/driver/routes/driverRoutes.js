@@ -33,10 +33,8 @@ import {
   saveOnboardingPersonal,
   saveOnboardingReferral,
   saveOnboardingVehicle,
-  registerDriver,
   requestDriverAccountDeletion,
   startOnboarding,
-  topUpMyWallet,
   createDriverWalletTopupOrder,
   createDriverPhonePeWalletTopupOrder,
   verifyDriverWalletTopup,
@@ -54,7 +52,8 @@ import { triggerDriverSosAlert } from '../../safety/controllers/safetyController
 
 export const driverRouter = Router();
 
-driverRouter.post("/register", asyncHandler(registerDriver));
+// POST /register was removed: it created drivers already approved, with no
+// OTP, documents or admin review. Drivers join through /onboarding/*.
 driverRouter.post("/login", loginRateLimit, asyncHandler(loginDriver));
 // Driver sign-in now lives at /v1/auth/otp (audience 'taxi-driver').
 driverRouter.get(
@@ -137,11 +136,9 @@ driverRouter.post(
   authenticate(["driver"]),
   asyncHandler(claimDriverIncentiveReward),
 );
-driverRouter.post(
-  "/wallet/top-up",
-  authenticate(["driver"]),
-  asyncHandler(topUpMyWallet),
-);
+// POST /wallet/top-up (credit any amount, no payment) was removed: it let a
+// driver mint balance and withdraw it. Top-ups go through the verified
+// /wallet/top-up/razorpay/* and /wallet/top-up/phonepe/* routes below.
 driverRouter.post(
   "/wallet/top-up/razorpay/callback",
   asyncHandler(handleDriverRazorpayWalletTopupCallback),

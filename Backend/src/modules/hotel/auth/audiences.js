@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 /**
  * Auth audience for the hotel partner app.
  *
@@ -50,7 +51,7 @@ export const createHotelPartnerAccount = async (phone, { name, email } = {}) => 
     }
 
     // OTP is the credential here; the password column just has to be set.
-    const password = await bcrypt.hash(`${phone}:${Date.now()}:${Math.random()}`, 10);
+    const password = await bcrypt.hash(crypto.randomBytes(24).toString('base64url'), 10);
 
     return Partner.create({
         name: trimmedName,

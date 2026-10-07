@@ -19,9 +19,10 @@ const signIn = async (phone) => {
   const verified = await post('/auth/otp/verify', { body: { audience: 'user', phone, otp } });
   const data = verified.body?.data;
   if (!data?.accessToken) {
-    // A brand-new number needs its profile completed before a session exists.
+    // A brand-new number needs its profile completed before a session exists;
+    // verify hands back a short-lived signup ticket for that step.
     const completed = await post('/auth/otp/complete', {
-      body: { audience: 'user', phone, otp, name: `QA ${phone.slice(-4)}` },
+      body: { audience: 'user', signupToken: data?.signupToken, name: `QA ${phone.slice(-4)}` },
     });
     const done = completed.body?.data;
     if (!done?.accessToken) return { error: `could not establish a session for ${phone}` };

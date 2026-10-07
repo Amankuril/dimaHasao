@@ -13,10 +13,18 @@ export async function createSettlement({ entityType, entityId, amount, notes = '
         throw new Error('Settlements only for restaurant or deliveryBoy');
     }
 
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) {
+        throw new Error('Settlement amount must be a positive number');
+    }
+    if (!mongoose.Types.ObjectId.isValid(entityId)) {
+        throw new Error('Invalid entityId');
+    }
+
     const settlement = await Settlement.create({
         entityType,
         entityId: new mongoose.Types.ObjectId(entityId),
-        amount: Number(amount),
+        amount: value,
         currency: 'INR',
         status: 'pending',
         notes,
@@ -32,10 +40,20 @@ export async function createSettlement({ entityType, entityId, amount, notes = '
  * Process a settlement — debit entity wallet + mark as processed.
  */
 export async function processSettlement(settlementId, { processedBy, payoutRef = '' } = {}) {
-    const settlement = await Settlement.findById(settlementId);
-    if (!settlement) throw new Error('Settlement not found');
-    if (settlement.status === 'processed') return settlement.toObject();
-    if (settlement.status === 'failed') throw new Error('Cannot process a failed settlement');
+    // Claim it atomically. Read-then-save let two concurrent calls both see
+    // 'pending' and both debit the wallet.
+    const settlement = await Settlement.findOneAndUpdate(
+        { _id: settlementId, status: 'pending' },
+        { $set: { status: 'processing' } },
+        { new: true }
+    );
+    if (!settlement) {
+        const existing = await Settlement.findById(settlementId);
+        if (!existing) throw new Error('Settlement not found');
+        if (existing.status === 'processed') return existing.toObject();
+        if (existing.status === 'failed') throw new Error('Cannot process a failed settlement');
+        throw new Error('Settlement is already being processed');
+    }
 
     try {
         // Debit the entity's wallet

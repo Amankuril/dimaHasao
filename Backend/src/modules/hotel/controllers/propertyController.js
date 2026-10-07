@@ -236,6 +236,12 @@ export const addRoomType = async (req, res) => {
     const property = await Property.findById(propertyId);
     if (!property) return res.status(404).json({ message: 'Property not found' });
 
+    // The sibling room-type handlers checked ownership; this one did not, so
+    // any partner could add rooms (and prices) to anyone's property.
+    if (String(property.partnerId) !== String(req.user._id) && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({ message: 'Not allowed' });
+    }
+
     if (!pricePerNight) return res.status(400).json({ message: 'pricePerNight required' });
 
     // Hotels, resorts and lodges sell rooms; a homestay may also be let whole.
@@ -373,6 +379,12 @@ export const upsertDocuments = async (req, res) => {
     const { propertyId } = req.params;
     const property = await Property.findById(propertyId);
     if (!property) return res.status(404).json({ message: 'Property not found' });
+
+    // Without an owner check any partner could replace another property's KYC
+    // documents and knock it back to 'pending' (offline) in one call.
+    if (String(property.partnerId) !== String(req.user._id) && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({ message: 'Not allowed' });
+    }
     const required = PROPERTY_DOCUMENTS[property.propertyType] || [];
     const payloadDocs = Array.isArray(req.body.documents) ? req.body.documents : [];
     const doc = await PropertyDocument.findOneAndUpdate(
@@ -628,8 +640,27 @@ export const getPropertyDetails = async (req, res) => {
     }
     const property = await Property.findById(id);
     if (!property) return res.status(404).json({ message: 'Property not found' });
+
+    /*
+     * Public for the guest app, but KYC is not public.
+     *
+     * This returned the property's PropertyDocument — ownership proofs,
+     * licences, ID scans — to anyone with the id, and served drafts and
+     * rejected listings the public list hides. The partner wizard and panel
+     * call the same endpoint signed in (optionalProtect on the route), so the
+     * owner and admins still get everything; everyone else gets a live,
+     * approved listing without documents.
+     */
+    const role = String(req.user?.role || '').toLowerCase();
+    const isOwnerOrAdmin = Boolean(req.user) &&
+      (String(property.partnerId) === String(req.user._id) || ['admin', 'superadmin'].includes(role));
+
+    if (!isOwnerOrAdmin && !(property.status === 'approved' && property.isLive)) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
     const roomTypes = await RoomType.find({ propertyId: id, isActive: true });
-    const documents = await PropertyDocument.findOne({ propertyId: id });
+    const documents = isOwnerOrAdmin ? await PropertyDocument.findOne({ propertyId: id }) : null;
     res.json({ property, roomTypes, documents });
   } catch (e) {
     res.status(500).json({ message: e.message });

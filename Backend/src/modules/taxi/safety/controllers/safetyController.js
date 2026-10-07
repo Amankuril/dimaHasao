@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { asyncHandler } from '../../../../utils/asyncHandler.js';
 import { SafetyAlert } from '../../common/models/SafetyAlert.js';
 import { Driver } from '../../driver/models/Driver.js';
@@ -77,13 +78,22 @@ const serializeSafetyAlert = (alert = {}) => {
   };
 };
 
-const readRideContext = async ({ rideId }) => {
-  const ride = rideId
-    ? await Ride.findById(rideId)
-      .populate('userId', 'name phone')
-      .populate('driverId', 'name phone vehicle')
-      .lean()
-    : null;
+/*
+ * Only a ride the caller is part of is read. Any rideId used to be loaded, and
+ * its rider/driver names and phones copied into an alert the caller then got
+ * back. An SOS must never fail, so a ride that isn't theirs (or a malformed
+ * id) is simply ignored rather than refused.
+ */
+const readRideContext = async ({ rideId, sourceApp, authId }) => {
+  if (!rideId || !mongoose.Types.ObjectId.isValid(rideId) || !authId) {
+    return { ride: null };
+  }
+
+  const ownerField = sourceApp === 'driver' ? 'driverId' : 'userId';
+  const ride = await Ride.findOne({ _id: rideId, [ownerField]: authId })
+    .populate('userId', 'name phone')
+    .populate('driverId', 'name phone vehicle')
+    .lean();
 
   return { ride };
 };
@@ -115,7 +125,7 @@ const createAlertRecord = async ({
   tripCode,
   vehicleLabel,
 }) => {
-  const { ride } = await readRideContext({ rideId });
+  const { ride } = await readRideContext({ rideId, sourceApp, authId });
   const actorUser = sourceApp === 'user'
     ? await User.findById(authId).select('name phone').lean()
     : ride?.userId || null;
@@ -130,7 +140,7 @@ const createAlertRecord = async ({
     serviceType: deriveServiceType({ requestedServiceType: serviceType, ride }),
     userId: sourceApp === 'user' ? authId : actorUser?._id || null,
     driverId: sourceApp === 'driver' ? authId : actorDriver?._id || null,
-    rideId: ride?._id || rideId || null,
+    rideId: ride?._id || null,
     riderName: cleanString(actorUser?.name),
     riderPhone: cleanString(actorUser?.phone),
     driverName: cleanString(actorDriver?.name),

@@ -191,8 +191,257 @@ export async function initiateOnlinePayment(userId, dto) {
   };
 }
 
+/**
+ * A 409 for "this payment already paid for someone else's order". The shared
+ * error classes stop at 404, and the error handler honours any statusCode.
+ */
+const paymentConflictError = () => {
+  const err = new Error("This payment has already been used for another order");
+  err.statusCode = 409;
+  return err;
+};
+
+/**
+ * The order (if any) already created from this Razorpay payment.
+ *
+ * A Razorpay payment pays for exactly one order. Without this, replaying the
+ * same (orderId, paymentId, signature) triple — which stays valid forever —
+ * created a fresh "paid" order every time. A retry by the same customer (the
+ * app re-submitting after a dropped response, or the webhook recovery path
+ * racing the client) gets the order it already has; anyone else gets a 409.
+ * The unique index on payment.razorpay.paymentId backs this up for the race
+ * where two requests both pass this check.
+ */
+const findOrderForRazorpayPayment = async (userId, rzPaymentId) => {
+  if (!rzPaymentId) return null;
+  const existing = await FoodOrder.findOne({ "payment.razorpay.paymentId": rzPaymentId });
+  if (!existing) return null;
+  if (String(existing.userId) !== String(userId)) throw paymentConflictError();
+  return existing;
+};
+
+const isDuplicateKeyOn = (err, path) =>
+  err?.code === 11000 &&
+  (Object.prototype.hasOwnProperty.call(err.keyPattern || {}, path) ||
+    String(err.message || "").includes(path));
+
+/**
+ * Razorpay orders skip the blocking geocode so the response returns fast; this
+ * fills in distance, rider earning and coordinates afterwards. Takes the saved
+ * order's id explicitly and never rejects.
+ */
+function resolveRiderEarningInBackground(savedOrderId, { restaurant, deliveryAddress, orderType, zoneId, normalizedPricing }) {
+  resolveRiderEarningForDelivery({
+    restaurant,
+    deliveryAddress: { ...deliveryAddress },
+    orderType,
+    zoneId,
+  })
+    .then(async (earningResolved) => {
+      try {
+        const updateFields = {};
+        if (earningResolved.distanceKm != null) {
+          updateFields['distanceKm'] = earningResolved.distanceKm;
+          updateFields['riderEarning'] = earningResolved.riderEarning ?? 0;
+          updateFields['pricing.platformProfit'] = Math.max(
+            0,
+            (normalizedPricing.deliveryFee ?? 0) +
+              (normalizedPricing.platformFee ?? 0) +
+              (normalizedPricing.markupTotal ?? 0) +
+              (normalizedPricing.restaurantCommission ?? 0) -
+              (earningResolved.riderEarning ?? 0),
+          );
+        }
+        if (earningResolved.deliveryGeocoded && earningResolved.deliveryPoint) {
+          updateFields['deliveryAddress.location'] = toGeoJsonPoint(earningResolved.deliveryPoint);
+        }
+        if (Object.keys(updateFields).length > 0) {
+          await FoodOrder.updateOne({ _id: savedOrderId }, { $set: updateFields });
+        }
+        // Backfill restaurant coords when missing
+        if (earningResolved.restaurantGeocoded && earningResolved.restaurantPoint) {
+          await FoodRestaurant.updateOne(
+            {
+              _id: restaurant._id,
+              $or: [
+                { 'location.coordinates': { $exists: false } },
+                { 'location.coordinates': { $size: 0 } },
+                { 'location.coordinates.0': { $exists: false } },
+              ],
+            },
+            {
+              $set: {
+                location: {
+                  ...(restaurant.location || {}),
+                  type: 'Point',
+                  coordinates: [
+                    earningResolved.restaurantPoint.lng,
+                    earningResolved.restaurantPoint.lat,
+                  ],
+                  latitude: earningResolved.restaurantPoint.lat,
+                  longitude: earningResolved.restaurantPoint.lng,
+                },
+              },
+            },
+          ).catch((err) => logger.warn(`Restaurant coord backfill failed: ${err?.message || err}`));
+        }
+      } catch (err) {
+        logger.warn(`Background geocode update failed for order ${savedOrderId}: ${err?.message || err}`);
+      }
+    })
+    .catch((err) => {
+      logger.warn(`Background geocode failed for Razorpay order ${savedOrderId}: ${err?.message || err}`);
+    });
+}
+
+// ----- Atomic status transitions & refunds -----
+/**
+ * Move an order from exactly `from` to `to`, or do nothing.
+ *
+ * Status changes used to be load → check → save, so two requests that both
+ * loaded the same "created" order (user cancel racing restaurant cancel, a
+ * double tap) both passed the check and both ran the refund that follows. Doing
+ * the write as a findOneAndUpdate conditioned on the status we checked means
+ * exactly one caller wins; everyone else gets null and must not run side
+ * effects. Returns the updated (hydrated) document.
+ */
+async function transitionOrderStatus(orderId, from, to, { set = {}, history, extraConditions = {}, select } = {}) {
+  const update = { $set: { ...set, orderStatus: to } };
+  if (history) {
+    update.$push = {
+      statusHistory: {
+        at: new Date(),
+        byRole: history.byRole,
+        byId: history.byId || undefined,
+        from,
+        to,
+        note: history.note || "",
+      },
+    };
+  }
+  const query = FoodOrder.findOneAndUpdate(
+    { _id: orderId, orderStatus: from, ...extraConditions },
+    update,
+    { new: true },
+  );
+  if (select) query.select(select);
+  return query;
+}
+
+/**
+ * Refund a paid online/wallet order that has just been cancelled.
+ *
+ * One path for user cancel, restaurant cancel and admin reject (which used to
+ * mark a paid order cancelled and never refund it). The refund is claimed
+ * first — payment.refund.status moves to 'pending' only if the order is still
+ * 'paid' and no refund is pending or processed — so a retried or concurrent
+ * cancel cannot pay the customer twice. Callers must only reach this after
+ * winning transitionOrderStatus.
+ *
+ * Mutates `order.payment` in memory to reflect the outcome so callers can build
+ * their response and notifications from it; the database is written here.
+ */
+async function refundCancelledOrderPayment(order, { destination = "source", description } = {}) {
+  const method = String(order?.payment?.method || "").toLowerCase();
+  const status = String(order?.payment?.status || "").toLowerCase();
+  if (status !== "paid") return;
+  if (method !== "razorpay" && method !== "wallet") return;
+  if (method === "razorpay" && !order.payment?.razorpay?.paymentId) return;
+
+  const amount = Number(order.pricing?.total ?? 0);
+  const refundTo = method === "wallet" || destination === "wallet" ? "wallet" : "source";
+
+  const claimed = await FoodOrder.findOneAndUpdate(
+    {
+      _id: order._id,
+      "payment.status": "paid",
+      "payment.refund.status": { $nin: ["pending", "processed"] },
+    },
+    {
+      $set: {
+        "payment.refund.status": "pending",
+        "payment.refund.destination": refundTo,
+        "payment.refund.amount": amount,
+      },
+    },
+    { new: true },
+  ).select("_id");
+  if (!claimed) return;
+
+  let refund;
+  let paymentStatus = "paid";
+  try {
+    if (refundTo === "wallet") {
+      await userWalletService.refundWalletBalance(
+        order.userId,
+        amount,
+        description || `Refund for cancelled order #${order.order_id || order._id}`,
+        method === "razorpay"
+          ? { orderId: order._id, source: "order_refund_wallet" }
+          : { orderId: order._id },
+      );
+      paymentStatus = "refunded";
+      refund = { status: "processed", destination: "wallet", amount, refundId: "", processedAt: new Date() };
+    } else {
+      const refundResult = await initiateRazorpayRefund(order.payment.razorpay.paymentId, amount);
+      if (refundResult?.success) {
+        paymentStatus = "refunded";
+        refund = {
+          status: "processed",
+          destination: "source",
+          amount,
+          refundId: refundResult.refundId,
+          processedAt: new Date(),
+        };
+      } else {
+        // Recorded so an admin knows a manual refund may be needed.
+        refund = { status: "failed", destination: "source", amount };
+      }
+    }
+  } catch (err) {
+    logger.error(`Refund failed for order ${order._id}: ${err?.message || err}`);
+    refund = { status: "failed", destination: refundTo, amount };
+  }
+
+  await FoodOrder.updateOne(
+    { _id: order._id },
+    { $set: { "payment.status": paymentStatus, "payment.refund": refund } },
+  );
+  order.payment.status = paymentStatus;
+  order.payment.refund = refund;
+}
+
+/*
+ * What a restaurant may move its own order to. Anything after pickup belongs to
+ * the rider, and a restaurant cannot cancel food a rider has already accepted —
+ * the old "any forward move" rule let it mark orders delivered or cancel (and
+ * refund) after the food had left.
+ */
+const RESTAURANT_TRANSITIONS = {
+  created: ["confirmed", "preparing", "cancelled_by_restaurant"],
+  confirmed: ["preparing", "ready_for_pickup", "cancelled_by_restaurant"],
+  preparing: ["ready_for_pickup", "cancelled_by_restaurant"],
+  ready_for_pickup: ["cancelled_by_restaurant"],
+};
+const TERMINAL_ORDER_STATUSES = new Set([
+  "delivered",
+  "cancelled_by_user",
+  "cancelled_by_restaurant",
+  "cancelled_by_admin",
+]);
+
 // ----- Create order -----
 export async function createOrder(userId, dto) {
+  // Checked before pricing: on a retry the cart has already been cleared, so
+  // pricing would fail with "Your cart is empty" before reaching this.
+  if (dto?.paymentMethod === "razorpay" || dto?.paymentMethod === "card") {
+    const existing = await findOrderForRazorpayPayment(
+      userId,
+      String(dto.razorpayPaymentId || "").trim(),
+    );
+    if (existing) return { order: normalizeOrderForClient(existing), razorpay: null };
+  }
+
   // SECURITY: load items from DB cart + recompute fees/coupon server-side.
   const priced = await calculateOrderPricing(userId, {
     ...dto,
@@ -401,6 +650,7 @@ export async function createOrder(userId, dto) {
 
   let distanceKm = null;
   let riderEarning = 0;
+  let deferEarningResolution = false;
 
   // For Razorpay (online) orders, run geocoding non-blocking so the Razorpay
   // order is created fast and the modal opens instantly. The geocode result is
@@ -409,69 +659,12 @@ export async function createOrder(userId, dto) {
 
   if (orderType !== 'takeaway') {
     if (isRazorpayOrder) {
-      // Fire-and-forget: don't await geocoding for online payment orders.
-      // The order will be updated with distance/riderEarning after geocode resolves.
-      resolveRiderEarningForDelivery({
-        restaurant,
-        deliveryAddress: { ...deliveryAddress },
-        orderType,
-        zoneId: restaurant?.zoneId || dto.zoneId || null,
-      })
-        .then(async (earningResolved) => {
-          try {
-            const updateFields = {};
-            if (earningResolved.distanceKm != null) {
-              updateFields['distanceKm'] = earningResolved.distanceKm;
-              updateFields['riderEarning'] = earningResolved.riderEarning ?? 0;
-              updateFields['pricing.platformProfit'] = Math.max(
-                0,
-                (normalizedPricing.deliveryFee ?? 0) +
-                  (normalizedPricing.platformFee ?? 0) +
-                  (normalizedPricing.markupTotal ?? 0) +
-                  (normalizedPricing.restaurantCommission ?? 0) -
-                  (earningResolved.riderEarning ?? 0),
-              );
-            }
-            if (earningResolved.deliveryGeocoded && earningResolved.deliveryPoint) {
-              updateFields['deliveryAddress.location'] = toGeoJsonPoint(earningResolved.deliveryPoint);
-            }
-            if (Object.keys(updateFields).length > 0) {
-              await FoodOrder.updateOne({ _id: order._id }, { $set: updateFields });
-            }
-            // Backfill restaurant coords when missing
-            if (earningResolved.restaurantGeocoded && earningResolved.restaurantPoint) {
-              await FoodRestaurant.updateOne(
-                {
-                  _id: restaurant._id,
-                  $or: [
-                    { 'location.coordinates': { $exists: false } },
-                    { 'location.coordinates': { $size: 0 } },
-                    { 'location.coordinates.0': { $exists: false } },
-                  ],
-                },
-                {
-                  $set: {
-                    location: {
-                      ...(restaurant.location || {}),
-                      type: 'Point',
-                      coordinates: [
-                        earningResolved.restaurantPoint.lng,
-                        earningResolved.restaurantPoint.lat,
-                      ],
-                      latitude: earningResolved.restaurantPoint.lat,
-                      longitude: earningResolved.restaurantPoint.lng,
-                    },
-                  },
-                },
-              ).catch((err) => logger.warn(`Restaurant coord backfill failed: ${err?.message || err}`));
-            }
-          } catch (err) {
-            logger.warn(`Background geocode update failed for order ${order._id}: ${err?.message || err}`);
-          }
-        })
-        .catch((err) => {
-          logger.warn(`Background geocode failed for Razorpay order ${order._id}: ${err?.message || err}`);
-        });
+      // Fire-and-forget, but only once the order exists — it is started just
+      // after order.save() below. It used to start here and reference `order`
+      // before its declaration, so every callback threw a ReferenceError, the
+      // .catch() handler threw again on `order._id`, and the resulting
+      // unhandled rejection takes the process down in production.
+      deferEarningResolution = true;
     } else {
       // COD / wallet: wait for geocode so riderEarning is accurate before saving
       const earningResolved = await resolveRiderEarningForDelivery({
@@ -596,7 +789,40 @@ export async function createOrder(userId, dto) {
 
   let razorpayPayload = null;
 
-  await order.save();
+  // order_id is random (see the model's pre-save), so a collision is possible
+  // if unlikely: clear it and let pre-save draw another. A duplicate Razorpay
+  // payment id means a concurrent request for the same payment won the race —
+  // treat it exactly like the up-front check.
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await order.save();
+      break;
+    } catch (err) {
+      if (isPaidOnline && isDuplicateKeyOn(err, "payment.razorpay.paymentId")) {
+        const existing = await findOrderForRazorpayPayment(userId, payment.razorpay.paymentId);
+        if (existing) return { order: normalizeOrderForClient(existing), razorpay: null };
+        throw paymentConflictError();
+      }
+      const orderIdClash =
+        isDuplicateKeyOn(err, "order_id") || isDuplicateKeyOn(err, "orderId");
+      if (orderIdClash && attempt < 3) {
+        order.order_id = undefined;
+        order.orderId = undefined;
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  if (deferEarningResolution) {
+    resolveRiderEarningInBackground(order._id, {
+      restaurant,
+      deliveryAddress,
+      orderType,
+      zoneId: restaurant?.zoneId || dto.zoneId || null,
+      normalizedPricing,
+    });
+  }
 
   try {
     await clearFoodCart(userId);
@@ -655,13 +881,32 @@ export async function createOrder(userId, dto) {
   } catch {
     // Don't block order placement on socket failures.
   }
-  const couponCode = normalizedPricing?.couponCode
-    ? String(normalizedPricing.couponCode).trim().toUpperCase()
+  // Only a coupon pricing actually applied counts as used. pricing.couponCode
+  // echoes whatever code was typed, valid or not, so counting that burned
+  // usage (and per-user allowance) on coupons that gave no discount.
+  const appliedCouponCode = priced.pricing?.appliedCoupon?.code;
+  const couponCode = appliedCouponCode
+    ? String(appliedCouponCode).trim().toUpperCase()
     : "";
   if (couponCode) {
     const offer = await FoodOffer.findOne({ couponCode }).lean();
     if (offer) {
-      await FoodOffer.updateOne({ _id: offer._id }, { $inc: { usedCount: 1 } });
+      // Conditional on the limit so concurrent checkouts cannot push usedCount
+      // past usageLimit (pricing checked it, but not atomically).
+      const counted = await FoodOffer.updateOne(
+        {
+          _id: offer._id,
+          $or: [
+            { usageLimit: null },
+            { usageLimit: { $lte: 0 } },
+            { $expr: { $lt: [{ $ifNull: ["$usedCount", 0] }, "$usageLimit"] } },
+          ],
+        },
+        { $inc: { usedCount: 1 } },
+      );
+      if (!counted.modifiedCount) {
+        logger.warn(`[OrderCreate] Coupon ${couponCode} reached its usage limit concurrently (order ${order._id})`);
+      }
       if (userId) {
         await FoodOfferUsage.updateOne(
           { offerId: offer._id, userId: new mongoose.Types.ObjectId(userId) },
@@ -1075,7 +1320,7 @@ export async function cancelOrder(orderId, userId, reason, refundDestination = "
   const identity = buildOrderIdentityFilter(orderId);
   if (!identity) throw new ValidationError("Order id required");
 
-  const order = await FoodOrder.findOne({
+  let order = await FoodOrder.findOne({
     ...identity,
     userId: new mongoose.Types.ObjectId(userId),
   });
@@ -1097,98 +1342,26 @@ export async function cancelOrder(orderId, userId, reason, refundDestination = "
     throw new ValidationError("Order cannot be cancelled");
 
   const from = order.orderStatus;
-  order.orderStatus = "cancelled_by_user";
-  pushStatusHistory(order, {
-    byRole: "USER",
-    byId: userId,
-    from,
-    to: "cancelled_by_user",
-    note: reason || "",
-  });
-
   const paymentMethod = String(order.payment?.method || "cash").toLowerCase();
   const paymentStatus = String(order.payment?.status || "cod_pending").toLowerCase();
   const normalizedRefundDestination =
     String(refundDestination || "source").toLowerCase() === "wallet"
       ? "wallet"
       : "source";
-  const hasRefundProcessed =
-    String(order.payment?.refund?.status || "none").toLowerCase() === "processed";
 
-  // ✅ NEW: Automated Razorpay Refund on User Cancel
-  if (
-    paymentStatus === "paid" &&
-    paymentMethod === "razorpay" &&
-    order.payment?.razorpay?.paymentId &&
-    !hasRefundProcessed
-  ) {
-    try {
-      if (normalizedRefundDestination === "wallet") {
-        await userWalletService.refundWalletBalance(
-          userId,
-          order.pricing.total,
-          `Refund for cancelled order #${order.order_id || order._id}`,
-          { orderId: order._id, source: "order_refund_wallet" },
-        );
-        order.payment.status = "refunded";
-        order.payment.refund = {
-          status: "processed",
-          destination: "wallet",
-          amount: order.pricing.total,
-          refundId: "",
-          processedAt: new Date()
-        };
-      } else {
-        const refundResult = await initiateRazorpayRefund(
-          order.payment.razorpay.paymentId,
-          order.pricing.total
-        );
+  // Conditional on the status checked above: a second cancel (double tap,
+  // retry) or a restaurant accept/cancel landing in between loses here, before
+  // any refund or COD-strike side effect runs.
+  const cancelled = await transitionOrderStatus(order._id, from, "cancelled_by_user", {
+    history: { byRole: "USER", byId: userId, note: reason || "" },
+  });
+  if (!cancelled) throw new ValidationError("Order cannot be cancelled");
+  order = cancelled;
 
-        if (refundResult.success) {
-          order.payment.status = "refunded";
-          order.payment.refund = {
-            status: "processed",
-            destination: "source",
-            amount: order.pricing.total,
-            refundId: refundResult.refundId,
-            processedAt: new Date()
-          };
-        } else {
-          // Log failure but let order cancellation proceed
-          order.payment.refund = {
-            status: "failed",
-            destination: "source",
-            amount: order.pricing.total
-          };
-        }
-      }
-    } catch (err) {
-      console.error(`Refund processing error for Order ${orderId}:`, err);
-      order.payment.refund = {
-        status: "failed",
-        destination: normalizedRefundDestination,
-        amount: order.pricing.total,
-      };
-    }
-  } else if (
-    paymentStatus === "paid" &&
-    paymentMethod === "wallet" &&
-    !hasRefundProcessed
-  ) {
-    try {
-      await userWalletService.refundWalletBalance(userId, order.pricing.total, `Refund for cancelled order #${order.order_id || order._id}`, { orderId: order._id });
-      order.payment.status = "refunded";
-      order.payment.refund = {
-        status: "processed",
-        destination: "wallet",
-        amount: order.pricing.total,
-        processedAt: new Date()
-      };
-    } catch (err) {
-      console.error(`Wallet refund processing error for Order ${orderId}:`, err);
-      order.payment.refund = { status: "failed", destination: "wallet", amount: order.pricing.total };
-    }
-  }
+  await refundCancelledOrderPayment(order, {
+    destination: normalizedRefundDestination,
+    description: `Refund for cancelled order #${order.order_id || order._id}`,
+  });
 
   // Auto COD Blocking logic: If cash payment method, increment cancellation count
   if (paymentMethod === "cash") {
@@ -1204,8 +1377,6 @@ export async function cancelOrder(orderId, userId, reason, refundDestination = "
       }
     }
   }
-
-  await order.save();
 
   enqueueOrderEvent("order_cancelled_by_user", {
     orderMongoId: order._id?.toString?.(),
@@ -1313,44 +1484,59 @@ export async function submitOrderRatings(orderId, userId, dto) {
   }
 
   const now = new Date();
-  order.ratings = order.ratings || {};
-  order.ratings.restaurant = {
-    rating: dto.restaurantRating,
-    comment: dto.restaurantComment || "",
-    ratedAt: now,
+  const set = {
+    "ratings.restaurant": {
+      rating: dto.restaurantRating,
+      comment: dto.restaurantComment || "",
+      ratedAt: now,
+    },
   };
-
+  const unrated = { "ratings.restaurant.rating": { $in: [null] } };
   if (hasDeliveryPartner) {
-    order.ratings.deliveryPartner = {
+    set["ratings.deliveryPartner"] = {
       rating: dto.deliveryPartnerRating,
       comment: dto.deliveryPartnerComment || "",
       ratedAt: now,
     };
+    unrated["ratings.deliveryPartner.rating"] = { $in: [null] };
   }
+
+  // The "not yet rated" check above is only a fast path. Two concurrent
+  // submissions both passed it and both folded their score into the
+  // restaurant/rider average, so the claim is made here, atomically, and only
+  // the winner touches the aggregates.
+  const rated = await FoodOrder.findOneAndUpdate(
+    { _id: order._id, orderStatus: "delivered", ...unrated },
+    { $set: set },
+    { new: true },
+  );
+  if (!rated) throw new ValidationError("Ratings already submitted for this order");
 
   await Promise.all([
     applyAggregateRating(
       FoodRestaurant,
-      order.restaurantId,
+      rated.restaurantId,
       dto.restaurantRating,
     ),
     hasDeliveryPartner
       ? applyAggregateRating(
           FoodDeliveryPartner,
-          order.dispatch.deliveryPartnerId,
+          rated.dispatch.deliveryPartnerId,
           dto.deliveryPartnerRating,
         )
       : Promise.resolve(),
   ]);
 
-    await order.save();
-    enqueueOrderEvent('order_ratings_submitted', {
-        orderMongoId: order._id?.toString?.(),
-        orderId: order._id.toString(),
-        userId,
-        restaurantRating: dto.restaurantRating,
-        deliveryPartnerRating: hasDeliveryPartner ? dto.deliveryPartnerRating : null
-    });
+  enqueueOrderEvent('order_ratings_submitted', {
+    orderMongoId: rated._id?.toString?.(),
+    orderId: rated._id.toString(),
+    userId,
+    restaurantRating: dto.restaurantRating,
+    deliveryPartnerRating: hasDeliveryPartner ? dto.deliveryPartnerRating : null
+  });
+
+  // The controller responds with { order }; this used to return nothing.
+  return normalizeOrderForClient(rated);
 }
 
 export async function updateOrderInstructions(orderId, userId, instructions) {
@@ -1412,51 +1598,67 @@ export async function updateOrderStatusRestaurant(
   preparationTime = 0
 ) {
   const identity = buildOrderIdentityFilter(orderId);
+  if (!identity) throw new NotFoundError("Order not found");
   let order = await FoodOrder.findOne({
     ...identity,
     restaurantId: new mongoose.Types.ObjectId(restaurantId),
   }).select("+deliveryOtp");
   if (!order) throw new NotFoundError("Order not found");
   const from = order.orderStatus;
-  if (!isStatusAdvance(from, orderStatus)) {
-    // If order is already at a further-forward status (e.g. 'preparing' when accepting),
-    // treat as success — the outcome is already achieved
-    if (STATUS_PRIORITY[from] > STATUS_PRIORITY[orderStatus]) {
-      return toRestaurantFacingOrder(order);
-    }
-    throw new ValidationError(`Current order status '${from}' is further ahead than '${orderStatus}'. Order cannot be moved backwards.`);
-  }
-  order.orderStatus = orderStatus;
 
+  // A finished order is not "already there" for any target — reporting success
+  // would tell the panel an accept/ready worked on a cancelled order.
+  if (TERMINAL_ORDER_STATUSES.has(from)) {
+    throw new ValidationError(`Order is already ${String(from).replace(/_/g, " ")}`);
+  }
+  const isCancel = orderStatus === "cancelled_by_restaurant";
+  // Repeated taps, and accept retried as "confirmed" after the order already
+  // moved on, are no-ops rather than errors — the outcome is already achieved.
+  if (
+    from === orderStatus ||
+    (!isCancel && (STATUS_PRIORITY[from] || 0) > (STATUS_PRIORITY[orderStatus] || 0))
+  ) {
+    return toRestaurantFacingOrder(order);
+  }
+  if (!(RESTAURANT_TRANSITIONS[from] || []).includes(orderStatus)) {
+    throw new ValidationError(`Order cannot be moved from '${from}' to '${orderStatus}'`);
+  }
+  // Once a rider has accepted the pickup, cancelling strands them mid-trip.
+  const extraConditions = {};
+  if (isCancel && from === "ready_for_pickup") {
+    if (order.dispatch?.status === "accepted") {
+      throw new ValidationError("A delivery partner has already accepted this order; it can no longer be cancelled");
+    }
+    extraConditions["dispatch.status"] = { $ne: "accepted" };
+  }
+
+  const set = {};
   if (preparationTime !== undefined && preparationTime !== null && preparationTime > 0) {
-    order.preparationTime = preparationTime;
+    set.preparationTime = preparationTime;
   }
 
   if ((orderStatus === "confirmed" || orderStatus === "preparing") && !order.acceptedAt) {
-    order.acceptedAt = new Date();
+    set.acceptedAt = new Date();
   }
 
   // Generate OTP for Takeaway when status changes to preparing or ready_for_pickup
   if (["preparing", "ready_for_pickup"].includes(orderStatus) && order.orderType === "takeaway") {
     if (!order.deliveryOtp) {
-      order.deliveryOtp = generateFourDigitDeliveryOtp();
+      set.deliveryOtp = generateFourDigitDeliveryOtp();
     }
-    order.deliveryVerification = {
-      ...(order.deliveryVerification?.toObject?.() || order.deliveryVerification || {}),
-      dropOtp: { required: true, verified: false },
-    };
-    order.markModified('deliveryVerification');
-    order.markModified('deliveryVerification.dropOtp');
+    set["deliveryVerification.dropOtp"] = { required: true, verified: false };
   }
 
-  pushStatusHistory(order, {
-    byRole: "RESTAURANT",
-    byId: restaurantId,
-    from,
-    to: orderStatus,
-    note: note || ""
+  const updated = await transitionOrderStatus(order._id, from, orderStatus, {
+    set,
+    history: { byRole: "RESTAURANT", byId: restaurantId, note: note || "" },
+    extraConditions,
+    select: "+deliveryOtp",
   });
-  await order.save();
+  if (!updated) {
+    throw new ValidationError("Order status changed in the meantime; please refresh and try again");
+  }
+  order = updated;
 
   // If takeaway and in an active status, emit the OTP to the user
   if (["preparing", "ready_for_pickup"].includes(orderStatus) && order.orderType === "takeaway" && order.deliveryOtp) {
@@ -1667,62 +1869,12 @@ export async function updateOrderStatusRestaurant(
         to: orderStatus
     });
 
-    // ✅ NEW: Automated Razorpay Refund on Restaurant Cancel
-    // Triggers if the restaurant sets status to a cancelled state (e.g., cancelled_by_restaurant)
-    if (
-      String(orderStatus).includes("cancel") &&
-      order.payment.status === "paid" &&
-      order.payment.method === "razorpay" &&
-      order.payment.razorpay?.paymentId &&
-      (!order.payment.refund || order.payment.refund.status !== "processed")
-    ) {
-      try {
-        const refundResult = await initiateRazorpayRefund(
-          order.payment.razorpay.paymentId,
-          order.pricing.total
-        );
-
-        if (refundResult.success) {
-          order.payment.status = "refunded";
-          order.payment.refund = {
-            status: "processed",
-            amount: order.pricing.total,
-            refundId: refundResult.refundId,
-            processedAt: new Date()
-          };
-        } else {
-          // Record failure so admin knows a manual refund might be needed
-          order.payment.refund = {
-            status: "failed",
-            amount: order.pricing.total
-          };
-        }
-      } catch (err) {
-        console.error(`Automated refund failed for Order ${order._id.toString()} (Restaurant Cancel):`, err);
-        order.payment.refund = { status: "failed", amount: order.pricing.total };
-      }
-      // Re-save order with updated payment status
-      await order.save();
-    } else if (
-      String(orderStatus).includes("cancel") &&
-      order.payment.status === "paid" &&
-      order.payment.method === "wallet" &&
-      (!order.payment.refund || order.payment.refund.status !== "processed")
-    ) {
-      try {
-        await userWalletService.refundWalletBalance(order.userId, order.pricing.total, `Refund for order #${order.order_id || order._id} cancelled by restaurant`, { orderId: order._id });
-        order.payment.status = "refunded";
-        order.payment.refund = {
-          status: "processed",
-          amount: order.pricing.total,
-          processedAt: new Date()
-        };
-      } catch (err) {
-        console.error(`Wallet refund processing error for Order ${order._id.toString()}:`, err);
-        order.payment.refund = { status: "failed", amount: order.pricing.total };
-      }
-      // Re-save order with updated payment status
-      await order.save();
+    // Automated refund on restaurant cancel. Only reached by the request that
+    // won the conditional transition above, and the refund claims itself too.
+    if (String(orderStatus).includes("cancel")) {
+      await refundCancelledOrderPayment(order, {
+        description: `Refund for order #${order.order_id || order._id} cancelled by restaurant`,
+      });
     }
 
     return toRestaurantFacingOrder(order);
@@ -1925,7 +2077,8 @@ export async function listOrdersAdmin(query) {
     } else {
       // Frontend passes restaurant name as restaurantId in the filter
       const restaurantDoc = await FoodRestaurant.findOne({ 
-        restaurantName: new RegExp(`^${restaurantIdRaw}$`, 'i') 
+        // Escaped: an admin-supplied pattern is otherwise a ReDoS vector.
+        restaurantName: new RegExp(`^${String(restaurantIdRaw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
       }).select('_id').lean();
       
       if (restaurantDoc) {
@@ -2323,6 +2476,7 @@ export async function deleteOrderAdmin(orderId, adminId) {
 
 export async function completeTakeawayOrderRestaurant(orderId, restaurantId, otp) {
   const identity = buildOrderIdentityFilter(orderId);
+  if (!identity) throw new NotFoundError("Order not found");
   const order = await FoodOrder.findOne({
     ...identity,
     restaurantId: new mongoose.Types.ObjectId(restaurantId),
@@ -2438,7 +2592,9 @@ export async function completeTakeawayOrderRestaurant(orderId, restaurantId, otp
 
 export async function acceptOrderAdmin(orderId, adminId) {
   const identity = buildOrderIdentityFilter(orderId);
-  const order = await FoodOrder.findOne(identity);
+  // findOne(null) matches the first order in the collection.
+  if (!identity) throw new NotFoundError("Order not found");
+  let order = await FoodOrder.findOne(identity);
   if (!order) throw new NotFoundError("Order not found");
 
   const from = order.orderStatus;
@@ -2455,18 +2611,16 @@ export async function acceptOrderAdmin(orderId, adminId) {
   // Admin accept moves the order straight into "preparing" (same as a restaurant
   // accept) so that delivery dispatch starts automatically and the order does not
   // get stuck in "confirmed".
-  order.orderStatus = "preparing";
-  order.acceptedAt = new Date();
-
-  pushStatusHistory(order, {
-    byRole: "ADMIN",
-    byId: adminId,
-    from,
-    to: "preparing",
-    note: "Order accepted by admin"
+  // Conditional on the status read above, so an accept cannot resurrect an
+  // order the user or restaurant cancelled a moment earlier.
+  const accepted = await transitionOrderStatus(order._id, from, "preparing", {
+    set: { acceptedAt: new Date() },
+    history: { byRole: "ADMIN", byId: adminId, note: "Order accepted by admin" },
   });
-
-  await order.save();
+  if (!accepted) {
+    throw new ValidationError("Order status changed in the meantime; please refresh and try again");
+  }
+  order = accepted;
 
   // Real-time notification
   try {
@@ -2511,7 +2665,9 @@ export async function acceptOrderAdmin(orderId, adminId) {
 
 export async function rejectOrderAdmin(orderId, reason, adminId) {
   const identity = buildOrderIdentityFilter(orderId);
-  const order = await FoodOrder.findOne(identity);
+  // findOne(null) matches the first order in the collection.
+  if (!identity) throw new NotFoundError("Order not found");
+  let order = await FoodOrder.findOne(identity);
   if (!order) throw new NotFoundError("Order not found");
 
   const from = order.orderStatus;
@@ -2525,17 +2681,18 @@ export async function rejectOrderAdmin(orderId, reason, adminId) {
     throw new ValidationError(`Order is already in '${from}' state. Cannot reject now.`);
   }
 
-  order.orderStatus = "cancelled_by_admin";
-
-  pushStatusHistory(order, {
-    byRole: "ADMIN",
-    byId: adminId,
-    from,
-    to: "cancelled_by_admin",
-    note: reason || "Order rejected by admin"
+  const rejected = await transitionOrderStatus(order._id, from, "cancelled_by_admin", {
+    history: { byRole: "ADMIN", byId: adminId, note: reason || "Order rejected by admin" },
   });
+  if (!rejected) {
+    throw new ValidationError("Order status changed in the meantime; please refresh and try again");
+  }
+  order = rejected;
 
-  await order.save();
+  // A paid order rejected by admin used to stay "paid" with no refund at all.
+  await refundCancelledOrderPayment(order, {
+    description: `Refund for order #${order.order_id || order._id} rejected by admin`,
+  });
 
   // Sync transaction status
   try {

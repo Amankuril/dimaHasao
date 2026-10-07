@@ -41,10 +41,21 @@ export const getRazorpayKeyId = () => KEY_ID;
  *  this to a client. */
 export const getRazorpayKeySecret = () => KEY_SECRET;
 
+/*
+ * The SDK builds its axios instance with no timeout, so a gateway that hangs
+ * held the request (and the user) open indefinitely. Every client made here
+ * gets one.
+ */
+const GATEWAY_TIMEOUT_MS = Number(process.env.RAZORPAY_TIMEOUT_MS || 15000);
+const withTimeout = (client) => {
+    if (client?.api?.rq?.defaults) client.api.rq.defaults.timeout = GATEWAY_TIMEOUT_MS;
+    return client;
+};
+
 /** Shared SDK client, or null when unconfigured. */
 export const getRazorpayClient = () => {
     if (!isRazorpayConfigured()) return null;
-    return new Razorpay({ key_id: KEY_ID, key_secret: KEY_SECRET });
+    return withTimeout(new Razorpay({ key_id: KEY_ID, key_secret: KEY_SECRET }));
 };
 
 /**
@@ -66,7 +77,7 @@ export const createRazorpayClient = ({ keyId, keySecret } = {}) => {
     if (!id || !secret) return getRazorpayClient();
     if (!Razorpay) return null;
 
-    return new Razorpay({ key_id: id, key_secret: secret });
+    return withTimeout(new Razorpay({ key_id: id, key_secret: secret }));
 };
 
 /**

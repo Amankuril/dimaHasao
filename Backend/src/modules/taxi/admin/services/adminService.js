@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import { ApiError } from '../../../../utils/ApiError.js';
 import { env } from '../../../../config/env.js';
@@ -45,9 +46,13 @@ import {
   emitToDriver,
   notifyUserAccountDeleted,
 } from '../../services/dispatchService.js';
+import { DRIVER_INELIGIBLE_STATUSES } from '../../services/matchingService.js';
 import { sendEmail } from '../../services/mailService.js';
 import { getActivePaymentGateway, normalizePaymentSettingsPayload } from '../../services/paymentGatewayService.js';
 import { signAccessToken } from '../../services/tokenService.js';
+import { ADMIN_LEVELS, ADMIN_MODULES, MODULE_SUPERADMIN_LEVELS } from '../../../../core/admin/adminHierarchy.constants.js';
+import { resolveAdminLevel } from '../../../../core/admin/adminHierarchy.service.js';
+import { ADMIN_FEATURES, FEATURE_ACTIONS, featureKey } from '../../../../core/admin/adminFeatures.js';
 import {
   ADMIN_PERMISSIONS,
   SUPERADMIN_PERMISSION,
@@ -1213,46 +1218,18 @@ export const csvFromRows = (headers, rows) => {
   return [headers.join(','), ...rows.map((row) => headers.map((header) => escape(row[header])).join(','))].join('\n');
 };
 
-const DEFAULT_ADMIN_EMAIL = 'admin@gmail.com';
-const DEFAULT_ADMIN_PASSWORD = '12345';
 const BCRYPT_HASH_PATTERN = /^\$2[aby]\$\d{2}\$/;
-
-const syncDefaultAdminRecord = async () => {
-  const now = new Date();
-  const existingAdmin = await Admin.findOne({ email: DEFAULT_ADMIN_EMAIL }).select('+password');
-  const nextPassword =
-    !existingAdmin || !BCRYPT_HASH_PATTERN.test(existingAdmin.password || '')
-      ? await hashPassword(DEFAULT_ADMIN_PASSWORD)
-      : undefined;
-
-  await Admin.collection.updateOne(
-    { email: DEFAULT_ADMIN_EMAIL },
-    {
-      $set: {
-        name: 'Super Admin',
-        email: DEFAULT_ADMIN_EMAIL,
-        phone: '9999999999',
-        role: 'superadmin',
-        admin_type: 'superadmin',
-        permissions: ['*'],
-        active: true,
-        status: 'active',
-        ...(nextPassword ? { password: nextPassword } : {}),
-        updatedAt: now,
-      },
-      $setOnInsert: {
-        createdAt: now,
-      },
-    },
-    { upsert: true },
-  );
-};
 
 const seedInitialData = async () => {
   const defaults = createDefaultAdminState();
 
+  // Demo riders and drivers (users with password 'password123') are for a
+  // fresh development database only — never for production, where an empty
+  // drivers collection on a new deploy would hand out known logins.
+  const seedDemoAccounts = env.nodeEnv !== 'production';
+
   // Seed Users
-  if (await User.countDocuments() === 0) {
+  if (seedDemoAccounts && await User.countDocuments() === 0) {
     await User.insertMany(defaults.users.map(u => ({ ...u, phone: u.mobile, password: 'password123' })));
   }
 
@@ -1262,7 +1239,7 @@ const seedInitialData = async () => {
   }
 
   // Seed Drivers
-  if (await Driver.countDocuments() === 0) {
+  if (seedDemoAccounts && await Driver.countDocuments() === 0) {
     await Driver.insertMany(defaults.drivers.map(d => ({ ...d, phone: d.mobile })));
   }
 
@@ -1308,7 +1285,10 @@ export const ensureServiceLocationsSeeded = async () => {
 };
 
 export const ensureAdminState = async () => {
-  await syncDefaultAdminRecord();
+  // This used to also upsert admin@gmail.com / 12345 as an active superadmin
+  // (re-activating it if someone had disabled it) — and it runs on ordinary
+  // admin actions such as saving a promo code. Admins are created by
+  // scripts/seed-super-admin.js or from the admin panel, never implicitly.
   await seedInitialData();
   return { ready: true };
 };
@@ -1345,12 +1325,21 @@ export const loginAdmin = async ({ email, password }) => {
     throw new ApiError(401, 'Invalid admin credentials');
   }
 
-  const passwordMatches = BCRYPT_HASH_PATTERN.test(admin.password || '')
-    ? await comparePassword(password, admin.password)
-    : admin.password === password;
+  const storedIsHash = BCRYPT_HASH_PATTERN.test(admin.password || '');
+  const passwordMatches = storedIsHash
+    ? await comparePassword(String(password || ''), admin.password)
+    : Boolean(admin.password) && timingSafeStringEqual(admin.password, String(password || ''));
 
   if (!passwordMatches) {
     throw new ApiError(401, 'Invalid admin credentials');
+  }
+
+  // A legacy plaintext password is accepted this once and replaced with its
+  // hash, so it stops sitting readable in the database. updateOne, not save:
+  // the schema's pre-save hook would hash it a second time.
+  if (!storedIsHash) {
+    await Admin.updateOne({ _id: admin._id }, { $set: { password: await hashPassword(String(password)) } })
+      .catch((error) => console.error('[taxi] admin password rehash failed', error?.message || error));
   }
 
   if (admin.active === false || String(admin.status || '').toLowerCase() === 'inactive') {
@@ -1378,6 +1367,90 @@ export const listAdmins = async (currentAdmin) => {
 
   return enrichAdminSummaries(admins);
 };
+
+const timingSafeStringEqual = (a, b) => {
+  const left = Buffer.from(String(a));
+  const right = Buffer.from(String(b));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+};
+
+/*
+ * Who may manage whom from the taxi panel.
+ *
+ * Holding subadmins.manage used to be enough to create a superadmin (anything
+ * but 'subadmin' normalised to superadmin with ['*']), reset any admin's
+ * password — the platform superadmin's included — and delete any admin. Now
+ * the target must rank strictly below the caller: platform superadmin (3) >
+ * module superadmin (2) > subadmin (1).
+ *
+ * admin_type 'subadmin' ranks as a subadmin whatever adminLevel says: taxi
+ * never set adminLevel, so every subadmin it created took the schema default
+ * platform_superadmin, and that stored value must not make them untouchable
+ * (or let them manage others) here.
+ */
+const TAXI_ADMIN_RANK_SUBADMIN = 1;
+const TAXI_ADMIN_RANK_MODULE_SUPERADMIN = 2;
+
+const resolveTaxiAdminRank = (admin = {}) => {
+  const adminType = String(admin.admin_type || '').trim().toLowerCase();
+  const role = String(admin.role || '').trim().toLowerCase();
+  if (adminType === 'subadmin' || role === 'subadmin') {
+    return TAXI_ADMIN_RANK_SUBADMIN;
+  }
+  const level = resolveAdminLevel(admin);
+  if (level === ADMIN_LEVELS.PLATFORM_SUPERADMIN) return 3;
+  if (Object.values(MODULE_SUPERADMIN_LEVELS).includes(level)) return TAXI_ADMIN_RANK_MODULE_SUPERADMIN;
+  return TAXI_ADMIN_RANK_SUBADMIN;
+};
+
+const loadCallerAdminRank = async (currentAdmin) => {
+  const caller = currentAdmin?.id ? await Admin.findById(currentAdmin.id).lean() : null;
+  if (!caller) {
+    throw new ApiError(403, 'Admin account not found');
+  }
+  return resolveTaxiAdminRank(caller);
+};
+
+const assertRanksBelowCaller = (callerRank, targetRank) => {
+  if (!(targetRank < callerRank)) {
+    throw new ApiError(403, 'You can only manage admin accounts below your own level');
+  }
+};
+
+/*
+ * The core admin gate (enforceAdminFeatureAccess) checks a subadmin's
+ * featurePermissions; taxi's own checks read the legacy permission strings.
+ * A taxi subadmin is given both, the features derived from the strings it was
+ * granted (all actions, since taxi's strings never distinguished them).
+ */
+const deriveTaxiFeaturePermissions = (permissions = []) => {
+  const granted = new Set(permissions.map((item) => String(item)));
+  const result = {};
+  for (const entry of ADMIN_FEATURES[ADMIN_MODULES.TAXI] || []) {
+    if ((entry.legacy || []).some((name) => granted.has(name))) {
+      result[featureKey(ADMIN_MODULES.TAXI, entry.key)] = Object.fromEntries(
+        FEATURE_ACTIONS.map((action) => [action, true]),
+      );
+    }
+  }
+  return result;
+};
+
+/** Hierarchy fields every account written from the taxi panel carries explicitly. */
+const buildTaxiAdminHierarchyFields = (adminType, permissions) => (
+  adminType === 'superadmin'
+    ? {
+        adminLevel: ADMIN_LEVELS.TAXI_SUPERADMIN,
+        module: ADMIN_MODULES.TAXI,
+        servicesAccess: [ADMIN_MODULES.TAXI],
+      }
+    : {
+        adminLevel: ADMIN_LEVELS.SUBADMIN,
+        module: ADMIN_MODULES.TAXI,
+        servicesAccess: [ADMIN_MODULES.TAXI],
+        featurePermissions: deriveTaxiFeaturePermissions(permissions),
+      }
+);
 
 const validateSubadminPayload = async (payload = {}, existingAdminId = null) => {
   const adminType = normalizeAdminType(payload.admin_type || payload.role);
@@ -1470,9 +1543,21 @@ export const createAdminAccount = async (currentAdmin, payload = {}) => {
   }
 
   const validated = await validateSubadminPayload(payload);
+  const callerRank = await loadCallerAdminRank(currentAdmin);
+  assertRanksBelowCaller(
+    callerRank,
+    validated.admin_type === 'superadmin' ? TAXI_ADMIN_RANK_MODULE_SUPERADMIN : TAXI_ADMIN_RANK_SUBADMIN,
+  );
+
+  // adminLevel is set explicitly: left unset, the shared schema defaulted it
+  // to platform_superadmin, so every taxi "subadmin" was a platform superadmin.
+  // The plaintext goes in as-is — the schema's pre-save hook hashes it; it
+  // used to be hashed here too, so the stored value was a hash of a hash and
+  // the new admin could never sign in.
   const created = await Admin.create({
     ...validated,
-    password: await hashPassword(password),
+    ...buildTaxiAdminHierarchyFields(validated.admin_type, validated.permissions),
+    password,
   });
 
   const [serializedAdmin] = await enrichAdminSummaries([created]);
@@ -1492,7 +1577,15 @@ export const updateAdminAccount = async (currentAdmin, id, payload = {}) => {
   }
 
   const validated = await validateSubadminPayload(payload, admin._id);
-  Object.assign(admin, validated);
+  const callerRank = await loadCallerAdminRank(currentAdmin);
+  // Both what the account is now and what it would become must sit below the caller.
+  assertRanksBelowCaller(callerRank, resolveTaxiAdminRank(admin.toObject()));
+  assertRanksBelowCaller(
+    callerRank,
+    validated.admin_type === 'superadmin' ? TAXI_ADMIN_RANK_MODULE_SUPERADMIN : TAXI_ADMIN_RANK_SUBADMIN,
+  );
+
+  Object.assign(admin, validated, buildTaxiAdminHierarchyFields(validated.admin_type, validated.permissions));
 
   if (payload.password) {
     const password = String(payload.password || '').trim();
@@ -1503,7 +1596,8 @@ export const updateAdminAccount = async (currentAdmin, id, payload = {}) => {
     if (password !== passwordConfirmation) {
       throw new ApiError(400, 'Passwords do not match');
     }
-    admin.password = await hashPassword(password);
+    // Plaintext: the pre-save hook hashes it (hashing here too stored a hash of a hash).
+    admin.password = password;
   }
 
   await admin.save();
@@ -1523,6 +1617,8 @@ export const deleteAdminAccount = async (currentAdmin, id) => {
     throw new ApiError(400, 'You cannot delete your own admin account');
   }
 
+  assertRanksBelowCaller(await loadCallerAdminRank(currentAdmin), resolveTaxiAdminRank(admin));
+
   await Admin.deleteOne({ _id: admin._id });
   return { deleted: true };
 };
@@ -1533,12 +1629,13 @@ export const forgotPassword = async (email) => {
     throw new ApiError(404, 'Admin with this email not found');
   }
 
-  // Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // crypto.randomInt, not Math.random (predictable), and a fresh attempt budget.
+  const otp = String(crypto.randomInt(100000, 1000000));
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   admin.resetPasswordOtp = otp;
   admin.resetPasswordExpires = otpExpires;
+  admin.resetPasswordAttempts = 0;
   await admin.save();
 
   // Send real email
@@ -1561,35 +1658,55 @@ export const forgotPassword = async (email) => {
     `,
   });
 
-  console.log(`[ADMIN FORGOT PASSWORD] OTP for ${email}: ${otp}`);
-
   return { message: 'OTP sent to your email' };
 };
 
-export const verifyResetOtp = async ({ email, otp }) => {
-  const admin = await Admin.findOne({
-    email: email?.trim().toLowerCase()
-  }).select('+resetPasswordOtp +resetPasswordExpires');
+/*
+ * Check a reset code, spending one attempt atomically first.
+ *
+ * There was no attempt limit at all: a 6-digit code over a 10-minute window,
+ * guarded only by a per-IP rate limit, against the same `admins` collection
+ * the core reset uses — so any admin's password, superadmin included, was a
+ * brute force away. Five wrong guesses now void the code.
+ */
+const MAX_RESET_ATTEMPTS = 5;
+const sameCode = (a, b) => {
+  const x = crypto.createHash('sha256').update(String(a)).digest();
+  const y = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(x, y);
+};
+const checkResetOtp = async (email, otp) => {
+  const admin = await Admin.findOneAndUpdate(
+    {
+      email: email?.trim().toLowerCase(),
+      resetPasswordOtp: { $exists: true, $ne: null },
+      resetPasswordExpires: { $gt: new Date() },
+      resetPasswordAttempts: { $not: { $gte: MAX_RESET_ATTEMPTS } },
+    },
+    { $inc: { resetPasswordAttempts: 1 } },
+    { new: true },
+  ).select('+resetPasswordOtp +resetPasswordExpires +resetPasswordAttempts');
 
-  if (!admin || admin.resetPasswordOtp !== otp || new Date() > admin.resetPasswordExpires) {
+  if (!admin || !otp || !sameCode(admin.resetPasswordOtp, otp)) {
     throw new ApiError(400, 'Invalid or expired OTP');
   }
+  return admin;
+};
 
+export const verifyResetOtp = async ({ email, otp }) => {
+  await checkResetOtp(email, otp);
   return { success: true, message: 'OTP verified successfully' };
 };
 
 export const resetPassword = async ({ email, otp, password }) => {
-  const admin = await Admin.findOne({
-    email: email?.trim().toLowerCase()
-  }).select('+resetPasswordOtp +resetPasswordExpires');
+  const admin = await checkResetOtp(email, otp);
 
-  if (!admin || admin.resetPasswordOtp !== otp || new Date() > admin.resetPasswordExpires) {
-    throw new ApiError(400, 'Invalid or expired OTP');
-  }
-
-  admin.password = await hashPassword(password);
+  // Plaintext: the schema's pre-save hook hashes it (hashing here as well
+  // stored a hash of a hash, so the reset password never worked).
+  admin.password = password;
   admin.resetPasswordOtp = undefined;
   admin.resetPasswordExpires = undefined;
+  admin.resetPasswordAttempts = 0;
   await admin.save();
 
   return { success: true, message: 'Password reset successful' };
@@ -3133,6 +3250,15 @@ export const updateDriver = async (id, payload, currentAdmin = null) => {
 
   if (payload.onboarding !== undefined) {
     update.onboarding = payload.onboarding;
+  }
+
+  // Disabling or un-approving a driver takes them offline, so they stop being
+  // offered rides straight away instead of whenever they next toggle.
+  if (
+    update.approve === false ||
+    (update.status !== undefined && DRIVER_INELIGIBLE_STATUSES.includes(String(update.status).trim().toLowerCase()))
+  ) {
+    update.isOnline = false;
   }
 
   const driver = await Driver.findByIdAndUpdate(id, update, { returnDocument: 'after' });

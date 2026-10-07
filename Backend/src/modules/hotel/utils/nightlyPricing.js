@@ -9,17 +9,40 @@
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+/** India Standard Time is UTC+05:30 with no daylight saving. */
+const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+
+/** The longest stay one booking may cover. Each night is a breakdown row. */
+export const MAX_STAY_NIGHTS = 30;
+
 /**
- * UTC midnight of the given date.
+ * The IST calendar date of a value, as UTC midnight of that date.
  *
- * Date-only values ("2026-12-24") parse as UTC midnight and are stored that
- * way, so the comparison has to happen in UTC too. Normalising to *local*
- * midnight instead shifts the calendar date by one on any server west of
- * Greenwich, which would charge the wrong season on a boundary night.
+ * Date-only values ("2026-12-24") parse as UTC midnight, which is 05:30 the
+ * same day in IST, so they keep their date. A full timestamp sent from an
+ * Indian browser (local midnight = 18:30Z the day before) now also lands on
+ * the date the guest picked; plain UTC truncation moved it back a day.
+ * Returning UTC midnight keeps the stored night dates in the format seasons
+ * and invoices already use.
  */
-const startOfDay = (value) => {
-    const date = new Date(value);
-    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+export const istCalendarDay = (value) => {
+    const shifted = new Date(new Date(value).getTime() + IST_OFFSET_MS);
+    return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
+};
+
+const startOfDay = istCalendarDay;
+
+/**
+ * Nights between check-in and check-out, counted on IST calendar dates.
+ *
+ * The single source of the night count. The quote used to count with
+ * Math.ceil over raw milliseconds while the price counted calendar days, so
+ * two timestamps on the same day gave "1 night" priced at zero nights —
+ * totalAmount 0, which the booking flow then treated as already paid.
+ */
+export const countNights = (checkIn, checkOut) => {
+    const nights = Math.round((startOfDay(checkOut) - startOfDay(checkIn)) / MS_PER_DAY);
+    return Number.isFinite(nights) ? nights : 0;
 };
 
 /**
@@ -58,10 +81,11 @@ export const rateForNight = (roomType, night) => {
  */
 export const priceStay = (roomType, checkIn, checkOut, units = 1) => {
     const from = startOfDay(checkIn);
-    const to = startOfDay(checkOut);
-    const nights = Math.round((to - from) / MS_PER_DAY);
+    const nights = countNights(checkIn, checkOut);
 
-    if (!Number.isFinite(nights) || nights <= 0) {
+    // Capped here as well as in the quote, so no caller can build an
+    // arbitrarily long breakdown array from two far-apart dates.
+    if (nights <= 0 || nights > MAX_STAY_NIGHTS) {
         return { nights: [], total: 0, totalNights: 0 };
     }
 

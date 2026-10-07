@@ -15,8 +15,10 @@ import { getTipSettings } from '../../services/appSettingsService.js';
 import { matchDrivers } from '../../services/matchingService.js';
 import { Ride } from '../models/Ride.js';
 import { UserWallet } from '../models/UserWallet.js';
-import { computeExpectedSignature } from '../../../../core/payments/razorpay.service.js';
+import { verifyPaymentSignature } from '../../../../core/payments/razorpay.service.js';
+import { assertClaimIsOwn, paymentClaimKey, withPaymentClaim } from '../../services/paymentClaimService.js';
 import { quoteRideFare } from '../../services/fareService.js';
+import { clearDriverRoute } from '../../socket/services/driverRouteService.js';
 import { taxiRazorpayRequest } from '../../services/razorpayClient.js';
 
 const EARTH_RADIUS_METERS = 6371000;
@@ -244,10 +246,9 @@ const finalizeRideCompletion = async ({
   driver.totalRatingScore = Number(driver.totalRatingScore || 0) + rating;
   driver.rating = Number((driver.totalRatingScore / driver.ratingCount).toFixed(1));
 
-  await Promise.all([
-    ride.save({ session }),
-    driver.save({ session }),
-  ]);
+  // Sequential: one transaction session cannot run operations in parallel.
+  await ride.save({ session });
+  await driver.save({ session });
 
   return {
     ride: await getRideDetails(ride._id),
@@ -361,10 +362,18 @@ export const getRideById = async (req, res) => {
   });
 
   const ride = await getRideDetails(req.params.rideId);
+  const data = ride.toJSON();
+
+  // The start PIN is the rider's to give; the driver must never be sent it.
+  if (req.auth.role !== 'user') {
+    delete data.otp;
+  }
+  delete data.otpFailedAttempts;
+  delete data.otpLockedUntil;
 
   res.json({
     success: true,
-    data: ride,
+    data,
   });
 };
 
@@ -376,7 +385,7 @@ export const getMyActiveRide = async (req, res) => {
 
   res.json({
     success: true,
-    data: ride ? serializeRideRealtime(ride) : null,
+    data: ride ? serializeRideRealtime(ride, { viewerRole: req.auth.role }) : null,
   });
 };
 
@@ -415,6 +424,7 @@ export const updateRideStatus = async (req, res) => {
     driverId: req.auth.sub,
     nextStatus,
     paymentMethod: req.body.paymentMethod,
+    otp: req.body.otp,
   });
 
   try {
@@ -436,6 +446,8 @@ export const updateRideStatus = async (req, res) => {
       io.to(room).emit('ride:status:updated', payload);
       
       // Emit ride:state
+      // Room broadcast reaches the driver too, so it carries no start PIN;
+      // rider screens keep the PIN they already hold when a payload lacks one.
       const statePayload = serializeRideRealtime(populatedRide);
       io.to(room).emit('ride:state', statePayload);
       
@@ -445,6 +457,12 @@ export const updateRideStatus = async (req, res) => {
     }
   } catch (socketError) {
     console.error('Failed to emit status update socket event from controller:', socketError);
+  }
+
+  // The socket path clears the live route buffer on completion; the REST path
+  // never did, so a driver who finished over REST kept streaming the old route.
+  if (nextStatus === RIDE_LIVE_STATUS.COMPLETED) {
+    clearDriverRoute(req.auth.sub);
   }
 
   // Ride completion settles commission/earnings into the driver's wallet
@@ -503,7 +521,7 @@ export const submitRideReview = async (req, res) => {
 
   res.json({
     success: true,
-    data: serializeRideRealtime(ride),
+    data: serializeRideRealtime(ride, { viewerRole: 'user' }),
   });
 };
 
@@ -595,15 +613,9 @@ export const verifyRazorpayRideCompletion = async (req, res) => {
   }
 
   const { keyId, keySecret } = await resolveRazorpayCredentials();
-  // Shared digest helper; the secret stays taxi's own admin-configured
+  // Shared constant-time check; the secret stays taxi's own admin-configured
   // gateway credential rather than the platform env key.
-  const expectedSignature = computeExpectedSignature({
-    orderId: orderId,
-    paymentId: paymentId,
-    secret: keySecret,
-  });
-
-  if (expectedSignature !== signature) {
+  if (!verifyPaymentSignature({ orderId, paymentId, signature, secret: keySecret })) {
     throw new ApiError(400, 'Invalid payment signature');
   }
 
@@ -613,6 +625,19 @@ export const verifyRazorpayRideCompletion = async (req, res) => {
     keyId,
     keySecret,
   });
+
+  /*
+   * The order must be this rider's payment for this ride. Only the amount was
+   * compared before, so a wallet top-up order or another ride's order of the
+   * same amount could be presented here and spent twice.
+   */
+  if (
+    String(order?.notes?.source || '') !== 'ride_completion' ||
+    String(order?.notes?.rideId || '') !== rideId ||
+    String(order?.notes?.userId || '') !== String(req.auth.sub)
+  ) {
+    throw new ApiError(400, 'This payment is not for this ride');
+  }
 
   const paymentAmounts = buildCompletionAmounts(ride, tipAmount);
   const verifiedTotalCharge = roundMoney(Number(order?.amount || 0) / 100);
@@ -639,57 +664,76 @@ export const verifyRazorpayRideCompletion = async (req, res) => {
     throw new ApiError(409, 'This ride completion payment was already processed');
   }
 
-  const session = await mongoose.startSession();
+  const claimOwner = { purpose: `ride_completion:${rideId}`, ownerRole: 'user', ownerId: String(req.auth.sub) };
+  const claim = await withPaymentClaim(
+    { key: paymentClaimKey('razorpay', paymentId), ...claimOwner },
+    async () => {
+      const session = await mongoose.startSession();
 
-  try {
-    session.startTransaction();
+      try {
+        session.startTransaction();
 
-    const liveRide = await loadCompletedRideForUser(rideId, req.auth.sub, session);
-    const result = await finalizeRideCompletion({
-      ride: liveRide,
-      userId: req.auth.sub,
-      rating,
-      comment,
-      tipAmount,
-      paymentSource: 'ride_completion_razorpay',
-      paymentRecord: {
-        provider: 'razorpay',
-        providerId: paymentId,
-        providerOrderId: orderId,
-        providerPaymentId: paymentId,
-        providerMode: 'razorpay_order',
-        source: 'ride_completion_razorpay',
-        currency: order.currency || 'INR',
-        paidAt: new Date(),
-      },
-      session,
-    });
+        const liveRide = await loadCompletedRideForUser(rideId, req.auth.sub, session);
+        const result = await finalizeRideCompletion({
+          ride: liveRide,
+          userId: req.auth.sub,
+          rating,
+          comment,
+          tipAmount,
+          paymentSource: 'ride_completion_razorpay',
+          paymentRecord: {
+            provider: 'razorpay',
+            providerId: paymentId,
+            providerOrderId: orderId,
+            providerPaymentId: paymentId,
+            providerMode: 'razorpay_order',
+            source: 'ride_completion_razorpay',
+            currency: order.currency || 'INR',
+            paidAt: new Date(),
+          },
+          session,
+        });
 
-    await session.commitTransaction();
+        await session.commitTransaction();
+        return { result, driverId: liveRide.driverId };
+      } catch (error) {
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        session.endSession();
+      }
+    },
+  );
 
-    if (result.walletResult?.transaction) {
-      emitToDriver(liveRide.driverId, 'driver:wallet:updated', {
-        wallet: result.walletResult.wallet,
-        transaction: result.walletResult.transaction,
-        notification: {
-          id: `ride-payment-${paymentId}`,
-          title: 'Payment received',
-          body: `Rs ${paymentAmounts.totalCharge.toFixed(2)} received from rider for completed ride.`,
-          sentAt: new Date().toISOString(),
-        },
-      });
-    }
-
+  if (!claim.claimed) {
+    // A retry of this same payment for this ride; anything else is a replay.
+    assertClaimIsOwn(claim.existing, claimOwner);
     res.json({
       success: true,
-      data: result.ride,
+      data: await getRideDetails(rideId),
     });
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
+    return;
   }
+
+  const { result, driverId: paidDriverId } = claim.result;
+
+  if (result.walletResult?.transaction) {
+    emitToDriver(paidDriverId, 'driver:wallet:updated', {
+      wallet: result.walletResult.wallet,
+      transaction: result.walletResult.transaction,
+      notification: {
+        id: `ride-payment-${paymentId}`,
+        title: 'Payment received',
+        body: `Rs ${paymentAmounts.totalCharge.toFixed(2)} received from rider for completed ride.`,
+        sentAt: new Date().toISOString(),
+      },
+    });
+  }
+
+  res.json({
+    success: true,
+    data: result.ride,
+  });
 };
 
 export const payRideCompletionWithWallet = async (req, res) => {
@@ -908,15 +952,9 @@ export const verifyRazorpayRideTip = async (req, res) => {
   }
 
   const { keyId, keySecret } = await resolveRazorpayCredentials();
-  // Shared digest helper; the secret stays taxi's own admin-configured
+  // Shared constant-time check; the secret stays taxi's own admin-configured
   // gateway credential rather than the platform env key.
-  const expectedSignature = computeExpectedSignature({
-    orderId: orderId,
-    paymentId: paymentId,
-    secret: keySecret,
-  });
-
-  if (expectedSignature !== signature) {
+  if (!verifyPaymentSignature({ orderId, paymentId, signature, secret: keySecret })) {
     throw new ApiError(400, 'Invalid payment signature');
   }
 
@@ -926,6 +964,15 @@ export const verifyRazorpayRideTip = async (req, res) => {
     keyId,
     keySecret,
   });
+
+  // Must be this rider's tip order for this ride (see verifyRazorpayRideCompletion).
+  if (
+    String(order?.notes?.kind || '') !== 'ride_tip' ||
+    String(order?.notes?.rideId || '') !== rideId ||
+    String(order?.notes?.userId || '') !== String(req.auth.sub)
+  ) {
+    throw new ApiError(400, 'This payment is not for this ride');
+  }
 
   const amountPaise = Number(order?.amount);
   if (!Number.isFinite(amountPaise) || amountPaise <= 0) {
@@ -1059,6 +1106,10 @@ export const cancelRide = async (req, res) => {
     throw new ApiError(404, 'Ride not found');
   }
 
+  if (ride.driverId) {
+    clearDriverRoute(ride.driverId);
+  }
+
   res.json({
     success: true,
     data: {
@@ -1116,18 +1167,28 @@ export const listAvailableDrivers = async (req, res) => {
     const distanceMeters = calculateDistanceMeters([longitude, latitude], driver.location?.coordinates || []);
     const etaMinutes = estimateEtaMinutes(distanceMeters);
 
+    /*
+     * This route is public (the pre-booking map), so it shows only "a car of
+     * this type is about here": no name or plate, and the position rounded to
+     * ~100 m. It used to return each online driver's exact live GPS with
+     * their name and number plate to anyone who asked. Distance/ETA above are
+     * still computed from the exact position.
+     */
+    const exactCoordinates = Array.isArray(driver.location?.coordinates) ? driver.location.coordinates : [];
+    const roundedCoordinates = exactCoordinates.map((value) => Math.round(Number(value) * 1000) / 1000);
+
     return {
       id: driver._id,
-      name: driver.name,
       vehicleTypeId: driver.vehicleTypeId,
       vehicleType: driver.vehicleType,
       vehicleIconType: driver.vehicleIconType,
-      vehicleNumber: driver.vehicleNumber,
       vehicleColor: driver.vehicleColor,
       vehicleMake: driver.vehicleMake,
       vehicleModel: driver.vehicleModel,
       rating: driver.rating,
-      location: driver.location,
+      location: exactCoordinates.length
+        ? { type: driver.location?.type || 'Point', coordinates: roundedCoordinates }
+        : driver.location,
       distanceMeters,
       etaMinutes,
     };

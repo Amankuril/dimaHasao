@@ -24,7 +24,12 @@ import { buildPaymentRequestContext, logPaymentDiagnostic } from '../../services
 export const uploadImage = asyncHandler(async (req, res) => {
     const folder = String(req.body?.folder || 'general').trim() || 'general';
     const scopedFolder = `taxi/${folder}`;
-    const replaceUrl = extractAssetUrl(req.body?.replaceUrl);
+    // replaceUrl is deliberately NOT honoured here. This route has to stay
+    // tokenless (driver onboarding uploads documents before an account
+    // exists), and storage deletes whatever replaceUrl names — so an anonymous
+    // caller could wipe any stored file. No taxi client sends it; the owning
+    // record's own update path is where an old image should be cleaned up.
+    const replaceUrl = null;
 
     if (req.file?.buffer) {
         const stored = await storeImageBuffer(req.file.buffer, scopedFolder, {

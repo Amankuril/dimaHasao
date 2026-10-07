@@ -136,6 +136,12 @@ const adminSchema = new mongoose.Schema(
             type: Date,
             select: false,
         },
+        // Wrong guesses against the current reset code; the code is void at 5.
+        resetPasswordAttempts: {
+            type: Number,
+            default: 0,
+            select: false,
+        },
     },
     {
         collection: 'admins',

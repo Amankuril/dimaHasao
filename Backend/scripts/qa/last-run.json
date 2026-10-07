@@ -1,8 +1,8 @@
 {
-  "total": 125,
-  "passed": 124,
+  "total": 121,
+  "passed": 117,
   "failed": 0,
-  "blocked": 1,
+  "blocked": 4,
   "critical": 0,
   "high": 0,
   "medium": 0,
@@ -361,22 +361,12 @@
     {
       "module": "authz",
       "id": "AUTHZ-120",
-      "title": "cannot settle another user's tour booking",
-      "status": "PASS",
-      "expected": "refused",
-      "actual": 400,
+      "title": "tour booking cross-user read",
+      "status": "BLOCKED",
+      "expected": "",
+      "actual": "",
       "severity": "Info",
-      "evidence": ""
-    },
-    {
-      "module": "authz",
-      "id": "AUTHZ-121",
-      "title": "cannot open a payment order on another user's tour",
-      "status": "PASS",
-      "expected": "401/403/404",
-      "actual": 404,
-      "severity": "Info",
-      "evidence": ""
+      "evidence": "could not create a tour booking to probe with"
     },
     {
       "module": "authz",
@@ -424,7 +414,7 @@
       "title": "consumer refused on tours operator bookings",
       "status": "PASS",
       "expected": "401/403/404",
-      "actual": 403,
+      "actual": 404,
       "severity": "Info",
       "evidence": ""
     },
@@ -444,7 +434,7 @@
       "title": "consumer refused on tours operator wallet",
       "status": "PASS",
       "expected": "401/403/404",
-      "actual": 403,
+      "actual": 404,
       "severity": "Info",
       "evidence": ""
     },
@@ -993,8 +983,8 @@
       "id": "BIZ-101",
       "title": "releasing a basket returns every seat",
       "status": "PASS",
-      "expected": "2990 left",
-      "actual": "2990",
+      "expected": "3000 left",
+      "actual": "3000",
       "severity": "Info",
       "evidence": ""
     },
@@ -1041,52 +1031,22 @@
     {
       "module": "business",
       "id": "BIZ-130",
-      "title": "a coupon below its minimum spend is refused",
-      "status": "PASS",
-      "expected": "no discount, with a reason",
-      "actual": "discount 0, reason This code needs a booking of at least ₹100000",
+      "title": "coupon rules",
+      "status": "BLOCKED",
+      "expected": "",
+      "actual": "",
       "severity": "Info",
-      "evidence": ""
-    },
-    {
-      "module": "business",
-      "id": "BIZ-131",
-      "title": "an unknown coupon still prices the trip",
-      "status": "PASS",
-      "expected": "200 with no discount",
-      "actual": "200, discount 0",
-      "severity": "Info",
-      "evidence": ""
+      "evidence": "no tour package to quote against"
     },
     {
       "module": "business",
       "id": "BIZ-140",
-      "title": "the booking charges what the quote showed",
-      "status": "PASS",
-      "expected": "total 4620, advance 1155",
-      "actual": "total 4620, advance 1155",
+      "title": "quote matches the booking",
+      "status": "BLOCKED",
+      "expected": "",
+      "actual": "",
       "severity": "Info",
-      "evidence": ""
-    },
-    {
-      "module": "business",
-      "id": "BIZ-141",
-      "title": "the settlement identity holds",
-      "status": "PASS",
-      "expected": "total = taxes + commission + payout",
-      "actual": "4620 vs 220 + 440 + 3960",
-      "severity": "Info",
-      "evidence": ""
-    },
-    {
-      "module": "business",
-      "id": "BIZ-142",
-      "title": "a new booking is unpaid until it is paid",
-      "status": "PASS",
-      "expected": "pending, nothing paid",
-      "actual": "pending, paid 0",
-      "severity": "Info",
-      "evidence": ""
+      "evidence": "no tour package"
     },
     {
       "module": "business",
@@ -1103,7 +1063,7 @@
       "id": "BIZ-151",
       "title": "a fare below the tariff is refused",
       "status": "PASS",
-      "expected": "4xx (tariff says about ₹847)",
+      "expected": "4xx (tariff says about ₹670)",
       "actual": 400,
       "severity": "Info",
       "evidence": ""
@@ -1134,7 +1094,7 @@
       "title": "a signed-in caller can upload an image",
       "status": "PASS",
       "expected": "200 with a url",
-      "actual": "200 http://localhost:5000/uploads/qa_33d183953964a17d6d44.webp",
+      "actual": "200 /uploads/qa_d86b5c36f0ed0ea74559.webp",
       "severity": "Info",
       "evidence": ""
     },
@@ -1204,7 +1164,7 @@
       "title": "a traversing folder name cannot escape the storage root",
       "status": "PASS",
       "expected": "refused or flattened",
-      "actual": "http://localhost:5000/uploads/tmp_qa-escape_8bb934b6f80fc5939d68.webp",
+      "actual": "/uploads/tmp_qa-escape_af480a274f2f90e08e87.webp",
       "severity": "Info",
       "evidence": ""
     },

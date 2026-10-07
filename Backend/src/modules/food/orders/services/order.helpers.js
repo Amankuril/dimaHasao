@@ -380,6 +380,42 @@ export async function applyAggregateRating(model, entityId, newRating) {
   await doc.save();
 }
 
+/**
+ * The rider socket payload for an order the rider has NOT accepted yet.
+ *
+ * Dispatch broadcasts each new order to several nearby riders. The full
+ * payload carried the customer's name, phone, street address and the whole
+ * payment object to every one of them, though only the rider who accepts ever
+ * needs it — and they get it from GET /orders/active once they do. Offers keep
+ * what a rider needs to decide: restaurant, area, amount, payment method.
+ * Mirrors the REST offer redaction in order-delivery.service.js.
+ */
+export function buildDeliveryOfferPayload(orderDoc, restaurantDoc = null) {
+  const full = buildDeliverySocketPayload(orderDoc, restaurantDoc);
+  const address = full.deliveryAddress || {};
+  const coords = address?.location?.coordinates;
+  const round = (v) => (Number.isFinite(Number(v)) ? Math.round(Number(v) * 1000) / 1000 : v);
+  return {
+    ...full,
+    deliveryAddress: {
+      city: address.city,
+      state: address.state,
+      zipCode: address.zipCode,
+      ...(Array.isArray(coords) && coords.length === 2
+        ? { location: { type: 'Point', coordinates: [round(coords[0]), round(coords[1])] } }
+        : {}),
+    },
+    customerAddress: [address.city, address.state].filter(Boolean).join(', '),
+    customerName: '',
+    customerPhone: '',
+    userName: '',
+    userPhone: '',
+    note: '',
+    payment: { method: full.payment?.method, status: full.payment?.status, amountDue: full.payment?.amountDue },
+    dispatch: { status: full.dispatch?.status },
+  };
+}
+
 export function buildDeliverySocketPayload(orderDoc, restaurantDoc = null) {
   const order = orderDoc?.toObject ? orderDoc.toObject() : orderDoc || {};
   const restaurant = restaurantDoc || order?.restaurantId || null;

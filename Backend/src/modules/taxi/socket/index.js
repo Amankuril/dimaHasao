@@ -20,6 +20,7 @@ import {
   notifyRideAccepted,
   setSocketServer,
   startDispatchFlow,
+  wasDriverNotifiedForRide,
 } from '../services/dispatchService.js';
 import { findZoneByPickup } from '../services/matchingService.js';
 import { acceptRideAssignment, createRideRecord, getRideRoom } from '../services/rideService.js';
@@ -83,7 +84,11 @@ const registerTaxiSocketConnectionHandlers = (io) => {
     addSocketSubscriptions(socket, { role: identity.role, entityId: identity.sub });
 
     socket.join(getSupportParticipantRoom(identity.role, identity.sub));
-    socket.join(getSupportRoleRoom(identity.role));
+    // The role room carries every conversation's updates; only support admins
+    // may sit in it (see broadcastSupportMessage).
+    if (identity.role === 'admin') {
+      socket.join(getSupportRoleRoom(identity.role));
+    }
 
     /*
      * Nothing here may await before the `socket.on(...)` registrations below.
@@ -113,9 +118,24 @@ const registerTaxiSocketConnectionHandlers = (io) => {
       });
     }
 
-    socket.on('chat:join', ({ conversationKey }) => {
+    socket.on('chat:join', ({ conversationKey } = {}) => {
       if (conversationKey) {
         const parsed = parseSupportConversationKey(conversationKey);
+
+        /*
+         * A rider or driver may only join their own conversation. Any key used
+         * to be joinable, so anyone could listen in on any support chat.
+         * Unparseable keys have no owner to check and are admin-only.
+         */
+        if (identity.role !== 'admin') {
+          if (
+            !parsed ||
+            parsed.peerRole !== identity.role ||
+            String(parsed.peerId) !== String(identity.sub)
+          ) {
+            return;
+          }
+        }
 
         if (parsed) {
           for (const key of parsed.keys) {
@@ -312,8 +332,15 @@ const registerTaxiSocketConnectionHandlers = (io) => {
       }),
     );
 
-    socket.on('rejectRide', ({ rideId }) => {
+    socket.on('rejectRide', async ({ rideId } = {}) => {
       if (identity.role !== 'driver' || !rideId) {
+        return;
+      }
+
+      // Only a driver this ride was actually offered to can reject it; any
+      // driver could otherwise mark itself into (and emit into) any ride.
+      const wasOffered = await wasDriverNotifiedForRide(rideId, identity.sub).catch(() => false);
+      if (!wasOffered) {
         return;
       }
 
@@ -321,7 +348,7 @@ const registerTaxiSocketConnectionHandlers = (io) => {
         console.error('Failed to mark driver rejection from dispatch', error);
       });
       socket.to(getRideRoom(rideId)).emit('driverRejectedRide', {
-        rideId,
+        rideId: String(rideId),
         driverId: identity.sub,
       });
     });

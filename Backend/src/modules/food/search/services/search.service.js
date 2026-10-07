@@ -1,4 +1,5 @@
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
+import { toPublicRestaurant } from '../../shared/publicRestaurant.js';
 import { FoodItem } from '../../admin/models/food.model.js';
 import { FoodCategory } from '../../admin/models/category.model.js';
 import { FoodZone } from '../../admin/models/zone.model.js';
@@ -56,12 +57,15 @@ export const searchUnified = async (query = {}, options = {}) => {
         minRating, 
         maxDeliveryTime, 
         isVeg,
-        page = 1,
-        limit = 20,
         zoneId,
         orderType
     } = query;
 
+    // Query values arrive as strings: `skip + limit` concatenated ("0" + "20")
+    // and an unbounded limit let one public request pull limit*6 food items and
+    // limit*3 full restaurant documents. Parsed and capped.
+    const page = Math.max(parseInt(query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(query.limit, 10) || 20, 1), 50);
     const skip = (page - 1) * limit;
     const term = String(q || '').trim();
     const regex = term ? new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
@@ -367,7 +371,9 @@ export const searchUnified = async (query = {}, options = {}) => {
     const finalResult = {
         success: true,
         data: {
-            restaurants: pageRestaurants,
+            // Full documents were returned here — bank, KYC and owner contact
+            // fields included — on an unauthenticated endpoint.
+            restaurants: pageRestaurants.map(toPublicRestaurant),
             total: results.length,
             page: parseInt(page),
             limit: parseInt(limit),

@@ -22,6 +22,13 @@ export const authMiddleware = (req, res, next) => {
         const decoded = verifyAccessToken(token);
         const userId = decoded.userId || decoded.sub || '';
         const role = String(decoded.role || '').toUpperCase();
+        // OTP signup tickets ({ phone, audience, purpose: 'signup' }) are signed
+        // with the same secret but are not sessions: they have no subject and
+        // no role. They used to pass here and reach every mount that checks
+        // only for a token (uploads, food payments).
+        if (decoded.purpose || !role || !userId) {
+            return sendError(res, 401, 'Invalid or expired token');
+        }
         req.user = {
             userId,
             role

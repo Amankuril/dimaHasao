@@ -198,14 +198,29 @@ export const sweepExpiredHolds = async (festivalId) => {
   });
 
   for (const booking of expired) {
-    await releaseSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount);
-    booking.bookingStatus = 'cancelled';
-    booking.cancelledAt = new Date();
-    booking.cancellationReason = 'Hold expired before payment';
-    await booking.save();
+    await cancelUnpaidHold(booking, 'Hold expired before payment');
   }
 
   return expired.length;
+};
+
+/**
+ * Cancel an unpaid hold and give its seats back — only if it is still an
+ * unpaid, uncancelled hold at the moment of the update.
+ *
+ * Release-then-save raced the payment verify: a payment confirmed between
+ * the load and the save was overwritten to 'cancelled' (paid, with no pass),
+ * and two sweeps could release the same seats twice.
+ */
+const cancelUnpaidHold = async (booking, reason) => {
+  const cancelled = await FestivalBooking.findOneAndUpdate(
+    { _id: booking._id, paymentStatus: 'pending', bookingStatus: { $ne: 'cancelled' } },
+    { $set: { bookingStatus: 'cancelled', cancelledAt: new Date(), cancellationReason: reason } },
+    { new: true }
+  );
+  if (!cancelled) return false;
+  await releaseSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount);
+  return true;
 };
 
 /**
@@ -458,11 +473,7 @@ export const releaseCheckout = async (req, res) => {
     });
 
     for (const booking of bookings) {
-      await releaseSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount);
-      booking.bookingStatus = 'cancelled';
-      booking.cancelledAt = new Date();
-      booking.cancellationReason = 'Payment not completed';
-      await booking.save();
+      await cancelUnpaidHold(booking, 'Payment not completed');
     }
 
     res.json({ success: true, released: bookings.length });
@@ -477,24 +488,70 @@ export const releaseHold = async (booking) => {
   await releaseSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount);
 };
 
-/** Mark a booking paid and issue its QR. Shared by both payment paths. */
-export const confirmBookingPayment = async (booking, { paymentId, paymentMethod } = {}) => {
-  if (booking.paymentStatus === 'paid') {
-    const error = new Error('This booking is already paid');
-    error.statusCode = 400;
-    throw error;
-  }
+/** What a successful payment writes onto a booking. */
+const paidFields = (booking, { paymentId, paymentMethod } = {}) => {
+  const set = {
+    paymentStatus: 'paid',
+    bookingStatus: 'confirmed',
+    amountPaid: booking.totalAmount,
+    // The gate pass only exists once the money does.
+    qrCode: booking.qrCode || issueQrCode(),
+  };
+  if (paymentId || booking.paymentId) set.paymentId = paymentId || booking.paymentId;
+  if (paymentMethod) set.paymentMethod = paymentMethod;
+  return set;
+};
 
-  booking.paymentStatus = 'paid';
-  booking.bookingStatus = 'confirmed';
-  booking.amountPaid = booking.totalAmount;
-  booking.paymentId = paymentId || booking.paymentId;
-  if (paymentMethod) booking.paymentMethod = paymentMethod;
-  // The gate pass only exists once the money does.
-  booking.qrCode = booking.qrCode || issueQrCode();
+/**
+ * Mark a booking paid and issue its QR. Shared by both payment paths.
+ *
+ * Only a booking still holding its seats (unpaid, not cancelled) is confirmed,
+ * in one conditional update. This was check-then-save: two concurrent
+ * verifies both passed, and a booking whose hold had expired — seats already
+ * handed back — was confirmed without them, overselling the category.
+ */
+export const confirmBookingPayment = async (booking, opts = {}) => {
+  const confirmed = await FestivalBooking.findOneAndUpdate(
+    { _id: booking._id, paymentStatus: 'pending', bookingStatus: { $in: ['pending', 'confirmed'] } },
+    { $set: paidFields(booking, opts) },
+    { new: true }
+  );
+  if (confirmed) return confirmed;
 
-  await booking.save();
-  return booking;
+  const current = await FestivalBooking.findById(booking._id).select('paymentStatus bookingStatus');
+  const error = new Error(
+    current?.paymentStatus === 'paid'
+      ? 'This booking is already paid'
+      : 'This booking was released before the payment completed'
+  );
+  error.statusCode = current?.paymentStatus === 'paid' ? 400 : 409;
+  throw error;
+};
+
+/**
+ * Confirm a paid booking whose seats were released (hold expired, checkout
+ * abandoned) while the buyer was paying.
+ *
+ * Seats are taken back first with the same conditional claim as a new
+ * booking; then the booking moves cancelled → paid in one update, so a
+ * concurrent verify cannot revive it twice. If that update loses, the seats
+ * just taken are returned.
+ *
+ * @returns {Promise<Object|null>} the confirmed booking, or null when the
+ *   seats are genuinely gone (the caller reports a refund is due).
+ */
+export const confirmReleasedBookingPayment = async (booking, opts = {}) => {
+  if (!(await claimSeatsForBooking(booking))) return null;
+
+  const confirmed = await FestivalBooking.findOneAndUpdate(
+    { _id: booking._id, paymentStatus: 'pending', bookingStatus: 'cancelled' },
+    { $set: { ...paidFields(booking, opts), cancelledAt: null, cancellationReason: '' } },
+    { new: true }
+  );
+  if (confirmed) return confirmed;
+
+  await releaseSeats(booking.festivalId, booking.ticketCategoryId, booking.ticketCount);
+  return confirmBookingPayment(booking, opts);
 };
 
 /** @route GET /v1/festivals/bookings/my */

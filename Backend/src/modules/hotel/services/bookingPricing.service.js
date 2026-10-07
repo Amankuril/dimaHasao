@@ -15,9 +15,7 @@ import AvailabilityLedger from '../models/AvailabilityLedger.js';
 import Booking from '../models/Booking.js';
 import Offer from '../models/Offer.js';
 import PaymentConfig from '../config/payment.config.js';
-import { priceStay } from '../utils/nightlyPricing.js';
-
-const DAY_MS = 1000 * 60 * 60 * 24;
+import { priceStay, countNights, istCalendarDay, MAX_STAY_NIGHTS } from '../utils/nightlyPricing.js';
 
 /**
  * Units left for a room type across a date range.
@@ -211,15 +209,16 @@ export const quoteStay = async ({
    * puts a check-in date behind the front desk's own clock. Compared at day
    * granularity so a booking made later the same morning still works.
    */
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  if (checkIn < startOfToday) {
+  // Compared on IST calendar dates — the same days the night count uses — so
+  // a booking made later the same morning still works wherever the server is.
+  if (istCalendarDay(checkIn) < istCalendarDay(new Date())) {
     const error = new Error('Check-in cannot be a date in the past');
     error.statusCode = 400;
     throw error;
   }
 
-  const totalNights = Math.ceil((checkOut - checkIn) / DAY_MS);
+  // One night count for the quote and the price (see countNights).
+  const totalNights = countNights(checkIn, checkOut);
 
   if (!totalNights || totalNights <= 0) {
     const error = new Error('Check-out must be after check-in');
@@ -227,7 +226,14 @@ export const quoteStay = async ({
     throw error;
   }
 
-  const requiredUnits = guests.rooms || 1;
+  if (totalNights > MAX_STAY_NIGHTS) {
+    const error = new Error(`A single booking can cover at most ${MAX_STAY_NIGHTS} nights`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Whole rooms only: this count is claimed from inventory and multiplies the price.
+  const requiredUnits = Math.max(1, Math.floor(Number(guests.rooms) || 1));
   const availability = await getAvailability({
     propertyId: property._id,
     roomTypeId: roomType._id,
@@ -286,6 +292,15 @@ export const quoteStay = async ({
 
   // TotalAmount - Tax - Commission = Gross - Discount - Commission.
   const partnerPayout = Math.floor(totalAmount - taxes - adminCommission);
+
+  // A stay that prices to nothing (an unpriced room, a coupon that ate the
+  // whole bill) must not be sold: the booking flow settles a zero balance as
+  // already paid, so it would confirm a free room and pay out commission.
+  if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
+    const error = new Error('This stay could not be priced. Please choose another room or dates.');
+    error.statusCode = 400;
+    throw error;
+  }
 
   return {
     totalNights,

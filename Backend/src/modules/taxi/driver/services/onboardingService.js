@@ -393,14 +393,30 @@ const publicDriverPayload = (driver) => {
   };
 };
 
+/*
+ * The registrationId is the applicant's proof of the session — it is only ever
+ * handed back by send-otp to whoever started it. Sessions used to be found by
+ * phone alone when it was missing, and every step is unauthenticated, so
+ * knowing someone's number was enough to read their documents or set their
+ * password. Every client step already sends registrationId.
+ */
 const getSession = async (registrationId, phone = '') => {
-  const query = registrationId
-    ? { registrationId: String(registrationId) }
-    : { phone: normalizePhone(phone) };
+  const normalizedRegistrationId = String(registrationId || '').trim();
 
-  const session = await DriverRegistrationSession.findOne(query).select('+personal.passwordHash');
+  if (!normalizedRegistrationId) {
+    throw new ApiError(400, 'registrationId is required');
+  }
+
+  const session = await DriverRegistrationSession.findOne({
+    registrationId: normalizedRegistrationId,
+  }).select('+personal.passwordHash');
 
   if (!session) {
+    throw new ApiError(404, 'Registration session not found');
+  }
+
+  const normalizedPhone = phone ? normalizePhone(phone) : '';
+  if (normalizedPhone && normalizedPhone !== session.phone) {
     throw new ApiError(404, 'Registration session not found');
   }
 
@@ -1046,7 +1062,15 @@ export const getDriverOnboardingSession = async ({ registrationId, phone }) => {
   const session = await getSession(registrationId, phone);
   return {
     session: publicSessionPayload(session),
-    personal: session.personal,
+    // getSession selects the password hash for the steps that need it; it
+    // must not go back out over this unauthenticated read.
+    personal: session.personal
+      ? {
+          fullName: session.personal.fullName,
+          email: session.personal.email,
+          gender: session.personal.gender,
+        }
+      : session.personal,
     referralCode: session.referralCode,
       vehicle: session.vehicle,
     documents: session.documents,

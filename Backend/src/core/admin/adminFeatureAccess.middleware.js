@@ -19,7 +19,7 @@ import {
   actionForMethod,
   findFeatureForPath,
   hasFeatureAction,
-  isAlwaysAllowedPath,
+  isAlwaysAllowedRequest,
 } from './adminFeatures.js';
 
 const ADMIN_FIELDS =
@@ -31,16 +31,26 @@ const ADMIN_FIELDS =
  * Every module signs a different claim — `userId` in food, `sub` in taxi, `id`
  * in hotel — so all three are read.
  */
-const subjectFromToken = (req) => {
+const decodeBearer = (req) => {
   const header = String(req.headers?.authorization || '');
-  if (!header.startsWith('Bearer ')) return '';
+  if (!header.startsWith('Bearer ')) return null;
 
   try {
-    const decoded = verifyAccessToken(header.slice(7).trim());
-    return String(decoded?.userId || decoded?.sub || decoded?.id || '');
+    return verifyAccessToken(header.slice(7).trim());
   } catch {
-    return '';
+    return null;
   }
+};
+
+const subjectFromToken = (req) => {
+  const decoded = decodeBearer(req);
+  return String(decoded?.userId || decoded?.sub || decoded?.id || '');
+};
+
+/** Whether the bearer token claims an admin role, in any module's spelling. */
+const tokenClaimsAdmin = (req) => {
+  const claimed = String(req.user?.role || req.auth?.role || decodeBearer(req)?.role || '').toUpperCase();
+  return ['ADMIN', 'SUB_ADMIN', 'SUPERADMIN', 'SUPER_ADMIN'].includes(claimed);
 };
 
 /**
@@ -83,17 +93,28 @@ const deny = (res, message) => res.status(403).json({ success: false, message })
  * @param {string} module - which module's panel this mount serves
  * @param {{ stripPrefix?: string }} [options] - taxi's admin routes are declared
  *   as `/admin/...` under a mount that is not `/admin`, so the prefix comes off
- *   before the catalogue sees the path.
+ *   before the catalogue sees the path. `addPrefix` does the reverse for a
+ *   section mounted outside its module's admin mount.
  */
-export const enforceAdminFeatureAccess = (module, { stripPrefix = '' } = {}) =>
+export const enforceAdminFeatureAccess = (module, { stripPrefix = '', addPrefix = '' } = {}) =>
   async function adminFeatureAccess(req, res, next) {
     try {
       const admin = await resolveAdmin(req);
 
       // No admin on the request means this mount is not admin-authenticated
       // yet; leave that to whatever guard owns it rather than inventing a
-      // verdict here.
-      if (!admin) return next();
+      // verdict here — unless the token says it IS an admin. Then a missing
+      // record means the admin was deleted, and passing would hand a deleted
+      // admin the panel with no limits at all (food's admin mount checks only
+      // the token's role claim, which outlives the account).
+      if (!admin) {
+        if (tokenClaimsAdmin(req)) return deny(res, 'Admin account not found');
+        return next();
+      }
+
+      if (admin.isActive === false) {
+        return deny(res, 'This admin account is deactivated');
+      }
 
       if (isSuperAdminLike(admin)) return next();
 
@@ -105,8 +126,11 @@ export const enforceAdminFeatureAccess = (module, { stripPrefix = '' } = {}) =>
       if (stripPrefix && (path === stripPrefix || path.startsWith(`${stripPrefix}/`))) {
         path = path.slice(stripPrefix.length) || '/';
       }
+      // A module section mounted outside its module's admin mount (festivals,
+      // under tours) names its feature by prefix.
+      if (addPrefix) path = `${addPrefix}${path === '/' ? '' : path}`;
 
-      if (isAlwaysAllowedPath(path)) return next();
+      if (isAlwaysAllowedRequest(req.method, path)) return next();
 
       const permission = findFeatureForPath(module, path);
       if (!permission) {

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../../../middlewares/authMiddleware.js';
+import { enforceAdminFeatureAccess } from '../../../../../core/admin/adminFeatureAccess.middleware.js';
 import {
   createBanner,
   createPromoCode,
@@ -21,7 +22,10 @@ import {
 
 export const promotionsRouter = Router();
 
-promotionsRouter.use('/admin', authenticate(['admin']));
+// Mounted at /v1 (routes/index.js), outside the taxi mount, so it never passed
+// the sub-admin feature gate: any admin — a food-only sub-admin included —
+// could create taxi promo codes and push notifications to every rider.
+promotionsRouter.use('/admin', authenticate(['admin']), enforceAdminFeatureAccess('taxi'));
 
 promotionsRouter.get('/admin/promotions/bootstrap', getPromotionsBootstrap);
 promotionsRouter.get('/admin/promos', getPromoCodes);

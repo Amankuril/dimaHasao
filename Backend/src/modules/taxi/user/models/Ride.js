@@ -205,6 +205,18 @@ const rideSchema = new mongoose.Schema(
       minlength: 4,
       maxlength: 4,
     },
+    // Wrong start-PIN guesses, checked server-side in updateRideLifecycle.
+    // Four digits is only 10k values, so the driver gets a few tries and is
+    // then locked out for a while rather than being able to walk the space.
+    otpFailedAttempts: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    otpLockedUntil: {
+      type: Date,
+      default: null,
+    },
     driverPaymentCollection: {
       provider: {
         type: String,

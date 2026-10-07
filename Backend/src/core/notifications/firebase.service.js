@@ -462,6 +462,16 @@ export const upsertPendingFirebaseDeviceTokenByPhone = async ({
         throw error;
     }
 
+    // This route is unauthenticated by design — an applicant awaiting approval
+    // has no session yet. It accepted approved partners too, so anyone who knew
+    // a live restaurant's or rider's phone could route its new-order pushes to
+    // their own device. Approved accounts register through /save with a session.
+    if (['approved', 'banned'].includes(String(owner.status || '').toLowerCase())) {
+        const error = new Error('Sign in to register notifications for this account');
+        error.statusCode = 400;
+        throw error;
+    }
+
     logger.info(
         `[FCM Service] pending-save start ownerType=${ownerType} ownerId=${owner._id} platform=${normalizedPlatform} tokenPreview=${previewToken(normalizedToken)}`
     );

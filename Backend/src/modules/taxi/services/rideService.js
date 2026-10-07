@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import { ApiError } from '../../../utils/ApiError.js';
 import { getOrLoadCachedValue } from '../../../utils/cache.js';
@@ -18,6 +19,7 @@ import { getTipSettings } from './appSettingsService.js';
 // Pure helpers; fareService imports resolveSetPriceForRide from here, and this
 // direction of the cycle only needs functions that touch no module state.
 import { fareFromTariff, fareWithinTolerance } from './fareService.js';
+import { DRIVER_ELIGIBLE_FOR_RIDES_FILTER } from './matchingService.js';
 
 const clearUserActiveRideIfPresent = async (user) => {
   if (!user?.currentRideId) {
@@ -36,6 +38,22 @@ const clearUserActiveRideIfPresent = async (user) => {
     user.currentRideId = null;
     await user.save();
     return;
+  }
+
+  // A booking for later is not in the way of riding now; it is left alone
+  // (it used to be cancelled here without telling anyone, driver included).
+  if (isRideScheduledForFuture(activeRide)) {
+    return;
+  }
+
+  /*
+   * Booking again used to silently cancel whatever ride was current — even one
+   * a driver had accepted or that was already under way, with no cancellation
+   * fee, no driver notification and no dispatch cleanup. Only a ride still
+   * searching (the rider re-booking after giving up on a search) is replaced.
+   */
+  if (activeRide.status !== RIDE_STATUS.SEARCHING) {
+    throw new ApiError(409, 'You already have a ride in progress. Finish or cancel it before booking another.');
   }
 
   activeRide.status = RIDE_STATUS.CANCELLED;
@@ -357,7 +375,8 @@ const processCompletedDriverReferralReward = async (ride) => {
 };
 
 const normalizeAddress = (value = '') => String(value || '').trim();
-const generateRideOtp = () => String(Math.floor(1000 + Math.random() * 9000));
+// crypto, not Math.random: the start PIN is what proves the rider is in the car.
+const generateRideOtp = () => String(crypto.randomInt(1000, 10000));
 const normalizeIntercityPayload = (intercity = {}) => ({
   bookingId: String(intercity.bookingId || '').trim(),
   fromCity: String(intercity.fromCity || '').trim(),
@@ -915,7 +934,12 @@ const populateRideRealtime = async (rideId) =>
     .populate('userId', 'name phone')
     .populate('driverId', 'name phone profileImage vehicleType vehicleIconType vehicleNumber vehicleColor vehicleMake vehicleModel vehicleImage rating');
 
-export const serializeRideRealtime = (ride) => ({
+/*
+ * viewerRole decides whether the start PIN is included: only the rider gets
+ * it. Anything broadcast to the ride room (rider AND driver) or mirrored out
+ * must be serialized without a viewerRole, which leaves the PIN out.
+ */
+export const serializeRideRealtime = (ride, { viewerRole = null } = {}) => ({
   rideId: String(ride._id),
   room: getRideRoom(ride._id),
   type: ride.serviceType || 'ride',
@@ -943,7 +967,7 @@ export const serializeRideRealtime = (ride) => ({
         updatedAt: ride.driverPaymentCollection.updatedAt || null,
       }
     : null,
-  otp: ride.otp || '',
+  ...(viewerRole === 'user' ? { otp: ride.otp || '' } : {}),
   intercity: ride.intercity || null,
   commissionAmount: ride.commissionAmount,
   driverEarnings: ride.driverEarnings,
@@ -1121,7 +1145,8 @@ export const listRideHistoryForIdentity = async ({ role, entityId, limit = 50, p
     estimatedDistanceMeters: ride.estimatedDistanceMeters || 0,
     estimatedDurationMinutes: ride.estimatedDurationMinutes || 0,
     paymentMethod: ride.paymentMethod,
-    otp: ride.otp || '',
+    // Rider history only; the driver must never be sent the start PIN.
+    ...(role === 'user' ? { otp: ride.otp || '' } : {}),
     intercity: ride.intercity || null,
     pricingSnapshot: ride.pricingSnapshot || null,
     commissionAmount: ride.commissionAmount,
@@ -1180,6 +1205,9 @@ export const acceptRideAssignment = async ({ rideId, driverId }) => {
         isOnline: true,
         isOnRide: false,
         'wallet.isBlocked': { $ne: true },
+        // Same eligibility as matching: a disabled/unapproved driver who still
+        // had a request on screen must not be able to take it.
+        ...DRIVER_ELIGIBLE_FOR_RIDES_FILTER,
         ...driverVehicleFilter,
       }).session(session);
 
@@ -1251,13 +1279,63 @@ const rideStatusConfig = {
     persistedStatus: RIDE_STATUS.ONGOING,
     allowedCurrent: [RIDE_LIVE_STATUS.STARTED, RIDE_LIVE_STATUS.ARRIVED],
   },
+  // Only a ride that actually started can complete. Accepted/arriving used to
+  // be allowed too, which let a driver "complete" a trip the rider never took
+  // (no PIN, no pickup) and have it settled into their wallet.
   [RIDE_LIVE_STATUS.COMPLETED]: {
     persistedStatus: RIDE_STATUS.COMPLETED,
-    allowedCurrent: [RIDE_LIVE_STATUS.STARTED, RIDE_LIVE_STATUS.ARRIVED, RIDE_LIVE_STATUS.ARRIVING, RIDE_LIVE_STATUS.ACCEPTED],
+    allowedCurrent: [RIDE_LIVE_STATUS.STARTED, RIDE_LIVE_STATUS.ARRIVED],
   },
 };
 
-export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymentMethod }) => {
+const RIDE_OTP_MAX_ATTEMPTS = 5;
+const RIDE_OTP_LOCK_MS = 10 * 60 * 1000;
+
+const ridePinMatches = (expected, provided) => {
+  const a = Buffer.from(String(expected || ''));
+  const b = Buffer.from(String(provided || '').trim());
+  return a.length > 0 && a.length === b.length && crypto.timingSafeEqual(a, b);
+};
+
+/*
+ * The start PIN is the rider's proof they are in the car. It used to be
+ * compared only in the driver app — which was sent the PIN to compare against —
+ * so any driver could start (and then complete and get paid for) a trip with
+ * no rider. It is checked here now, and never sent to the driver.
+ */
+const verifyRideStartOtp = async (ride, otp) => {
+  if (!ride.otp) {
+    // Every ride is created with a PIN; a ride without one has nothing to check.
+    return;
+  }
+
+  const lockedUntil = ride.otpLockedUntil ? new Date(ride.otpLockedUntil).getTime() : 0;
+  if (lockedUntil > Date.now()) {
+    throw new ApiError(429, 'Too many wrong PINs. Try again in a few minutes.');
+  }
+
+  if (ridePinMatches(ride.otp, otp)) {
+    return;
+  }
+
+  const updated = await Ride.findOneAndUpdate(
+    { _id: ride._id },
+    { $inc: { otpFailedAttempts: 1 } },
+    { returnDocument: 'after', projection: { otpFailedAttempts: 1 } },
+  ).lean();
+
+  if (Number(updated?.otpFailedAttempts || 0) >= RIDE_OTP_MAX_ATTEMPTS) {
+    await Ride.updateOne(
+      { _id: ride._id },
+      { $set: { otpFailedAttempts: 0, otpLockedUntil: new Date(Date.now() + RIDE_OTP_LOCK_MS) } },
+    );
+    throw new ApiError(429, 'Too many wrong PINs. Try again in a few minutes.');
+  }
+
+  throw new ApiError(400, 'Wrong PIN. Ask the passenger again.');
+};
+
+export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymentMethod, otp }) => {
   const config = rideStatusConfig[nextStatus];
 
   if (!config) {
@@ -1274,19 +1352,31 @@ export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymen
     throw new ApiError(409, `Ride cannot move from ${ride.liveStatus} to ${nextStatus}`);
   }
 
-  ride.liveStatus = nextStatus;
-  ride.status = config.persistedStatus;
+  const previousLiveStatus = ride.liveStatus;
+
+  // started -> started is the idempotent re-publish the driver app sends over
+  // the socket after its REST call; the PIN was already checked on the way in.
+  if (nextStatus === RIDE_LIVE_STATUS.STARTED && previousLiveStatus !== RIDE_LIVE_STATUS.STARTED) {
+    await verifyRideStartOtp(ride, otp);
+  }
+
+  const updates = {
+    liveStatus: nextStatus,
+    status: config.persistedStatus,
+  };
 
   if (nextStatus === RIDE_LIVE_STATUS.ACCEPTED) {
-    ride.arrivedAt = null;
+    updates.arrivedAt = null;
   }
 
   if (nextStatus === RIDE_LIVE_STATUS.ARRIVING && !ride.arrivedAt) {
-    ride.arrivedAt = new Date();
+    updates.arrivedAt = new Date();
   }
 
   if (nextStatus === RIDE_LIVE_STATUS.STARTED && !ride.startedAt) {
-    ride.startedAt = new Date();
+    updates.startedAt = new Date();
+    updates.otpFailedAttempts = 0;
+    updates.otpLockedUntil = null;
   }
 
   if (paymentMethod !== undefined && paymentMethod !== null && String(paymentMethod).trim()) {
@@ -1302,21 +1392,44 @@ export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymen
      * method or a QR/Razorpay collection has actually been verified paid.
      */
     if (requestedPaymentMethod !== 'online' || ride.paymentMethod === 'online' || hasVerifiedOnlinePaymentCollection(ride)) {
-      ride.paymentMethod = requestedPaymentMethod;
+      updates.paymentMethod = requestedPaymentMethod;
     }
   }
 
   if (nextStatus === RIDE_LIVE_STATUS.COMPLETED) {
-    ride.completedAt = new Date();
+    updates.completedAt = new Date();
   }
 
-  await ride.save();
+  /*
+   * Conditional on the status we validated against. This used to be a
+   * read-then-save, so a rider cancelling between the read and the save had
+   * the cancellation silently overwritten by the driver's update (and a
+   * cancelled ride could then be completed and settled).
+   */
+  const updatedRide = await Ride.findOneAndUpdate(
+    {
+      _id: ride._id,
+      driverId,
+      liveStatus: previousLiveStatus,
+      status: { $ne: RIDE_STATUS.CANCELLED },
+    },
+    { $set: updates },
+    { returnDocument: 'after' },
+  );
+
+  if (!updatedRide) {
+    throw new ApiError(409, 'Ride status changed. Please refresh and try again.');
+  }
+
+  // A repeat 'completed' must not settle the wallet twice: only the call that
+  // actually moved the ride into completed runs the side effects below.
+  const justCompleted = nextStatus === RIDE_LIVE_STATUS.COMPLETED && previousLiveStatus !== RIDE_LIVE_STATUS.COMPLETED;
 
   let walletUpdate = null;
 
-  if (nextStatus === RIDE_LIVE_STATUS.COMPLETED) {
+  if (justCompleted) {
     await Promise.all([
-      User.findByIdAndUpdate(ride.userId, { currentRideId: null }),
+      User.findByIdAndUpdate(updatedRide.userId, { currentRideId: null }),
       Driver.findByIdAndUpdate(driverId, { isOnRide: false }),
     ]);
 
@@ -1325,13 +1438,13 @@ export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymen
 
     await incrementDriverTodaySummaryForCompletedRide({
       driverId,
-      completedAt: settledRide?.completedAt || ride.completedAt,
+      completedAt: settledRide?.completedAt || updatedRide.completedAt,
       driverEarnings: settledRide?.driverEarnings,
       distanceMeters: settledRide?.estimatedDistanceMeters,
     });
 
-    await processCompletedRideReferralReward(ride);
-    await processCompletedDriverReferralReward(ride);
+    await processCompletedRideReferralReward(updatedRide);
+    await processCompletedDriverReferralReward(updatedRide);
   }
 
   const populatedRide = await populateRideRealtime(ride._id);

@@ -53,6 +53,10 @@ const resolveAccount = async (decoded) => {
   return null;
 };
 
+const isDeactivatedAdmin = (resolved) =>
+  ['admin', 'superadmin'].includes(resolved?.role) &&
+  (resolved.account?.isActive === false || resolved.account?.active === false);
+
 export const protect = async (req, res, next) => {
   try {
     const token = readToken(req);
@@ -68,6 +72,12 @@ export const protect = async (req, res, next) => {
         message: 'Your account has been blocked. Please contact support.',
         isBlocked: true,
       });
+    }
+
+    // A deactivated platform admin keeps a valid token until it expires; only
+    // isBlocked was checked, so they kept tours admin access. Users unaffected.
+    if (isDeactivatedAdmin(resolved)) {
+      return res.status(403).json({ message: 'This admin account has been deactivated.' });
     }
 
     req.user = resolved.account;
@@ -95,7 +105,7 @@ export const optionalProtect = async (req, _res, next) => {
     const token = readToken(req);
     if (token) {
       const resolved = await resolveAccount(verifyToken(token));
-      if (resolved && !resolved.account.isBlocked) {
+      if (resolved && !resolved.account.isBlocked && !isDeactivatedAdmin(resolved)) {
         req.user = resolved.account;
         req.userRole = resolved.role;
       }

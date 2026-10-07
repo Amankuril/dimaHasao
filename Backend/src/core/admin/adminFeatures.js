@@ -79,6 +79,8 @@ export const ADMIN_FEATURES = {
     feature('reports', 'Reports', ['/reports']),
     feature('referral_settings', 'Referral settings', ['/referral-settings']),
     feature('landing_pages', 'Landing & social pages', ['/pages-social-media']),
+    // Mounted at /v1/food (landing.routes.js), not /v1/food/admin.
+    feature('landing_banners', 'Home banners & landing settings', ['/hero-banners']),
     feature('archived_accounts', 'Archived accounts', ['/archived-accounts']),
   ],
 
@@ -95,6 +97,8 @@ export const ADMIN_FEATURES = {
     feature('wallet', 'Wallet & payouts', ['/wallet', '/payment-methods'], ['wallet.view', 'earnings.view']),
     feature('referrals', 'Referrals', ['/referrals', '/referral'], ['referrals.view']),
     feature('safety', 'Safety', ['/safety'], ['support.view']),
+    // /v1/taxi/chats is gated with addPrefix '/chats' (taxi/routes/index.js).
+    feature('support_chat', 'Rider & driver support chat', ['/chats'], ['support.view']),
     feature('reports', 'Reports', ['/reports'], ['reports.view']),
     feature('general_settings', 'General settings', ['/general-settings'], ['settings.view']),
     feature('integration_settings', 'Integration settings', ['/integration-settings'], ['settings.view']),
@@ -105,7 +109,8 @@ export const ADMIN_FEATURES = {
     // 'promotions.view' (Frontend/.../AdminLayout.jsx), so either feature has
     // to emit it or the grant here would produce a sidebar that never shows up.
     feature('promo_codes', 'Promo codes', ['/promos', '/promotions'], ['promotions.view']),
-    feature('banners', 'Banners & push notifications', ['/banners', '/push-notifications'], ['promotions.view']),
+    // '/notifications' reads stay always-allowed; sending (POST) needs this grant.
+    feature('banners', 'Banners & push notifications', ['/banners', '/push-notifications', '/notifications'], ['promotions.view']),
     feature('onboarding', 'Onboarding screens', ['/on-boarding', '/on-boarding-driver']),
   ],
 
@@ -131,6 +136,9 @@ export const ADMIN_FEATURES = {
     feature('offers', 'Offers', ['/offers']),
     feature('reviews', 'Reviews', ['/reviews']),
     feature('settings', 'Settings', ['/settings']),
+    // Festivals share the tours admin section but mount at /v1/festivals/admin,
+    // which runs the gate with addPrefix '/festivals' so it lands here.
+    feature('festivals', 'Festivals & passes', ['/festivals']),
   ],
 };
 
@@ -168,6 +176,36 @@ export const isAlwaysAllowedPath = (path) => {
   const normalized = normalizePath(path);
   return ALWAYS_ALLOWED_PATHS.some(
     (allowed) => normalized === allowed || normalized.startsWith(`${allowed}/`),
+  );
+};
+
+/**
+ * Writes a sub-admin may make under an always-allowed path: only ones that act
+ * on their own account or upload a file. Everything else under those paths
+ * needs a grant like any other write.
+ *
+ * ALWAYS_ALLOWED_PATHS used to apply to every method, so a sub-admin holding
+ * any one grant could POST /notifications/broadcast (push to every user),
+ * PATCH /business-settings or /customization-settings, and create or delete
+ * taxi app modules under /common.
+ */
+const SELF_SERVICE_WRITES = [
+  { methods: ['PUT', 'PATCH', 'POST'], pattern: /^\/(me|profile|fcm-token)(\/.*)?$/ },
+  { methods: ['POST'], pattern: /^\/(upload-image|common\/upload\/image)$/ },
+  { methods: ['PUT', 'PATCH'], pattern: /^\/notifications\/(read-all|[^/]+\/read)$/ },
+  { methods: ['DELETE'], pattern: /^\/notifications$/ },
+];
+
+const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/** Whether a sub-admin may make this request without a feature grant. */
+export const isAlwaysAllowedRequest = (method, path) => {
+  if (!isAlwaysAllowedPath(path)) return false;
+  const verb = String(method || 'GET').toUpperCase();
+  if (READ_METHODS.has(verb)) return true;
+  const normalized = normalizePath(path);
+  return SELF_SERVICE_WRITES.some(
+    (rule) => rule.methods.includes(verb) && rule.pattern.test(normalized),
   );
 };
 

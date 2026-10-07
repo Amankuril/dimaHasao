@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Partner from '../models/Partner.js';
 import Admin from '../models/Admin.js';
 import { FoodUser } from '../../../core/users/user.model.js';
+import { hasModuleAccess } from '../../../core/admin/adminHierarchy.service.js';
 
 // This module arrived from a standalone service that signed tokens with
 // JWT_SECRET and put the subject in `id`. The platform signs with
@@ -62,6 +63,20 @@ const withHotelRole = (account) => {
   }
 
   const plain = typeof account.toObject === 'function' ? account.toObject() : { ...account };
+
+  /*
+   * Only an admin who may administer hotels becomes a hotel admin.
+   *
+   * Every platform admin used to come out as 'admin' — including a sub-admin
+   * granted only food or taxi. The /admin mount is feature-gated in core, but
+   * the routes outside it (properties, bookings, payments, wallet) authorize on
+   * the role alone, so that sub-admin could edit any listing or refund any
+   * booking. One without hotel access is no admin here.
+   */
+  if (!hasModuleAccess(plain, 'hotel')) {
+    return { ...plain, role: 'admin_without_hotel_access', isPlatformAdmin: false };
+  }
+
   return {
     ...plain,
     role: plain.adminLevel === 'platform_superadmin' ? 'superadmin' : 'admin',
@@ -87,6 +102,11 @@ const resolveAccount = async (decoded) => {
 
   return withHotelRole(account);
 };
+
+/** A platform admin account (any hotel role it was mapped to) that was switched off. */
+const isDeactivatedAdmin = (account) =>
+  Boolean(account?.adminLevel || account?.isPlatformAdmin || account?.role === 'admin_without_hotel_access') &&
+  (account.isActive === false || account.active === false);
 
 export const protect = async (req, res, next) => {
   try {
@@ -114,6 +134,13 @@ export const protect = async (req, res, next) => {
         message: 'Your account has been blocked by admin. Please contact support.',
         isBlocked: true
       });
+    }
+
+    // A deactivated platform admin keeps a valid token until it expires, and
+    // only isBlocked was checked here, so they kept hotel admin access.
+    // Users and partners are untouched.
+    if (isDeactivatedAdmin(user)) {
+      return res.status(403).json({ message: 'This admin account has been deactivated.' });
     }
 
     req.user = user;
@@ -150,7 +177,7 @@ export const optionalProtect = async (req, res, next) => {
 
     if (token) {
       const user = await resolveAccount(verifyToken(token));
-      if (user && !user.isBlocked) {
+      if (user && !user.isBlocked && !isDeactivatedAdmin(user)) {
         req.user = user;
       }
     }

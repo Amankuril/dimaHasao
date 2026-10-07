@@ -1271,63 +1271,73 @@ export const updateWithdrawalStatus = async (req, res) => {
     }
 
     const now = new Date();
-    withdrawal.status = status;
-    withdrawal.processingDetails = withdrawal.processingDetails || {};
-    if (remarks) withdrawal.processingDetails.remarks = remarks;
-    if (utrNumber) withdrawal.processingDetails.utrNumber = String(utrNumber).trim();
-    if (status === 'processing') withdrawal.processingDetails.processedAt = now;
-    if (status === 'completed') withdrawal.processingDetails.completedAt = now;
-    if (REFUNDING_STATUSES.includes(status)) withdrawal.processingDetails.failedAt = now;
+    const fromStatus = withdrawal.status;
+    const set = { status };
+    if (remarks) set['processingDetails.remarks'] = remarks;
+    if (utrNumber) set['processingDetails.utrNumber'] = String(utrNumber).trim();
+    if (status === 'processing') set['processingDetails.processedAt'] = now;
+    if (status === 'completed') set['processingDetails.completedAt'] = now;
+    if (REFUNDING_STATUSES.includes(status)) set['processingDetails.failedAt'] = now;
+
+    /*
+     * Move the status only from the one we validated against.
+     *
+     * This was read-check-save, so two admins (or a double-click) failing the
+     * same request both passed the transition check and both credited the
+     * amount back. The conditional update lets exactly one of them through.
+     */
+    const updated = await Withdrawal.findOneAndUpdate(
+      { _id: withdrawal._id, status: fromStatus },
+      { $set: set },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(409).json({ success: false, message: 'This withdrawal was updated by someone else. Please refresh.' });
+    }
 
     // The wallet was debited when the request was raised, so a payout that
     // never happened has to be credited back before the request is closed.
+    // Through the wallet's atomic credit, which also writes the ledger row —
+    // the old in-memory `balance +=` could overwrite a concurrent movement.
     if (REFUNDING_STATUSES.includes(status)) {
-      const wallet = await Wallet.findById(withdrawal.walletId);
+      const wallet = await Wallet.findById(updated.walletId);
       if (wallet) {
-        wallet.balance += withdrawal.amount;
-        wallet.totalWithdrawals = Math.max(0, (wallet.totalWithdrawals || 0) - withdrawal.amount);
-        await wallet.save();
-
-        await Transaction.create({
-          walletId: wallet._id,
-          partnerId: withdrawal.partnerId,
-          modelType: 'Partner',
-          type: 'credit',
-          category: 'refund',
-          amount: withdrawal.amount,
-          balanceAfter: wallet.balance,
-          description: `Withdrawal ${withdrawal.withdrawalId} ${status} — amount returned`,
-          reference: withdrawal.withdrawalId,
-          status: 'completed',
-          metadata: { withdrawalId: withdrawal.withdrawalId, reason: remarks || status },
-        });
+        await wallet.credit(
+          updated.amount,
+          `Withdrawal ${updated.withdrawalId} ${status} — amount returned`,
+          updated.withdrawalId,
+          'refund'
+        );
+        // credit() leaves totalWithdrawals alone; this payout never happened.
+        await Wallet.updateOne(
+          { _id: wallet._id, totalWithdrawals: { $gte: updated.amount } },
+          { $inc: { totalWithdrawals: -updated.amount } }
+        );
       }
     }
 
-    if (withdrawal.transactionId) {
-      await Transaction.findByIdAndUpdate(withdrawal.transactionId, {
+    if (updated.transactionId) {
+      await Transaction.findByIdAndUpdate(updated.transactionId, {
         status: status === 'completed' ? 'completed' : REFUNDING_STATUSES.includes(status) ? 'failed' : 'pending',
       });
     }
 
-    await withdrawal.save();
-
     notificationService
       .sendToUser(
-        withdrawal.partnerId,
+        updated.partnerId,
         {
           title: 'Payout update',
           body:
             status === 'completed'
-              ? `₹${withdrawal.amount} has been paid out (ref ${withdrawal.processingDetails.utrNumber}).`
-              : `Your withdrawal ${withdrawal.withdrawalId} is now ${status}.`,
+              ? `₹${updated.amount} has been paid out (ref ${updated.processingDetails.utrNumber}).`
+              : `Your withdrawal ${updated.withdrawalId} is now ${status}.`,
         },
-        { type: 'withdrawal_update', withdrawalId: String(withdrawal._id) },
+        { type: 'withdrawal_update', withdrawalId: String(updated._id) },
         'partner',
       )
       .catch((err) => console.error('Withdrawal notification failed:', err));
 
-    res.json({ success: true, withdrawal });
+    res.json({ success: true, withdrawal: updated });
   } catch (error) {
     console.error('Update Withdrawal Status Error:', error);
     res.status(500).json({ success: false, message: 'Failed to update withdrawal' });

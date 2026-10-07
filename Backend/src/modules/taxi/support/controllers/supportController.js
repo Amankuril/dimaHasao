@@ -219,7 +219,8 @@ export const listMySupportTickets = async (req, res) => {
 
   const statusList = normalizeStatusFilter(req.query.status);
   const page = toInt(req.query.page, 1);
-  const limit = toInt(req.query.limit, 20);
+  // Capped: an uncapped limit let one request pull the whole collection.
+  const limit = Math.min(toInt(req.query.limit, 20), 100);
 
   const query = {
     requesterRole,
@@ -444,17 +445,21 @@ export const adminListSupportTickets = async (req, res) => {
   const userType = toLowerText(req.query.userType);
   const search = toText(req.query.search);
   const page = toInt(req.query.page, 1);
-  const limit = toInt(req.query.limit, 20);
+  // Capped: an uncapped limit let one request pull the whole collection.
+  const limit = Math.min(toInt(req.query.limit, 20), 100);
 
   const query = {};
   if (statusList) query.status = { $in: statusList };
   if (USER_TYPE_SET.has(userType)) query.userType = userType;
   if (search) {
+    // Escaped: the raw text was used as a pattern, so a crafted search could
+    // run a catastrophic regex against every ticket.
+    const pattern = search.slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     query.$or = [
-      { ticketCode: { $regex: search, $options: 'i' } },
-      { title: { $regex: search, $options: 'i' } },
-      { requesterName: { $regex: search, $options: 'i' } },
-      { requesterPhone: { $regex: search, $options: 'i' } },
+      { ticketCode: { $regex: pattern, $options: 'i' } },
+      { title: { $regex: pattern, $options: 'i' } },
+      { requesterName: { $regex: pattern, $options: 'i' } },
+      { requesterPhone: { $regex: pattern, $options: 'i' } },
     ];
   }
 

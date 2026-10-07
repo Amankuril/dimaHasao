@@ -319,7 +319,26 @@ export const settleCompletedRideWallet = async ({ rideId }) => {
       type: commissionConfig.type,
       value: commissionConfig.value,
     });
-    const paymentMethod = normalizePaymentMethod(ride.paymentMethod);
+    /*
+     * An 'online' ride only means the rider *chose* online at booking. The
+     * fare used to be credited to the driver's wallet on that label alone, so
+     * a ride the rider then paid in cash (or never paid) still paid the driver
+     * out of platform money. The fare is credited here only when the server
+     * has verified the collection (driver QR polled paid against the fare).
+     *
+     * Anything else settles as cash: commission is deducted, and if the rider
+     * pays in-app afterwards, finalizeRideCompletion (rideController.js) sees
+     * paymentMethod 'cash' and credits the full fare then — the same path an
+     * ordinary cash ride paid online already takes. Net to the driver is the
+     * same driverEarnings, just only once the money actually exists.
+     */
+    const collection = ride.driverPaymentCollection || {};
+    const collectionVerifiedPaid =
+      (Boolean(collection.paidAt) || String(collection.status || '').trim().toLowerCase() === 'paid')
+      && Number(collection.amount || 0) + 0.001 >= fare;
+    const paymentMethod = normalizePaymentMethod(ride.paymentMethod) === 'online' && collectionVerifiedPaid
+      ? 'online'
+      : 'cash';
     const driverEarnings = Math.max(Math.round((fare - commissionAmount) * 100) / 100, 0);
     const amount = paymentMethod === 'cash' ? -commissionAmount : driverEarnings;
     const type = paymentMethod === 'cash' ? 'commission_deduction' : 'ride_earning';

@@ -35,7 +35,8 @@ try {
     console.warn("⚠️ Razorpay Keys missing. Payment features will fail if used.");
     razorpay = {
       orders: {
-        create: () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)"))
+        create: () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)")),
+        fetch: () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)"))
       },
       payments: {
         fetch: () => Promise.reject(new Error("Razorpay Not Initialized")),
@@ -227,11 +228,11 @@ export const getTransactions = async (req, res) => {
  */
 export const requestWithdrawal = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const amount = Number(req.body.amount);
     const role = getWalletRole(req.user.role, 'partner'); // Withdrawals only for partners generally
 
     // Validation
-    if (!amount || amount < PaymentConfig.minWithdrawalAmount) {
+    if (!Number.isFinite(amount) || amount < PaymentConfig.minWithdrawalAmount) {
       return res.status(400).json({
         message: `Minimum withdrawal amount is ₹${PaymentConfig.minWithdrawalAmount}`
       });
@@ -281,7 +282,7 @@ export const requestWithdrawal = async (req, res) => {
     const razorpayBaseUrl = 'https://api.razorpay.com/v1';
 
     // Helper for API Calls
-    const rpRequest = async (method, endpoint, data) => {
+    const rpRequest = async (method, endpoint, data, extraHeaders = {}) => {
       try {
         // Verify Account Number is not a placeholder
         if (endpoint === '/payouts' && data.account_number?.includes('XXXX')) {
@@ -295,9 +296,13 @@ export const requestWithdrawal = async (req, res) => {
           url: `${razorpayBaseUrl}${endpoint}`,
           headers: {
             'Authorization': authHeader,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...extraHeaders
           },
-          data
+          data,
+          // Without a timeout a hung RazorpayX call held the request open
+          // indefinitely with the partner's money reserved and no record.
+          timeout: 15000
         });
         return result.data;
       } catch (error) {
@@ -309,6 +314,32 @@ export const requestWithdrawal = async (req, res) => {
         });
         throw new Error(errorDesc);
       }
+    };
+
+    /*
+     * Reserve the money before any of it can leave.
+     *
+     * The balance used to be checked, the real RazorpayX payout sent, and only
+     * then `balance -= amount; save()` — so two concurrent requests both passed
+     * the check and both were paid out, and the in-memory save could also
+     * overwrite a concurrent credit. The wallet's debit is one guarded $inc,
+     * so only requests the balance actually covers get past this line.
+     */
+    const withdrawalId = 'WD' + Date.now() + Math.floor(Math.random() * 1000);
+    try {
+      await wallet.debit(amount, `Withdrawal Request (${withdrawalId})`, withdrawalId, 'withdrawal');
+    } catch (err) {
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+
+    // Anything that fails before the withdrawal is recorded gives the money back.
+    let recorded = false;
+    const releaseReservation = async () => {
+      if (recorded) return;
+      await wallet
+        .credit(amount, `Withdrawal ${withdrawalId} not raised — amount returned`, withdrawalId, 'refund')
+        .then(() => Wallet.updateOne({ _id: wallet._id, totalWithdrawals: { $gte: amount } }, { $inc: { totalWithdrawals: -amount } }))
+        .catch((e) => console.error(`Withdrawal ${withdrawalId} reservation release failed:`, e.message));
     };
 
     let payoutId = null;
@@ -346,7 +377,9 @@ export const requestWithdrawal = async (req, res) => {
         await wallet.save();
       }
 
-      // 4. Create Payout
+      // 4. Create Payout. Keyed on our withdrawal id so a retried call cannot
+      // become a second payout; a timeout lands in 'manual' with the money
+      // still reserved, for an admin to reconcile against RazorpayX.
       const payout = await rpRequest('post', '/payouts', {
         account_number: PaymentConfig.razorpayAccountNumber,
         fund_account_id: wallet.razorpayFundAccountId,
@@ -355,9 +388,9 @@ export const requestWithdrawal = async (req, res) => {
         mode: "IMPS",
         purpose: "payout",
         queue_if_low_balance: true,
-        reference_id: `WD-${Date.now()}`,
+        reference_id: withdrawalId,
         narration: "Rukkoin Withdrawal"
-      });
+      }, { 'X-Payout-Idempotency': withdrawalId });
       payoutId = payout.id;
       payoutStatus = payout.status;
     } catch (errMessage) {
@@ -370,51 +403,50 @@ export const requestWithdrawal = async (req, res) => {
       payoutStatus = 'manual';
     }
 
-    // 5. Deduct Wallet & Create Records
-    const withdrawalId = 'WD' + Date.now() + Math.floor(Math.random() * 1000);
+    // 5. Record the request. The wallet was already debited above.
+    let withdrawal;
+    let transaction;
+    try {
+      withdrawal = await Withdrawal.create({
+        withdrawalId,
+        partnerId: req.user._id,
+        walletId: wallet._id,
+        amount,
+        bankDetails: wallet.bankDetails,
+        status: payoutStatus === 'processed' ? 'completed' : payoutStatus === 'manual' ? 'pending' : 'processing',
+        razorpayPayoutId: payoutId,
+        razorpayFundAccountId: wallet.razorpayFundAccountId,
+        processingDetails: {
+          remarks: rzpError
+            ? `Awaiting manual settlement — Razorpay payout unavailable: ${rzpError}`
+            : 'Initiated from partner app',
+          initiatedAt: new Date()
+        }
+      });
+      recorded = true;
+    } catch (err) {
+      // A payout that did go out must not be handed back as balance too.
+      if (!payoutId) await releaseReservation();
+      throw err;
+    }
 
-    const withdrawal = await Withdrawal.create({
-      withdrawalId,
-      partnerId: req.user._id,
-      walletId: wallet._id,
-      amount,
-      bankDetails: wallet.bankDetails,
-      status: payoutStatus === 'processed' ? 'completed' : payoutStatus === 'manual' ? 'pending' : 'processing',
-      razorpayPayoutId: payoutId,
-      razorpayFundAccountId: wallet.razorpayFundAccountId,
-      processingDetails: {
-        remarks: rzpError
-          ? `Awaiting manual settlement — Razorpay payout unavailable: ${rzpError}`
-          : 'Initiated from partner app',
-        initiatedAt: new Date()
-      }
-    });
+    // The debit wrote the ledger row; give it the request's status and ids.
+    transaction = await Transaction.findOneAndUpdate(
+      { walletId: wallet._id, reference: withdrawalId, category: 'withdrawal', type: 'debit' },
+      {
+        $set: {
+          status: payoutStatus === 'processed' ? 'completed' : 'pending',
+          'metadata.withdrawalId': withdrawalId,
+          'metadata.razorpayPayoutId': payoutId
+        }
+      },
+      { new: true }
+    );
 
-    // Deduct amount from wallet (Immediate deduction)
-    wallet.balance -= amount;
-    wallet.totalWithdrawals += amount;
-    await wallet.save();
-
-    // Create transaction
-    const transaction = await Transaction.create({
-      walletId: wallet._id,
-      partnerId: req.user._id,
-      modelType: 'Partner',
-      type: 'debit',
-      category: 'withdrawal',
-      amount,
-      balanceAfter: wallet.balance,
-      description: `Withdrawal Request (${withdrawal.withdrawalId})`,
-      reference: withdrawal.withdrawalId,
-      status: payoutStatus === 'processed' ? 'completed' : 'pending',
-      metadata: {
-        withdrawalId: withdrawal.withdrawalId,
-        razorpayPayoutId: payoutId
-      }
-    });
-
-    withdrawal.transactionId = transaction._id;
-    await withdrawal.save();
+    if (transaction) {
+      withdrawal.transactionId = transaction._id;
+      await withdrawal.save();
+    }
 
     res.json({
       success: true,
@@ -426,7 +458,7 @@ export const requestWithdrawal = async (req, res) => {
         id: withdrawal.withdrawalId,
         amount: withdrawal.amount,
         status: withdrawal.status,
-        txnId: transaction._id
+        txnId: transaction?._id
       }
     });
 
@@ -739,9 +771,9 @@ export const getWalletStats = async (req, res) => {
  */
 export const createAddMoneyOrder = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const amount = Number(req.body.amount);
 
-    if (!amount || amount < 10) { // Minimum 10rs
+    if (!Number.isFinite(amount) || amount < 10) { // Minimum 10rs
       return res.status(400).json({ message: 'Minimum amount is ₹10' });
     }
 
@@ -780,7 +812,7 @@ export const createAddMoneyOrder = async (req, res) => {
  */
 export const verifyAddMoneyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     const role = getWalletRole(req.user.role);
 
     // Shared, constant-time verification.
@@ -792,6 +824,40 @@ export const verifyAddMoneyPayment = async (req, res) => {
       return res.status(400).json({ message: 'Invalid payment signature' });
     }
 
+    /*
+     * Credit what Razorpay actually took, for the caller's own top-up, once.
+     *
+     * This credited `req.body.amount` — a ₹10 payment could be declared as
+     * ₹10,00,000 — and could be replayed with the same signature forever. The
+     * amount and the owner now come from the order this server created
+     * (createAddMoneyOrder puts userId/type in its notes), and the payment id
+     * is the ledger reference, unique for top-ups (see Transaction.js), so a
+     * replay or a concurrent duplicate cannot land twice.
+     */
+    let order;
+    try {
+      order = await razorpay.orders.fetch(razorpay_order_id);
+    } catch (err) {
+      console.error('Verify Add Money: order fetch failed:', err.message);
+      return res.status(502).json({ message: 'Could not confirm this payment with the gateway. Please retry.' });
+    }
+    if (order?.notes?.type !== 'wallet_topup' || String(order?.notes?.userId || '') !== String(req.user._id)) {
+      return res.status(400).json({ message: 'This payment is not a top-up for your wallet' });
+    }
+
+    let paidPaise = Number(order.amount_paid) || 0;
+    if (paidPaise <= 0) {
+      // amount_paid can lag the checkout callback; the payment itself is authoritative.
+      const payment = await razorpay.payments.fetch(razorpay_payment_id).catch(() => null);
+      if (payment && payment.order_id === razorpay_order_id && payment.status === 'captured') {
+        paidPaise = Number(payment.amount) || 0;
+      }
+    }
+    if (paidPaise <= 0) {
+      return res.status(409).json({ message: 'Payment is still processing. Please retry in a moment.' });
+    }
+    const amount = paidPaise / 100;
+
     // Find correct wallet based on ROLE
     let wallet = await Wallet.findOne({ partnerId: req.user._id, role });
     if (!wallet) {
@@ -802,13 +868,28 @@ export const verifyAddMoneyPayment = async (req, res) => {
       });
     }
 
+    const alreadyCredited = () => Transaction.exists({ category: 'topup', reference: razorpay_payment_id });
+    if (await alreadyCredited()) {
+      return res.json({ success: true, message: 'Wallet credited successfully', newBalance: wallet.balance });
+    }
+
     // Credit wallet
-    await wallet.credit(
-      Number(amount),
-      `Wallet Top-up`,
-      razorpay_payment_id,
-      'topup'
-    );
+    try {
+      await wallet.credit(
+        amount,
+        `Wallet Top-up`,
+        razorpay_payment_id,
+        'topup'
+      );
+    } catch (err) {
+      // Lost a race to a concurrent verify of the same payment: the unique
+      // index refused our ledger row and credit() already reversed the $inc.
+      if (err?.code === 11000) {
+        const fresh = await Wallet.findById(wallet._id).select('balance');
+        return res.json({ success: true, message: 'Wallet credited successfully', newBalance: fresh?.balance ?? wallet.balance });
+      }
+      throw err;
+    }
 
     res.json({
       success: true,

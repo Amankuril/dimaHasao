@@ -41,10 +41,14 @@ const imageFilter = (req, file, cb) => {
   }
 };
 
-// File filter for documents (PDF, images)
+// File filter for documents (images only)
+//
+// PDFs used to pass this filter, but every upload is re-encoded to WebP by the
+// storage service, which cannot read a PDF — so a PDF was accepted, failed
+// mid-request with a 500, and left its temp file behind. The partner screens
+// only offer images, so refuse PDFs up front with a clear message.
 const documentFilter = (req, file, cb) => {
   const allowedMimes = [
-    'application/pdf',
     'image/jpeg',
     'image/jpg',
     'image/png',
@@ -54,7 +58,7 @@ const documentFilter = (req, file, cb) => {
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only PDF and image files are allowed'), false);
+    cb(new Error('Only JPG, PNG or WebP images are allowed'), false);
   }
 };
 

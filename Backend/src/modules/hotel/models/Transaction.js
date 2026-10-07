@@ -79,6 +79,14 @@ const transactionSchema = new mongoose.Schema({
 transactionSchema.index({ walletId: 1, createdAt: -1 });
 transactionSchema.index({ partnerId: 1, createdAt: -1 });
 transactionSchema.index({ type: 1, status: 1 });
+// One ledger credit per gateway payment for wallet top-ups. The reference is
+// the Razorpay payment id, so a replayed or concurrent verify-add-money is
+// refused here and Wallet.credit reverses its balance change.
+// Keyed with category so it never clashes with the plain `reference` index.
+transactionSchema.index(
+  { category: 1, reference: 1 },
+  { unique: true, partialFilterExpression: { category: 'topup' }, name: 'uniq_topup_reference' }
+);
 
 // Virtual for formatted amount
 transactionSchema.virtual('formattedAmount').get(function () {

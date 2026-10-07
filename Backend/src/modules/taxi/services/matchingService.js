@@ -54,6 +54,14 @@ const idCandidates = (value) => {
 /** Query fragment for a single id field holding either spelling. */
 const idMatch = (value) => ({ $in: idCandidates(value) });
 
+export const DRIVER_INELIGIBLE_STATUSES = ['pending', 'inactive', 'blocked', 'rejected', 'disabled', 'suspended'];
+
+export const DRIVER_ELIGIBLE_FOR_RIDES_FILTER = Object.freeze({
+  approve: { $ne: false },
+  deletedAt: null,
+  status: { $nin: DRIVER_INELIGIBLE_STATUSES },
+});
+
 const buildDriverMatchFilters = ({ zoneId, serviceLocationId, vehicleTypeId, vehicleTypeIds, vehicleTypeKeys }) => {
   const normalizedVehicleTypeIds = normalizeVehicleTypeIds(vehicleTypeIds, vehicleTypeId);
   const normalizedVehicleTypeKeys = Array.isArray(vehicleTypeKeys)
@@ -78,6 +86,10 @@ const buildDriverMatchFilters = ({ zoneId, serviceLocationId, vehicleTypeId, veh
     isOnline: true,
     isOnRide: false,
     'wallet.isBlocked': { $ne: true },
+    // An admin disabling or un-approving a driver (or the driver re-entering
+    // review after a vehicle/document change) left isOnline as it was, so they
+    // kept receiving and accepting rides. Eligibility is checked here too.
+    ...DRIVER_ELIGIBLE_FOR_RIDES_FILTER,
     ...(zoneId ? { zoneId: idMatch(zoneId) } : {}),
     /*
      * A driver whose service location was never set still belongs to the zone

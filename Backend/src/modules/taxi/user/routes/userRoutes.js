@@ -15,18 +15,15 @@ import {
   clearAllUserNotifications,
   listPublicServiceLocations,
   loginUser,
-  registerUser,
   requestAccountDeletion,
   saveUserFcmToken,
   signupUser,
-  topupUserWallet,
   transferUserWalletToDriver,
   transferUserWallet,
   updateCurrentUser,
   uploadUserProfileImage,
   verifyRazorpayWalletTopup,
   verifyPhonePeWalletTopup,
-  verifyUserPhoneForOtpLogin,
   getSetPrices,
   getZones,
 } from "../controllers/userController.js";
@@ -49,13 +46,15 @@ userRouter.get('/vehicle-types', asyncHandler(getPublicVehicleTypeCatalog));
 userRouter.get('/set-prices', asyncHandler(getSetPrices));
 userRouter.get('/zones', asyncHandler(getZones));
 userRouter.get('/service-locations', asyncHandler(listPublicServiceLocations));
-userRouter.post('/register', asyncHandler(registerUser));
 userRouter.post('/signup', asyncHandler(signupUser));
 userRouter.post('/login', loginRateLimit, asyncHandler(loginUser));
-userRouter.post('/profile-image', asyncHandler(uploadUserProfileImage));
-// Consumer sign-in now lives at /v1/auth/otp (audience 'user') — one account
-// across food, taxi, hotel and tours.
-userRouter.post('/otp-login', otpVerifyRateLimit, asyncHandler(verifyUserPhoneForOtpLogin));
+// Was anonymous: anyone could push 12MB images into storage. No client calls
+// it before sign-in (the profile screen is behind auth), so require a session.
+userRouter.post('/profile-image', authenticate(['user']), asyncHandler(uploadUserProfileImage));
+// Consumer sign-in lives at /v1/auth/otp (audience 'user') — one account
+// across food, taxi, hotel and tours. POST /otp-login and POST /register were
+// removed: both issued a session for a phone number with no OTP at all, which
+// let anyone sign in as any consumer on every module.
 userRouter.post('/fcm-token', authenticate(['user']), asyncHandler(saveUserFcmToken));
 userRouter.get('/me', authenticate(['user']), asyncHandler(getCurrentUser));
 userRouter.patch('/me', authenticate(['user']), asyncHandler(updateCurrentUser));
@@ -65,7 +64,9 @@ userRouter.delete('/notifications/:id', authenticate(['user']), asyncHandler(del
 userRouter.delete('/notifications', authenticate(['user']), asyncHandler(clearAllUserNotifications));
 userRouter.post('/sos', authenticate(['user']), asyncHandler(triggerUserSosAlert));
 userRouter.get('/wallet', authenticate(['user']), asyncHandler(getUserWallet));
-userRouter.post('/wallet/topup', authenticate(['user']), asyncHandler(topupUserWallet));
+// POST /wallet/topup (credit any amount, no payment) was removed: the balance
+// could be spent on food or transferred to a driver and withdrawn. Top-ups go
+// through the verified /wallet/razorpay/* and /wallet/phonepe/* routes.
 userRouter.post('/wallet/transfer', authenticate(['user']), asyncHandler(transferUserWallet));
 userRouter.post('/wallet/transfer/driver', authenticate(['user']), asyncHandler(transferUserWalletToDriver));
 userRouter.post('/wallet/razorpay/order', authenticate(['user']), paymentOrderRateLimit, asyncHandler(createRazorpayWalletTopupOrder));

@@ -5358,17 +5358,25 @@ export async function getEarningAddonHistory(query = {}) {
 
 export async function creditEarningAddonHistory(historyId, notes) {
     if (!historyId || !mongoose.Types.ObjectId.isValid(historyId)) return null;
-    const doc = await FoodEarningAddonHistory.findById(historyId).populate('offerId');
-    if (!doc) return null;
-    if (doc.status !== 'pending') return doc.toObject();
+    // Claim pending → credited in one write. Reading the status and saving
+    // after let a double-click (or two admins) both pass and credit twice.
+    const doc = await FoodEarningAddonHistory.findOneAndUpdate(
+        { _id: historyId, status: 'pending' },
+        {
+            $set: {
+                status: 'credited',
+                creditedAt: new Date(),
+                creditedNotes: typeof notes === 'string' ? notes.trim() : '',
+            },
+        },
+        { new: true }
+    ).populate('offerId');
+    if (!doc) {
+        const existing = await FoodEarningAddonHistory.findById(historyId).populate('offerId');
+        return existing ? existing.toObject() : null;
+    }
 
     const amountToCredit = Number(doc.earningAmount || 0);
-
-    // 1. Update history status
-    doc.status = 'credited';
-    doc.creditedAt = new Date();
-    doc.creditedNotes = typeof notes === 'string' ? notes.trim() : '';
-    await doc.save();
 
     // 2. Credit the wallet
     if (amountToCredit > 0) {
@@ -5935,22 +5943,38 @@ export async function getWithdrawals(query = {}) {
 
 export async function updateWithdrawalStatus(id, { status, adminNote, rejectionReason, transactionId }) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) throw new ValidationError('Invalid withdrawal ID');
-    
+
+    /*
+     * A withdrawal is decided once: pending → approved | rejected. Any status
+     * used to be written over any other, so an approved (paid-out) request
+     * could be flipped to rejected — which drops it from the deducted total
+     * and hands the restaurant the same balance to withdraw again — or a
+     * rejected one approved twice by a double click.
+     */
+    const nextStatus = String(status || '').toLowerCase();
+    if (!['approved', 'rejected'].includes(nextStatus)) {
+        throw new ValidationError('Status must be approved or rejected');
+    }
+
     const update = {
-        status: String(status).toLowerCase(),
+        status: nextStatus,
         adminNote,
         rejectionReason,
         transactionId,
         processedAt: new Date()
     };
 
-    const updated = await FoodRestaurantWithdrawal.findByIdAndUpdate(
-        id,
+    const updated = await FoodRestaurantWithdrawal.findOneAndUpdate(
+        { _id: id, status: 'pending' },
         { $set: update },
         { new: true }
     ).populate('restaurantId', 'restaurantName').lean();
 
-    if (!updated) throw new ValidationError('Withdrawal request not found');
+    if (!updated) {
+        const existing = await FoodRestaurantWithdrawal.findById(id).select('status').lean();
+        if (!existing) throw new ValidationError('Withdrawal request not found');
+        throw new ValidationError(`Withdrawal request is already ${existing.status}`);
+    }
     return updated;
 }
 
@@ -6051,9 +6075,14 @@ export async function getDeliveryWallets(query = {}) {
 
     const filter = { status: 'approved' };
     if (query.search) {
+        // Escaped like the other admin searches: a raw pattern is a ReDoS vector.
+        const searchRegex = new RegExp(
+            String(query.search).slice(0, 80).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+            'i'
+        );
         filter.$or = [
-            { name: new RegExp(query.search, 'i') },
-            { phone: new RegExp(query.search, 'i') }
+            { name: searchRegex },
+            { phone: searchRegex }
         ];
     }
 

@@ -46,8 +46,9 @@ export function useActiveTrip() {
       return isSnapshotForRide(snapshot, routeRideId) ? snapshot : null;
   }, [routeRideId]);
   const [hydratedTripState, setHydratedTripState] = useState(() => storedActiveTripSnapshot);
-  const routeOtp = routeState?.request?.raw?.otp || routeState?.request?.otp || routeState?.otp || '';
-  const [isHydratingTrip, setIsHydratingTrip] = useState(!routeRideId || !routeOtp);
+  // Was keyed on the route carrying the ride PIN, which drivers are no longer sent.
+  const routeHasTripState = Boolean(routeState?.request?.raw || routeState?.request);
+  const [isHydratingTrip, setIsHydratingTrip] = useState(!routeRideId || !routeHasTripState);
   const exitToDriverHome = useCallback((statusMessage = '') => {
       if (routeRideId) {
           clearStoredTripPhase(routeRideId);
@@ -63,7 +64,7 @@ export function useActiveTrip() {
 
   useEffect(() => {
       let active = true;
-      const hasRestorableRouteState = Boolean(routeRideId && routeOtp);
+      const hasRestorableRouteState = Boolean(routeRideId && routeHasTripState);
 
       if (hasRestorableRouteState) {
           setIsHydratingTrip(false);
@@ -151,7 +152,7 @@ export function useActiveTrip() {
       return () => {
           active = false;
       };
-  }, [exitToDriverHome, routeOtp, routeRideId]);
+  }, [exitToDriverHome, routeHasTripState, routeRideId]);
 
   const effectiveState = hydratedTripState || routeState;
 
@@ -650,7 +651,6 @@ export function useActiveTrip() {
 
   const displayFare = liveRequest?.fare || tripData.fare;
   const fareAmount = parseFareAmount(displayFare);
-  const expectedOtp = String(liveRaw?.otp || liveRequest?.otp || effectiveState?.otp || '');
   const waitingPricing = liveRaw?.pricingSnapshot || liveRequest?.raw?.pricingSnapshot || effectiveState?.pricingSnapshot || {};
   const allowedPaymentModes = (() => {
       const rawItems = Array.isArray(waitingPricing?.allowed_payment_methods) ? waitingPricing.allowed_payment_methods : [];
@@ -1023,33 +1023,22 @@ export function useActiveTrip() {
           return;
       }
 
-      let resolvedExpectedOtp = String(expectedOtp || '');
+      // The PIN is checked by the server now (it is no longer sent to the driver
+      // app to compare against). Only move into the trip once the server agrees.
+      if (!rideId) {
+          setOtpError('Trip details are still loading. Try again in a moment.');
+          return;
+      }
 
       try {
           const driverToken = getLocalDriverToken();
-          const response = await api.get('/rides/active/me', withDriverAuthorization(driverToken));
-          const latestActiveJob = unwrapApiPayload(response);
-          const latestRideId = getJobRideId(latestActiveJob);
-
-          if (latestRideId && String(latestRideId) === String(rideId || routeRideId || '')) {
-              resolvedExpectedOtp = String(latestActiveJob?.otp || resolvedExpectedOtp || '');
-
-              const latestPersistedState = buildPersistedTripState(latestActiveJob, {
-                  phase,
-                  arrivedAt: localArrivedAt || latestActiveJob?.arrivedAt || '',
-              });
-
-              if (latestPersistedState) {
-                  setHydratedTripState(latestPersistedState);
-                  writeStoredActiveTripSnapshot(latestPersistedState);
-              }
-          }
-      } catch {
-          // Fall back to the currently hydrated OTP if the refresh request fails.
-      }
-
-      if (String(enteredOtp) !== resolvedExpectedOtp) {
-          setOtpError('Wrong PIN. Ask the passenger again.');
+          await api.patch(
+              `/rides/${rideId}/status`,
+              { status: 'started', otp: String(enteredOtp) },
+              withDriverAuthorization(driverToken),
+          );
+      } catch (error) {
+          setOtpError(error?.message && error?.status ? error.message : 'Could not verify the PIN. Check your connection and try again.');
           return;
       }
 
@@ -1073,19 +1062,6 @@ export function useActiveTrip() {
       if (optimisticSnapshot) {
           writeStoredActiveTripSnapshot(optimisticSnapshot);
           setHydratedTripState(optimisticSnapshot);
-      }
-
-      try {
-          if (rideId) {
-              const driverToken = getLocalDriverToken();
-              await api.patch(
-                  `/rides/${rideId}/status`,
-                  { status: 'started' },
-                  withDriverAuthorization(driverToken),
-              );
-          }
-      } catch {
-          // Keep the optimistic local state; socket/live hydration will reconcile when available.
       }
 
       publishRideStatus('started');
@@ -1434,13 +1410,8 @@ export function useActiveTrip() {
 
       const enteredOtp = nextOtp.join('');
 
-      if (enteredOtp.length === 4 && expectedOtp && enteredOtp === expectedOtp) {
+      if (enteredOtp.length === 4) {
           setTimeout(() => startTripAfterOtp(enteredOtp), 250);
-          return;
-      }
-
-      if (enteredOtp.length === 4 && expectedOtp) {
-          setOtpError('Incorrect PIN. Please enter the PIN shown to the passenger.');
       }
   };
 

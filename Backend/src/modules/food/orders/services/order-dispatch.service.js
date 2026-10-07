@@ -10,6 +10,7 @@ import { getIO, rooms } from '../../../../config/socket.js';
 import { addOrderJob } from '../../../../queues/producers/order.producer.js';
 import {
   buildDeliverySocketPayload,
+  buildDeliveryOfferPayload,
   buildOrderIdentityFilter,
   haversineKm,
   notifyOwnerSafely,
@@ -380,7 +381,7 @@ export async function tryAutoAssign(orderId, options = {}) {
       // If we ran out of new eligible partners, we might want to re-offer to everyone (Phase 2 style)
       const io = getIO();
       if (io && partners.length > 0) {
-        const payload = buildDeliverySocketPayload(order, order.restaurantId);
+        const payload = buildDeliveryOfferPayload(order, order.restaurantId);
         for (const p of partners) {
           const roomName = rooms.delivery(p.partnerId);
           const eventPayload = { ...payload, pickupDistanceKm: p.distanceKm };
@@ -401,7 +402,7 @@ export async function tryAutoAssign(orderId, options = {}) {
     }
 
     const io = getIO();
-    const payload = buildDeliverySocketPayload(order, order.restaurantId);
+    const payload = buildDeliveryOfferPayload(order, order.restaurantId);
 
     const phase1Batch = eligible.slice(0, Math.min(3, eligible.length));
 
@@ -514,6 +515,7 @@ export async function processDispatchTimeout(orderId, partnerId) {
 
 export async function resendDeliveryNotificationRestaurant(orderId, restaurantId) {
   const identity = buildOrderIdentityFilter(orderId);
+  if (!identity) throw new NotFoundError('Order not found');
   const order = await FoodOrder.findOne({
     ...identity,
     restaurantId: new mongoose.Types.ObjectId(restaurantId),

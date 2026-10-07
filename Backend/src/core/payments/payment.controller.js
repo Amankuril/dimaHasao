@@ -42,7 +42,7 @@ export const getUserWalletTransactionsController = async (req, res, next) => {
     try {
         const userId = req.user?.userId;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
         const data = await getWalletWithTransactions('user', userId, { page, limit });
         return sendResponse(res, 200, 'Wallet transactions fetched', data);
     } catch (err) {
@@ -56,7 +56,7 @@ export const getRestaurantWalletController = async (req, res, next) => {
     try {
         const restaurantId = req.user?.restaurantId || req.params.restaurantId;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
         const data = await getWalletWithTransactions('restaurant', restaurantId, { page, limit });
         return sendResponse(res, 200, 'Restaurant wallet fetched', data);
     } catch (err) {
@@ -70,7 +70,7 @@ export const getDeliveryWalletController = async (req, res, next) => {
     try {
         const deliveryPartnerId = req.user?.deliveryPartnerId || req.params.deliveryPartnerId;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
         const data = await getWalletWithTransactions('deliveryBoy', deliveryPartnerId, { page, limit });
         return sendResponse(res, 200, 'Delivery wallet fetched', data);
     } catch (err) {
@@ -121,7 +121,7 @@ export const listSettlementsController = async (req, res, next) => {
     try {
         const { entityType, entityId, status } = req.query;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
         const data = await listSettlements({ entityType, entityId, status, page, limit });
         return sendResponse(res, 200, 'Settlements fetched', data);
     } catch (err) {
@@ -155,7 +155,7 @@ export const listRefundsController = async (req, res, next) => {
     try {
         const { status } = req.query;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
         const data = await listRefunds({ status, page, limit });
         return sendResponse(res, 200, 'Refunds fetched', data);
     } catch (err) {

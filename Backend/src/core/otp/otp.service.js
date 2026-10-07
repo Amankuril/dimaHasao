@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import ms from 'ms';
 import { FoodOtp } from './otp.model.js';
 import { config } from '../../config/env.js';
@@ -61,11 +62,9 @@ export const getOtpScopeConfig = (scope) =>
 /** Static code for dev/test modes, sized to the scope ('1234' / '123456'). */
 const getDefaultOtpCode = (length = 4) => '123456789012'.slice(0, length);
 
-const generateOtp = (length = 4) => {
-    const min = 10 ** (length - 1);
-    const max = 10 ** length - 1;
-    return String(Math.floor(min + Math.random() * (max - min + 1)));
-};
+// crypto.randomInt, not Math.random: Math.random is not a CSPRNG and its
+// output can be predicted from earlier values.
+const generateOtp = (length = 4) => String(crypto.randomInt(10 ** (length - 1), 10 ** length));
 
 const getDefaultTestPhone = () =>
     normalizeOtpPhone(config.defaultTestPhone || process.env.DEFAULT_TEST_PHONE || '');
@@ -340,10 +339,9 @@ export const createOrUpdateOtp = async (phone, scope = 'default', { metadata = n
         }
     }
 
-    logger.info(
-        `[OTP] phone=${normalizedPhone} scope=${normalizedScope} mode=${resolved.reason} otp=${otp}`,
-    );
-    console.log(`[OTP DEBUG] Generated OTP ${otp} for phone ${normalizedPhone} (${resolved.reason})`);
+    // Never log the code itself: anyone with log access could sign in as the
+    // user. The mode says whether it was static (dev) or a live SMS.
+    logger.info(`[OTP] phone=${normalizedPhone} scope=${normalizedScope} mode=${resolved.reason}`);
 
     const ttlMs =
         getOtpScopeConfig(normalizedScope).ttlMs || getOtpTtlMs() || ms(config.otpExpiry || '5m');
@@ -394,30 +392,30 @@ export const verifyOtp = async (phone, otp, scope = 'default') => {
         return { valid: false, reason: 'OTP expired' };
     }
 
-    if (record.attempts >= config.otpMaxAttempts) {
+    // Count the attempt atomically before comparing. This used to increment in
+    // memory and save without awaiting, so parallel guesses all read the same
+    // low count and the attempt limit never applied to a burst.
+    const counted = await FoodOtp.findOneAndUpdate(
+        { _id: record._id, attempts: { $lt: config.otpMaxAttempts } },
+        { $inc: { attempts: 1 } },
+        { new: true },
+    );
+    if (!counted) {
         return { valid: false, reason: 'Max attempts exceeded' };
     }
 
-    record.attempts += 1;
-
-    if (record.otp !== otp) {
-        void record.save().catch((err) => {
-            logger.warn(`[OTP VERIFY] Failed to persist attempts for ${normalizedPhone}: ${err.message}`);
-        });
+    if (String(counted.otp) !== String(otp)) {
         return { valid: false, reason: 'Invalid OTP' };
     }
 
-    const metadata = record.metadata ?? null;
-
-    // Awaited deliberately: a fire-and-forget delete leaves a window in which
-    // the same code verifies twice, so a captured OTP can be replayed.
-    try {
-        await record.deleteOne();
-    } catch (err) {
-        logger.warn(`[OTP VERIFY] Failed to delete OTP record for ${normalizedPhone}: ${err.message}`);
+    // Consume it atomically: of two requests with the right code, only the one
+    // that deletes the record wins, so a captured OTP cannot be replayed.
+    const consumed = await FoodOtp.findOneAndDelete({ _id: record._id });
+    if (!consumed) {
+        return { valid: false, reason: 'OTP not found' };
     }
 
-    return { valid: true, metadata };
+    return { valid: true, metadata: consumed.metadata ?? null };
 };
 
 /**

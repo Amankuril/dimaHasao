@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import express from 'express';
 import { upload } from '../../../middleware/upload.js';
 import { authMiddleware } from '../../../core/auth/auth.middleware.js';
@@ -15,12 +16,17 @@ const router = express.Router();
 const requireInternalSecret = (req, res, next) => {
     const expected = String(config.uploadInternalSecret || '').trim();
     const provided = String(req.get('X-Upload-Secret') || '').trim();
-    if (!expected || !provided || provided !== expected) {
+    const a = Buffer.from(provided);
+    const b = Buffer.from(expected);
+    if (!expected || !provided || a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
         return res.status(401).json({
             success: false,
             message: 'Unauthorized upload',
         });
     }
+    // A trusted backend forwarding its own upload; the storage service lets it
+    // replace and delete without an end-user owner check.
+    req.uploadTrusted = true;
     return next();
 };
 
@@ -92,10 +98,8 @@ const isImageUpload = (file) => {
  * document on the platform, deletable by a stranger who knows a URL.
  *
  * Any authenticated principal is allowed, because uploads come from consumers,
- * vendors and admins alike. Deletion is not yet ownership-scoped — uploads do
- * not record who made them — so an authenticated user who knows another's URL
- * can still remove it. That needs an owner on the asset and is noted rather
- * than half-built here.
+ * vendors and admins alike. Deletion is scoped to the uploader (or an admin)
+ * through UploadedAsset — see canDeleteAsset and storage.service.js.
  *
  * Attached per route rather than to the router: the /internal pair below
  * authenticates with a shared secret instead of a bearer token.
@@ -115,10 +119,17 @@ router.post('/image', authMiddleware, upload.single('file'), async (req, res, ne
                 ? req.body.folder.trim()
                 : 'uploads';
 
+        // replaceUrl deletes the old file, so it gets the same ownership check
+        // as DELETE / — it used to bypass it and delete any file by URL.
+        const requestedReplace = extractAssetUrl(req.body?.replaceUrl);
+        const replaceUrl = requestedReplace && (await canDeleteAsset(req, requestedReplace))
+            ? requestedReplace
+            : null;
+
         const stored = await storeImageBuffer(req.file.buffer, folder, {
             mimeType: req.file.mimetype,
             originalName: req.file.originalname,
-            replaceUrl: extractAssetUrl(req.body?.replaceUrl),
+            replaceUrl,
         });
 
         await recordAsset(req, stored, folder);

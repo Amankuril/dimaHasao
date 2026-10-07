@@ -585,12 +585,20 @@ const RideTracking = () => {
       if (rideId) {
         await api.patch(`/rides/${rideId}/cancel`);
       }
-    } catch (_error) {
-      // If the ride has already advanced or ended, we still clear the local state below.
-    } finally {
-      clearCurrentRide();
-      navigate('/taxi/user');
+    } catch (error) {
+      // A trip already under way can no longer be cancelled (the server
+      // refuses with 409). Keep tracking it instead of dropping the rider
+      // onto the home screen while the trip carries on.
+      if (Number(error?.status) === 409 && /started/i.test(String(error?.message || ''))) {
+        const message = error.message;
+        setShowCancelConfirm(false);
+        window.alert(message);
+        return;
+      }
+      // If the ride has already ended, we still clear the local state below.
     }
+    clearCurrentRide();
+    navigate('/taxi/user');
   };
 
   useEffect(() => {
