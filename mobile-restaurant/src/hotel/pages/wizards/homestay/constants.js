@@ -3,15 +3,15 @@ import { BedDouble, CheckSquare, Coffee, ShowerHead, Snowflake, Tv, Wifi } from 
 /* Port of the constants at the top of Frontend/src/modules/Hotel/app/partner/pages/AddHomestayWizard.jsx. */
 
 export const WIZARD_STEPS = [
-  { title: 'Basic Info', short: 'Basics', subtitle: 'Name your homestay and describe it for guests.' },
+  { title: 'Basic info', short: 'Basics', subtitle: 'Name your homestay and describe it for guests.' },
   { title: 'Location', short: 'Location', subtitle: 'Where guests will find you, and the pin on the map.' },
-  { title: 'Homestay Amenities', short: 'Amenities', subtitle: 'What guests can use during their stay.' },
-  { title: 'Nearby Places', short: 'Nearby', subtitle: 'Landmarks and transport worth mentioning.' },
-  { title: 'Property Images', short: 'Photos', subtitle: 'A cover photo and a gallery of the property.' },
-  { title: 'Inventory Setup', short: 'Rooms', subtitle: 'Rooms or the whole home, with rates and how many you have.' },
-  { title: 'House Rules', short: 'Rules', subtitle: 'Check-in times, cancellation terms and house rules.' },
+  { title: 'Homestay amenities', short: 'Amenities', subtitle: 'What guests can use during their stay.' },
+  { title: 'Nearby places', short: 'Nearby', subtitle: 'Landmarks and transport worth mentioning.' },
+  { title: 'Property images', short: 'Photos', subtitle: 'A cover photo and a gallery of the property.' },
+  { title: 'Inventory setup', short: 'Rooms', subtitle: 'Rooms or the whole home, with rates and how many you have.' },
+  { title: 'House rules', short: 'Rules', subtitle: 'Check-in times, cancellation terms and house rules.' },
   { title: 'Documents', short: 'Documents', subtitle: 'Licences and certificates for verification.' },
-  { title: 'Review & Submit', short: 'Review', subtitle: 'Check everything over before sending it for approval.' },
+  { title: 'Review & submit', short: 'Review', subtitle: 'Check everything over before sending it for approval.' },
 ];
 
 export const REQUIRED_DOCS_HOMESTAY = [
@@ -36,11 +36,11 @@ export const ROOM_AMENITIES = [
 export const HOUSE_RULES_OPTIONS = ['No smoking', 'No pets', 'No loud music', 'ID required at check-in'];
 
 export const NEARBY_TYPE_OPTIONS = [
-  { value: 'tourist', label: 'Tourist Attraction' },
+  { value: 'tourist', label: 'Tourist attraction' },
   { value: 'airport', label: 'Airport' },
   { value: 'market', label: 'Market' },
-  { value: 'railway', label: 'Railway Station' },
-  { value: 'bus_stop', label: 'Bus Stop' },
+  { value: 'railway', label: 'Railway station' },
+  { value: 'bus_stop', label: 'Bus stop' },
   { value: 'hospital', label: 'Hospital' },
   { value: 'restaurant', label: 'Restaurant' },
   { value: 'other', label: 'Other' },

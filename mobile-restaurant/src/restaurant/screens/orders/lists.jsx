@@ -1,9 +1,9 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Calendar, ChevronRight, Clock, MessageSquare, Search, Users } from 'lucide-react-native';
+import { Calendar, ChevronRight, Clock, Inbox, MessageSquare, RefreshCw, Search, Users, X } from 'lucide-react-native';
 import Img from '../../../components/Img';
 import { Press } from '../../../components/ui';
-import { poppins, shadow, tw } from '../../../theme';
+import { Button, EmptyState, StatusBadge, formatINR } from '../../../components/ds';
+import { color, elevation, radii, space, type as t } from '../../../theme';
 import { useAllOrders } from '../../hooks/pages/orders/useAllOrders';
 import { useCancelledOrders } from '../../hooks/pages/orders/useCancelledOrders';
 import { useCompletedOrders } from '../../hooks/pages/orders/useCompletedOrders';
@@ -12,19 +12,32 @@ import { usePreparingOrders } from '../../hooks/pages/orders/usePreparingOrders'
 import { useReadyOrders } from '../../hooks/pages/orders/useReadyOrders';
 import { useTableBookings } from '../../hooks/pages/orders/useTableBookings';
 import { useTakeawayOrders } from '../../hooks/pages/orders/useTakeawayOrders';
-import { RT, RT_GRADIENT } from '../../theme';
-import { BRAND, OrderCard } from './parts';
+import { OrderCard, orderTypeMeta } from './parts';
 
-/* The order lists of Food/pages/restaurant/OrdersMain.jsx, one per filter tab. Each owns its fetching through its generated hook. */
+/*
+ * The order lists of Food/pages/restaurant/OrdersMain.jsx, one per filter tab. Each owns its fetching through its generated hook.
+ * They render inside OrdersMain's ScrollView (which also carries the swipe-to-change-tab handlers), so they map rather than nest a FlatList.
+ */
 
 function ListFrame({ title, right, loading, empty, children }) {
   return (
     <View style={styles.frame}>
       <View style={styles.head}>
-        <Text style={styles.title} accessibilityRole="header">{title}</Text>
-        {loading ? <ActivityIndicator size="small" color={tw.gray500} /> : right}
+        <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
+          {title}
+        </Text>
+        {loading ? <ActivityIndicator size="small" color={color.primary} /> : right}
       </View>
-      {loading ? <Text style={styles.emptyText}>Loading...</Text> : empty ? <Text style={styles.emptyText}>{empty}</Text> : children}
+      {loading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color={color.primary} />
+          <Text style={styles.loadingText}>Loading orders…</Text>
+        </View>
+      ) : empty ? (
+        <EmptyState icon={Inbox} title={empty} style={styles.emptyCard} />
+      ) : (
+        children
+      )}
     </View>
   );
 }
@@ -41,6 +54,7 @@ const dateLabel = (value) =>
 
 /** The compact row the Completed and Cancelled tabs draw (not the OrderCard). */
 function HistoryRow({ order, date, status, badge, reason, onSelectOrder }) {
+  const typeMeta = orderTypeMeta(order.type);
   return (
     <Press
       scale={1}
@@ -51,32 +65,37 @@ function HistoryRow({ order, date, status, badge, reason, onSelectOrder }) {
       style={styles.history}
     >
       <View style={styles.historyPhoto}>
-        {order.photoUrl ? <Img source={{ uri: order.photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" /> : <Text style={styles.historyAlt}>{order.photoAlt}</Text>}
+        {order.photoUrl ? (
+          <Img source={{ uri: order.photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={order.photoAlt} />
+        ) : (
+          <typeMeta.icon size={20} color={color.textDisabled} />
+        )}
       </View>
-      <View style={{ flex: 1, minHeight: 80, justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-          <View style={{ flexShrink: 1 }}>
-            <Text style={styles.historyId}>Order #{order.orderId}</Text>
-            <Text style={styles.historyCustomer}>{order.customerName}</Text>
+      <View style={styles.historyBody}>
+        <View style={styles.historyTop}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.historyId} numberOfLines={1}>
+              Order #{order.orderId}
+            </Text>
+            <Text style={styles.historyCustomer} numberOfLines={1}>
+              {order.customerName}
+            </Text>
           </View>
-          <View style={{ alignItems: 'flex-end', gap: 4 }}>
-            <View style={[styles.historyBadge, { borderColor: badge.border, backgroundColor: badge.bg }]}>
-              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: badge.dot }} />
-              <Text style={[styles.historyBadgeText, { color: badge.fg }]}>{badge.label}</Text>
-            </View>
-            <Text style={styles.historyDate}>{date}</Text>
-          </View>
+          <StatusBadge label={badge.label} tone={badge.tone} />
         </View>
-        <View style={{ marginTop: 8 }}>
-          <Text style={styles.historyItems} numberOfLines={1}>{order.itemsSummary}</Text>
-          {reason ? <Text style={styles.historyReason} numberOfLines={1}>Reason: {reason}</Text> : null}
-        </View>
-        <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
-          <Text style={styles.historyMeta}>{order.type}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-            <Text style={styles.historyMeta}>Amount</Text>
-            <Text style={styles.historyAmount}>₹{Number(order.amount || 0).toFixed(2)}</Text>
-          </View>
+        <Text style={styles.historyItems} numberOfLines={2}>
+          {order.itemsSummary}
+        </Text>
+        {reason ? (
+          <Text style={styles.historyReason} numberOfLines={2}>
+            Reason: {reason}
+          </Text>
+        ) : null}
+        <View style={styles.historyFoot}>
+          <Text style={styles.historyMeta} numberOfLines={1}>
+            {typeMeta.label} · {date}
+          </Text>
+          <Text style={styles.historyAmount}>{formatINR(order.amount, { decimals: 2 })}</Text>
         </View>
       </View>
     </Press>
@@ -93,7 +112,7 @@ export function CompletedOrders(props) {
           order={order}
           date={dateLabel(order.deliveredAt)}
           status="Delivered"
-          badge={{ label: order.type === 'Takeaway' ? 'Picked Up' : 'Delivered', border: tw.emerald200, bg: tw.emerald50, fg: tw.emerald600, dot: tw.emerald500 }}
+          badge={{ label: order.type === 'Takeaway' ? 'Picked up' : 'Delivered', tone: 'success' }}
           onSelectOrder={props.onSelectOrder}
         />
       ))}
@@ -114,12 +133,7 @@ export function CancelledOrders(props) {
             date={dateLabel(order.cancelledAt)}
             status="Cancelled"
             reason={order.cancellationReason}
-            badge={
-              byUser
-                ? // orange-* utilities are repainted by the restaurant theme
-                  { label: 'Cancelled by User', border: RT.accentBorder, bg: RT.primarySoft, fg: RT.accent, dot: RT.accent }
-                : { label: order.cancelledBy === 'restaurant' ? 'Cancelled by Restaurant' : 'Cancelled', border: tw.rose200, bg: tw.rose50, fg: tw.rose600, dot: tw.rose500 }
-            }
+            badge={{ label: byUser ? 'Cancelled by user' : order.cancelledBy === 'restaurant' ? 'Cancelled by restaurant' : 'Cancelled', tone: 'danger' }}
             onSelectOrder={props.onSelectOrder}
           />
         );
@@ -129,11 +143,11 @@ export function CancelledOrders(props) {
 }
 
 const BOOKING_STATUS = {
-  pending: { color: '#0A4D2B', backgroundColor: '#EEF5F0', borderColor: '#FBCFE8', text: 'APPROVAL REQ' },
-  confirmed: { color: '#15803D', backgroundColor: '#DCFCE7', borderColor: '#BBF7D0', text: 'CONFIRMED' },
-  'checked-in': { color: '#F97316', backgroundColor: '#FFF7ED', borderColor: '#FFEDD5', text: 'CHECKED-IN' },
-  completed: { color: '#3B82F6', backgroundColor: '#EFF6FF', borderColor: '#DBEAFE', text: 'COMPLETED' },
-  cancelled: { color: '#B91C1C', backgroundColor: '#FEE2E2', borderColor: '#FCA5A5', text: 'CANCELLED' },
+  pending: { tone: 'primary', text: 'Approval required' },
+  confirmed: { tone: 'info', text: 'Confirmed' },
+  'checked-in': { tone: 'info', text: 'Checked in' },
+  completed: { tone: 'success', text: 'Completed' },
+  cancelled: { tone: 'danger', text: 'Cancelled' },
 };
 
 const bookingStatus = (status) => {
@@ -142,71 +156,71 @@ const bookingStatus = (status) => {
   return BOOKING_STATUS[s] || BOOKING_STATUS.cancelled;
 };
 
+function Fact({ icon: Icon, children }) {
+  return (
+    <View style={styles.fact}>
+      <Icon size={16} color={color.textMuted} />
+      <Text style={styles.factText}>{children}</Text>
+    </View>
+  );
+}
+
 export function TableBookings() {
   const { bookings, loading, handleStatusUpdate, handleRefresh } = useTableBookings();
-  if (loading) return <Text style={[styles.emptyText, { paddingVertical: 40, color: tw.gray400 }]}>Loading bookings...</Text>;
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={color.primary} />
+        <Text style={styles.loadingText}>Loading bookings…</Text>
+      </View>
+    );
+  }
   return (
-    <View style={[styles.frame, { paddingHorizontal: 4 }]}>
-      <View style={[styles.head, { marginBottom: 16, paddingHorizontal: 4 }]}>
-        <Text style={styles.title} accessibilityRole="header">Dining Bookings</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Press onPress={handleRefresh} hitSlop={10}>
-            <Text style={styles.refresh}>REFRESH</Text>
-          </Press>
-          <Text style={[styles.count, poppins(500)]}>({bookings.length})</Text>
-        </View>
+    <View style={styles.frame}>
+      <View style={styles.head}>
+        <Text style={styles.title} accessibilityRole="header">
+          Dining bookings <Text style={styles.count}>({bookings.length})</Text>
+        </Text>
+        <Button title="Refresh" icon={RefreshCw} variant="ghost" size="sm" fullWidth={false} onPress={handleRefresh} style={{ height: 44 }} />
       </View>
 
       {bookings.length === 0 ? (
-        <View style={styles.bookingEmpty}>
-          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray400, ...poppins(400) }}>No dining bookings yet</Text>
-        </View>
+        <EmptyState icon={Calendar} title="No dining bookings yet" style={styles.emptyCard} />
       ) : (
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: space.md }}>
           {bookings.map((booking) => {
             const tone = bookingStatus(booking.status);
             return (
               <View key={booking._id} style={styles.booking}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.bookingName}>{booking.user?.name}</Text>
+                <View style={styles.bookingTop}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.bookingName} numberOfLines={1}>
+                      {booking.user?.name}
+                    </Text>
                     <Text style={styles.bookingPhone}>{booking.user?.phone || 'No phone'}</Text>
                   </View>
-                  <Text style={[styles.bookingBadge, { color: tone.color, backgroundColor: tone.backgroundColor, borderColor: tone.borderColor }]}>{tone.text}</Text>
+                  <StatusBadge label={tone.text} tone={tone.tone} />
                 </View>
 
                 <View style={styles.bookingFacts}>
-                  <View style={styles.fact}>
-                    <Calendar size={14} color={tw.gray400} />
-                    <Text style={styles.factText}>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</Text>
-                  </View>
-                  <View style={styles.fact}>
-                    <Clock size={14} color={tw.gray400} />
-                    <Text style={styles.factText}>{booking.timeSlot}</Text>
-                  </View>
-                  <View style={styles.fact}>
-                    <Users size={14} color={tw.gray400} />
-                    <Text style={styles.factText}>{booking.guests} Guests</Text>
-                  </View>
+                  <Fact icon={Calendar}>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</Fact>
+                  <Fact icon={Clock}>{booking.timeSlot}</Fact>
+                  <Fact icon={Users}>{booking.guests} guests</Fact>
                 </View>
 
                 {booking.specialRequest ? (
                   <View style={styles.request}>
-                    <MessageSquare size={12} color={tw.blue700} style={{ marginTop: 2 }} />
-                    <Text style={styles.requestText} numberOfLines={2}>{booking.specialRequest}</Text>
+                    <MessageSquare size={14} color={color.info} style={{ marginTop: 3 }} />
+                    <Text style={styles.requestText} numberOfLines={2}>
+                      {booking.specialRequest}
+                    </Text>
                   </View>
                 ) : null}
 
                 {String(booking.status || '').toLowerCase() === 'pending' ? (
-                  <View style={{ marginTop: 16, flexDirection: 'row', gap: 8 }}>
-                    <Press onPress={() => handleStatusUpdate(booking._id, 'accepted')} style={{ flex: 1 }}>
-                      <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.accept}>
-                        <Text style={styles.acceptText}>ACCEPT</Text>
-                      </LinearGradient>
-                    </Press>
-                    <Press onPress={() => handleStatusUpdate(booking._id, 'cancelled')} style={styles.decline}>
-                      <Text style={styles.declineText}>DECLINE</Text>
-                    </Press>
+                  <View style={styles.bookingActions}>
+                    <Button title="Decline" icon={X} variant="dangerSoft" onPress={() => handleStatusUpdate(booking._id, 'cancelled')} style={{ flex: 1 }} />
+                    <Button title="Accept" onPress={() => handleStatusUpdate(booking._id, 'accepted')} style={{ flex: 1 }} />
                   </View>
                 ) : null}
               </View>
@@ -260,10 +274,15 @@ export function AllOrders(props) {
       title="All orders"
       emptyText="No orders found"
       right={
-        <Press onPress={() => state.navigate('/food/restaurant/orders/all', { state: { from: '/food/restaurant' } })} hitSlop={10} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Text style={styles.history_link}>Full History</Text>
-          <ChevronRight size={12} color={BRAND} strokeWidth={3} />
-        </Press>
+        <Button
+          title="Full history"
+          iconRight={ChevronRight}
+          variant="ghost"
+          size="sm"
+          fullWidth={false}
+          onPress={() => state.navigate('/food/restaurant/orders/all', { state: { from: '/food/restaurant' } })}
+          style={{ height: 44, paddingHorizontal: space.sm }}
+        />
       }
     />
   );
@@ -330,28 +349,22 @@ export function OutForDeliveryOrders(props) {
 export function SearchResults({ query, results, isLoading, onSelectOrder, onVerifyTakeaway, transformOrderForList }) {
   if (isLoading) {
     return (
-      <View style={{ alignItems: 'center', justifyContent: 'center', padding: 80 }}>
-        <ActivityIndicator size="large" color="#dc2626" style={{ marginBottom: 16 }} />
-        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', ...poppins(400) }}>Searching for &quot;{query}&quot;...</Text>
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={color.primary} />
+        <Text style={styles.loadingText}>Searching for &quot;{query}&quot;…</Text>
       </View>
     );
   }
   const transformed = (results || []).map(transformOrderForList);
   return (
     <View style={styles.frame}>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <Text style={styles.title}>Search results for</Text>
-        <Text style={styles.query}>&quot;{query}&quot;</Text>
-        <Text style={[styles.count, poppins(500)]}>({transformed.length})</Text>
+      <View style={styles.head}>
+        <Text style={styles.title} accessibilityRole="header" numberOfLines={2}>
+          Results for &quot;{query}&quot; <Text style={styles.count}>({transformed.length})</Text>
+        </Text>
       </View>
       {transformed.length === 0 ? (
-        <View style={styles.noResults}>
-          <View style={styles.noResultsIcon}>
-            <Search size={32} color={tw.gray300} />
-          </View>
-          <Text style={{ fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 4, ...poppins(700) }}>No results found</Text>
-          <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, textAlign: 'center', ...poppins(400) }}>Try searching for a different order ID or customer name</Text>
-        </View>
+        <EmptyState icon={Search} title="No results found" message="Try searching for a different order ID or customer name" style={styles.emptyCard} />
       ) : (
         transformed.map((order) => <OrderCard key={order.orderId || order.mongoId} {...order} onSelect={onSelectOrder} onVerifyTakeaway={onVerifyTakeaway} />)
       )}
@@ -360,40 +373,34 @@ export function SearchResults({ query, results, isLoading, onSelectOrder, onVeri
 }
 
 const styles = StyleSheet.create({
-  frame: { paddingTop: 16, paddingBottom: 24 },
-  head: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 },
-  title: { fontSize: 16, lineHeight: 24, color: '#000', ...poppins(600) },
-  count: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  emptyText: { textAlign: 'center', paddingVertical: 32, fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  history_link: { fontSize: 12, lineHeight: 16, color: BRAND, ...poppins(700) },
-  history: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  historyPhoto: { width: 64, height: 64, borderRadius: 8, overflow: 'hidden', backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  historyAlt: { fontSize: 9, lineHeight: 11, color: tw.gray400, textAlign: 'center', paddingHorizontal: 4, ...poppins(500) },
-  historyId: { fontSize: 13, lineHeight: 15, color: tw.slate900, ...poppins(700) },
-  historyCustomer: { fontSize: 10, lineHeight: 15, color: tw.gray500, marginTop: 4, textTransform: 'capitalize', ...poppins(500) },
-  historyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, borderWidth: 1 },
-  historyBadgeText: { fontSize: 9, lineHeight: 14, ...poppins(700) },
-  historyDate: { fontSize: 9, lineHeight: 14, color: tw.gray400, ...poppins(500) },
-  historyItems: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  historyReason: { fontSize: 10, lineHeight: 15, color: BRAND, marginTop: 4, ...poppins(400) },
-  historyMeta: { fontSize: 11, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  historyAmount: { fontSize: 12, lineHeight: 16, color: '#000', ...poppins(500) },
-  refresh: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: '#dc2626', ...poppins(800) },
-  bookingEmpty: { alignItems: 'center', paddingVertical: 48, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.gray200 },
-  booking: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.gray200, ...shadow('sm') },
-  bookingName: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  bookingPhone: { fontSize: 11, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  bookingBadge: { fontSize: 10, lineHeight: 15, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1, overflow: 'hidden', ...poppins(700) },
-  bookingFacts: { flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: tw.gray50, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: tw.gray100 },
-  fact: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  factText: { fontSize: 11, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  request: { marginTop: 12, padding: 8, flexDirection: 'row', alignItems: 'flex-start', gap: 4, backgroundColor: 'rgba(239,246,255,0.5)', borderRadius: 8, borderWidth: 1, borderColor: 'rgba(219,234,254,0.5)' },
-  requestText: { flex: 1, fontSize: 10, lineHeight: 15, color: tw.blue700, fontStyle: 'italic', ...poppins(400) },
-  accept: { paddingVertical: 8, borderRadius: 12, alignItems: 'center', ...shadow('sm') },
-  acceptText: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, color: '#fff', ...poppins(800) },
-  decline: { flex: 1, paddingVertical: 8, borderRadius: 12, alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: tw.rose200 },
-  declineText: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, color: tw.slate600, ...poppins(800) },
-  query: { fontSize: 14, lineHeight: 20, color: tw.gray700, fontStyle: 'italic', backgroundColor: tw.gray200, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden', ...poppins(400) },
-  noResults: { backgroundColor: '#fff', borderRadius: 16, padding: 40, alignItems: 'center', ...shadow('sm') },
-  noResultsIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  frame: { paddingTop: space.sm, paddingBottom: space.xxl },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, minHeight: 44, marginBottom: space.sm },
+  title: { flex: 1, ...t.subheading, color: color.text },
+  count: { ...t.small, color: color.textMuted },
+  loading: { alignItems: 'center', gap: space.md, paddingVertical: space.xxxl + space.lg },
+  loadingText: { ...t.body, color: color.textMuted, textAlign: 'center' },
+  emptyCard: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, paddingVertical: space.xxxl },
+
+  history: { flexDirection: 'row', gap: space.md, backgroundColor: color.surface, borderRadius: radii.lg, padding: space.md + 2, marginBottom: space.md, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  historyPhoto: { width: 56, height: 56, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  historyBody: { flex: 1, minWidth: 0, gap: space.xs },
+  historyTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.sm },
+  historyId: { ...t.bodyStrong, color: color.text },
+  historyCustomer: { ...t.small, color: color.textSecondary },
+  historyItems: { ...t.small, color: color.text },
+  historyReason: { ...t.small, color: color.danger },
+  historyFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, marginTop: space.xs },
+  historyMeta: { flex: 1, ...t.caption, color: color.textMuted },
+  historyAmount: { ...t.bodyStrong, color: color.text },
+
+  booking: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.lg, gap: space.md, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  bookingTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: space.sm },
+  bookingName: { ...t.subheading, color: color.text },
+  bookingPhone: { ...t.small, color: color.textMuted },
+  bookingFacts: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space.lg, rowGap: space.sm, backgroundColor: color.surfaceMuted, padding: space.md, borderRadius: radii.md },
+  fact: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  factText: { ...t.label, color: color.text },
+  request: { padding: space.sm + 2, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, backgroundColor: color.infoSoft, borderRadius: radii.md },
+  requestText: { flex: 1, ...t.small, color: color.info },
+  bookingActions: { flexDirection: 'row', gap: space.sm },
 });

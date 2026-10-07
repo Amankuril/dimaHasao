@@ -1,12 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { AlertCircle, UserCheck } from 'lucide-react-native';
+import { AlertCircle, ChevronRight, UserCheck } from 'lucide-react-native';
 import { useNavigate } from '../../../lib/webRouter';
 import { Press } from '../../../components/ui';
-import { poppins, shadow, tw } from '../../../theme';
+import { SectionHeader } from '../../../components/ds';
+import { color, radii, space, tone as tones, type } from '../../../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/components/dashboard/ActionRequired.jsx.
  * item.link is navigated as given; usePartnerDashboard supplies /hotel/partner/... links.
+ * Urgent items use the danger tone, the rest warning; each row is one 44 px+ target.
  */
 const ActionRequired = ({ items }) => {
   const navigate = useNavigate();
@@ -14,31 +16,36 @@ const ActionRequired = ({ items }) => {
   if (!items || items.length === 0) return null;
 
   return (
-    <View style={{ marginBottom: 32 }}>
-      <Text style={styles.heading}>Action Required</Text>
-      <View style={{ gap: 12 }}>
+    <View>
+      <SectionHeader title="Action required" />
+      <View style={{ gap: space.md }}>
         {items.map((item, index) => {
-          const urgent = Boolean(item.urgent);
+          const t = item.urgent ? tones.danger : tones.warning;
+          const Icon = item.type === 'check-in' ? UserCheck : AlertCircle;
           return (
             <Press
               key={index}
-              scale={1}
+              scale={0.99}
               onPress={() => navigate(item.link)}
-              style={[styles.card, { backgroundColor: urgent ? tw.red50 : tw.orange50, borderColor: urgent ? tw.red100 : tw.orange100 }]}
+              accessibilityLabel={`${item.title}. ${item.description || ''}`}
+              style={[styles.card, { backgroundColor: t.bg, borderColor: t.fg }]}
             >
-              <View style={[styles.icon, { backgroundColor: urgent ? tw.red100 : tw.orange100 }]}>
-                {item.type === 'check-in' ? (
-                  <UserCheck size={24} color={urgent ? tw.red600 : tw.orange600} />
-                ) : (
-                  <AlertCircle size={24} color={urgent ? tw.red600 : tw.orange600} />
-                )}
+              <View style={[styles.icon, { backgroundColor: color.surface }]}>
+                <Icon size={20} color={t.fg} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[styles.title, { color: urgent ? tw.red800 : tw.orange900 }]}>{item.title}</Text>
-                <Text style={[styles.desc, { color: urgent ? tw.red600 : tw.orange700 }]}>{item.description}</Text>
+                <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                {item.description ? (
+                  <Text style={[type.small, { color: color.textSecondary }]} numberOfLines={2}>
+                    {item.description}
+                  </Text>
+                ) : null}
               </View>
               <View style={styles.fix}>
-                <Text style={[styles.fixText, { color: urgent ? tw.red600 : tw.orange600 }]}>Fix Now</Text>
+                <Text style={[type.label, { color: t.fg }]}>Fix now</Text>
+                <ChevronRight size={16} color={t.fg} />
               </View>
             </Press>
           );
@@ -49,13 +56,9 @@ const ActionRequired = ({ items }) => {
 };
 
 const styles = StyleSheet.create({
-  heading: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 16, paddingHorizontal: 4, ...poppins(700) },
-  card: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, borderWidth: 1 },
-  icon: { padding: 12, borderRadius: 12, marginRight: 16 },
-  title: { fontSize: 16, lineHeight: 24, ...poppins(700) },
-  desc: { fontSize: 14, lineHeight: 20, ...poppins(400) },
-  fix: { marginLeft: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, backgroundColor: '#fff', ...shadow('sm') },
-  fixText: { fontSize: 14, lineHeight: 20, ...poppins(700) },
+  card: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, borderRadius: radii.lg, borderWidth: 1 },
+  icon: { width: 40, height: 40, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  fix: { flexDirection: 'row', alignItems: 'center', gap: space.xxs },
 });
 
 export { ActionRequired };

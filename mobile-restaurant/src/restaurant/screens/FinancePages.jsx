@@ -1,64 +1,66 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle, Mail, Wallet } from 'lucide-react-native';
+import { CheckCircle, Mail, Store, Wallet } from 'lucide-react-native';
+import { Button, Card, EmptyState, Money, SegmentedControl, StatusBadge } from '../../components/ds';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 import BottomNavOrders, { BOTTOM_NAV_HEIGHT } from '../components/BottomNavOrders';
-import { PageHeader, RadioRow } from '../components/ui';
+import { PageHeader } from '../components/ui';
 import { useDownloadReport } from '../hooks/pages/useDownloadReport';
 import { useWithdrawalHistoryPage } from '../hooks/pages/useWithdrawalHistoryPage';
-import { RT_GRADIENT } from '../theme';
+import { inr2, sentenceCase } from './finance/financeUi';
+import { Notice, PinnedBar, Radio } from './inventory/partnerKit';
 
 const when = (value) => (value ? new Date(value).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A');
 
 /** Port of Food/pages/restaurant/WithdrawalHistoryPage.jsx (/food/restaurant/withdrawal-history). */
 export function WithdrawalHistoryPage() {
+  const insets = useSafeAreaInsets();
   const { goBack, withdrawalHistoryTab, setWithdrawalHistoryTab, withdrawalRequests, loadingWithdrawalRequests } = useWithdrawalHistoryPage();
   const pending = withdrawalHistoryTab === 'pending';
   const rows = withdrawalRequests.filter((req) => (pending ? req.status === 'Pending' : req.status === 'Approved' || req.status === 'Processed'));
 
-  const tab = (id, label) => {
-    const on = withdrawalHistoryTab === id;
-    return (
-      <Press scale={0.98} onPress={() => setWithdrawalHistoryTab(id)} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flex: 1 }}>
-        <LinearGradient colors={on ? RT_GRADIENT : [tw.gray100, tw.gray100]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.tab}>
-          <Text style={[styles.tabText, { color: on ? '#fff' : tw.gray600 }]} numberOfLines={1} adjustsFontSizeToFit>{label}</Text>
-        </LinearGradient>
-      </Press>
-    );
-  };
+  const renderRow = ({ item: request }) => (
+    <Card style={styles.row}>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Money value={request.amount != null ? inr2(request.amount) : '₹'} />
+        <Text style={styles.date}>{pending ? `Requested: ${when(request.requestedAt)}` : `Processed: ${when(request.processedAt)}`}</Text>
+      </View>
+      <StatusBadge label={pending ? 'Pending' : request.status === 'Approved' ? 'Approved' : 'Processed'} tone={pending ? 'warning' : 'success'} />
+    </Card>
+  );
 
   return (
-    <View style={{ flex: 1, backgroundColor: tw.gray100 }}>
+    <View style={styles.page}>
       <PageHeader title="Withdrawal History" onBack={goBack} />
       <View style={styles.tabs}>
-        {tab('pending', 'Withdrawal Pending')}
-        {tab('successful', 'Withdrawal Successful')}
+        <SegmentedControl
+          value={withdrawalHistoryTab}
+          onChange={setWithdrawalHistoryTab}
+          options={[
+            { value: 'pending', label: 'Withdrawal pending' },
+            { value: 'successful', label: 'Withdrawal successful' },
+          ]}
+        />
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24, paddingBottom: 24 + BOTTOM_NAV_HEIGHT, gap: 12 }}>
-        {loadingWithdrawalRequests ? (
-          <Text style={styles.loading}>Loading...</Text>
-        ) : rows.length === 0 ? (
-          <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-            <Wallet size={64} color={tw.gray300} style={{ marginBottom: 16 }} />
-            <Text style={styles.emptyText}>{pending ? 'No pending withdrawal requests' : 'No successful withdrawals'}</Text>
-          </View>
-        ) : (
-          rows.map((request) => (
-            <View key={request.id} style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.amount}>₹{request.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
-                <Text style={styles.date}>{pending ? `Requested: ${when(request.requestedAt)}` : `Processed: ${when(request.processedAt)}`}</Text>
-              </View>
-              <Text style={[styles.badge, pending ? { backgroundColor: '#fef9c3', color: '#854d0e' } : { backgroundColor: tw.green100, color: tw.green800 }]}>
-                {pending ? 'Pending' : request.status === 'Approved' ? 'Approved' : 'Processed'}
-              </Text>
+      <FlatList
+        data={loadingWithdrawalRequests ? [] : rows}
+        keyExtractor={(request, index) => String(request.id ?? index)}
+        renderItem={renderRow}
+        ItemSeparatorComponent={() => <View style={{ height: space.md }} />}
+        contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxl + BOTTOM_NAV_HEIGHT + insets.bottom }}
+        ListEmptyComponent={
+          loadingWithdrawalRequests ? (
+            <View style={styles.loading}>
+              <ActivityIndicator size="small" color={color.primary} />
+              <Text style={styles.loadingText}>Loading...</Text>
             </View>
-          ))
-        )}
-      </ScrollView>
+          ) : (
+            <EmptyState icon={Wallet} title={pending ? 'No pending withdrawal requests' : 'No successful withdrawals'} />
+          )
+        }
+      />
       <BottomNavOrders />
     </View>
   );
@@ -68,60 +70,53 @@ export function WithdrawalHistoryPage() {
 export function DownloadReport() {
   const insets = useSafeAreaInsets();
   const { goBack, reportView, setReportView, viewType, setViewType, durations, duration, setDuration, showSuccess, handleSend, REPORT_VIEWS, VIEW_TYPES } = useDownloadReport();
+
+  const radioRow = (opt, selected, onPress, last) => (
+    <Press key={opt.id} scale={1} onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected, checked: selected }} accessibilityLabel={opt.label} style={[styles.radioRow, last ? null : styles.radioDivider]}>
+      <Radio selected={selected} />
+      <Text style={[styles.radioLabel, selected ? { color: color.primary, fontFamily: 'Poppins_600SemiBold' } : null]}>{opt.label}</Text>
+    </Press>
+  );
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={styles.page}>
       <PageHeader title="Download report" onBack={goBack} backLabel="Back" />
-      <Text style={styles.scope}>
-        You are generating a report for <Text style={poppins(600)}>All Outlets</Text>
-      </Text>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 20, gap: 24 }}>
-        <View style={{ gap: 12 }}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: space.xxl }]}>
+        <Notice tone="primary" icon={Store}>
+          <Text style={[type.small, { color: color.text }]}>
+            You are generating a report for <Text style={{ fontFamily: 'Poppins_600SemiBold' }}>All outlets</Text>
+          </Text>
+        </Notice>
+
+        <View style={styles.group}>
           <Text style={styles.question}>Select the report view:</Text>
-          {REPORT_VIEWS.map((opt) => (
-            <RadioRow key={opt.id} label={opt.label} selected={reportView === opt.id} onPress={() => setReportView(opt.id)} />
-          ))}
+          <Card padded={false}>{REPORT_VIEWS.map((opt, i) => radioRow(opt, reportView === opt.id, () => setReportView(opt.id), i === REPORT_VIEWS.length - 1))}</Card>
         </View>
 
-        <View style={{ gap: 12 }}>
+        <View style={styles.group}>
           <Text style={styles.question}>Select view for data:</Text>
-          <View style={styles.segments}>
-            {VIEW_TYPES.map((type) => {
-              const on = viewType === type;
-              return (
-                <Press key={type} scale={1} onPress={() => setViewType(type)} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flex: 1 }}>
-                  <LinearGradient colors={on ? RT_GRADIENT : ['#fff', '#fff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingVertical: 8, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 14, lineHeight: 20, color: on ? '#fff' : tw.gray800, ...poppins(600) }}>{type}</Text>
-                  </LinearGradient>
-                </Press>
-              );
-            })}
-          </View>
+          <SegmentedControl value={viewType} onChange={setViewType} options={VIEW_TYPES.map((vt) => ({ value: vt, label: sentenceCase(vt) }))} />
         </View>
 
-        <View style={{ gap: 12 }}>
+        <View style={styles.group}>
           <Text style={styles.question}>Select duration for report:</Text>
-          {durations.map((opt) => (
-            <RadioRow key={opt.id} label={opt.label} selected={duration === opt.id} onPress={() => setDuration(opt.id)} />
-          ))}
+          <Card padded={false}>{durations.map((opt, i) => radioRow(opt, duration === opt.id, () => setDuration(opt.id), i === durations.length - 1))}</Card>
         </View>
       </ScrollView>
 
-      <View style={{ paddingHorizontal: 16, paddingBottom: 24 + insets.bottom }}>
-        <Press scale={0.98} onPress={handleSend} accessibilityRole="button">
-          <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 12 }}>
-            <Mail size={20} color="#fff" />
-            <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) }}>Send an email</Text>
-          </LinearGradient>
-        </Press>
-      </View>
+      <PinnedBar>
+        <Button title="Send an email" icon={Mail} size="lg" onPress={handleSend} />
+      </PinnedBar>
 
       {showSuccess ? (
-        <View style={[styles.success, { bottom: 32 + insets.bottom }]} pointerEvents="none" accessibilityRole="alert">
-          <CheckCircle size={24} color={tw.green600} />
-          <View>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) }}>Report queued</Text>
-            <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) }}>We’ll email it to you shortly.</Text>
+        <View style={[styles.success, { bottom: 54 + space.lg * 2 + space.md + insets.bottom }]} pointerEvents="none" accessibilityRole="alert">
+          <View style={styles.successIcon}>
+            <CheckCircle size={22} color={color.success} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[type.bodyStrong, { color: color.text }]}>Report queued</Text>
+            <Text style={[type.caption, { color: color.textMuted }]}>We’ll email it to you shortly.</Text>
           </View>
         </View>
       ) : null}
@@ -130,17 +125,18 @@ export function DownloadReport() {
 }
 
 const styles = StyleSheet.create({
-  tabs: { backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 1, borderBottomWidth: 1, borderBottomColor: tw.gray200, flexDirection: 'row', gap: 8 },
-  tab: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  tabText: { fontSize: 14, lineHeight: 20, ...poppins(500) },
-  loading: { paddingVertical: 32, textAlign: 'center', fontSize: 16, color: tw.gray500, ...poppins(400) },
-  emptyText: { fontSize: 18, lineHeight: 28, color: tw.gray500, textAlign: 'center', ...poppins(500) },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', backgroundColor: '#fff', borderRadius: 8, padding: 16, borderWidth: 1, borderColor: tw.gray200, ...shadow('sm') },
-  amount: { fontSize: 18, lineHeight: 28, color: tw.gray900, marginBottom: 8, ...poppins(700) },
-  date: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 12, lineHeight: 16, ...poppins(500) },
-  scope: { backgroundColor: '#f8e7a0', color: tw.gray900, fontSize: 14, lineHeight: 20, paddingHorizontal: 16, paddingVertical: 8, ...poppins(400) },
-  question: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  segments: { flexDirection: 'row', borderWidth: 1, borderColor: tw.gray300, borderRadius: 12, overflow: 'hidden' },
-  success: { position: 'absolute', left: 24, right: 24, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.gray200, padding: 16, ...shadow('lg') },
+  page: { flex: 1, backgroundColor: color.bg },
+  tabs: { paddingHorizontal: space.lg, paddingTop: space.md },
+  loading: { paddingVertical: space.xxxl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  loadingText: { ...type.body, color: color.textMuted },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  date: { ...type.caption, color: color.textMuted, marginTop: space.xs },
+  scroll: { padding: space.lg, gap: space.xxl },
+  group: { gap: space.md },
+  question: { ...type.bodyStrong, color: color.text },
+  radioRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 52, paddingHorizontal: space.lg },
+  radioDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  radioLabel: { flex: 1, ...type.body, color: color.text },
+  success: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, padding: space.lg, ...elevation.float },
+  successIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.successSoft, alignItems: 'center', justifyContent: 'center' },
 });

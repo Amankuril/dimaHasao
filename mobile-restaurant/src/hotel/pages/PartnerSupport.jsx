@@ -3,10 +3,10 @@ import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronDown, CircleHelp, Mail, MessageSquare, Phone } from 'lucide-react-native';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, Card, EmptyState, SectionHeader } from '../../components/ds';
+import { color, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
 import { faqService } from '../services/apiService';
-import { HT } from '../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerSupport.jsx
@@ -20,19 +20,15 @@ const FaqItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <View style={styles.faq}>
-      <Press scale={1} onPress={() => setIsOpen(!isOpen)} style={styles.faqHead}>
+    <Card padded={false} style={{ overflow: 'hidden' }}>
+      <Press scale={1} onPress={() => setIsOpen(!isOpen)} accessibilityState={{ expanded: isOpen }} accessibilityLabel={question} style={styles.faqHead}>
         <Text style={styles.faqQ}>{question}</Text>
         <View style={{ transform: [{ rotate: isOpen ? '180deg' : '0deg' }] }}>
-          <ChevronDown size={18} color={tw.gray400} />
+          <ChevronDown size={18} color={color.textMuted} />
         </View>
       </Press>
-      {isOpen ? (
-        <View style={{ paddingHorizontal: 16 }}>
-          <Text style={styles.faqA}>{answer}</Text>
-        </View>
-      ) : null}
-    </View>
+      {isOpen ? <Text style={styles.faqA}>{answer}</Text> : null}
+    </Card>
   );
 };
 
@@ -56,44 +52,33 @@ const PartnerSupport = () => {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       <PartnerHeader title="Support Center" subtitle="We are here to help" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}>
-        <View style={{ maxWidth: 768, width: '100%', alignSelf: 'center', paddingHorizontal: 16, paddingTop: 24 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: space.xxxl + insets.bottom }}>
+        <View style={{ maxWidth: 768, width: '100%', alignSelf: 'center', padding: space.lg, gap: space.md }}>
           {/* Contact Options */}
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 32 }}>
-            <Press onPress={() => open('https://wa.me/919111384535')} style={[styles.contact, { backgroundColor: HT.primary }, shadow('lg')]}>
-              <MessageSquare size={24} color="#fff" />
-              <Text style={[styles.contactText, { color: '#fff' }]}>WhatsApp Chat</Text>
-            </Press>
-            <Press onPress={() => open('tel:9111384535')} style={[styles.contact, { backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200 }, shadow('sm')]}>
-              <Phone size={24} color={tw.slate900} />
-              <Text style={[styles.contactText, { color: tw.slate900 }]}>Call Support</Text>
-            </Press>
+          <View style={{ flexDirection: 'row', gap: space.md }}>
+            <Button title="WhatsApp chat" icon={MessageSquare} onPress={() => open('https://wa.me/919111384535')} style={{ flex: 1 }} />
+            <Button title="Call support" icon={Phone} variant="outline" onPress={() => open('tel:9111384535')} style={{ flex: 1 }} />
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <CircleHelp size={18} color={tw.gray400} />
-            <Text style={styles.h3}>Frequently Asked Questions</Text>
-          </View>
+          <SectionHeader title="Frequently asked questions" style={{ marginTop: space.lg, marginBottom: 0 }} />
 
-          <View>
-            {loading ? (
-              <View style={{ padding: 32, alignItems: 'center' }}>
-                <ActivityIndicator color={HT.primary} />
-              </View>
-            ) : faqs.length === 0 ? (
-              <Text style={styles.none}>No FAQs available.</Text>
-            ) : (
-              faqs.map((faq, i) => <FaqItem key={faq._id || i} question={faq.question} answer={faq.answer} />)
-            )}
-          </View>
+          {loading ? (
+            <View style={{ padding: space.xxxl, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={color.primary} />
+            </View>
+          ) : faqs.length === 0 ? (
+            <EmptyState icon={CircleHelp} title="No FAQs available." />
+          ) : (
+            faqs.map((faq, i) => <FaqItem key={faq._id || i} question={faq.question} answer={faq.answer} />)
+          )}
 
-          <View style={{ marginTop: 32, alignItems: 'center' }}>
+          <View style={{ marginTop: space.xl, alignItems: 'center' }}>
             <Text style={styles.still}>Still have questions?</Text>
-            <Press onPress={() => open('mailto:partners@rokkooin.com')} scale={1} style={styles.mail}>
-              <Mail size={14} color={HT.primary} />
+            <Press onPress={() => open('mailto:partners@rokkooin.com')} scale={1} accessibilityLabel="Email partners@rokkooin.com" style={styles.mail}>
+              <Mail size={16} color={color.primary} />
               <Text style={styles.mailText}>Email us at partners@rokkooin.com</Text>
             </Press>
           </View>
@@ -104,17 +89,12 @@ const PartnerSupport = () => {
 };
 
 const styles = StyleSheet.create({
-  contact: { flex: 1, padding: 20, borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  contactText: { fontSize: 14, lineHeight: 20, ...poppins(700) },
-  h3: { fontSize: 16, lineHeight: 24, color: tw.slate900, ...poppins(900) },
-  none: { padding: 32, textAlign: 'center', fontSize: 14, lineHeight: 20, color: tw.gray400, ...poppins(400) },
-  faq: { borderWidth: 1, borderColor: tw.gray200, borderRadius: 16, marginBottom: 12, backgroundColor: '#fff', overflow: 'hidden' },
-  faqHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, gap: 8 },
-  faqQ: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(700) },
-  faqA: { fontSize: 12, lineHeight: 19.5, color: tw.gray500, paddingBottom: 16, ...poppins(400) },
-  still: { fontSize: 12, lineHeight: 16, color: tw.gray400, marginBottom: 8, ...poppins(400) },
-  mail: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 2, borderBottomWidth: 1, borderBottomColor: HT.primaryBorder },
-  mailText: { fontSize: 14, lineHeight: 20, color: HT.primary, ...poppins(700) },
+  faqHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: space.lg, gap: space.sm, minHeight: 56 },
+  faqQ: { flex: 1, ...type.bodyStrong, color: color.text },
+  faqA: { ...type.small, color: color.textSecondary, paddingHorizontal: space.lg, paddingBottom: space.lg },
+  still: { ...type.small, color: color.textMuted },
+  mail: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 44 },
+  mailText: { ...type.label, color: color.primary, textDecorationLine: 'underline' },
 });
 
 export default PartnerSupport;

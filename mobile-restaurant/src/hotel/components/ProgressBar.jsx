@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { tw } from '../../theme';
-import { HT } from '../theme';
+import { color, radii } from '../../theme';
 
 /* Port of Frontend/src/modules/Hotel/app/partner/components/ProgressBar.jsx (thin track, 500ms ease-out fill). */
 const ProgressBar = ({ currentStep, totalSteps }) => {
@@ -13,7 +12,12 @@ const ProgressBar = ({ currentStep, totalSteps }) => {
   }, [currentStep, totalSteps, progress]);
 
   return (
-    <View style={styles.track}>
+    <View
+      style={styles.track}
+      accessibilityRole="progressbar"
+      accessibilityValue={{ min: 0, max: totalSteps, now: currentStep }}
+      accessibilityLabel={`Step ${currentStep} of ${totalSteps}`}
+    >
       <Animated.View
         style={[styles.fill, { width: progress.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }) }]}
       />
@@ -22,8 +26,8 @@ const ProgressBar = ({ currentStep, totalSteps }) => {
 };
 
 const styles = StyleSheet.create({
-  track: { width: '100%', height: 4, backgroundColor: tw.gray100 },
-  fill: { height: '100%', backgroundColor: HT.primary },
+  track: { width: '100%', height: 6, borderRadius: radii.pill, overflow: 'hidden', backgroundColor: color.border },
+  fill: { height: '100%', borderRadius: radii.pill, backgroundColor: color.primary },
 });
 
 export { ProgressBar };

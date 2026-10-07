@@ -1,19 +1,18 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Bell, Calendar, ChevronDown, Download, FileText, Menu, Wallet, X } from 'lucide-react-native';
+import { Bell, Calendar, Check, ChevronDown, ChevronRight, Download, FileText, Menu, Receipt, Wallet } from 'lucide-react-native';
+import { Button, Card, EmptyState, IconButton, Money, SectionHeader, SegmentedControl, StatusBadge } from '../../components/ds';
 import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
 import { restaurantAPI } from '../../api/restaurant';
 import { alert } from '../../lib/webShim';
-import { poppins, shadow, tw } from '../../theme';
-import BottomNavOrders from '../components/BottomNavOrders';
+import { color, elevation, radii, space, type } from '../../theme';
+import BottomNavOrders, { BOTTOM_NAV_HEIGHT } from '../components/BottomNavOrders';
 import DateRangeDialog from '../components/DateRangeDialog';
 import { useHubFinance } from '../hooks/pages/useHubFinance';
-import { RT, RT_GRADIENT } from '../theme';
-
-const inr = (value) => Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+import { DialogHead, StatTile, dialogPanel, inr2, useKeyboardHeight } from './finance/financeUi';
+import { Field, Input, ScreenHeader } from './inventory/partnerKit';
 
 const formatDateForDisplay = (date) => {
   const day = date.getDate();
@@ -63,24 +62,20 @@ const getDateOptions = () => {
   ];
 };
 
-const STATUS_STYLE = {
-  // text-green-700 / text-amber-700 are repainted to the theme's strong green; red is left alone.
-  green: { backgroundColor: tw.green100, color: RT.primaryStrong },
-  red: { backgroundColor: tw.red100, color: tw.red700 },
-  amber: { backgroundColor: tw.amber100, color: RT.primaryStrong },
-};
+/** getWithdrawalStatusClass() answers with class names; map them onto the status tones. */
+const withdrawalTone = (cls) => (cls.includes('green') ? 'success' : cls.includes('red') ? 'danger' : 'warning');
 
 function OrderRow({ order, formatDateTime, last }) {
   return (
-    <View style={[{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }, last ? null : { borderBottomWidth: 1, borderBottomColor: tw.gray200, paddingBottom: 12 }]}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.orderId}>Order ID: {order.orderId || 'N/A'}</Text>
+    <View style={[styles.orderRow, last ? null : styles.rowDivider]}>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={styles.orderId} numberOfLines={1}>Order ID: {order.orderId || 'N/A'}</Text>
         <Text style={styles.orderDate}>{formatDateTime(order.createdAt || order.deliveredAt)}</Text>
-        <Text style={styles.orderFood}>{order.foodNames || (order.items && order.items.map((item) => item.name).join(', ')) || 'N/A'}</Text>
+        <Text style={styles.orderFood} numberOfLines={2}>{order.foodNames || (order.items && order.items.map((item) => item.name).join(', ')) || 'N/A'}</Text>
       </View>
-      <View style={{ alignItems: 'flex-end', marginLeft: 16 }}>
-        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>₹{inr(order.payout || 0)}</Text>
-        <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>Earning</Text>
+      <View style={{ alignItems: 'flex-end' }}>
+        <Money value={inr2(order.payout || 0)} style={styles.rowMoney} />
+        <Text style={styles.rowMoneyLabel}>Earning</Text>
       </View>
     </View>
   );
@@ -92,6 +87,7 @@ export default function HubFinance() {
   const { width: windowWidth } = useWindowDimensions();
   const reportBtnRef = useRef(null);
   const [menuPos, setMenuPos] = useState(null);
+  const keyboardHeight = useKeyboardHeight();
   const h = useHubFinance();
   const {
     navigate, location, goBack, showBack, activeTab, setActiveTab, selectedDateRange, setSelectedDateRange, showDownloadMenu, setShowDownloadMenu,
@@ -172,167 +168,142 @@ export default function HubFinance() {
   const currentOrders = financeData?.currentCycle?.orders;
 
   return (
-    <View style={{ flex: 1, backgroundColor: tw.gray100 }}>
-      <View style={[styles.nav, { paddingTop: 12 + insets.top }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          {showBack ? (
-            <Press onPress={goBack} accessibilityLabel="Go back" hitSlop={8} style={{ padding: 6 }}>
-              <ArrowLeft size={20} color={tw.gray900} />
-            </Press>
-          ) : null}
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text numberOfLines={1} style={styles.navTitle} accessibilityRole="header">{restaurantData?.name || financeData?.restaurant?.name || 'Restaurant'}</Text>
-              <ChevronDown size={16} color={tw.gray600} />
-            </View>
-            <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray600, marginTop: 2, ...poppins(400) }}>{subtitle}</Text>
+    <View style={styles.page}>
+      <ScreenHeader
+        title={restaurantData?.name || financeData?.restaurant?.name || 'Restaurant'}
+        subtitle={subtitle}
+        showBack={Boolean(showBack)}
+        onBack={showBack ? goBack : undefined}
+        right={
+          <View style={styles.headerActions}>
+            <IconButton icon={Bell} label="Notifications" variant="inverse" onPress={() => navigate('/food/restaurant/notifications', { state: { from: location.pathname } })} />
+            <IconButton icon={Menu} label="Menu" variant="inverse" onPress={() => navigate('/food/restaurant/explore')} />
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 8 }}>
-            <Press onPress={() => navigate('/food/restaurant/withdrawal-history', { state: { from: location.pathname } })} accessibilityLabel="Withdrawal History" style={styles.navIcon}>
-              <Wallet size={20} color={tw.gray700} />
-            </Press>
-            <Press onPress={() => navigate('/food/restaurant/notifications', { state: { from: location.pathname } })} accessibilityLabel="Notifications" style={styles.navIcon}>
-              <Bell size={20} color={tw.gray700} />
-            </Press>
-            <Press onPress={() => navigate('/food/restaurant/explore')} accessibilityLabel="Menu" style={styles.navIcon}>
-              <Menu size={20} color={tw.gray700} />
-            </Press>
-          </View>
-        </View>
+        }
+      />
+
+      <View style={styles.tabsWrap}>
+        <SegmentedControl
+          value={activeTab}
+          onChange={setActiveTab}
+          options={[
+            { value: 'payouts', label: 'Payouts' },
+            { value: 'invoices', label: 'Invoices & taxes' },
+          ]}
+        />
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 12 }}>
-        {[['payouts', 'Payouts'], ['invoices', 'Invoices & Taxes']].map(([id, label]) => {
-          const active = activeTab === id;
-          return (
-            <Press key={id} scale={0.98} onPress={() => setActiveTab(id)} accessibilityRole="tab" accessibilityState={{ selected: active }} style={{ flex: 1 }}>
-              <LinearGradient colors={active ? RT_GRADIENT : ['#fff', '#fff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.tab, active ? null : { borderWidth: 1, borderColor: tw.gray300 }]}>
-                <Text style={{ fontSize: 14, lineHeight: 20, color: active ? '#fff' : tw.gray600, ...poppins(500) }}>{label}</Text>
-              </LinearGradient>
-            </Press>
-          );
-        })}
-      </View>
-
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 112 + insets.bottom }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: space.xxxl + BOTTOM_NAV_HEIGHT + insets.bottom }]} keyboardShouldPersistTaps="handled">
         {activeTab === 'payouts' ? (
-          <View style={{ gap: 24 }}>
+          <View style={{ gap: space.xxl }}>
             <View>
-              <Text style={styles.h2}>Current cycle</Text>
-              <View style={styles.box}>
+              <SectionHeader title="Current cycle" />
+              <Card>
                 {loading ? (
-                  <Text style={{ paddingVertical: 32, textAlign: 'center', color: tw.gray500, ...poppins(400) }}>Loading...</Text>
+                  <View style={styles.loadingRow}>
+                    <ActivityIndicator size="small" color={color.primary} />
+                    <Text style={styles.muted}>Loading...</Text>
+                  </View>
                 ) : (
                   <>
-                    <Text style={{ fontSize: 36, lineHeight: 40, color: tw.gray900, marginBottom: 8, ...poppins(700) }}>₹{inr(payout)}</Text>
-                    <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray600, marginBottom: 16, ...poppins(400) }}>
+                    <Text style={styles.overline}>Estimated payout</Text>
+                    <Money large value={inr2(payout)} style={{ marginTop: space.xs }} />
+                    <Text style={[styles.muted, { marginTop: space.xs }]}>
                       {financeData?.currentCycle?.totalOrders || 0} {financeData?.currentCycle?.totalOrders === 1 ? 'order' : 'orders'}
                     </Text>
-                    <Press scale={0.98} disabled={!canWithdraw} onPress={() => { setWithdrawalAmount(''); setShowWithdrawalModal(true); }} accessibilityState={{ disabled: !canWithdraw }} style={{ marginTop: 16 }}>
-                      <LinearGradient colors={canWithdraw ? RT_GRADIENT : [tw.gray200, tw.gray200]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.withdraw}>
-                        <Wallet size={20} color={canWithdraw ? '#fff' : tw.gray500} />
-                        <Text style={{ fontSize: 16, lineHeight: 24, color: canWithdraw ? '#fff' : tw.gray500, ...poppins(600) }}>Withdraw</Text>
-                      </LinearGradient>
-                    </Press>
+                    <Button
+                      title="Withdraw"
+                      icon={Wallet}
+                      size="lg"
+                      disabled={!canWithdraw}
+                      onPress={() => {
+                        setWithdrawalAmount('');
+                        setShowWithdrawalModal(true);
+                      }}
+                      style={{ marginTop: space.lg }}
+                    />
                   </>
                 )}
-              </View>
+              </Card>
             </View>
 
             <View>
-              <Text style={styles.h2}>Withdrawal requests</Text>
-              <View style={styles.box}>
+              <SectionHeader title="Withdrawal requests" action="History" onAction={() => navigate('/food/restaurant/withdrawal-history', { state: { from: location.pathname } })} />
+              <Card padded={false}>
                 {loadingWithdrawals ? (
-                  <Text style={styles.empty}>Loading withdrawal requests...</Text>
+                  <View style={styles.loadingRow}>
+                    <ActivityIndicator size="small" color={color.primary} />
+                    <Text style={styles.muted}>Loading withdrawal requests...</Text>
+                  </View>
                 ) : withdrawalRequests.length === 0 ? (
-                  <Text style={styles.empty}>No withdrawal requests found.</Text>
+                  <EmptyState icon={Wallet} title="No withdrawal requests found." style={styles.emptyCompact} />
                 ) : (
-                  <View style={{ gap: 12 }}>
-                    {withdrawalRequests.slice(0, 8).map((request, index) => {
-                      const cls = getWithdrawalStatusClass(request?.status);
-                      const st = cls.includes('green') ? STATUS_STYLE.green : cls.includes('red') ? STATUS_STYLE.red : STATUS_STYLE.amber;
-                      return (
-                        <View key={request?._id || request?.id || index} style={styles.reqCard}>
-                          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                            <View style={{ flex: 1 }}>
-                              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) }}>₹{inr(request?.amount)}</Text>
-                              <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 4, ...poppins(400) }}>Requested: {formatDateTime(request?.createdAt || request?.requestedAt)}</Text>
-                              {request?.processedAt ? (
-                                <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 2, ...poppins(400) }}>Processed: {formatDateTime(request?.processedAt)}</Text>
-                              ) : null}
-                            </View>
-                            <Text style={[styles.badge, { backgroundColor: st.backgroundColor, color: st.color }]}>{formatWithdrawalStatus(request?.status)}</Text>
-                          </View>
+                  <View>
+                    {withdrawalRequests.slice(0, 8).map((request, index, list) => (
+                      <View key={request?._id || request?.id || index} style={[styles.reqRow, index < list.length - 1 || withdrawalRequests.length > 8 ? styles.rowDivider : null]}>
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Money value={inr2(request?.amount)} style={styles.reqMoney} />
+                          <Text style={styles.caption}>Requested: {formatDateTime(request?.createdAt || request?.requestedAt)}</Text>
+                          {request?.processedAt ? <Text style={styles.caption}>Processed: {formatDateTime(request?.processedAt)}</Text> : null}
                         </View>
-                      );
-                    })}
+                        <StatusBadge label={formatWithdrawalStatus(request?.status)} tone={withdrawalTone(getWithdrawalStatusClass(request?.status))} />
+                      </View>
+                    ))}
                     {withdrawalRequests.length > 8 ? (
-                      <Press scale={1} onPress={() => navigate('/food/restaurant/withdrawal-history')} style={{ paddingTop: 4, alignItems: 'center' }}>
-                        <Text style={{ fontSize: 14, lineHeight: 20, color: '#000', ...poppins(500) }}>View all requests</Text>
-                      </Press>
+                      <Button title="View all requests" variant="ghost" iconRight={ChevronRight} onPress={() => navigate('/food/restaurant/withdrawal-history')} />
                     ) : null}
                   </View>
                 )}
-              </View>
+              </Card>
             </View>
 
             <View>
-              <Text style={styles.h2}>Past cycles</Text>
-              <View style={{ gap: 12 }}>
-                <View style={{ flexDirection: 'row', gap: 8, zIndex: 20 }}>
+              <SectionHeader title="Past cycles" />
+              <View style={{ gap: space.md }}>
+                <View style={styles.filterRow}>
                   <Press scale={1} onPress={() => setShowDateRangePicker(!showDateRangePicker)} accessibilityLabel={`Date range ${selectedDateRange}`} style={styles.rangeBtn}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                      <Calendar size={16} color={tw.gray600} />
-                      <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) }}>{selectedDateRange}</Text>
-                    </View>
-                    <ChevronDown size={16} color={tw.gray600} style={showDateRangePicker ? { transform: [{ rotate: '180deg' }] } : null} />
+                    <Calendar size={18} color={color.primary} />
+                    <Text numberOfLines={1} style={styles.rangeText}>{selectedDateRange}</Text>
+                    <ChevronDown size={18} color={color.textMuted} style={showDateRangePicker ? { transform: [{ rotate: '180deg' }] } : null} />
                   </Press>
                   <View ref={reportBtnRef} collapsable={false}>
-                    <Press scale={0.98} onPress={toggleReportMenu} accessibilityLabel="Get report">
-                      <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.report}>
-                        <Download size={16} color="#fff" />
-                        <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) }}>Get report</Text>
-                        <ChevronDown size={16} color="#fff" />
-                      </LinearGradient>
-                    </Press>
+                    <Button title="Get report" variant="secondary" icon={Download} iconRight={ChevronDown} fullWidth={false} onPress={toggleReportMenu} accessibilityLabel="Get report" />
                   </View>
                 </View>
 
-                {!loadingPastCycles && pastOrders ? (
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, marginBottom: 12, paddingHorizontal: 4, ...poppins(500) }}>{pastOrders.length} orders found</Text>
-                ) : null}
+                {!loadingPastCycles && pastOrders ? <Text style={styles.found}>{pastOrders.length} orders found</Text> : null}
 
                 {loadingPastCycles ? (
-                  <View style={styles.box}>
-                    <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', ...poppins(400) }}>Loading past cycles...</Text>
-                  </View>
+                  <Card style={styles.loadingRow}>
+                    <ActivityIndicator size="small" color={color.primary} />
+                    <Text style={styles.muted}>Loading past cycles...</Text>
+                  </Card>
                 ) : (
                   <>
                     {pastOrders && pastOrders.length > 0 ? (
-                      <View style={[styles.box, { gap: 12 }]}>
+                      <Card padded={false}>
                         {pastOrders.map((order, index) => (
                           <OrderRow key={order.orderId || index} order={order} formatDateTime={formatDateTime} last={index === pastOrders.length - 1} />
                         ))}
-                      </View>
+                      </Card>
                     ) : pastOrders && pastOrders.length === 0 ? (
-                      <View style={[styles.box, { padding: 32, alignItems: 'center', borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray300 }]}>
-                        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, fontStyle: 'italic', ...poppins(400) }}>No orders found for this selected range.</Text>
-                      </View>
+                      <Card style={styles.dashed}>
+                        <Text style={[styles.muted, { textAlign: 'center' }]}>No orders found for this selected range.</Text>
+                      </Card>
                     ) : null}
 
                     {(!pastCyclesData || !pastOrders) && !loadingPastCycles && currentOrders && currentOrders.length > 0 ? (
-                      <View style={[styles.box, { gap: 12 }]}>
+                      <Card padded={false}>
                         {currentOrders.map((order, index) => (
                           <OrderRow key={order.orderId || index} order={order} formatDateTime={formatDateTime} last={index === currentOrders.length - 1} />
                         ))}
-                      </View>
+                      </Card>
                     ) : null}
 
                     {(!pastCyclesData || !pastOrders || pastOrders.length === 0) && (!currentOrders || currentOrders.length === 0) && !loadingPastCycles && !loading ? (
-                      <View style={[styles.box, { padding: 48, alignItems: 'center', borderWidth: 1, borderColor: tw.gray200 }]}>
-                        <Text style={{ color: tw.gray400, marginBottom: 8, ...poppins(400) }}>No transaction history available</Text>
-                        <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, textAlign: 'center', ...poppins(400) }}>Your earnings and order payouts will appear here.</Text>
-                      </View>
+                      <Card padded={false}>
+                        <EmptyState icon={Receipt} title="No transaction history available" message="Your earnings and order payouts will appear here." style={styles.emptyCompact} />
+                      </Card>
                     ) : null}
                   </>
                 )}
@@ -342,48 +313,46 @@ export default function HubFinance() {
         ) : null}
 
         {activeTab === 'invoices' ? (
-          <View style={{ gap: 16 }}>
-            <View style={[styles.box, { borderWidth: 1, borderColor: tw.gray200 }]}>
-              <Text style={styles.h3}>Invoices & Taxes Summary</Text>
-              <View style={{ gap: 12 }}>
-                {[
-                  ['Orders', String(invoiceSummary.count)],
-                  ['Earnings', `₹${inr(invoiceSummary.earnings)}`],
-                  ['Commission', `₹${inr(invoiceSummary.commission)}`],
-                  ['Gross amount', `₹${inr(invoiceSummary.gross)}`],
-                ].map(([label, value]) => (
-                  <View key={label} style={{ borderRadius: 6, backgroundColor: tw.gray50, padding: 12 }}>
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) }}>{label}</Text>
-                    <Text style={{ fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) }}>{value}</Text>
-                  </View>
-                ))}
+          <View style={{ gap: space.xxl }}>
+            <View>
+              <SectionHeader title="Invoices & taxes summary" />
+              <View style={styles.tileGrid}>
+                <View style={styles.tileRow}>
+                  <StatTile label="Orders" value={String(invoiceSummary.count)} />
+                  <StatTile label="Earnings" value={inr2(invoiceSummary.earnings)} tone="primary" />
+                </View>
+                <View style={styles.tileRow}>
+                  <StatTile label="Commission" value={inr2(invoiceSummary.commission)} />
+                  <StatTile label="Gross amount" value={inr2(invoiceSummary.gross)} />
+                </View>
               </View>
             </View>
 
-            <View style={[styles.box, { borderWidth: 1, borderColor: tw.gray200 }]}>
-              <Text style={styles.h3}>Order invoice details</Text>
-              {loading ? (
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) }}>Loading invoice data...</Text>
-              ) : invoiceOrders.length === 0 ? (
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) }}>No invoice data available for selected range.</Text>
-              ) : (
-                <View style={{ gap: 8 }}>
-                  {invoiceOrders.map((order, index) => (
-                    <View key={`${order.orderId || index}-invoice`} style={{ borderWidth: 1, borderColor: tw.gray100, borderRadius: 6, padding: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) }}>Order: {order.orderId || 'N/A'}</Text>
-                          <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray600, marginTop: 2, ...poppins(400) }}>{order.paymentMethod || 'N/A'} | {order.orderStatus || 'N/A'}</Text>
-                        </View>
-                        <View style={{ alignItems: 'flex-end' }}>
-                          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) }}>₹{inr(order.totalAmount || 0)}</Text>
-                          <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>Total</Text>
-                        </View>
+            <View>
+              <SectionHeader title="Order invoice details" />
+              <Card padded={false}>
+                {loading ? (
+                  <View style={styles.loadingRow}>
+                    <ActivityIndicator size="small" color={color.primary} />
+                    <Text style={styles.muted}>Loading invoice data...</Text>
+                  </View>
+                ) : invoiceOrders.length === 0 ? (
+                  <EmptyState icon={FileText} title="No invoice data available for selected range." style={styles.emptyCompact} />
+                ) : (
+                  invoiceOrders.map((order, index) => (
+                    <View key={`${order.orderId || index}-invoice`} style={[styles.orderRow, index < invoiceOrders.length - 1 ? styles.rowDivider : null]}>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={styles.orderId} numberOfLines={1}>Order: {order.orderId || 'N/A'}</Text>
+                        <Text style={styles.orderFood}>{order.paymentMethod || 'N/A'} | {order.orderStatus || 'N/A'}</Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Money value={inr2(order.totalAmount || 0)} style={styles.rowMoney} />
+                        <Text style={styles.rowMoneyLabel}>Total</Text>
                       </View>
                     </View>
-                  ))}
-                </View>
-              )}
+                  ))
+                )}
+              </Card>
             </View>
           </View>
         ) : null}
@@ -392,45 +361,49 @@ export default function HubFinance() {
       <Modal visible={showDownloadMenu && Boolean(menuPos)} transparent animationType="fade" onRequestClose={() => setShowDownloadMenu(false)} statusBarTranslucent>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowDownloadMenu(false)} accessibilityLabel="Close menu" />
         <View style={[styles.menu, { top: menuPos?.top || 0, right: menuPos?.right || 0 }]}>
-          <Press scale={1} onPress={downloadPDF} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 8 }}>
-            <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center' }}>
-              <FileText size={16} color={RT.primary} />
+          <Press scale={1} onPress={downloadPDF} accessibilityRole="menuitem" accessibilityLabel="Download PDF" style={styles.menuItem}>
+            <View style={styles.menuIcon}>
+              <FileText size={18} color={color.primary} />
             </View>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) }}>Download PDF</Text>
+            <Text style={styles.menuText}>Download PDF</Text>
           </Press>
         </View>
       </Modal>
 
-      <Dialog visible={showDateRangePicker} onClose={() => setShowDateRangePicker(false)} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.rangePanel}>
-        <View style={styles.rangeHead}>
-          <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) }}>Select Date Range</Text>
-          <Press onPress={() => setShowDateRangePicker(false)} accessibilityLabel="Close" style={{ padding: 4, borderRadius: 999 }}>
-            <X size={20} color={tw.gray500} />
-          </Press>
-        </View>
-        <ScrollView style={{ padding: 8 }} contentContainerStyle={{ gap: 4 }}>
-          {getDateOptions().map((option) => (
-            <Press
-              key={option.label}
-              scale={1}
-              onPress={() => {
-                if (option.custom) {
-                  setShowDateRangePicker(false);
-                  setShowCalendar(true);
-                } else {
-                  setSelectedDateRange(option.range);
-                  setStartDate(option.startDate);
-                  setEndDate(option.endDate);
-                  setShowDateRangePicker(false);
-                  fetchPastCyclesData(option.startDate, option.endDate);
-                }
-              }}
-              style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 }}
-            >
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) }}>{option.label}</Text>
-              {!option.custom ? <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>{option.range}</Text> : null}
-            </Press>
-          ))}
+      <Dialog visible={showDateRangePicker} onClose={() => setShowDateRangePicker(false)} backdrop={color.overlay} panelStyle={[dialogPanel, styles.rangePanel]}>
+        <DialogHead title="Select date range" onClose={() => setShowDateRangePicker(false)} />
+        <ScrollView contentContainerStyle={{ padding: space.md, gap: space.sm }}>
+          {getDateOptions().map((option) => {
+            const selected = !option.custom && (option.range === selectedDateRange || option.label === selectedDateRange);
+            return (
+              <Press
+                key={option.label}
+                scale={1}
+                onPress={() => {
+                  if (option.custom) {
+                    setShowDateRangePicker(false);
+                    setShowCalendar(true);
+                  } else {
+                    setSelectedDateRange(option.range);
+                    setStartDate(option.startDate);
+                    setEndDate(option.endDate);
+                    setShowDateRangePicker(false);
+                    fetchPastCyclesData(option.startDate, option.endDate);
+                  }
+                }}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                accessibilityLabel={option.label}
+                style={[styles.option, selected ? styles.optionOn : null]}
+              >
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.optionLabel}>{option.label}</Text>
+                  {!option.custom ? <Text style={styles.caption}>{option.range}</Text> : null}
+                </View>
+                {selected ? <Check size={18} color={color.primary} /> : option.custom ? <ChevronRight size={18} color={color.textMuted} /> : null}
+              </Press>
+            );
+          })}
         </ScrollView>
       </Dialog>
 
@@ -452,46 +425,35 @@ export default function HubFinance() {
         }}
       />
 
-      <Dialog visible={showWithdrawalModal} onClose={closeWithdrawal} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.wPanel}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <Text style={{ fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) }}>Withdraw Amount</Text>
-          <Press onPress={closeWithdrawal} accessibilityLabel="Close" style={{ padding: 4, borderRadius: 999 }}>
-            <X size={20} color={tw.gray600} />
-          </Press>
-        </View>
-        <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray600, marginBottom: 8, ...poppins(400) }}>
-            Available Balance: <Text style={{ color: tw.gray900, ...poppins(600) }}>₹{inr(payout)}</Text>
-          </Text>
-          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, marginBottom: 8, ...poppins(500) }}>Enter Amount to Withdraw</Text>
-          <TextInput
-            value={withdrawalAmount}
-            onChangeText={(text) => {
-              let val = text.replace(/[^0-9.]/g, '');
-              const parts = val.split('.');
-              if (parts.length > 2) val = `${parts[0]}.${parts.slice(1).join('')}`;
-              if (val.length > 1 && val.startsWith('0') && !val.startsWith('0.')) val = val.replace(/^0+/, '');
-              setWithdrawalAmount(val);
-            }}
-            keyboardType="decimal-pad"
-            autoComplete="off"
-            placeholder="Enter amount"
-            placeholderTextColor={tw.gray400}
-            accessibilityLabel="Enter Amount to Withdraw"
-            style={styles.amount}
-          />
-          {overBalance ? <Text style={{ fontSize: 14, lineHeight: 20, color: RT.primary, marginTop: 4, ...poppins(400) }}>Amount cannot exceed available balance</Text> : null}
-        </View>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Press scale={0.98} onPress={closeWithdrawal} style={[styles.wBtn, { borderWidth: 1, borderColor: tw.gray300 }]}>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) }}>Cancel</Text>
-          </Press>
-          <Press scale={0.98} disabled={submitOff} onPress={submitWithdrawal} accessibilityState={{ disabled: submitOff, busy: submittingWithdrawal }} style={{ flex: 1 }}>
-            <LinearGradient colors={submitOff ? [tw.gray300, tw.gray300] : RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.wBtn}>
-              {submittingWithdrawal ? <ActivityIndicator size="small" color="#fff" /> : null}
-              <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) }}>{submittingWithdrawal ? 'Submitting...' : 'Submit Request'}</Text>
-            </LinearGradient>
-          </Press>
+      <Dialog visible={showWithdrawalModal} onClose={closeWithdrawal} backdrop={color.overlay} panelStyle={[dialogPanel, { marginBottom: keyboardHeight }]}>
+        <DialogHead title="Withdraw amount" onClose={closeWithdrawal} />
+        <View style={{ padding: space.xl, gap: space.lg }}>
+          <View style={styles.balance}>
+            <Text style={styles.balanceLabel}>Available balance</Text>
+            <Money value={inr2(payout)} style={{ color: color.primary }} />
+          </View>
+          <Field label="Enter amount to withdraw" error={overBalance ? 'Amount cannot exceed available balance' : null}>
+            <Input
+              value={withdrawalAmount}
+              onChangeText={(text) => {
+                let val = text.replace(/[^0-9.]/g, '');
+                const parts = val.split('.');
+                if (parts.length > 2) val = `${parts[0]}.${parts.slice(1).join('')}`;
+                if (val.length > 1 && val.startsWith('0') && !val.startsWith('0.')) val = val.replace(/^0+/, '');
+                setWithdrawalAmount(val);
+              }}
+              keyboardType="decimal-pad"
+              autoComplete="off"
+              placeholder="Enter amount"
+              accessibilityLabel="Enter amount to withdraw"
+              error={overBalance}
+              left={<Text style={styles.rupee}>₹</Text>}
+            />
+          </Field>
+          <View style={{ flexDirection: 'row', gap: space.md }}>
+            <Button title="Cancel" variant="outline" onPress={closeWithdrawal} style={{ flex: 1 }} />
+            <Button title={submittingWithdrawal ? 'Submitting...' : 'Submit request'} loading={submittingWithdrawal} disabled={submitOff} onPress={submitWithdrawal} style={{ flex: 1.4 }} />
+          </View>
         </View>
       </Dialog>
 
@@ -501,26 +463,40 @@ export default function HubFinance() {
 }
 
 const styles = StyleSheet.create({
-  nav: { backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  navTitle: { flexShrink: 1, fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  navIcon: { padding: 8, borderRadius: 999 },
-  tab: { paddingVertical: 12, paddingHorizontal: 16, borderRadius: 999, alignItems: 'center' },
-  h2: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 12, ...poppins(700) },
-  h3: { fontSize: 14, lineHeight: 20, color: tw.gray900, marginBottom: 12, ...poppins(600) },
-  box: { backgroundColor: '#fff', borderRadius: 8, padding: 16 },
-  empty: { paddingVertical: 24, textAlign: 'center', fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  withdraw: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8 },
-  reqCard: { borderWidth: 1, borderColor: tw.gray200, borderRadius: 8, padding: 12 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 12, lineHeight: 16, ...poppins(600) },
-  rangeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, paddingHorizontal: 16, paddingVertical: 12 },
-  report: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8 },
-  menu: { position: 'absolute', minWidth: 180, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, paddingVertical: 8, zIndex: 50, ...shadow('2xl') },
-  orderId: { fontSize: 14, lineHeight: 20, color: tw.gray900, marginBottom: 4, ...poppins(600) },
-  orderDate: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginBottom: 4, ...poppins(400) },
-  orderFood: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  rangePanel: { width: '100%', maxWidth: 384, maxHeight: '80%', alignSelf: 'center', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, ...shadow('xl') },
-  rangeHead: { padding: 16, borderBottomWidth: 1, borderBottomColor: tw.gray100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  wPanel: { width: '100%', maxWidth: 448, alignSelf: 'center', backgroundColor: '#fff', borderRadius: 8, padding: 24, ...shadow('xl') },
-  amount: { paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: tw.gray300, borderRadius: 8, fontSize: 16, color: tw.gray900, ...poppins(400) },
-  wBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8 },
+  page: { flex: 1, backgroundColor: color.bg },
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
+  tabsWrap: { paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.xs },
+  scroll: { paddingHorizontal: space.lg, paddingTop: space.lg },
+  overline: { ...type.overline, color: color.goldText },
+  muted: { ...type.body, color: color.textMuted },
+  caption: { ...type.caption, color: color.textMuted, marginTop: 2 },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingVertical: space.xxl, paddingHorizontal: space.lg },
+  emptyCompact: { paddingVertical: space.xxl },
+  rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  reqRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, padding: space.lg },
+  reqMoney: { ...type.bodyStrong, fontSize: 16 },
+  orderRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.lg, padding: space.lg },
+  orderId: { ...type.bodyStrong, color: color.text },
+  orderDate: { ...type.caption, color: color.textMuted, marginTop: 2 },
+  orderFood: { ...type.small, color: color.textSecondary, marginTop: 2 },
+  rowMoney: { ...type.bodyStrong, fontSize: 15 },
+  rowMoneyLabel: { ...type.caption, color: color.textMuted },
+  filterRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  rangeBtn: { flex: 1, minWidth: 0, height: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  rangeText: { flex: 1, minWidth: 0, ...type.label, color: color.text },
+  found: { ...type.label, color: color.textSecondary },
+  dashed: { borderStyle: 'dashed', borderColor: color.borderStrong, paddingVertical: space.xxl },
+  tileGrid: { gap: space.md },
+  tileRow: { flexDirection: 'row', gap: space.md },
+  menu: { position: 'absolute', minWidth: 200, backgroundColor: color.surface, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, paddingVertical: space.xs, ...elevation.float },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48, paddingHorizontal: space.lg },
+  menuIcon: { width: 32, height: 32, borderRadius: radii.sm, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  menuText: { ...type.bodyStrong, color: color.text },
+  rangePanel: { maxHeight: '80%' },
+  option: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56, paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  optionOn: { borderColor: color.primary, backgroundColor: color.primarySoft },
+  optionLabel: { ...type.bodyStrong, color: color.text },
+  balance: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, padding: space.md, borderRadius: radii.md, backgroundColor: color.primarySoft },
+  balanceLabel: { ...type.label, color: color.textSecondary },
+  rupee: { ...type.bodyStrong, color: color.textSecondary },
 });

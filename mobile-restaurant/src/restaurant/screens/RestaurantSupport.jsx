@@ -1,37 +1,15 @@
-import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, Send } from 'lucide-react-native';
+import { CheckCircle2, Clock4, Inbox, LifeBuoy, Loader as LoaderIcon, Send } from 'lucide-react-native';
+import { Button, Card, EmptyState, SectionHeader, StatusBadge } from '../../components/ds';
 import { SelectField } from '../../components/kit';
-import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 import { useRestaurantSupport } from '../hooks/pages/useRestaurantSupport';
-import { RT, RT_GRADIENT } from '../theme';
+import { StatTile, sentenceCase } from './finance/financeUi';
+import { Field, Input, Notice, ScreenHeader } from './inventory/partnerKit';
 
-/*
- * getStatusStyle() answers with class names; these are the same three looks.
- * restaurantTheme.css repaints text-emerald-700 and text-amber-700 as the primary-strong green.
- */
-const STATUS = {
-  resolved: { bg: tw.emerald100, fg: RT.primaryStrong, border: tw.emerald200 },
-  'in-progress': { bg: tw.blue100, fg: tw.blue700, border: tw.blue200 },
-  open: { bg: tw.amber100, fg: RT.primaryStrong, border: tw.amber200 },
-};
-
-/** A text input with the theme's focus border (input:focus = primary 55 % over white). */
-function Input({ style, ...props }) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <TextInput
-      {...props}
-      placeholderTextColor={tw.slate400}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={[style, focused ? { borderColor: '#789d8a' } : null]}
-    />
-  );
-}
+/* getStatusStyle() answers with class names; these are the same three states as tones. */
+const STATUS_TONE = { resolved: 'success', 'in-progress': 'info', open: 'warning' };
 
 /** Port of Food/pages/restaurant/RestaurantSupport.jsx (/food/restaurant/help-centre/support). */
 export default function RestaurantSupport() {
@@ -39,94 +17,91 @@ export default function RestaurantSupport() {
   const { goBack, tickets, loading, submitting, statusFilter, setStatusFilter, form, setForm, stats, handleSubmit, CATEGORY_OPTIONS, PRIORITY_OPTIONS, STATUS_OPTIONS } = useRestaurantSupport();
   const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const stat = (label, value, tone) => (
-    <View style={[styles.stat, { borderColor: tone.border, backgroundColor: tone.bg }]}>
-      <Text style={{ fontSize: 12, lineHeight: 16, color: tone.label, ...poppins(400) }}>{label}</Text>
-      <Text style={{ fontSize: 18, lineHeight: 28, color: tone.value, ...poppins(700) }}>{value}</Text>
-    </View>
-  );
-
   return (
-    <View style={{ flex: 1, backgroundColor: tw.slate50 }}>
-      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
-        <Press onPress={goBack} accessibilityLabel="Go back" hitSlop={8} style={{ padding: 4 }}>
-          <ChevronLeft size={24} color={tw.slate900} />
-        </Press>
-        <View>
-          <Text style={{ fontSize: 18, lineHeight: 28, color: tw.slate900, ...poppins(700) }} accessibilityRole="header">Support</Text>
-          <Text style={{ fontSize: 12, lineHeight: 16, color: tw.slate500, ...poppins(400) }}>Raise issue and track admin response</Text>
-        </View>
-      </View>
+    <View style={styles.page}>
+      <ScreenHeader title="Support" subtitle="Raise issue and track admin response" onBack={goBack} />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 112, gap: 16 }}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {stat('Total', stats.total, { border: tw.slate200, bg: '#fff', label: tw.slate500, value: tw.slate900 })}
-            {stat('Open', stats.open, { border: tw.amber200, bg: RT.primarySoft, label: RT.primaryStrong, value: tw.amber800 })}
-            {stat('In progress', stats.inProgress, { border: tw.blue200, bg: tw.blue50, label: tw.blue700, value: tw.blue800 })}
-            {stat('Resolved', stats.resolved, { border: tw.emerald200, bg: tw.emerald50, label: RT.primaryStrong, value: tw.emerald800 })}
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.scroll, { paddingBottom: space.xxxl + insets.bottom }]}>
+          <View style={{ gap: space.sm }}>
+            <View style={styles.statRow}>
+              <StatTile label="Total" value={stats.total} icon={LifeBuoy} />
+              <StatTile label="Open" value={stats.open} tone="warning" icon={Clock4} />
+            </View>
+            <View style={styles.statRow}>
+              <StatTile label="In progress" value={stats.inProgress} tone="info" icon={LoaderIcon} />
+              <StatTile label="Resolved" value={stats.resolved} tone="success" icon={CheckCircle2} />
+            </View>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Raise support ticket</Text>
-            <SelectField value={form.category} options={CATEGORY_OPTIONS} onChange={set('category')} accessibilityLabel="Category" style={styles.select} textStyle={styles.selectText} />
-            <SelectField value={form.priority} options={PRIORITY_OPTIONS} onChange={set('priority')} accessibilityLabel="Priority" style={styles.select} textStyle={styles.selectText} />
-            <Input value={form.issueType} onChangeText={set('issueType')} placeholder="Issue type (required)" maxLength={120} style={styles.input} />
-            <Input value={form.subject} onChangeText={set('subject')} placeholder="Short subject" maxLength={180} style={styles.input} />
-            <Input value={form.orderRef} onChangeText={set('orderRef')} placeholder="Order ID (optional)" maxLength={80} style={styles.input} />
-            <Input value={form.description} onChangeText={set('description')} placeholder="Describe your issue" maxLength={1000} multiline textAlignVertical="top" style={[styles.input, { minHeight: 96 }]} />
-            <Press scale={0.98} onPress={() => handleSubmit({ preventDefault() {} })} disabled={submitting} accessibilityState={{ disabled: submitting, busy: submitting }} style={[{ borderRadius: 12, ...shadow('lg') }, submitting ? { opacity: 0.6 } : null]}>
-              <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.submit}>
-                {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Send size={16} color="#fff" />}
-                <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) }}>Submit Ticket</Text>
-              </LinearGradient>
-            </Press>
+          <View>
+            <SectionHeader title="Raise support ticket" />
+            <Card style={{ gap: space.lg }}>
+              <Field label="Category">
+                <SelectField value={form.category} options={CATEGORY_OPTIONS} onChange={set('category')} accessibilityLabel="Category" style={styles.select} textStyle={styles.selectText} chevronColor={color.textMuted} />
+              </Field>
+              <Field label="Priority">
+                <SelectField value={form.priority} options={PRIORITY_OPTIONS} onChange={set('priority')} accessibilityLabel="Priority" style={styles.select} textStyle={styles.selectText} chevronColor={color.textMuted} />
+              </Field>
+              <Field label="Issue type">
+                <Input value={form.issueType} onChangeText={set('issueType')} placeholder="Issue type (required)" accessibilityLabel="Issue type" maxLength={120} />
+              </Field>
+              <Field label="Subject">
+                <Input value={form.subject} onChangeText={set('subject')} placeholder="Short subject" accessibilityLabel="Subject" maxLength={180} />
+              </Field>
+              <Field label="Order ID" optional>
+                <Input value={form.orderRef} onChangeText={set('orderRef')} placeholder="Order ID (optional)" accessibilityLabel="Order ID" maxLength={80} />
+              </Field>
+              <Field label="Description">
+                <Input value={form.description} onChangeText={set('description')} placeholder="Describe your issue" accessibilityLabel="Description" maxLength={1000} multiline textAlignVertical="top" />
+              </Field>
+              <Button title="Submit ticket" icon={Send} size="lg" loading={submitting} disabled={submitting} onPress={() => handleSubmit({ preventDefault() {} })} />
+            </Card>
           </View>
 
-          <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <Text style={styles.cardTitle}>My tickets</Text>
+          <View>
+            <View style={styles.ticketsHead}>
+              <SectionHeader title="My tickets" style={{ marginBottom: 0, flex: 1 }} />
               <SelectField
                 value={statusFilter}
                 options={STATUS_OPTIONS}
                 onChange={setStatusFilter}
                 accessibilityLabel="Filter by status"
-                style={[styles.select, { paddingHorizontal: 8, paddingVertical: 6, minWidth: 120 }]}
-                textStyle={{ fontSize: 12, lineHeight: 16, color: tw.slate900, ...poppins(400) }}
+                style={[styles.select, styles.filter]}
+                textStyle={styles.filterText}
+                chevronColor={color.textMuted}
               />
             </View>
 
             {loading ? (
-              <View style={styles.state}>
-                <ActivityIndicator size="small" color={tw.slate500} />
+              <Card style={styles.state}>
+                <ActivityIndicator size="small" color={color.primary} />
                 <Text style={styles.stateText}>Loading tickets...</Text>
-              </View>
+              </Card>
             ) : tickets.length === 0 ? (
-              <View style={styles.state}>
-                <Text style={styles.stateText}>No support tickets found.</Text>
-              </View>
+              <Card padded={false}>
+                <EmptyState icon={Inbox} title="No support tickets found." />
+              </Card>
             ) : (
-              tickets.map((ticket) => {
-                const tone = STATUS[ticket.status] || STATUS.open;
-                return (
-                  <View key={ticket._id} style={styles.ticket}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <Text style={styles.ticketMeta}>#{String(ticket._id).slice(-6)} • {new Date(ticket.createdAt).toLocaleString()}</Text>
-                      <Text style={[styles.ticketStatus, { backgroundColor: tone.bg, color: tone.fg, borderColor: tone.border }]}>{ticket.status}</Text>
+              <View style={{ gap: space.md }}>
+                {tickets.map((ticket) => (
+                  <Card key={ticket._id} style={{ gap: space.xs }}>
+                    <View style={styles.ticketTop}>
+                      <Text style={styles.ticketMeta} numberOfLines={1}>#{String(ticket._id).slice(-6)} • {new Date(ticket.createdAt).toLocaleString()}</Text>
+                      <StatusBadge label={sentenceCase(ticket.status)} tone={STATUS_TONE[ticket.status] || 'warning'} />
                     </View>
-                    <Text style={{ marginTop: 8, fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(600) }}>{ticket.issueType}</Text>
+                    <Text style={[type.subheading, { color: color.text, marginTop: space.xs }]}>{ticket.issueType}</Text>
                     {ticket.subject ? <Text style={styles.ticketLine}>Subject: {ticket.subject}</Text> : null}
                     {ticket.orderRef ? <Text style={styles.ticketLine}>Order: {ticket.orderRef}</Text> : null}
-                    {ticket.description ? <Text style={{ fontSize: 14, lineHeight: 20, color: tw.slate700, marginTop: 8, ...poppins(400) }}>{ticket.description}</Text> : null}
+                    {ticket.description ? <Text style={[type.body, { color: color.text, marginTop: space.xs }]}>{ticket.description}</Text> : null}
                     {ticket.adminResponse ? (
-                      <View style={styles.response}>
-                        <Text style={{ fontSize: 11, lineHeight: 16, color: tw.blue700, ...poppins(600) }}>ADMIN RESPONSE</Text>
-                        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.blue900, marginTop: 4, ...poppins(400) }}>{ticket.adminResponse}</Text>
-                      </View>
+                      <Notice tone="info" title="Admin response" style={{ marginTop: space.sm }}>
+                        {ticket.adminResponse}
+                      </Notice>
                     ) : null}
-                  </View>
-                );
-              })
+                  </Card>
+                ))}
+              </View>
             )}
           </View>
         </ScrollView>
@@ -136,19 +111,17 @@ export default function RestaurantSupport() {
 }
 
 const styles = StyleSheet.create({
-  submit: { borderRadius: 12, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.slate200, paddingHorizontal: 16, paddingBottom: 12 },
-  stat: { width: '48.8%', borderRadius: 12, borderWidth: 1, padding: 12 },
-  card: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, padding: 16, gap: 12 },
-  cardTitle: { fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(700) },
-  select: { borderRadius: 8, borderWidth: 1, borderColor: tw.slate300, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff' },
-  selectText: { fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(400) },
-  input: { borderRadius: 8, borderWidth: 1, borderColor: tw.slate300, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: tw.slate900, ...poppins(400) },
-  state: { paddingVertical: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  stateText: { fontSize: 14, lineHeight: 20, color: tw.slate500, ...poppins(400) },
-  ticket: { borderRadius: 12, borderWidth: 1, borderColor: tw.slate200, padding: 12 },
-  ticketMeta: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.slate500, ...poppins(600) },
-  ticketStatus: { fontSize: 11, lineHeight: 16, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, borderWidth: 1, overflow: 'hidden', textTransform: 'capitalize', ...poppins(600) },
-  ticketLine: { fontSize: 12, lineHeight: 16, color: tw.slate600, marginTop: 4, ...poppins(400) },
-  response: { marginTop: 12, borderRadius: 8, borderWidth: 1, borderColor: tw.blue200, backgroundColor: tw.blue50, padding: 10 },
+  page: { flex: 1, backgroundColor: color.bg },
+  scroll: { padding: space.lg, gap: space.xxl },
+  statRow: { flexDirection: 'row', gap: space.sm },
+  select: { minHeight: 48, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, paddingHorizontal: space.md, backgroundColor: color.surface, gap: space.sm },
+  selectText: { ...type.body, color: color.text },
+  ticketsHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.md },
+  filter: { minHeight: 44, minWidth: 128 },
+  filterText: { ...type.label, color: color.text },
+  state: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingVertical: space.xxl },
+  stateText: { ...type.body, color: color.textMuted },
+  ticketTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  ticketMeta: { flex: 1, minWidth: 0, ...type.caption, color: color.textMuted },
+  ticketLine: { ...type.small, color: color.textSecondary },
 });

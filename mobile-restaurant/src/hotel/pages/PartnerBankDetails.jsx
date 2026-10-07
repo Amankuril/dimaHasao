@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Building2, CreditCard, Edit, Landmark, Save, Trash2, User } from 'lucide-react-native';
-import { Press } from '../../components/ui';
+import { Building2, CreditCard, Edit, Info, Landmark, Save, Trash2, User } from 'lucide-react-native';
+import { Button, Card, StatusBadge } from '../../components/ds';
+import HeritageHeader from '../../components/HeritageHeader';
 import { confirm, toast } from '../../lib/notify';
 import { useNavigate } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 import walletService from '../services/walletService';
-import { HT } from '../theme';
+import { Field, PageLoader, PinnedBar } from '../components/dashboard/partnerUi';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerBankDetails.jsx
@@ -16,13 +17,16 @@ import { HT } from '../theme';
 
 const EMPTY = { accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '' };
 
-function Row({ label, icon: Icon, isEditing, editor, view, fieldStyle }) {
+function Row({ label, icon: Icon, isEditing, editor, view }) {
+  if (isEditing) return editor;
   return (
-    <View>
-      <Text style={styles.label}>{label}</Text>
-      <View style={[styles.field, isEditing ? styles.fieldEdit : styles.fieldView, fieldStyle]}>
-        <Icon size={18} color={tw.gray400} />
-        {isEditing ? editor : view}
+    <View style={styles.readRow}>
+      <View style={styles.readIcon}>
+        <Icon size={18} color={color.primary} />
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={styles.label}>{label}</Text>
+        {view}
       </View>
     </View>
   );
@@ -34,7 +38,6 @@ const PartnerBankDetails = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [focused, setFocused] = useState('');
 
   // Bank Details State
   const [details, setDetails] = useState(EMPTY);
@@ -145,137 +148,106 @@ const PartnerBankDetails = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: HT.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={HT.primary} />
+      <View style={{ flex: 1, backgroundColor: color.bg }}>
+        <HeritageHeader title="Bank account" onBack={() => navigate(-1)} />
+        <PageLoader />
       </View>
     );
   }
 
-  const input = (key, placeholder, extra = {}) => (
-    <TextInput
+  const input = (key, label, placeholder, extra = {}) => (
+    <Field
+      label={label}
       placeholder={placeholder}
-      placeholderTextColor={tw.gray300}
       value={details[key]}
       onChangeText={(v) => setDetails({ ...details, [key]: extra.upper ? v.toUpperCase() : v })}
-      onFocus={() => setFocused(key)}
-      onBlur={() => setFocused('')}
       autoCapitalize={extra.upper ? 'characters' : 'none'}
-      style={styles.input}
+      keyboardType={extra.keyboardType}
     />
   );
-  const view = (text) => <Text style={styles.value}>{text}</Text>;
-  // focus-within: border primary + 2px ring at 10%
-  const focus = (key) => (isEditing && focused === key ? { borderColor: HT.primary, boxShadow: '0 0 0 2px rgba(10,77,43,0.1)' } : null);
+  const view = (text) => (
+    <Text style={styles.value} numberOfLines={2}>
+      {text}
+    </Text>
+  );
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 + insets.bottom }} keyboardShouldPersistTaps="handled">
-        {/* Header */}
-        <View style={[styles.hero, { paddingTop: 32 + insets.top }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-            <Press onPress={() => navigate(-1)} accessibilityLabel="Back" style={styles.back}>
-              <ArrowLeft size={20} color="#fff" />
-            </Press>
-            <Text style={styles.heroTitle}>Bank Account</Text>
-          </View>
-          <View style={{ alignItems: 'center', opacity: 0.9 }}>
-            <View style={styles.heroIcon}>
-              <Landmark size={32} color="#fff" />
-            </View>
-            <Text style={styles.heroSub}>Manage your payout account</Text>
-          </View>
-        </View>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <HeritageHeader title="Bank account" subtitle="Manage your payout account" onBack={() => navigate(-1)} />
 
-        <View style={{ maxWidth: 448, width: '100%', alignSelf: 'center', paddingHorizontal: 16, marginTop: -40 }}>
-          <View style={styles.card}>
-            {/* View Mode Header */}
-            {!isEditing && existingDetails ? (
-              <View style={styles.cardHead}>
-                <View>
-                  <Text style={styles.cardTitle}>Saved Account</Text>
-                  <Text style={styles.cardSub}>Verified for Payouts</Text>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxl + (isEditing ? 0 : insets.bottom) }} keyboardShouldPersistTaps="handled">
+          <View style={{ maxWidth: 448, width: '100%', alignSelf: 'center', gap: space.lg }}>
+            <Card style={{ gap: space.lg }}>
+              {/* View Mode Header */}
+              {!isEditing && existingDetails ? (
+                <View style={styles.cardHead}>
+                  <View style={styles.headIcon}>
+                    <Landmark size={22} color={color.primary} />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.cardTitle}>Saved account</Text>
+                    <StatusBadge label="Verified for payouts" tone="success" />
+                  </View>
+                  <Button title="Edit" icon={Edit} variant="secondary" size="sm" fullWidth={false} onPress={() => setIsEditing(true)} style={{ minHeight: 44 }} />
                 </View>
-                <Press onPress={() => setIsEditing(true)} style={styles.editBtn}>
-                  <Edit size={14} color={HT.primary} />
-                  <Text style={styles.editText}>Edit</Text>
-                </Press>
-              </View>
-            ) : null}
+              ) : null}
 
-            {/* Edit Mode Header */}
-            {isEditing ? (
-              <View style={styles.cardHead}>
-                <View>
-                  <Text style={styles.cardTitle}>{existingDetails ? 'Edit Account' : 'Add Account'}</Text>
-                  <Text style={styles.cardSub}>Enter your official bank details</Text>
-                </View>
-                {existingDetails ? (
-                  <Press onPress={() => setIsEditing(false)}>
-                    <Text style={styles.cancel}>Cancel</Text>
-                  </Press>
-                ) : null}
-              </View>
-            ) : null}
-
-            <View style={{ gap: 16 }}>
-              <Row label="Account Holder" icon={User} isEditing={isEditing} editor={input('accountHolderName', 'Name as per Passbook')} view={view(details.accountHolderName)} fieldStyle={focus('accountHolderName')} />
-              <Row label="Account Number" icon={CreditCard} isEditing={isEditing} editor={input('accountNumber', 'Enter Account Number')} view={view(`•••• •••• ${details.accountNumber.slice(-4)}`)} fieldStyle={focus('accountNumber')} />
-              <Row label="IFSC Code" icon={Building2} isEditing={isEditing} editor={input('ifscCode', 'IFSC', { upper: true })} view={view(details.ifscCode)} fieldStyle={focus('ifscCode')} />
-              <Row label="Bank Name" icon={Landmark} isEditing={isEditing} editor={input('bankName', 'e.g. HDFC Bank')} view={view(details.bankName)} fieldStyle={focus('bankName')} />
-            </View>
-
-            {/* Actions */}
-            <View style={{ marginTop: 32, gap: 12 }}>
+              {/* Edit Mode Header */}
               {isEditing ? (
-                <Press onPress={handleSave} disabled={saving} style={[styles.save, shadow('0 10px 15px -3px rgba(10,77,43,0.2)')]}>
-                  {saving ? <ActivityIndicator size="small" color="#fff" /> : <Save size={18} color="#fff" />}
-                  <Text style={styles.saveText}>Save Details</Text>
-                </Press>
-              ) : (
-                <Press onPress={handleDelete} disabled={saving} style={styles.remove}>
-                  {saving ? <ActivityIndicator size="small" color={tw.red500} /> : <Trash2 size={18} color={tw.red500} />}
-                  <Text style={styles.removeText}>Remove Account</Text>
-                </Press>
-              )}
-            </View>
+                <View style={styles.cardHead}>
+                  <View style={styles.headIcon}>
+                    <Landmark size={22} color={color.primary} />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.cardTitle}>{existingDetails ? 'Edit account' : 'Add account'}</Text>
+                    <Text style={styles.cardSub}>Enter your official bank details</Text>
+                  </View>
+                  {existingDetails ? <Button title="Cancel" variant="ghost" size="sm" fullWidth={false} onPress={() => setIsEditing(false)} style={{ minHeight: 44 }} /> : null}
+                </View>
+              ) : null}
+
+              <View style={{ gap: space.lg }}>
+                <Row label="Account holder" icon={User} isEditing={isEditing} editor={input('accountHolderName', 'Account holder', 'Name as per passbook')} view={view(details.accountHolderName)} />
+                <Row label="Account number" icon={CreditCard} isEditing={isEditing} editor={input('accountNumber', 'Account number', 'Enter account number', { keyboardType: 'number-pad' })} view={view(`•••• •••• ${details.accountNumber.slice(-4)}`)} />
+                <Row label="IFSC code" icon={Building2} isEditing={isEditing} editor={input('ifscCode', 'IFSC code', 'e.g. HDFC0001234', { upper: true })} view={view(details.ifscCode)} />
+                <Row label="Bank name" icon={Landmark} isEditing={isEditing} editor={input('bankName', 'Bank name', 'e.g. HDFC Bank')} view={view(details.bankName)} />
+              </View>
+
+              {/* Actions */}
+              {!isEditing ? <Button title="Remove account" icon={Trash2} variant="dangerSoft" onPress={handleDelete} loading={saving} disabled={saving} /> : null}
+            </Card>
 
             <View style={styles.note}>
+              <Info size={18} color={color.info} />
               <Text style={styles.noteText}>
-                <Text style={{ ...poppins(700) }}>Note:</Text> Ensuring these details are correct is crucial. Withdrawals will be processed directly to this account via IMPS.
+                <Text style={type.bodyStrong}>Note:</Text> Ensuring these details are correct is crucial. Withdrawals will be processed directly to this account via IMPS.
               </Text>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+
+        {isEditing ? (
+          <PinnedBar>
+            <Button title="Save details" icon={Save} size="lg" onPress={handleSave} loading={saving} disabled={saving} />
+          </PinnedBar>
+        ) : null}
+      </KeyboardAvoidingView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: HT.primary, paddingBottom: 48, paddingHorizontal: 24, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, marginBottom: 24, ...shadow('lg') },
-  back: { padding: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 999 },
-  heroTitle: { fontSize: 20, lineHeight: 28, color: '#fff', ...poppins(700) },
-  heroIcon: { width: 64, height: 64, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  heroSub: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) },
-  card: { backgroundColor: '#fff', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: tw.gray100, ...shadow('0 20px 25px -5px rgba(229,231,235,0.5)') },
-  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: tw.gray50 },
-  cardTitle: { fontSize: 18, lineHeight: 28, color: tw.slate900, ...poppins(900) },
-  cardSub: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
-  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: tw.gray50, borderRadius: 8 },
-  editText: { fontSize: 12, lineHeight: 16, color: HT.primary, ...poppins(700) },
-  cancel: { fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(700) },
-  label: { fontSize: 10, lineHeight: 15, letterSpacing: 1.5, textTransform: 'uppercase', color: tw.gray400, marginBottom: 6, ...poppins(900) },
-  field: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, borderWidth: 1 },
-  fieldEdit: { backgroundColor: tw.gray50, borderColor: tw.gray200 },
-  fieldView: { backgroundColor: 'rgba(249,250,251,0.5)', borderColor: 'transparent' },
-  input: { flex: 1, padding: 0, fontSize: 14, color: tw.slate900, ...poppins(700) },
-  value: { fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(700) },
-  save: { width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: HT.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  saveText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
-  remove: { width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red100, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  removeText: { fontSize: 14, lineHeight: 20, color: tw.red500, ...poppins(700) },
-  note: { marginTop: 24, padding: 16, backgroundColor: tw.blue50, borderRadius: 12, borderWidth: 1, borderColor: tw.blue100 },
-  noteText: { fontSize: 12, lineHeight: 19.5, color: tw.blue700, textAlign: 'center', ...poppins(500) },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingBottom: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  headIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { ...type.subheading, color: color.text, marginBottom: space.xxs },
+  cardSub: { ...type.small, color: color.textMuted },
+  readRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48 },
+  readIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  label: { ...type.caption, color: color.textMuted },
+  value: { ...type.bodyStrong, color: color.text },
+  note: { flexDirection: 'row', gap: space.sm, padding: space.lg, backgroundColor: color.infoSoft, borderRadius: radii.md },
+  noteText: { flex: 1, ...type.small, color: color.text },
 });
 
 export default PartnerBankDetails;

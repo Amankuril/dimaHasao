@@ -1,12 +1,12 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { ChevronDown, ChevronUp, Clock } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Clock, Pencil } from 'lucide-react-native';
+import { Card, SectionHeader, StatusBadge } from '../../components/ds';
 import { Press } from '../../components/ui';
-import { poppins, tw } from '../../theme';
-import { PageHeader, Toggle } from '../components/ui';
+import { color, radii, space, type } from '../../theme';
 import { useOutletTimings } from '../hooks/pages/useOutletTimings';
-import { RT, RT_GRADIENT } from '../theme';
+import { ScreenHeader, Switch } from './inventory/partnerKit';
 
 /** MUI MobileTimePicker ("hh:mm a") -> the field opens the Android time picker. */
 function TimeField({ label, value, display, onChange }) {
@@ -20,90 +20,103 @@ function TimeField({ label, value, display, onChange }) {
       },
     });
   return (
-    <View style={{ gap: 8 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Clock size={16} color={tw.gray700} />
-        <Text style={styles.fieldLabel}>{label}</Text>
-      </View>
-      <View style={styles.fieldWrap}>
-        <Press scale={1} onPress={open} accessibilityLabel={`${label}: ${display}`} style={styles.field}>
-          <Text style={styles.fieldText}>{display}</Text>
-        </Press>
-      </View>
-      <Text style={styles.current}>Current: {display}</Text>
+    <View style={{ flex: 1, minWidth: 136 }}>
+      <Text style={[type.label, { color: color.text, marginBottom: space.sm }]}>{label}</Text>
+      <Press scale={0.98} onPress={open} accessibilityLabel={`${label}: ${display}. Change`} style={styles.field}>
+        <Clock size={18} color={color.primary} />
+        <Text style={[type.bodyStrong, { flex: 1, color: color.text }]}>{display}</Text>
+        <Pencil size={16} color={color.textMuted} />
+      </Press>
     </View>
   );
 }
 
 /** Port of Food/pages/restaurant/OutletTimings.jsx (/food/restaurant/outlet-timings). */
 export default function OutletTimings() {
+  const insets = useSafeAreaInsets();
   const { companyName, goBack, expandedDay, days, loading, toggleDay, toggleDayOpen, handleTimeChange, dayNames, stringToTime, formatTime12Hour } = useOutletTimings();
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) }}>Loading outlet timings...</Text>
+      <View style={{ flex: 1, backgroundColor: color.bg }}>
+        <ScreenHeader title="Outlet timings" onBack={goBack} />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md }}>
+          <ActivityIndicator size="large" color={color.primary} />
+          <Text style={[type.body, { color: color.textSecondary }]}>Loading outlet timings…</Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <PageHeader title="Outlet timings" onBack={goBack} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}>
-        <View style={{ marginBottom: 24 }}>
-          <Text style={styles.section}>{companyName} delivery</Text>
-          <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 2 }} />
-        </View>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <ScreenHeader title="Outlet timings" subtitle={`${companyName} delivery`} onBack={goBack} />
+      <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxxl + insets.bottom }}>
+        <SectionHeader title="Weekly hours" />
+        <Text style={[type.small, { color: color.textSecondary, marginTop: -space.xs, marginBottom: space.md }]}>Tap a day to change its opening and closing time. Use the switch to open or close the outlet for that day.</Text>
 
-        <View style={{ gap: 8 }}>
-          {dayNames.map((day) => {
+        <Card padded={false} style={{ overflow: 'hidden' }}>
+          {dayNames.map((day, index) => {
             const dayData = days[day] || { isOpen: true, openingTime: '09:00', closingTime: '22:00' };
             const isExpanded = expandedDay === day;
+            const last = index === dayNames.length - 1;
             return (
-              <View key={day} style={styles.day}>
-                <View style={[styles.dayHead, isExpanded ? { backgroundColor: tw.gray100 } : null]}>
-                  <Press scale={1} onPress={() => toggleDay(day)} accessibilityState={{ expanded: isExpanded }} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    {isExpanded ? <ChevronUp size={20} color={tw.gray700} /> : <ChevronDown size={20} color={tw.gray700} />}
-                    <Text style={styles.dayName}>{day}</Text>
+              <View key={day} style={[!last && styles.divider, isExpanded && { backgroundColor: color.surfaceMuted }]}>
+                <View style={styles.dayHead}>
+                  <Press
+                    scale={1}
+                    onPress={() => toggleDay(day)}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded: isExpanded }}
+                    accessibilityLabel={`${day}, ${dayData.isOpen ? `open ${formatTime12Hour(dayData.openingTime)} to ${formatTime12Hour(dayData.closingTime)}` : 'closed'}`}
+                    style={styles.dayPress}
+                  >
+                    {isExpanded ? <ChevronUp size={20} color={color.primary} /> : <ChevronDown size={20} color={color.textMuted} />}
+                    <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+                        <Text style={[type.bodyStrong, { color: color.text }]}>{day}</Text>
+                        <StatusBadge label={dayData.isOpen ? 'Open' : 'Closed'} tone={dayData.isOpen ? 'primary' : 'neutral'} />
+                      </View>
+                      {dayData.isOpen ? (
+                        <View style={styles.timeChip}>
+                          <Clock size={14} color={color.textSecondary} />
+                          <Text style={[type.label, { color: color.text }]}>
+                            {formatTime12Hour(dayData.openingTime)} – {formatTime12Hour(dayData.closingTime)}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
                   </Press>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <Text style={styles.dayState}>{dayData.isOpen ? 'Open' : 'Close'}</Text>
-                    <Toggle value={dayData.isOpen} onValueChange={() => toggleDayOpen(day)} onColor={tw.green500} accessibilityLabel={`${day} open`} />
-                  </View>
+                  <Switch value={dayData.isOpen} onValueChange={() => toggleDayOpen(day)} accessibilityLabel={`${day} open`} />
                 </View>
 
                 {isExpanded ? (
                   <View style={styles.dayBody}>
                     {dayData.isOpen ? (
-                      <>
+                      <View style={styles.fields}>
                         <TimeField label="Opening time" value={stringToTime(dayData.openingTime)} display={formatTime12Hour(dayData.openingTime)} onChange={(date) => handleTimeChange(day, 'openingTime', date)} />
                         <TimeField label="Closing time" value={stringToTime(dayData.closingTime)} display={formatTime12Hour(dayData.closingTime)} onChange={(date) => handleTimeChange(day, 'closingTime', date)} />
-                      </>
+                      </View>
                     ) : (
-                      <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, paddingLeft: 24, ...poppins(400) }}>This day is closed</Text>
+                      <Text style={[type.small, { color: color.textMuted }]}>This day is closed. Turn the switch on to set hours.</Text>
                     )}
                   </View>
                 ) : null}
               </View>
             );
           })}
-        </View>
+        </Card>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { fontSize: 16, lineHeight: 24, color: RT.primary, textAlign: 'center', marginBottom: 8, ...poppins(600) },
-  day: { backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, borderRadius: 2, overflow: 'hidden' },
-  dayHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-  dayName: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(500) },
-  dayState: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) },
-  dayBody: { padding: 16, gap: 16, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  fieldLabel: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  fieldWrap: { borderWidth: 1, borderColor: tw.gray200, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(249,250,251,0.6)' },
-  field: { height: 36, justifyContent: 'center', paddingHorizontal: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, borderRadius: 4 },
-  fieldText: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(400) },
-  current: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  dayHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.md, paddingRight: space.md, minHeight: 64 },
+  dayPress: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.md },
+  timeChip: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, alignSelf: 'flex-start', paddingHorizontal: space.sm + 2, height: 28, borderRadius: radii.pill, backgroundColor: color.surfaceMuted, borderWidth: 1, borderColor: color.border },
+  dayBody: { paddingHorizontal: space.lg, paddingBottom: space.lg },
+  fields: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  field: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
 });

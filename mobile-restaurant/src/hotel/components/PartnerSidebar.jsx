@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Animated, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   X, User, Building, List,
   History, Shield,
@@ -13,11 +12,10 @@ import { useNavigate } from '../../lib/webRouter';
 import { Press } from '../../components/ui';
 import { mediaUrl } from '../../api/client';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 import usePartnerStore from '../store/partnerStore';
 import { clearPartnerSessions } from '../../restaurant/utils/partnerSession';
 import { usePartnerAuth } from '../utils/partnerAuth';
-import { HT, HT_GRADIENT } from '../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/components/PartnerSidebar.jsx:
@@ -62,7 +60,7 @@ const MENU_GROUPS = [
 const MenuItem = ({ icon: Icon, label, path, badge, onNavigate }) => (
   <Press scale={0.95} onPress={() => onNavigate(path)} accessibilityLabel={label} style={styles.menuItem}>
     <View style={styles.menuIcon}>
-      <Icon size={16} color={HT.primary} />
+      <Icon size={18} color={color.primary} />
     </View>
     <Text style={styles.menuLabel}>{label}</Text>
     {badge ? (
@@ -70,7 +68,7 @@ const MenuItem = ({ icon: Icon, label, path, badge, onNavigate }) => (
         <Text style={styles.badgeText}>{badge}</Text>
       </View>
     ) : null}
-    <ChevronRight size={14} color={tw.gray300} />
+    <ChevronRight size={18} color={color.textDisabled} />
   </Press>
 );
 
@@ -135,18 +133,17 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
             <View style={styles.topRow}>
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Text style={[styles.brand, { color: HT.primary }]}>Dima</Text>
-                  <Text style={[styles.brand, { color: tw.amber600 }]}>Hasao</Text>
+                  <Text style={styles.brand}>DIMA HASAO</Text>
                 </View>
                 <Text style={styles.partner}>Partner</Text>
               </View>
               <Press onPress={onClose} accessibilityLabel="Close menu" style={styles.closeBtn}>
-                <X size={20} color={tw.gray500} />
+                <X size={20} color={color.textSecondary} />
               </Press>
             </View>
 
             <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
-              <LinearGradient colors={HT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.profileCard}>
+              <View style={styles.profileCard}>
                 <View style={styles.glow} />
                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 }}>
                   <View style={styles.avatar}>
@@ -164,7 +161,7 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
                 <Press onPress={() => handleNavigation('/hotel/partner/profile')} accessibilityLabel="Edit profile" style={styles.editBtn}>
                   <Edit3 size={14} color="#fff" />
                 </Press>
-              </LinearGradient>
+              </View>
             </View>
 
             <View style={{ paddingHorizontal: 20, gap: 20, paddingBottom: 128 }}>
@@ -181,7 +178,7 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
 
               <View style={styles.footer}>
                 <Press onPress={handleLogout} accessibilityLabel="Log Out" style={styles.logout}>
-                  <LogOut size={14} color={tw.red500} />
+                  <LogOut size={18} color={color.danger} />
                   <Text style={styles.logoutText}>Log Out</Text>
                 </Press>
                 <Text style={styles.version}>Partner App • v1.0.0</Text>
@@ -195,27 +192,27 @@ const PartnerSidebar = ({ isOpen, onClose }) => {
 };
 
 const styles = StyleSheet.create({
-  drawer: { height: '100%', backgroundColor: '#fff', ...shadow('2xl') },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, paddingBottom: 8 },
-  brand: { fontSize: 18, lineHeight: 18, letterSpacing: -0.45, ...poppins(900) },
-  partner: { fontSize: 9, lineHeight: 13, letterSpacing: 1.8, textTransform: 'uppercase', color: tw.gray400, marginTop: 4, ...poppins(700) },
-  closeBtn: { padding: 8, borderRadius: 999, backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray100 },
-  profileCard: { borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'flex-start', overflow: 'hidden', ...shadow('lg') },
-  glow: { position: 'absolute', top: -40, right: -40, width: 96, height: 96, borderRadius: 48, backgroundColor: 'rgba(255,255,255,0.1)' },
-  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  name: { fontSize: 16, lineHeight: 20, color: '#fff', ...poppins(700) },
-  email: { fontSize: 10, lineHeight: 15, color: 'rgba(255,255,255,0.8)', marginTop: 2, ...poppins(400) },
-  editBtn: { padding: 8, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.1)' },
-  groupTitle: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, marginBottom: 8, paddingLeft: 8, ...poppins(700) },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 10, borderRadius: 12 },
-  menuIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: HT.primaryTint, alignItems: 'center', justifyContent: 'center' },
-  menuLabel: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  badge: { backgroundColor: HT.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
-  badgeText: { fontSize: 10, lineHeight: 15, color: '#fff', ...poppins(700) },
-  footer: { paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  logout: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8 },
-  logoutText: { fontSize: 12, lineHeight: 16, color: tw.red500, ...poppins(500) },
-  version: { fontSize: 10, lineHeight: 15, color: tw.gray400, marginTop: 16, paddingHorizontal: 8, ...poppins(400) },
+  drawer: { height: '100%', backgroundColor: color.bg, ...elevation.float },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: space.xl, paddingBottom: space.sm },
+  brand: { ...type.titleSerif, color: color.primary },
+  partner: { ...type.tagline, fontSize: 12, lineHeight: 16, color: color.textMuted, marginTop: 2 },
+  closeBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  profileCard: { borderRadius: radii.lg, padding: space.lg, flexDirection: 'row', alignItems: 'flex-start', overflow: 'hidden', backgroundColor: color.primaryDeep, borderWidth: 1, borderColor: 'rgba(202,168,62,0.4)' },
+  glow: { position: 'absolute', top: -40, right: -40, width: 96, height: 96, borderRadius: 48, backgroundColor: 'rgba(202,168,62,0.12)' },
+  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 2, borderColor: color.gold, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  name: { ...type.subheading, color: color.goldOnDark },
+  email: { ...type.caption, color: color.textOnDarkMuted, marginTop: 2 },
+  editBtn: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  groupTitle: { ...type.overline, color: color.textMuted, marginBottom: space.sm, paddingLeft: space.sm },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.sm, minHeight: 52, borderRadius: radii.md },
+  menuIcon: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  menuLabel: { flex: 1, ...type.bodyStrong, color: color.text },
+  badge: { backgroundColor: color.goldSoft, paddingHorizontal: space.sm, minHeight: 22, justifyContent: 'center', borderRadius: radii.pill },
+  badgeText: { ...type.caption, color: color.goldText },
+  footer: { paddingTop: space.sm, borderTopWidth: 1, borderTopColor: color.border },
+  logout: { marginTop: space.sm, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.sm, minHeight: 48 },
+  logoutText: { ...type.bodyStrong, color: color.danger },
+  version: { ...type.caption, color: color.textMuted, marginTop: space.lg, paddingHorizontal: space.sm },
 });
 
 export { PartnerSidebar };

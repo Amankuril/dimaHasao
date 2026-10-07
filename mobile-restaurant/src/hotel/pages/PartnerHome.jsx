@@ -3,10 +3,9 @@ import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-n
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, ShieldCheck, Star } from 'lucide-react-native';
 import Img from '../../components/Img';
-import { Press } from '../../components/ui';
+import { Button } from '../../components/ds';
 import { useNavigate } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
-import { HT } from '../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerHome.jsx
@@ -57,14 +56,14 @@ const PartnerHome = () => {
             resizeMode="cover"
           />
           <LinearGradient
-            colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.7)', '#ffffff']}
+            colors={['rgba(253,251,247,0.9)', 'rgba(253,251,247,0.7)', color.bg]}
             style={StyleSheet.absoluteFill}
           />
         </View>
 
         <View style={{ maxWidth: 896, zIndex: 10 }}>
           <Text style={styles.heroTitle}>
-            Grow Your Revenue {'\n'}with <Text style={{ color: HT.primary }}>Dima Hasao</Text>
+            Grow your revenue {'\n'}with <Text style={{ color: color.primary }}>Dima Hasao</Text>
           </Text>
           <Text style={styles.heroSub}>
             List your property. Reach verified guests. Earn up to 30% more. Seamless onboarding in under 10 minutes.
@@ -86,7 +85,7 @@ const PartnerHome = () => {
           decelerationRate="fast"
           onScroll={onCarouselScroll}
           scrollEventThrottle={16}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: CARD_GAP, alignItems: 'center' }}
+          contentContainerStyle={{ paddingHorizontal: space.xxl, paddingBottom: space.xxxl, gap: CARD_GAP, alignItems: 'center' }}
         >
           {STEPS.map((card, i) => {
             const on = i === active;
@@ -96,7 +95,7 @@ const PartnerHome = () => {
                 <View style={{ height: 180, overflow: 'hidden' }}>
                   <Img source={{ uri: card.img }} accessibilityLabel={card.title} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                   <LinearGradient
-                    colors={['transparent', HT.primary]} /* from-[#005CA8]/60: the css repaints the gradient stop solid */
+                    colors={['transparent', color.primary]} /* from-[#005CA8]/60: the css repaints the gradient stop solid */
                     style={[StyleSheet.absoluteFill, { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', padding: 20 }]}
                   >
                     <Text style={styles.stepNum}>{card.step}</Text>
@@ -136,7 +135,7 @@ const PartnerHome = () => {
             {BENEFITS.map((item, i) => (
               <View key={i} style={styles.benefitCard}>
                 <View style={styles.benefitIcon}>
-                  <item.icon size={24} color="#fff" />
+                  <item.icon size={24} color={color.onPrimary} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.benefitTitle}>{item.title}</Text>
@@ -153,9 +152,7 @@ const PartnerHome = () => {
         <View style={styles.cta}>
           <Text style={styles.ctaTitle}>Ready to transform your business?</Text>
           <Text style={styles.ctaText}>Join hotel partners growing with Dima Hasao Partnerb today.</Text>
-          <Press onPress={() => navigate('/hotel/partner/join')} style={styles.ctaBtn}>
-            <Text style={styles.ctaBtnText}>List Your Property</Text>
-          </Press>
+          <Button title="List your property" variant="gold" size="lg" fullWidth={false} onPress={() => navigate('/hotel/partner/join')} />
         </View>
       </View>
     </ScrollView>
@@ -163,33 +160,31 @@ const PartnerHome = () => {
 };
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: HT.bg },
-  hero: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingTop: 48, paddingBottom: 48, overflow: 'hidden' },
-  heroTitle: { fontSize: 36, lineHeight: 39.6, letterSpacing: -0.9, textAlign: 'center', color: HT.text, marginBottom: 16, ...poppins(900) },
-  heroSub: { fontSize: 16, lineHeight: 24, textAlign: 'center', color: HT.text, maxWidth: 576, marginBottom: 32, paddingHorizontal: 8, ...poppins(500) },
-  eyebrow: { fontSize: 12, lineHeight: 16, letterSpacing: 2.4, textTransform: 'uppercase', color: tw.gray400, marginBottom: 8, ...poppins(700) },
-  h2: { fontSize: 30, lineHeight: 36, color: HT.text, ...poppins(700) },
-  stepCard: { width: CARD_W, height: 360, backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray100, ...shadow('lg') },
+  page: { flex: 1, backgroundColor: color.bg },
+  hero: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg, paddingVertical: space.xxxl + space.lg, overflow: 'hidden' },
+  heroTitle: { ...type.heading, fontSize: 32, lineHeight: 40, textAlign: 'center', color: color.text, marginBottom: space.lg },
+  heroSub: { ...type.body, fontSize: 16, lineHeight: 24, textAlign: 'center', color: color.textSecondary, maxWidth: 576, marginBottom: space.xxl, paddingHorizontal: space.sm },
+  eyebrow: { ...type.overline, color: color.goldText, marginBottom: space.sm },
+  h2: { ...type.heading, fontSize: 26, lineHeight: 34, color: color.text },
+  stepCard: { width: CARD_W, height: 360, backgroundColor: color.surface, borderRadius: radii.xl, overflow: 'hidden', borderWidth: 1, borderColor: color.border, ...elevation.card },
   stepCardIdle: { opacity: 0.7, transform: [{ scale: 0.9 }] },
-  stepCardActive: { opacity: 1, borderColor: HT.primary, boxShadow: '0 20px 25px -5px rgba(10,77,43,0.15)' },
-  stepNum: { fontSize: 48, lineHeight: 48, color: 'rgba(255,255,255,0.3)', ...poppins(900) },
-  tag: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', marginBottom: 4 },
-  tagText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(700) },
-  stepBody: { height: 180, padding: 20, justifyContent: 'center', backgroundColor: '#fff' },
-  stepTitle: { fontSize: 20, lineHeight: 28, color: HT.text, marginBottom: 8, ...poppins(700) },
-  stepDesc: { fontSize: 14, lineHeight: 22.75, color: HT.text, marginBottom: 16, ...poppins(400) },
-  activeLine: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, backgroundColor: HT.primary },
-  benefits: { paddingVertical: 48, backgroundColor: tw.gray50, borderTopWidth: 1, borderBottomWidth: 1, borderColor: tw.gray100 },
-  benefitsLead: { fontSize: 14, lineHeight: 20, color: HT.text, maxWidth: 448, ...poppins(400) },
-  benefitCard: { flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: '#fff', padding: 24, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  benefitIcon: { width: 48, height: 48, borderRadius: 12, backgroundColor: HT.primary, alignItems: 'center', justifyContent: 'center' },
-  benefitTitle: { fontSize: 18, lineHeight: 28, color: HT.text, marginBottom: 4, ...poppins(700) },
-  benefitText: { fontSize: 14, lineHeight: 22.75, color: HT.text, ...poppins(400) },
-  cta: { backgroundColor: HT.primary, borderRadius: 24, padding: 32, alignItems: 'center', overflow: 'hidden', ...shadow('xl') },
-  ctaTitle: { fontSize: 24, lineHeight: 32, color: '#fff', textAlign: 'center', marginBottom: 16, ...poppins(700) },
-  ctaText: { fontSize: 14, lineHeight: 20, color: 'rgba(255,255,255,0.8)', textAlign: 'center', marginBottom: 32, ...poppins(400) },
-  ctaBtn: { backgroundColor: '#fff', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 999 },
-  ctaBtnText: { fontSize: 14, lineHeight: 20, color: HT.primary, ...poppins(700) },
+  stepCardActive: { opacity: 1, borderColor: color.primary, ...elevation.float },
+  stepNum: { ...type.priceLg, fontSize: 44, lineHeight: 48, color: 'rgba(255,255,255,0.45)' },
+  tag: { paddingHorizontal: space.md, height: 26, justifyContent: 'center', borderRadius: radii.pill, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', marginBottom: space.xs },
+  tagText: { ...type.caption, color: color.textInverse },
+  stepBody: { height: 180, padding: space.xl, justifyContent: 'center', backgroundColor: color.surface },
+  stepTitle: { ...type.heading, color: color.text, marginBottom: space.sm },
+  stepDesc: { ...type.body, color: color.textSecondary, marginBottom: space.lg },
+  activeLine: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, backgroundColor: color.gold },
+  benefits: { paddingVertical: space.xxxl + space.lg, backgroundColor: color.surfaceMuted, borderTopWidth: 1, borderBottomWidth: 1, borderColor: color.border },
+  benefitsLead: { ...type.body, color: color.textSecondary, maxWidth: 448 },
+  benefitCard: { flexDirection: 'row', alignItems: 'center', gap: space.lg, backgroundColor: color.surface, padding: space.xl, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, ...elevation.card },
+  benefitIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
+  benefitTitle: { ...type.subheading, color: color.text, marginBottom: space.xs },
+  benefitText: { ...type.small, color: color.textSecondary },
+  cta: { backgroundColor: color.primaryDeep, borderRadius: radii.xl, padding: space.xxl, alignItems: 'center', overflow: 'hidden', ...elevation.float },
+  ctaTitle: { ...type.titleSerif, fontSize: 20, lineHeight: 28, color: color.goldOnDark, textAlign: 'center', marginBottom: space.md },
+  ctaText: { ...type.body, color: color.textOnDarkMuted, textAlign: 'center', marginBottom: space.xxl },
 });
 
 export default PartnerHome;

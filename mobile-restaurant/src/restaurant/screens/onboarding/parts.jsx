@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { Calendar, Clock, Upload, X } from 'lucide-react-native';
+import { Calendar, Check, Clock, Upload, X } from 'lucide-react-native';
+import Fa from '../../../components/Fa';
 import Img from '../../../components/Img';
 import { SelectField } from '../../../components/kit';
 import { Press } from '../../../components/ui';
-import { poppins, shadow, tw } from '../../../theme';
-import { RT, RT_GRADIENT } from '../../theme';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 /*
  * The small pieces the three onboarding steps share: shadcn Input / Label /
@@ -18,7 +17,14 @@ import { RT, RT_GRADIENT } from '../../theme';
 export function Section({ title, children, style }) {
   return (
     <View style={[styles.section, style]}>
-      {title ? <Text style={styles.sectionTitle}>{title}</Text> : null}
+      {title ? (
+        <View style={styles.sectionHead}>
+          <Fa name="fa-solid fa-leaf" size={12} color={color.gold} />
+          <Text style={styles.sectionTitle} accessibilityRole="header">
+            {String(title).toUpperCase()}
+          </Text>
+        </View>
+      ) : null}
       {children}
     </View>
   );
@@ -37,7 +43,7 @@ export function Field({ style, ...props }) {
   const [focused, setFocused] = useState(false);
   return (
     <TextInput
-      placeholderTextColor={tw.gray400}
+      placeholderTextColor={color.textMuted}
       {...props}
       onFocus={(e) => {
         setFocused(true);
@@ -47,7 +53,7 @@ export function Field({ style, ...props }) {
         setFocused(false);
         props.onBlur?.(e);
       }}
-      style={[styles.input, focused ? { borderColor: RT.primary } : null, props.editable === false ? { opacity: 0.7 } : null, style]}
+      style={[styles.input, styles.inputText, focused ? styles.inputFocused : null, props.editable === false ? styles.inputReadOnly : null, style]}
     />
   );
 }
@@ -63,26 +69,28 @@ export function Dropdown({ value, options, onChange, placeholder, disabled, acce
         onChange={onChange}
         accessibilityLabel={accessibilityLabel}
         style={styles.input}
-        textStyle={[styles.inputText, !value ? { color: tw.gray500 } : null]}
-        chevronColor={tw.gray500}
+        textStyle={[styles.inputText, !value ? { color: color.textMuted } : null]}
+        chevronColor={color.textMuted}
       />
     </View>
   );
 }
 
 /** The pill buttons ("Yes, Pure Veg", "Yes" / "No", ...). */
-export function Pill({ label, active, onPress, activeColors = RT_GRADIENT, disabled }) {
+export function Pill({ label, active, onPress, activeColors = [color.primary], disabled }) {
+  const on = activeColors[0];
   return (
-    <Press scale={0.97} onPress={onPress} disabled={disabled} accessibilityRole="radio" accessibilityState={{ selected: Boolean(active) }}>
-      {active ? (
-        <LinearGradient colors={activeColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.pill, { borderColor: activeColors[0] }]}>
-          <Text style={[styles.pillText, { color: '#fff' }]}>{label}</Text>
-        </LinearGradient>
-      ) : (
-        <View style={[styles.pill, { backgroundColor: '#fff', borderColor: tw.gray200 }]}>
-          <Text style={[styles.pillText, { color: tw.gray700 }]}>{label}</Text>
-        </View>
-      )}
+    <Press
+      scale={0.97}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="radio"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: Boolean(active), disabled: Boolean(disabled) }}
+      style={[styles.pill, active ? { backgroundColor: on, borderColor: on } : styles.pillOff]}
+    >
+      {active ? <Check size={14} color={color.onPrimary} strokeWidth={3} /> : null}
+      <Text style={[styles.pillText, { color: active ? color.onPrimary : color.text }]}>{label}</Text>
     </Press>
   );
 }
@@ -91,7 +99,7 @@ export function Pill({ label, active, onPress, activeColors = RT_GRADIENT, disab
 export function UploadButton({ onPress, style }) {
   return (
     <Press scale={0.98} onPress={onPress} accessibilityLabel="Upload" style={[styles.upload, style]}>
-      <Upload size={16} color={tw.gray900} />
+      <Upload size={18} color={color.primary} />
       <Text style={styles.uploadText}>Upload</Text>
     </Press>
   );
@@ -100,10 +108,10 @@ export function UploadButton({ onPress, style }) {
 /** The round "x" the previews carry. */
 export function RemoveButton({ onPress, style, label = 'Remove image' }) {
   return (
-    <Press onPress={onPress} accessibilityLabel={label} hitSlop={6} style={style}>
-      <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.remove}>
-        <X size={12} color="#fff" />
-      </LinearGradient>
+    <Press onPress={onPress} accessibilityLabel={label} hitSlop={8} style={style}>
+      <View style={styles.remove}>
+        <X size={16} color={color.textInverse} strokeWidth={2.5} />
+      </View>
     </Press>
   );
 }
@@ -143,11 +151,11 @@ export function TimeSelector({ label, value, onChange, stringToTime, timeToStrin
   return (
     <View style={styles.timeBox}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <Clock size={16} color={tw.gray800} />
-        <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(500) }}>{label}</Text>
+        <Clock size={16} color={color.textSecondary} />
+        <Text style={styles.label}>{label}</Text>
       </View>
       <Press scale={1} onPress={open} accessibilityLabel={label} style={styles.timeField}>
-        <Text style={[styles.inputText, { fontSize: 12 }, !date ? { color: tw.gray500 } : null]}>{date ? formatTime12Hour(`${pad2(date.getHours())}:${pad2(date.getMinutes())}`) : 'Select time'}</Text>
+        <Text style={[styles.inputText, !date ? { color: color.textMuted } : null]}>{date ? formatTime12Hour(`${pad2(date.getHours())}:${pad2(date.getMinutes())}`) : 'Select time'}</Text>
       </Press>
     </View>
   );
@@ -171,28 +179,32 @@ export function DateSelector({ value, onChange, parseLocalYMDDate, formatDateToL
   };
   return (
     <Press scale={1} onPress={open} accessibilityLabel="FSSAI expiry date" style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-      <Text style={[styles.inputText, !date ? { color: tw.gray500 } : null]}>
+      <Text style={[styles.inputText, !date ? { color: color.textMuted } : null]}>
         {date ? date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Select expiry date'}
       </Text>
-      <Calendar size={16} color={tw.gray500} />
+      <Calendar size={18} color={color.textMuted} />
     </Press>
   );
 }
 
 export const styles = StyleSheet.create({
-  section: { backgroundColor: '#fff', padding: 16, borderRadius: 6, gap: 16 },
-  sectionTitle: { fontSize: 18, lineHeight: 28, color: '#000', ...poppins(600) },
-  label: { fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(400) },
-  hint: { fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(400) },
-  input: { minHeight: 36, borderRadius: 6, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 4, justifyContent: 'center' },
-  inputText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(400) },
-  pill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: 'transparent' },
-  pillText: { fontSize: 12, lineHeight: 16, ...poppins(400) },
-  upload: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 36, borderRadius: 6, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', paddingHorizontal: 16, ...shadow('sm') },
-  uploadText: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(500) },
-  remove: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
-  document: { marginTop: 12, aspectRatio: 4 / 3, borderRadius: 6, overflow: 'hidden', backgroundColor: tw.gray100 },
+  section: { backgroundColor: color.surface, padding: space.lg, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, gap: space.lg, ...elevation.card },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  sectionTitle: { ...type.sectionSerif, color: color.primary, flexShrink: 1 },
+  label: { ...type.label, color: color.textSecondary },
+  hint: { ...type.caption, color: color.textMuted },
+  input: { minHeight: 48, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.md, paddingVertical: space.xs, justifyContent: 'center' },
+  inputFocused: { borderColor: color.primary, borderWidth: 1.5 },
+  inputReadOnly: { backgroundColor: color.surfaceMuted, color: color.textSecondary },
+  inputText: { ...type.body, color: color.text },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, minHeight: 44, paddingHorizontal: space.lg, borderRadius: radii.pill, borderWidth: 1 },
+  pillOff: { backgroundColor: color.surface, borderColor: color.borderStrong },
+  pillText: { ...type.label },
+  upload: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, height: 48, borderRadius: radii.md, borderWidth: 1.5, borderColor: color.primaryBorder, backgroundColor: color.primarySoft, paddingHorizontal: space.lg },
+  uploadText: { ...type.button, color: color.primary },
+  remove: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(17,24,39,0.72)', alignItems: 'center', justifyContent: 'center' },
+  document: { marginTop: space.md, aspectRatio: 4 / 3, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  timeBox: { borderRadius: 6, borderWidth: 1, borderColor: tw.gray200, backgroundColor: 'rgba(249,250,251,0.6)', paddingHorizontal: 12, paddingVertical: 8 },
-  timeField: { height: 36, borderRadius: 4, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', paddingHorizontal: 12, justifyContent: 'center' },
+  timeBox: { borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surfaceMuted, paddingHorizontal: space.md, paddingVertical: space.md },
+  timeField: { height: 48, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingHorizontal: space.md, justifyContent: 'center' },
 });

@@ -4,7 +4,7 @@ import { Volume2 } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { restaurantAPI } from '../../api/restaurant';
 import { toast } from '../../lib/notify';
-import { poppins, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 
 /** Port of Food/components/restaurant/ResendNotificationButton.jsx: re-alerts delivery partners for an order. */
 export default function ResendNotificationButton({ orderId, mongoId, onSuccess }) {
@@ -30,13 +30,14 @@ export default function ResendNotificationButton({ orderId, mongoId, onSuccess }
 
   return (
     <Press onPress={handleResend} disabled={loading} accessibilityLabel="Resend notification to delivery partners" accessibilityState={{ disabled: loading, busy: loading }} hitSlop={8} style={[styles.button, loading ? { opacity: 0.5 } : null]}>
-      {loading ? <ActivityIndicator size={12} color={tw.blue700} /> : <Volume2 size={12} color={tw.blue700} />}
-      <Text style={styles.text}>{loading ? 'Sending...' : 'Resend'}</Text>
+      {loading ? <ActivityIndicator size="small" color={color.info} /> : <Volume2 size={14} color={color.info} />}
+      <Text style={styles.text}>{loading ? 'Sending…' : 'Resend to riders'}</Text>
     </Press>
   );
 }
 
 const styles = StyleSheet.create({
-  button: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: tw.blue100, borderWidth: 1, borderColor: tw.blue300 },
-  text: { fontSize: 10, lineHeight: 15, color: tw.blue700, ...poppins(500) },
+  // 32 px pill + 8 px hitSlop on every side = a 48 px target.
+  button: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: space.xs + 2, height: 32, paddingHorizontal: space.md, borderRadius: radii.pill, backgroundColor: color.infoSoft },
+  text: { ...type.label, color: color.info },
 });

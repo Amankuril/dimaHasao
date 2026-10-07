@@ -6,6 +6,7 @@ import { X } from 'lucide-react-native';
 import { subscribeToasts } from '../lib/notify';
 
 import { useAnimatedValue } from '../lib/useAnimatedValue';
+import { radii, type } from '../theme';
 
 /*
  * The web mounts sonner as <Toaster position="top-center" richColors
@@ -144,19 +145,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     padding: 16,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: radii.md,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    boxShadow: '0 10px 28px -8px rgba(6,28,14,0.28)',
   },
   body: { flex: 1, gap: 1 },
   action: { height: 24, paddingHorizontal: 8, borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' },
-  actionText: { fontSize: 12, fontWeight: '500' },
-  title: { fontSize: 13, lineHeight: 19.5, fontWeight: '500' },
-  desc: { fontSize: 13, lineHeight: 19.5, fontWeight: '400', opacity: 0.9 },
+  actionText: { ...type.label },
+  title: { ...type.bodyStrong },
+  desc: { ...type.small, opacity: 0.9 },
   close: {
     position: 'absolute',
     top: -8,

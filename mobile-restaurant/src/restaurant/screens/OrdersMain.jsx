@@ -1,24 +1,23 @@
-import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, BackHandler, Easing, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, BackHandler, Easing, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { confirm } from '../../lib/notify';
-import { AlertCircle, Clock, Search, X } from 'lucide-react-native';
+import { AlertCircle, Clock, Search, ShieldCheck, ShoppingBag, Utensils, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
+import { Button, Card, Chip, StatusBadge } from '../../components/ds';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type as t } from '../../theme';
 import BottomNavOrders, { BOTTOM_NAV_HEIGHT } from '../components/BottomNavOrders';
 import RestaurantNavbar from '../components/RestaurantNavbar';
 import { useOrdersMain } from '../hooks/pages/useOrdersMain';
-import { RT, RT_GRADIENT } from '../theme';
 import { AllOrders, CancelledOrders, CompletedOrders, OutForDeliveryOrders, PreparingOrders, ReadyOrders, SearchResults, TableBookings, TakeawayOrders } from './orders/lists';
-import { BRAND, EmptyState } from './orders/parts';
+import { EmptyState } from './orders/parts';
 import { CancelPopup, NewOrderPopup, OrderSheet, RejectPopup, VerifyTakeawayPopup } from './orders/popups';
 
 const QUICK_FILTER_TABS = ['all', 'preparing', 'ready', 'out-for-delivery', 'table-booking', 'takeaway-orders'];
 
-/** `animate-pulse` dot */
-function PulseDot({ color }) {
+/** `animate-pulse` dot: draws the eye to tabs that need action. */
+function PulseDot({ color: c, style }) {
   const anim = useAnimatedValue(1);
   useEffect(() => {
     const loop = Animated.loop(
@@ -30,11 +29,37 @@ function PulseDot({ color }) {
     loop.start();
     return () => loop.stop();
   }, [anim]);
-  return <Animated.View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color, opacity: anim }} />;
+  return <Animated.View style={[{ width: 10, height: 10, borderRadius: 5, backgroundColor: c, opacity: anim }, style]} />;
 }
 
-function CountBadge({ value, bg, fg }) {
-  return <Text style={[styles.countBadge, { backgroundColor: bg, color: fg }]}>{value}</Text>;
+/** Count pill for the quick filters. */
+function CountPill({ value, on }) {
+  return (
+    <View style={[styles.countPill, { backgroundColor: on ? color.surface : color.primary }]}>
+      <Text style={[t.caption, { color: on ? color.primary : color.onPrimary }]}>{value > 99 ? '99+' : value}</Text>
+    </View>
+  );
+}
+
+/** Local primitive: a 48 px half-width toggle tile (icon + label + optional count) for the takeaway / dining shortcuts. */
+function QuickFilter({ icon: Icon, label, on, onPress, count, pulse }) {
+  return (
+    <Press
+      onPress={onPress}
+      scale={0.98}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: on }}
+      accessibilityLabel={count ? `${label}, ${count} waiting` : label}
+      style={[styles.quick, on ? styles.quickOn : styles.quickOff]}
+    >
+      <Icon size={18} color={on ? color.onPrimary : color.primary} />
+      <Text style={[t.label, { flexShrink: 1, color: on ? color.onPrimary : color.text }]} numberOfLines={1}>
+        {label}
+      </Text>
+      {count ? <CountPill value={count} on={on} /> : null}
+      {pulse ? <PulseDot color={on ? color.goldOnDark : color.warning} /> : null}
+    </Press>
+  );
 }
 
 /** Port of Food/pages/restaurant/OrdersMain.jsx (/food/restaurant): the restaurant's home. */
@@ -106,38 +131,29 @@ export default function OrdersMain() {
   const showVerification = !restaurantStatus.isLoading && !restaurantStatus.isActive && restaurantStatus.onboarding?.completedSteps === 4;
   const rejectionLines = String(restaurantStatus.rejectionReason || '').split('\n').map((line) => line.trim()).filter(Boolean);
   const showQuickFilters = searchQuery.trim() === '' && QUICK_FILTER_TABS.includes(activeFilter);
-
-  const quickFilter = (id, label, badge) => {
-    const on = activeFilter === id;
-    return (
-      <Press onPress={() => setActiveFilter(on ? 'all' : id)} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flex: 1, minWidth: 0, transform: [{ scale: on ? 1.05 : 1 }] }}>
-        <LinearGradient colors={on ? RT_GRADIENT : ['#fff', '#fff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.quick}>
-          <Text style={[styles.quickText, { color: on ? '#fff' : '#000' }]} numberOfLines={1}>{label}</Text>
-          {badge}
-        </LinearGradient>
-      </Press>
-    );
-  };
+  const [searchFocused, setSearchFocused] = useState(false);
 
   return (
     <View style={styles.page}>
       <RestaurantNavbar showNotifications hideSearch />
 
       <View style={styles.top}>
-        <View style={styles.search}>
-          <Search size={18} color={tw.slate400} />
+        <View style={[styles.search, searchFocused ? { borderColor: color.primary } : null]}>
+          <Search size={18} color={color.textMuted} />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
             placeholder="Search by order ID or dish name"
-            placeholderTextColor={tw.slate400}
+            placeholderTextColor={color.textMuted}
             returnKeyType="search"
             accessibilityLabel="Search orders"
             style={styles.searchInput}
           />
           {searchQuery ? (
-            <Press onPress={() => setSearchQuery('')} accessibilityLabel="Clear search" hitSlop={10}>
-              <X size={16} color={tw.slate400} />
+            <Press onPress={() => setSearchQuery('')} accessibilityLabel="Clear search" hitSlop={10} style={styles.clear}>
+              <X size={18} color={color.textMuted} />
             </Press>
           ) : null}
         </View>
@@ -149,28 +165,22 @@ export default function OrdersMain() {
           onLayout={(e) => {
             barWidth.current = e.nativeEvent.layout.width;
           }}
-          contentContainerStyle={{ gap: 8, paddingVertical: 4, paddingHorizontal: 2 }}
+          accessibilityRole="tablist"
+          contentContainerStyle={styles.tabs}
         >
           {filterTabs.map((tab) => {
             const on = activeFilter === tab.id;
             const pending = tab.id === 'all' && pendingOrdersCount > 0;
             return (
-              <Press
+              <View
                 key={tab.id}
-                onPress={() => selectFilter(tab.id)}
                 onLayout={(e) => {
                   pillLayouts.current[tab.id] = e.nativeEvent.layout;
                 }}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: on }}
-                style={{ opacity: on ? 1 : 0.7, transform: [{ scale: on ? 1.05 : 1 }] }}
               >
-                <LinearGradient colors={on ? RT_GRADIENT : ['#fff', '#fff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.pill}>
-                  <Text style={[styles.pillText, { color: on ? '#fff' : '#000' }]}>{tab.label}</Text>
-                  {pending ? <CountBadge value={pendingOrdersCount} bg={tw.amber100} fg={RT.primaryStrong} /> : null}
-                  {pending ? <PulseDot color={BRAND} /> : null}
-                </LinearGradient>
-              </Press>
+                <Chip label={tab.label} selected={on} onPress={() => selectFilter(tab.id)} count={pending ? pendingOrdersCount : undefined} style={styles.tab} />
+                {pending ? <PulseDot color={color.warning} style={styles.tabDot} /> : null}
+              </View>
             );
           })}
         </ScrollView>
@@ -178,7 +188,7 @@ export default function OrdersMain() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 96 + BOTTOM_NAV_HEIGHT }}
+        contentContainerStyle={{ paddingHorizontal: space.lg, paddingTop: space.sm, paddingBottom: space.xxxl + BOTTOM_NAV_HEIGHT }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         onTouchStart={(e) => handleTouchStart(touch(e))}
@@ -186,86 +196,85 @@ export default function OrdersMain() {
         onTouchEnd={handleTouchEnd}
       >
         {showVerification ? (
-          <View style={[styles.card, { borderColor: restaurantStatus.rejectionReason ? tw.red200 : tw.yellow200 || '#fef08a' }]}>
+          <Card style={styles.banner}>
             {restaurantStatus.rejectionReason ? (
               <>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-                  <View style={{ borderRadius: 999, padding: 8, backgroundColor: tw.red100 }}>
-                    <AlertCircle size={20} color={BRAND} />
+                <View style={styles.bannerHead}>
+                  <View style={[styles.bannerIcon, { backgroundColor: color.dangerSoft }]}>
+                    <AlertCircle size={20} color={color.danger} />
                   </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={[styles.cardTitle, { color: BRAND, marginBottom: 8 }]}>Denied Verification</Text>
-                    <View style={styles.rejection}>
-                      <Text style={styles.rejectionLabel}>Reason for Rejection:</Text>
-                      {rejectionLines.length > 1 ? (
-                        rejectionLines.map((point, index) => (
-                          <Text key={index} style={styles.rejectionText}>{'•'} {point}</Text>
-                        ))
-                      ) : (
-                        <Text style={styles.rejectionText}>{restaurantStatus.rejectionReason}</Text>
-                      )}
-                    </View>
+                  <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+                    <Text style={styles.bannerTitle}>Verification denied</Text>
+                    <StatusBadge label="Rejected" tone="danger" />
                   </View>
                 </View>
-                <Text style={[styles.cardBody, { color: tw.gray700, marginBottom: 12 }]}>
-                  Please correct the above issues and click &quot;Reverify&quot; to resubmit your request for approval.
-                </Text>
-                <Press scale={0.99} onPress={handleReverify} disabled={isReverifying} accessibilityState={{ disabled: isReverifying, busy: isReverifying }} style={isReverifying ? { opacity: 0.5 } : null}>
-                  <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.reverify}>
-                    {isReverifying ? <ActivityIndicator size="small" color="#fff" /> : null}
-                    <Text style={styles.reverifyText}>{isReverifying ? 'Submitting...' : 'Reverify'}</Text>
-                  </LinearGradient>
-                </Press>
+                <View style={styles.rejection}>
+                  <Text style={styles.rejectionLabel}>Reason for rejection</Text>
+                  {rejectionLines.length > 1 ? (
+                    rejectionLines.map((point, index) => (
+                      <Text key={index} style={styles.rejectionText}>
+                        {'•'} {point}
+                      </Text>
+                    ))
+                  ) : (
+                    <Text style={styles.rejectionText}>{restaurantStatus.rejectionReason}</Text>
+                  )}
+                </View>
+                <Text style={styles.bannerBody}>Please correct the issues above and tap &quot;Reverify&quot; to resubmit your request for approval.</Text>
+                <Button title={isReverifying ? 'Submitting…' : 'Reverify'} onPress={handleReverify} loading={isReverifying} />
               </>
             ) : (
-              <>
-                <Text style={[styles.cardTitle, { marginBottom: 4 }]}>Verification Done in 24 Hours</Text>
-                <Text style={styles.cardBody}>Your account is under verification. You&apos;ll be notified once approved.</Text>
-              </>
+              <View style={styles.bannerHead}>
+                <View style={[styles.bannerIcon, { backgroundColor: color.warningSoft }]}>
+                  <ShieldCheck size={20} color={color.warning} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+                  <Text style={styles.bannerTitle}>Verification done in 24 hours</Text>
+                  <Text style={styles.bannerBody}>Your account is under verification. You&apos;ll be notified once approved.</Text>
+                </View>
+              </View>
             )}
-          </View>
+          </Card>
         ) : null}
 
         {pendingDiningRequest ? (
-          <View style={[styles.card, { borderColor: tw.blue200 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <View style={{ padding: 8, borderRadius: 999, backgroundColor: tw.blue100 }}>
-                <Clock size={16} color={BRAND} />
+          <Card style={styles.banner}>
+            <View style={styles.bannerHead}>
+              <View style={[styles.bannerIcon, { backgroundColor: color.infoSoft }]}>
+                <Clock size={20} color={color.info} />
               </View>
-              <Text style={{ flex: 1, fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) }}>Dining Activation Request Pending</Text>
+              <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+                <Text style={styles.bannerTitle}>Dining activation request pending</Text>
+                <Text style={styles.bannerBody}>
+                  Your request to {pendingDiningRequest.requestedSettings?.isEnabled ? 'enable' : 'update'} dining services is being reviewed by our team. You&apos;ll be notified via SMS/Dashboard once it&apos;s approved.
+                </Text>
+              </View>
             </View>
-            <Text style={styles.cardBody}>
-              Your request to {pendingDiningRequest.requestedSettings?.isEnabled ? 'enable' : 'update'} dining services is being reviewed by our team. You&apos;ll be notified via SMS/Dashboard once it&apos;s approved.
-            </Text>
-            <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <PulseDot color={tw.blue500} />
-              <Text style={styles.underReview}>UNDER REVIEW</Text>
+            <View style={styles.reviewRow}>
+              <PulseDot color={color.warning} />
+              <StatusBadge label="Under review" tone="warning" />
             </View>
-          </View>
+          </Card>
         ) : null}
 
         {showQuickFilters ? (
           <View style={styles.quickRow}>
-            {quickFilter(
-              'takeaway-orders',
-              'Takeaway Orders',
-              activeTakeawayCount > 0 && activeFilter !== 'all' ? (
-                <>
-                  <CountBadge value={activeTakeawayCount} bg={tw.amber100} fg={RT.primaryStrong} />
-                  <PulseDot color={RT.accent} />
-                </>
-              ) : null,
-            )}
-            {quickFilter(
-              'table-booking',
-              'Dining Booking',
-              pendingBookingsCount > 0 ? (
-                <>
-                  <CountBadge value={pendingBookingsCount} bg={tw.red100} fg={BRAND} />
-                  <PulseDot color={BRAND} />
-                </>
-              ) : null,
-            )}
+            <QuickFilter
+              icon={ShoppingBag}
+              label="Takeaway orders"
+              on={activeFilter === 'takeaway-orders'}
+              onPress={() => setActiveFilter(activeFilter === 'takeaway-orders' ? 'all' : 'takeaway-orders')}
+              count={activeTakeawayCount > 0 && activeFilter !== 'all' ? activeTakeawayCount : 0}
+              pulse={activeTakeawayCount > 0 && activeFilter !== 'all'}
+            />
+            <QuickFilter
+              icon={Utensils}
+              label="Dining booking"
+              on={activeFilter === 'table-booking'}
+              onPress={() => setActiveFilter(activeFilter === 'table-booking' ? 'all' : 'table-booking')}
+              count={pendingBookingsCount > 0 ? pendingBookingsCount : 0}
+              pulse={pendingBookingsCount > 0}
+            />
           </View>
         ) : null}
 
@@ -284,23 +293,26 @@ export default function OrdersMain() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.gray100 },
-  top: { backgroundColor: tw.gray100, paddingHorizontal: 16, paddingBottom: 8 },
-  search: { marginVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, borderRadius: 16, ...shadow('sm') },
-  searchInput: { flex: 1, height: 46, paddingVertical: 0, fontSize: 14, color: tw.slate900, ...poppins(600) },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 999 },
-  pillText: { fontSize: 14, lineHeight: 20, ...poppins(500) },
-  countBadge: { fontSize: 10, lineHeight: 15, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', ...poppins(800) },
-  card: { marginVertical: 16, borderRadius: 16, paddingHorizontal: 24, paddingVertical: 16, backgroundColor: '#fff', borderWidth: 1, ...shadow('sm') },
-  cardTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  cardBody: { fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
-  rejection: { backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red200, borderRadius: 8, padding: 12, marginBottom: 12, gap: 4 },
-  rejectionLabel: { fontSize: 12, lineHeight: 16, color: tw.red800, marginBottom: 4, ...poppins(600) },
-  rejectionText: { fontSize: 12, lineHeight: 16, color: tw.red700, ...poppins(400) },
-  reverify: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
-  reverifyText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) },
-  underReview: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.blue500, ...poppins(800) },
-  quickRow: { paddingVertical: 8, flexDirection: 'row', justifyContent: 'center', gap: 12 },
-  quick: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 999, borderWidth: 1, borderColor: tw.gray200, ...shadow('sm') },
-  quickText: { flexShrink: 1, fontSize: 14, lineHeight: 20, ...poppins(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  top: { backgroundColor: color.bg, paddingTop: space.md, paddingBottom: space.sm, gap: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  search: { marginHorizontal: space.lg, height: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md },
+  searchInput: { flex: 1, minWidth: 0, height: 48, paddingVertical: 0, ...t.body, color: color.text },
+  clear: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  tabs: { gap: space.sm, paddingHorizontal: space.lg, paddingVertical: space.xs },
+  tab: { height: 44 },
+  tabDot: { position: 'absolute', top: 0, right: 0, borderWidth: 2, borderColor: color.bg, width: 12, height: 12, borderRadius: 6 },
+  banner: { marginTop: space.sm, marginBottom: space.sm, gap: space.md },
+  bannerHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  bannerIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  bannerTitle: { ...t.subheading, color: color.text },
+  bannerBody: { ...t.small, color: color.textSecondary },
+  rejection: { backgroundColor: color.dangerSoft, borderRadius: radii.md, padding: space.md, gap: space.xs },
+  rejectionLabel: { ...t.label, color: color.danger },
+  rejectionText: { ...t.small, color: color.text },
+  reviewRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  quickRow: { paddingTop: space.sm, flexDirection: 'row', gap: space.md },
+  quick: { flex: 1, minWidth: 0, height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1 },
+  quickOn: { backgroundColor: color.primary, borderColor: color.primary },
+  quickOff: { backgroundColor: color.surface, borderColor: color.border },
+  countPill: { minWidth: 22, height: 22, paddingHorizontal: 6, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
 });

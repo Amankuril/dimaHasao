@@ -2,6 +2,7 @@ import { Redirect, Stack, usePathname } from 'expo-router';
 import { View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { isHotelAuthenticated } from '../../restaurant/utils/auth';
+import { color } from '../../theme';
 
 /*
  * Web: Hotel/routes.jsx (RequirePartner + PartnerThemeLayout). The hotel
@@ -31,8 +32,8 @@ export default function HotelShell() {
     if (hotelUser?.onboardingComplete && hotelUser?.partnerApprovalStatus !== 'approved') return <Redirect href={`${HOME}/under-review`} />;
   }
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fff' }, animation: 'fade', animationDuration: 120 }} />
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bg }, animation: 'fade', animationDuration: 120 }} />
     </View>
   );
 }

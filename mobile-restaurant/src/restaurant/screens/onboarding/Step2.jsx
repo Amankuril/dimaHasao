@@ -1,11 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Calendar as CalendarIcon, Image as ImageIcon, ShoppingBag } from 'lucide-react-native';
 import Img from '../../../components/Img';
 import { Press } from '../../../components/ui';
-import { poppins, tw } from '../../../theme';
+import { color, radii, space, type } from '../../../theme';
 import { Toggle } from '../../components/ui';
-import { RT_GRADIENT } from '../../theme';
 import { Field, Hint, Label, RemoveButton, Section, TimeSelector, UploadButton } from './parts';
 
 /** Step 2 of the wizard: menu and profile photos, timings, open days and takeaway. */
@@ -37,16 +35,16 @@ export default function Step2({ o }) {
   const profileSrc = step2.profileImage ? getPreviewImageUrl(step2.profileImage) : null;
 
   return (
-    <View style={{ gap: 24 }}>
-      <Section title="Menu & photos" style={{ gap: 20 }}>
+    <View style={{ gap: space.xxl }}>
+      <Section title="Menu & photos" style={{ gap: space.xl }}>
         <Text style={styles.intro}>Add clear photos of your printed menu and a primary profile image. This helps customers understand what you serve.</Text>
 
-        <View style={{ gap: 8 }}>
-          <Label style={{ ...poppins(500) }}>Menu images</Label>
+        <View style={{ gap: space.sm }}>
+          <Label>Menu images</Label>
           <View style={styles.dropzone}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={styles.dropIcon}>
-                <ImageIcon size={20} color={tw.gray700} />
+                <ImageIcon size={20} color={color.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.dropTitle}>Upload menu images</Text>
@@ -81,7 +79,7 @@ export default function Step2({ o }) {
                 }
                 return (
                   <View key={`${idx}-${imageUrl || ''}`} style={styles.tile}>
-                    <RemoveButton onPress={() => handleRemoveMenuImage(idx)} label={`Remove menu image ${idx + 1}`} style={{ position: 'absolute', top: 4, right: 4, zIndex: 30 }} />
+                    <RemoveButton onPress={() => handleRemoveMenuImage(idx)} label={`Remove menu image ${idx + 1}`} style={{ position: 'absolute', top: space.xs + 2, right: space.xs + 2, zIndex: 30 }} />
                     {imageUrl ? (
                       <Img source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={`Menu ${idx + 1}`} />
                     ) : (
@@ -99,18 +97,18 @@ export default function Step2({ o }) {
           ) : null}
         </View>
 
-        <View style={{ gap: 8 }}>
-          <Label style={{ ...poppins(500) }}>Restaurant profile image</Label>
+        <View style={{ gap: space.sm }}>
+          <Label>Restaurant profile image</Label>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
             <View>
               <View style={styles.avatar}>
                 {profileSrc ? (
                   <Img source={{ uri: profileSrc }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel="Restaurant profile" />
                 ) : (
-                  <ImageIcon size={24} color={tw.gray500} />
+                  <ImageIcon size={24} color={color.textMuted} />
                 )}
               </View>
-              {step2.profileImage ? <RemoveButton onPress={handleRemoveProfileImage} label="Remove profile image" style={{ position: 'absolute', top: -4, right: -4, zIndex: 10 }} /> : null}
+              {step2.profileImage ? <RemoveButton onPress={handleRemoveProfileImage} label="Remove profile image" style={{ position: 'absolute', top: -space.xs, right: -space.xs, zIndex: 10 }} /> : null}
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.dropTitle}>Upload profile image</Text>
@@ -129,10 +127,10 @@ export default function Step2({ o }) {
         </View>
       </Section>
 
-      <Section style={{ gap: 20 }}>
-        <View style={{ gap: 12 }}>
+      <Section style={{ gap: space.xl }}>
+        <View style={{ gap: space.md }}>
           <Label>Outlet timings</Label>
-          <View style={{ gap: 16 }}>
+          <View style={{ gap: space.lg }}>
             <TimeSelector label="Opening time" value={step2.openingTime || ''} onChange={(val) => changeTime('openingTime', val)} stringToTime={stringToTime} timeToString={timeToString} formatTime12Hour={formatTime12Hour} />
             <TimeSelector label="Closing time" value={step2.closingTime || ''} onChange={(val) => changeTime('closingTime', val)} stringToTime={stringToTime} timeToString={timeToString} formatTime12Hour={formatTime12Hour} />
           </View>
@@ -148,9 +146,9 @@ export default function Step2({ o }) {
           </View>
         </View>
 
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: space.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <CalendarIcon size={14} color={tw.gray800} />
+            <CalendarIcon size={16} color={color.textSecondary} />
             <Label>Open days</Label>
           </View>
           <Hint>Select the days your restaurant accepts delivery orders.</Hint>
@@ -159,15 +157,9 @@ export default function Step2({ o }) {
               const active = step2.openDays.includes(day);
               return (
                 <Press key={day} scale={0.95} onPress={() => toggleDay(day)} accessibilityRole="checkbox" accessibilityLabel={day} accessibilityState={{ checked: active }} style={styles.dayWrap}>
-                  {active ? (
-                    <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.day}>
-                      <Text style={[styles.dayText, { color: '#fff' }]}>{day.charAt(0)}</Text>
-                    </LinearGradient>
-                  ) : (
-                    <View style={[styles.day, { backgroundColor: tw.gray100 }]}>
-                      <Text style={[styles.dayText, { color: tw.gray800 }]}>{day.charAt(0)}</Text>
-                    </View>
-                  )}
+                  <View style={[styles.day, active ? styles.dayOn : styles.dayOff]}>
+                    <Text style={[styles.dayText, { color: active ? color.onPrimary : color.text }]}>{day.charAt(0)}</Text>
+                  </View>
                 </Press>
               );
             })}
@@ -175,12 +167,12 @@ export default function Step2({ o }) {
         </View>
       </Section>
 
-      <Section style={{ gap: 20 }}>
+      <Section style={{ gap: space.xl }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <ShoppingBag size={16} color={tw.green600} />
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>Takeaway (Pickup) order</Text>
+              <ShoppingBag size={18} color={color.primary} />
+              <Text style={styles.toggleTitle}>Takeaway (pickup) orders</Text>
             </View>
             <Hint style={{ marginTop: 2 }}>Enable this to allow customers to pick up orders themselves from your restaurant.</Hint>
           </View>
@@ -192,19 +184,22 @@ export default function Step2({ o }) {
 }
 
 const styles = StyleSheet.create({
-  intro: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  dropzone: { marginTop: 4, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray300, borderRadius: 6, backgroundColor: 'rgba(249,250,251,0.7)', paddingHorizontal: 16, paddingVertical: 12, gap: 12, alignItems: 'stretch' },
-  dropIcon: { width: 40, height: 40, borderRadius: 6, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  dropTitle: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(500) },
-  dropHint: { fontSize: 11, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  grid: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  tile: { width: '47.5%', aspectRatio: 4 / 5, borderRadius: 6, overflow: 'hidden', backgroundColor: tw.gray100 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
-  caption: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 8, paddingVertical: 4 },
-  captionText: { fontSize: 10, lineHeight: 15, color: '#fff', ...poppins(400) },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200 },
-  days: { marginTop: 4, flexDirection: 'row', gap: 6 },
+  intro: { ...type.small, color: color.textSecondary },
+  dropzone: { marginTop: space.xs, borderWidth: 1.5, borderStyle: 'dashed', borderColor: color.borderStrong, borderRadius: radii.md, backgroundColor: color.surfaceMuted, padding: space.lg, gap: space.md, alignItems: 'stretch' },
+  dropIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  dropTitle: { ...type.bodyStrong, color: color.text },
+  dropHint: { ...type.caption, color: color.textMuted },
+  grid: { marginTop: space.sm, flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  tile: { width: '47.5%', aspectRatio: 4 / 5, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm },
+  caption: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: space.sm, paddingVertical: space.xs },
+  captionText: { ...type.caption, color: color.textInverse },
+  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: color.border },
+  days: { marginTop: space.xs, flexDirection: 'row', gap: space.xs + 2 },
   dayWrap: { flex: 1 },
-  day: { aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 6 },
-  dayText: { fontSize: 11, lineHeight: 16, ...poppins(500) },
+  day: { minHeight: 44, aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md, borderWidth: 1 },
+  dayOn: { backgroundColor: color.primary, borderColor: color.primary },
+  dayOff: { backgroundColor: color.surface, borderColor: color.borderStrong },
+  dayText: { ...type.label },
+  toggleTitle: { ...type.bodyStrong, color: color.text },
 });

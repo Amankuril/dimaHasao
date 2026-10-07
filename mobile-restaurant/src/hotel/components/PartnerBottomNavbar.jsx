@@ -3,8 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, Briefcase, UserCircle } from 'lucide-react-native';
 import { useNavigate, useLocation } from '../../lib/webRouter';
 import { Press } from '../../components/ui';
-import { poppins, tw } from '../../theme';
-import { HT } from '../theme';
+import { color, radii, space, type } from '../../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/components/PartnerBottomNavbar.jsx.
@@ -45,17 +44,13 @@ const PartnerBottomNavbar = () => {
               scale={1}
               onPress={() => navigate(item.route)}
               accessibilityLabel={item.name}
+              accessibilityRole="tab"
               accessibilityState={{ selected: isActive }}
               style={styles.item}
             >
               {isActive ? <View style={styles.pill} /> : null}
-              <Icon
-                size={22}
-                color={isActive ? HT.primary : tw.gray400}
-                fill={isActive ? HT.primary : 'none'} /* fill-[#005CA8]/10: partnerTheme.css repaints every fill-[#005CA8]* as solid primary (alpha dropped) */
-                strokeWidth={isActive ? 2.5 : 2}
-              />
-              <Text style={[styles.label, { color: isActive ? HT.primary : tw.gray400 }]}>{item.name}</Text>
+              <Icon size={22} color={isActive ? color.goldOnDark : 'rgba(255,255,255,0.85)'} strokeWidth={isActive ? 2.5 : 2} />
+              <Text style={[styles.label, { color: isActive ? color.goldOnDark : 'rgba(255,255,255,0.85)' }, isActive && { fontFamily: 'Poppins_600SemiBold' }]}>{item.name}</Text>
             </Press>
           );
         })}
@@ -66,18 +61,18 @@ const PartnerBottomNavbar = () => {
 
 const styles = StyleSheet.create({
   bar: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: color.primaryPressed,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(243,244,246,0.8)',
-    paddingHorizontal: 8,
-    boxShadow: '0 -8px 30px rgba(0,0,0,0.08)',
+    borderTopColor: 'rgba(202,168,62,0.35)',
+    paddingHorizontal: space.sm,
+    boxShadow: '0 -8px 30px rgba(6,28,14,0.18)',
   },
   row: { height: PARTNER_NAV_HEIGHT, flexDirection: 'row', alignItems: 'center' },
-  item: { flex: 1, height: '100%', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 4 },
-  pill: { position: 'absolute', left: 8, right: 8, top: 6, bottom: 6, borderRadius: 12, backgroundColor: HT.primarySoft },
-  label: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, ...poppins(700) },
+  item: { flex: 1, height: '100%', alignItems: 'center', justifyContent: 'center', gap: 2, padding: space.xs },
+  pill: { position: 'absolute', left: space.sm, right: space.sm, top: 6, bottom: 6, borderRadius: radii.md, backgroundColor: 'rgba(255,255,255,0.12)' },
+  label: { ...type.caption },
 });
 
 export { PartnerBottomNavbar };

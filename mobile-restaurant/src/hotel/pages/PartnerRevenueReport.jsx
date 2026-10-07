@@ -20,15 +20,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { ArrowLeft, Download, TrendingUp } from 'lucide-react-native';
-import { Press } from '../../components/ui';
+import { ArrowLeft, CalendarDays, Download, TrendingUp } from 'lucide-react-native';
+import { Button, Card, EmptyState, IconButton, SectionHeader } from '../../components/ds';
 import { useNavigate } from '../../lib/webRouter';
 import { toast } from '../../lib/notify';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
 import { bookingService } from '../services/apiService';
 import { formatINR as currency, toInputDate } from '../utils/format';
-import { HT } from '../theme';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -41,9 +40,9 @@ function DateBox({ value, onChange, label }) {
         value={value}
         onChangeText={onChange}
         placeholder="YYYY-MM-DD"
-        placeholderTextColor={tw.gray400}
+        placeholderTextColor={color.textDisabled}
         accessibilityLabel={label}
-        style={styles.dateBox}
+        style={[styles.dateBox, styles.dateText]}
       />
     );
   }
@@ -58,7 +57,8 @@ function DateBox({ value, onChange, label }) {
     });
   };
   return (
-    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={label} style={styles.dateBox}>
+    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={`${label}: ${value}`} style={[styles.dateBox, styles.dateRow]}>
+      <CalendarDays size={16} color={color.textMuted} />
       <Text style={styles.dateText}>{value}</Text>
     </Pressable>
   );
@@ -117,42 +117,41 @@ const PartnerRevenueReport = () => {
   };
 
   const cards = [
-    ['Bookings', String(totals.bookings), tw.gray900],
-    ['Gross collected', currency(totals.gross), tw.gray900],
-    ['Platform commission', currency(totals.commission), tw.amber700],
-    ['Your payout', currency(totals.payout), HT.primary],
+    ['Bookings', String(totals.bookings), color.text],
+    ['Gross collected', currency(totals.gross), color.text],
+    ['Platform commission', currency(totals.commission), color.goldText],
+    ['Your payout', currency(totals.payout), color.success],
   ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       <PartnerHeader />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
-        <View style={{ maxWidth: 896, width: '100%', alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 24, gap: 24 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Press onPress={() => navigate(-1)} accessibilityLabel="Back" style={{ padding: 8, borderRadius: 999 }}>
-              <ArrowLeft size={18} color={tw.gray900} />
-            </Press>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.h1}>Revenue Report</Text>
+      <ScrollView contentContainerStyle={{ paddingBottom: space.xxxl + insets.bottom }}>
+        <View style={{ maxWidth: 896, width: '100%', alignSelf: 'center', padding: space.lg, gap: space.lg }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+            <IconButton icon={ArrowLeft} label="Back" onPress={() => navigate(-1)} style={{ marginLeft: -space.sm }} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.h1}>Revenue report</Text>
               <Text style={styles.sub}>Paid bookings only</Text>
             </View>
-            <Press onPress={exportCsv} disabled={byMonth.length === 0} style={[styles.csv, byMonth.length === 0 && { opacity: 0.5 }]}>
-              <Download size={14} color="#fff" />
-              <Text style={styles.csvText}>CSV</Text>
-            </Press>
+            <Button title="CSV" icon={Download} variant="outline" size="sm" fullWidth={false} onPress={exportCsv} disabled={byMonth.length === 0} style={{ minHeight: 44 }} accessibilityLabel="Export CSV" />
           </View>
 
-          <View style={styles.rangeBar}>
-            <Text style={styles.rangeLabel}>From</Text>
-            <DateBox label="From" value={range.from} onChange={(v) => setRange((r) => ({ ...r, from: v }))} />
-            <Text style={styles.rangeLabel}>To</Text>
-            <DateBox label="To" value={range.to} onChange={(v) => setRange((r) => ({ ...r, to: v }))} />
-          </View>
+          <Card style={styles.rangeBar}>
+            <View style={{ flex: 1, gap: space.xs }}>
+              <Text style={styles.rangeLabel}>From</Text>
+              <DateBox label="From" value={range.from} onChange={(v) => setRange((r) => ({ ...r, from: v }))} />
+            </View>
+            <View style={{ flex: 1, gap: space.xs }}>
+              <Text style={styles.rangeLabel}>To</Text>
+              <DateBox label="To" value={range.to} onChange={(v) => setRange((r) => ({ ...r, to: v }))} />
+            </View>
+          </Card>
 
           {loading ? (
-            <View style={{ padding: 64, alignItems: 'center' }}>
-              <ActivityIndicator size="small" color={tw.gray400} />
+            <View style={{ padding: space.xxxl * 2, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={color.primary} />
             </View>
           ) : (
             <>
@@ -160,22 +159,21 @@ const PartnerRevenueReport = () => {
                 {cards.map(([label, value, tone]) => (
                   <View key={label} style={styles.card}>
                     <Text style={styles.cardLabel}>{label}</Text>
-                    <Text style={[styles.cardValue, { color: tone }]}>{value}</Text>
+                    <Text style={[styles.cardValue, { color: tone }]} numberOfLines={1} adjustsFontSizeToFit>
+                      {value}
+                    </Text>
                   </View>
                 ))}
               </View>
 
-              <View style={[styles.panel, { padding: 20 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <TrendingUp size={16} color={HT.primary} />
-                  <Text style={styles.h2}>Payout by month</Text>
-                </View>
+              <Card>
+                <SectionHeader title="Payout by month" />
                 {byMonth.length === 0 ? (
-                  <Text style={styles.empty}>No paid bookings in this range yet.</Text>
+                  <EmptyState icon={TrendingUp} title="No paid bookings in this range yet." style={{ paddingVertical: space.xxl }} />
                 ) : (
-                  <View style={{ gap: 8 }}>
+                  <View style={{ gap: space.sm }}>
                     {byMonth.map((month) => (
-                      <View key={`${month.year}-${month.month}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <View key={`${month.year}-${month.month}`} style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
                         <Text style={styles.monthLabel}>
                           {MONTH_NAMES[month.month - 1]} {String(month.year).slice(-2)}
                         </Text>
@@ -187,33 +185,37 @@ const PartnerRevenueReport = () => {
                     ))}
                   </View>
                 )}
-              </View>
+              </Card>
 
-              <View style={[styles.panel, { overflow: 'hidden' }]}>
-                <Text style={[styles.h2, { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.gray100 }]}>By property</Text>
+              <Card padded={false} style={{ overflow: 'hidden' }}>
+                <SectionHeader title="By property" style={{ padding: space.lg, marginBottom: 0 }} />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={{ minWidth: 544 }}>
-                    <View style={[styles.tr, { backgroundColor: tw.gray50 }]}>
+                    <View style={[styles.tr, { backgroundColor: color.surfaceMuted }]}>
                       {['Property', 'Bookings', 'Gross', 'Commission', 'Payout'].map((h, i) => (
-                        <Text key={h} style={[styles.th, i === 0 ? styles.cProp : styles.cNum, i > 0 && { textAlign: 'right' }]}>{h}</Text>
+                        <Text key={h} style={[styles.th, i === 0 ? styles.cProp : styles.cNum, i > 0 && { textAlign: 'right' }]}>
+                          {h}
+                        </Text>
                       ))}
                     </View>
                     {byProperty.length === 0 ? (
                       <Text style={styles.nothing}>Nothing to report yet.</Text>
                     ) : (
                       byProperty.map((row) => (
-                        <View key={row.propertyId} style={[styles.tr, { borderTopWidth: 1, borderTopColor: tw.gray100 }]}>
-                          <Text style={[styles.td, styles.cProp, { color: tw.gray900, ...poppins(600) }]}>{row.propertyName}</Text>
+                        <View key={row.propertyId} style={[styles.tr, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border }]}>
+                          <Text style={[styles.td, styles.cProp, type.bodyStrong, { color: color.text }]} numberOfLines={2}>
+                            {row.propertyName}
+                          </Text>
                           <Text style={[styles.td, styles.cNum]}>{row.bookings}</Text>
                           <Text style={[styles.td, styles.cNum]}>{currency(row.gross)}</Text>
-                          <Text style={[styles.td, styles.cNum, { color: tw.amber700 }]}>{currency(row.commission)}</Text>
-                          <Text style={[styles.td, styles.cNum, { color: HT.primary, ...poppins(700) }]}>{currency(row.payout)}</Text>
+                          <Text style={[styles.td, styles.cNum, { color: color.goldText }]}>{currency(row.commission)}</Text>
+                          <Text style={[styles.td, styles.cNum, type.bodyStrong, { color: color.success, textAlign: 'right' }]}>{currency(row.payout)}</Text>
                         </View>
                       ))
                     )}
                   </View>
                 </ScrollView>
-              </View>
+              </Card>
             </>
           )}
         </View>
@@ -223,31 +225,27 @@ const PartnerRevenueReport = () => {
 };
 
 const styles = StyleSheet.create({
-  h1: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(900) },
-  sub: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  csv: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#0a0a0a', borderRadius: 8 },
-  csvText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(700) },
-  rangeBar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, backgroundColor: '#fff', padding: 12, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  rangeLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
-  dateBox: { minWidth: 104, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray200, borderRadius: 8, fontSize: 12, color: tw.gray900, ...poppins(400) },
-  dateText: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(400) },
-  cards: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: { width: '48%', flexGrow: 1, backgroundColor: '#fff', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  cardLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
-  cardValue: { fontSize: 20, lineHeight: 28, marginTop: 4, ...poppins(900) },
-  panel: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  h2: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  empty: { fontSize: 12, lineHeight: 16, color: tw.gray400, paddingVertical: 24, textAlign: 'center', ...poppins(400) },
-  monthLabel: { width: 64, fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(700) },
-  track: { flex: 1, height: 24, backgroundColor: tw.gray50, borderRadius: 6, overflow: 'hidden' },
-  bar: { height: '100%', backgroundColor: HT.primary, borderRadius: 6 },
-  monthValue: { width: 96, textAlign: 'right', fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) },
+  h1: { ...type.heading, color: color.text },
+  sub: { ...type.small, color: color.textMuted },
+  rangeBar: { flexDirection: 'row', gap: space.md, padding: space.md },
+  rangeLabel: { ...type.label, color: color.text },
+  dateBox: { minHeight: 48, paddingHorizontal: space.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, justifyContent: 'center' },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  dateText: { ...type.body, color: color.text },
+  cards: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  card: { width: '47%', flexGrow: 1, backgroundColor: color.surface, padding: space.lg, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, gap: space.xs, ...elevation.card },
+  cardLabel: { ...type.label, color: color.textSecondary },
+  cardValue: { ...type.price, fontSize: 20, lineHeight: 28 },
+  monthLabel: { width: 56, ...type.caption, color: color.textSecondary },
+  track: { flex: 1, height: 24, backgroundColor: color.surfaceMuted, borderRadius: radii.sm, overflow: 'hidden' },
+  bar: { height: '100%', backgroundColor: color.primary, borderRadius: radii.sm },
+  monthValue: { minWidth: 80, textAlign: 'right', ...type.label, color: color.text },
   tr: { flexDirection: 'row', alignItems: 'center' },
-  th: { padding: 16, fontSize: 10, lineHeight: 15, letterSpacing: 0.5, textTransform: 'uppercase', color: tw.gray500, ...poppins(600) },
-  td: { padding: 16, fontSize: 14, lineHeight: 20, color: tw.gray700, textAlign: 'left', ...poppins(400) },
+  th: { padding: space.md, ...type.caption, fontFamily: type.label.fontFamily, color: color.textSecondary },
+  td: { padding: space.md, ...type.body, color: color.textSecondary, textAlign: 'left' },
   cProp: { width: 184 },
   cNum: { width: 90, textAlign: 'right' },
-  nothing: { padding: 32, textAlign: 'center', fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(400) },
+  nothing: { padding: space.xxl, textAlign: 'center', ...type.small, color: color.textMuted },
 });
 
 export default PartnerRevenueReport;

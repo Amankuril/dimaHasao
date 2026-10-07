@@ -3,15 +3,15 @@ import { Coffee, Snowflake, Sun, Tv, Trees, Mountain, ShowerHead, Waves, Wifi } 
 /* Port of the constants at the top of Frontend/src/modules/Hotel/app/partner/pages/AddResortWizard.jsx. */
 
 export const WIZARD_STEPS = [
-  { title: 'Basic Info', short: 'Basics', subtitle: 'Name your resort and describe what makes it a destination.' },
+  { title: 'Basic info', short: 'Basics', subtitle: 'Name your resort and describe what makes it a destination.' },
   { title: 'Location', short: 'Location', subtitle: 'Where guests will find you, and the pin on the map.' },
   { title: 'Amenities', short: 'Amenities', subtitle: 'What the resort offers on site.' },
-  { title: 'Nearby Places', short: 'Nearby', subtitle: 'Landmarks and transport worth mentioning.' },
-  { title: 'Resort Images', short: 'Photos', subtitle: 'A cover photo and a gallery of the resort.' },
-  { title: 'Cottages & Rooms', short: 'Rooms', subtitle: 'Each cottage or room you sell, with its rate and count.' },
-  { title: 'Resort Rules', short: 'Rules', subtitle: 'Check-in times, cancellation terms and house rules.' },
+  { title: 'Nearby places', short: 'Nearby', subtitle: 'Landmarks and transport worth mentioning.' },
+  { title: 'Resort images', short: 'Photos', subtitle: 'A cover photo and a gallery of the resort.' },
+  { title: 'Cottages & rooms', short: 'Rooms', subtitle: 'Each cottage or room you sell, with its rate and count.' },
+  { title: 'Resort rules', short: 'Rules', subtitle: 'Check-in times, cancellation terms and house rules.' },
   { title: 'Documents', short: 'Documents', subtitle: 'Licences and certificates for verification.' },
-  { title: 'Review & Submit', short: 'Review', subtitle: 'Check everything over before sending it for approval.' },
+  { title: 'Review & submit', short: 'Review', subtitle: 'Check everything over before sending it for approval.' },
 ];
 
 export const REQUIRED_DOCS_RESORT = [
@@ -24,10 +24,10 @@ export const REQUIRED_DOCS_RESORT = [
 export const RESORT_AMENITIES = ['Swimming Pool', 'Restaurant', 'Bar', 'Parking'];
 export const RESORT_ACTIVITIES = ['Water Sports', 'Spa', 'Bonfire', 'Indoor Games'];
 export const RESORT_TYPES = [
-  { value: 'beach', label: 'Beach Resort', icon: Waves },
-  { value: 'hill', label: 'Hill Resort', icon: Mountain },
-  { value: 'jungle', label: 'Jungle Resort', icon: Trees },
-  { value: 'desert', label: 'Desert Resort', icon: Sun },
+  { value: 'beach', label: 'Beach resort', icon: Waves },
+  { value: 'hill', label: 'Hill resort', icon: Mountain },
+  { value: 'jungle', label: 'Jungle resort', icon: Trees },
+  { value: 'desert', label: 'Desert resort', icon: Sun },
 ];
 export const ROOM_AMENITIES_OPTIONS = [
   { key: 'seaview', label: 'Sea View', icon: Waves },
@@ -40,11 +40,11 @@ export const ROOM_AMENITIES_OPTIONS = [
 export const HOUSE_RULES_OPTIONS = ['No smoking', 'No pets', 'No loud music', 'ID required at check-in'];
 
 export const NEARBY_TYPES = [
-  { value: 'tourist', label: 'Tourist Attraction' },
+  { value: 'tourist', label: 'Tourist attraction' },
   { value: 'airport', label: 'Airport' },
   { value: 'market', label: 'Market' },
-  { value: 'railway', label: 'Railway Station' },
-  { value: 'bus_stop', label: 'Bus Stop' },
+  { value: 'railway', label: 'Railway station' },
+  { value: 'bus_stop', label: 'Bus stop' },
   { value: 'hospital', label: 'Hospital' },
   { value: 'restaurant', label: 'Restaurant' },
   { value: 'other', label: 'Other' },

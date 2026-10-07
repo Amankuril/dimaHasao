@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { localStore } from '../../lib/storage';
 import { useNavigate } from '../../lib/webRouter';
 import { WORKSPACE, WORKSPACE_HOME, hasBothProfiles, setActiveWorkspace } from '../utils/partnerSession';
+import { color } from '../../theme';
 
 /*
  * Port of Frontend/src/shared/partner/PartnerWorkspaceSwitcher.jsx.
@@ -109,7 +110,7 @@ export default function PartnerWorkspaceSwitcher() {
       accessibilityLabel={`${label}. Drag to reposition.`}
       style={[styles.btn, { transform: [...pos.getTranslateTransform(), { scale: dragging ? 1.04 : 1 }] }]}
     >
-      <ArrowLeftRight size={20} color="#fff" strokeWidth={2.25} />
+      <ArrowLeftRight size={20} color={color.goldOnDark} strokeWidth={2.25} />
     </Animated.View>
   );
 }
@@ -122,16 +123,13 @@ const styles = StyleSheet.create({
     width: SIZE,
     height: SIZE,
     borderRadius: SIZE / 2,
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: color.primaryDeep,
+    borderWidth: 2,
+    borderColor: color.gold,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 12,
     zIndex: 1000,
-    shadowColor: '#0f172a',
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
+    boxShadow: '0 10px 28px -8px rgba(6,28,14,0.35)',
   },
 });

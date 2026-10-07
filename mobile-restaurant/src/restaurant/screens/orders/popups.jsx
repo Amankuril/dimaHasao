@@ -1,19 +1,18 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, PanResponder, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Check, ChevronDown, ChevronUp, FileText, MapPin, Minus, Plus, ReceiptText, ShoppingBag, Users, Volume2, VolumeX } from 'lucide-react-native';
+import { PanResponder, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Banknote, Check, ChevronDown, ChevronRight, ChevronUp, Clock, FileText, MapPin, Minus, Plus, ReceiptText, ShoppingBag, StickyNote, Timer, Users, Volume2, VolumeX } from 'lucide-react-native';
 import { Dialog } from '../../../components/kit';
 import Img from '../../../components/Img';
 import { Press } from '../../../components/ui';
-import { poppins, shadow, tw } from '../../../theme';
+import { Button, IconButton, Money, StatusBadge } from '../../../components/ds';
+import { color, elevation, radii, space, type as t } from '../../../theme';
 import ResendNotificationButton from '../../components/ResendNotificationButton';
-import { RT, RT_GRADIENT } from '../../theme';
 import { getCustomerFacingOrderTotal, getMenuItemLevelMarkupTotal, getOrderMarkupTotal } from '../../utils/restaurantOrderPricing';
-import { BRAND } from './parts';
+import { VegMark, orderStatusTone, orderTypeMeta, paymentMeta, sentence } from './parts';
 
 /* The dialogs of Food/pages/restaurant/OrdersMain.jsx: new order, reject, cancel, verify takeaway and the order summary. `h` is useOrdersMain(). */
 
-const PANEL = { width: '100%', maxWidth: 448, alignSelf: 'center', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', ...shadow('2xl') };
+const PANEL = { width: '100%', maxWidth: 448, alignSelf: 'center', backgroundColor: color.surface, borderRadius: radii.xl, overflow: 'hidden', ...elevation.sheet };
 const lower = (v) => String(v ?? '').toLowerCase().trim();
 
 const variantOf = (item) => {
@@ -25,48 +24,28 @@ const variantOf = (item) => {
   );
 };
 
-function OrderTypeBanner({ order }) {
-  const type = lower(order.orderType || order.type);
-  if (type === 'takeaway') {
-    // orange-* utilities are repainted by the restaurant theme
-    return (
-      <View style={[styles.banner, { backgroundColor: RT.primarySoft, borderColor: RT.accentBorder }]}>
-        <View style={[styles.bannerIcon, { backgroundColor: tw.orange100 }]}>
-          <ShoppingBag size={16} color={RT.accent} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.bannerKicker, { color: tw.orange800 }]}>TAKEAWAY ORDER</Text>
-          <Text style={[styles.bannerText, { color: tw.orange950 || '#431407' }]}>Customer will pick up from restaurant.</Text>
-        </View>
-      </View>
-    );
-  }
-  if (type === 'dining') {
-    return (
-      <View style={[styles.banner, { backgroundColor: tw.blue50, borderColor: tw.blue200 }]}>
-        <View style={[styles.bannerIcon, { backgroundColor: tw.blue100 }]}>
-          <Users size={16} color={tw.blue600} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.bannerKicker, { color: tw.blue800 }]}>DINING ORDER</Text>
-          <Text style={[styles.bannerText, { color: '#172554' }]}>For in-restaurant dining. Table service.</Text>
-        </View>
-      </View>
-    );
-  }
-  const addr = order.customerAddress || order.deliveryAddress || order.address;
-  const display = !addr ? '' : typeof addr === 'string' ? addr : [addr.street || addr.addressLine1 || addr.label, addr.addressLine2, addr.city, addr.pincode || addr.zipCode].filter(Boolean).join(', ');
+function InfoBox({ icon: Icon, tone = 'neutral', kicker, text }) {
+  const box = tone === 'info' ? { bg: color.infoSoft, fg: color.info } : { bg: color.surfaceMuted, fg: color.primary };
   return (
-    <View style={[styles.banner, { backgroundColor: tw.green50, borderColor: tw.green200 }]}>
-      <View style={[styles.bannerIcon, { backgroundColor: tw.green100 }]}>
-        <MapPin size={16} color={tw.green600} />
+    <View style={[styles.infoBox, { backgroundColor: box.bg }]}>
+      <View style={styles.infoIcon}>
+        <Icon size={18} color={box.fg} />
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={[styles.bannerKicker, { color: tw.green800 }]}>HOME DELIVERY ORDER</Text>
-        <Text style={[styles.bannerText, { color: '#052e16' }]}>{display ? `Deliver to: ${display}` : 'Deliver to customer address.'}</Text>
+        <Text style={[styles.infoKicker, { color: box.fg }]}>{kicker}</Text>
+        <Text style={styles.infoText}>{text}</Text>
       </View>
     </View>
   );
+}
+
+function OrderTypeBanner({ order }) {
+  const type = lower(order.orderType || order.type);
+  if (type === 'takeaway') return <InfoBox icon={ShoppingBag} kicker="Takeaway order" text="Customer will pick up from restaurant." />;
+  if (type === 'dining') return <InfoBox icon={Users} kicker="Dining order" text="For in-restaurant dining. Table service." />;
+  const addr = order.customerAddress || order.deliveryAddress || order.address;
+  const display = !addr ? '' : typeof addr === 'string' ? addr : [addr.street || addr.addressLine1 || addr.label, addr.addressLine2, addr.city, addr.pincode || addr.zipCode].filter(Boolean).join(', ');
+  return <InfoBox icon={MapPin} kicker="Home delivery order" text={display ? `Deliver to: ${display}` : 'Deliver to customer address.'} />;
 }
 
 function PopupItem({ item, amount }) {
@@ -76,40 +55,38 @@ function PopupItem({ item, amount }) {
   const markup = getMenuItemLevelMarkupTotal(item);
   return (
     <View style={styles.item}>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
-        <View style={[styles.vegBox, { borderColor: isVeg ? tw.emerald600 : tw.rose600, backgroundColor: isVeg ? 'rgba(236,253,245,0.8)' : 'rgba(255,241,242,0.8)' }]}>
-          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isVeg ? tw.emerald600 : tw.rose600 }} />
-        </View>
-        <Text style={styles.qty}>{item.quantity}×</Text>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.itemName}>{item.name}</Text>
-          {variantText ? (
-            <View style={styles.variant}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tw.rose600 }} />
-              <Text style={styles.variantText}>{variantText}</Text>
-            </View>
-          ) : null}
-          {addons.length > 0 ? (
-            <View style={{ marginTop: 4, flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-              {addons.map((addon, i) => (
-                <Text key={i} style={styles.addon}>+ {typeof addon === 'string' ? addon : addon.name}</Text>
-              ))}
-            </View>
-          ) : null}
-        </View>
+      <View style={{ paddingTop: 3 }}>
+        <VegMark nonVeg={!isVeg} />
       </View>
-      <View style={{ marginLeft: 8, alignItems: 'flex-end' }}>
+      <Text style={styles.qty}>{item.quantity}×</Text>
+      <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+        <Text style={styles.itemName}>{item.name}</Text>
+        {variantText ? <Text style={styles.variant}>{variantText}</Text> : null}
+        {addons.length > 0 ? (
+          <View style={styles.addons}>
+            {addons.map((addon, i) => (
+              <Text key={i} style={styles.addon}>
+                + {typeof addon === 'string' ? addon : addon.name}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+      </View>
+      <View style={{ alignItems: 'flex-end', gap: 2 }}>
         <Text style={styles.price}>₹{amount}</Text>
         {markup > 0 ? (
-          <View style={{ marginTop: 4, alignItems: 'flex-end' }}>
-            <Text style={[styles.markup, { color: tw.rose700 }]}>+ ₹{markup} admin</Text>
-            <Text style={[styles.markup, { color: tw.gray900, ...poppins(700) }]}>Total ₹{Math.round((amount + markup) * 100) / 100}</Text>
-          </View>
+          <>
+            <Text style={styles.markup}>+ ₹{markup} admin</Text>
+            <Text style={[styles.markup, { color: color.text, fontFamily: 'Poppins_600SemiBold' }]}>Total ₹{Math.round((amount + markup) * 100) / 100}</Text>
+          </>
         ) : null}
       </View>
     </View>
   );
 }
+
+const HANDLE = 44;
+const INSET = 6;
 
 /** "Slide to accept": the countdown drains behind the label; dragging (or tapping) the handle accepts. */
 function AcceptSlider({ h, timeoutSeconds }) {
@@ -138,7 +115,7 @@ function AcceptSlider({ h, timeoutSeconds }) {
     }),
   ).current;
 
-  const maxTravel = Math.max(width - 40 - 16, 0);
+  const maxTravel = Math.max(width - HANDLE - INSET * 2, 0);
   const fill = timeoutSeconds > 0 ? Math.max(0, Math.min(1, h.countdown / timeoutSeconds)) : 0;
   return (
     <View
@@ -150,8 +127,13 @@ function AcceptSlider({ h, timeoutSeconds }) {
         h.acceptSliderRef.current = { offsetWidth: w };
       }}
     >
-      <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[StyleSheet.absoluteFill, { right: undefined, width: `${fill * 100}%` }]} />
-      <Text style={styles.sliderText}>{h.isAcceptingOrder ? 'Accepting order...' : `Slide to accept (${h.formatTime(h.countdown)})`}</Text>
+      <View style={[StyleSheet.absoluteFill, styles.sliderFill, { right: undefined, width: `${fill * 100}%` }]} />
+      <View style={styles.sliderLabel} pointerEvents="none">
+        {h.isAcceptingOrder ? null : <Timer size={16} color={color.goldOnDark} />}
+        <Text style={styles.sliderText} numberOfLines={1}>
+          {h.isAcceptingOrder ? 'Accepting order…' : `Slide to accept (${h.formatTime(h.countdown)})`}
+        </Text>
+      </View>
       <View
         {...(h.isAcceptingOrder ? {} : pan.panHandlers)}
         accessible
@@ -160,7 +142,7 @@ function AcceptSlider({ h, timeoutSeconds }) {
         accessibilityState={{ disabled: h.isAcceptingOrder }}
         style={[styles.handle, { transform: [{ translateX: h.acceptSwipeProgress * maxTravel }] }]}
       >
-        <Text style={styles.handleArrow}>›</Text>
+        <ChevronRight size={24} color={color.primary} strokeWidth={3} />
       </View>
     </View>
   );
@@ -170,13 +152,7 @@ export function NewOrderPopup({ h }) {
   const order = h.popupOrder || h.newOrder;
   const visible = h.showNewOrderPopup && Boolean(order);
   if (!visible) return null;
-  const type = lower(order.orderType || order.type);
-  const tag =
-    type === 'takeaway'
-      ? { label: 'TAKEAWAY', bg: tw.orange100, fg: RT.primaryStrong }
-      : type === 'dining'
-        ? { label: 'DINING', bg: tw.blue100, fg: tw.blue700 }
-        : { label: 'HOME DELIVERY', bg: tw.green100, fg: RT.primaryStrong };
+  const typeMeta = orderTypeMeta(lower(order.orderType || order.type) === 'takeaway' ? 'takeaway' : lower(order.orderType || order.type) === 'dining' ? 'dining' : 'Home delivery');
   const items = order.items || [];
   const ALWAYS_SHOW = 4;
   const extra = items.slice(ALWAYS_SHOW);
@@ -193,86 +169,94 @@ export function NewOrderPopup({ h }) {
 
   return (
     // A new order must be answered: the backdrop does not dismiss it, as on the web.
-    <Dialog visible onClose={() => {}} closeOnBackdrop={false} panelStyle={[PANEL, { maxHeight: '85%' }]}>
+    <Dialog visible onClose={() => {}} closeOnBackdrop={false} panelStyle={[PANEL, { maxHeight: '90%' }]}>
       <View style={styles.popupHeader}>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-            <Text style={styles.popupId} numberOfLines={1}>{order.orderId || '#Order'}</Text>
-            <Text style={[styles.popupTag, { backgroundColor: tag.bg, color: tag.fg }]}>{tag.label}</Text>
+        <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+          <Text style={styles.popupKicker}>New order</Text>
+          <Text style={styles.popupId} numberOfLines={1}>
+            {order.orderId || '#Order'}
+          </Text>
+          <View style={styles.badgeRow}>
+            <StatusBadge label={typeMeta.label} tone="neutral" icon={typeMeta.icon} />
+            <Text style={styles.popupRestaurant} numberOfLines={1}>
+              {order.restaurantName || 'Restaurant'}
+            </Text>
           </View>
-          <Text style={styles.popupRestaurant}>{order.restaurantName || 'Restaurant'}</Text>
         </View>
-        <Press onPress={h.toggleMute} accessibilityLabel={h.isCurrentOrderMuted ? 'Unmute' : 'Mute'} style={{ padding: 8 }}>
-          {h.isCurrentOrderMuted ? <VolumeX size={20} color={tw.gray700} /> : <Volume2 size={20} color={tw.gray700} />}
-        </Press>
+        <IconButton
+          icon={h.isCurrentOrderMuted ? VolumeX : Volume2}
+          label={h.isCurrentOrderMuted ? 'Unmute' : 'Mute'}
+          onPress={h.toggleMute}
+          variant="inverse"
+        />
       </View>
 
-      <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: 16 }}>
+      <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={styles.popupBody}>
         <OrderTypeBanner order={order} />
 
-        {order.restaurantNote ? (
-          <View style={styles.noteBox}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <FileText size={16} color={BRAND} />
-              <Text style={[styles.bannerKicker, { color: tw.blue800 }]}>NOTE FOR RESTAURANT</Text>
-            </View>
-            <Text style={styles.noteText}>{order.restaurantNote}</Text>
-          </View>
-        ) : null}
+        {order.restaurantNote ? <InfoBox icon={StickyNote} tone="info" kicker="Note for restaurant" text={order.restaurantNote} /> : null}
 
-        <View style={{ marginBottom: 16 }}>
+        <View>
           <View style={styles.detailsHead}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <FileText size={20} color={tw.gray700} />
-              <Text style={styles.detailsTitle}>Details</Text>
-              <Text style={styles.detailsCount}>({items.length} item{items.length !== 1 ? 's' : ''})</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 1 }}>
+              <FileText size={18} color={color.textSecondary} />
+              <Text style={styles.detailsTitle}>
+                Items <Text style={styles.detailsCount}>({items.length})</Text>
+              </Text>
             </View>
-            <Text style={[styles.detailsCount, poppins(600)]}>{formattedTime}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+              <Clock size={14} color={color.textMuted} />
+              <Text style={styles.detailsCount}>{formattedTime}</Text>
+            </View>
           </View>
-          <View style={{ gap: 12 }}>
-            {items.slice(0, ALWAYS_SHOW).map((item, i) => <PopupItem key={i} item={item} amount={h.getRestaurantItemAmount(item)} />)}
+          <View style={styles.itemList}>
+            {items.slice(0, ALWAYS_SHOW).map((item, i) => (
+              <PopupItem key={i} item={item} amount={h.getRestaurantItemAmount(item)} />
+            ))}
             {h.isDetailsExpanded ? extra.map((item, i) => <PopupItem key={ALWAYS_SHOW + i} item={item} amount={h.getRestaurantItemAmount(item)} />) : null}
           </View>
           {extra.length > 0 ? (
-            <Press scale={0.99} onPress={() => h.setIsDetailsExpanded(!h.isDetailsExpanded)} style={styles.more}>
-              {h.isDetailsExpanded ? <ChevronUp size={16} color={tw.gray500} /> : <ChevronDown size={16} color={tw.gray500} />}
-              <Text style={styles.moreText}>{h.isDetailsExpanded ? 'Show less' : `+${extra.length} more item${extra.length !== 1 ? 's' : ''}`}</Text>
-            </Press>
+            <Button
+              title={h.isDetailsExpanded ? 'Show less' : `+${extra.length} more item${extra.length !== 1 ? 's' : ''}`}
+              icon={h.isDetailsExpanded ? ChevronUp : ChevronDown}
+              variant="ghost"
+              size="sm"
+              onPress={() => h.setIsDetailsExpanded(!h.isDetailsExpanded)}
+              style={{ height: 44, marginTop: space.xs }}
+            />
           ) : null}
         </View>
 
-        <View style={styles.bill}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <ReceiptText size={20} color={tw.gray700} />
-            <Text style={styles.detailsTitle}>Total bill</Text>
-          </View>
-          {adminMarkup > 0 ? (
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.billValue}>
-                ₹{restaurantBill} <Text style={{ color: tw.rose700, ...poppins(600) }}>+ ₹{adminMarkup}</Text>
-              </Text>
-              <Text style={styles.customerTotal}>Customer total ₹{getCustomerFacingOrderTotal(order)}</Text>
+        <View style={styles.summary}>
+          <View style={styles.summaryRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+              <ReceiptText size={18} color={color.textSecondary} />
+              <Text style={styles.detailsTitle}>Total bill</Text>
             </View>
-          ) : (
-            <Text style={styles.billValue}>₹{restaurantBill}</Text>
-          )}
-        </View>
+            {adminMarkup > 0 ? (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={t.price}>
+                  ₹{restaurantBill} <Text style={[t.bodyStrong, { color: color.textSecondary }]}>+ ₹{adminMarkup}</Text>
+                </Text>
+                <Text style={styles.customerTotal}>Customer total ₹{getCustomerFacingOrderTotal(order)}</Text>
+              </View>
+            ) : (
+              <Money value={`₹${restaurantBill}`} />
+            )}
+          </View>
 
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>Payment</Text>
-          <Text style={[styles.rowValue, { color: isCod ? RT.accent : tw.green600 }]}>{isCod ? 'Cash on Delivery' : 'Paid'}</Text>
-        </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.rowLabel}>Payment</Text>
+            {isCod ? <StatusBadge label="Cash on delivery" tone="warning" icon={Banknote} style={styles.badgeMid} /> : <StatusBadge label="Paid" tone="success" icon={Check} style={styles.badgeMid} />}
+          </View>
 
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>Preparation time</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Press onPress={() => h.setPrepTime(Math.max(1, h.prepTime - 1))} accessibilityLabel="Less preparation time" style={styles.step}>
-              <Minus size={16} color={tw.gray700} />
-            </Press>
-            <Text style={styles.prep}>{h.prepTime} mins</Text>
-            <Press onPress={() => h.setPrepTime(h.prepTime + 1)} accessibilityLabel="More preparation time" style={styles.step}>
-              <Plus size={16} color={tw.gray700} />
-            </Press>
+          <View style={styles.summaryRow}>
+            <Text style={styles.rowLabel}>Preparation time</Text>
+            <View style={styles.stepper}>
+              <IconButton icon={Minus} label="Less preparation time" variant="soft" onPress={() => h.setPrepTime(Math.max(1, h.prepTime - 1))} />
+              <Text style={styles.prep}>{h.prepTime} mins</Text>
+              <IconButton icon={Plus} label="More preparation time" variant="soft" onPress={() => h.setPrepTime(h.prepTime + 1)} />
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -284,11 +268,9 @@ export function NewOrderPopup({ h }) {
             <Text style={styles.cancelledBody}>This order is no longer available for acceptance.</Text>
           </View>
         ) : (
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: space.sm }}>
             <AcceptSlider h={h} timeoutSeconds={timeoutSeconds} />
-            <Press scale={0.99} onPress={h.handleRejectClick} disabled={h.isAcceptingOrder} accessibilityState={{ disabled: h.isAcceptingOrder }} style={[styles.reject, h.isAcceptingOrder ? { opacity: 0.6 } : null]}>
-              <Text style={styles.rejectText}>Reject Order</Text>
-            </Press>
+            <Button title="Reject order" variant="dangerSoft" onPress={h.handleRejectClick} disabled={h.isAcceptingOrder} />
           </View>
         )}
       </View>
@@ -296,8 +278,8 @@ export function NewOrderPopup({ h }) {
   );
 }
 
-/** Reject and Cancel share one layout; only the selected-row styling differs, as on the web. */
-function ReasonDialog({ visible, title, subtitle, reasons, value, onChange, onClose, onConfirm, busy, confirmLabel, radioFirst }) {
+/** Reject and Cancel share one layout; a radio list of reasons and a destructive confirm. */
+function ReasonDialog({ visible, title, subtitle, reasons, value, onChange, onClose, onConfirm, busy, confirmLabel }) {
   const disabled = !value || busy;
   return (
     <Dialog visible={visible} onClose={onClose} panelStyle={[PANEL, { maxHeight: '92%' }]}>
@@ -305,33 +287,20 @@ function ReasonDialog({ visible, title, subtitle, reasons, value, onChange, onCl
         <Text style={styles.reasonTitle}>{title}</Text>
         <Text style={styles.reasonSub}>{subtitle}</Text>
       </View>
-      <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
+      <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={styles.reasonList} accessibilityRole="radiogroup">
         {reasons.map((reason) => {
           const on = value === reason;
-          const tick = (
-            <LinearGradient colors={on ? RT_GRADIENT : ['transparent', 'transparent']} style={[styles.tick, radioFirst ? { borderWidth: 2, borderColor: on ? tw.red500 : tw.gray300 } : null]}>
-              {on ? <Check size={12} color="#fff" strokeWidth={3} /> : null}
-            </LinearGradient>
-          );
           return (
-            <Press key={reason} scale={0.99} onPress={() => onChange(reason)} accessibilityRole="radio" accessibilityState={{ selected: on }} style={[styles.reason, on ? { borderColor: radioFirst ? tw.red500 : BRAND, backgroundColor: tw.red50 } : null]}>
-              {radioFirst ? tick : null}
-              <Text style={[styles.reasonText, { color: on ? (radioFirst ? tw.red700 : BRAND) : radioFirst ? tw.gray700 : tw.gray900 }]}>{reason}</Text>
-              {!radioFirst && on ? tick : null}
+            <Press key={reason} scale={0.99} onPress={() => onChange(reason)} accessibilityRole="radio" accessibilityState={{ selected: on, checked: on }} accessibilityLabel={reason} style={[styles.reason, on ? styles.reasonOn : null]}>
+              <View style={[styles.radio, on ? styles.radioOn : null]}>{on ? <View style={styles.radioDot} /> : null}</View>
+              <Text style={[styles.reasonText, on ? { color: color.text, fontFamily: 'Poppins_600SemiBold' } : null]}>{reason}</Text>
             </Press>
           );
         })}
       </ScrollView>
       <View style={styles.reasonFoot}>
-        <Press scale={0.99} onPress={onClose} disabled={busy} style={[styles.reasonCancel, busy ? { opacity: 0.5 } : null]}>
-          <Text style={styles.reasonCancelText}>Cancel</Text>
-        </Press>
-        <Press scale={0.98} onPress={onConfirm} disabled={disabled} accessibilityState={{ disabled, busy }} style={{ flex: 1 }}>
-          <LinearGradient colors={value ? RT_GRADIENT : [tw.gray200, tw.gray200]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.reasonConfirm}>
-            {busy ? <ActivityIndicator size="small" color="#fff" /> : null}
-            <Text style={[styles.reasonConfirmText, { color: value ? '#fff' : tw.gray400 }]}>{busy ? 'Confirming...' : confirmLabel}</Text>
-          </LinearGradient>
-        </Press>
+        <Button title={busy ? 'Confirming…' : confirmLabel} variant="danger" onPress={onConfirm} disabled={disabled} loading={busy} />
+        <Button title="Go back" variant="outline" onPress={onClose} disabled={busy} accessibilityLabel="Cancel" />
       </View>
     </Dialog>
   );
@@ -341,7 +310,7 @@ export function RejectPopup({ h }) {
   return (
     <ReasonDialog
       visible={h.showRejectPopup}
-      title={`Reject Order ${(h.popupOrder || h.newOrder)?.orderId || '#Order'}`}
+      title={`Reject order ${(h.popupOrder || h.newOrder)?.orderId || '#Order'}`}
       subtitle="Please select a reason for rejecting this order"
       reasons={h.rejectReasons}
       value={h.rejectReason}
@@ -349,7 +318,7 @@ export function RejectPopup({ h }) {
       onClose={h.handleRejectCancel}
       onConfirm={h.handleRejectConfirm}
       busy={h.isRejectingOrder}
-      confirmLabel="Confirm Rejection"
+      confirmLabel="Confirm rejection"
     />
   );
 }
@@ -358,7 +327,7 @@ export function CancelPopup({ h }) {
   return (
     <ReasonDialog
       visible={h.showCancelPopup && Boolean(h.orderToCancel)}
-      title={`Cancel Order ${h.orderToCancel?.orderId || '#Order'}`}
+      title={`Cancel order ${h.orderToCancel?.orderId || '#Order'}`}
       subtitle="Please provide a reason for cancelling this order"
       reasons={h.rejectReasons}
       value={h.cancelReason}
@@ -366,75 +335,71 @@ export function CancelPopup({ h }) {
       onClose={h.handleCancelPopupClose}
       onConfirm={h.handleCancelConfirm}
       busy={h.isCancellingOrder}
-      confirmLabel="Confirm Cancellation"
-      radioFirst
+      confirmLabel="Confirm cancellation"
     />
   );
 }
 
 export function VerifyTakeawayPopup({ h }) {
+  const [focused, setFocused] = useState(false);
   const order = h.verifyingOrder;
   const visible = h.showVerifyTakeawayPopup && Boolean(order);
   if (!visible) return null;
   const short = h.takeawayOtpInput.length < 4;
   const disabled = h.isSubmittingVerifyTakeaway || short;
   return (
-    <Dialog visible onClose={h.handleVerifyTakeawayClose} backdrop="rgba(0,0,0,0.7)" panelStyle={[PANEL, { maxWidth: 384, borderRadius: 24 }]}>
-      <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.verifyHead}>
-        <View style={styles.verifyCircleA} />
-        <View style={styles.verifyCircleB} />
+    <Dialog visible onClose={h.handleVerifyTakeawayClose} backdrop={color.overlay} panelStyle={[PANEL, { maxWidth: 400 }]}>
+      <View style={styles.verifyHead}>
         <View style={styles.verifyIcon}>
-          <ShoppingBag size={28} color="#fff" />
+          <ShoppingBag size={26} color={color.goldOnDark} />
         </View>
-        <Text style={styles.verifyTitle}>Verify Takeaway</Text>
-        <Text style={styles.verifyKicker}>SELF-PICKUP VERIFICATION</Text>
-      </LinearGradient>
+        <Text style={styles.verifyTitle}>Verify takeaway</Text>
+        <Text style={styles.verifyKicker}>Self-pickup verification</Text>
+      </View>
 
-      <View style={{ paddingHorizontal: 20, marginTop: -20 }}>
+      <View style={styles.verifyBody}>
         <View style={styles.verifyCard}>
           <View style={styles.verifyPhoto}>
-            {order.photoUrl ? <Img source={{ uri: order.photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" /> : <ShoppingBag size={24} color={tw.slate300} />}
+            {order.photoUrl ? <Img source={{ uri: order.photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" /> : <ShoppingBag size={22} color={color.textDisabled} />}
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.verifyOrder}>
-              <Text style={styles.verifyOrderLabel}>ORDER </Text>#{order.orderId}
+            <Text style={styles.verifyOrder} numberOfLines={1}>
+              Order #{order.orderId}
             </Text>
-            <Text style={styles.verifyCustomer} numberOfLines={1}>{order.customerName}</Text>
-            <Text style={styles.verifyItems} numberOfLines={1}>{order.itemsSummary}</Text>
+            <Text style={styles.verifyCustomer} numberOfLines={1}>
+              {order.customerName}
+            </Text>
+            <Text style={styles.verifyItems} numberOfLines={2}>
+              {order.itemsSummary}
+            </Text>
           </View>
         </View>
-      </View>
 
-      <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 }}>
-        <Text style={styles.otpLabel}>ENTER 4-DIGIT CUSTOMER OTP</Text>
-        <TextInput
-          ref={h.otpInputRef}
-          value={h.takeawayOtpInput}
-          onChangeText={(text) => h.setTakeawayOtpInput(text.replace(/\D/g, '').slice(0, 4))}
-          keyboardType="number-pad"
-          maxLength={4}
-          placeholder="••••"
-          placeholderTextColor={tw.slate300}
-          accessibilityLabel="Customer OTP"
-          style={styles.otp}
-        />
-      </View>
+        <View style={{ gap: space.sm }}>
+          <Text style={styles.otpLabel}>Enter the customer&apos;s 4-digit OTP</Text>
+          <TextInput
+            ref={h.otpInputRef}
+            value={h.takeawayOtpInput}
+            onChangeText={(text) => h.setTakeawayOtpInput(text.replace(/\D/g, '').slice(0, 4))}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            keyboardType="number-pad"
+            maxLength={4}
+            placeholder="••••"
+            placeholderTextColor={color.textDisabled}
+            accessibilityLabel="Customer OTP"
+            style={[styles.otp, focused ? { borderColor: color.primary } : null]}
+          />
+        </View>
 
-      <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}>
-        <Press onPress={h.handleVerifyTakeawayClose} style={styles.verifyCancel}>
-          <Text style={[styles.verifyButtonText, { color: tw.slate500 }]}>CANCEL</Text>
-        </Press>
-        <Press onPress={h.handleVerifyTakeawayConfirm} disabled={disabled} accessibilityState={{ disabled, busy: h.isSubmittingVerifyTakeaway }} style={[{ flex: 1 }, disabled ? { opacity: 0.4 } : null]}>
-          <LinearGradient colors={short ? ['#94a3b8', '#94a3b8'] : RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.verifyConfirm}>
-            <Text style={[styles.verifyButtonText, { color: '#fff' }]}>{h.isSubmittingVerifyTakeaway ? 'VERIFYING…' : 'COMPLETE ORDER'}</Text>
-          </LinearGradient>
-        </Press>
+        <View style={styles.verifyFoot}>
+          <Button title="Cancel" variant="outline" onPress={h.handleVerifyTakeawayClose} style={{ flex: 1 }} />
+          <Button title={h.isSubmittingVerifyTakeaway ? 'Verifying…' : 'Complete order'} onPress={h.handleVerifyTakeawayConfirm} disabled={disabled} loading={h.isSubmittingVerifyTakeaway} style={{ flex: 1.4 }} />
+        </View>
       </View>
     </Dialog>
   );
 }
-
-const DONE = ['ready', 'delivered', 'completed', 'picked_up'];
 
 /** The summary shown when an order card is tapped. */
 export function OrderSheet({ h }) {
@@ -442,176 +407,166 @@ export function OrderSheet({ h }) {
   const visible = h.isSheetOpen && Boolean(order);
   if (!visible) return null;
   const status = lower(order.status);
-  const tone = DONE.includes(status)
-    ? { border: tw.emerald500, fg: tw.emerald600, bg: tw.emerald50, dot: tw.emerald500 }
-    : status === 'cancelled' || status === 'rejected'
-      ? { border: tw.rose500, fg: tw.rose600, bg: tw.rose50, dot: tw.rose500 }
-      : { border: tw.slate800, fg: tw.slate900, bg: tw.slate50, dot: tw.slate800 };
-  const method = lower(order.paymentMethod);
-  const isCod = method === 'cash' || method === 'cod';
+  const pickedUp = status === 'delivered' && order.type === 'Takeaway';
+  const pay = paymentMeta(order.paymentMethod) || { label: 'Paid online', tone: 'success' };
   const close = () => h.setIsSheetOpen(false);
+  const typeMeta = orderTypeMeta(order.type);
   return (
-    <Dialog visible onClose={close} blur={8} panelStyle={[PANEL, { maxWidth: 384, maxHeight: '85%', borderRadius: 24, borderWidth: 1, borderColor: tw.gray100 }]}>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <View style={styles.grab} />
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-          <View style={{ flexShrink: 1 }}>
-            <Text style={styles.sheetId}>Order #{order.orderId}</Text>
-            <Text style={styles.sheetCustomer}>{order.customerName}</Text>
-            <Text style={styles.sheetType}>{order.type}{order.tableOrToken ? ` • ${order.tableOrToken}` : ''}</Text>
+    <Dialog visible onClose={close} blur={8} panelStyle={[PANEL, { maxWidth: 400, maxHeight: '85%' }]}>
+      <ScrollView contentContainerStyle={styles.sheetBody}>
+        <View style={styles.sheetTop}>
+          <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+            <Text style={styles.sheetId} selectable>
+              Order #{order.orderId}
+            </Text>
+            <Text style={styles.sheetCustomer} numberOfLines={1}>
+              {order.customerName}
+            </Text>
+            <Text style={styles.sheetMeta} numberOfLines={1}>
+              {typeMeta.label}
+              {order.tableOrToken ? ` • ${order.tableOrToken}` : ''} · {order.timePlaced}
+            </Text>
           </View>
-          <View style={{ alignItems: 'flex-end', gap: 4 }}>
-            <View style={[styles.sheetBadge, { borderColor: tone.border, backgroundColor: tone.bg }]}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tone.dot }} />
-              <Text style={[styles.sheetBadgeText, { color: tone.fg }]}>{String(status === 'delivered' && order.type === 'Takeaway' ? 'Picked Up' : order.status).toUpperCase()}</Text>
+          <StatusBadge label={pickedUp ? 'Picked up' : sentence(order.status)} tone={pickedUp ? 'success' : orderStatusTone(status)} />
+        </View>
+
+        {order.type !== 'Takeaway' && order.type !== 'Dining' && (status === 'preparing' || status === 'ready') && !order.deliveryPartnerId ? (
+          <ResendNotificationButton orderId={order.orderId} mongoId={order.mongoId} onSuccess={close} />
+        ) : null}
+
+        <View style={styles.sheetFacts}>
+          {order.status !== 'ready' && order.eta ? (
+            <View style={styles.sheetFact}>
+              <Timer size={16} color={color.textSecondary} />
+              <Text style={styles.sheetFactLabel}>ETA</Text>
+              <Text style={styles.sheetFactValue}>{order.eta}</Text>
             </View>
-            <Text style={styles.sheetTime}>{order.timePlaced}</Text>
-            {order.type !== 'Takeaway' && order.type !== 'Dining' && (status === 'preparing' || status === 'ready') && !order.deliveryPartnerId ? (
-              <ResendNotificationButton orderId={order.orderId} mongoId={order.mongoId} onSuccess={close} />
-            ) : null}
+          ) : null}
+          <View style={styles.sheetFact}>
+            <Text style={styles.sheetFactLabel}>Payment</Text>
+            <StatusBadge label={pay.label} tone={pay.tone} icon={pay.icon} style={styles.badgeMid} />
           </View>
         </View>
 
-        <View style={styles.rule} />
-
-        <Text style={styles.sheetSection}>ITEMS</Text>
-        <View style={{ gap: 8, marginBottom: 16 }}>
+        <View style={{ gap: space.sm }}>
+          <Text style={styles.sheetSection}>Items</Text>
           {String(order.itemsSummary || '')
             .split(/,\s*/)
             .filter(Boolean)
             .map((itemStr, idx) => (
               <View key={idx} style={styles.sheetItem}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: BRAND }} />
                 <Text style={styles.sheetItemText}>{itemStr}</Text>
               </View>
             ))}
         </View>
 
-        <View style={styles.sheetMeta}>
-          {order.status !== 'ready' && order.eta ? (
-            <Text style={styles.sheetMetaText}>ETA: <Text style={{ color: '#000', ...poppins(700) }}>{order.eta}</Text></Text>
-          ) : null}
-          <Text style={styles.sheetMetaText}>
-            Payment: <Text style={{ color: isCod ? RT.primaryStrong : '#000', ...poppins(700) }}>{isCod ? 'Cash on Delivery' : 'Paid online'}</Text>
-          </Text>
-        </View>
-
         {order.status === 'cancelled' && order.cancellationReason ? (
-          <View style={[styles.sheetNote, { backgroundColor: tw.red50, borderColor: tw.red100 }]}>
-            <Text style={[styles.sheetNoteLabel, { color: BRAND }]}>CANCELLATION REASON</Text>
-            <Text style={[styles.sheetNoteText, { color: tw.red700 }]}>{order.cancellationReason}</Text>
+          <View style={[styles.sheetNote, { backgroundColor: color.dangerSoft }]}>
+            <Text style={[styles.sheetNoteLabel, { color: color.danger }]}>Cancellation reason</Text>
+            <Text style={styles.sheetNoteText}>{order.cancellationReason}</Text>
           </View>
         ) : null}
         {order.status === 'rejected' && order.rejectionReason ? (
-          <View style={[styles.sheetNote, { backgroundColor: RT.primarySoft, borderColor: tw.amber100 }]}>
-            <Text style={[styles.sheetNoteLabel, { color: RT.accent }]}>REJECTION REASON</Text>
-            <Text style={[styles.sheetNoteText, { color: RT.primaryStrong }]}>{order.rejectionReason}</Text>
+          <View style={[styles.sheetNote, { backgroundColor: color.dangerSoft }]}>
+            <Text style={[styles.sheetNoteLabel, { color: color.danger }]}>Rejection reason</Text>
+            <Text style={styles.sheetNoteText}>{order.rejectionReason}</Text>
           </View>
         ) : null}
         {order.restaurantNote ? (
-          <View style={[styles.sheetNote, { backgroundColor: tw.blue50, borderColor: tw.blue100 }]}>
-            <Text style={[styles.sheetNoteLabel, { color: BRAND }]}>NOTE FOR RESTAURANT</Text>
-            <Text style={[styles.sheetNoteText, { color: tw.blue700 }]}>{order.restaurantNote}</Text>
+          <View style={[styles.sheetNote, { backgroundColor: color.infoSoft }]}>
+            <Text style={[styles.sheetNoteLabel, { color: color.info }]}>Note for restaurant</Text>
+            <Text style={styles.sheetNoteText}>{order.restaurantNote}</Text>
           </View>
         ) : null}
 
-        <Press scale={0.98} onPress={close}>
-          <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.close}>
-            <Text style={styles.closeText}>Close</Text>
-          </LinearGradient>
-        </Press>
+        <Button title="Close" variant="secondary" onPress={close} />
       </ScrollView>
     </Dialog>
   );
 }
 
 const styles = StyleSheet.create({
-  banner: { marginBottom: 16, borderWidth: 1, borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  bannerIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  bannerKicker: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, ...poppins(700) },
-  bannerText: { fontSize: 12, lineHeight: 16, marginTop: 2, ...poppins(600) },
-  noteBox: { marginBottom: 16, backgroundColor: tw.blue50, borderWidth: 1, borderColor: tw.blue200, borderRadius: 8, padding: 12 },
-  noteText: { fontSize: 14, lineHeight: 20, color: tw.blue900, ...poppins(500) },
-  item: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, backgroundColor: tw.slate50, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.slate200 },
-  vegBox: { width: 16, height: 16, borderWidth: 2, borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
-  qty: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: tw.gray900, color: tw.amber400, borderWidth: 1, borderColor: tw.gray800, overflow: 'hidden', fontSize: 12, lineHeight: 16, letterSpacing: 0.6, ...poppins(800) },
-  itemName: { fontSize: 14, lineHeight: 19, color: '#030712', ...poppins(800) },
-  variant: { marginTop: 4, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: tw.rose100, borderWidth: 2, borderColor: tw.rose300 || '#fda4af', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 8 },
-  variantText: { fontSize: 12, lineHeight: 16, color: tw.rose900 || '#881337', ...poppins(800) },
-  addon: { fontSize: 12, lineHeight: 16, color: tw.slate800, backgroundColor: tw.slate100, borderWidth: 1, borderColor: tw.slate300, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 6, overflow: 'hidden', ...poppins(700) },
-  price: { fontSize: 14, lineHeight: 20, color: tw.gray900, backgroundColor: tw.gray100, borderWidth: 1, borderColor: tw.gray200, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, overflow: 'hidden', ...poppins(800) },
-  markup: { fontSize: 10, lineHeight: 13, ...poppins(600) },
-  detailsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: tw.gray200, marginBottom: 12 },
-  detailsTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  detailsCount: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  more: { marginTop: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray300 },
-  moreText: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(600) },
-  bill: { marginBottom: 16, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: tw.gray200, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  billValue: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  customerTotal: { fontSize: 12, lineHeight: 16, color: tw.slate600, ...poppins(600) },
-  row: { marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
-  rowLabel: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  rowValue: { fontSize: 14, lineHeight: 20, ...poppins(600) },
-  step: { padding: 6, backgroundColor: tw.gray100, borderRadius: 999 },
-  prep: { minWidth: 60, textAlign: 'center', fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) },
-  popupHeader: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray200, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  popupId: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  popupTag: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', ...poppins(700) },
-  popupRestaurant: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 2, ...poppins(400) },
-  popupFooter: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: tw.gray200, backgroundColor: '#fff' },
-  cancelledBox: { borderRadius: 12, borderWidth: 1, borderColor: tw.red200, backgroundColor: tw.red50, paddingHorizontal: 16, paddingVertical: 12 },
-  cancelledTitle: { fontSize: 14, lineHeight: 20, color: tw.red700, ...poppins(600) },
-  cancelledBody: { marginTop: 4, fontSize: 12, lineHeight: 16, color: BRAND, ...poppins(400) },
-  slider: { height: 56, borderRadius: 16, backgroundColor: RT.primaryStrong, overflow: 'hidden', justifyContent: 'center' },
-  sliderText: { paddingHorizontal: 48, textAlign: 'center', fontSize: 12, lineHeight: 15, color: '#fff', ...poppins(600) },
-  handle: { position: 'absolute', left: 8, top: 8, width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('md') },
-  handleArrow: { fontSize: 18, lineHeight: 22, color: tw.gray900, ...poppins(700) },
-  reject: { backgroundColor: '#fff', borderWidth: 2, borderColor: tw.red500, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  rejectText: { fontSize: 14, lineHeight: 20, color: BRAND, ...poppins(600) },
-  reasonHead: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  reasonTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  reasonSub: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 4, ...poppins(400) },
-  reason: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, borderRadius: 8, borderWidth: 2, borderColor: tw.gray200, backgroundColor: '#fff' },
-  reasonText: { flex: 1, fontSize: 14, lineHeight: 20, ...poppins(500) },
-  tick: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  reasonFoot: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: tw.gray50, borderTopWidth: 1, borderTopColor: tw.gray200, flexDirection: 'row', gap: 8 },
-  reasonCancel: { flex: 1, backgroundColor: '#fff', borderWidth: 2, borderColor: tw.gray300, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-  reasonCancelText: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(600) },
-  reasonConfirm: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 8 },
-  reasonConfirmText: { fontSize: 14, lineHeight: 20, ...poppins(600) },
-  verifyHead: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32, alignItems: 'center', overflow: 'hidden' },
-  verifyCircleA: { position: 'absolute', top: -24, right: -24, width: 96, height: 96, borderRadius: 48, backgroundColor: 'rgba(255,255,255,0.1)' },
-  verifyCircleB: { position: 'absolute', bottom: -16, left: -16, width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.05)' },
-  verifyIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  verifyTitle: { fontSize: 18, lineHeight: 28, letterSpacing: -0.45, color: '#fff', ...poppins(800) },
-  verifyKicker: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, color: 'rgba(255,255,255,0.7)', marginTop: 2, ...poppins(600) },
-  verifyCard: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, ...shadow('lg') },
-  verifyPhoto: { width: 56, height: 56, borderRadius: 12, overflow: 'hidden', backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  verifyOrder: { fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(800) },
-  verifyOrderLabel: { fontSize: 10, letterSpacing: 0.5, color: tw.slate400, ...poppins(700) },
-  verifyCustomer: { fontSize: 14, lineHeight: 20, color: tw.slate700, marginTop: 2, ...poppins(700) },
-  verifyItems: { fontSize: 12, lineHeight: 16, color: tw.slate400, fontStyle: 'italic', ...poppins(400) },
-  otpLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: tw.slate400, marginBottom: 12, textAlign: 'center', ...poppins(800) },
-  otp: { textAlign: 'center', fontSize: 48, letterSpacing: 24, paddingLeft: 12, paddingVertical: 12, borderWidth: 2, borderColor: tw.slate200, borderRadius: 16, backgroundColor: tw.slate50, color: tw.slate800, ...poppins(800) },
-  verifyCancel: { flex: 1, backgroundColor: '#fff', borderWidth: 2, borderColor: tw.slate200, paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
-  verifyConfirm: { paddingVertical: 16, borderRadius: 16, alignItems: 'center' },
-  verifyButtonText: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, ...poppins(800) },
-  grab: { alignSelf: 'center', height: 4, width: 40, borderRadius: 2, backgroundColor: tw.gray200, marginBottom: 8 },
-  sheetId: { fontSize: 16, lineHeight: 24, color: '#000', ...poppins(800) },
-  sheetCustomer: { fontSize: 12, lineHeight: 16, color: tw.gray600, marginTop: 2, ...poppins(600) },
-  sheetType: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 2, ...poppins(500) },
-  sheetBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1 },
-  sheetBadgeText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, ...poppins(800) },
-  sheetTime: { fontSize: 11, lineHeight: 16, color: tw.gray400, ...poppins(500) },
-  rule: { borderTopWidth: 1, borderTopColor: tw.gray100, marginVertical: 12 },
-  sheetSection: { fontSize: 12, lineHeight: 16, letterSpacing: 0.3, color: tw.gray900, marginBottom: 8, ...poppins(800) },
-  sheetItem: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: tw.slate50, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: tw.slate200, ...shadow('sm') },
-  sheetItemText: { flex: 1, fontSize: 14, lineHeight: 19, color: tw.slate900, ...poppins(700) },
-  sheetMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, backgroundColor: tw.gray50, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  sheetMetaText: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  sheetNote: { marginBottom: 16, padding: 12, borderWidth: 1, borderRadius: 12 },
-  sheetNoteLabel: { fontSize: 10, lineHeight: 15, marginBottom: 4, ...poppins(700) },
-  sheetNoteText: { fontSize: 12, lineHeight: 16, ...poppins(500) },
-  close: { paddingVertical: 12, borderRadius: 12, alignItems: 'center', ...shadow('md') },
-  closeText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
+  infoBox: { borderRadius: radii.md, padding: space.md, flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  infoIcon: { width: 32, height: 32, borderRadius: radii.sm, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  infoKicker: { ...t.label },
+  infoText: { ...t.small, color: color.text, marginTop: 2 },
+
+  item: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm + 2, paddingVertical: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  qty: { minWidth: 32, textAlign: 'center', paddingHorizontal: space.xs + 2, paddingVertical: 1, borderRadius: radii.sm, overflow: 'hidden', backgroundColor: color.surfaceMuted, ...t.bodyStrong, color: color.text },
+  itemName: { ...t.bodyStrong, color: color.text },
+  variant: { alignSelf: 'flex-start', ...t.caption, color: color.textSecondary, backgroundColor: color.surfaceMuted, borderWidth: 1, borderColor: color.border, paddingHorizontal: space.sm, paddingVertical: 2, borderRadius: radii.sm, overflow: 'hidden' },
+  addons: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
+  addon: { ...t.caption, color: color.textSecondary, backgroundColor: color.surfaceMuted, paddingHorizontal: space.sm, paddingVertical: 2, borderRadius: radii.sm, overflow: 'hidden' },
+  price: { ...t.bodyStrong, color: color.text },
+  markup: { ...t.caption, color: color.textMuted },
+
+  popupHeader: { paddingHorizontal: space.lg, paddingVertical: space.md, backgroundColor: color.primaryDeep, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  popupKicker: { ...t.overline, color: color.goldOnDark },
+  popupId: { ...t.heading, color: color.textInverse },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  popupRestaurant: { flex: 1, ...t.caption, color: color.textOnDarkMuted },
+  popupBody: { padding: space.lg, gap: space.lg },
+  detailsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, paddingBottom: space.xs },
+  detailsTitle: { ...t.bodyStrong, color: color.text },
+  detailsCount: { ...t.caption, color: color.textMuted },
+  itemList: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  summary: { backgroundColor: color.surfaceMuted, borderRadius: radii.md, paddingHorizontal: space.md, paddingVertical: space.xs },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, minHeight: 52, paddingVertical: space.xs },
+  badgeMid: { alignSelf: 'center' },
+  customerTotal: { ...t.caption, color: color.textSecondary },
+  rowLabel: { ...t.body, color: color.textSecondary },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  prep: { minWidth: 72, textAlign: 'center', ...t.subheading, color: color.text },
+  popupFooter: { padding: space.lg, paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, backgroundColor: color.surface },
+  cancelledBox: { borderRadius: radii.md, backgroundColor: color.dangerSoft, padding: space.md, gap: space.xs },
+  cancelledTitle: { ...t.bodyStrong, color: color.danger },
+  cancelledBody: { ...t.small, color: color.text },
+
+  slider: { height: 56, borderRadius: radii.md, backgroundColor: color.primaryDeep, overflow: 'hidden', justifyContent: 'center' },
+  sliderFill: { backgroundColor: color.primary },
+  sliderLabel: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs + 2, paddingLeft: HANDLE + INSET * 2, paddingRight: space.md },
+  sliderText: { flexShrink: 1, ...t.button, color: color.textInverse },
+  handle: { position: 'absolute', left: INSET, top: INSET, width: HANDLE, height: HANDLE, borderRadius: radii.sm + 2, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', ...elevation.float },
+
+  reasonHead: { paddingHorizontal: space.lg, paddingTop: space.lg, paddingBottom: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border, gap: space.xs },
+  reasonTitle: { ...t.heading, color: color.text },
+  reasonSub: { ...t.small, color: color.textMuted },
+  reasonList: { paddingHorizontal: space.lg, paddingVertical: space.md, gap: space.sm },
+  reason: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48, paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radii.md, borderWidth: 1.5, borderColor: color.border, backgroundColor: color.surface },
+  reasonOn: { borderColor: color.primary, backgroundColor: color.primarySoft },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  radioOn: { borderColor: color.primary },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.primary },
+  reasonText: { flex: 1, ...t.body, color: color.textSecondary },
+  reasonFoot: { padding: space.lg, paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, gap: space.sm },
+
+  verifyHead: { paddingHorizontal: space.xxl, paddingTop: space.xxl, paddingBottom: space.xl, alignItems: 'center', backgroundColor: color.primaryDeep, gap: space.xs },
+  verifyIcon: { width: 52, height: 52, borderRadius: radii.lg, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: space.sm },
+  verifyTitle: { ...t.heading, color: color.textInverse },
+  verifyKicker: { ...t.overline, color: color.goldOnDark },
+  verifyBody: { padding: space.xl, gap: space.xl },
+  verifyCard: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, padding: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md, ...elevation.card },
+  verifyPhoto: { width: 52, height: 52, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  verifyOrder: { ...t.bodyStrong, color: color.text },
+  verifyCustomer: { ...t.small, color: color.textSecondary },
+  verifyItems: { ...t.caption, color: color.textMuted },
+  otpLabel: { ...t.label, color: color.textSecondary, textAlign: 'center' },
+  otp: { height: 64, textAlign: 'center', fontSize: 32, letterSpacing: 16, paddingLeft: 16, paddingVertical: 0, borderWidth: 1.5, borderColor: color.border, borderRadius: radii.md, backgroundColor: color.surfaceMuted, color: color.text, fontFamily: 'Poppins_700Bold' },
+  verifyFoot: { flexDirection: 'row', gap: space.sm },
+
+  sheetBody: { padding: space.xl, gap: space.lg },
+  sheetTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.sm },
+  sheetId: { ...t.heading, color: color.text },
+  sheetCustomer: { ...t.bodyStrong, color: color.textSecondary },
+  sheetMeta: { ...t.caption, color: color.textMuted },
+  sheetFacts: { backgroundColor: color.surfaceMuted, borderRadius: radii.md, padding: space.md, gap: space.sm },
+  sheetFact: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  sheetFactLabel: { ...t.small, color: color.textSecondary, minWidth: 64 },
+  sheetFactValue: { ...t.bodyStrong, color: color.text },
+  sheetSection: { ...t.overline, color: color.textSecondary },
+  sheetItem: { paddingHorizontal: space.md, paddingVertical: space.sm + 2, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  sheetItemText: { ...t.bodyStrong, color: color.text },
+  sheetNote: { padding: space.md, borderRadius: radii.md, gap: space.xs },
+  sheetNoteLabel: { ...t.label },
+  sheetNoteText: { ...t.small, color: color.text },
 });

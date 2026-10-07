@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MapPin, Search, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { toast } from '../../lib/notify';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 import { fetchPlaceSuggestions, resolvePlaceSuggestion } from '../utils/googlePlaces';
-import { RT } from '../theme';
 
 const DEBOUNCE_MS = 350;
 const MIN_QUERY_LENGTH = 3;
@@ -118,11 +117,9 @@ export default function LocationSearchInput({
 
   return (
     <View style={[{ zIndex: 20 }, style]}>
-      {label ? <Text style={styles.label}>{String(label).toUpperCase()}</Text> : null}
-      <View style={styles.inputWrap}>
-        <View style={styles.searchIcon} pointerEvents="none">
-          <Search size={16} color={tw.gray400} />
-        </View>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <View style={[styles.inputWrap, focused ? styles.inputFocus : null, isResolving ? { opacity: 0.6 } : null]}>
+        <Search size={18} color={color.textMuted} />
         <TextInput
           ref={inputRef}
           value={query}
@@ -133,40 +130,41 @@ export default function LocationSearchInput({
             if (!selectionLockRef.current && suggestions.length > 0 && !isResolving) setDropdownOpen(true);
           }}
           placeholder={placeholder}
-          placeholderTextColor={tw.gray400}
+          placeholderTextColor={color.textMuted}
           editable={!isResolving}
-          accessibilityLabel={label}
-          style={[styles.input, focused ? styles.inputFocus : null, isResolving ? { opacity: 0.6 } : null]}
+          accessibilityLabel={label || placeholder}
+          style={styles.input}
         />
         {query && !isSearching && !isResolving ? (
           <Press scale={1} onPress={handleClear} accessibilityLabel="Clear search" style={styles.right}>
-            <X size={16} color={tw.gray400} />
+            <X size={18} color={color.textMuted} />
           </Press>
         ) : null}
         {isSearching || isResolving ? (
           <View style={styles.right}>
-            <ActivityIndicator size="small" color={RT.primary} />
+            <ActivityIndicator size="small" color={color.primary} />
           </View>
         ) : null}
       </View>
 
       {showDropdown ? (
         <View style={styles.dropdown}>
-          <Text style={styles.dropHead}>NEARBY & MATCHING PLACES</Text>
+          <Text style={styles.dropHead}>Nearby and matching places</Text>
           {suggestions.map((suggestion, idx) => (
             <Press
               key={suggestion.id}
               scale={1}
               onPress={() => handleSelectSuggestion(suggestion)}
-              style={[styles.row, idx < suggestions.length - 1 ? { borderBottomWidth: 1, borderBottomColor: tw.gray50 } : null]}
+              accessibilityLabel={suggestion.mainText || suggestion.display}
+              style={[styles.row, idx < suggestions.length - 1 ? styles.rowDivider : null]}
             >
-              <MapPin size={16} color={RT.primary} style={{ marginTop: 2 }} />
+              <MapPin size={18} color={color.primary} style={{ marginTop: 2 }} />
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text numberOfLines={1} style={styles.main}>{suggestion.mainText || suggestion.display}</Text>
+                <Text numberOfLines={1} style={[type.bodyStrong, { color: color.text }]}>{suggestion.mainText || suggestion.display}</Text>
                 {suggestion.secondaryText ? (
-                  <Text numberOfLines={1} style={styles.second}>{suggestion.secondaryText}</Text>
+                  <Text numberOfLines={1} style={[type.small, { color: color.textMuted }]}>{suggestion.secondaryText}</Text>
                 ) : suggestion.display && suggestion.display !== suggestion.mainText ? (
-                  <Text numberOfLines={1} style={styles.second}>{suggestion.display}</Text>
+                  <Text numberOfLines={1} style={[type.small, { color: color.textMuted }]}>{suggestion.display}</Text>
                 ) : null}
               </View>
             </Press>
@@ -178,16 +176,13 @@ export default function LocationSearchInput({
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 12, lineHeight: 16, color: tw.gray700, marginBottom: 6, letterSpacing: 0.3, minWidth: 64, ...poppins(700) },
-  inputWrap: { justifyContent: 'center', ...shadow('sm') },
-  searchIcon: { position: 'absolute', left: 12, zIndex: 10 },
-  input: { paddingLeft: 40, paddingRight: 40, paddingVertical: 12, fontSize: 14, color: tw.gray900, borderWidth: 1, borderColor: tw.gray200, borderRadius: 12, backgroundColor: '#fff', ...poppins(400) },
-  // restaurantTheme.css: input:focus border = primary 55 % over white
-  inputFocus: { borderColor: '#789d8a' },
-  right: { position: 'absolute', right: 12, padding: 4 },
-  dropdown: { marginTop: 8, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray100, overflow: 'hidden', ...shadow('xl') },
-  dropHead: { paddingHorizontal: 16, paddingVertical: 8, fontSize: 10, lineHeight: 16, letterSpacing: 0.5, color: tw.gray400, backgroundColor: tw.gray50, ...poppins(700) },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  main: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  second: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
+  label: { ...type.label, color: color.text, marginBottom: space.sm },
+  inputWrap: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, backgroundColor: color.surface },
+  inputFocus: { borderColor: color.primary, borderWidth: 1.5 },
+  input: { flex: 1, minWidth: 0, paddingVertical: space.md, ...type.body, color: color.text, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : null) },
+  right: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginRight: -space.xs },
+  dropdown: { marginTop: space.sm, backgroundColor: color.surface, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.float },
+  dropHead: { ...type.caption, color: color.textMuted, paddingHorizontal: space.lg, paddingVertical: space.sm, backgroundColor: color.surfaceMuted },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 52 },
+  rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
 });

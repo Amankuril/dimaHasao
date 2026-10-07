@@ -1,11 +1,10 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AlertTriangle, ChevronRight, Settings } from 'lucide-react-native';
-import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { AlertTriangle, Bike, ChevronRight, Clock, Settings, ShoppingBag } from 'lucide-react-native';
+import { Button, Card, IconButton, StatusBadge } from '../../components/ds';
+import { color, radii, space, type } from '../../theme';
 import { PageHeader, Toggle } from '../components/ui';
 import { ShadButton, ShadDialog } from '../components/ShadDialog';
 import { useRestaurantStatus } from '../hooks/pages/useRestaurantStatus';
-import { RT, RT_GRADIENT } from '../theme';
 
 /** Port of Food/pages/restaurant/RestaurantStatus.jsx (/food/restaurant/status). */
 export default function RestaurantStatus() {
@@ -25,89 +24,88 @@ export default function RestaurantStatus() {
       : 'Not configured';
   const warning = !isWithinTimings && restaurantData && !isDayClosed;
   // The web's dialog icon is a broken character ("??") on an orange disc; a warning mark stands in.
-  const dialogIcon = <AlertTriangle size={28} color={RT.primary} />;
+  const dialogIcon = <AlertTriangle size={28} color={color.warning} />;
 
-  const statusRow = (title, on, onText, offText, onChange) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-      <View style={{ flex: 1 }}>
+  const statusRow = (title, on, onText, offText, onChange, Icon) => (
+    <View style={styles.statusRow}>
+      <View style={[styles.rowIcon, { backgroundColor: on ? color.successSoft : color.surfaceMuted }]}>
+        <Icon size={20} color={on ? color.success : color.textMuted} />
+      </View>
+      <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
         <Text style={styles.rowTitle}>{title}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: on ? tw.green500 : tw.gray600 }} />
-          <Text style={styles.muted}>{on ? onText : offText}</Text>
-        </View>
+        <StatusBadge label={on ? onText : offText} tone={on ? 'success' : 'neutral'} />
       </View>
       <Toggle value={on} onValueChange={onChange} accessibilityLabel={title} />
     </View>
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: tw.gray100 }}>
+    <View style={styles.page}>
       <PageHeader title="Restaurant status" subtitle="You are mapped to 1 restaurant" onBack={goBack} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}>
-        <View style={styles.card}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Card padded={false}>
+          <View style={styles.head}>
+            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+              <Text style={styles.name} numberOfLines={2}>{loading ? 'Loading…' : restaurantData?.name || 'Restaurant'}</Text>
+              <Text style={styles.muted} numberOfLines={2}>{loading ? 'Loading…' : `${idText}${address ? ` | ${address}` : ''}`}</Text>
+            </View>
+            <IconButton icon={Settings} label="Explore more" variant="soft" onPress={() => navigate('/food/restaurant/explore', from)} />
+          </View>
+
+          <View style={styles.divider} />
+          {statusRow('Delivery status', deliveryStatus, 'Receiving orders', 'Not receiving orders', handleDeliveryStatusChange, Bike)}
+          <View style={styles.divider} />
+          {statusRow('Takeaway status', takeawayStatus, 'Pickup orders are enabled', 'Pickup orders are disabled', handleTakeawayStatusChange, ShoppingBag)}
+          <View style={styles.divider} />
+
+          <View style={styles.slot}>
+            <View style={[styles.rowIcon, { backgroundColor: color.primarySoft }]}>
+              <Clock size={20} color={color.primary} />
+            </View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={[styles.rowTitle, { marginBottom: 4 }]}>{loading ? 'Loading...' : restaurantData?.name || 'Restaurant'}</Text>
-              <Text style={styles.muted}>{loading ? 'Loading...' : `${idText}${address ? ` | ${address}` : ''}`}</Text>
+              <Text style={styles.muted}>Current delivery slot</Text>
+              <Text style={styles.rowTitle}>{loading ? 'Loading…' : slot}</Text>
             </View>
-            <Press onPress={() => navigate('/food/restaurant/explore', from)} accessibilityLabel="Explore more" style={styles.gear}>
-              <Settings size={20} color={tw.gray600} />
-            </Press>
+            {!isDayClosed ? (
+              <Button title="Details" iconRight={ChevronRight} variant="ghost" size="sm" fullWidth={false} onPress={() => navigate('/food/restaurant/outlet-timings', from)} style={{ height: 44, paddingHorizontal: space.sm }} />
+            ) : null}
           </View>
 
-          {statusRow('Delivery status', deliveryStatus, 'Receiving orders', 'Not receiving orders', handleDeliveryStatusChange)}
-          {statusRow('Takeaway status', takeawayStatus, 'Pickup orders are enabled', 'Pickup orders are disabled', handleTakeawayStatusChange)}
-
-          <View>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, marginBottom: 8, ...poppins(400) }}>Current delivery slot</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <Text style={[styles.rowTitle, { flex: 1, marginBottom: 0 }]}>{loading ? 'Loading...' : slot}</Text>
-              {!isDayClosed ? (
-                <Press onPress={() => navigate('/food/restaurant/outlet-timings', from)} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Text style={styles.details}>Details</Text>
-                  <ChevronRight size={16} color={RT.primary} />
-                </Press>
-              ) : null}
+          {warning ? (
+            <View style={styles.warning} accessibilityRole="alert">
+              <AlertTriangle size={18} color={color.warning} style={{ marginTop: 1 }} />
+              <Text style={styles.warningText}>You are currently outside your scheduled delivery timings.</Text>
             </View>
-          </View>
-        </View>
-
-        {warning ? (
-          <View style={styles.warning}>
-            <View style={styles.bang}>
-              <Text style={{ fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(700) }}>!</Text>
-            </View>
-            <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) }}>You are currently outside your scheduled delivery timings.</Text>
-          </View>
-        ) : null}
+          ) : null}
+        </Card>
       </ScrollView>
 
       <ShadDialog visible={showOutletClosedDialog} onClose={() => setShowOutletClosedDialog(false)} style={styles.dialog}>
         <View style={styles.dialogHeader}>
           <View style={styles.dialogIcon}>{dialogIcon}</View>
-          <Text style={styles.dialogTitle}>Outlet Timings Closed</Text>
+          <Text style={styles.dialogTitle}>Outlet timings closed</Text>
         </View>
-        <View style={{ gap: 8 }}>
+        <View style={styles.dialogActions}>
+          <ShadButton title="Go to outlet timings" onPress={handleGoToOutletTimings} />
           <ShadButton variant="outline" title="Cancel" onPress={() => setShowOutletClosedDialog(false)} />
-          <ShadButton title="Go to Outlet Timings" onPress={handleGoToOutletTimings} />
         </View>
       </ShadDialog>
 
       <ShadDialog visible={showOutsideTimingsDialog} onClose={() => setShowOutsideTimingsDialog(false)} style={styles.dialog}>
         <View style={styles.dialogHeader}>
           <View style={styles.dialogIcon}>{dialogIcon}</View>
-          <Text style={styles.dialogTitle}>Outside Delivery Timings</Text>
+          <Text style={styles.dialogTitle}>Outside delivery timings</Text>
           <Text style={styles.dialogDesc}>You are currently outside your scheduled delivery timings. Please change outlet timings to enable delivery status.</Text>
         </View>
-        <View style={{ gap: 8 }}>
-          <ShadButton variant="outline" title="Cancel" onPress={() => setShowOutsideTimingsDialog(false)} />
+        <View style={styles.dialogActions}>
           <ShadButton
-            title="Change Outlet Timings"
+            title="Change outlet timings"
             onPress={() => {
               setShowOutsideTimingsDialog(false);
               navigate('/food/restaurant/outlet-timings', from);
             }}
           />
+          <ShadButton variant="outline" title="Cancel" onPress={() => setShowOutsideTimingsDialog(false)} />
         </View>
       </ShadDialog>
     </View>
@@ -115,16 +113,22 @@ export default function RestaurantStatus() {
 }
 
 const styles = StyleSheet.create({
-  dialog: { width: '90%', maxWidth: 448, padding: 16, gap: 8 },
-  dialogHeader: { gap: 8, alignItems: 'center' },
-  dialogIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: tw.orange100, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  dialogTitle: { fontSize: 18, lineHeight: 24, color: tw.gray900, textAlign: 'center', ...poppins(600) },
-  dialogDesc: { marginTop: 8, fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', ...poppins(400) },
-  card: { backgroundColor: tw.gray50, borderTopLeftRadius: 8, borderTopRightRadius: 8, padding: 16, gap: 24, ...shadow('sm') },
-  rowTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 6, ...poppins(700) },
-  muted: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  gear: { marginLeft: 12, padding: 8, backgroundColor: tw.gray200, borderRadius: 999 },
-  details: { fontSize: 14, lineHeight: 20, color: RT.primary, ...poppins(500) },
-  warning: { backgroundColor: tw.pink50 || '#fdf2f8', borderBottomLeftRadius: 8, borderBottomRightRadius: 8, padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  bang: { width: 20, height: 20, borderRadius: 10, backgroundColor: RT_GRADIENT[0], alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  page: { flex: 1, backgroundColor: color.bg },
+  content: { padding: space.lg, paddingBottom: space.xxxl },
+  head: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, padding: space.lg },
+  name: { ...type.heading, color: color.text },
+  muted: { ...type.small, color: color.textMuted },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginHorizontal: space.lg },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg },
+  rowIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  rowTitle: { ...type.subheading, color: color.text },
+  slot: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg },
+  warning: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, padding: space.lg, backgroundColor: color.warningSoft, borderBottomLeftRadius: radii.lg, borderBottomRightRadius: radii.lg },
+  warningText: { flex: 1, ...type.small, color: color.text },
+  dialog: { width: '90%', maxWidth: 448, padding: space.xxl, gap: space.xl },
+  dialogHeader: { gap: space.sm, alignItems: 'center' },
+  dialogIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: color.warningSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.xs },
+  dialogTitle: { ...type.heading, color: color.text, textAlign: 'center' },
+  dialogDesc: { ...type.small, color: color.textSecondary, textAlign: 'center' },
+  dialogActions: { gap: space.sm },
 });

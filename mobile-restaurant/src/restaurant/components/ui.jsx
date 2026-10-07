@@ -1,11 +1,8 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft } from 'lucide-react-native';
 import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
-import { RT, RT_GRADIENT } from '../theme';
+import HeritageHeader from '../../components/HeritageHeader';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /*
  * The small building blocks the restaurant pages share on the web
@@ -13,27 +10,17 @@ import { RT, RT_GRADIENT } from '../theme';
  * drawn once so every screen renders them the same way.
  */
 
-/** The sticky white page header: back arrow, title, optional subtitle and a right slot. */
+/**
+ * Page header for every restaurant sub-screen: the heritage bar (deep green,
+ * gold Cinzel title, 44 px back). Same props as before; `border`, `large`
+ * and `style` are accepted for compatibility.
+ */
 export function PageHeader({ title, subtitle, onBack, right, border = true, large = true, backLabel = 'Go back', style }) {
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[styles.header, border ? styles.headerBorder : null, { paddingTop: 12 + insets.top }, style]}>
-      {onBack ? (
-        <Press onPress={onBack} accessibilityLabel={backLabel} hitSlop={8} style={{ padding: 6 }}>
-          <ArrowLeft size={large ? 24 : 20} color={tw.gray900} />
-        </Press>
-      ) : null}
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={large ? styles.title : styles.titleSmall} numberOfLines={1} accessibilityRole="header">{title}</Text>
-        {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
-      </View>
-      {right}
-    </View>
-  );
+  return <HeritageHeader title={title} subtitle={subtitle} onBack={onBack} showBack={Boolean(onBack)} right={right} />;
 }
 
 /** shadcn Switch as the restaurant pages colour it (green when on, gray-300 when off). */
-export function Toggle({ value, onValueChange, disabled, onColor = tw.green600, offColor = tw.gray300, accessibilityLabel }) {
+export function Toggle({ value, onValueChange, disabled, onColor = color.primary, offColor = color.borderStrong, accessibilityLabel }) {
   return (
     <Pressable
       onPress={() => !disabled && onValueChange?.(!value)}
@@ -43,7 +30,7 @@ export function Toggle({ value, onValueChange, disabled, onColor = tw.green600, 
       hitSlop={10}
       style={[styles.switch, { backgroundColor: value ? onColor : offColor, opacity: disabled ? 0.5 : 1 }]}
     >
-      <View style={[styles.thumb, { transform: [{ translateX: value ? 16 : 0 }] }]} />
+      <View style={[styles.thumb, { transform: [{ translateX: value ? 20 : 0 }] }]} />
     </Pressable>
   );
 }
@@ -52,12 +39,10 @@ export function Toggle({ value, onValueChange, disabled, onColor = tw.green600, 
 export function PrimaryButton({ title, onPress, disabled, loading, loadingTitle, style, textStyle, children }) {
   const off = disabled || loading;
   return (
-    <Press scale={0.98} onPress={onPress} disabled={off} accessibilityState={{ disabled: Boolean(off), busy: Boolean(loading) }} style={[off ? { opacity: 0.5 } : null, style]}>
-      <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.primary}>
-        {loading ? <ActivityIndicator size="small" color="#fff" /> : null}
-        {children}
-        <Text style={[styles.primaryText, textStyle]}>{loading && loadingTitle ? loadingTitle : title}</Text>
-      </LinearGradient>
+    <Press scale={0.98} onPress={onPress} disabled={off} accessibilityState={{ disabled: Boolean(off), busy: Boolean(loading) }} style={[styles.primary, off ? styles.primaryOff : null, style]}>
+      {loading ? <ActivityIndicator size="small" color={off ? color.textMuted : color.onPrimary} /> : null}
+      {children}
+      <Text style={[styles.primaryText, off ? { color: color.textMuted } : null, textStyle]}>{loading && loadingTitle ? loadingTitle : title}</Text>
     </Press>
   );
 }
@@ -86,30 +71,27 @@ export function InfoDialog({ visible, onClose, icon, title, description, childre
 /** shadcn RadioGroupItem + Label row. */
 export function RadioRow({ label, selected, onPress }) {
   return (
-    <Press scale={1} onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-      <View style={[styles.radio, selected ? { borderColor: RT.primary } : null]}>{selected ? <View style={styles.radioDot} /> : null}</View>
+    <Press scale={1} onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected, checked: Boolean(selected) }} accessibilityLabel={typeof label === 'string' ? label : undefined} style={styles.radioRow}>
+      <View style={[styles.radio, selected ? { borderColor: color.primary } : null]}>{selected ? <View style={styles.radioDot} /> : null}</View>
       <Text style={styles.radioLabel}>{label}</Text>
     </Press>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 12 },
-  headerBorder: { borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  title: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  titleSmall: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) },
-  subtitle: { fontSize: 14, lineHeight: 20, color: tw.gray500, marginTop: 2, ...poppins(400) },
-  switch: { width: 36, height: 20, borderRadius: 10, padding: 2, justifyContent: 'center' },
-  thumb: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#fff', ...shadow('sm') },
-  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8 },
-  primaryText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) },
-  outline: { alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff' },
-  outlineText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  dialog: { width: '90%', maxWidth: 448, alignSelf: 'center', backgroundColor: '#fff', borderRadius: 12, padding: 16, gap: 8, ...shadow('xl') },
-  dialogIcon: { alignSelf: 'center', marginBottom: 12, width: 64, height: 64, borderRadius: 32, backgroundColor: tw.orange100, alignItems: 'center', justifyContent: 'center' },
-  dialogTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, textAlign: 'center', ...poppins(600) },
-  dialogBody: { marginTop: 8, fontSize: 14, lineHeight: 20, color: tw.gray600, textAlign: 'center', ...poppins(400) },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: tw.gray400, alignItems: 'center', justifyContent: 'center' },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: RT.primary },
-  radioLabel: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(400) },
+  switch: { width: 48, height: 28, borderRadius: radii.pill, padding: 3, justifyContent: 'center' },
+  thumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: color.surface, ...elevation.card },
+  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, minHeight: 48, paddingHorizontal: space.xl, borderRadius: radii.md, backgroundColor: color.primary },
+  primaryOff: { backgroundColor: color.surfaceMuted },
+  primaryText: { ...type.button, color: color.onPrimary },
+  outline: { alignItems: 'center', justifyContent: 'center', minHeight: 48, paddingHorizontal: space.lg, borderRadius: radii.md, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface },
+  outlineText: { ...type.button, color: color.text },
+  dialog: { width: '100%', maxWidth: 400, backgroundColor: color.bg, borderRadius: radii.xl, borderWidth: 1, borderColor: color.border, padding: space.xxl, ...elevation.float },
+  dialogIcon: { alignSelf: 'center', marginBottom: space.md, width: 64, height: 64, borderRadius: radii.lg, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  dialogTitle: { ...type.heading, color: color.text, textAlign: 'center' },
+  dialogBody: { ...type.body, marginTop: space.sm, color: color.textSecondary, textAlign: 'center' },
+  radioRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 44 },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: color.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.primary },
+  radioLabel: { flex: 1, ...type.body, color: color.text },
 });

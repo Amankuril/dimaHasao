@@ -1,10 +1,11 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Building2, Palmtree, Home, BedDouble, ArrowLeft, ChevronRight, X } from 'lucide-react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Building2, Palmtree, Home, BedDouble, ChevronRight, X } from 'lucide-react-native';
+import { Card, IconButton, StatusBadge } from '../../components/ds';
+import HeritageHeader from '../../components/HeritageHeader';
 import { useNavigate } from '../../lib/webRouter';
-import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
-import { HT } from '../theme';
+import { color, radii, space, tone, type } from '../../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerJoinPropertyType.jsx.
@@ -21,7 +22,7 @@ const PROPERTY_TYPES = [
     badge: 'Rooms',
     icon: Building2,
     route: '/hotel/partner/join-hotel',
-    color: { bg: tw.blue50, fg: tw.blue600 },
+    tone: 'primary',
   },
   {
     key: 'resort',
@@ -30,7 +31,7 @@ const PROPERTY_TYPES = [
     badge: 'Leisure',
     icon: Palmtree,
     route: '/hotel/partner/join-resort',
-    color: { bg: tw.emerald50, fg: tw.emerald600 },
+    tone: 'success',
   },
   {
     key: 'homestay',
@@ -39,7 +40,7 @@ const PROPERTY_TYPES = [
     badge: 'Hosted',
     icon: Home,
     route: '/hotel/partner/join-homestay',
-    color: { bg: tw.amber50, fg: tw.amber600 },
+    tone: 'gold',
   },
   {
     key: 'lodge',
@@ -48,7 +49,7 @@ const PROPERTY_TYPES = [
     badge: 'Rooms',
     icon: BedDouble,
     route: '/hotel/partner/join-lodge',
-    color: { bg: tw.purple50, fg: tw.purple600 },
+    tone: 'info',
   },
 ];
 
@@ -61,46 +62,42 @@ const PartnerJoinPropertyType = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
-      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
-        <Press onPress={() => navigate(-1)} accessibilityLabel="Back" style={styles.headBtn}>
-          <ArrowLeft size={20} color={tw.gray600} />
-        </Press>
-        <Text style={styles.headTitle}>Select Property Type</Text>
-        <Press onPress={() => navigate('/hotel/partner/dashboard')} accessibilityLabel="Close" style={styles.headBtn}>
-          <X size={20} color={tw.gray600} />
-        </Press>
-      </View>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <StatusBar style="light" />
+      <HeritageHeader
+        title="Select property type"
+        onBack={() => navigate(-1)}
+        right={<IconButton icon={X} label="Close" onPress={() => navigate('/hotel/partner/dashboard')} iconColor={color.textInverse} />}
+      />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 16 + insets.bottom }}>
-        <View style={{ marginBottom: 24, gap: 8 }}>
-          <Text style={styles.h1}>What are you listing?</Text>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: space.xxl + insets.bottom }]}>
+        <View style={{ gap: space.xs }}>
+          <Text style={styles.h1} accessibilityRole="header">
+            What are you listing?
+          </Text>
           <Text style={styles.sub}>Select the type of property you want to list.</Text>
         </View>
 
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: space.md }}>
           {PROPERTY_TYPES.map((item) => {
             const Icon = item.icon;
+            const t = tone[item.tone];
             return (
-              <Press key={item.key} onPress={() => handleSelectType(item)} scale={0.98} style={styles.card}>
-                <View style={[styles.iconBox, { backgroundColor: item.color.bg }]}>
-                  <Icon size={24} color={item.color.fg} />
+              <Card key={item.key} onPress={() => handleSelectType(item)} accessibilityLabel={`${item.label}. ${item.description}`} style={styles.card}>
+                <View style={[styles.iconBox, { backgroundColor: t.bg }]}>
+                  <Icon size={24} color={t.fg} />
                 </View>
 
-                <View style={{ flex: 1, minWidth: 0 }}>
+                <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
                   <Text style={styles.label}>{item.label}</Text>
                   <Text style={styles.desc} numberOfLines={2}>
                     {item.description}
                   </Text>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{item.badge}</Text>
-                  </View>
+                  <StatusBadge label={item.badge} tone="neutral" />
                 </View>
 
-                <View style={{ position: 'absolute', top: 16, right: 16 }}>
-                  <ChevronRight size={16} color={tw.gray300} />
-                </View>
-              </Press>
+                <ChevronRight size={20} color={color.textMuted} />
+              </Card>
             );
           })}
         </View>
@@ -110,36 +107,13 @@ const PartnerJoinPropertyType = () => {
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: tw.gray100,
-    ...shadow('sm'),
-  },
-  headBtn: { padding: 8, borderRadius: 999 },
-  headTitle: { fontSize: 18, lineHeight: 28, color: tw.gray800, ...poppins(700) },
-  h1: { fontSize: 24, lineHeight: 32, color: tw.gray900, ...poppins(700) },
-  sub: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 16,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: tw.gray200,
-    borderRadius: 16,
-    ...shadow('sm'),
-  },
-  iconBox: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 16, lineHeight: 24, color: tw.gray900, marginBottom: 4, ...poppins(700) },
-  desc: { fontSize: 12, lineHeight: 19.5, color: tw.gray500, marginBottom: 8, ...poppins(400) },
-  badge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, backgroundColor: tw.gray100, borderRadius: 6 },
-  badgeText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, textTransform: 'uppercase', color: tw.gray500, ...poppins(700) },
+  content: { width: '100%', maxWidth: 768, alignSelf: 'center', padding: space.lg, gap: space.xl },
+  h1: { ...type.heading, color: color.text },
+  sub: { ...type.body, color: color.textSecondary },
+  card: { flexDirection: 'row', alignItems: 'center', gap: space.lg, minHeight: 88 },
+  iconBox: { width: 48, height: 48, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  label: { ...type.subheading, color: color.text },
+  desc: { ...type.small, color: color.textSecondary },
 });
 
 export default PartnerJoinPropertyType;

@@ -4,12 +4,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu, Wallet, Bell } from 'lucide-react-native';
 import { useNavigate } from '../../lib/webRouter';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type, elevation } from '../../theme';
+import Fa from '../../components/Fa';
 import PartnerSidebar from './PartnerSidebar';
 import { hotelService } from '../services/apiService';
 import walletService from '../services/walletService';
 import { formatCurrencyINR } from '../utils/format';
-import { HT } from '../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/components/PartnerHeader.jsx:
@@ -51,40 +51,36 @@ const PartnerHeader = () => {
     fetchNotifications();
   }, []);
 
+  const negative = Number(walletBalance) < 0;
   return (
     <>
-      <View style={[styles.header, { height: 96 + insets.top, paddingTop: 8 + insets.top }]}>
-        <Press onPress={() => setIsSidebarOpen(true)} accessibilityLabel="Open menu" style={styles.roundBtn}>
-          <Menu size={18} color={tw.gray700} />
+      <View style={[styles.header, { paddingTop: insets.top + space.xs }]}>
+        <Press onPress={() => setIsSidebarOpen(true)} accessibilityLabel="Open menu" style={styles.iconBtn}>
+          <Menu size={22} color={color.textInverse} />
         </Press>
 
-        <View style={{ marginLeft: 16, paddingTop: 4 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[styles.brand, { color: HT.primary }]}>Dima</Text>
-            <Text style={[styles.brand, { color: tw.amber600, marginLeft: 4 }]}>Hasao</Text>
+        <View style={styles.brandBox}>
+          <View style={styles.brandRow}>
+            <Fa name="fa-solid fa-leaf" size={11} color={color.gold} />
+            <Text style={styles.brand} numberOfLines={1} accessibilityRole="header">DIMA HASAO</Text>
           </View>
           <Text style={styles.partner}>Partner</Text>
         </View>
 
         <View style={{ flex: 1 }} />
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Press onPress={() => navigate('/hotel/partner/notifications')} accessibilityLabel="Notifications" style={styles.roundBtn}>
-            <Bell size={18} color={tw.gray700} />
-            {unreadCount > 0 ? <View style={styles.dot} /> : null}
-          </Press>
+        <Press onPress={() => navigate('/hotel/partner/notifications')} accessibilityLabel={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'} style={styles.iconBtn}>
+          <Bell size={22} color={color.textInverse} />
+          {unreadCount > 0 ? <View style={styles.dot} /> : null}
+        </Press>
 
-          <Press onPress={() => navigate('/hotel/partner/wallet')} accessibilityLabel="Wallet" style={styles.walletBtn}>
-            <View style={styles.walletIcon}>
-              <Wallet size={10} color="#fff" />
-            </View>
-            <View style={{ marginRight: 2 }}>
-              {/* Written upper-case rather than textTransform: Android measures the lower-case text and clips the last letter. */}
-              <Text style={styles.walletLabel} numberOfLines={1}>{'WALLET'}</Text>
-              <Text style={styles.walletValue}>{formatCurrencyINR(walletBalance)}</Text>
-            </View>
-          </Press>
-        </View>
+        <Press onPress={() => navigate('/hotel/partner/wallet')} accessibilityLabel={`Wallet, ${formatCurrencyINR(walletBalance)}${negative ? ', amount due' : ''}`} style={styles.walletBtn}>
+          <Wallet size={16} color={color.goldOnDark} />
+          <View>
+            <Text style={styles.walletLabel} numberOfLines={1}>{negative ? 'Due' : 'Wallet'}</Text>
+            <Text style={[styles.walletValue, negative && { color: '#FCA5A5' }]} numberOfLines={1}>{formatCurrencyINR(walletBalance)}</Text>
+          </View>
+        </Press>
       </View>
 
       {/* Rendered global to the header, as on the web */}
@@ -94,22 +90,16 @@ const PartnerHeader = () => {
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(243,244,246,0.5)',
-  },
-  roundBtn: { padding: 6, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  brand: { fontSize: 18, lineHeight: 18, letterSpacing: -0.45, ...poppins(900) },
-  partner: { fontSize: 9, lineHeight: 13, letterSpacing: 1.8, textTransform: 'uppercase', color: tw.gray400, marginTop: 4, ...poppins(700) },
-  dot: { position: 'absolute', top: 0, right: 0, width: 10, height: 10, borderRadius: 5, backgroundColor: tw.red500, borderWidth: 2, borderColor: '#fff' },
-  walletBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  walletIcon: { width: 20, height: 20, borderRadius: 10, backgroundColor: HT.primary, alignItems: 'center', justifyContent: 'center' },
-  walletLabel: { fontSize: 8, lineHeight: 8, letterSpacing: 0.4, minWidth: 44, color: tw.gray400, ...poppins(700) },
-  walletValue: { fontSize: 10, lineHeight: 12, color: tw.slate900, marginTop: 1, ...poppins(700) },
+  header: { flexDirection: 'row', alignItems: 'center', gap: space.xs, minHeight: 60, paddingHorizontal: space.sm, paddingBottom: space.sm, backgroundColor: color.primaryDeep, ...elevation.card },
+  iconBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  brandBox: { marginLeft: space.xs },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  brand: { ...type.titleSerif, color: color.goldOnDark },
+  partner: { ...type.tagline, fontSize: 12, lineHeight: 16, color: color.textOnDarkMuted, marginLeft: 17 },
+  dot: { position: 'absolute', top: 9, right: 10, width: 10, height: 10, borderRadius: 5, backgroundColor: color.goldBright, borderWidth: 2, borderColor: color.primaryDeep },
+  walletBtn: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 44, paddingHorizontal: space.md, borderRadius: radii.pill, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.4)' },
+  walletLabel: { ...type.caption, lineHeight: 14, color: color.textOnDarkMuted },
+  walletValue: { ...type.label, lineHeight: 16, color: color.textInverse },
 });
 
 export { PartnerHeader };

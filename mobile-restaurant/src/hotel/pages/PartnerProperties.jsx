@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Building2, MapPin, Pencil, PlusCircle, Trash2, Eye } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AlertTriangle, Building2, ImageOff, MapPin, Pencil, PlusCircle, Trash2, Eye } from 'lucide-react-native';
 import { useNavigate } from '../../lib/webRouter';
 import Img from '../../components/Img';
-import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, Card, Chip, ChipRow, EmptyState, IconButton, SectionHeader, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import { propertyService } from '../services/apiService';
 import PartnerHeader from '../components/PartnerHeader';
-import { HT } from '../theme';
+import { approvalTone, sentence } from '../components/dashboard/partnerUi';
 
 /* Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerProperties.jsx. */
 
@@ -19,10 +20,9 @@ const EDIT_WIZARD_BY_TYPE = {
   homestay: '/hotel/partner/join-homestay',
 };
 
-const STATUS_BG = { published: '#10b981', rejected: '#ef4444' };
-
 const PartnerProperties = () => {
   const navigate = useNavigate();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [propertiesByType, setPropertiesByType] = useState({});
@@ -93,173 +93,136 @@ const PartnerProperties = () => {
   const sections = Object.entries(propertiesByType);
   const filteredSections = activeFilter === 'All' ? sections : sections.filter(([type]) => type === activeFilter);
 
+  const renderCard = (property) => {
+    const st = approvalTone(property.status);
+    return (
+      <Card key={property._id} style={styles.card}>
+        {/* Photo & status */}
+        <View style={styles.imageBox}>
+          {property.coverImage ? (
+            <Img source={{ uri: property.coverImage }} accessibilityLabel={property.propertyName} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+          ) : (
+            <View style={styles.noImage}>
+              <ImageOff size={24} color={color.textDisabled} />
+              <Text style={[type.caption, { color: color.textMuted }]}>No image</Text>
+            </View>
+          )}
+          <StatusBadge label={st.label} tone={st.tone} style={styles.statusBadge} />
+          {property.propertyImages && property.propertyImages.length > 0 ? (
+            <View style={styles.photoCount}>
+              <Text style={[type.caption, { color: color.textInverse }]}>
+                {property.propertyImages.length} photo{property.propertyImages.length === 1 ? '' : 's'}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Info */}
+        <View style={{ gap: space.xs }}>
+          <Text style={styles.name} numberOfLines={2}>
+            {property.propertyName}
+          </Text>
+          <View style={styles.cityRow}>
+            <MapPin size={16} color={color.textMuted} />
+            <Text style={styles.city} numberOfLines={1}>
+              {property.address?.city || 'Unknown City'}
+              {property.address?.state ? `, ${property.address.state}` : ''}
+            </Text>
+          </View>
+          <Text style={styles.short} numberOfLines={2}>
+            {property.shortDescription || 'No description provided'}
+          </Text>
+        </View>
+
+        {/* Bottom Buttons */}
+        <View style={styles.actions}>
+          <Button title="Edit" icon={Pencil} variant="secondary" size="md" onPress={() => handleEditProperty(property)} style={{ flex: 1 }} accessibilityLabel={`Edit ${property.propertyName}`} />
+          <Button title="Details" icon={Eye} variant="outline" size="md" onPress={() => handleViewDetails(property)} style={{ flex: 1 }} accessibilityLabel={`Details of ${property.propertyName}`} />
+          <IconButton icon={Trash2} variant="danger" label={`Delete ${property.propertyName}`} size={48} onPress={() => setPropertyToDelete(property)} style={{ borderRadius: radii.md }} />
+        </View>
+      </Card>
+    );
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       <PartnerHeader title="My Properties" subtitle="Manage your listings by property type" />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 80 }}>
+      <ScrollView contentContainerStyle={{ paddingTop: space.lg, paddingBottom: space.xxxl + insets.bottom }}>
         <View style={styles.titleRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Building2 size={14} color={tw.gray400} />
-            <Text style={styles.sectionTitle}>Your Listings</Text>
-          </View>
-          <Press onPress={handleAddProperty} style={styles.addBtn}>
-            <PlusCircle size={14} color="#fff" />
-            <Text style={styles.addText}>Add New</Text>
-          </Press>
+          <SectionHeader title="Your listings" style={{ marginBottom: 0, flex: 1 }} />
+          <Button title="Add new" icon={PlusCircle} size="sm" fullWidth={false} onPress={handleAddProperty} style={{ minHeight: 44 }} />
         </View>
 
         {/* Filter Tabs */}
         {sections.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 16 }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+          <ChipRow style={{ flexGrow: 0, marginBottom: space.lg }}>
             {['All', ...Object.keys(propertiesByType)].map((filterType) => {
               const displayName =
-                filterType === 'All'
-                  ? 'All Properties'
-                  : propertiesByType[filterType][0]?.dynamicCategory?.displayName || filterType.toUpperCase();
-              const active = activeFilter === filterType;
+                filterType === 'All' ? 'All properties' : propertiesByType[filterType][0]?.dynamicCategory?.displayName || sentence(filterType);
               return (
-                <Press
+                <Chip
                   key={filterType}
+                  label={displayName}
+                  count={filterType === 'All' ? undefined : propertiesByType[filterType].length}
+                  selected={activeFilter === filterType}
                   onPress={() => setActiveFilter(filterType)}
-                  style={[styles.filter, active ? styles.filterOn : styles.filterOff]}
-                >
-                  <Text style={[styles.filterText, { color: active ? '#fff' : tw.gray500 }]}>{displayName}</Text>
-                </Press>
+                />
               );
             })}
-          </ScrollView>
+          </ChipRow>
         ) : null}
 
-        {error ? (
-          <View style={styles.error}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
-
-        {loading ? <Text style={styles.loading}>Loading properties...</Text> : null}
-
-        {!loading && sections.length === 0 ? (
-          <View style={{ marginTop: 32, alignItems: 'center' }}>
-            <Text style={styles.empty}>No properties found. Start by adding your first property.</Text>
-          </View>
-        ) : null}
-
-        <View style={{ gap: 24, marginTop: 8 }}>
-          {filteredSections.map(([type, list]) => (
-            <View key={type} style={{ gap: 12 }}>
-              <View style={{ paddingHorizontal: 4 }}>
-                <Text style={styles.typeTitle}>{list[0]?.dynamicCategory?.displayName || type.toUpperCase()}</Text>
-                <Text style={styles.typeCount}>
-                  {list.length} {list.length === 1 ? 'property' : 'properties'}
-                </Text>
-              </View>
-              <View style={{ gap: 16 }}>
-                {list.map((property) => (
-                  <View key={property._id} style={styles.card}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-                      {/* Left: Info */}
-                      <View style={{ flex: 1, paddingTop: 4, minWidth: 0 }}>
-                        <Text style={styles.name} numberOfLines={1}>
-                          {property.propertyName}
-                        </Text>
-
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                          <MapPin size={14} color={tw.gray400} />
-                          <Text style={styles.city} numberOfLines={1}>
-                            {property.address?.city || 'Unknown City'}, {property.address?.state || ''}
-                          </Text>
-                        </View>
-
-                        <Text style={styles.short} numberOfLines={2}>
-                          {property.shortDescription || 'No description provided'}
-                        </Text>
-                      </View>
-
-                      {/* Right: Image & Badge */}
-                      <View style={styles.imageBox}>
-                        {property.coverImage ? (
-                          <Img source={{ uri: property.coverImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                        ) : (
-                          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                            <Text style={{ fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(400) }}>No Image</Text>
-                          </View>
-                        )}
-                        <View style={{ position: 'absolute', top: 6, right: 6 }}>
-                          <View style={[styles.statusBadge, { backgroundColor: STATUS_BG[property.status] || '#f97316' }]}>
-                            <Text style={styles.statusText}>
-                              {property.status === 'published'
-                                ? 'Active'
-                                : property.status
-                                  ? property.status.charAt(0).toUpperCase() + property.status.slice(1)
-                                  : 'Pending'}
-                            </Text>
-                          </View>
-                        </View>
-                        {property.propertyImages && property.propertyImages.length > 0 ? (
-                          <View style={styles.dots}>
-                            <View style={[styles.dot, { backgroundColor: '#fff' }]} />
-                            {property.propertyImages.slice(0, 2).map((_, idx) => (
-                              <View key={idx} style={[styles.dot, { backgroundColor: 'rgba(255,255,255,0.5)' }]} />
-                            ))}
-                          </View>
-                        ) : null}
-                      </View>
-                    </View>
-
-                    {/* Bottom Buttons */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                      <Press onPress={() => handleEditProperty(property)} style={[styles.action, { backgroundColor: tw.blue50 }]}>
-                        <Pencil size={14} color={HT.primary} />
-                        <Text style={[styles.actionText, { color: HT.primary }]}>Edit</Text>
-                      </Press>
-                      <Press onPress={() => handleViewDetails(property)} style={[styles.action, { backgroundColor: tw.slate50 }]}>
-                        <Eye size={14} color={tw.slate700} />
-                        <Text style={[styles.actionText, { color: tw.slate700 }]}>Details</Text>
-                      </Press>
-                      <Press onPress={() => setPropertyToDelete(property)} style={[styles.action, { backgroundColor: tw.red50 }]}>
-                        <Trash2 size={14} color={tw.red600} />
-                        <Text style={[styles.actionText, { color: tw.red600 }]}>Delete</Text>
-                      </Press>
-                    </View>
-                  </View>
-                ))}
-              </View>
+        <View style={{ paddingHorizontal: space.lg }}>
+          {error ? (
+            <View style={styles.error} accessibilityRole="alert">
+              <AlertTriangle size={18} color={color.danger} />
+              <Text style={styles.errorText}>{error}</Text>
             </View>
-          ))}
+          ) : null}
+
+          {loading ? (
+            <View style={styles.loading}>
+              <ActivityIndicator size="small" color={color.primary} />
+              <Text style={[type.small, { color: color.textMuted }]}>Loading properties...</Text>
+            </View>
+          ) : null}
+
+          {!loading && sections.length === 0 ? (
+            <EmptyState icon={Building2} title="No properties yet" message="No properties found. Start by adding your first property." actionLabel="Add property" onAction={handleAddProperty} />
+          ) : null}
+
+          <View style={{ gap: space.xxl }}>
+            {filteredSections.map(([type, list]) => (
+              <View key={type} style={{ gap: space.md }}>
+                <View>
+                  <Text style={styles.typeTitle}>{list[0]?.dynamicCategory?.displayName || sentence(type)}</Text>
+                  <Text style={styles.typeCount}>
+                    {list.length} {list.length === 1 ? 'property' : 'properties'}
+                  </Text>
+                </View>
+                {list.map(renderCard)}
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
 
       {/* Delete Confirmation Modal */}
       <Modal visible={Boolean(propertyToDelete)} transparent animationType="fade" onRequestClose={() => setPropertyToDelete(null)} statusBarTranslucent>
         <View style={styles.modalWrap}>
-          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]} onPress={() => setPropertyToDelete(null)} />
+          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: color.overlay }]} onPress={() => setPropertyToDelete(null)} accessibilityLabel="Cancel" />
           <View style={styles.modalCard}>
             <View style={styles.trashCircle}>
-              <Trash2 size={24} color={tw.red600} />
+              <Trash2 size={24} color={color.danger} />
             </View>
-            <Text style={styles.modalTitle}>Delete Property?</Text>
+            <Text style={styles.modalTitle}>Delete property?</Text>
             <Text style={styles.modalBody}>
-              Are you sure you want to delete <Text style={{ color: tw.gray800, ...poppins(700) }}>{propertyToDelete?.propertyName}</Text>? This action cannot be undone and will delete all associated rooms and data.
+              Are you sure you want to delete <Text style={{ ...type.bodyStrong, color: color.text }}>{propertyToDelete?.propertyName}</Text>? This action cannot be undone and will delete all associated rooms and data.
             </Text>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <Press onPress={() => setPropertyToDelete(null)} disabled={isDeleting} style={[styles.modalBtn, { backgroundColor: tw.gray100, opacity: isDeleting ? 0.5 : 1 }]}>
-                <Text style={[styles.modalBtnText, { color: tw.gray700 }]}>Cancel</Text>
-              </Press>
-              <Press
-                onPress={handleDeleteProperty}
-                disabled={isDeleting}
-                style={[styles.modalBtn, { backgroundColor: tw.red600, opacity: isDeleting ? 0.5 : 1, flexDirection: 'row', gap: 8 }, shadow('0 10px 15px -3px rgba(255,201,201,1)')]}
-              >
-                {isDeleting ? (
-                  <>
-                    <ActivityIndicator size="small" color="#fff" style={{ transform: [{ scale: 0.7 }] }} />
-                    <Text style={[styles.modalBtnText, { color: '#fff' }]}>Deleting...</Text>
-                  </>
-                ) : (
-                  <Text style={[styles.modalBtnText, { color: '#fff' }]}>Delete</Text>
-                )}
-              </Press>
+            <View style={{ flexDirection: 'row', gap: space.md, alignSelf: 'stretch' }}>
+              <Button title="Cancel" variant="outline" onPress={() => setPropertyToDelete(null)} disabled={isDeleting} style={{ flex: 1 }} />
+              <Button title={isDeleting ? 'Deleting...' : 'Delete'} icon={Trash2} variant="danger" onPress={handleDeleteProperty} loading={isDeleting} style={{ flex: 1 }} />
             </View>
           </View>
         </View>
@@ -269,38 +232,27 @@ const PartnerProperties = () => {
 };
 
 const styles = StyleSheet.create({
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  sectionTitle: { fontSize: 12, lineHeight: 16, letterSpacing: 1.8, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: HT.primary },
-  addText: { fontSize: 11, lineHeight: 16.5, letterSpacing: 0.55, textTransform: 'uppercase', color: '#fff', ...poppins(700) },
-  filter: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
-  filterOn: { backgroundColor: HT.primary, borderColor: HT.primary, ...shadow('sm') },
-  filterOff: { backgroundColor: '#fff', borderColor: tw.gray200 },
-  filterText: { fontSize: 11, lineHeight: 16.5, letterSpacing: 0.55, textTransform: 'uppercase', ...poppins(700) },
-  error: { marginBottom: 16, backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red200, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  errorText: { fontSize: 12, lineHeight: 16, color: tw.red700, ...poppins(400) },
-  loading: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  empty: { fontSize: 12, lineHeight: 16, color: tw.gray500, textAlign: 'center', ...poppins(400) },
-  typeTitle: { fontSize: 12, lineHeight: 16, letterSpacing: 1.8, textTransform: 'uppercase', color: tw.gray500, ...poppins(700) },
-  typeCount: { fontSize: 11, lineHeight: 16.5, color: tw.gray400, ...poppins(400) },
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: tw.gray100, gap: 16, ...shadow('0 2px 15px rgba(0,0,0,0.03)') },
-  name: { fontSize: 18, lineHeight: 22.5, color: tw.slate900, marginBottom: 10, ...poppins(700) },
-  city: { flex: 1, fontSize: 13, lineHeight: 19.5, color: tw.gray500, ...poppins(500) },
-  short: { paddingLeft: 20, fontSize: 13, lineHeight: 19.5, color: tw.gray400, ...poppins(500) },
-  imageBox: { width: 110, height: 80, borderRadius: 12, overflow: 'hidden', backgroundColor: tw.gray100, borderWidth: 1, borderColor: tw.gray50 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  statusText: { fontSize: 10, lineHeight: 15, color: '#fff', ...poppins(700) },
-  dots: { position: 'absolute', bottom: 6, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 4 },
-  dot: { width: 6, height: 6, borderRadius: 3 },
-  action: { flex: 1, paddingVertical: 10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  actionText: { fontSize: 13, lineHeight: 19.5, ...poppins(700) },
-  modalWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
-  modalCard: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', ...shadow('xl') },
-  trashCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: tw.red100, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, marginBottom: 8, ...poppins(700) },
-  modalBody: { fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', marginBottom: 24, ...poppins(400) },
-  modalBtn: { flex: 1, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  modalBtnText: { fontSize: 14, lineHeight: 20, ...poppins(700) },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, paddingHorizontal: space.lg, marginBottom: space.md },
+  error: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.lg, backgroundColor: color.dangerSoft, borderRadius: radii.md, padding: space.md },
+  errorText: { ...type.small, color: color.danger, flex: 1 },
+  loading: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.lg },
+  typeTitle: { ...type.subheading, color: color.text },
+  typeCount: { ...type.caption, color: color.textMuted },
+  card: { gap: space.md },
+  imageBox: { width: '100%', aspectRatio: 16 / 9, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.surfaceMuted },
+  noImage: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.xs },
+  statusBadge: { position: 'absolute', top: space.sm, left: space.sm },
+  photoCount: { position: 'absolute', bottom: space.sm, right: space.sm, paddingHorizontal: space.sm, height: 24, borderRadius: radii.pill, backgroundColor: color.overlay, justifyContent: 'center' },
+  name: { ...type.subheading, color: color.text },
+  cityRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  city: { ...type.small, color: color.textSecondary, flex: 1, minWidth: 0 },
+  short: { ...type.small, color: color.textMuted },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  modalWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
+  modalCard: { width: '100%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xxl, alignItems: 'center', ...elevation.sheet },
+  trashCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.lg },
+  modalTitle: { ...type.heading, color: color.text, marginBottom: space.sm },
+  modalBody: { ...type.body, color: color.textSecondary, textAlign: 'center', marginBottom: space.xxl },
 });
 
 export default PartnerProperties;

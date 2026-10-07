@@ -3,8 +3,8 @@ import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Calendar, X } from 'lucide-react-native';
 import { Dialog } from '../../components/kit';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
-import { PrimaryButton } from './ui';
+import { Button, IconButton } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /*
  * Stand-in for Food/components/ui/date-range-calendar.tsx. The web draws its
@@ -15,7 +15,7 @@ import { PrimaryButton } from './ui';
 
 const label = (date) => (date ? new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Select date');
 
-export default function DateRangeDialog({ visible, onClose, startDate, endDate, onDateRangeChange, onApply, applyLabel = 'Apply Custom Range', title = 'Select date range' }) {
+export default function DateRangeDialog({ visible, onClose, startDate, endDate, onDateRangeChange, onApply, applyLabel = 'Apply custom range', title = 'Select date range' }) {
   const pick = (which) => {
     const current = which === 'start' ? startDate : endDate;
     DateTimePickerAndroid.open({
@@ -31,34 +31,36 @@ export default function DateRangeDialog({ visible, onClose, startDate, endDate, 
   };
   const field = (which, caption, value) => (
     <Press scale={0.99} onPress={() => pick(which)} accessibilityLabel={`${caption}: ${label(value)}`} style={styles.field}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.caption}>{caption}</Text>
-        <Text style={styles.value}>{label(value)}</Text>
+      <View style={styles.fieldIcon}>
+        <Calendar size={18} color={color.primary} />
       </View>
-      <Calendar size={16} color={tw.gray400} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={styles.caption}>{caption}</Text>
+        <Text style={[styles.value, !value ? { color: color.textMuted } : null]}>{label(value)}</Text>
+      </View>
     </Press>
   );
   return (
-    <Dialog visible={visible} onClose={onClose} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.panel}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Text style={styles.title}>{title}</Text>
-        <Press onPress={onClose} accessibilityLabel="Close" hitSlop={8}>
-          <X size={20} color={tw.gray900} />
-        </Press>
+    <Dialog visible={visible} onClose={onClose} backdrop={color.overlay} panelStyle={styles.panel}>
+      <View style={styles.head}>
+        <Text style={styles.title} accessibilityRole="header">{title}</Text>
+        <IconButton icon={X} label="Close" onPress={onClose} style={{ marginRight: -space.sm }} />
       </View>
-      <View style={{ gap: 12 }}>
-        {field('start', 'FROM', startDate)}
-        {field('end', 'TO', endDate)}
+      <View style={{ gap: space.md }}>
+        {field('start', 'From', startDate)}
+        {field('end', 'To', endDate)}
       </View>
-      <PrimaryButton title={applyLabel} onPress={onApply} disabled={!startDate || !endDate} style={{ marginTop: 16 }} textStyle={{ fontSize: 16, lineHeight: 24, ...poppins(700) }} />
+      <Button title={applyLabel} size="lg" onPress={onApply} disabled={!startDate || !endDate} style={{ marginTop: space.xl }} />
     </Dialog>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { width: '90%', maxWidth: 384, alignSelf: 'center', backgroundColor: '#fff', borderRadius: 24, padding: 24, ...shadow('2xl') },
-  title: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  field: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff' },
-  caption: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, color: tw.gray500, ...poppins(600) },
-  value: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
+  panel: { width: '90%', maxWidth: 400, alignSelf: 'center', backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xxl, ...elevation.sheet },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space.lg },
+  title: { flex: 1, ...type.heading, color: color.text },
+  field: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 60, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  fieldIcon: { width: 36, height: 36, borderRadius: radii.sm, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  caption: { ...type.caption, color: color.textMuted },
+  value: { ...type.bodyStrong, color: color.text },
 });

@@ -15,7 +15,7 @@ const StepWrapper = ({ children, stepKey }) => {
     <Animated.View
       style={{
         width: '100%',
-        maxWidth: 576,
+        maxWidth: 768, // the wizards' content width
         alignSelf: 'center',
         opacity: anim,
         transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],

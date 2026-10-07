@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { IconButton } from '../../../components/ds';
 import { Dialog } from '../../../components/kit';
 import { Press } from '../../../components/ui';
-import { poppins, tw } from '../../../theme';
-import { RT, RT_GRADIENT } from '../../theme';
+import { color as c, radii, space, type } from '../../../theme';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -39,21 +38,17 @@ export default function SimpleCalendar({ selectedDate, onDateSelect, isOpen, onC
   const selected = selectedDate ? new Date(selectedDate).toDateString() : null;
 
   return (
-    <Dialog visible={Boolean(isOpen)} onClose={onClose} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.panel}>
-      <View style={{ padding: 16 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <Press onPress={() => shiftMonth(-1)} accessibilityLabel="Previous month" style={{ padding: 4 }}>
-            <ChevronLeft size={20} color={tw.gray900} />
-          </Press>
-          <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(600) }}>{MONTHS[currentMonth.getMonth()]} {currentMonth.getFullYear()}</Text>
-          <Press onPress={() => shiftMonth(1)} accessibilityLabel="Next month" style={{ padding: 4 }}>
-            <ChevronRight size={20} color={tw.gray900} />
-          </Press>
+    <Dialog visible={Boolean(isOpen)} onClose={onClose} backdrop={c.overlay} panelStyle={styles.panel}>
+      <View style={{ padding: space.lg }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space.sm }}>
+          <IconButton icon={ChevronLeft} label="Previous month" variant="soft" onPress={() => shiftMonth(-1)} />
+          <Text style={[type.heading, { color: c.text }]} accessibilityRole="header">{MONTHS[currentMonth.getMonth()]} {currentMonth.getFullYear()}</Text>
+          <IconButton icon={ChevronRight} label="Next month" variant="soft" onPress={() => shiftMonth(1)} />
         </View>
         <View style={styles.row}>
           {DAYS.map((day) => (
             <View key={day} style={styles.cell}>
-              <Text style={{ textAlign: 'center', fontSize: 12, lineHeight: 16, color: tw.gray500, paddingVertical: 8, ...poppins(500) }}>{day}</Text>
+              <Text style={[type.caption, { textAlign: 'center', color: c.textMuted, paddingVertical: space.sm }]}>{day}</Text>
             </View>
           ))}
         </View>
@@ -62,8 +57,8 @@ export default function SimpleCalendar({ selectedDate, onDateSelect, isOpen, onC
             const inMonth = date.getMonth() === currentMonth.getMonth();
             const isSel = Boolean(selected) && date.toDateString() === selected;
             const isToday = date.toDateString() === today;
-            const color = !inMonth ? tw.gray300 : isSel ? '#fff' : isToday ? RT.primary : tw.gray700;
-            const label = <Text style={{ fontSize: 14, lineHeight: 20, color, ...(inMonth && isToday && !isSel ? poppins(600) : poppins(400)) }}>{date.getDate()}</Text>;
+            const fg = !inMonth ? c.textDisabled : isSel ? c.onPrimary : isToday ? c.primary : c.text;
+            const label = <Text style={[inMonth && (isToday || isSel) ? type.bodyStrong : type.body, { color: fg }]}>{date.getDate()}</Text>;
             return (
               <View key={index} style={[styles.cell, { paddingVertical: 2 }]}>
                 <Press
@@ -72,13 +67,11 @@ export default function SimpleCalendar({ selectedDate, onDateSelect, isOpen, onC
                     onDateSelect(new Date(date));
                     onClose();
                   }}
-                  style={{ height: 40, borderRadius: 4, overflow: 'hidden', backgroundColor: inMonth && isToday && !isSel ? '#f9f0f7' : 'transparent' }}
+                  accessibilityLabel={date.toDateString()}
+                  accessibilityState={{ selected: inMonth && isSel }}
+                  style={{ height: 44, borderRadius: radii.md, overflow: 'hidden', backgroundColor: inMonth && isSel ? c.primary : inMonth && isToday ? c.primarySoft : 'transparent' }}
                 >
-                  {inMonth && isSel ? (
-                    <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fill}>{label}</LinearGradient>
-                  ) : (
-                    <View style={styles.fill}>{label}</View>
-                  )}
+                  <View style={styles.fill}>{label}</View>
                 </Press>
               </View>
             );
@@ -90,7 +83,7 @@ export default function SimpleCalendar({ selectedDate, onDateSelect, isOpen, onC
 }
 
 const styles = StyleSheet.create({
-  panel: { width: 360, maxWidth: '92%', backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden' },
+  panel: { width: 360, maxWidth: '92%', backgroundColor: c.surface, borderRadius: radii.lg, overflow: 'hidden' },
   row: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { width: `${100 / 7}%`, paddingHorizontal: 2 },
   fill: { flex: 1, alignItems: 'center', justifyContent: 'center' },

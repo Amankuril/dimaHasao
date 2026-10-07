@@ -1,26 +1,24 @@
-import { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Calendar as CalendarIcon, Check, Clock, Image as ImageIcon, MapPin, Upload, User, X } from 'lucide-react-native';
+import { Calendar as CalendarIcon, Check, Clock, Image as ImageIcon, MapPin, Upload, User, X } from 'lucide-react-native';
 import Img from '../../components/Img';
 import { SelectField } from '../../components/kit';
+import { Button, Chip, ChipRow, IconButton, StatusBadge } from '../../components/ds';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 import LocationSearchInput from '../components/LocationSearchInput';
 import { ImageSourcePicker } from '../components/ImageSourcePicker';
 import { useEditOwner } from '../hooks/pages/useEditOwner';
-import { RT, RT_GRADIENT } from '../theme';
 import { toast } from '../../lib/notify';
 import { sessionStore } from '../../lib/storage';
+import { Field as KitField, Input, PinnedBar, ScreenHeader, Switch, VegMark } from './inventory/partnerKit';
 
-function Card({ title, right, children, gap = 16 }) {
+function Card({ title, right, children, gap = space.lg }) {
   return (
     <View style={styles.card}>
       {title ? (
         <View style={styles.cardHead}>
-          <Text style={styles.cardTitle}>{title}</Text>
+          <Text style={[type.subheading, { flex: 1, color: color.text }]} accessibilityRole="header">{title}</Text>
           {right}
         </View>
       ) : null}
@@ -30,43 +28,30 @@ function Card({ title, right, children, gap = 16 }) {
 }
 
 function Field({ label, value, onChangeText, placeholder, keyboardType, secureTextEntry, maxLength, editable = true, autoCapitalize = 'none', style }) {
-  const [focused, setFocused] = useState(false);
   return (
-    <View>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
+    <KitField label={label}>
+      <Input
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={tw.gray400}
         keyboardType={keyboardType}
         secureTextEntry={secureTextEntry}
         maxLength={maxLength}
         editable={editable}
         autoCapitalize={autoCapitalize}
         accessibilityLabel={label}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={[styles.input, focused ? styles.inputFocus : null, !editable ? { backgroundColor: tw.gray50, color: tw.gray500, opacity: 0.5 } : null, style]}
+        style={style}
       />
-    </View>
+    </KitField>
   );
 }
 
 function Select({ label, value, options, onChange, placeholder }) {
   const opts = value ? options : [{ value: '', label: placeholder }, ...options];
   return (
-    <View>
-      <Text style={styles.label}>{label}</Text>
-      <SelectField
-        value={value}
-        options={opts}
-        onChange={onChange}
-        accessibilityLabel={label}
-        style={styles.select}
-        textStyle={{ fontSize: 14, color: value ? tw.gray900 : tw.gray500, ...poppins(400) }}
-      />
-    </View>
+    <KitField label={label}>
+      <SelectField value={value} options={opts} onChange={onChange} accessibilityLabel={label} chevronColor={color.textMuted} style={styles.select} textStyle={[type.body, { color: value ? color.text : color.textMuted }]} />
+    </KitField>
   );
 }
 
@@ -74,24 +59,19 @@ function Select({ label, value, options, onChange, placeholder }) {
 function DocUpload({ title, value, getPreviewUrl, onRemove, onPick, button }) {
   return (
     <View style={styles.doc}>
-      <Text style={styles.docTitle}>{title}</Text>
+      <Text style={[type.label, { color: color.text, alignSelf: 'flex-start' }]}>{title}</Text>
       {value ? (
         <View style={styles.docPreview}>
           <Img source={{ uri: getPreviewUrl(value) }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={title} />
-          <Press onPress={onRemove} accessibilityLabel="Remove" style={styles.docRemove}>
-            <X size={14} color="#fff" />
-          </Press>
+          <IconButton icon={X} label={`Remove ${title}`} variant="danger" size={36} iconSize={16} onPress={onRemove} style={styles.docRemove} />
         </View>
       ) : (
-        <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-          <ImageIcon size={40} color={tw.gray400} style={{ marginBottom: 4 }} />
-          <Text style={{ fontSize: 11, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>No document uploaded</Text>
+        <View style={{ alignItems: 'center', paddingVertical: space.md, gap: space.xs }}>
+          <ImageIcon size={32} color={color.textMuted} />
+          <Text style={[type.caption, { color: color.textMuted }]}>No document uploaded</Text>
         </View>
       )}
-      <Press scale={0.98} onPress={onPick} style={styles.docBtn}>
-        <Upload size={14} color={tw.gray700} />
-        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) }}>{button}</Text>
-      </Press>
+      <Button title={button} icon={Upload} variant="outline" size="sm" onPress={onPick} style={{ minHeight: 44 }} />
     </View>
   );
 }
@@ -110,15 +90,13 @@ function TimeBox({ label, value, onChange }) {
         if (event.type === 'set' && date) onChange(date);
       },
     });
-  const display = value ? value.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }): '';
+  const display = value ? value.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
   return (
-    <View style={styles.timeWrap}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <Clock size={16} color={tw.gray800} />
-        <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(500) }}>{label}</Text>
-      </View>
-      <Press scale={1} onPress={open} accessibilityLabel={`${label}: ${display || 'Select time'}`} style={styles.timeField}>
-        <Text style={{ fontSize: 12, lineHeight: 16, color: display ? tw.gray900 : tw.gray400, ...poppins(400) }}>{display || 'Select time'}</Text>
+    <View style={{ flex: 1, minWidth: 136 }}>
+      <Text style={[type.label, { color: color.text, marginBottom: space.sm }]}>{label}</Text>
+      <Press scale={0.98} onPress={open} accessibilityLabel={`${label}: ${display || 'Select time'}`} style={styles.select}>
+        <Clock size={18} color={color.primary} />
+        <Text style={[type.bodyStrong, { flex: 1, color: display ? color.text : color.textMuted }]}>{display || 'Select time'}</Text>
       </Press>
     </View>
   );
@@ -126,7 +104,6 @@ function TimeBox({ label, value, onChange }) {
 
 /** Port of Food/pages/restaurant/EditOwner.jsx (/food/restaurant/edit-owner). */
 export default function EditOwner() {
-  const insets = useSafeAreaInsets();
   const {
     navigate, routerLocation, backTarget, handleBack, TABS, activeTab, setActiveTab, formData, zones, loading, saving,
     isPhotoPickerOpen, setIsPhotoPickerOpen, activeImageField, hasChanges, handleInputChange, handleLocationChange,
@@ -137,9 +114,12 @@ export default function EditOwner() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <ActivityIndicator size="large" color={RT.primary} />
-        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(500) }}>Loading profile details...</Text>
+      <View style={{ flex: 1, backgroundColor: color.bg }}>
+        <ScreenHeader title="Edit profile" onBack={handleBack} />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md }}>
+          <ActivityIndicator size="large" color={color.primary} />
+          <Text style={[type.body, { color: color.textSecondary }]}>Loading profile details…</Text>
+        </View>
       </View>
     );
   }
@@ -203,148 +183,122 @@ export default function EditOwner() {
   const saveOff = !hasChanges || loading || saving;
 
   return (
-    <View style={{ flex: 1, backgroundColor: tw.gray50 }}>
-      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
-        <Press onPress={handleBack} accessibilityLabel="Go back" hitSlop={8} style={{ padding: 6 }}>
-          <ArrowLeft size={24} color={tw.gray900} />
-        </Press>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.headerTitle} numberOfLines={1} accessibilityRole="header">Edit Profile & Contact Details</Text>
-          <Text style={styles.headerSub}>RESTAURANT CONTROL PANEL</Text>
-        </View>
-      </View>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: color.bg }}>
+      <ScreenHeader title="Edit profile" subtitle="Profile and contact details" onBack={handleBack} />
       <View style={styles.tabsWrap}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 20 }}>
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <Press key={tab.id} scale={1} onPress={() => setActiveTab(tab.id)} accessibilityRole="tab" accessibilityState={{ selected: active }} style={[styles.tab, active ? { borderBottomColor: RT.primary } : null]}>
-                <Icon size={16} color={active ? RT.primary : tw.gray400} />
-                <Text style={[styles.tabText, { color: active ? RT.primary : tw.gray500 }]}>{tab.label}</Text>
-              </Press>
-            );
-          })}
-        </ScrollView>
+        <ChipRow>
+          {TABS.map((tab) => (
+            <Chip key={tab.id} label={tab.label} icon={tab.icon} selected={activeTab === tab.id} onPress={() => setActiveTab(tab.id)} />
+          ))}
+        </ChipRow>
       </View>
 
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 112 + insets.bottom, gap: 24 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxxl }}>
         {activeTab === 'owner' ? (
           <>
-            <View style={[styles.card, { alignItems: 'center', gap: 12 }]}>
-              <Text style={[styles.label, { alignSelf: 'flex-start', marginBottom: 0, color: tw.gray800 }]}>OWNER PROFILE PHOTO</Text>
-              <View style={{ marginTop: 8 }}>
-                <View style={styles.avatar}>
+            <Card title="Owner photo">
+              <View style={{ alignItems: 'center', gap: space.md }}>
+                <View>
+                  <View style={styles.avatar}>
+                    {formData.profileImage ? (
+                      <Img source={{ uri: getPreviewUrl(formData.profileImage) }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel="Owner Profile" />
+                    ) : (
+                      <User size={40} color={color.primary} />
+                    )}
+                  </View>
                   {formData.profileImage ? (
-                    <Img source={{ uri: getPreviewUrl(formData.profileImage) }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel="Owner Profile" />
-                  ) : (
-                    <User size={40} color={tw.gray400} />
-                  )}
+                    <IconButton icon={X} label="Remove photo" variant="danger" size={36} iconSize={16} onPress={() => handleRemoveImage('profileImage')} style={styles.avatarRemove} />
+                  ) : null}
                 </View>
-                {formData.profileImage ? (
-                  <Press onPress={() => handleRemoveImage('profileImage')} accessibilityLabel="Remove photo" style={styles.avatarRemove}>
-                    <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarRemoveFill}>
-                      <X size={14} color="#fff" />
-                    </LinearGradient>
-                  </Press>
-                ) : null}
+                <Button title="Choose photo" icon={Upload} variant="secondary" size="sm" fullWidth={false} onPress={() => handlePhotoClick('profileImage')} style={{ minHeight: 44, alignSelf: 'center' }} />
               </View>
-              <Press scale={0.98} onPress={() => handlePhotoClick('profileImage')} style={styles.choose}>
-                <Upload size={14} color={RT.primary} />
-                <Text style={{ fontSize: 12, lineHeight: 16, color: RT.primary, ...poppins(600) }}>Choose Photo</Text>
-              </Press>
-            </View>
+            </Card>
 
-            <Card>
-              <Field label="FULL NAME" value={formData.ownerName} onChangeText={(t) => handleInputChange('ownerName', formatNameToCapital(t.replace(/[^A-Za-z ]/g, '')))} placeholder="Enter owner full name" autoCapitalize="words" />
-              <Field label="OWNER EMAIL ADDRESS" value={formData.ownerEmail} onChangeText={(t) => handleInputChange('ownerEmail', t)} placeholder="Enter owner email" keyboardType="email-address" />
-              <Field label="MOBILE PHONE NUMBER" value={formData.ownerPhone} onChangeText={(t) => handleInputChange('ownerPhone', t.replace(/\D/g, '').slice(0, 10))} placeholder="Enter 10-digit mobile number" keyboardType="number-pad" editable={false} />
+            <Card title="Owner details">
+              <Field label="Full name" value={formData.ownerName} onChangeText={(t) => handleInputChange('ownerName', formatNameToCapital(t.replace(/[^A-Za-z ]/g, '')))} placeholder="Enter owner full name" autoCapitalize="words" />
+              <Field label="Owner email address" value={formData.ownerEmail} onChangeText={(t) => handleInputChange('ownerEmail', t)} placeholder="Enter owner email" keyboardType="email-address" />
+              <Field label="Mobile phone number" value={formData.ownerPhone} onChangeText={(t) => handleInputChange('ownerPhone', t.replace(/\D/g, '').slice(0, 10))} placeholder="Enter 10-digit mobile number" keyboardType="number-pad" editable={false} />
             </Card>
           </>
         ) : null}
 
         {activeTab === 'restaurant' ? (
           <>
-            <Card title="General Details">
-              <Field label="RESTAURANT NAME" value={formData.restaurantName} onChangeText={(t) => handleInputChange('restaurantName', t.replace(/[/-]/g, ''))} placeholder="Enter restaurant name" autoCapitalize="sentences" />
-              <Field label="PRIMARY CONTACT NUMBER" value={formData.primaryContactNumber} onChangeText={(t) => handleInputChange('primaryContactNumber', t)} placeholder="Enter primary contact number" keyboardType="phone-pad" />
-              <View style={{ paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray100 }}>
-                <Text style={[styles.label, { marginBottom: 8 }]}>MENU TYPE</Text>
-                <Text style={{ fontSize: 11, lineHeight: 16, color: tw.gray500, marginBottom: 12, ...poppins(400) }}>This helps users filter restaurants by dietary preference.</Text>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <Press scale={1} onPress={() => handleInputChange('pureVegRestaurant', true)} style={[styles.pill, formData.pureVegRestaurant === true ? { backgroundColor: tw.green600, borderColor: tw.green600 } : null]}>
-                    <Text style={[styles.pillText, { color: formData.pureVegRestaurant === true ? '#fff' : tw.gray700 }]}>🥦 Yes, Pure Veg</Text>
+            <Card title="General details">
+              <Field label="Restaurant name" value={formData.restaurantName} onChangeText={(t) => handleInputChange('restaurantName', t.replace(/[/-]/g, ''))} placeholder="Enter restaurant name" autoCapitalize="sentences" />
+              <Field label="Primary contact number" value={formData.primaryContactNumber} onChangeText={(t) => handleInputChange('primaryContactNumber', t)} placeholder="Enter primary contact number" keyboardType="phone-pad" />
+              <View>
+                <Text style={[type.label, { color: color.text }]}>Menu type</Text>
+                <Text style={[type.caption, { color: color.textMuted, marginTop: 2, marginBottom: space.sm }]}>Helps customers filter restaurants by diet.</Text>
+                <View style={{ flexDirection: 'row', gap: space.sm }} accessibilityRole="radiogroup">
+                  <Press scale={0.98} onPress={() => handleInputChange('pureVegRestaurant', true)} accessibilityRole="radio" accessibilityState={{ selected: formData.pureVegRestaurant === true }} accessibilityLabel="Yes, pure veg" style={[styles.menuType, formData.pureVegRestaurant === true && styles.menuTypeOn]}>
+                    <VegMark veg />
+                    <Text style={[type.label, { flex: 1, color: color.text }]}>Pure veg</Text>
+                    {formData.pureVegRestaurant === true ? <Check size={16} color={color.primary} /> : null}
                   </Press>
-                  <Press scale={1} onPress={() => handleInputChange('pureVegRestaurant', false)} style={[styles.pill, formData.pureVegRestaurant === false ? { backgroundColor: RT.primary, borderColor: 'transparent' } : null]}>
-                    <Text style={[styles.pillText, { color: formData.pureVegRestaurant === false ? '#fff' : tw.gray700 }]}>🍖 No, Mixed Menu</Text>
+                  <Press scale={0.98} onPress={() => handleInputChange('pureVegRestaurant', false)} accessibilityRole="radio" accessibilityState={{ selected: formData.pureVegRestaurant === false }} accessibilityLabel="No, mixed menu" style={[styles.menuType, formData.pureVegRestaurant === false && styles.menuTypeOn]}>
+                    <VegMark veg />
+                    <VegMark veg={false} />
+                    <Text style={[type.label, { flex: 1, color: color.text }]}>Mixed menu</Text>
+                    {formData.pureVegRestaurant === false ? <Check size={16} color={color.primary} /> : null}
                   </Press>
                 </View>
               </View>
-              <Select label="SERVICE ZONE" value={formData.zoneId} onChange={(v) => handleInputChange('zoneId', v)} placeholder="Select service zone" options={zones.map((z) => ({ value: String(z._id || z.id), label: z.name }))} />
+              <Select label="Service zone" value={formData.zoneId} onChange={(v) => handleInputChange('zoneId', v)} placeholder="Select service zone" options={zones.map((z) => ({ value: String(z._id || z.id), label: z.name }))} />
             </Card>
 
             <Card
-              title="Address & Location"
-              right={
-                <Press scale={0.97} onPress={goToMap} accessibilityLabel="Select from map" style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4 }}>
-                  <MapPin size={14} color={RT.primary} />
-                  <Text style={{ fontSize: 10, lineHeight: 16, letterSpacing: 0.5, minWidth: 100, color: RT.primary, ...poppins(700) }}>SELECT FROM MAP</Text>
-                </Press>
-              }
+              title="Address and location"
+              right={<Button title="Pick on map" icon={MapPin} variant="ghost" size="sm" fullWidth={false} onPress={goToMap} accessibilityLabel="Select from map" style={{ minHeight: 44, paddingHorizontal: space.sm }} />}
             >
-              <LocationSearchInput label="SEARCH YOUR OUTLET LOCATION" placeholder="Search area, street, landmark..." biasLocation={biasLocation} onLocationSelect={handleLocationSearchSelect} />
-              <Field label="FULL ADDRESS (LINE 1)*" value={loc.addressLine1 || ''} onChangeText={(t) => handleLocationChange('addressLine1', t)} placeholder="Building / Shop / Street number" autoCapitalize="sentences" />
-              <Field label="ADDRESS LINE 2 (OPTIONAL)" value={loc.addressLine2 || ''} onChangeText={(t) => handleLocationChange('addressLine2', t)} placeholder="Floor, wing, suite info" autoCapitalize="sentences" />
-              <Field label="AREA / LOCALITY*" value={loc.area || ''} onChangeText={(t) => handleLocationChange('area', t)} placeholder="Area / Sector / Colony" autoCapitalize="sentences" />
-              <Field label="LANDMARK (OPTIONAL)" value={loc.landmark || ''} onChangeText={(t) => handleLocationChange('landmark', t)} placeholder="Nearby landmark" autoCapitalize="sentences" />
-              <View style={{ flexDirection: 'row', gap: 16 }}>
-                <View style={{ flex: 1 }}>
-                  <Field label="CITY" value={loc.city || 'Indore'} onChangeText={(t) => handleLocationChange('city', t)} placeholder="City" autoCapitalize="words" />
+              <LocationSearchInput label="Search your outlet location" placeholder="Search area, street, landmark" biasLocation={biasLocation} onLocationSelect={handleLocationSearchSelect} />
+              <Field label="Full address (line 1) *" value={loc.addressLine1 || ''} onChangeText={(t) => handleLocationChange('addressLine1', t)} placeholder="Building / shop / street number" autoCapitalize="sentences" />
+              <Field label="Address line 2 (optional)" value={loc.addressLine2 || ''} onChangeText={(t) => handleLocationChange('addressLine2', t)} placeholder="Floor, wing, suite" autoCapitalize="sentences" />
+              <Field label="Area / locality *" value={loc.area || ''} onChangeText={(t) => handleLocationChange('area', t)} placeholder="Area / sector / colony" autoCapitalize="sentences" />
+              <Field label="Landmark (optional)" value={loc.landmark || ''} onChangeText={(t) => handleLocationChange('landmark', t)} placeholder="Nearby landmark" autoCapitalize="sentences" />
+              <View style={styles.pair}>
+                <View style={styles.pairItem}>
+                  <Field label="City" value={loc.city || 'Indore'} onChangeText={(t) => handleLocationChange('city', t)} placeholder="City" autoCapitalize="words" />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Field label="PINCODE" value={loc.pincode || ''} onChangeText={(t) => handleLocationChange('pincode', t.replace(/\D/g, ''))} placeholder="6-digit PIN" keyboardType="number-pad" />
+                <View style={styles.pairItem}>
+                  <Field label="Pincode" value={loc.pincode || ''} onChangeText={(t) => handleLocationChange('pincode', t.replace(/\D/g, ''))} placeholder="6-digit PIN" keyboardType="number-pad" />
                 </View>
               </View>
             </Card>
 
-            <Card title="Operation & Timings">
-              <View style={{ gap: 16 }}>
-                <TimeBox label="Opening Time" value={stringToTime(formData.openingTime)} onChange={(d) => changeTime('openingTime', d)} />
-                <TimeBox label="Closing Time" value={stringToTime(formData.closingTime)} onChange={(d) => changeTime('closingTime', d)} />
+            <Card title="Operation and timings">
+              <View style={styles.pair}>
+                <TimeBox label="Opening time" value={stringToTime(formData.openingTime)} onChange={(d) => changeTime('openingTime', d)} />
+                <TimeBox label="Closing time" value={stringToTime(formData.closingTime)} onChange={(d) => changeTime('closingTime', d)} />
               </View>
               <View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-                  <CalendarIcon size={14} color={RT.primary} />
-                  <Text style={[styles.label, { marginBottom: 0 }]}>OPERATIONAL DAYS</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, marginBottom: space.sm }}>
+                  <CalendarIcon size={16} color={color.primary} />
+                  <Text style={[type.label, { color: color.text }]}>Operational days</Text>
                 </View>
-                <View style={{ flexDirection: 'row', gap: 6 }}>
+                <View style={{ flexDirection: 'row', gap: space.xs + 2 }}>
                   {daysOfWeek.map((day) => {
                     const active = formData.openDays.includes(day);
                     return (
-                      <Press key={day} scale={1} onPress={() => handleDayToggle(day)} accessibilityLabel={day} accessibilityState={{ selected: active }} style={[styles.day, active ? { backgroundColor: RT.primary } : null]}>
-                        <Text style={{ fontSize: 12, lineHeight: 16, color: active ? '#fff' : tw.gray800, ...poppins(600) }}>{day.slice(0, 1)}</Text>
+                      <Press key={day} scale={0.95} onPress={() => handleDayToggle(day)} accessibilityRole="checkbox" accessibilityLabel={day} accessibilityState={{ checked: active }} style={[styles.day, active && styles.dayOn]}>
+                        <Text style={[type.caption, { fontFamily: 'Poppins_600SemiBold', color: active ? color.onPrimary : color.text }]}>{day}</Text>
                       </Press>
                     );
                   })}
                 </View>
               </View>
-              <Field label="ESTIMATED DELIVERY TIME" value={formData.estimatedDeliveryTime} onChangeText={(t) => handleInputChange('estimatedDeliveryTime', t)} placeholder="e.g., 30-40 mins" />
+              <Field label="Estimated delivery time" value={formData.estimatedDeliveryTime} onChangeText={(t) => handleInputChange('estimatedDeliveryTime', t)} placeholder="e.g. 30-40 mins" />
             </Card>
 
-            <Card
-              title="Cuisines Served"
-              right={
-                <Text style={styles.badge}>MAX 8 SELECTED</Text>
-              }
-            >
-              <ScrollView nestedScrollEnabled style={{ maxHeight: 256 }}>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            <Card title="Cuisines served" right={<StatusBadge label="Max 8" tone="gold" />}>
+              <ScrollView nestedScrollEnabled style={{ maxHeight: 280 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
                   {ALL_CUISINES.map((cuisine) => {
                     const selected = formData.cuisines.includes(cuisine);
                     return (
-                      <Press key={cuisine} scale={1} onPress={() => handleCuisineToggle(cuisine)} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} style={[styles.cuisine, selected ? { borderColor: RT.primary, backgroundColor: 'rgba(254,242,242,0.5)' } : null]}>
-                        <Text style={{ flexShrink: 1, fontSize: 12, lineHeight: 16, color: selected ? RT.primary : tw.gray700, ...poppins(600) }}>{cuisine}</Text>
-                        {selected ? <Check size={14} color={RT.primary} /> : null}
+                      <Press key={cuisine} scale={0.97} onPress={() => handleCuisineToggle(cuisine)} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} accessibilityLabel={cuisine} style={[styles.cuisine, selected && styles.cuisineOn]}>
+                        <Text style={[type.label, { flexShrink: 1, color: selected ? color.primary : color.text }]} numberOfLines={2}>{cuisine}</Text>
+                        {selected ? <Check size={16} color={color.primary} /> : null}
                       </Press>
                     );
                   })}
@@ -356,75 +310,66 @@ export default function EditOwner() {
 
         {activeTab === 'kyc' ? (
           <>
-            <Card title="PAN Card Information">
-              <Field label="PAN CARD NUMBER" value={formData.panNumber} onChangeText={(t) => handleInputChange('panNumber', t.toUpperCase())} placeholder="Enter 10-digit PAN (e.g. ABCDE1234F)" maxLength={10} autoCapitalize="characters" />
-              <Field label="NAME ON PAN CARD" value={formData.nameOnPan} onChangeText={(t) => handleInputChange('nameOnPan', t)} placeholder="Enter exact name on PAN card" autoCapitalize="words" />
-              <DocUpload title="PAN Card Upload" value={formData.panImage} getPreviewUrl={getPreviewUrl} onRemove={() => handleRemoveImage('panImage')} onPick={() => handlePhotoClick('panImage')} button="Upload PAN" />
+            <Card title="PAN card">
+              <Field label="PAN card number" value={formData.panNumber} onChangeText={(t) => handleInputChange('panNumber', t.toUpperCase())} placeholder="e.g. ABCDE1234F" maxLength={10} autoCapitalize="characters" />
+              <Field label="Name on PAN card" value={formData.nameOnPan} onChangeText={(t) => handleInputChange('nameOnPan', t)} placeholder="Exact name on PAN card" autoCapitalize="words" />
+              <DocUpload title="PAN card copy" value={formData.panImage} getPreviewUrl={getPreviewUrl} onRemove={() => handleRemoveImage('panImage')} onPick={() => handlePhotoClick('panImage')} button="Upload PAN" />
             </Card>
 
-            <Card title="Bank Account Info">
-              <Field label="ACCOUNT HOLDER NAME" value={formData.accountHolderName} onChangeText={(t) => handleInputChange('accountHolderName', formatNameToCapital(t.replace(/[^A-Za-z ]/g, '')))} placeholder="Name as in bank records" autoCapitalize="words" />
-              <Field label="BANK ACCOUNT NUMBER" value={formData.accountNumber} onChangeText={(t) => handleInputChange('accountNumber', t.replace(/\D/g, ''))} placeholder="Enter account number" keyboardType="number-pad" secureTextEntry />
-              <Field label="CONFIRM ACCOUNT NUMBER" value={formData.confirmAccountNumber} onChangeText={(t) => handleInputChange('confirmAccountNumber', t.replace(/\D/g, ''))} placeholder="Re-enter account number" keyboardType="number-pad" />
-              <View style={{ flexDirection: 'row', gap: 16 }}>
-                <View style={{ flex: 1 }}>
-                  <Field label="IFSC CODE" value={formData.ifscCode} onChangeText={(t) => handleInputChange('ifscCode', t.toUpperCase())} placeholder="11-digit IFSC" maxLength={11} autoCapitalize="characters" />
+            <Card title="Bank account">
+              <Field label="Account holder name" value={formData.accountHolderName} onChangeText={(t) => handleInputChange('accountHolderName', formatNameToCapital(t.replace(/[^A-Za-z ]/g, '')))} placeholder="Name as in bank records" autoCapitalize="words" />
+              <Field label="Bank account number" value={formData.accountNumber} onChangeText={(t) => handleInputChange('accountNumber', t.replace(/\D/g, ''))} placeholder="Enter account number" keyboardType="number-pad" secureTextEntry />
+              <Field label="Confirm account number" value={formData.confirmAccountNumber} onChangeText={(t) => handleInputChange('confirmAccountNumber', t.replace(/\D/g, ''))} placeholder="Re-enter account number" keyboardType="number-pad" />
+              <View style={styles.pair}>
+                <View style={styles.pairItem}>
+                  <Field label="IFSC code" value={formData.ifscCode} onChangeText={(t) => handleInputChange('ifscCode', t.toUpperCase())} placeholder="11-character IFSC" maxLength={11} autoCapitalize="characters" />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Select label="ACCOUNT TYPE" value={formData.accountType} onChange={(v) => handleInputChange('accountType', v)} placeholder="Select type" options={[{ value: 'Saving', label: 'Saving' }, { value: 'Current', label: 'Current' }]} />
+                <View style={styles.pairItem}>
+                  <Select label="Account type" value={formData.accountType} onChange={(v) => handleInputChange('accountType', v)} placeholder="Select type" options={[{ value: 'Saving', label: 'Saving' }, { value: 'Current', label: 'Current' }]} />
                 </View>
               </View>
             </Card>
 
-            <Card
-              title="GST Registration"
-              right={
-                <Press scale={1} onPress={() => handleInputChange('gstRegistered', !formData.gstRegistered)} accessibilityRole="switch" accessibilityState={{ checked: formData.gstRegistered }} accessibilityLabel="GST registered" style={[styles.switch, { backgroundColor: formData.gstRegistered ? RT.primary : tw.gray200 }]}>
-                  <View style={[styles.thumb, { transform: [{ translateX: formData.gstRegistered ? 20 : 0 }] }]} />
-                </Press>
-              }
-            >
+            <Card title="GST registration" right={<Switch value={Boolean(formData.gstRegistered)} onValueChange={() => handleInputChange('gstRegistered', !formData.gstRegistered)} accessibilityLabel="GST registered" />}>
               {formData.gstRegistered ? (
-                <View style={{ gap: 16, paddingTop: 8 }}>
-                  <Field label="GSTIN (GST NUMBER)" value={formData.gstNumber} onChangeText={(t) => handleInputChange('gstNumber', t.toUpperCase())} placeholder="e.g. 22AAAAA1111A1Z1" maxLength={15} autoCapitalize="characters" />
-                  <Field label="GST LEGAL BUSINESS NAME" value={formData.gstLegalName} onChangeText={(t) => handleInputChange('gstLegalName', t)} placeholder="Legal firm / business name" autoCapitalize="words" />
-                  <Field label="GST REGISTERED ADDRESS" value={formData.gstAddress} onChangeText={(t) => handleInputChange('gstAddress', t)} placeholder="Registered business address" autoCapitalize="sentences" />
-                  <DocUpload title="GST Registration Copy" value={formData.gstImage} getPreviewUrl={getPreviewUrl} onRemove={() => handleRemoveImage('gstImage')} onPick={() => handlePhotoClick('gstImage')} button="Upload GST Certificate" />
-                </View>
-              ) : null}
+                <>
+                  <Field label="GSTIN (GST number)" value={formData.gstNumber} onChangeText={(t) => handleInputChange('gstNumber', t.toUpperCase())} placeholder="e.g. 22AAAAA1111A1Z1" maxLength={15} autoCapitalize="characters" />
+                  <Field label="GST legal business name" value={formData.gstLegalName} onChangeText={(t) => handleInputChange('gstLegalName', t)} placeholder="Legal firm / business name" autoCapitalize="words" />
+                  <Field label="GST registered address" value={formData.gstAddress} onChangeText={(t) => handleInputChange('gstAddress', t)} placeholder="Registered business address" autoCapitalize="sentences" />
+                  <DocUpload title="GST registration copy" value={formData.gstImage} getPreviewUrl={getPreviewUrl} onRemove={() => handleRemoveImage('gstImage')} onPick={() => handlePhotoClick('gstImage')} button="Upload GST certificate" />
+                </>
+              ) : (
+                <Text style={[type.small, { color: color.textMuted }]}>Turn on if your business is GST registered.</Text>
+              )}
             </Card>
           </>
         ) : null}
 
         {activeTab === 'docs' ? (
           <>
-            <Card title="FSSAI License details">
-              <Field label="FSSAI LICENSE NUMBER" value={formData.fssaiNumber} onChangeText={(t) => handleInputChange('fssaiNumber', t.replace(/\D/g, ''))} placeholder="Enter 14-digit license number" maxLength={14} keyboardType="number-pad" />
-              <View>
-                <Text style={styles.label}>LICENSE EXPIRY DATE</Text>
-                <Press scale={1} onPress={openExpiry} accessibilityLabel={`License expiry date ${formData.fssaiExpiry || 'not set'}`} style={[styles.input, { borderRadius: 8 }]}>
-                  <Text style={{ fontSize: 14, color: formData.fssaiExpiry ? tw.gray900 : tw.gray400, ...poppins(400) }}>{formData.fssaiExpiry || 'yyyy-mm-dd'}</Text>
+            <Card title="FSSAI licence">
+              <Field label="FSSAI licence number" value={formData.fssaiNumber} onChangeText={(t) => handleInputChange('fssaiNumber', t.replace(/\D/g, ''))} placeholder="14-digit licence number" maxLength={14} keyboardType="number-pad" />
+              <KitField label="Licence expiry date">
+                <Press scale={0.98} onPress={openExpiry} accessibilityLabel={`License expiry date ${formData.fssaiExpiry || 'not set'}`} style={styles.select}>
+                  <CalendarIcon size={18} color={color.primary} />
+                  <Text style={[type.body, { flex: 1, color: formData.fssaiExpiry ? color.text : color.textMuted }]}>{formData.fssaiExpiry || 'yyyy-mm-dd'}</Text>
                 </Press>
-              </View>
-              <DocUpload title="FSSAI Copy Upload" value={formData.fssaiImage} getPreviewUrl={getPreviewUrl} onRemove={() => handleRemoveImage('fssaiImage')} onPick={() => handlePhotoClick('fssaiImage')} button="Upload FSSAI License" />
+              </KitField>
+              <DocUpload title="FSSAI licence copy" value={formData.fssaiImage} getPreviewUrl={getPreviewUrl} onRemove={() => handleRemoveImage('fssaiImage')} onPick={() => handlePhotoClick('fssaiImage')} button="Upload FSSAI licence" />
             </Card>
 
-            <Card title="Menu & Photos" right={<Text style={[styles.badge, { backgroundColor: tw.blue50 }]}>{formData.menuImages.length} / 10 PHOTOS</Text>}>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            <Card title="Menu photos" right={<StatusBadge label={`${formData.menuImages.length} / 10`} tone="neutral" />}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
                 {formData.menuImages.map((img, idx) => (
                   <View key={idx} style={styles.menuCell}>
                     <Img source={{ uri: getPreviewUrl(img) }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={`Menu photo ${idx + 1}`} />
-                    <Press onPress={() => handleRemoveImage('menuImages', idx)} accessibilityLabel="Remove" style={styles.menuRemove}>
-                      <X size={12} color="#fff" />
-                    </Press>
+                    <IconButton icon={X} label={`Remove menu photo ${idx + 1}`} variant="danger" size={36} iconSize={16} onPress={() => handleRemoveImage('menuImages', idx)} style={styles.menuRemove} />
                   </View>
                 ))}
                 {formData.menuImages.length < 10 ? (
-                  <Press scale={0.98} onPress={() => handlePhotoClick('menuImages')} style={[styles.menuCell, styles.menuAdd]}>
-                    <View style={styles.menuAddIcon}>
-                      <ImageIcon size={18} color={tw.gray600} />
-                    </View>
-                    <Text style={{ fontSize: 11, lineHeight: 16, color: tw.gray600, letterSpacing: 0.5, ...poppins(700) }}>ADD MENU PHOTO</Text>
+                  <Press scale={0.98} onPress={() => handlePhotoClick('menuImages')} accessibilityLabel="Add menu photo" style={[styles.menuCell, styles.menuAdd]}>
+                    <ImageIcon size={22} color={color.primary} />
+                    <Text style={[type.label, { color: color.primary }]}>Add menu photo</Text>
                   </Press>
                 ) : null}
               </View>
@@ -433,13 +378,9 @@ export default function EditOwner() {
         ) : null}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}>
-        <Press scale={0.98} disabled={saveOff} onPress={handleSave} accessibilityState={{ disabled: saveOff, busy: saving }} style={saveOff ? { opacity: 0.5 } : null}>
-          <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.save, saveOff ? null : shadow('lg')]}>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', letterSpacing: 0.4, ...poppins(700) }}>{saving ? 'Uploading & Saving details...' : 'Save Profile Details'}</Text>
-          </LinearGradient>
-        </Press>
-      </View>
+      <PinnedBar>
+        <Button title={saving ? 'Uploading and saving…' : 'Save profile details'} size="lg" loading={saving} disabled={saveOff} onPress={handleSave} />
+      </PinnedBar>
 
       <ImageSourcePicker
         isOpen={isPhotoPickerOpen}
@@ -449,47 +390,29 @@ export default function EditOwner() {
         description="Choose file from gallery or snap with camera"
         fileNamePrefix={`${activeImageField || 'photo'}`}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  tabsWrap: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  tab: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 4, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  tabText: { fontSize: 12, lineHeight: 16, ...poppins(600) },
-  card: { backgroundColor: '#fff', padding: 20, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, gap: 16, ...shadow('sm') },
-  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: tw.gray200, paddingBottom: 8 },
-  cardTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  label: { fontSize: 12, lineHeight: 16, color: tw.gray700, marginBottom: 6, letterSpacing: 0.3, ...poppins(700) },
-  input: { height: 44, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 0, fontSize: 14, color: tw.gray900, borderWidth: 1, borderColor: tw.gray200, borderRadius: 6, backgroundColor: '#fff', ...poppins(400) },
-  // restaurantTheme.css: input:focus border = primary 55 % over white
-  inputFocus: { borderColor: '#789d8a' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  headerTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  headerSub: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, minWidth: 160, color: tw.gray500, ...poppins(600) },
-  select: { height: 44, paddingHorizontal: 12, borderWidth: 1, borderColor: tw.gray200, borderRadius: 6, backgroundColor: '#fff' },
-  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200 },
-  avatarRemove: { position: 'absolute', top: -4, right: -4, ...shadow('md') },
-  avatarRemoveFill: { borderRadius: 999, padding: 4 },
-  choose: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, height: 32, borderWidth: 1, borderColor: RT.primary, borderRadius: 6 },
-  pill: { flex: 1, alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff' },
-  pillText: { fontSize: 12, lineHeight: 16, ...poppins(600) },
-  timeWrap: { borderWidth: 1, borderColor: tw.gray200, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(249,250,251,0.6)' },
-  timeField: { height: 36, justifyContent: 'center', paddingHorizontal: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, borderRadius: 4 },
-  day: { flex: 1, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray100 },
-  badge: { fontSize: 10, lineHeight: 16, color: RT.primary, backgroundColor: RT.primarySoft, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden', ...poppins(700) },
-  cuisine: { width: '48.5%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200 },
-  doc: { borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200, borderRadius: 12, padding: 16, backgroundColor: 'rgba(249,250,251,0.5)', alignItems: 'center', gap: 12 },
-  docTitle: { alignSelf: 'flex-start', fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(600) },
-  docPreview: { width: '100%', maxWidth: 200, aspectRatio: 4 / 3, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200 },
-  docRemove: { position: 'absolute', top: 6, right: 6, backgroundColor: RT.primary, borderRadius: 999, padding: 4, ...shadow('md') },
-  docBtn: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 32, borderWidth: 1, borderColor: tw.gray300, borderRadius: 6, backgroundColor: '#fff' },
-  switch: { width: 44, height: 24, borderRadius: 12, padding: 2, justifyContent: 'center' },
-  thumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff', ...shadow('sm') },
-  menuCell: { width: '48%', aspectRatio: 4 / 3, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200 },
-  menuRemove: { position: 'absolute', top: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 999, padding: 4 },
-  menuAdd: { borderStyle: 'dashed', borderColor: tw.gray300, backgroundColor: 'rgba(249,250,251,0.7)', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  menuAddIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.gray200 },
-  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 16, paddingTop: 16 },
-  save: { height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  tabsWrap: { backgroundColor: color.surface, paddingVertical: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  card: { backgroundColor: color.surface, padding: space.lg, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, gap: space.lg, ...elevation.card },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 32 },
+  select: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, backgroundColor: color.surface },
+  pair: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  pairItem: { flex: 1, minWidth: 136 },
+  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: color.border },
+  avatarRemove: { position: 'absolute', top: -6, right: -6 },
+  menuType: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  menuTypeOn: { borderColor: color.primary, borderWidth: 2, backgroundColor: color.primarySoft },
+  day: { flex: 1, height: 44, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', backgroundColor: color.surfaceMuted, borderWidth: 1, borderColor: color.border },
+  dayOn: { backgroundColor: color.primary, borderColor: color.primary },
+  cuisine: { flexGrow: 1, flexBasis: '45%', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.xs, paddingVertical: space.sm, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border },
+  cuisineOn: { borderColor: color.primary, backgroundColor: color.primarySoft },
+  doc: { borderWidth: 1, borderStyle: 'dashed', borderColor: color.borderStrong, borderRadius: radii.md, padding: space.md, backgroundColor: color.surfaceMuted, alignItems: 'center', gap: space.md },
+  docPreview: { width: '100%', maxWidth: 220, aspectRatio: 4 / 3, borderRadius: radii.md, overflow: 'hidden', borderWidth: 1, borderColor: color.border },
+  docRemove: { position: 'absolute', top: space.xs, right: space.xs },
+  menuCell: { flexGrow: 1, flexBasis: '45%', aspectRatio: 4 / 3, borderRadius: radii.md, overflow: 'hidden', borderWidth: 1, borderColor: color.border },
+  menuRemove: { position: 'absolute', top: space.xs, right: space.xs },
+  menuAdd: { borderStyle: 'dashed', borderColor: color.borderStrong, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center', gap: space.xs },
 });

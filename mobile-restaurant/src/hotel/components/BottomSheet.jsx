@@ -3,8 +3,7 @@ import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet as KitBottomSheet } from '../../components/kit';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
-import { HT } from '../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 
 /**
  * Port of Frontend/src/modules/Hotel/app/partner/components/BottomSheet.jsx.
@@ -25,7 +24,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
       <View style={styles.header}>
         <Text style={styles.title} numberOfLines={2}>{title}</Text>
         <Press onPress={onClose} accessibilityLabel="Close" style={styles.close}>
-          <X size={20} color={tw.gray500} />
+          <X size={20} color={color.textSecondary} />
         </Press>
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -37,18 +36,18 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
 
 const styles = StyleSheet.create({
   panel: {
-    backgroundColor: '#fff',
+    backgroundColor: color.bg,
     width: '100%',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 24,
-    paddingHorizontal: 24,
-    ...shadow('2xl'),
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    paddingTop: space.md,
+    paddingHorizontal: space.xl,
+    ...elevation.sheet,
   },
-  handle: { width: 48, height: 6, borderRadius: 3, backgroundColor: tw.gray200, alignSelf: 'center', marginBottom: 24 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 12 },
-  title: { flex: 1, fontSize: 20, lineHeight: 28, color: HT.headline, ...poppins(700) },
-  close: { padding: 8, borderRadius: 999 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.borderStrong, alignSelf: 'center', marginBottom: space.lg },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.lg, gap: space.md },
+  title: { flex: 1, ...type.heading, color: color.text },
+  close: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });
 
 export { BottomSheet };

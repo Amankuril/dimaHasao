@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Shield } from 'lucide-react-native';
-import { poppins, shadow, tw } from '../../theme';
+import { AlertTriangle, Shield } from 'lucide-react-native';
+import { Card } from '../../components/ds';
+import { color, radii, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
 import { legalService } from '../services/apiService';
-import { HT } from '../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerPrivacy.jsx
@@ -44,31 +44,32 @@ const PartnerPrivacy = () => {
   const paragraphs = typeof content === 'string' ? content.split('\n').filter(Boolean) : [];
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       <PartnerHeader title="Privacy Policy" subtitle="How we handle partner data" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}>
-        <View style={{ maxWidth: 768, width: '100%', alignSelf: 'center', paddingHorizontal: 16, paddingTop: 24 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: space.xxxl + insets.bottom }}>
+        <View style={{ maxWidth: 768, width: '100%', alignSelf: 'center', padding: space.lg }}>
           {error ? (
             <View style={styles.warn}>
+              <AlertTriangle size={18} color={color.warning} />
               <Text style={styles.warnText}>{error}</Text>
             </View>
           ) : null}
 
-          <View style={styles.card}>
+          <Card style={styles.card}>
             <View style={styles.head}>
               <View style={styles.headIcon}>
-                <Shield size={20} color={tw.gray500} />
+                <Shield size={20} color={color.primary} />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.title}>{page?.title || 'Partner data and privacy'}</Text>
               </View>
             </View>
 
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: space.md }}>
               {paragraphs.length > 0 ? paragraphs.map((p, idx) => <Text key={idx} style={styles.text}>{p}</Text>) : <Text style={styles.text}>{String(content)}</Text>}
             </View>
-          </View>
+          </Card>
         </View>
       </ScrollView>
     </View>
@@ -76,13 +77,14 @@ const PartnerPrivacy = () => {
 };
 
 const styles = StyleSheet.create({
-  warn: { marginBottom: 16, backgroundColor: tw.amber50, borderWidth: 1, borderColor: tw.amber200, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8 },
-  warnText: { fontSize: 12, lineHeight: 16, color: tw.amber800, ...poppins(400) },
-  card: { backgroundColor: '#fff', padding: 32, borderRadius: 32, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 24, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  headIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 18, lineHeight: 28, color: tw.slate900, ...poppins(900) },
-  text: { fontSize: 12, lineHeight: 19.5, color: tw.gray500, ...poppins(400) },
+  warn: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.lg, backgroundColor: color.warningSoft, borderRadius: radii.md, padding: space.md },
+  warnText: { flex: 1, ...type.small, color: color.text },
+  card: { padding: space.xl },
+  head: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.lg, paddingBottom: space.lg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  headIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  title: { ...type.heading, color: color.text },
+  sub: { ...type.small, color: color.textMuted },
+  text: { ...type.body, color: color.textSecondary },
 });
 
 export default PartnerPrivacy;

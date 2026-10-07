@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { color, space, type } from '../../../theme';
 import { DateSelector, Dropdown, DocumentPreview, Field, Label, Pill, Section, UploadButton } from './parts';
 
 const ACCOUNT_TYPES = [
@@ -16,19 +17,19 @@ export default function Step3({ o }) {
   } = o;
 
   return (
-    <View style={{ gap: 24 }}>
+    <View style={{ gap: space.xxl }}>
       <Section title="PAN details">
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: space.lg }}>
           <View>
             <Label>PAN number</Label>
-            <Field value={step3.panNumber || ''} onChangeText={(text) => setStep3({ ...step3, panNumber: normalizePAN(text) })} style={{ marginTop: 4 }} placeholder="ABCDE1234F" autoCapitalize="characters" autoCorrect={false} accessibilityLabel="PAN number" />
+            <Field value={step3.panNumber || ''} onChangeText={(text) => setStep3({ ...step3, panNumber: normalizePAN(text) })} style={{ marginTop: space.xs + 2 }} placeholder="ABCDE1234F" autoCapitalize="characters" autoCorrect={false} accessibilityLabel="PAN number" />
           </View>
           <View>
             <Label>PAN Card Holder Name</Label>
             <Field
               value={step3.nameOnPan || ''}
               onChangeText={(text) => setStep3({ ...step3, nameOnPan: formatNameToCapital(text.replace(/[^A-Za-z ]/g, '')) })}
-              style={{ marginTop: 4 }}
+              style={{ marginTop: space.xs + 2 }}
               accessibilityLabel="PAN card holder name"
             />
           </View>
@@ -36,7 +37,7 @@ export default function Step3({ o }) {
         <View>
           <Label>PAN image</Label>
           <UploadButton
-            style={{ marginTop: 8 }}
+            style={{ marginTop: space.sm }}
             onPress={() => openImageSourcePicker({ title: 'Upload PAN image', fileNamePrefix: 'pan-image', onSelectFile: handlePanImageSelected })}
           />
           {step3.panImage ? <DocumentPreview uri={getPreviewImageUrl(step3.panImage)} label="PAN document" onRemove={() => setStep3((prev) => ({ ...prev, panImage: null }))} /> : null}
@@ -44,13 +45,13 @@ export default function Step3({ o }) {
       </Section>
 
       <Section title="GST details">
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <Label style={{ fontSize: 14, lineHeight: 20 }}>GST registered?</Label>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.md }}>
+          <Label style={{ ...type.bodyStrong, color: color.text, flexShrink: 1 }}>GST registered?</Label>
           <Pill label="Yes" active={step3.gstRegistered} onPress={() => setStep3({ ...step3, gstRegistered: true })} />
           <Pill label="No" active={!step3.gstRegistered} onPress={() => setStep3({ ...step3, gstRegistered: false })} />
         </View>
         {step3.gstRegistered ? (
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: space.md }}>
             <Field value={step3.gstNumber || ''} onChangeText={(text) => setStep3({ ...step3, gstNumber: normalizeGST(text) })} placeholder="GST number (15 characters)" autoCapitalize="characters" autoCorrect={false} accessibilityLabel="GST number" />
             <Field
               value={step3.gstLegalName || ''}
@@ -68,7 +69,7 @@ export default function Step3({ o }) {
       </Section>
 
       <Section title="FSSAI details">
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: space.lg }}>
           <Field
             value={step3.fssaiNumber || ''}
             onChangeText={(text) => setStep3({ ...step3, fssaiNumber: text.replace(/\D/g, '').slice(0, 14) })}
@@ -77,7 +78,7 @@ export default function Step3({ o }) {
             accessibilityLabel="FSSAI number"
           />
           <View>
-            <Label style={{ marginBottom: 4 }}>FSSAI expiry date</Label>
+            <Label style={{ marginBottom: space.xs + 2 }}>FSSAI expiry date</Label>
             <DateSelector value={step3.fssaiExpiry} onChange={(fssaiExpiry) => setStep3({ ...step3, fssaiExpiry })} parseLocalYMDDate={parseLocalYMDDate} formatDateToLocalYMD={formatDateToLocalYMD} />
           </View>
         </View>
@@ -88,11 +89,11 @@ export default function Step3({ o }) {
       </Section>
 
       <Section title="Bank account details">
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: space.lg }}>
           <Field value={step3.accountNumber || ''} onChangeText={(text) => setStep3({ ...step3, accountNumber: normalizeBankAcc(text) })} placeholder="Account number" keyboardType="number-pad" accessibilityLabel="Account number" />
           <Field value={step3.confirmAccountNumber || ''} onChangeText={(text) => setStep3({ ...step3, confirmAccountNumber: normalizeBankAcc(text) })} placeholder="Re-enter account number" keyboardType="number-pad" accessibilityLabel="Re-enter account number" />
         </View>
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: space.lg }}>
           <Field value={step3.ifscCode || ''} onChangeText={(text) => setStep3({ ...step3, ifscCode: normalizeIFSC(text) })} placeholder="IFSC code" autoCapitalize="characters" autoCorrect={false} accessibilityLabel="IFSC code" />
           <Dropdown value={step3.accountType || ''} options={ACCOUNT_TYPES} onChange={(accountType) => setStep3({ ...step3, accountType })} placeholder="Select account type" accessibilityLabel="Account type" />
         </View>

@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import {
   Calendar, User, Phone, Mail, MapPin,
   CreditCard, CheckCircle,
-  ChevronLeft, AlertTriangle, LogIn, LogOut, FileText, Printer, X,
+  AlertTriangle, LogIn, LogOut, FileText, Printer, X,
 } from 'lucide-react-native';
 import Img from '../../components/Img';
-import { Press } from '../../components/ui';
+import { Button, Card, IconButton, StatusBadge } from '../../components/ds';
+import HeritageHeader from '../../components/HeritageHeader';
 import { useNavigate, useParams } from '../../lib/webRouter';
 import { confirm, toast } from '../../lib/notify';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
 import { bookingService } from '../services/apiService';
-import { HT } from '../theme';
+import { BookingStatusBadge, InfoTile, KeyValue, PageLoader, PinnedBar, sentence, ui } from '../components/dashboard/partnerUi';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerBookingDetail.jsx
@@ -96,56 +97,49 @@ const BookingInvoice = ({ invoice, onClose }) => {
   };
 
   return (
-    <View style={{ backgroundColor: '#fff' }}>
+    <View style={{ backgroundColor: color.surface }}>
       <View style={inv.bar}>
         <Text style={inv.barTitle}>Invoice</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Press onPress={printInvoice} style={inv.printBtn}>
-            <Printer size={14} color="#fff" />
-            <Text style={inv.printText}>Print / Save PDF</Text>
-          </Press>
-          {onClose ? (
-            <Press scale={1} onPress={onClose} accessibilityLabel="Close invoice" style={{ padding: 8, borderRadius: 8 }}>
-              <X size={16} color={tw.gray500} />
-            </Press>
-          ) : null}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+          <Button title="Print / Save PDF" icon={Printer} size="sm" fullWidth={false} onPress={printInvoice} style={{ minHeight: 44 }} />
+          {onClose ? <IconButton icon={X} label="Close invoice" onPress={onClose} iconColor={color.textSecondary} /> : null}
         </View>
       </View>
 
-      <View style={{ padding: 24 }}>
+      <View style={{ padding: space.xl }}>
         <View style={inv.head}>
           <View>
-            <Text style={inv.kicker}>Tax Invoice</Text>
+            <Text style={inv.kicker}>Tax invoice</Text>
             <Text style={inv.number}>{invoice.invoiceNumber}</Text>
             <Text style={inv.small}>Issued {shortDate(invoice.issuedAt)}</Text>
-            <Text style={inv.smallNoMt}>Booking {invoice.bookingId}</Text>
+            <Text style={inv.small}>Booking {invoice.bookingId}</Text>
           </View>
-          <View style={{ marginTop: 16 }}>
+          <View style={{ marginTop: space.lg }}>
             <Text style={inv.seller}>{seller?.name}</Text>
-            {seller?.type ? <Text style={[inv.kicker, { letterSpacing: 1 }]}>{seller.type}</Text> : null}
+            {seller?.type ? <Text style={inv.kicker}>{seller.type}</Text> : null}
             {addressLine(seller?.address) ? <Text style={[inv.small, { maxWidth: 256 }]}>{addressLine(seller.address)}</Text> : null}
-            {seller?.contactNumber ? <Text style={inv.smallNoMt}>{seller.contactNumber}</Text> : null}
+            {seller?.contactNumber ? <Text style={inv.small}>{seller.contactNumber}</Text> : null}
           </View>
         </View>
 
         <View style={inv.two}>
           <View>
-            <Text style={[inv.kicker, { marginBottom: 4 }]}>Billed to</Text>
+            <Text style={[inv.kicker, { marginBottom: space.xs }]}>Billed to</Text>
             <Text style={inv.bold}>{buyer?.name || 'Guest'}</Text>
-            {buyer?.phone ? <Text style={inv.smallNoMt}>{buyer.phone}</Text> : null}
-            {buyer?.email ? <Text style={inv.smallNoMt}>{buyer.email}</Text> : null}
+            {buyer?.phone ? <Text style={inv.small}>{buyer.phone}</Text> : null}
+            {buyer?.email ? <Text style={inv.small}>{buyer.email}</Text> : null}
           </View>
           <View>
-            <Text style={[inv.kicker, { marginBottom: 4 }]}>Stay</Text>
+            <Text style={[inv.kicker, { marginBottom: space.xs }]}>Stay</Text>
             <Text style={inv.stay}>
               {shortDate(stay?.checkInDate)} — {shortDate(stay?.checkOutDate)}
             </Text>
-            <Text style={inv.smallNoMt}>
+            <Text style={inv.small}>
               {stay?.totalNights} night{stay?.totalNights === 1 ? '' : 's'}
               {stay?.roomType ? ` · ${stay.roomType}` : ''}
             </Text>
             {stay?.adults != null || stay?.children != null ? (
-              <Text style={inv.smallNoMt}>
+              <Text style={inv.small}>
                 {stay.adults || 0} adult{stay.adults === 1 ? '' : 's'}
                 {stay.children ? `, ${stay.children} child${stay.children === 1 ? '' : 'ren'}` : ''}
               </Text>
@@ -153,9 +147,9 @@ const BookingInvoice = ({ invoice, onClose }) => {
           </View>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: 24 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingVertical: space.xl }}>
           <View style={{ minWidth: 448 }}>
-            <View style={[inv.tr, { borderBottomWidth: 1, borderBottomColor: tw.gray100, paddingBottom: 8 }]}>
+            <View style={[inv.tr, { borderBottomWidth: 1, borderBottomColor: color.border, paddingBottom: space.sm }]}>
               <Text style={[inv.th, { flex: 2.4 }]}>Description</Text>
               <Text style={[inv.th, { flex: 1.2 }]}>Date</Text>
               <Text style={[inv.th, { flex: 1, textAlign: 'right' }]}>Rate</Text>
@@ -163,103 +157,78 @@ const BookingInvoice = ({ invoice, onClose }) => {
               <Text style={[inv.th, { flex: 1.2, textAlign: 'right' }]}>Amount</Text>
             </View>
             {lineItems.map((item, index) => (
-              <View key={index} style={[inv.tr, { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: tw.gray50 }]}>
-                <Text style={[inv.td, { flex: 2.4, paddingRight: 12 }]}>{item.description}</Text>
-                <Text style={[inv.td, { flex: 1.2, fontSize: 12, color: tw.gray500 }]}>{item.date ? shortDate(item.date) : '—'}</Text>
+              <View key={index} style={[inv.tr, { paddingVertical: space.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border }]}>
+                <Text style={[inv.td, { flex: 2.4, paddingRight: space.md }]}>{item.description}</Text>
+                <Text style={[inv.td, { flex: 1.2, ...type.caption, color: color.textMuted }]}>{item.date ? shortDate(item.date) : '—'}</Text>
                 <Text style={[inv.td, { flex: 1, textAlign: 'right' }]}>{rupees(item.rate)}</Text>
                 <Text style={[inv.td, { flex: 0.6, textAlign: 'right' }]}>{item.units}</Text>
-                <Text style={[inv.td, { flex: 1.2, textAlign: 'right', ...poppins(600) }]}>{rupees(item.amount)}</Text>
+                <Text style={[inv.td, type.bodyStrong, { flex: 1.2, textAlign: 'right' }]}>{rupees(item.amount)}</Text>
               </View>
             ))}
-            {lineItems.length === 0 ? (
-              <Text style={{ paddingVertical: 24, textAlign: 'center', color: tw.gray400, fontSize: 12, ...poppins(400) }}>
-                No line items recorded for this booking.
-              </Text>
-            ) : null}
+            {lineItems.length === 0 ? <Text style={[inv.small, { paddingVertical: space.xl, textAlign: 'center' }]}>No line items recorded for this booking.</Text> : null}
           </View>
         </ScrollView>
 
-        <View style={{ borderTopWidth: 1, borderTopColor: tw.gray200, paddingTop: 24, alignItems: 'flex-end' }}>
-          <View style={{ width: '100%', maxWidth: 288, gap: 8 }}>
-            <View style={inv.line}>
-              <Text style={inv.lineLabel}>Subtotal</Text>
-              <Text style={inv.lineValue}>{rupees(totals.subtotal)}</Text>
-            </View>
+        <View style={{ borderTopWidth: 1, borderTopColor: color.border, paddingTop: space.xl, alignItems: 'flex-end' }}>
+          <View style={{ width: '100%', maxWidth: 288, gap: space.sm }}>
+            <KeyValue label="Subtotal" value={rupees(totals.subtotal)} />
             {totals.discount > 0 ? (
-              <View style={inv.line}>
-                <Text style={[inv.lineText, { color: tw.emerald700 }]}>Discount{totals.couponCode ? ` (${totals.couponCode})` : ''}</Text>
-                <Text style={[inv.lineValue, { color: tw.emerald700 }]}>−{rupees(totals.discount)}</Text>
-              </View>
+              <KeyValue
+                label={`Discount${totals.couponCode ? ` (${totals.couponCode})` : ''}`}
+                labelStyle={{ color: color.success }}
+                value={`−${rupees(totals.discount)}`}
+                valueStyle={{ color: color.success }}
+              />
             ) : null}
-            <View style={inv.line}>
-              <Text style={inv.lineLabel}>GST @ {totals.gstRate}%</Text>
-              <Text style={inv.lineValue}>{rupees(totals.taxes)}</Text>
-            </View>
-            <View style={[inv.line, { borderTopWidth: 1, borderTopColor: tw.gray200, paddingTop: 8 }]}>
-              <Text style={{ fontSize: 16, color: tw.gray900, ...poppins(700) }}>Total</Text>
-              <Text style={{ fontSize: 16, color: tw.gray900, ...poppins(900) }}>{rupees(totals.total)}</Text>
-            </View>
-            <View style={inv.line}>
-              <Text style={{ fontSize: 12, color: tw.gray500, ...poppins(400) }}>
-                {totals.amountDue > 0 ? 'Amount due' : 'Paid in full'}
-              </Text>
-              <Text style={{ fontSize: 12, color: totals.amountDue > 0 ? tw.amber700 : tw.emerald700, ...poppins(700) }}>
-                {totals.amountDue > 0 ? rupees(totals.amountDue) : rupees(0)}
-              </Text>
-            </View>
+            <KeyValue label={`GST @ ${totals.gstRate}%`} value={rupees(totals.taxes)} />
+            <KeyValue
+              label="Total"
+              labelStyle={type.subheading}
+              value={rupees(totals.total)}
+              valueStyle={type.price}
+              style={{ borderTopWidth: 1, borderTopColor: color.border, paddingTop: space.sm }}
+            />
+            <KeyValue
+              label={totals.amountDue > 0 ? 'Amount due' : 'Paid in full'}
+              labelStyle={type.small}
+              value={totals.amountDue > 0 ? rupees(totals.amountDue) : rupees(0)}
+              valueStyle={{ color: totals.amountDue > 0 ? color.warning : color.success }}
+            />
           </View>
         </View>
 
         {settlement ? (
           <View style={inv.settle}>
-            <Text style={[inv.kicker, { marginBottom: 8 }]}>Settlement (not shown on the guest&apos;s copy)</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 24, rowGap: 4 }}>
-              <Text style={inv.settleText}>
-                Platform commission <Text style={{ color: tw.gray900, ...poppins(700) }}>{rupees(settlement.commission)}</Text>
-              </Text>
-              <Text style={inv.settleText}>
-                Partner payout <Text style={{ color: tw.emerald700, ...poppins(700) }}>{rupees(settlement.partnerPayout)}</Text>
-              </Text>
-            </View>
+            <Text style={[type.label, { color: color.textSecondary, marginBottom: space.xs }]}>Settlement (not shown on the guest&apos;s copy)</Text>
+            <KeyValue label="Platform commission" value={rupees(settlement.commission)} />
+            <KeyValue label="Partner payout" value={rupees(settlement.partnerPayout)} valueStyle={{ color: color.success }} />
           </View>
         ) : null}
 
-        <Text style={{ marginTop: 32, fontSize: 10, color: tw.gray400, textAlign: 'center', ...poppins(400) }}>
-          This is a computer-generated invoice and does not require a signature.
-        </Text>
+        <Text style={[inv.small, { marginTop: space.xxl, textAlign: 'center' }]}>This is a computer-generated invoice and does not require a signature.</Text>
       </View>
     </View>
   );
 };
 
 const inv = StyleSheet.create({
-  bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  barTitle: { fontSize: 16, color: tw.gray900, ...poppins(700) },
-  printBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#0a0a0a', borderRadius: 8 },
-  printText: { fontSize: 12, color: '#fff', ...poppins(700) },
-  head: { paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  kicker: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
-  number: { fontSize: 24, lineHeight: 32, marginTop: 4, color: tw.gray900, ...poppins(900) },
-  small: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 4, ...poppins(400) },
-  smallNoMt: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  seller: { fontSize: 18, lineHeight: 22, color: tw.gray900, ...poppins(700) },
-  two: { paddingVertical: 24, gap: 24, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  bold: { fontSize: 16, color: tw.gray900, ...poppins(700) },
-  stay: { fontSize: 14, color: tw.gray900, ...poppins(600) },
+  bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, paddingLeft: space.xl, paddingRight: space.sm, paddingVertical: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  barTitle: { ...type.heading, color: color.text },
+  head: { paddingBottom: space.xl, borderBottomWidth: 1, borderBottomColor: color.border },
+  kicker: { ...type.overline, color: color.textMuted },
+  number: { ...type.heading, fontSize: 22, lineHeight: 30, marginTop: space.xs, color: color.text },
+  small: { ...type.caption, color: color.textMuted, marginTop: space.xxs },
+  seller: { ...type.heading, color: color.text },
+  two: { paddingVertical: space.xl, gap: space.xl, borderBottomWidth: 1, borderBottomColor: color.border },
+  bold: { ...type.subheading, color: color.text },
+  stay: { ...type.bodyStrong, color: color.text },
   tr: { flexDirection: 'row', alignItems: 'center' },
-  th: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
-  td: { fontSize: 14, color: tw.gray900, ...poppins(400) },
-  line: { flexDirection: 'row', justifyContent: 'space-between' },
-  lineLabel: { fontSize: 14, color: tw.gray500, ...poppins(400) },
-  lineText: { fontSize: 14, ...poppins(400) },
-  lineValue: { fontSize: 14, color: tw.gray900, ...poppins(600) },
-  settle: { marginTop: 24, padding: 16, backgroundColor: tw.gray50, borderRadius: 12, borderWidth: 1, borderColor: tw.gray100 },
-  settleText: { fontSize: 14, color: tw.gray900, ...poppins(400) },
+  th: { ...type.overline, color: color.textMuted },
+  td: { ...type.body, color: color.text },
+  settle: { marginTop: space.xl, padding: space.lg, gap: space.xs, backgroundColor: color.surfaceMuted, borderRadius: radii.md },
 });
 
 /* -------------------------- PartnerBookingDetail ------------------------- */
-
-const label = (text) => ({ fontSize: 9, lineHeight: 13.5, color: tw.gray400, textTransform: 'uppercase', marginBottom: 2, ...poppins(700), ...(text || {}) });
 
 const PartnerBookingDetail = () => {
   const { id } = useParams();
@@ -360,8 +329,8 @@ const PartnerBookingDetail = () => {
 
   if (loading) {
     return (
-      <View style={[styles.page, { alignItems: 'center', justifyContent: 'center' }]}>
-        <ActivityIndicator size="small" color={tw.gray900} />
+      <View style={styles.page}>
+        <PageLoader />
       </View>
     );
   }
@@ -381,39 +350,26 @@ const PartnerBookingDetail = () => {
 
   const checkInLabel = 'Check-in';
   const checkOutLabel = 'Check-out';
-  const durationLabel = 'Nights';
-
-  const statusTone =
-    booking.bookingStatus === 'confirmed'
-      ? { bg: tw.green50, fg: tw.green700, border: tw.green100 }
-      : booking.bookingStatus === 'cancelled'
-        ? { bg: tw.red50, fg: tw.red700, border: tw.red100 }
-        : booking.bookingStatus === 'no_show'
-          ? { bg: tw.gray100, fg: tw.gray600, border: tw.gray200 }
-          : { bg: tw.yellow50, fg: tw.yellow700, border: tw.yellow100 };
 
   const half = canCheckIn || canCheckOut;
+  const hasActions = canCheckIn || canCheckOut || canMarkPaid || canMarkNoShow;
+  const adults = booking.guests?.adults || 1;
+  const children = booking.guests?.children > 0 ? booking.guests.children : 0;
+  const location =
+    typeof property.address === 'object' && property.address
+      ? `${property.address.city || ''}${property.address.city && property.address.area ? ', ' : ''}${property.address.area || ''}`
+      : property.address || 'Location';
 
   return (
     <View style={styles.page}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
-        <Press scale={1} onPress={() => navigate('/hotel/partner/bookings')} accessibilityLabel="Back" style={{ padding: 8, borderRadius: 999 }}>
-          <ChevronLeft size={20} color={tw.gray900} />
-        </Press>
-        <Text style={styles.headerTitle}>Booking Details</Text>
-        <Press scale={1} onPress={handleViewInvoice} disabled={invoiceLoading} style={[styles.invoiceBtn, invoiceLoading && { opacity: 0.6 }]}>
-          <FileText size={14} color="#fff" />
-          <Text style={styles.invoiceText}>{invoiceLoading ? 'Loading…' : 'Invoice'}</Text>
-        </Press>
-      </View>
+      <HeritageHeader title="Booking details" onBack={() => navigate('/hotel/partner/bookings')} />
 
       <Modal visible={Boolean(invoice)} transparent animationType="fade" onRequestClose={() => setInvoice(null)} statusBarTranslucent>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <View style={{ flex: 1, backgroundColor: color.overlay }}>
           {/* A tap on the dim area closes (web: onClick on the overlay); the card swallows its own taps (stopPropagation). */}
           <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <Pressable
-              style={{ flexGrow: 1, padding: 16, paddingTop: 16 + insets.top }}
+              style={{ flexGrow: 1, padding: space.lg, paddingTop: space.lg + insets.top, paddingBottom: space.lg + insets.bottom }}
               onPress={() => setInvoice(null)}
               accessibilityLabel="Close invoice"
             >
@@ -425,216 +381,145 @@ const PartnerBookingDetail = () => {
         </View>
       </Modal>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
-        <View style={{ paddingHorizontal: 16, paddingVertical: 24, gap: 24 }}>
-          {/* Status Card - Compact */}
-          <View style={[styles.card, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <Text style={[label(), { fontSize: 10, lineHeight: 15, letterSpacing: 1.5, marginBottom: 2 }]}>Booking ID</Text>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(900) }}>#{booking.bookingId || booking._id}</Text>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: (hasActions ? space.xxl : space.xxxl + insets.bottom) }]} showsVerticalScrollIndicator={false}>
+        {/* Status + property */}
+        <Card style={{ gap: space.md }}>
+          <View style={styles.idRow}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.caption}>Booking ID</Text>
+              <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={1}>
+                #{booking.bookingId || booking._id}
+              </Text>
             </View>
-            <View style={[styles.statusPill, { backgroundColor: statusTone.bg, borderColor: statusTone.border }]}>
-              <Text style={[styles.statusText, { color: statusTone.fg }]}>{booking.bookingStatus.replace('_', ' ')}</Text>
-            </View>
+            <BookingStatusBadge status={booking.bookingStatus} />
           </View>
-
-          {/* Property Info */}
-          <View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: 16 }]}>
+          <View style={ui.divider} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
             <View style={styles.propImg}>
               {property.images?.[0] ? (
                 <Img source={{ uri: property.images[0] }} accessibilityLabel="property" style={{ width: '100%', height: '100%' }} resizeMode="cover" />
               ) : (
-                <MapPin size={24} color={tw.gray300} style={{ margin: 20 }} />
+                <MapPin size={24} color={color.textDisabled} />
               )}
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.propName}>{(property.propertyName || 'Property Name').toUpperCase()}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                <View style={styles.typeChip}>
-                  <Text style={styles.typeText}>{pType.toUpperCase()}</Text>
-                </View>
-                <Text style={styles.loc} numberOfLines={1}>
-                  {typeof property.address === 'object' && property.address
-                    ? `${property.address.city || ''}${property.address.city && property.address.area ? ', ' : ''}${property.address.area || ''}`
-                    : (property.address || 'Location')}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Guest Info - Compact */}
-          <View style={styles.card}>
-            <View style={styles.cardHead}>
-              <User size={16} color={tw.gray400} />
-              <Text style={styles.cardTitle}>Guest Details</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <View style={styles.avatar}>
-                <Text style={{ fontSize: 16, color: tw.gray500, ...poppins(700) }}>{user.name?.[0] || 'G'}</Text>
-              </View>
-              <View>
-                <Text style={{ fontSize: 14, color: tw.gray900, ...poppins(700) }}>{user.name || 'Guest'}</Text>
-                <Text style={{ fontSize: 12, color: tw.gray500, ...poppins(400) }}>Joined via App</Text>
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <Pressable
-                onPress={() => user.phone && Linking.openURL(`tel:${user.phone}`)}
-                style={[styles.tile, { flex: 1 }]}
-              >
-                <Text style={label()}>Phone</Text>
-                <View style={styles.tileRow}>
-                  <Phone size={12} color={tw.gray400} />
-                  <Text style={styles.tileText}>{user.phone || 'N/A'}</Text>
-                </View>
-              </Pressable>
-              <View style={[styles.tile, { flex: 1 }]}>
-                <Text style={label()}>Email</Text>
-                <View style={styles.tileRow}>
-                  <Mail size={12} color={tw.gray400} />
-                  <Text style={[styles.tileText, { flexShrink: 1 }]} numberOfLines={1}>{user.email || 'N/A'}</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.guests}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <User size={14} color={tw.gray400} />
-                <Text style={{ fontSize: 10, color: tw.gray500, textTransform: 'uppercase', ...poppins(700) }}>Total Guests</Text>
-              </View>
-              <Text style={{ fontSize: 14, color: tw.gray900, flexShrink: 1, textAlign: 'right', ...poppins(700) }}>
-                {booking.guests?.adults || 1} Adult{(booking.guests?.adults || 1) !== 1 ? 's' : ''}
-                {booking.guests?.children > 0 ? `, ${booking.guests.children} Child${booking.guests.children !== 1 ? 'ren' : ''}` : ''}
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[type.subheading, { color: color.text }]} numberOfLines={2}>
+                {property.propertyName || 'Property Name'}
+              </Text>
+              <Text style={[type.small, { color: color.textMuted }]} numberOfLines={2}>
+                {[sentence(pType), location].filter(Boolean).join(' · ')}
               </Text>
             </View>
           </View>
+        </Card>
 
-          {/* Stay Info - Compact */}
-          <View style={styles.card}>
-            <View style={styles.cardHead}>
-              <Calendar size={16} color={tw.gray400} />
-              <Text style={styles.cardTitle}>Stay Details</Text>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
-              <View style={[styles.tile, { flex: 1 }]}>
-                <Text style={label()}>{checkInLabel}</Text>
-                <Text style={styles.dateText}>{booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : 'N/A'}</Text>
-              </View>
-              <View style={[styles.tile, { flex: 1 }]}>
-                <Text style={label()}>{checkOutLabel}</Text>
-                <Text style={styles.dateText}>{booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : 'N/A'}</Text>
-              </View>
-            </View>
-            <View style={[styles.tile, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[label(), { marginBottom: 0 }]}>Room Type</Text>
-                <Text style={styles.dateText}>{room.name || room.type || 'Standard'}</Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ fontSize: 12, color: tw.gray900, ...poppins(700) }}>
-                  {booking.bookingUnit === 'entire' ? '1 Unit' : '1 Room'}
-                </Text>
-                <Text style={{ fontSize: 10, color: tw.gray500, ...poppins(500) }}>
-                  {booking.totalNights} {durationLabel}
-                </Text>
-              </View>
-            </View>
+        {/* Guest Info */}
+        <Card style={{ gap: space.md }}>
+          <View style={styles.cardHead}>
+            <User size={18} color={color.primary} />
+            <Text style={styles.cardTitle}>Guest details</Text>
           </View>
-
-          {/* Payment/Price Info - Compact */}
-          <View style={styles.card}>
-            <View style={styles.cardHead}>
-              <CreditCard size={16} color={tw.gray400} />
-              <Text style={styles.cardTitle}>Payment & Payout</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+            <View style={styles.avatar}>
+              <Text style={[type.subheading, { color: color.primary }]}>{user.name?.[0] || 'G'}</Text>
             </View>
-            <View style={{ gap: 8 }}>
-              <View style={styles.payRow}>
-                <Text style={styles.payLabel}>Total Amount (Collect)</Text>
-                <Text style={{ fontSize: 16, color: tw.gray900, ...poppins(700) }}>₹{booking.totalAmount}</Text>
-              </View>
-              <View style={styles.payRow}>
-                <Text style={styles.payLabel}>Partner Payout (Earnings)</Text>
-                <Text style={{ fontSize: 14, color: tw.green700, ...poppins(700) }}>₹{booking.partnerPayout}</Text>
-              </View>
-              <View style={[styles.payRow, { paddingTop: 4 }]}>
-                <Text style={styles.payLabel}>Status</Text>
-                <View style={[styles.payPill, { backgroundColor: booking.paymentStatus === 'paid' ? tw.green100 : tw.yellow100 }]}>
-                  <Text style={{ fontSize: 10, textTransform: 'uppercase', color: booking.paymentStatus === 'paid' ? tw.green700 : tw.yellow700, ...poppins(700) }}>
-                    {booking.paymentStatus === 'paid' ? 'PAID' : 'PAY AT HOTEL'}
-                  </Text>
-                </View>
-              </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[type.subheading, { color: color.text }]} numberOfLines={1}>
+                {user.name || 'Guest'}
+              </Text>
+              <Text style={[type.small, { color: color.textMuted }]}>Joined via app</Text>
             </View>
+            {user.phone ? <IconButton icon={Phone} label={`Call ${user.name || 'guest'}`} variant="primary" onPress={() => Linking.openURL(`tel:${user.phone}`)} /> : null}
           </View>
-        </View>
+          <View style={styles.tiles}>
+            <Pressable onPress={() => user.phone && Linking.openURL(`tel:${user.phone}`)} accessibilityRole="button" accessibilityLabel={`Phone ${user.phone || 'not available'}`} style={{ flex: 1, minWidth: 0 }}>
+              <InfoTile label="Phone" value={user.phone || 'N/A'} icon={Phone} numberOfLines={1} />
+            </Pressable>
+            <InfoTile label="Email" value={user.email || 'N/A'} icon={Mail} numberOfLines={1} />
+          </View>
+          <KeyValue
+            label="Total guests"
+            value={`${adults} adult${adults !== 1 ? 's' : ''}${children ? `, ${children} child${children !== 1 ? 'ren' : ''}` : ''}`}
+          />
+        </Card>
 
-        {/* Actions Grid */}
-        <View style={styles.actions}>
-          {canCheckIn && (
-            <Press onPress={handleCheckIn} style={[styles.bigBtn, { width: '100%' }]}>
-              <LogIn size={20} color="#fff" />
-              <Text style={styles.bigText}>{checkInLabel} Guest</Text>
-            </Press>
-          )}
+        {/* Stay Info */}
+        <Card style={{ gap: space.md }}>
+          <View style={styles.cardHead}>
+            <Calendar size={18} color={color.primary} />
+            <Text style={styles.cardTitle}>Stay details</Text>
+          </View>
+          <View style={styles.tiles}>
+            <InfoTile label={checkInLabel} value={booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : 'N/A'} />
+            <InfoTile label={checkOutLabel} value={booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : 'N/A'} />
+          </View>
+          <View style={styles.tiles}>
+            <InfoTile label="Room type" value={room.name || room.type || 'Standard'} style={{ flex: 1.4 }} />
+            <InfoTile label="Stay" value={`${booking.totalNights} ${booking.totalNights === 1 ? 'night' : 'nights'} · ${booking.bookingUnit === 'entire' ? '1 unit' : '1 room'}`} />
+          </View>
+        </Card>
 
-          {canCheckOut && (
-            <Press onPress={handleCheckOut} style={[styles.bigBtn, { width: '100%' }]}>
-              <LogOut size={20} color="#fff" />
-              <Text style={styles.bigText}>{checkOutLabel} Guest</Text>
-            </Press>
-          )}
+        {/* Payment/Price Info */}
+        <Card style={{ gap: space.sm }}>
+          <View style={[styles.cardHead, { marginBottom: space.xs }]}>
+            <CreditCard size={18} color={color.primary} />
+            <Text style={styles.cardTitle}>Payment & payout</Text>
+          </View>
+          <KeyValue label="Total amount (collect)" value={`₹${booking.totalAmount}`} valueStyle={type.price} />
+          <KeyValue label="Partner payout (earnings)" value={`₹${booking.partnerPayout}`} valueStyle={{ color: color.success }} />
+          <KeyValue
+            label="Payment status"
+            value={<StatusBadge label={booking.paymentStatus === 'paid' ? 'Paid' : 'Pay at hotel'} tone={booking.paymentStatus === 'paid' ? 'success' : 'warning'} />}
+          />
+          <Button
+            title={invoiceLoading ? 'Loading…' : 'View invoice'}
+            icon={FileText}
+            variant="outline"
+            loading={invoiceLoading}
+            onPress={handleViewInvoice}
+            style={{ marginTop: space.sm }}
+          />
+        </Card>
+      </ScrollView>
+
+      {/* Actions */}
+      {hasActions ? (
+        <PinnedBar style={styles.actions}>
+          {canCheckIn && <Button title={`${checkInLabel} guest`} icon={LogIn} size="lg" onPress={handleCheckIn} style={{ width: '100%' }} />}
+
+          {canCheckOut && <Button title={`${checkOutLabel} guest`} icon={LogOut} size="lg" onPress={handleCheckOut} style={{ width: '100%' }} />}
 
           {canMarkPaid && (
-            <Press onPress={handleMarkPaid} style={[styles.paidBtn, { flexGrow: 1, flexBasis: half ? '47%' : '100%' }]}>
-              <CheckCircle size={18} color="#fff" />
-              <Text style={styles.smallText}>Mark Paid</Text>
-            </Press>
+            <Button
+              title="Mark paid"
+              icon={CheckCircle}
+              variant={half ? 'secondary' : 'primary'}
+              onPress={handleMarkPaid}
+              style={{ flexGrow: 1, flexBasis: half ? '45%' : '100%' }}
+            />
           )}
 
           {canMarkNoShow && (
-            <Press onPress={handleNoShow} style={[styles.noShowBtn, { flexGrow: 1, flexBasis: half ? '47%' : '100%' }]}>
-              <AlertTriangle size={18} color={tw.gray700} />
-              <Text style={[styles.smallText, { color: tw.gray700 }]}>No Show</Text>
-            </Press>
+            <Button title="No show" icon={AlertTriangle} variant="dangerSoft" onPress={handleNoShow} style={{ flexGrow: 1, flexBasis: half ? '45%' : '100%' }} />
           )}
-        </View>
-      </ScrollView>
+        </PinnedBar>
+      ) : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: HT.bg },
-  header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray200, paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerTitle: { flex: 1, fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  invoiceBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: '#0a0a0a' },
-  invoiceText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(700) },
-  invoiceCard: { width: '100%', maxWidth: 768, alignSelf: 'center', backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', ...shadow('2xl') },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  statusPill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1 },
-  statusText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.25, textTransform: 'uppercase', ...poppins(700) },
-  propImg: { width: 64, height: 64, backgroundColor: tw.gray100, borderRadius: 12, overflow: 'hidden' },
-  propName: { fontSize: 16, lineHeight: 20, color: tw.slate900, ...poppins(900) },
-  typeChip: { paddingHorizontal: 8, paddingVertical: 2, backgroundColor: tw.gray100, borderRadius: 4 },
-  typeText: { fontSize: 9, lineHeight: 13.5, color: tw.gray500, ...poppins(700) },
-  loc: { flexShrink: 1, maxWidth: 150, fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(500) },
-  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  cardTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  tile: { padding: 10, backgroundColor: tw.gray50, borderRadius: 12 },
-  tileRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tileText: { fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(600) },
-  dateText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  guests: { marginTop: 12, padding: 12, backgroundColor: tw.gray50, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: tw.gray100 },
-  payRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  payLabel: { fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  payPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingTop: 8 }, // the web's actions grid sits outside the max-w-2xl px-4 wrapper, edge to edge
-  bigBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#000', paddingVertical: 16, borderRadius: 12, ...shadow('lg') },
-  bigText: { fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) },
-  paidBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: tw.green600, paddingVertical: 12, borderRadius: 12, ...shadow('lg') },
-  noShowBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, paddingVertical: 12, borderRadius: 12 },
-  smallText: { fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  content: { padding: space.lg, gap: space.md },
+  invoiceCard: { width: '100%', maxWidth: 768, alignSelf: 'center', backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden', ...elevation.sheet },
+  idRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  caption: { ...type.caption, color: color.textMuted },
+  propImg: { width: 64, height: 64, backgroundColor: color.surfaceMuted, borderRadius: radii.md, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  cardTitle: { ...type.subheading, color: color.text },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  tiles: { flexDirection: 'row', gap: space.md },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
 });
 
 export default PartnerBookingDetail;

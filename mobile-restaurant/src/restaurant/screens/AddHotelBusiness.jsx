@@ -1,9 +1,8 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Building2 } from 'lucide-react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Building2 } from 'lucide-react-native';
 import { createHotelProfile, fetchPartnerProfiles, submitHotelKyc } from '../../api/partner';
-import { Press } from '../../components/ui';
+import { Button, Card, EmptyState } from '../../components/ds';
 import {
   HOTEL_BUSINESS_DEFAULTS,
   HOTEL_DOCUMENTS_DEFAULTS,
@@ -15,9 +14,10 @@ import {
 } from '../../hotel/onboarding/hotelOnboardingFields';
 import { toast } from '../../lib/notify';
 import { useLocation, useNavigate } from '../../lib/webRouter';
-import { poppins, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 import { setHotelSession } from '../utils/auth';
 import { WORKSPACE, hasHotelProfile, setActiveWorkspace, setPartnerProfiles } from '../utils/partnerSession';
+import { PinnedBar, ScreenHeader } from './inventory/partnerKit';
 
 /*
  * Port of Frontend/src/shared/partner/AddHotelBusiness.jsx (/food/restaurant/add-hotel).
@@ -34,7 +34,6 @@ import { WORKSPACE, hasHotelProfile, setActiveWorkspace, setPartnerProfiles } fr
 export default function AddHotelBusiness() {
   const navigate = useNavigate();
   const location = useLocation();
-  const insets = useSafeAreaInsets();
   const scrollRef = useRef(null);
 
   /*
@@ -121,34 +120,29 @@ export default function AddHotelBusiness() {
   if (alreadyHasHotel) {
     return (
       <View style={styles.page}>
-        <View style={[styles.narrow, { alignItems: 'center', paddingTop: 40 + insets.top }]}>
-          <Text style={styles.already}>You already have a stay business.</Text>
-          <Press onPress={() => navigate('/hotel/partner/dashboard')} accessibilityLabel="Go to it" style={[styles.button, { alignSelf: 'center', paddingHorizontal: 20, marginTop: 16 }]}>
-            <Text style={styles.buttonText}>Go to it</Text>
-          </Press>
+        <ScreenHeader title="Stay business" />
+        <View style={[styles.narrow, { paddingTop: space.xxl }]}>
+          <EmptyState icon={Building2} title="You already have a stay business." actionLabel="Go to it" onAction={() => navigate('/hotel/partner/dashboard')} />
         </View>
       </View>
     );
   }
 
+  const skipping = step === 1 && continuingSignup;
   return (
     <KeyboardAvoidingView style={styles.page} behavior="padding">
-      <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: 24 + insets.top, paddingBottom: 24 + insets.bottom }}>
-        <View style={styles.narrow}>
-          <Press onPress={goBack} accessibilityLabel={step === 1 && continuingSignup ? 'Skip for now' : 'Back'} style={styles.back}>
-            <ArrowLeft size={14} color={tw.slate500} />
-            <Text style={styles.backText}>{step === 1 && continuingSignup ? 'Skip for now' : 'Back'}</Text>
-          </Press>
-
+      <ScreenHeader title="Stay business" subtitle={`Step ${step} of 2`} onBack={goBack} />
+      <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: space.lg }}>
+        <View style={[styles.narrow, { gap: space.lg }]}>
           <View style={styles.head}>
             <View style={styles.headIcon}>
-              <Building2 size={22} color={tw.slate700} />
+              <Building2 size={22} color={color.primary} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title} accessibilityRole="header">
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
                 {step === 1 ? (continuingSignup ? 'Now your stay' : 'List a hotel or stay') : 'Verify your identity'}
               </Text>
-              <Text style={styles.sub}>
+              <Text style={[type.small, { color: color.textMuted }]}>
                 {step === 1
                   ? continuingSignup
                     ? 'Your restaurant is in for review. Next, set up your stay.'
@@ -157,38 +151,38 @@ export default function AddHotelBusiness() {
               </Text>
             </View>
           </View>
+          <View style={styles.progress}>
+            <View style={[styles.progressStep, styles.progressOn]} />
+            <View style={[styles.progressStep, step === 2 && styles.progressOn]} />
+          </View>
 
-          {step === 1 ? (
-            <HotelBusinessFields values={business} onChange={setBusiness} />
-          ) : (
-            <HotelDocumentsFields values={documents} onChange={setDocuments} />
-          )}
-
-          <Press
-            onPress={step === 1 ? goNext : submit}
-            disabled={loading}
-            accessibilityLabel={loading ? 'Submitting' : step === 1 ? 'Continue' : 'Submit for review'}
-            style={[styles.button, { marginTop: 24 }, loading ? { opacity: 0.6 } : null]}
-          >
-            {loading ? <ActivityIndicator size="small" color="#fff" /> : null}
-            <Text style={styles.buttonText}>{loading ? 'Submitting' : step === 1 ? 'Continue' : 'Submit for review'}</Text>
-          </Press>
+          <Card>
+            {step === 1 ? <HotelBusinessFields values={business} onChange={setBusiness} /> : <HotelDocumentsFields values={documents} onChange={setDocuments} />}
+          </Card>
         </View>
       </ScrollView>
+
+      <PinnedBar style={{ gap: space.sm }}>
+        <Button
+          title={loading ? 'Submitting' : step === 1 ? 'Continue' : 'Submit for review'}
+          size="lg"
+          loading={loading}
+          disabled={loading}
+          onPress={step === 1 ? goNext : submit}
+          accessibilityLabel={loading ? 'Submitting' : step === 1 ? 'Continue' : 'Submit for review'}
+        />
+        {skipping ? <Button title="Skip for now" variant="ghost" onPress={goBack} accessibilityLabel="Skip for now" /> : null}
+      </PinnedBar>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' },
-  narrow: { width: '100%', maxWidth: 448, alignSelf: 'center', paddingHorizontal: 20 },
-  already: { fontSize: 14, lineHeight: 20, color: tw.slate600, textAlign: 'center', ...poppins(400) },
-  back: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 20 },
-  backText: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.slate500, textTransform: 'uppercase', ...poppins(700) },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
-  headIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 18, lineHeight: 28, color: tw.slate900, ...poppins(700) },
-  sub: { fontSize: 12, lineHeight: 16, color: tw.slate500, ...poppins(400) },
-  button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, backgroundColor: tw.slate900, paddingVertical: 14 },
-  buttonText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  narrow: { width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: space.lg },
+  head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  headIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  progress: { flexDirection: 'row', gap: space.sm },
+  progressStep: { flex: 1, height: 4, borderRadius: 2, backgroundColor: color.border },
+  progressOn: { backgroundColor: color.primary },
 });

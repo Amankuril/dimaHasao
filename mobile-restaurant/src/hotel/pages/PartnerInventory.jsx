@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import {
-  ArrowLeft, Calendar as CalendarIcon, ChevronLeft, ChevronRight,
-  BedDouble, Users, Plus, CheckCircle, X, AlertTriangle,
+  Calendar as CalendarIcon, ChevronLeft, ChevronRight,
+  BedDouble, Users, Plus, Minus, CheckCircle, X, AlertTriangle,
   Globe, Lock,
 } from 'lucide-react-native';
 import { useNavigate, useParams } from '../../lib/webRouter';
 import { BottomSheet, SelectField } from '../../components/kit';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, Chip, ChipRow, IconButton, SegmentedControl } from '../../components/ds';
+import HeritageHeader from '../../components/HeritageHeader';
+import { color, elevation, radii, space, tone, type } from '../../theme';
 import { propertyService, availabilityService } from '../services/apiService';
 import SeasonalRatesPanel from '../components/SeasonalRatesPanel';
-import { HT } from '../theme';
+import { PageLoader } from '../components/dashboard/partnerUi';
 
 /* Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerInventory.jsx. */
 
@@ -31,7 +33,7 @@ const addDays = (d, n) => {
 
 const TABS = [
   { id: 'walk_in', label: 'Walk-in', icon: Users },
-  { id: 'external', label: 'Ext. Booking', icon: Globe },
+  { id: 'external', label: 'External', icon: Globe },
   { id: 'block', label: 'Block', icon: Lock },
 ];
 
@@ -46,7 +48,7 @@ const PLATFORMS = [
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /** The web's <input type="date">: a box that opens the Android date dialog. */
-function DateField({ value, onChange, minimumDate }) {
+function DateField({ value, onChange, minimumDate, label }) {
   const open = () => {
     DateTimePickerAndroid.open({
       value: value ? fromYmd(value) : new Date(),
@@ -58,8 +60,11 @@ function DateField({ value, onChange, minimumDate }) {
     });
   };
   return (
-    <Pressable onPress={open} accessibilityRole="button" style={styles.input}>
-      <Text style={[styles.inputText, { color: value ? tw.gray900 : tw.gray400 }]}>{value}</Text>
+    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={label ? `${label}: ${value || 'not set'}` : value} style={[styles.input, styles.dateInput]}>
+      <CalendarIcon size={16} color={color.textMuted} />
+      <Text style={[styles.inputText, { flex: 1, color: value ? color.text : color.textDisabled }]} numberOfLines={1}>
+        {value}
+      </Text>
     </Pressable>
   );
 }
@@ -255,12 +260,12 @@ const PartnerInventory = () => {
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const cellW = (screenW - 32 - 2) / 7;
+    const cellW = (screenW - space.lg * 2 - 2) / 7 - 0.1;
 
     const days = [];
     // Empty slots for start match
     for (let i = 0; i < firstDay; i++) {
-      days.push(<View key={`empty-${i}`} style={[styles.cell, { width: cellW, backgroundColor: 'rgba(249,250,251,0.3)' }]} />);
+      days.push(<View key={`empty-${i}`} style={[styles.cell, { width: cellW, backgroundColor: color.surfaceMuted }]} />);
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -268,29 +273,24 @@ const PartnerInventory = () => {
       const isSoldOut = available === 0;
       const isLow = available > 0 && available <= 2;
       const displayCount = available !== undefined ? available : '-';
+      const t = isSoldOut ? tone.danger : isLow ? tone.warning : tone.success;
 
       days.push(
         <Pressable
           key={d}
           onPress={() => handleDateClick(d)}
           accessibilityRole="button"
-          style={[styles.cell, { width: cellW, backgroundColor: isSoldOut ? tw.red50 : '#fff', justifyContent: 'space-between' }]}
+          accessibilityLabel={`${d}: ${selectedRoom ? (isSoldOut ? 'sold out' : `${displayCount} left`) : ''}. Update inventory`}
+          style={({ pressed }) => [styles.cell, { width: cellW, backgroundColor: isSoldOut ? color.dangerSoft : color.surface }, pressed && { backgroundColor: color.primarySoft }]}
         >
-          <Text style={{ fontSize: 14, lineHeight: 20, color: isSoldOut ? tw.red500 : tw.gray700, ...poppins(700) }}>{d}</Text>
-
-          <View style={{ alignItems: 'flex-end', gap: 4 }}>
-            {selectedRoom ? (
-              isSoldOut ? (
-                <View style={[styles.tag, { backgroundColor: tw.red100 }]}>
-                  <Text style={[styles.tagText, { color: tw.red600 }]}>SOLD OUT</Text>
-                </View>
-              ) : (
-                <View style={[styles.tag, { backgroundColor: isLow ? tw.orange100 : tw.emerald100 }]}>
-                  <Text style={[styles.tagText, { color: isLow ? tw.orange600 : tw.emerald600 }]}>{displayCount} left</Text>
-                </View>
-              )
-            ) : null}
-          </View>
+          <Text style={[type.caption, { color: isSoldOut ? color.danger : color.textSecondary }]}>{d}</Text>
+          {selectedRoom ? (
+            <View style={[styles.tag, { backgroundColor: t.bg }]}>
+              <Text style={[isSoldOut ? type.caption : type.bodyStrong, { color: t.fg }]} numberOfLines={1}>
+                {isSoldOut ? 'Full' : displayCount}
+              </Text>
+            </View>
+          ) : null}
         </Pressable>,
       );
     }
@@ -299,7 +299,7 @@ const PartnerInventory = () => {
       <View style={styles.grid}>
         {WEEKDAYS.map((day) => (
           <View key={day} style={[styles.dayHead, { width: cellW }]}>
-            <Text style={{ fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) }}>{day}</Text>
+            <Text style={[type.caption, { color: color.textMuted }]}>{day}</Text>
           </View>
         ))}
         {days}
@@ -308,46 +308,23 @@ const PartnerInventory = () => {
   };
 
   if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: HT.bg }}>
-        <ActivityIndicator size="large" color={tw.emerald600} />
-      </View>
-    );
+    return <PageLoader />;
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
-        <Press onPress={() => navigate(-1)} accessibilityLabel="Back" style={styles.backBtn}>
-          <ArrowLeft size={20} color={tw.gray700} />
-        </Press>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ fontSize: 18, lineHeight: 22.5, color: tw.gray900, ...poppins(700) }}>Inventory Manager</Text>
-          <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }} numberOfLines={1}>{property?.propertyName}</Text>
-        </View>
-        <View style={styles.headIcon}>
-          <CalendarIcon size={20} color={tw.emerald600} />
-        </View>
-      </View>
+      <HeritageHeader title="Inventory" subtitle={property?.propertyName} onBack={() => navigate(-1)} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 96 + insets.bottom }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ paddingBottom: 56 + space.xxxl + insets.bottom }} keyboardShouldPersistTaps="handled">
         {/* Room Selector */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16, gap: 8 }}>
-          {roomTypes.map((rt) => {
-            const active = selectedRoom?._id === rt._id;
-            return (
-              <Press
-                key={rt._id}
-                onPress={() => setSelectedRoom(rt)}
-                style={[styles.roomPill, active ? styles.roomPillOn : styles.roomPillOff]}
-              >
-                <BedDouble size={14} color={active ? '#fff' : tw.gray600} />
-                <Text style={{ fontSize: 12, lineHeight: 16, color: active ? '#fff' : tw.gray600, ...poppins(700) }}>{rt.name}</Text>
-              </Press>
-            );
-          })}
-        </ScrollView>
+        <View style={{ paddingVertical: space.lg }}>
+          <ChipRow>
+            {roomTypes.map((rt) => (
+              <Chip key={rt._id} icon={BedDouble} label={rt.name} selected={selectedRoom?._id === rt._id} onPress={() => setSelectedRoom(rt)} />
+            ))}
+          </ChipRow>
+        </View>
 
         <SeasonalRatesPanel
           propertyId={id}
@@ -363,49 +340,44 @@ const PartnerInventory = () => {
         />
 
         {/* Calendar Controls */}
-        <View style={{ paddingHorizontal: 16, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) }}>
+        <View style={styles.monthRow}>
+          <Text style={[type.heading, { color: color.text, flex: 1 }]} numberOfLines={1}>
             {currentDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
           </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Pressable onPress={() => handleMonthChange(-1)} accessibilityRole="button" accessibilityLabel="Previous month" style={styles.monthBtn}>
-              <ChevronLeft size={16} color={tw.gray600} />
-            </Pressable>
-            <Pressable onPress={() => handleMonthChange(1)} accessibilityRole="button" accessibilityLabel="Next month" style={styles.monthBtn}>
-              <ChevronRight size={16} color={tw.gray600} />
-            </Pressable>
-          </View>
+          <IconButton icon={ChevronLeft} label="Previous month" variant="soft" onPress={() => handleMonthChange(-1)} />
+          <IconButton icon={ChevronRight} label="Next month" variant="soft" onPress={() => handleMonthChange(1)} />
         </View>
+        <Text style={[type.small, { color: color.textMuted, paddingHorizontal: space.lg, marginBottom: space.md }]}>Rooms left each night. Tap a date to update it.</Text>
 
         {/* Calendar Grid */}
-        <View style={{ paddingHorizontal: 16 }}>{renderCalendar()}</View>
+        <View style={{ paddingHorizontal: space.lg }}>{renderCalendar()}</View>
 
         {/* Legend */}
-        <View style={{ paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', gap: 16, justifyContent: 'center' }}>
+        <View style={styles.legend}>
           {[
-            ['Available', '#10b981'],
-            ['Low Stock', '#f97316'],
-            ['Sold Out', '#ef4444'],
-          ].map(([label, color]) => (
-            <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: color }} />
-              <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(500) }}>{label}</Text>
+            ['Available', 'success'],
+            ['Low stock (1–2)', 'warning'],
+            ['Sold out', 'danger'],
+          ].map(([label, t]) => (
+            <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 }}>
+              <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: tone[t].fg }} />
+              <Text style={[type.caption, { color: color.textSecondary }]}>{label}</Text>
             </View>
           ))}
         </View>
       </ScrollView>
 
       {/* FAB */}
-      <Press onPress={handleOpenModal} scale={0.9} accessibilityLabel="Update inventory" style={[styles.fab, { bottom: 24 + insets.bottom }]}>
-        <Plus size={28} color="#fff" />
+      <Press onPress={handleOpenModal} scale={0.9} accessibilityLabel="Update inventory" style={[styles.fab, { bottom: space.xxl + insets.bottom }]}>
+        <Plus size={26} color={color.onPrimary} />
       </Press>
 
       {/* Toast */}
       {toast ? (
-        <View pointerEvents="none" style={[styles.toastWrap, { top: 80 + insets.top }]}>
-          <View style={styles.toast}>
-            {toast.type === 'success' ? <CheckCircle size={16} color={tw.emerald400} /> : <AlertTriangle size={16} color={tw.red400} />}
-            <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) }}>{toast.message}</Text>
+        <View pointerEvents="none" style={[styles.toastWrap, { top: insets.top + 72 }]}>
+          <View style={styles.toast} accessibilityLiveRegion="polite">
+            {toast.type === 'success' ? <CheckCircle size={18} color={color.successSoft} /> : <AlertTriangle size={18} color={color.dangerSoft} />}
+            <Text style={[type.bodyStrong, { color: color.textInverse, flexShrink: 1 }]}>{toast.message}</Text>
           </View>
         </View>
       ) : null}
@@ -414,171 +386,158 @@ const PartnerInventory = () => {
       <BottomSheet
         visible={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        backdrop="rgba(0,0,0,0.6)"
+        backdrop={color.overlay}
         blur={8}
         panelStyle={[styles.sheet, { height: Math.round(screenH * 0.85) }]}
       >
-        <View style={styles.sheetHead}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) }}>Update Inventory</Text>
-            <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>{selectedRoom?.name}</Text>
-          </View>
-          <Press onPress={() => setIsModalOpen(false)} accessibilityLabel="Close" style={{ backgroundColor: tw.gray100, padding: 8, borderRadius: 999 }}>
-            <X size={18} color={tw.gray700} />
-          </Press>
-        </View>
-
-        {/* Tabs */}
-        <View style={styles.tabs}>
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const active = modalTab === tab.id;
-            return (
-              <Pressable
-                key={tab.id}
-                onPress={() => setModalTab(tab.id)}
-                accessibilityRole="button"
-                style={[styles.tab, active && { backgroundColor: '#fff', ...shadow('sm') }]}
-              >
-                <Icon size={18} color={active ? '#000' : tw.gray400} />
-                <Text style={{ fontSize: 12, lineHeight: 16, color: active ? '#000' : tw.gray400, ...poppins(700) }}>{tab.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Form */}
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 80, gap: 20 }} keyboardShouldPersistTaps="handled">
-          <View style={{ flexDirection: 'row', gap: 16 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Check-in</Text>
-              <DateField
-                value={formData.startDate}
-                onChange={(newStart) => {
-                  let newEnd = formData.endDate;
-                  if (newEnd <= newStart) newEnd = toYmd(addDays(fromYmd(newStart), 1));
-                  setFormData({ ...formData, startDate: newStart, endDate: newEnd });
-                }}
-              />
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.sheetHead}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[type.heading, { color: color.text }]}>Update inventory</Text>
+              <Text style={[type.small, { color: color.textMuted }]} numberOfLines={1}>
+                {selectedRoom?.name}
+              </Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Check-out</Text>
-              <DateField
-                value={formData.endDate}
-                minimumDate={addDays(fromYmd(formData.startDate), 1)}
-                onChange={(v) => setFormData({ ...formData, endDate: v })}
-              />
-            </View>
+            <IconButton icon={X} label="Close" variant="soft" onPress={() => setIsModalOpen(false)} />
           </View>
 
-          <View>
-            <Text style={styles.label}>Number of Rooms</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-              <Pressable
-                onPress={() => setFormData({ ...formData, units: Math.max(1, formData.units - 1) })}
-                accessibilityRole="button"
-                accessibilityLabel="Fewer rooms"
-                style={styles.stepBtn}
-              >
-                <ChevronLeft size={20} color={tw.gray700} />
-              </Pressable>
-              <Text style={{ fontSize: 20, lineHeight: 28, width: 32, textAlign: 'center', color: tw.gray900, ...poppins(700) }}>{formData.units}</Text>
-              <Pressable
-                onPress={() => setFormData({ ...formData, units: formData.units + 1 })}
-                accessibilityRole="button"
-                accessibilityLabel="More rooms"
-                style={styles.stepBtn}
-              >
-                <ChevronRight size={20} color={tw.gray700} />
-              </Pressable>
-            </View>
-            <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray400, marginTop: 8, ...poppins(400) }}>Maximum {selectedRoom?.totalInventory} units available in total.</Text>
-          </View>
+          {/* Tabs */}
+          <SegmentedControl
+            options={TABS.map((tab) => ({ value: tab.id, label: tab.label }))}
+            value={modalTab}
+            onChange={setModalTab}
+            style={{ margin: space.lg }}
+          />
 
-          {modalTab === 'external' ? (
-            <>
-              <View>
-                <Text style={styles.label}>Platform Name</Text>
-                <SelectField
-                  value={formData.platform}
-                  options={PLATFORMS}
-                  onChange={(v) => setFormData({ ...formData, platform: v })}
-                  accessibilityLabel="Platform Name"
-                  style={styles.input}
-                  textStyle={[styles.inputText, { color: tw.gray900 }]}
+          {/* Form */}
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: space.lg, paddingBottom: space.xxl, gap: space.xl }} keyboardShouldPersistTaps="handled">
+            <View style={{ flexDirection: 'row', gap: space.md }}>
+              <View style={{ flex: 1, gap: space.xs + 2 }}>
+                <Text style={styles.label}>Check-in</Text>
+                <DateField
+                  label="Check-in"
+                  value={formData.startDate}
+                  onChange={(newStart) => {
+                    let newEnd = formData.endDate;
+                    if (newEnd <= newStart) newEnd = toYmd(addDays(fromYmd(newStart), 1));
+                    setFormData({ ...formData, startDate: newStart, endDate: newEnd });
+                  }}
                 />
               </View>
-              <View>
-                <Text style={styles.label}>Reference ID</Text>
+              <View style={{ flex: 1, gap: space.xs + 2 }}>
+                <Text style={styles.label}>Check-out</Text>
+                <DateField
+                  label="Check-out"
+                  value={formData.endDate}
+                  minimumDate={addDays(fromYmd(formData.startDate), 1)}
+                  onChange={(v) => setFormData({ ...formData, endDate: v })}
+                />
+              </View>
+            </View>
+
+            <View style={{ gap: space.xs + 2 }}>
+              <Text style={styles.label}>Number of rooms</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
+                <Pressable
+                  onPress={() => setFormData({ ...formData, units: Math.max(1, formData.units - 1) })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Fewer rooms"
+                  style={styles.stepBtn}
+                >
+                  <Minus size={20} color={color.text} />
+                </Pressable>
+                <Text style={[type.price, { minWidth: 32, textAlign: 'center', color: color.text }]}>{formData.units}</Text>
+                <Pressable
+                  onPress={() => setFormData({ ...formData, units: formData.units + 1 })}
+                  accessibilityRole="button"
+                  accessibilityLabel="More rooms"
+                  style={styles.stepBtn}
+                >
+                  <Plus size={20} color={color.text} />
+                </Pressable>
+              </View>
+              <Text style={[type.caption, { color: color.textMuted }]}>Maximum {selectedRoom?.totalInventory} units available in total.</Text>
+            </View>
+
+            {modalTab === 'external' ? (
+              <>
+                <View style={{ gap: space.xs + 2 }}>
+                  <Text style={styles.label}>Platform name</Text>
+                  <SelectField
+                    value={formData.platform}
+                    options={PLATFORMS}
+                    onChange={(v) => setFormData({ ...formData, platform: v })}
+                    accessibilityLabel="Platform Name"
+                    style={styles.input}
+                    textStyle={[styles.inputText, { color: color.text }]}
+                    chevronColor={color.textMuted}
+                  />
+                </View>
+                <View style={{ gap: space.xs + 2 }}>
+                  <Text style={styles.label}>Reference ID</Text>
+                  <TextInput
+                    placeholder="e.g. #AB12345"
+                    placeholderTextColor={color.textDisabled}
+                    value={formData.referenceNo}
+                    onChangeText={(t) => setFormData({ ...formData, referenceNo: t })}
+                    accessibilityLabel="Reference ID"
+                    style={[styles.input, styles.inputText, { color: color.text }]}
+                  />
+                </View>
+              </>
+            ) : null}
+
+            {modalTab === 'block' ? (
+              <View style={{ gap: space.xs + 2 }}>
+                <Text style={styles.label}>Reason for blocking</Text>
                 <TextInput
-                  placeholder="e.g. #AB12345"
-                  placeholderTextColor={tw.gray400}
-                  value={formData.referenceNo}
-                  onChangeText={(t) => setFormData({ ...formData, referenceNo: t })}
-                  style={[styles.input, styles.inputText, { color: tw.gray900 }]}
+                  placeholder="e.g. Maintenance, Painting, Personal use..."
+                  placeholderTextColor={color.textDisabled}
+                  value={formData.notes}
+                  onChangeText={(t) => setFormData({ ...formData, notes: t })}
+                  multiline
+                  textAlignVertical="top"
+                  accessibilityLabel="Reason for blocking"
+                  style={[styles.input, styles.inputText, { height: 96, paddingTop: space.md, color: color.text }]}
                 />
               </View>
-            </>
-          ) : null}
+            ) : null}
+          </ScrollView>
 
-          {modalTab === 'block' ? (
-            <View>
-              <Text style={styles.label}>Reason for Blocking</Text>
-              <TextInput
-                placeholder="e.g. Maintenance, Painting, Personal use..."
-                placeholderTextColor={tw.gray400}
-                value={formData.notes}
-                onChangeText={(t) => setFormData({ ...formData, notes: t })}
-                multiline
-                textAlignVertical="top"
-                style={[styles.input, styles.inputText, { height: 96, padding: 16, color: tw.gray900 }]}
-              />
-            </View>
-          ) : null}
-        </ScrollView>
-
-        {/* Submit Button */}
-        <View style={[styles.submitWrap, { paddingBottom: 16 + insets.bottom }]}>
-          <Press onPress={handleActionSubmit} disabled={actionLoading} scale={0.98} style={[styles.submit, { opacity: actionLoading ? 0.5 : 1 }]}>
-            {actionLoading ? <ActivityIndicator size="small" color="#fff" /> : null}
-            <Text style={{ fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) }}>
-              {modalTab === 'walk_in' && 'Confirm Walk-in'}
-              {modalTab === 'external' && 'Add External Booking'}
-              {modalTab === 'block' && 'Block Rooms'}
-            </Text>
-          </Press>
-        </View>
+          {/* Submit Button */}
+          <View style={[styles.submitWrap, { paddingBottom: space.lg + insets.bottom }]}>
+            <Button
+              size="lg"
+              loading={actionLoading}
+              disabled={actionLoading}
+              onPress={handleActionSubmit}
+              title={modalTab === 'walk_in' ? 'Confirm walk-in' : modalTab === 'external' ? 'Add external booking' : 'Block rooms'}
+            />
+          </View>
+        </KeyboardAvoidingView>
       </BottomSheet>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: 'rgba(255,255,255,0.9)', borderBottomWidth: 1, borderBottomColor: tw.gray100, paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center' },
-  headIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.emerald50, alignItems: 'center', justifyContent: 'center' },
-  roomPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
-  roomPillOn: { backgroundColor: tw.gray900, borderColor: tw.gray900, ...shadow('0 10px 15px -3px rgba(16,24,40,0.2)') },
-  roomPillOff: { backgroundColor: '#fff', borderColor: tw.gray200 },
-  monthBtn: { width: 32, height: 32, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: tw.gray200, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: tw.gray200, ...shadow('sm') },
-  dayHead: { height: 32, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', borderWidth: 0.5, borderColor: tw.gray200 },
-  cell: { height: 96, borderWidth: 0.5, borderColor: tw.gray100, padding: 8 },
-  tag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  tagText: { fontSize: 10, lineHeight: 15, ...poppins(700) },
-  fab: { position: 'absolute', right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', ...shadow('0 20px 25px -5px rgba(0,0,0,0.2)') },
-  toastWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  toast: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(16,24,40,0.9)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, ...shadow('xl') },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: 'hidden' },
-  sheetHead: { padding: 16, borderBottomWidth: 1, borderBottomColor: tw.gray100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  tabs: { flexDirection: 'row', padding: 8, gap: 4, backgroundColor: tw.gray50, margin: 16, borderRadius: 12 },
-  tab: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 8 },
-  label: { fontSize: 12, lineHeight: 16, textTransform: 'uppercase', color: tw.gray500, marginBottom: 6, ...poppins(700) },
-  input: { height: 48, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', justifyContent: 'center' },
-  inputText: { fontSize: 14, lineHeight: 20, ...poppins(500) },
-  stepBtn: { width: 48, height: 48, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, alignItems: 'center', justifyContent: 'center' },
-  submitWrap: { padding: 16, borderTopWidth: 1, borderTopColor: tw.gray100, backgroundColor: '#fff' },
-  submit: { height: 56, backgroundColor: '#000', borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  monthRow: { paddingHorizontal: space.lg, paddingBottom: space.xs, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: color.border, borderRadius: radii.lg, overflow: 'hidden', borderWidth: 1, borderColor: color.border },
+  dayHead: { height: 32, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  cell: { height: 64, borderWidth: StyleSheet.hairlineWidth, borderColor: color.border, paddingVertical: space.xs, alignItems: 'center', justifyContent: 'space-between' },
+  tag: { minWidth: 30, paddingHorizontal: space.xs, height: 26, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center' },
+  legend: { paddingHorizontal: space.lg, paddingVertical: space.lg, flexDirection: 'row', flexWrap: 'wrap', columnGap: space.lg, rowGap: space.sm, justifyContent: 'center' },
+  fab: { position: 'absolute', right: space.xl, width: 56, height: 56, borderRadius: 28, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center', ...elevation.float },
+  toastWrap: { position: 'absolute', left: space.lg, right: space.lg, alignItems: 'center' },
+  toast: { flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.primaryDeep, paddingHorizontal: space.lg, paddingVertical: space.md, borderRadius: radii.md, ...elevation.float },
+  sheet: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, overflow: 'hidden' },
+  sheetHead: { paddingLeft: space.lg, paddingRight: space.sm, paddingVertical: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  label: { ...type.label, color: color.text },
+  input: { height: 48, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, justifyContent: 'center' },
+  dateInput: { flexDirection: 'row', alignItems: 'center', gap: space.sm, justifyContent: 'flex-start' },
+  inputText: { ...type.body },
+  stepBtn: { width: 48, height: 48, borderRadius: radii.md, borderWidth: 1, borderColor: color.borderStrong, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  submitWrap: { padding: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, backgroundColor: color.surface },
 });
 
 export default PartnerInventory;

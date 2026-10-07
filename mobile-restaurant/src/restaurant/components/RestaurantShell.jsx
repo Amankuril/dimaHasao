@@ -6,6 +6,7 @@ import { usePushNotifications } from '../../lib/push';
 import { localStore } from '../../lib/storage';
 import { setCurrentPath } from '../utils/alertPlatform';
 import { hasHotelProfile } from '../utils/partnerSession';
+import { color } from '../../theme';
 
 /*
  * Web: Food/components/restaurant/RestaurantRouter.jsx. The routes that sit
@@ -58,10 +59,10 @@ export default function RestaurantShell() {
     }
   }
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       {/* A screen that stays mounted under the stack keeps its own light bar; set it per route so a white screen never inherits it. */}
       {isPublic ? null : <StatusBar style={GREEN_HEADER.has(sub) ? 'light' : 'dark'} />}
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fff' }, animation: 'fade', animationDuration: 120 }} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bg }, animation: 'fade', animationDuration: 120 }} />
     </View>
   );
 }

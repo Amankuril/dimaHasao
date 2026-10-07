@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, BackHandler, KeyboardAvoidingView, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BackHandler, KeyboardAvoidingView, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import * as Location from 'expo-location';
-import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
-import { Press } from '../../components/ui';
+import { ArrowRight } from 'lucide-react-native';
 import { confirm } from '../../lib/notify';
 import { clearRouteState } from '../../lib/routeState';
 import { localStore } from '../../lib/storage';
 import { useLocation, useNavigate } from '../../lib/webRouter';
-import { poppins, tw } from '../../theme';
+import { color, space } from '../../theme';
+import { StepCard, StepIntro, StepRail, WizardFooter, WizardHeader } from '../components/wizardUi';
 import useLocationSearch from '../hooks/useLocationSearch';
 import { hotelService, propertyService } from '../services/apiService';
-import { HT } from '../theme';
 import { StepAmenities, StepBasicInfo, StepLocation } from './wizards/hotel/StepsBasics';
 import { StepDone, StepReview, StepDocuments, StepRules } from './wizards/hotel/StepsFinal';
 import { StepImages, StepNearby } from './wizards/hotel/StepsNearbyImages';
@@ -32,10 +30,8 @@ const emptyDocs = () => REQUIRED_DOCS_HOTEL.map((d) => ({ type: d.type, name: d.
 const AddHotelWizard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const wide = width >= 640; // Tailwind `sm:`
-  const roomy = width >= 768; // Tailwind `md:`
   const scrollRef = useRef(null);
 
   const [existingProperty] = useState(() => location.state?.property || null);
@@ -763,55 +759,17 @@ const AddHotelWizard = () => {
 
   return (
     <KeyboardAvoidingView style={styles.page} behavior="padding">
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <View style={styles.headerBar}>
-          <Press scale={0.9} onPress={handleBack} style={styles.headerBtn} accessibilityLabel="Go back">
-            <ArrowLeft size={20} color={tw.gray500} />
-          </Press>
+      <WizardHeader title={isComplete ? 'Complete' : getStepTitle()} subtitle={isComplete ? 'Registration submitted' : `Step ${step} of 9`} onBack={handleBack} onClose={handleExit} />
 
-          <View style={{ flex: 1, minWidth: 0, alignItems: 'center' }}>
-            <Text style={styles.stepKicker}>{isComplete ? 'Complete' : `Step ${step} of 9`}</Text>
-            <Text style={styles.stepName} numberOfLines={1}>{isComplete ? 'Registration submitted' : getStepTitle()}</Text>
-          </View>
+      {/* Segmented rail: each step is its own bar, so progress reads as
+          "five of nine done" at a glance rather than a fraction of a line. */}
+      {!isComplete ? <StepRail steps={WIZARD_STEPS} step={step} showLabels={wide} /> : null}
 
-          <Press scale={0.9} onPress={handleExit} style={styles.headerBtn} accessibilityLabel="Close and discard">
-            <X size={20} color={tw.gray500} />
-          </Press>
-        </View>
+      <ScrollView ref={scrollRef} style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={styles.scroll}>
+        <View style={styles.main}>
+          {!isComplete ? <StepIntro>{getStepSubtitle()}</StepIntro> : null}
 
-        {/* Segmented rail: each step is its own bar, so progress reads as
-            "five of nine done" at a glance rather than a fraction of a line. */}
-        {!isComplete ? (
-          <View style={styles.rail}>
-            {WIZARD_STEPS.map((wizardStep, index) => {
-              const position = index + 1;
-              const done = position < step;
-              const current = position === step;
-              return (
-                <View key={wizardStep.title} style={styles.railItem}>
-                  <View style={[styles.railBar, { backgroundColor: done || current ? HT.primary : tw.gray200 }]} />
-                  {wide ? (
-                    <Text style={[styles.railLabel, { color: current ? HT.primary : done ? tw.gray400 : tw.gray300 }]} numberOfLines={1}>
-                      {wizardStep.short}
-                    </Text>
-                  ) : null}
-                </View>
-              );
-            })}
-          </View>
-        ) : null}
-      </View>
-
-      <ScrollView ref={scrollRef} style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
-        <View style={[styles.main, { paddingTop: roomy ? 8 : 0 }]}>
-          {!isComplete ? (
-            <View style={{ marginBottom: 20 }}>
-              <Text style={[styles.h1, roomy ? { fontSize: 30, lineHeight: 36 } : null]}>{getStepTitle()}</Text>
-              <Text style={styles.subtitle}>{getStepSubtitle()}</Text>
-            </View>
-          ) : null}
-
-          <View style={[styles.card, roomy ? { padding: 28 } : null]}>
+          <StepCard>
             {step === 1 && <StepBasicInfo propertyForm={propertyForm} updatePropertyForm={updatePropertyForm} error={error} />}
 
             {step === 2 && (
@@ -874,36 +832,25 @@ const AddHotelWizard = () => {
             {step === 9 && <StepReview propertyForm={propertyForm} roomTypes={roomTypes} error={error} />}
 
             {step === 10 && <StepDone onGo={() => navigate('/hotel/partner/properties', { replace: true })} />}
-          </View>
+          </StepCard>
         </View>
       </ScrollView>
 
       {!isComplete ? (
-        <View style={[styles.footer, { paddingBottom: 12 + insets.bottom }]}>
-          <View style={styles.footerBar}>
-            <Press scale={0.97} onPress={handleBack} disabled={step === 1 || loading} style={[styles.backBtn, step === 1 || loading ? { opacity: 0.4 } : null]}>
-              <Text style={styles.backText}>Back</Text>
-            </Press>
-
-            {/* Destructive and easy to hit by accident, so it is left off narrow screens, as the web does. */}
-            {step < 9 && wide ? (
-              <Press scale={0.97} onPress={clearCurrentStep} disabled={loading} style={[styles.clearBtn, loading ? { opacity: 0.4 } : null]}>
-                <Text style={styles.clearText}>Clear step</Text>
-              </Press>
-            ) : null}
-
-            <Press
-              scale={0.98}
-              onPress={handleNext}
-              disabled={loading || (step === 6 && roomTypes.length === 0)}
-              style={[styles.nextBtn, loading || (step === 6 && roomTypes.length === 0) ? { opacity: 0.5 } : null]}
-            >
-              {loading ? <ActivityIndicator size="small" color="#fff" /> : null}
-              <Text style={styles.nextText}>{step === 9 ? (loading ? 'Submitting…' : 'Submit property') : 'Continue'}</Text>
-              {!loading && step < 9 ? <ArrowRight size={16} color="#fff" /> : null}
-            </Press>
-          </View>
-        </View>
+        <WizardFooter
+          onBack={handleBack}
+          backDisabled={step === 1 || loading}
+          // Destructive and easy to hit by accident, so it is left off narrow screens, as the web does.
+          onClear={step < 9 && wide ? clearCurrentStep : undefined}
+          clearDisabled={loading}
+          next={{
+            label: step === 9 ? (loading ? 'Submitting…' : 'Submit property') : 'Continue',
+            onPress: handleNext,
+            disabled: loading || (step === 6 && roomTypes.length === 0),
+            loading,
+            icon: !loading && step < 9 ? ArrowRight : undefined,
+          }}
+        />
       ) : null}
     </KeyboardAvoidingView>
   );
@@ -912,27 +859,7 @@ const AddHotelWizard = () => {
 export default AddHotelWizard;
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: HT.bg },
-  header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  headerBar: { height: 64, width: '100%', maxWidth: 768, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
-  headerBtn: { padding: 8, borderRadius: 8 },
-  stepKicker: { fontSize: 11, lineHeight: 16, letterSpacing: 1.6, color: HT.primary, textTransform: 'uppercase', ...poppins(700) },
-  stepName: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  rail: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
-  railItem: { flex: 1, alignItems: 'center', gap: 6 },
-  railBar: { height: 6, width: '100%', borderRadius: 999 },
-  railLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, textTransform: 'uppercase', ...poppins(700) },
-  scroll: { flexGrow: 1, paddingTop: 24, paddingBottom: 32 },
-  main: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: 16 },
-  h1: { fontSize: 26, lineHeight: 32, color: tw.gray900, letterSpacing: -0.5, ...poppins(800) },
-  subtitle: { fontSize: 14, lineHeight: 20, marginTop: 6, color: tw.gray500, ...poppins(400) },
-  card: { backgroundColor: '#fff', padding: 20, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(229,231,235,0.8)', gap: 24, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' },
-  footer: { backgroundColor: 'rgba(255,255,255,0.95)', borderTopWidth: 1, borderTopColor: tw.gray200, paddingTop: 12 },
-  footerBar: { width: '100%', maxWidth: 768, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
-  backBtn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200 },
-  backText: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(700) },
-  clearBtn: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12 },
-  clearText: { fontSize: 14, lineHeight: 20, color: tw.gray400, ...poppins(600) },
-  nextBtn: { flex: 1, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, backgroundColor: HT.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  nextText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  scroll: { flexGrow: 1, paddingTop: space.lg, paddingBottom: space.xxl },
+  main: { width: '100%', maxWidth: 768, alignSelf: 'center', paddingHorizontal: space.lg, gap: space.lg },
 });

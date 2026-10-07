@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AlertTriangle, ArrowLeft, Check, ChevronDown, Clock, Pencil, Trash2 } from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AlertTriangle, ChevronDown, Clock, Pencil, Plus, Trash2 } from 'lucide-react-native';
 import { Dialog } from '../../components/kit';
+import { Button, Card, IconButton } from '../../components/ds';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
-import { ShadButton, ShadDialog } from '../components/ShadDialog';
+import { color, elevation, radii, space, type } from '../../theme';
 import { useDaySlots } from '../hooks/pages/useDaySlots';
-import { RT } from '../theme';
+import { CheckRow, Notice, PinnedBar, ScreenHeader } from './inventory/partnerKit';
 
 const ITEM = 40;
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -59,27 +58,27 @@ function TimePickerWheel({ initialHour, initialMinute, initialPeriod, onClose, o
   const [mi, setMi] = useState(m);
   const [pi, setPi] = useState(PERIODS.indexOf(p));
   return (
-    <Dialog visible onClose={onClose} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.picker}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 32, paddingHorizontal: 16 }}>
+    <Dialog visible onClose={onClose} backdrop={color.overlay} panelStyle={styles.picker}>
+      <Text style={[type.heading, { color: color.text, paddingHorizontal: space.lg, paddingTop: space.lg }]} accessibilityRole="header">Choose time</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: space.lg, paddingHorizontal: space.lg }}>
         <Wheel values={HOURS} index={hi} onIndex={setHi} format={(v) => String(v)} />
         <Text style={styles.colon}>:</Text>
         <Wheel values={MINUTES} index={mi} onIndex={setMi} format={(v) => String(v).padStart(2, '0')} />
         <Wheel values={PERIODS} index={pi} onIndex={setPi} format={(v) => v.toUpperCase()} />
         <View pointerEvents="none" style={styles.lines}>
-          <View style={{ height: ITEM, borderTopWidth: 1, borderBottomWidth: 1, borderColor: tw.gray300 }} />
+          <View style={styles.band} />
         </View>
       </View>
       <View style={styles.okay}>
-        <Press
-          scale={0.97}
+        <Button title="Cancel" variant="outline" onPress={onClose} style={{ flex: 1 }} />
+        <Button
+          title="Okay"
           onPress={() => {
             onConfirm(String(HOURS[hi]), String(MINUTES[mi]).padStart(2, '0'), PERIODS[pi]);
             onClose();
           }}
-          accessibilityLabel="Okay"
-        >
-          <Text style={{ fontSize: 16, lineHeight: 24, color: RT.primary, ...poppins(500) }}>Okay</Text>
-        </Press>
+          style={{ flex: 1 }}
+        />
       </View>
     </Dialog>
   );
@@ -87,7 +86,6 @@ function TimePickerWheel({ initialHour, initialMinute, initialPeriod, onClose, o
 
 /** Port of Food/pages/restaurant/DaySlots.jsx (/food/restaurant/outlet-timings/:day). */
 export default function DaySlots() {
-  const insets = useSafeAreaInsets();
   const {
     companyName, navigate, dayName, dayData, copyToAllDays, setCopyToAllDays, deleteDialogOpen, setDeleteDialogOpen, setSlotToDelete,
     timePickerOpen, setTimePickerOpen, getTimeParts, handleCustomTimeChange, calculateSlotDuration, calculateTotalDuration,
@@ -104,77 +102,50 @@ export default function DaySlots() {
     const time = isStart ? slot.start : slot.end;
     const period = isStart ? slot.startPeriod : slot.endPeriod;
     return (
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Clock size={16} color={tw.gray600} />
-          <Text style={styles.rowLabel}>{isStart ? 'Start Time' : 'End Time'}</Text>
-        </View>
-        <Press scale={1} onPress={() => setTimePickerOpen({ slotId: slot.id, field, type: 'time' })} accessibilityLabel={`${isStart ? 'Start' : 'End'} time ${time}`} style={styles.timeBox}>
-          <Text style={styles.timeText}>{time}</Text>
-          <Pencil size={16} color={tw.gray500} />
+      <View style={styles.timeRow}>
+        <Text style={[type.label, { color: color.textSecondary, width: 44 }]}>{isStart ? 'Start' : 'End'}</Text>
+        <Press scale={0.98} onPress={() => setTimePickerOpen({ slotId: slot.id, field, type: 'time' })} accessibilityLabel={`${isStart ? 'Start' : 'End'} time ${time}`} style={styles.timeBox}>
+          <Clock size={18} color={color.primary} />
+          <Text style={[type.bodyStrong, { flex: 1, color: color.text }]}>{time}</Text>
+          <Pencil size={16} color={color.textMuted} />
         </Press>
-        <Press scale={1} onPress={() => setTimePickerOpen({ slotId: slot.id, field, type: 'period' })} accessibilityLabel={`${isStart ? 'Start' : 'End'} period ${period}`} style={styles.periodBox}>
-          <Text style={styles.periodText}>{period.toUpperCase()}</Text>
-          <ChevronDown size={16} color={tw.gray500} style={{ opacity: 0.5 }} />
+        <Press scale={0.98} onPress={() => setTimePickerOpen({ slotId: slot.id, field, type: 'period' })} accessibilityLabel={`${isStart ? 'Start' : 'End'} period ${period}`} style={styles.periodBox}>
+          <Text style={[type.bodyStrong, { color: color.text }]}>{period.toUpperCase()}</Text>
+          <ChevronDown size={16} color={color.textMuted} />
         </Press>
       </View>
     );
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
-        <Press onPress={() => navigate('/food/restaurant/outlet-timings')} accessibilityLabel="Go back" hitSlop={8} style={{ padding: 6 }}>
-          <ArrowLeft size={24} color={tw.gray900} />
-        </Press>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.headerTitle} numberOfLines={1} accessibilityRole="header">{dayName}</Text>
-          <Text style={styles.headerSub} numberOfLines={1}>{companyName} delivery</Text>
-        </View>
-      </View>
-      <View style={{ backgroundColor: tw.gray50, padding: 8 }}>
-        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) }}>
-          Add or modify your restaurant timings here. You can create maximum up to 3 time slots in a day.
-        </Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <ScreenHeader title={dayName} subtitle={`${companyName} delivery`} onBack={() => navigate('/food/restaurant/outlet-timings')} />
 
-      <ScrollView style={{ flex: 1 }}>
-        <View style={{ gap: 24 }}>
-          {dayData.slots.map((slot, index) => (
-            <View key={slot.id} style={styles.slot}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text>
-                  <Text style={styles.slotTitle}>Slot-{index + 1}</Text>
-                  <Text style={styles.slotDur}>  ({calculateSlotDuration(slot.start, slot.end, slot.startPeriod, slot.endPeriod)})</Text>
-                </Text>
-                <Press onPress={() => deleteSlot(slot.id)} accessibilityLabel="Delete slot" style={styles.trash}>
-                  <Trash2 size={16} color="#f87171" />
-                </Press>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: space.lg, gap: space.md }}>
+        <Notice tone="neutral" icon={Clock}>Add or change your timings here. You can create up to 3 time slots in a day.</Notice>
+        {dayData.slots.map((slot, index) => (
+          <Card key={slot.id} style={{ gap: space.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[type.subheading, { color: color.text }]}>Slot {index + 1}</Text>
+                <Text style={[type.caption, { color: color.textMuted }]}>{calculateSlotDuration(slot.start, slot.end, slot.startPeriod, slot.endPeriod)}</Text>
               </View>
-              {row(slot, 'start')}
-              {row(slot, 'end')}
+              <IconButton icon={Trash2} label={`Delete slot ${index + 1}`} variant="danger" onPress={() => deleteSlot(slot.id)} />
             </View>
-          ))}
-        </View>
-        {dayData.slots.length < 3 ? (
-          <Press scale={1} onPress={addSlot} style={{ paddingVertical: 12, alignItems: 'center' }}>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: RT.primary, ...poppins(500) }}>+ Add time slot</Text>
-          </Press>
-        ) : null}
+            {row(slot, 'start')}
+            {row(slot, 'end')}
+          </Card>
+        ))}
+        {dayData.slots.length < 3 ? <Button title="Add time slot" icon={Plus} variant="secondary" onPress={addSlot} /> : null}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Press scale={1} onPress={() => setCopyToAllDays(!copyToAllDays)} accessibilityRole="checkbox" accessibilityState={{ checked: copyToAllDays }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <View style={[styles.check, copyToAllDays ? { backgroundColor: tw.green600, borderColor: tw.green600 } : null]}>
-            {copyToAllDays ? <Check size={14} color="#fff" /> : null}
-          </View>
-          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) }}>Copy above timings to all days</Text>
-        </Press>
-        <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) }}>Total: {calculateTotalDuration()}</Text>
-        <Press scale={0.98} onPress={handleSave} style={styles.save}>
-          <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) }}>Save</Text>
-        </Press>
-      </View>
+      <PinnedBar style={{ gap: space.sm }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+          <CheckRow label="Copy these timings to all days" checked={copyToAllDays} onPress={() => setCopyToAllDays(!copyToAllDays)} style={{ flex: 1 }} />
+          <Text style={[type.label, { color: color.textSecondary }]}>Total {calculateTotalDuration()}</Text>
+        </View>
+        <Button title="Save" onPress={handleSave} />
+      </PinnedBar>
 
       {current && timePickerOpen.type ? (
         <TimePickerWheel
@@ -187,50 +158,32 @@ export default function DaySlots() {
         />
       ) : null}
 
-      <ShadDialog visible={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} style={styles.deleteDialog}>
-        <View style={{ gap: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8, paddingRight: 40 }}>
-            <View style={styles.deleteIcon}>
-              <AlertTriangle size={24} color={RT.primary} />
-            </View>
-            <Text style={styles.deleteTitle}>Delete Time Slot</Text>
-          </View>
-          <Text style={styles.deleteDesc}>Are you sure you want to delete this time slot? This action cannot be undone.</Text>
+      <Dialog visible={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} backdrop={color.overlay} panelStyle={styles.deleteDialog}>
+        <View style={styles.deleteIcon}>
+          <AlertTriangle size={26} color={color.danger} />
         </View>
-        {/* DialogFooter is flex-col-reverse on a phone: the primary action sits on top */}
-        <View style={{ gap: 8, marginTop: 8 }}>
-          <ShadButton title="Delete" onPress={confirmDelete} />
-          <ShadButton variant="outline" title="Cancel" onPress={() => { setDeleteDialogOpen(false); setSlotToDelete(null); }} />
+        <Text style={[type.heading, { color: color.text, textAlign: 'center' }]} accessibilityRole="header">Delete time slot?</Text>
+        <Text style={[type.small, { color: color.textSecondary, textAlign: 'center', marginTop: space.sm, marginBottom: space.xl }]}>This time slot will be removed. This can&apos;t be undone.</Text>
+        <View style={{ flexDirection: 'row', gap: space.md, alignSelf: 'stretch' }}>
+          <Button title="Cancel" variant="outline" onPress={() => { setDeleteDialogOpen(false); setSlotToDelete(null); }} style={{ flex: 1 }} />
+          <Button title="Delete" variant="danger" onPress={confirmDelete} style={{ flex: 1 }} />
         </View>
-      </ShadDialog>
+      </Dialog>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  picker: { width: '90%', maxWidth: 320, alignSelf: 'center', backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', ...shadow('xl') },
-  wheelOn: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  wheelOff: { fontSize: 16, lineHeight: 24, color: tw.gray400, ...poppins(400) },
-  colon: { paddingHorizontal: 8, fontSize: 24, lineHeight: 32, color: tw.gray900, ...poppins(700) },
-  lines: { position: 'absolute', left: 16, right: 16, top: 0, bottom: 0, justifyContent: 'center' },
-  okay: { borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 16, paddingVertical: 16, alignItems: 'center' },
-  slot: { backgroundColor: '#fff', padding: 16, gap: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  slotTitle: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) },
-  slotDur: { fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
-  trash: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#fce7f3', alignItems: 'center', justifyContent: 'center' },
-  rowLabel: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  timeBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 112, paddingHorizontal: 8, height: 40, borderWidth: 1, borderColor: tw.gray300, borderRadius: 2, backgroundColor: tw.gray50 },
-  timeText: { fontSize: 15, color: tw.gray900, ...poppins(700) },
-  periodBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 70, height: 36, paddingHorizontal: 12, borderWidth: 1, borderColor: tw.gray300, borderRadius: 2, backgroundColor: '#fff' },
-  periodText: { fontSize: 14, color: tw.gray900, ...poppins(500) },
-  footer: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 16, paddingVertical: 16, gap: 16, ...shadow('lg') },
-  check: { width: 20, height: 20, borderWidth: 2, borderColor: tw.gray300, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
-  save: { backgroundColor: tw.gray800, borderRadius: 8, height: 36, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  headerTitle: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  headerSub: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  deleteDialog: { width: '94%', maxWidth: 425, padding: 16, gap: 8 },
-  deleteIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: tw.red100, alignItems: 'center', justifyContent: 'center' },
-  deleteTitle: { flex: 1, fontSize: 18, lineHeight: 24, color: tw.gray900, ...poppins(600) },
-  deleteDesc: { paddingTop: 8, fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
+  picker: { width: '90%', maxWidth: 320, alignSelf: 'center', backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden', ...elevation.sheet },
+  wheelOn: { ...type.heading, color: color.primary },
+  wheelOff: { ...type.body, color: color.textMuted },
+  colon: { paddingHorizontal: space.sm, ...type.priceLg, color: color.text },
+  lines: { position: 'absolute', left: space.lg, right: space.lg, top: 0, bottom: 0, justifyContent: 'center' },
+  band: { height: ITEM, borderRadius: radii.md, backgroundColor: color.primarySoft, opacity: 0.6 },
+  okay: { flexDirection: 'row', gap: space.md, padding: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  timeBox: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, backgroundColor: color.surface },
+  periodBox: { minHeight: 48, minWidth: 76, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs, paddingHorizontal: space.md, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, backgroundColor: color.surface },
+  deleteDialog: { width: '90%', maxWidth: 380, alignSelf: 'center', backgroundColor: color.surface, borderRadius: radii.lg, padding: space.xxl, alignItems: 'center' },
+  deleteIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.lg },
 });

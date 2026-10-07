@@ -1,8 +1,7 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MapPin } from 'lucide-react-native';
 import { Press } from '../../../components/ui';
-import { poppins, shadow, tw } from '../../../theme';
-import { RT } from '../../theme';
+import { color, elevation, radii, space, type } from '../../../theme';
 import { Dropdown, Field, Hint, Label, Pill, Section } from './parts';
 
 // The web's city list (a fixed Select).
@@ -26,15 +25,15 @@ export default function Step1({ o }) {
   });
 
   return (
-    <View style={{ gap: 24 }}>
+    <View style={{ gap: space.xxl }}>
       <Section title="Restaurant information" style={{ gap: 0 }}>
-        <View style={{ gap: 12, marginTop: 16 }}>
+        <View style={{ gap: space.lg, marginTop: space.lg }}>
           <View>
             <Label>Restaurant name*</Label>
             <Field
               value={step1.restaurantName || ''}
               onChangeText={(text) => setStep1({ ...step1, restaurantName: formatNameToCapital(text.replace(/[/-]/g, '')) })}
-              style={{ marginTop: 4 }}
+              style={{ marginTop: space.xs + 2 }}
               placeholder="Customers will see this name"
               editable={isEditing}
               accessibilityLabel="Restaurant name"
@@ -42,24 +41,24 @@ export default function Step1({ o }) {
           </View>
           <View>
             <Label>Pure veg restaurant?*</Label>
-            <View style={{ marginTop: 8, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-              <Pill label="Yes, Pure Veg" active={step1.pureVegRestaurant === true} activeColors={[tw.green600, tw.green600]} disabled={!isEditing} onPress={() => setStep1({ ...step1, pureVegRestaurant: true })} />
-              <Pill label="No, Mixed Menu" active={step1.pureVegRestaurant === false} activeColors={[RT.nonVeg, RT.nonVeg]} disabled={!isEditing} onPress={() => setStep1({ ...step1, pureVegRestaurant: false })} />
+            <View style={{ marginTop: space.sm, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.sm }}>
+              <Pill label="Yes, Pure Veg" active={step1.pureVegRestaurant === true} activeColors={[color.veg]} disabled={!isEditing} onPress={() => setStep1({ ...step1, pureVegRestaurant: true })} />
+              <Pill label="No, Mixed Menu" active={step1.pureVegRestaurant === false} activeColors={[color.nonVeg]} disabled={!isEditing} onPress={() => setStep1({ ...step1, pureVegRestaurant: false })} />
             </View>
-            <Hint style={{ marginTop: 4 }}>This helps users filter restaurants by dietary preference.</Hint>
+            <Hint style={{ marginTop: space.xs + 2 }}>This helps users filter restaurants by dietary preference.</Hint>
           </View>
         </View>
       </Section>
 
       <Section title="Owner details" style={{ gap: 0 }}>
         <Text style={styles.lead}>These details will be used for all business communications and updates.</Text>
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: space.lg }}>
           <View>
             <Label>Full name*</Label>
             <Field
               value={step1.ownerName || ''}
               onChangeText={(text) => setStep1({ ...step1, ownerName: formatNameToCapital(text.replace(/[^A-Za-z ]/g, '')) })}
-              style={{ marginTop: 4 }}
+              style={{ marginTop: space.xs + 2 }}
               placeholder="Owner full name"
               editable={isEditing}
               accessibilityLabel="Owner full name"
@@ -70,7 +69,7 @@ export default function Step1({ o }) {
             <Field
               value={step1.ownerEmail || ''}
               onChangeText={(text) => setStep1({ ...step1, ownerEmail: normalizeEmail(text) })}
-              style={{ marginTop: 4 }}
+              style={{ marginTop: space.xs + 2 }}
               placeholder="ritu@gmail.com"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -84,7 +83,7 @@ export default function Step1({ o }) {
             <Field
               value={step1.ownerPhone || ''}
               onChangeText={(text) => setStep1({ ...step1, ownerPhone: text.replace(/\D/g, '').slice(0, 10) })}
-              style={{ marginTop: 4 }}
+              style={{ marginTop: space.xs + 2 }}
               placeholder="10 digit mobile number"
               keyboardType="number-pad"
               readOnly={Boolean(verifiedPhoneNumber)}
@@ -101,21 +100,21 @@ export default function Step1({ o }) {
           <Field
             value={step1.primaryContactNumber || ''}
             onChangeText={(text) => setStep1({ ...step1, primaryContactNumber: text.replace(/\D/g, '').slice(0, 10) })}
-            style={{ marginTop: 4 }}
+            style={{ marginTop: space.xs + 2 }}
             placeholder="Restaurant's primary contact number"
             keyboardType="number-pad"
             maxLength={10}
             editable={isEditing}
             accessibilityLabel="Primary contact number"
           />
-          <Hint style={{ marginTop: 4 }}>Customers, delivery partners and {companyName} may call on this number for order support.</Hint>
+          <Hint style={{ marginTop: space.xs + 2 }}>Customers, delivery partners and {companyName} may call on this number for order support.</Hint>
         </View>
 
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: space.md }}>
           <Text style={styles.body}>Add your restaurant&apos;s location for order pick-up.</Text>
           <View>
             <Label>Service zone*</Label>
-            <View style={{ marginTop: 4 }}>
+            <View style={{ marginTop: space.xs + 2 }}>
               <Dropdown
                 value={step1.zoneId || ''}
                 options={zoneOptions}
@@ -125,7 +124,7 @@ export default function Step1({ o }) {
                 accessibilityLabel="Service zone"
               />
             </View>
-            <Hint style={{ marginTop: 4 }}>Choose the service zone where your restaurant will be available.</Hint>
+            <Hint style={{ marginTop: space.xs + 2 }}>Choose the service zone where your restaurant will be available.</Hint>
           </View>
 
           <View>
@@ -139,9 +138,9 @@ export default function Step1({ o }) {
                 onBlur={() => setIsLocationSearchFocused(false)}
                 autoCorrect={false}
                 accessibilityLabel="Search location"
-                style={{ color: '#000', paddingRight: 36 }}
+                style={{ paddingRight: 40 }}
               />
-              {isSearchingLocation ? <ActivityIndicator size="small" color={RT.accent} style={{ position: 'absolute', right: 12 }} /> : null}
+              {isSearchingLocation ? <ActivityIndicator size="small" color={color.primary} style={{ position: 'absolute', right: space.md }} /> : null}
             </View>
             {locationSuggestions.length > 0 ? (
               <ScrollView style={styles.suggestions} nestedScrollEnabled keyboardShouldPersistTaps="handled">
@@ -151,15 +150,15 @@ export default function Step1({ o }) {
                     scale={1}
                     onPress={() => selectLocationSuggestion(s)}
                     accessibilityLabel={s.display}
-                    style={[styles.suggestion, index < locationSuggestions.length - 1 ? { borderBottomWidth: 1, borderBottomColor: tw.gray100 } : null]}
+                    style={[styles.suggestion, index < locationSuggestions.length - 1 ? styles.suggestionDivider : null]}
                   >
-                    <MapPin size={20} color="#DC2626" strokeWidth={2.5} />
+                    <MapPin size={18} color={color.primary} />
                     <Text numberOfLines={2} style={styles.suggestionText}>{s.display}</Text>
                   </Press>
                 ))}
               </ScrollView>
             ) : null}
-            <Hint style={{ marginTop: 4 }}>Select a suggestion to auto-fill area/city/state/pincode and coordinates.</Hint>
+            <Hint style={{ marginTop: space.xs + 2 }}>Select a suggestion to auto-fill area/city/state/pincode and coordinates.</Hint>
           </View>
 
           <Field value={loc.addressLine1 || ''} onChangeText={(text) => setLoc({ addressLine1: text })} placeholder="Shop no. / building no. (optional)" accessibilityLabel="Shop or building number" />
@@ -169,7 +168,7 @@ export default function Step1({ o }) {
           <Dropdown value={loc.city || ''} options={cityOptions} onChange={(city) => setLoc({ city })} placeholder="Select City*" accessibilityLabel="City" />
           <Field value={loc.state || ''} onChangeText={(text) => setLoc({ state: text })} placeholder="State" accessibilityLabel="State" />
           <Field value={loc.pincode || ''} onChangeText={(text) => setLoc({ pincode: normalizePincode(text) })} placeholder="Pincode" keyboardType="number-pad" accessibilityLabel="Pincode" />
-          <Hint style={{ marginTop: 4 }}>Please ensure that this address is the same as mentioned on your FSSAI license.</Hint>
+          <Hint style={{ marginTop: space.xs + 2 }}>Please ensure that this address is the same as mentioned on your FSSAI license.</Hint>
         </View>
       </Section>
     </View>
@@ -177,9 +176,10 @@ export default function Step1({ o }) {
 }
 
 const styles = StyleSheet.create({
-  lead: { fontSize: 14, lineHeight: 20, color: tw.gray600, marginTop: 16, marginBottom: 16, ...poppins(400) },
-  body: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(400) },
-  suggestions: { marginTop: 6, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, borderRadius: 16, padding: 4, maxHeight: 280, ...shadow('lg') },
-  suggestion: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 6 },
-  suggestionText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray800, ...poppins(600) },
+  lead: { ...type.small, color: color.textSecondary, marginTop: space.md, marginBottom: space.lg },
+  body: { ...type.body, color: color.textSecondary },
+  suggestions: { marginTop: space.xs + 2, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, padding: space.xs, maxHeight: 280, ...elevation.float },
+  suggestion: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 48, paddingVertical: space.sm, paddingHorizontal: space.sm },
+  suggestionDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  suggestionText: { flex: 1, ...type.small, color: color.text },
 });

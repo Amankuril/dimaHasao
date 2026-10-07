@@ -4,13 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Clock3, ShieldCheck, XCircle } from 'lucide-react-native';
 import { fetchPartnerProfiles } from '../../api/partner';
-import { Press } from '../../components/ui';
+import { Button, Card, StatusBadge } from '../../components/ds';
+import HeritageHeader from '../../components/HeritageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from '../../lib/webRouter';
-import { AUTH } from '../../restaurant/components/AuthShell';
 import { isHotelAuthenticated, isModuleAuthenticated } from '../../restaurant/utils/auth';
 import { clearPartnerSessions } from '../../restaurant/utils/partnerSession';
-import { montserrat, poppins, shadow } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/HotelUnderReview.jsx
@@ -30,32 +30,21 @@ import { montserrat, poppins, shadow } from '../../theme';
  */
 
 const STATUS_META = {
-  pending: { label: 'Under review', tone: 'pending' },
-  approved: { label: 'Approved', tone: 'approved' },
-  rejected: { label: 'Rejected', tone: 'rejected' },
-  banned: { label: 'Disabled', tone: 'rejected' },
-};
-
-const TONES = {
-  approved: { bg: '#ecfdf5', fg: '#047857' },
-  rejected: { bg: '#fef2f2', fg: '#dc2626' },
-  pending: { bg: '#fffbeb', fg: '#b45309' },
+  pending: { label: 'Under review', tone: 'warning', icon: Clock3 },
+  approved: { label: 'Approved', tone: 'success', icon: ShieldCheck },
+  rejected: { label: 'Rejected', tone: 'danger', icon: XCircle },
+  banned: { label: 'Disabled', tone: 'danger', icon: XCircle },
 };
 
 function StatusCard({ title, status, note }) {
   const meta = STATUS_META[status] || STATUS_META.pending;
-  const tone = TONES[meta.tone];
-  const Icon = meta.tone === 'approved' ? ShieldCheck : meta.tone === 'rejected' ? XCircle : Clock3;
   return (
-    <View style={styles.card}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text style={styles.cardTitle}>{title}</Text>
-        <View style={[styles.pill, { backgroundColor: tone.bg }]}>
-          <Icon size={11} color={tone.fg} />
-          <Text style={[styles.pillText, { color: tone.fg }]}>{meta.label}</Text>
-        </View>
+    <View style={styles.statusCard}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm }}>
+        <Text style={[type.bodyStrong, { flex: 1, color: color.text }]}>{title}</Text>
+        <StatusBadge label={meta.label} tone={meta.tone} icon={meta.icon} />
       </View>
-      {note ? <Text style={styles.note}>{note}</Text> : null}
+      {note ? <Text style={[type.small, { color: color.textSecondary }]}>{note}</Text> : null}
     </View>
   );
 }
@@ -125,24 +114,32 @@ export default function HotelUnderReview() {
   return (
     <View style={styles.page}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingTop: 24 + insets.top, paddingBottom: 24 + insets.bottom }}>
-        <View style={styles.panel}>
-          <View style={{ marginBottom: 20, alignItems: 'center' }}>
-            <View style={styles.clock}>
-              <Clock3 size={32} color={AUTH.gold} />
-            </View>
+      <HeritageHeader title="Under review" />
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: space.xxl + insets.bottom }]}>
+        <Card style={styles.panel}>
+          <View style={styles.clock}>
+            <Clock3 size={30} color={color.goldText} />
           </View>
 
-          <View style={{ marginBottom: 24, alignItems: 'center' }}>
+          <View style={{ alignItems: 'center', gap: space.sm }}>
             <Text style={styles.kicker}>Application submitted</Text>
-            <Text style={styles.title} accessibilityRole="header">Your details are under review</Text>
+            <Text style={styles.title} accessibilityRole="header">
+              Your details are under review
+            </Text>
             <Text style={styles.body}>
               Our team verifies new partners before their dashboard opens. You&apos;ll be able to come straight in the moment each business is approved.
             </Text>
-            {loading ? <Text style={styles.checking}>Checking latest status...</Text> : <View style={{ marginTop: 12, height: 16 }} />}
+            <View style={styles.checkingRow} accessibilityLiveRegion="polite">
+              {loading ? (
+                <>
+                  <ActivityIndicator size="small" color={color.textMuted} />
+                  <Text style={styles.checking}>Checking latest status...</Text>
+                </>
+              ) : null}
+            </View>
           </View>
 
-          <View style={{ marginBottom: 24, gap: 12 }}>
+          <View style={{ gap: space.md, alignSelf: 'stretch' }}>
             {profiles.restaurant ? (
               <StatusCard
                 title="Restaurant"
@@ -159,29 +156,22 @@ export default function HotelUnderReview() {
             ) : null}
           </View>
 
-          <Press scale={0.98} onPress={signOut} accessibilityLabel="Back to login" style={styles.signOut}>
-            {loading ? <ActivityIndicator size="small" color={AUTH.muted} /> : null}
-            <Text style={styles.signOutText}>Back to login</Text>
-          </Press>
-        </View>
+          <Button title="Back to login" variant="outline" onPress={signOut} accessibilityLabel="Back to login" />
+        </Card>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: AUTH.bg },
-  panel: { width: '100%', maxWidth: 448, alignSelf: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(202,168,62,0.3)', backgroundColor: AUTH.card, padding: 20, ...shadow('0 28px 80px rgba(0,0,0,0.65)') },
-  clock: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(202,168,62,0.15)', alignItems: 'center', justifyContent: 'center' },
-  kicker: { marginBottom: 8, fontSize: 12, lineHeight: 16, letterSpacing: 3.84, color: AUTH.gold, textTransform: 'uppercase', ...montserrat(600) },
-  title: { maxWidth: 304, fontSize: 15, lineHeight: 20, color: AUTH.cream, textAlign: 'center', ...poppins(800) },
-  body: { marginTop: 12, fontSize: 14, lineHeight: 24, color: AUTH.muted, textAlign: 'center', ...poppins(400) },
-  checking: { marginTop: 12, fontSize: 12, lineHeight: 16, letterSpacing: 2.16, color: AUTH.dim, textTransform: 'uppercase', ...poppins(500) },
-  card: { borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#fff', padding: 16 },
-  cardTitle: { fontSize: 14, lineHeight: 20, color: '#0f172b', ...poppins(700) },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  pillText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.5, textTransform: 'uppercase', ...poppins(800) },
-  note: { marginTop: 6, fontSize: 12, lineHeight: 16, color: '#62748e', ...poppins(400) },
-  signOut: { height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)' },
-  signOutText: { fontSize: 14, lineHeight: 20, color: AUTH.muted, ...poppins(600) },
+  page: { flex: 1, backgroundColor: color.bg },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: space.lg, paddingTop: space.xxl },
+  panel: { width: '100%', maxWidth: 448, alignSelf: 'center', alignItems: 'center', gap: space.xl, padding: space.xl },
+  clock: { width: 64, height: 64, borderRadius: 32, backgroundColor: color.goldSoft, alignItems: 'center', justifyContent: 'center' },
+  kicker: { ...type.overline, color: color.goldText },
+  title: { ...type.heading, color: color.text, textAlign: 'center' },
+  body: { ...type.body, color: color.textSecondary, textAlign: 'center' },
+  checkingRow: { minHeight: 20, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  checking: { ...type.caption, color: color.textMuted },
+  statusCard: { gap: space.xs + 2, padding: space.lg, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.bg },
 });

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { CalendarRange, ChevronDown, Plus, Trash2 } from 'lucide-react-native';
+import { CalendarDays, CalendarRange, Check, ChevronDown, Plus, Trash2 } from 'lucide-react-native';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, IconButton } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import { propertyService } from '../services/apiService';
 import { formatINR, toInputDate } from '../utils/format';
 
@@ -30,8 +31,9 @@ function DateBox({ value, onChange, placeholder }) {
     });
   };
   return (
-    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={placeholder} style={[styles.field, { flex: 1 }]}>
-      <Text style={[styles.fieldText, { color: value ? tw.gray900 : tw.gray400 }]} numberOfLines={1}>
+    <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={placeholder} style={[styles.field, styles.dateField]}>
+      <CalendarDays size={16} color={color.textMuted} />
+      <Text style={[styles.fieldText, { flex: 1, color: value ? color.text : color.textDisabled }]} numberOfLines={1}>
         {value || placeholder}
       </Text>
     </Pressable>
@@ -101,75 +103,85 @@ const SeasonalRatesPanel = ({ propertyId, roomType, onSaved, onNotify }) => {
 
   return (
     <View style={styles.card}>
-      <Press scale={1} onPress={() => setOpen((value) => !value)} accessibilityLabel="Seasonal rates" style={styles.head}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <CalendarRange size={16} color={tw.emerald600} />
+      <Press
+        scale={1}
+        onPress={() => setOpen((value) => !value)}
+        accessibilityLabel="Seasonal rates"
+        accessibilityState={{ expanded: open }}
+        style={styles.head}
+      >
+        <View style={styles.headIcon}>
+          <CalendarRange size={18} color={color.primary} />
+        </View>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.headTitle}>Seasonal rates</Text>
+          <Text style={styles.headMeta} numberOfLines={1}>
+            {activeCount > 0 ? `${activeCount} active` : `Base ${formatINR(roomType.pricePerNight)}`}
+          </Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={styles.headMeta}>{activeCount > 0 ? `${activeCount} active` : `Base ${formatINR(roomType.pricePerNight)}`}</Text>
-          <ChevronDown size={14} color={tw.gray400} style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }} />
-        </View>
+        <ChevronDown size={18} color={color.textMuted} style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }} />
       </Press>
 
       {open ? (
         <View style={styles.body}>
           <Text style={styles.note}>
             Nights inside a season are charged at its rate; every other night uses the base rate of{' '}
-            <Text style={poppins(700)}>{formatINR(roomType.pricePerNight)}</Text>.
+            <Text style={{ ...type.bodyStrong, fontSize: 13, color: color.text }}>{formatINR(roomType.pricePerNight)}</Text>.
           </Text>
 
           {seasons.length === 0 ? <Text style={styles.empty}>No seasons set for {roomType.name}.</Text> : null}
 
           {seasons.map((season, index) => (
             <View key={index} style={styles.season}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={styles.label}>Season name</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
                 <TextInput
                   value={season.name}
                   onChangeText={(text) => patch(index, { name: text })}
                   placeholder="e.g. Puja peak"
-                  placeholderTextColor={tw.gray400}
-                  style={[styles.field, styles.fieldText, { flex: 1, color: tw.gray900 }]}
+                  placeholderTextColor={color.textDisabled}
+                  accessibilityLabel="Season name"
+                  style={[styles.field, styles.fieldText, { flex: 1, minWidth: 0, color: color.text }]}
                 />
-                <Press onPress={() => remove(index)} accessibilityLabel="Remove season" style={{ padding: 8, borderRadius: 8 }}>
-                  <Trash2 size={14} color={tw.red500} />
-                </Press>
+                <IconButton icon={Trash2} label="Remove season" variant="danger" onPress={() => remove(index)} style={{ borderRadius: radii.md }} />
               </View>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <DateBox value={season.startDate} placeholder="Start date" onChange={(v) => patch(index, { startDate: v })} />
-                <DateBox value={season.endDate} placeholder="End date" onChange={(v) => patch(index, { endDate: v })} />
-                <TextInput
-                  value={String(season.pricePerNight ?? '')}
-                  onChangeText={(text) => patch(index, { pricePerNight: text.replace(/[^0-9.]/g, '') })}
-                  keyboardType="numeric"
-                  accessibilityLabel="Price per night"
-                  style={[styles.field, styles.fieldText, { flex: 1, color: tw.gray900, ...poppins(700) }]}
-                />
+              <View style={{ flexDirection: 'row', gap: space.sm }}>
+                <View style={{ flex: 1, gap: space.xs }}>
+                  <Text style={styles.label}>From</Text>
+                  <DateBox value={season.startDate} placeholder="Start date" onChange={(v) => patch(index, { startDate: v })} />
+                </View>
+                <View style={{ flex: 1, gap: space.xs }}>
+                  <Text style={styles.label}>To</Text>
+                  <DateBox value={season.endDate} placeholder="End date" onChange={(v) => patch(index, { endDate: v })} />
+                </View>
               </View>
+              <Text style={styles.label}>Price per night (₹)</Text>
+              <TextInput
+                value={String(season.pricePerNight ?? '')}
+                onChangeText={(text) => patch(index, { pricePerNight: text.replace(/[^0-9.]/g, '') })}
+                keyboardType="numeric"
+                accessibilityLabel="Price per night"
+                style={[styles.field, styles.fieldText, type.bodyStrong, { color: color.text }]}
+              />
               <Press
                 scale={1}
                 onPress={() => patch(index, { isActive: !season.isActive })}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: season.isActive }}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                accessibilityLabel="Apply this season"
+                style={styles.checkRow}
               >
-                <View style={[styles.check, season.isActive ? { backgroundColor: tw.emerald600, borderColor: tw.emerald600 } : null]}>
-                  {season.isActive ? <Text style={styles.tick}>✓</Text> : null}
+                <View style={[styles.check, season.isActive ? { backgroundColor: color.primary, borderColor: color.primary } : null]}>
+                  {season.isActive ? <Check size={14} color={color.onPrimary} strokeWidth={3} /> : null}
                 </View>
                 <Text style={styles.applyText}>Apply this season</Text>
               </Press>
             </View>
           ))}
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Press onPress={add} style={styles.addBtn}>
-              <Plus size={12} color={tw.gray600} />
-              <Text style={styles.addText}>Add season</Text>
-            </Press>
-            <Press onPress={save} disabled={saving} style={[styles.saveBtn, saving ? { opacity: 0.6 } : null]}>
-              {saving ? <ActivityIndicator size="small" color="#fff" /> : null}
-              <Text style={styles.saveText}>Save rates</Text>
-            </Press>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+            <Button title="Add season" icon={Plus} variant="outline" fullWidth={false} onPress={add} />
+            <Button title="Save rates" onPress={save} loading={saving} disabled={saving} style={{ flex: 1 }} />
           </View>
         </View>
       ) : null}
@@ -178,23 +190,22 @@ const SeasonalRatesPanel = ({ propertyId, roomType, onSaved, onNotify }) => {
 };
 
 const styles = StyleSheet.create({
-  card: { marginHorizontal: 16, marginBottom: 16, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, overflow: 'hidden', ...shadow('sm') },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  headTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) },
-  headMeta: { fontSize: 11, lineHeight: 16.5, color: tw.gray400, ...poppins(700) },
-  body: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 12, gap: 12, borderTopWidth: 1, borderTopColor: tw.gray50 },
-  note: { fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(400) },
-  empty: { fontSize: 12, lineHeight: 16, color: tw.gray400, paddingVertical: 8, ...poppins(400) },
-  season: { backgroundColor: tw.gray50, borderRadius: 12, padding: 12, gap: 8 },
-  field: { paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, borderRadius: 8, justifyContent: 'center', minHeight: 36 },
-  fieldText: { fontSize: 12, lineHeight: 16, ...poppins(400) },
-  check: { width: 16, height: 16, borderRadius: 3, borderWidth: 1, borderColor: tw.gray300, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  tick: { fontSize: 11, lineHeight: 13, color: '#fff', ...poppins(700) },
-  applyText: { fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(700) },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray200, borderRadius: 8 },
-  addText: { fontSize: 11, lineHeight: 16.5, color: tw.gray600, ...poppins(700) },
-  saveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: tw.emerald600, borderRadius: 8 },
-  saveText: { fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(700) },
+  card: { marginHorizontal: space.lg, marginBottom: space.lg, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.card },
+  head: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 56 },
+  headIcon: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  headTitle: { ...type.bodyStrong, color: color.text },
+  headMeta: { ...type.caption, color: color.textMuted },
+  body: { padding: space.lg, gap: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  note: { ...type.small, color: color.textSecondary },
+  empty: { ...type.small, color: color.textMuted, paddingVertical: space.sm },
+  season: { backgroundColor: color.surfaceMuted, borderRadius: radii.md, padding: space.md, gap: space.xs + 2 },
+  label: { ...type.label, color: color.text },
+  field: { paddingHorizontal: space.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md, justifyContent: 'center', minHeight: 48 },
+  dateField: { flexDirection: 'row', alignItems: 'center', gap: space.sm, justifyContent: 'flex-start' },
+  fieldText: { ...type.body },
+  checkRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 44 },
+  check: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  applyText: { ...type.label, color: color.text },
 });
 
 export { SeasonalRatesPanel };

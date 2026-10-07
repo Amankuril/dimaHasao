@@ -1,125 +1,94 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Download } from 'lucide-react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CheckCircle2, Download, Info, Upload } from 'lucide-react-native';
+import { Button, Card } from '../../components/ds';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 import ImageSourcePicker from '../components/ImageSourcePicker';
 import { useFssaiDetails } from '../hooks/pages/useFssaiDetails';
 import { useFssaiUpdate } from '../hooks/pages/useFssaiUpdate';
-import { RT, RT_GRADIENT } from '../theme';
-
-/** The pages' own header: px-4 pt-4 pb-3, round back button, 16px semibold title and an optional 12px caption. */
-function Header({ title, subtitle, onBack }) {
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[styles.header, { paddingTop: 16 + insets.top }]}>
-      <Press onPress={onBack} accessibilityLabel="Back" hitSlop={6} style={{ padding: 8, borderRadius: 999 }}>
-        <ArrowLeft size={20} color={tw.gray900} />
-      </Press>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={{ fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(600) }} numberOfLines={1} accessibilityRole="header">{title}</Text>
-        {subtitle ? <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>{subtitle}</Text> : null}
-      </View>
-    </View>
-  );
-}
+import { Field, Input, Notice, PinnedBar, ScreenHeader } from './inventory/partnerKit';
 
 /** Port of Food/pages/restaurant/FssaiDetails.jsx (/food/restaurant/fssai). The web page shows no live licence data either. */
 export function FssaiDetails() {
-  const insets = useSafeAreaInsets();
   const { navigate, goBack } = useFssaiDetails();
   const toUpdate = () => navigate('/food/restaurant/fssai/update');
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <Header title="FSSAI Details" subtitle="No live restaurant license data available." onBack={goBack} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 112, gap: 16 }}>
-        <View style={styles.notice}>
-          <View style={styles.i}>
-            <Text style={{ fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(600) }}>i</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.value}>FSSAI details are not available</Text>
-            <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray700, marginTop: 4, ...poppins(400) }}>Upload or sync your license information to manage compliance here.</Text>
-          </View>
-        </View>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <ScreenHeader title="FSSAI details" subtitle="No live licence data available" onBack={goBack} />
+      <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: space.xxxl }}>
+        <Notice tone="warning" icon={Info} title="FSSAI details are not available">
+          Upload or sync your licence information to manage compliance here.
+        </Notice>
 
-        <View style={styles.card}>
-          <View>
-            <Text style={styles.label}>FSSAI registration number</Text>
-            <Text style={styles.value}>Not available</Text>
+        <Card padded={false} style={{ overflow: 'hidden' }}>
+          <View style={[styles.row, styles.divider]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>FSSAI registration number</Text>
+              <Text style={styles.value}>Not available</Text>
+            </View>
           </View>
-          <View style={styles.dash} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View>
+          <View style={[styles.row, styles.divider]}>
+            <View style={{ flex: 1 }}>
               <Text style={styles.label}>Document</Text>
               <Text style={styles.value}>No document uploaded</Text>
             </View>
             {/* The web button has no action: there is no document to download. */}
-            <View style={styles.download}>
-              <Download size={16} color={tw.gray800} />
+            <View style={styles.download} accessibilityLabel="Download unavailable">
+              <Download size={18} color={color.textDisabled} />
             </View>
           </View>
-          <View style={styles.dash} />
-          <View>
-            <Text style={styles.label}>Valid up to</Text>
-            <Text style={styles.value}>Not available</Text>
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Valid up to</Text>
+              <Text style={styles.value}>Not available</Text>
+            </View>
           </View>
-        </View>
+        </Card>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingTop: 12, paddingBottom: 24 + insets.bottom }]}>
-        <Press scale={0.98} onPress={toUpdate} style={{ marginBottom: 8 }}>
-          <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.pill}>
-            <Text style={styles.pillText}>Update FSSAI license</Text>
-          </LinearGradient>
-        </Press>
-        <Text style={styles.renew}>
+      <PinnedBar style={{ gap: space.sm }}>
+        <Button title="Update FSSAI licence" size="lg" onPress={toUpdate} />
+        <Text style={[type.small, { color: color.textSecondary, textAlign: 'center' }]}>
           Haven&apos;t renewed your FSSAI?{' '}
-          <Text onPress={toUpdate} accessibilityRole="link" style={{ color: RT.primary, textDecorationLine: 'underline' }}>Apply Now</Text>
+          <Text onPress={toUpdate} accessibilityRole="link" style={{ color: color.primary, fontFamily: 'Poppins_600SemiBold', textDecorationLine: 'underline' }}>
+            Apply now
+          </Text>
         </Text>
-      </View>
+      </PinnedBar>
     </View>
   );
 }
 
 /** Port of Food/pages/restaurant/FssaiUpdate.jsx (/food/restaurant/fssai/update). */
 export function FssaiUpdate() {
-  const insets = useSafeAreaInsets();
-  const [focus, setFocus] = useState('');
   const { goBack, uploadedFile, isPhotoPickerOpen, setIsPhotoPickerOpen, handleFileSelect, handleFileClick, handleSubmit } = useFssaiUpdate();
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <Header title="Update FSSAI" onBack={goBack} />
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 112, gap: 16 }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <ScreenHeader title="Update FSSAI" onBack={goBack} />
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxxl }}>
         {/* As on the web, these two fields are not bound to anything: only the upload is checked. */}
-        <View>
-          <Text style={styles.fieldLabel}>FSSAI registration number</Text>
-          <TextInput placeholder="eg. 19138110019201" placeholderTextColor={tw.gray400} keyboardType="number-pad" accessibilityLabel="FSSAI registration number" onFocus={() => setFocus('number')} onBlur={() => setFocus('')} style={[styles.input, focus === 'number' ? styles.inputFocus : null]} />
-        </View>
-        <View>
-          <Text style={styles.fieldLabel}>Valid up to</Text>
-          <TextInput placeholder="DD-MM-YYYY" placeholderTextColor={tw.gray400} accessibilityLabel="Valid up to" onFocus={() => setFocus('date')} onBlur={() => setFocus('')} style={[styles.input, focus === 'date' ? styles.inputFocus : null]} />
-        </View>
-        <View style={{ gap: 8 }}>
-          <Text style={[styles.fieldLabel, { marginBottom: 0 }]}>Upload your FSSAI license</Text>
-          <Press scale={0.99} onPress={handleFileClick} style={styles.drop}>
-            <Text style={{ fontSize: 24, lineHeight: 32, marginBottom: 8 }}>{uploadedFile ? '✅' : '⬆️'}</Text>
-            <Text style={[styles.value, { ...poppins(500), textAlign: 'center' }]}>{uploadedFile ? uploadedFile.name : 'Upload your FSSAI license'}</Text>
-            <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, marginTop: 4, ...poppins(400) }}>{uploadedFile ? 'Click to change' : 'jpeg, png, or pdf (up to 5MB)'}</Text>
-          </Press>
-          <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray700, textDecorationLine: 'underline', ...poppins(400) }}>View upload guidelines</Text>
-        </View>
+        <Card style={{ gap: space.lg }}>
+          <Field label="FSSAI registration number">
+            <Input placeholder="e.g. 19138110019201" keyboardType="number-pad" accessibilityLabel="FSSAI registration number" />
+          </Field>
+          <Field label="Valid up to">
+            <Input placeholder="DD-MM-YYYY" accessibilityLabel="Valid up to" />
+          </Field>
+          <Field label="FSSAI licence" hint="View upload guidelines">
+            <Press scale={0.99} onPress={handleFileClick} accessibilityLabel={uploadedFile ? `Change file ${uploadedFile.name}` : 'Upload your FSSAI license'} style={[styles.drop, uploadedFile && styles.dropDone]}>
+              <View style={[styles.dropIcon, uploadedFile && { backgroundColor: color.successSoft }]}>
+                {uploadedFile ? <CheckCircle2 size={24} color={color.success} /> : <Upload size={24} color={color.primary} />}
+              </View>
+              <Text style={[type.bodyStrong, { color: color.text, textAlign: 'center' }]} numberOfLines={2}>{uploadedFile ? uploadedFile.name : 'Upload your FSSAI licence'}</Text>
+              <Text style={[type.caption, { color: color.textMuted }]}>{uploadedFile ? 'Tap to change' : 'JPEG, PNG or PDF, up to 5 MB'}</Text>
+            </Press>
+          </Field>
+        </Card>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingTop: 8, paddingBottom: 24 + insets.bottom }]}>
-        <Press scale={0.98} disabled={!uploadedFile} onPress={() => handleSubmit({ preventDefault() {} })} accessibilityState={{ disabled: !uploadedFile }}>
-          <LinearGradient colors={uploadedFile ? RT_GRADIENT : [tw.gray200, tw.gray200]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.pill}>
-            <Text style={[styles.pillText, uploadedFile ? null : { color: tw.gray500 }]}>Confirm</Text>
-          </LinearGradient>
-        </Press>
-      </View>
+      <PinnedBar>
+        <Button title="Confirm" size="lg" disabled={!uploadedFile} onPress={() => handleSubmit({ preventDefault() {} })} />
+      </PinnedBar>
 
       <ImageSourcePicker
         isOpen={isPhotoPickerOpen}
@@ -134,21 +103,12 @@ export function FssaiUpdate() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200, backgroundColor: '#fff' },
-  // restaurantTheme.css: input:focus border = primary 55 % over white
-  inputFocus: { borderColor: '#789d8a' },
-  notice: { borderRadius: 16, backgroundColor: '#ffe9b3', paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  i: { marginTop: 4, width: 24, height: 24, borderRadius: 12, backgroundColor: RT.primary, alignItems: 'center', justifyContent: 'center' },
-  card: { borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, padding: 16, gap: 12, ...shadow('sm') },
-  label: { fontSize: 12, lineHeight: 16, color: tw.gray500, marginBottom: 4, ...poppins(400) },
-  value: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(600) },
-  dash: { borderTopWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200 },
-  download: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: tw.gray300, alignItems: 'center', justifyContent: 'center' },
-  footer: { paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: tw.gray200, backgroundColor: '#fff' },
-  pill: { paddingVertical: 12, borderRadius: 999, alignItems: 'center' },
-  pillText: { fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) },
-  renew: { fontSize: 12, lineHeight: 16, color: tw.gray600, textAlign: 'center', ...poppins(400) },
-  fieldLabel: { fontSize: 12, lineHeight: 16, color: tw.gray700, marginBottom: 4, ...poppins(500) },
-  input: { borderWidth: 1, borderColor: tw.gray300, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: tw.gray900, ...poppins(400) },
-  drop: { borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray300, backgroundColor: tw.gray50, paddingHorizontal: 16, paddingVertical: 32, alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  label: { ...type.caption, color: color.textMuted, marginBottom: 2 },
+  value: { ...type.bodyStrong, color: color.text },
+  download: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.border, alignItems: 'center', justifyContent: 'center' },
+  drop: { borderRadius: radii.md, borderWidth: 1.5, borderStyle: 'dashed', borderColor: color.borderStrong, backgroundColor: color.surfaceMuted, paddingHorizontal: space.lg, paddingVertical: space.xxl, alignItems: 'center', gap: space.xs },
+  dropDone: { borderColor: color.success, backgroundColor: color.surface },
+  dropIcon: { width: 52, height: 52, borderRadius: radii.lg, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.xs },
 });

@@ -1,17 +1,18 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar, Wallet, Building2, Star, Plus } from 'lucide-react-native';
 import { useNavigate } from '../../lib/webRouter';
-import { Press } from '../../components/ui';
+import { Button } from '../../components/ds';
 import { collectFcmTokenFast } from '../../lib/push';
-import { poppins, shadow, tw } from '../../theme';
+import { color, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
 import usePartnerDashboard from '../hooks/usePartnerDashboard';
 import DashboardStatCard from '../components/dashboard/DashboardStatCard';
 import RecentBookingsTable from '../components/dashboard/RecentBookingsTable';
 import ActionRequired from '../components/dashboard/ActionRequired';
 import { userService } from '../services/apiService';
-import { HT } from '../theme';
+import { PageLoader } from '../components/dashboard/partnerUi';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerDashboard.jsx
@@ -22,6 +23,7 @@ import { HT } from '../theme';
  */
 const PartnerDashboard = () => {
   const navigate = useNavigate();
+  const insets = useSafeAreaInsets();
   const { stats, recentBookings, actionItems, loading, user } = usePartnerDashboard();
 
   // Init Notifications
@@ -52,31 +54,30 @@ const PartnerDashboard = () => {
 
   if (loading) {
     return (
-      <View style={[styles.page, { alignItems: 'center', justifyContent: 'center' }]}>
-        <ActivityIndicator size="large" color={HT.primary} />
+      <View style={styles.page}>
+        <PageLoader />
       </View>
     );
   }
+
+  const negativeWallet = Number(stats.walletBalance) < 0;
 
   return (
     <View style={styles.page}>
       <PartnerHeader />
 
-      <ScrollView contentContainerStyle={styles.main} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.main, { paddingBottom: space.xxxl + insets.bottom }]} showsVerticalScrollIndicator={false}>
         {/* Header & Greeting */}
         <View style={styles.greetRow}>
-          <View>
-            <Text style={styles.h1}>Welcome back, {user?.name?.split(' ')[0] || 'Partner'}! 👋</Text>
+          <View style={{ gap: space.xxs }}>
+            <Text style={styles.h1} numberOfLines={2}>
+              Welcome back, {user?.name?.split(' ')[0] || 'Partner'}
+            </Text>
             <Text style={styles.sub}>Here&apos;s what&apos;s happening with your properties today.</Text>
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            {/* Add Property - High Visible */}
-            <Press onPress={() => navigate('/hotel/partner/join')} style={styles.addBtn}>
-              <Plus size={18} color="#fff" />
-              <Text style={styles.addText}>Add Property</Text>
-            </Press>
-          </View>
+          {/* Add Property - High Visible */}
+          <Button title="Add property" icon={Plus} onPress={() => navigate('/hotel/partner/join')} fullWidth={false} />
         </View>
 
         {/* Priority Actions */}
@@ -87,40 +88,42 @@ const PartnerDashboard = () => {
           <View style={styles.gridRow}>
             <DashboardStatCard
               icon={Calendar}
-              label="Total Bookings"
+              label="Total bookings"
               value={stats.totalBookings}
               subtext={stats.bookingsThisWeek > 0 ? `+${stats.bookingsThisWeek} this week` : 'No new bookings this week'}
-              actionLabel="View All"
+              actionLabel="View all"
               onAction={() => navigate('/hotel/partner/bookings')}
             />
             <DashboardStatCard
               icon={Wallet}
-              label="Wallet Balance"
-              value={formatCurrency(stats.walletBalance)}
-              subtext="Available to withdraw"
+              iconTone={negativeWallet ? 'danger' : 'success'}
+              label="Wallet balance"
+              value={negativeWallet ? `−${formatCurrency(Math.abs(stats.walletBalance))}` : formatCurrency(stats.walletBalance)}
+              valueTone={negativeWallet ? 'danger' : undefined}
+              valueNote={negativeWallet ? 'Due' : undefined}
+              subtext={negativeWallet ? 'You owe the platform' : 'Available to withdraw'}
               actionLabel="Withdraw"
               onAction={() => navigate('/hotel/partner/wallet')}
-              color={tw.blue600}
             />
           </View>
           <View style={styles.gridRow}>
             <DashboardStatCard
               icon={Building2}
-              label="Active Properties"
+              iconTone="info"
+              label="Active properties"
               value={stats.activeProperties}
-              subtext="Online & Bookable"
+              subtext="Online & bookable"
               actionLabel="Manage"
               onAction={() => navigate('/hotel/partner/properties')}
-              color={tw.purple600}
             />
             <DashboardStatCard
               icon={Star}
-              label="Pending Reviews"
+              iconTone="gold"
+              label="Pending reviews"
               value={stats.pendingReviews}
               subtext="Action required"
               actionLabel="Reply"
               onAction={() => navigate('/hotel/partner/reviews')}
-              color={tw.orange500}
             />
           </View>
         </View>
@@ -133,15 +136,13 @@ const PartnerDashboard = () => {
 };
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: HT.bg },
-  main: { paddingHorizontal: 16, paddingTop: 32, paddingBottom: 96 },
-  greetRow: { marginBottom: 32, gap: 16 },
-  h1: { fontSize: 24, lineHeight: 32, color: tw.slate900, ...poppins(900) },
-  sub: { color: tw.gray500, marginTop: 4, fontSize: 14, lineHeight: 20, ...poppins(500) },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: HT.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, alignSelf: 'flex-start', ...shadow('md') },
-  addText: { color: '#fff', fontSize: 16, lineHeight: 24, ...poppins(700) },
-  grid: { gap: 8, marginBottom: 24 },
-  gridRow: { flexDirection: 'row', gap: 8 },
+  page: { flex: 1, backgroundColor: color.bg },
+  main: { padding: space.lg, gap: space.xxl },
+  greetRow: { gap: space.lg },
+  h1: { ...type.heading, fontSize: 22, lineHeight: 30, color: color.text },
+  sub: { ...type.small, color: color.textMuted },
+  grid: { gap: space.md },
+  gridRow: { flexDirection: 'row', gap: space.md },
 });
 
 export default PartnerDashboard;

@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#FAF6ED' },
   card: { width: '100%', borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3', backgroundColor: '#fff', padding: 24, ...shadow('sm') },
   header: { marginBottom: 24, borderBottomWidth: 1, borderBottomColor: '#E5DDC3', paddingBottom: 20 },
-  kicker: { fontSize: 11, lineHeight: 16.5, letterSpacing: 2.2, textTransform: 'uppercase', color: '#0A4D2B', ...poppins(700) },
+  kicker: { fontSize: 12, lineHeight: 18, letterSpacing: 1.6, textTransform: 'uppercase', color: '#0A4D2B', ...poppins(700) },
   title: { marginTop: 6, fontSize: 24, lineHeight: 32, color: tw.gray900, ...poppins(900) },
   updated: { marginTop: 4, fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
   empty: { paddingVertical: 32, fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },

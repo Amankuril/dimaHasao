@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { Building2, Layers, Store } from 'lucide-react-native';
+import { Building2, ChevronRight, Layers, Store } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { sessionStore } from '../../lib/storage';
 import { useNavigate } from '../../lib/webRouter';
-import { playfair, poppins } from '../../theme';
+import { radii, space, type } from '../../theme';
 import { AUTH } from './AuthShell';
 import { WORKSPACE, setActiveWorkspace, setOnboardingIntent } from '../utils/partnerSession';
 
@@ -56,23 +56,24 @@ export default function OnboardingChoice({ phone, signupToken }) {
   };
 
   return (
-    <View style={{ gap: 16 }}>
+    <View style={{ gap: space.xl }}>
       <View>
-        <Text style={styles.title}>What are you listing?</Text>
+        <Text style={styles.title} accessibilityRole="header">What are you listing?</Text>
         <Text style={styles.lead}>
           Signing in as <Text style={styles.phone}>{phone}</Text>. You can add the other one later from settings.
         </Text>
       </View>
-      <View style={{ gap: 10 }}>
+      <View style={{ gap: space.md }}>
         {CHOICES.map(({ id, label, hint, Icon }) => (
           <Press key={id} onPress={() => handlePick(id)} accessibilityLabel={label} style={styles.choice}>
             <View style={styles.icon}>
               <Icon size={20} color={AUTH.gold} />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.label}>{label}</Text>
               <Text style={styles.hint}>{hint}</Text>
             </View>
+            <ChevronRight size={20} color={AUTH.gold} />
           </Press>
         ))}
       </View>
@@ -81,11 +82,11 @@ export default function OnboardingChoice({ phone, signupToken }) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, lineHeight: 28, letterSpacing: 0.4, color: AUTH.cream, ...playfair(700) },
-  lead: { marginTop: 8, fontSize: 13, lineHeight: 21, color: AUTH.muted, ...poppins(400) },
-  phone: { color: AUTH.cream, ...poppins(700) },
-  choice: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(202,168,62,0.25)', backgroundColor: 'rgba(0,0,0,0.15)', padding: 16 },
-  icon: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(202,168,62,0.15)', alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 14, lineHeight: 20, color: AUTH.cream, ...poppins(700) },
-  hint: { fontSize: 12, lineHeight: 16, color: AUTH.muted, ...poppins(400) },
+  title: { ...type.heading, fontSize: 20, lineHeight: 28, color: AUTH.cream, textAlign: 'center' },
+  lead: { marginTop: space.sm, ...type.small, color: AUTH.muted, textAlign: 'center' },
+  phone: { color: AUTH.cream, fontFamily: 'Poppins_700Bold' },
+  choice: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 72, borderRadius: radii.lg, borderWidth: 1, borderColor: 'rgba(202,168,62,0.3)', backgroundColor: 'rgba(0,0,0,0.18)', paddingHorizontal: space.lg, paddingVertical: space.md },
+  icon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: 'rgba(202,168,62,0.15)', alignItems: 'center', justifyContent: 'center' },
+  label: { ...type.subheading, color: AUTH.cream },
+  hint: { ...type.small, color: AUTH.muted },
 });

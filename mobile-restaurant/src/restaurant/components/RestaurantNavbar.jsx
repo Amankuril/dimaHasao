@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Bell, MapPin, Search, Utensils, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
@@ -9,10 +8,11 @@ import { restaurantAPI } from '../../api/restaurant';
 import { events } from '../../lib/events';
 import { localStore } from '../../lib/storage';
 import { useLocation, useNavigate } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
+import { color, elevation, radii, space, type } from '../../theme';
+import { Button } from '../../components/ds';
+import Fa from '../../components/Fa';
 import useNotificationInbox from '../hooks/useNotificationInbox';
 import { useRestaurantNotifications } from '../hooks/useRestaurantNotifications';
-import { RT, RT_GRADIENT } from '../theme';
 import { formatRestaurantDisplayAddress } from '../utils/restaurantLocation';
 
 const extractRestaurantPayload = (response) =>
@@ -106,52 +106,54 @@ export default function RestaurantNavbar({
   return (
     <>
       <StatusBar style="light" />
-      <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.row}>
           <View style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-            <Text style={styles.name} numberOfLines={1} accessibilityRole="header">{loading ? 'Loading...' : restaurantName || 'Restaurant'}</Text>
+            <View style={styles.nameRow}>
+              <Fa name="fa-solid fa-leaf" size={11} color={color.gold} />
+              <Text style={styles.name} numberOfLines={1} accessibilityRole="header">{loading ? 'Loading…' : restaurantName || 'Restaurant'}</Text>
+            </View>
             {!loading && restaurantAddress && restaurantAddress.trim() !== '' ? (
               <View style={styles.addressRow}>
-                <MapPin size={10} color="rgba(255,255,255,0.8)" />
+                <MapPin size={13} color={color.textOnDarkMuted} />
                 <Text style={styles.address} numberOfLines={1}>{restaurantAddress}</Text>
               </View>
             ) : null}
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
             {showOfflineOnlineTag ? (
-              <Press onPress={() => navigate('/food/restaurant/status', from)} accessibilityLabel={`Restaurant is ${status}. Change status`} style={[styles.tag, online ? styles.tagOn : styles.tagOff]} hitSlop={6}>
-                {online ? null : <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />}
-                <View style={[styles.tagDot, { backgroundColor: online ? tw.emerald400 : 'rgba(255,255,255,0.3)' }]} />
-                <Text style={[styles.tagText, { color: online ? '#fff' : 'rgba(255,255,255,0.7)' }]}>{status}</Text>
+              <Press onPress={() => navigate('/food/restaurant/status', from)} accessibilityLabel={`Restaurant is ${status}. Change status`} style={[styles.tag, online ? styles.tagOn : styles.tagOff]}>
+                <View style={[styles.tagDot, { backgroundColor: online ? color.onPrimary : color.textDisabled }]} />
+                <Text style={[styles.tagText, { color: online ? color.onPrimary : color.textOnDarkMuted }]}>{status}</Text>
               </Press>
             ) : null}
             {showNotifications ? (
-              <Press onPress={() => navigate('/food/restaurant/notifications', from)} accessibilityLabel="Notifications" style={{ padding: 10 }}>
-                <Bell size={20} color="#fff" />
+              <Press onPress={() => navigate('/food/restaurant/notifications', from)} accessibilityLabel={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'} style={styles.bell}>
+                <Bell size={22} color={color.textInverse} />
                 {unreadCount > 0 ? <View style={styles.bellDot} /> : null}
               </Press>
             ) : null}
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       {showSearch && !hideSearch ? (
         <View style={styles.searchWrap}>
           <View style={styles.search}>
-            <Search size={18} color={tw.slate400} />
+            <Search size={18} color={color.textMuted} />
             <TextInput
               value={searchValue}
               onChangeText={setSearchValue}
               placeholder="Search by order ID or dish name"
-              placeholderTextColor={tw.slate400}
+              placeholderTextColor={color.textMuted}
               returnKeyType="search"
               accessibilityLabel="Search orders"
               style={styles.searchInput}
             />
             {searchValue ? (
-              <Press onPress={() => setSearchValue('')} accessibilityLabel="Clear search" hitSlop={10}>
-                <X size={16} color={tw.slate400} />
+              <Press onPress={() => setSearchValue('')} accessibilityLabel="Clear search" style={styles.clear}>
+                <X size={18} color={color.textMuted} />
               </Press>
             ) : null}
           </View>
@@ -163,34 +165,29 @@ export default function RestaurantNavbar({
           <View style={styles.popup}>
             <View style={styles.popupTop}>
               <View style={styles.popupIcon}>
-                <Utensils size={24} color={RT.primary} />
+                <Utensils size={24} color={color.primary} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.popupTitle}>New Table Request!</Text>
-                <Text style={styles.popupBody} numberOfLines={1}>
+                <Text style={styles.popupTitle}>New table request</Text>
+                <Text style={styles.popupBody} numberOfLines={2}>
                   {newReservation.user?.name || 'A Guest'} has requested a table for {newReservation.guests} people.
                 </Text>
               </View>
               <Press onPress={clearNewReservation} accessibilityLabel="Dismiss" style={styles.popupClose}>
-                <X size={16} color={tw.slate400} />
+                <X size={18} color={color.textMuted} />
               </Press>
             </View>
             <View style={styles.popupActions}>
-              <Press
+              <Button
+                title="View request"
                 onPress={() => {
                   clearNewReservation();
                   // The web points this at /dining-reservations, a path its router does not have; the reservations screen is the target.
                   navigate('/food/restaurant/reservations');
                 }}
                 style={{ flex: 1 }}
-              >
-                <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.popupPrimary}>
-                  <Text style={styles.popupPrimaryText}>VIEW REQUEST</Text>
-                </LinearGradient>
-              </Press>
-              <Press onPress={clearNewReservation} style={styles.popupLater}>
-                <Text style={styles.popupLaterText}>LATER</Text>
-              </Press>
+              />
+              <Button title="Later" variant="outline" fullWidth={false} onPress={clearNewReservation} />
             </View>
           </View>
         </View>
@@ -200,30 +197,29 @@ export default function RestaurantNavbar({
 }
 
 const styles = StyleSheet.create({
-  header: { borderBottomLeftRadius: 35, borderBottomRightRadius: 35, paddingBottom: 8, zIndex: 10, ...shadow('0 10px 30px rgba(184,11,61,0.25)') },
-  row: { paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  name: { fontSize: 17, lineHeight: 19, letterSpacing: -0.4, color: '#fff', ...poppins(700) },
-  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, opacity: 0.9 },
-  address: { flex: 1, fontSize: 11, lineHeight: 16, color: 'rgba(255,255,255,0.9)', ...poppins(500) },
-  tag: { overflow: 'hidden', flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, borderWidth: 1, ...shadow('sm') },
-  tagOn: { backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.2)' },
-  tagOff: { borderColor: 'rgba(255,255,255,0.1)' },
-  tagDot: { width: 6, height: 6, borderRadius: 3 },
-  tagText: { fontSize: 11, lineHeight: 16, letterSpacing: -0.3, paddingHorizontal: 2, ...poppins(700) },
-  bellDot: { position: 'absolute', top: 8, right: 10, width: 10, height: 10, borderRadius: 5, backgroundColor: tw.emerald400, borderWidth: 2, borderColor: RT.primary },
-  searchWrap: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff' },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate100, borderRadius: 16, ...shadow('sm') },
-  searchInput: { flex: 1, height: 46, paddingVertical: 0, fontSize: 14, color: tw.slate900, ...poppins(600) },
-  popupWrap: { position: 'absolute', left: 16, right: 16, zIndex: 100 },
-  popup: { backgroundColor: '#fff', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(10,77,43,0.1)', overflow: 'hidden', ...shadow('0 20px 50px rgba(0,0,0,0.15)') },
-  popupTop: { padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  popupIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: tw.red50, alignItems: 'center', justifyContent: 'center' },
-  popupTitle: { fontSize: 14, lineHeight: 20, color: tw.slate900, ...poppins(800) },
-  popupBody: { fontSize: 12, lineHeight: 16, color: tw.slate500, marginTop: 2, ...poppins(500) },
-  popupClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.slate50, alignItems: 'center', justifyContent: 'center' },
-  popupActions: { backgroundColor: tw.slate50, padding: 12, flexDirection: 'row', gap: 8 },
-  popupPrimary: { height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  popupPrimaryText: { fontSize: 12, letterSpacing: 1.2, color: '#fff', ...poppins(700) },
-  popupLater: { height: 40, paddingHorizontal: 16, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate200, alignItems: 'center', justifyContent: 'center' },
-  popupLaterText: { fontSize: 12, letterSpacing: 1.2, color: tw.slate600, ...poppins(700) },
+  header: { backgroundColor: color.primaryDeep, borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, paddingBottom: space.sm, zIndex: 10, ...elevation.card },
+  row: { paddingLeft: space.lg, paddingRight: space.sm, paddingVertical: space.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 60 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  name: { flexShrink: 1, ...type.subheading, fontSize: 17, color: color.goldOnDark },
+  addressRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: 2 },
+  address: { flex: 1, ...type.caption, color: color.textOnDarkMuted },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, paddingHorizontal: space.md, height: 36, borderRadius: radii.pill, borderWidth: 1 },
+  tagOn: { backgroundColor: color.success, borderColor: 'rgba(255,255,255,0.25)' },
+  tagOff: { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.25)' },
+  tagDot: { width: 8, height: 8, borderRadius: 4 },
+  tagText: { ...type.label },
+  bell: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  bellDot: { position: 'absolute', top: 9, right: 10, width: 10, height: 10, borderRadius: 5, backgroundColor: color.goldBright, borderWidth: 2, borderColor: color.primaryDeep },
+  searchWrap: { paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.sm },
+  search: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md },
+  searchInput: { flex: 1, height: 48, paddingVertical: 0, ...type.body, color: color.text, outlineWidth: 0 },
+  clear: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  popupWrap: { position: 'absolute', left: space.lg, right: space.lg, zIndex: 100 },
+  popup: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.float },
+  popupTop: { padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  popupIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  popupTitle: { ...type.subheading, color: color.text },
+  popupBody: { ...type.small, color: color.textSecondary, marginTop: 2 },
+  popupClose: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  popupActions: { backgroundColor: color.surfaceMuted, padding: space.md, flexDirection: 'row', gap: space.sm },
 });

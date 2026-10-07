@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AppState, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { AlertTriangle, Clock3, ShieldCheck, X } from 'lucide-react-native';
+import { AlertTriangle, Clock3, ShieldCheck, XCircle } from 'lucide-react-native';
 import { Press } from '../../../components/ui';
 import { restaurantAPI } from '../../../api/restaurant';
 import { useAuth } from '../../../context/AuthContext';
 import { persistModuleFcmToken, syncPendingPartnerFcmQuick } from '../../../lib/push';
 import { localStore } from '../../../lib/storage';
 import { useLocation, useNavigate } from '../../../lib/webRouter';
-import { poppins, shadow } from '../../../theme';
-import { AUTH } from '../../components/AuthShell';
+import { color, elevation, radii, space, type } from '../../../theme';
+import { AUTH, authStyles } from '../../components/AuthShell';
 import { getModuleToken } from '../../utils/auth';
 import { clearOnboardingFromLocalStorage } from '../../utils/onboardingUtils';
 
@@ -124,55 +124,48 @@ export default function VerificationPending() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDisabledByAdmin ? '#1b0b09' : AUTH.bg }}>
+    <View style={{ flex: 1, backgroundColor: AUTH.bg }}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingTop: 24 + insets.top, paddingBottom: 24 + insets.bottom }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: space.lg, paddingTop: space.xxl + insets.top, paddingBottom: space.xxl + insets.bottom }}>
         <View style={styles.card}>
-          <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            {isStopped ? (
-              <View style={styles.banner}>
-                <View style={styles.diamond}>
-                  <View style={{ transform: [{ rotate: '-45deg' }] }}>
-                    <X size={16} color="#fff" strokeWidth={4} />
-                  </View>
-                </View>
-                <Text style={styles.bannerText}>{isDisabledByAdmin ? 'DISABLED' : 'REJECTED'}</Text>
-                <View style={styles.bannerTip} />
-              </View>
-            ) : (
-              <View style={styles.clock}>
-                <Clock3 size={32} color={AUTH.gold} />
-              </View>
-            )}
+          <View style={styles.top}>
+            <View style={[styles.disc, isStopped ? styles.discStop : null]}>
+              {isStopped ? <XCircle size={32} color={ERROR_ON_DARK} /> : <Clock3 size={32} color={color.goldOnDark} />}
+            </View>
+            <View style={[styles.pill, isStopped ? styles.pillStop : null]}>
+              <Text style={[styles.pillText, isStopped ? { color: ERROR_ON_DARK } : null]}>{isStopped ? (isDisabledByAdmin ? 'Disabled' : 'Rejected') : 'Verification pending'}</Text>
+            </View>
           </View>
 
-          <View style={{ marginBottom: 16, alignItems: 'center' }}>
+          <View style={{ marginBottom: space.xl, alignItems: 'center' }}>
             {isStopped ? (
               <>
-                <Text style={styles.h1} accessibilityRole="header">{isDisabledByAdmin ? 'Restaurant Disabled' : 'Registration Rejected'}</Text>
+                <Text style={styles.h1} accessibilityRole="header">{isDisabledByAdmin ? 'Restaurant disabled' : 'Registration rejected'}</Text>
                 <Text style={styles.body}>{isDisabledByAdmin ? 'Your restaurant has been disabled.' : parsedMessage.text}</Text>
                 {parsedMessage.reason && !isDisabledByAdmin ? (
                   <View style={styles.reason}>
-                    <Text style={styles.reasonLabel}>REASON FOR REJECTION:</Text>
+                    <Text style={styles.reasonLabel}>Reason for rejection</Text>
                     <Text style={styles.reasonText}>{parsedMessage.reason}</Text>
                   </View>
                 ) : null}
               </>
             ) : (
               <>
-                <Text style={styles.kicker}>VERIFICATION PENDING</Text>
-                <Text style={styles.h1Small} accessibilityRole="header">{'Your restaurant is\nunder review'}</Text>
+                <Text style={styles.h1} accessibilityRole="header">Your restaurant is under review</Text>
                 <Text style={styles.body}>
                   Admin received your onboarding details successfully. Our team will verify your restaurant and activate your dashboard once approval is complete.
                 </Text>
               </>
             )}
-            <Text style={styles.checking}>{checkingStatus ? 'CHECKING LATEST APPROVAL STATUS...' : ' '}</Text>
+            <View style={styles.checkingRow}>
+              {checkingStatus ? <ActivityIndicator size="small" color={AUTH.muted} /> : null}
+              <Text style={styles.checking}>{checkingStatus ? 'Checking latest approval status…' : ' '}</Text>
+            </View>
           </View>
 
           <View style={styles.next}>
-            {isStopped ? <AlertTriangle size={20} color="#fca5a5" style={{ marginTop: 2 }} /> : <ShieldCheck size={20} color={AUTH.gold} style={{ marginTop: 2 }} />}
-            <View style={{ flex: 1 }}>
+            {isStopped ? <AlertTriangle size={20} color={ERROR_ON_DARK} style={{ marginTop: 2 }} /> : <ShieldCheck size={20} color={color.goldOnDark} style={{ marginTop: 2 }} />}
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.nextTitle}>{isStopped ? 'What to do next' : 'What happens next'}</Text>
               <Text style={styles.nextBody}>
                 {isDisabledByAdmin
@@ -183,24 +176,24 @@ export default function VerificationPending() {
               </Text>
               {pendingPhone ? (
                 <Text style={styles.phone}>
-                  Registered phone: <Text style={{ color: AUTH.muted, ...poppins(500) }}>{pendingPhone}</Text>
+                  Registered phone: <Text style={{ color: AUTH.cream, fontFamily: 'Poppins_600SemiBold' }}>{pendingPhone}</Text>
                 </Text>
               ) : null}
             </View>
           </View>
 
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: space.md }}>
             {isDisabledByAdmin ? (
-              <Press scale={0.98} onPress={() => navigate('/food/restaurant/help-content')} style={styles.primary}>
-                <Text style={styles.primaryText}>Contact Support</Text>
+              <Press scale={0.98} onPress={() => navigate('/food/restaurant/help-content')} style={authStyles.button}>
+                <Text style={authStyles.buttonText}>Contact support</Text>
               </Press>
             ) : localStatus === 'rejected' ? (
-              <Press scale={0.98} onPress={reapply} style={styles.primary}>
-                <Text style={styles.primaryText}>Re-apply</Text>
+              <Press scale={0.98} onPress={reapply} style={authStyles.button}>
+                <Text style={authStyles.buttonText}>Re-apply</Text>
               </Press>
             ) : null}
-            <Press scale={0.98} onPress={backToLogin} style={isStopped ? styles.outline : styles.primary}>
-              <Text style={isStopped ? styles.outlineText : styles.primaryText}>Back to login</Text>
+            <Press scale={0.98} onPress={backToLogin} style={isStopped ? styles.outline : authStyles.button}>
+              <Text style={isStopped ? styles.outlineText : authStyles.buttonText}>Back to login</Text>
             </Press>
           </View>
         </View>
@@ -209,29 +202,27 @@ export default function VerificationPending() {
   );
 }
 
-const RED = '#E51A21';
+const ERROR_ON_DARK = '#fca5a5'; // red-300: the only error tint with AA contrast on the deep-green panel
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(202,168,62,0.3)', backgroundColor: AUTH.card, padding: 20, ...shadow('0 28px 80px rgba(0,0,0,0.65)') },
-  banner: { height: 36, marginVertical: 8, marginLeft: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: RED, borderTopLeftRadius: 6, borderBottomLeftRadius: 6, paddingLeft: 32, paddingRight: 12 },
-  bannerText: { flexShrink: 0, paddingRight: 3, fontSize: 13, lineHeight: 15, letterSpacing: 2.6, color: '#fff', ...poppins(800) },
-  bannerTip: { position: 'absolute', right: -13, top: 5, width: 26, height: 26, backgroundColor: RED, transform: [{ rotate: '45deg' }] },
-  diamond: { position: 'absolute', left: -16, top: 2, width: 32, height: 32, backgroundColor: RED, borderWidth: 3, borderColor: AUTH.card, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '45deg' }], zIndex: 2 },
-  clock: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(202,168,62,0.15)', alignItems: 'center', justifyContent: 'center' },
-  h1: { fontSize: 20, lineHeight: 28, color: AUTH.cream, textAlign: 'center', ...poppins(800) },
-  h1Small: { fontSize: 15, lineHeight: 20, color: AUTH.cream, textAlign: 'center', ...poppins(800) },
-  kicker: { marginBottom: 8, fontSize: 12, lineHeight: 16, letterSpacing: 3.84, color: AUTH.gold, ...poppins(600) },
-  body: { marginTop: 12, fontSize: 14, lineHeight: 24, color: AUTH.muted, textAlign: 'center', ...poppins(400) },
-  reason: { alignSelf: 'stretch', marginTop: 16, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)', backgroundColor: 'rgba(239,68,68,0.1)' },
-  reasonLabel: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, color: '#fca5a5', marginBottom: 4, ...poppins(800) },
-  reasonText: { fontSize: 14, lineHeight: 23, color: AUTH.cream, ...poppins(500) },
-  checking: { marginTop: 12, minHeight: 16, fontSize: 12, lineHeight: 16, letterSpacing: 2.16, color: AUTH.dim, textAlign: 'center', ...poppins(500) },
-  next: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(202,168,62,0.2)', backgroundColor: AUTH.field, padding: 14 },
-  nextTitle: { fontSize: 14, lineHeight: 20, color: AUTH.cream, ...poppins(600) },
-  nextBody: { marginTop: 4, fontSize: 14, lineHeight: 20, color: AUTH.muted, ...poppins(400) },
-  phone: { marginTop: 8, fontSize: 14, lineHeight: 20, color: AUTH.dim, ...poppins(400) },
-  primary: { height: 48, borderRadius: 12, backgroundColor: AUTH.gold, alignItems: 'center', justifyContent: 'center', ...shadow('0 10px 24px rgba(202,168,62,0.25)') },
-  primaryText: { fontSize: 16, color: AUTH.bg, ...poppins(600) },
-  outline: { height: 48, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
-  outlineText: { fontSize: 16, color: AUTH.muted, ...poppins(600) },
+  card: { borderRadius: radii.xl, borderWidth: 1, borderColor: 'rgba(202,168,62,0.3)', backgroundColor: color.primaryDeep, padding: space.xxl, ...elevation.float },
+  top: { alignItems: 'center', gap: space.md, marginBottom: space.lg },
+  disc: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(202,168,62,0.15)', alignItems: 'center', justifyContent: 'center' },
+  discStop: { backgroundColor: 'rgba(239,68,68,0.15)' },
+  pill: { paddingHorizontal: space.md, height: 28, borderRadius: radii.pill, backgroundColor: 'rgba(202,168,62,0.15)', justifyContent: 'center' },
+  pillStop: { backgroundColor: 'rgba(239,68,68,0.15)' },
+  pillText: { ...type.label, color: color.goldOnDark },
+  h1: { ...type.heading, fontSize: 20, lineHeight: 28, color: AUTH.cream, textAlign: 'center' },
+  body: { marginTop: space.md, ...type.body, color: AUTH.muted, textAlign: 'center' },
+  reason: { alignSelf: 'stretch', marginTop: space.lg, padding: space.md + 2, borderRadius: radii.lg, borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)', backgroundColor: 'rgba(239,68,68,0.1)', gap: space.xs },
+  reasonLabel: { ...type.label, color: ERROR_ON_DARK },
+  reasonText: { ...type.body, color: AUTH.cream },
+  checkingRow: { marginTop: space.md, minHeight: 20, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  checking: { ...type.caption, color: AUTH.muted, textAlign: 'center' },
+  next: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, marginBottom: space.xl, borderRadius: radii.lg, borderWidth: 1, borderColor: 'rgba(202,168,62,0.2)', backgroundColor: AUTH.field, padding: space.lg },
+  nextTitle: { ...type.bodyStrong, color: AUTH.cream },
+  nextBody: { marginTop: space.xs, ...type.small, color: AUTH.muted },
+  phone: { marginTop: space.sm, ...type.small, color: AUTH.muted },
+  outline: { height: 54, borderRadius: radii.md, borderWidth: 1.5, borderColor: 'rgba(202,168,62,0.45)', alignItems: 'center', justifyContent: 'center' },
+  outlineText: { ...type.button, fontSize: 16, color: AUTH.cream },
 });

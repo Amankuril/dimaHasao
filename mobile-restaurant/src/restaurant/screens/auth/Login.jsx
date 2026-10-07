@@ -11,7 +11,7 @@ import { toast } from '../../../lib/notify';
 import { collectFcmTokenFast, persistModuleFcmToken } from '../../../lib/push';
 import { localStore, sessionStore } from '../../../lib/storage';
 import { useLocation, useNavigate } from '../../../lib/webRouter';
-import { montserrat, poppins } from '../../../theme';
+import { color, radii, space, type } from '../../../theme';
 import AuthShell, { AUTH, AuthTitle, authStyles } from '../../components/AuthShell';
 import { checkOnboardingStatus, clearAllFilesFromDB, clearOnboardingFromLocalStorage, isRestaurantOnboardingComplete } from '../../utils/onboardingUtils';
 import OnboardingChoice from '../../components/OnboardingChoice';
@@ -335,14 +335,14 @@ export default function RestaurantLogin() {
 
   return (
     <AuthShell>
-      <AuthTitle title="Partner Sign In" kicker={isOtpStep ? 'Verify' : 'Sign in'}>
+      <AuthTitle title="Partner sign in" kicker={isOtpStep ? 'Verify' : 'Sign in'}>
         {!isOtpStep ? (
           <Text style={styles.lead}>Enter your mobile number to manage your restaurant or your stay.</Text>
         ) : (
           <View style={styles.sentRow}>
             <Text style={[styles.lead, { marginTop: 0, flexShrink: 1 }]}>We&apos;ve sent a code to {contactInfo}</Text>
-            <Press onPress={() => navigate('/food/restaurant/login')} accessibilityLabel="Edit phone number" style={styles.edit} hitSlop={8}>
-              <Pencil size={14} color={AUTH.gold} strokeWidth={2.5} />
+            <Press onPress={() => navigate('/food/restaurant/login')} accessibilityLabel="Edit phone number" style={styles.edit}>
+              <Pencil size={16} color={AUTH.gold} strokeWidth={2.5} />
             </Press>
           </View>
         )}
@@ -364,9 +364,9 @@ export default function RestaurantLogin() {
                 maxLength={10}
                 autoFocus
                 placeholder="10-digit number"
-                placeholderTextColor={AUTH.dim}
+                placeholderTextColor={AUTH.muted}
                 accessibilityLabel="Mobile number"
-                style={[authStyles.input, { paddingHorizontal: 16, letterSpacing: 1.7 }]}
+                style={[authStyles.input, { paddingHorizontal: space.lg }]}
               />
             </View>
           </View>
@@ -393,35 +393,37 @@ export default function RestaurantLogin() {
                 autoComplete={index === 0 ? 'sms-otp' : 'off'}
                 maxLength={index === 0 ? 4 : 1}
                 placeholder="•"
-                placeholderTextColor={AUTH.dim}
+                placeholderTextColor={AUTH.muted}
                 accessibilityLabel={`Digit ${index + 1}`}
-                style={[styles.otpBox, blockTimer > 0 ? styles.otpBoxBlocked : null]}
+                style={[styles.otpBox, otp[index] ? styles.otpBoxFilled : null, otpError ? styles.otpBoxError : null, blockTimer > 0 ? styles.otpBoxBlocked : null]}
               />
             ))}
           </View>
 
           <View style={{ alignItems: 'center' }}>
             {blockTimer > 0 ? (
-              <Text style={styles.resendOff}>RESEND SMS</Text>
+              <Text style={styles.resendOff}>Resend SMS</Text>
             ) : resendTimer > 0 ? (
               <Text style={styles.resendWait}>
                 Resend SMS in <Text style={styles.resendTime}>{timer(resendTimer)}</Text>
               </Text>
             ) : (
-              <Press onPress={handleResend} hitSlop={8}>
-                <Text style={styles.resend}>Didn&apos;t receive SMS? Resend SMS</Text>
+              <Press onPress={handleResend} style={styles.resendBtn}>
+                <Text style={styles.resendWait}>
+                  Didn&apos;t receive SMS? <Text style={styles.resend}>Resend SMS</Text>
+                </Text>
               </Press>
             )}
           </View>
 
           <Press scale={0.99} disabled={verifyDisabled} onPress={() => handleVerify()} accessibilityState={{ disabled: verifyDisabled, busy: loading }} style={[authStyles.button, verifyDisabled ? authStyles.buttonDisabled : null]}>
             {loading ? <ActivityIndicator size="small" color={AUTH.bg} /> : null}
-            <Text style={authStyles.buttonText}>{loading ? 'Verifying...' : 'Verify & Continue'}</Text>
+            <Text style={authStyles.buttonText}>{loading ? 'Verifying…' : 'Verify & continue'}</Text>
           </Press>
 
           {blockTimer > 0 ? (
-            <View style={styles.blocked}>
-              <Text style={styles.blockedTitle}>TOO MANY FAILED ATTEMPTS</Text>
+            <View style={styles.blocked} accessibilityRole="alert">
+              <Text style={styles.blockedTitle}>Too many failed attempts</Text>
               <Text style={styles.blockedTime}>
                 Try again after {Math.floor((blockTimer - 1) / 60)}:{String((blockTimer - 1) % 60).padStart(2, '0')}
               </Text>
@@ -435,21 +437,26 @@ export default function RestaurantLogin() {
   );
 }
 
+const ERROR_ON_DARK = '#fca5a5'; // red-300: the only error tint with AA contrast on the deep-green panel
+
 const styles = StyleSheet.create({
-  lead: { marginTop: 16, fontSize: 13, lineHeight: 21, color: AUTH.muted, textAlign: 'center', ...poppins(400) },
-  sentRow: { marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  edit: { borderRadius: 8, borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', padding: 6 },
-  code: { borderRightWidth: 1, borderRightColor: 'rgba(202,168,62,0.25)', paddingHorizontal: 16, fontSize: 14, lineHeight: 20, color: AUTH.muted, ...montserrat(700) },
-  otpError: { textAlign: 'center', fontSize: 13, lineHeight: 18, letterSpacing: 0.3, color: '#fca5a5', ...poppins(700) },
-  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: 12 },
-  otpBox: { width: 56, height: 56, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', backgroundColor: AUTH.field, textAlign: 'center', fontSize: 24, paddingVertical: 0, color: AUTH.cream, ...poppins(700) },
+  lead: { marginTop: space.lg, ...type.body, color: AUTH.muted, textAlign: 'center' },
+  sentRow: { marginTop: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  edit: { width: 44, height: 44, borderRadius: radii.md, borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
+  code: { borderRightWidth: 1, borderRightColor: 'rgba(202,168,62,0.25)', paddingHorizontal: space.lg, ...type.bodyStrong, fontSize: 16, color: AUTH.cream },
+  otpError: { textAlign: 'center', ...type.bodyStrong, color: ERROR_ON_DARK },
+  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: space.md },
+  otpBox: { width: 58, height: 60, borderRadius: radii.md, borderWidth: 1.5, borderColor: 'rgba(202,168,62,0.35)', backgroundColor: AUTH.field, textAlign: 'center', fontSize: 24, paddingVertical: 0, color: AUTH.cream, fontFamily: 'Poppins_700Bold' },
+  otpBoxFilled: { borderColor: color.gold },
+  otpBoxError: { borderColor: 'rgba(248,113,113,0.8)' },
   otpBoxBlocked: { borderColor: 'rgba(248,113,113,0.7)', opacity: 0.5 },
-  resendOff: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: AUTH.dim, ...poppins(600) },
-  resendWait: { fontSize: 12, lineHeight: 16, color: AUTH.muted, ...poppins(600) },
-  resendTime: { color: AUTH.gold, ...poppins(800) },
-  resend: { fontSize: 12, lineHeight: 16, color: AUTH.gold, ...poppins(700) },
-  blocked: { alignSelf: 'center', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(248,113,113,0.3)', backgroundColor: 'rgba(239,68,68,0.1)', paddingHorizontal: 24, paddingVertical: 10, alignItems: 'center' },
-  blockedTitle: { fontSize: 11, lineHeight: 16, letterSpacing: 0.55, color: '#fca5a5', ...poppins(700) },
-  blockedTime: { fontSize: 14, lineHeight: 20, color: AUTH.cream, ...poppins(700) },
-  legal: { fontSize: 10, lineHeight: 15, letterSpacing: 1.8, color: AUTH.dim, textTransform: 'uppercase', textAlign: 'center', ...montserrat(600) },
+  resendOff: { ...type.label, color: AUTH.muted, opacity: 0.6 },
+  resendWait: { ...type.label, color: AUTH.muted, textAlign: 'center' },
+  resendTime: { color: color.goldOnDark, fontFamily: 'Poppins_700Bold' },
+  resendBtn: { minHeight: 44, justifyContent: 'center', paddingHorizontal: space.sm },
+  resend: { ...type.label, color: color.goldOnDark, textDecorationLine: 'underline' },
+  blocked: { alignSelf: 'stretch', borderRadius: radii.md, borderWidth: 1, borderColor: 'rgba(248,113,113,0.35)', backgroundColor: 'rgba(239,68,68,0.12)', paddingHorizontal: space.xl, paddingVertical: space.md, alignItems: 'center', gap: 2 },
+  blockedTitle: { ...type.label, color: ERROR_ON_DARK },
+  blockedTime: { ...type.bodyStrong, color: AUTH.cream },
+  legal: { ...type.caption, color: AUTH.muted, textAlign: 'center' },
 });

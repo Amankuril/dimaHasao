@@ -1,16 +1,15 @@
-import { ActivityIndicator, Image, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Edit, Plus, Search, Trash2, X } from 'lucide-react-native';
+import { Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ImagePlus, Plus, Search, Trash2, X } from 'lucide-react-native';
 import { BottomSheet, Dialog, SelectField } from '../../components/kit';
+import { Button, Card, EmptyState, IconButton, SectionHeader } from '../../components/ds';
 import Img from '../../components/Img';
 import { toast } from '../../lib/notify';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 import ImageSourcePicker from '../components/ImageSourcePicker';
-import { Toggle } from '../components/ui';
 import { useItemDetailsPage } from '../hooks/pages/useItemDetailsPage';
-import { RT, RT_GRADIENT } from '../theme';
+import { Field, FieldLabel, Input, Notice, PinnedBar, ScreenHeader, SheetPanel, StockSwitch, Switch, VegMark } from './inventory/partnerKit';
 
 const dishFallbackImage = require('../assets/dish_fallback.webp');
 
@@ -23,39 +22,56 @@ const cleanPrice = (raw) => {
   return parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : value;
 };
 
-function Field({ label, small, children }) {
-  return (
-    <View>
-      <Text style={small ? styles.labelSm : styles.label}>{label}</Text>
-      {children}
-    </View>
-  );
-}
+const Rupee = <Text style={[type.bodyStrong, { color: color.textMuted }]}>₹</Text>;
 
-function ScopeBadge({ scope, selected }) {
+/** Category diet scope: the FSSAI mark + word for Veg / Non-Veg, a plain pill for Both. */
+function ScopeBadge({ scope }) {
   if (scope === 'Veg' || scope === 'Non-Veg') {
-    const veg = scope === 'Veg';
-    const border = selected ? (veg ? tw.green400 : '#fff') : veg ? tw.green600 : tw.red600;
-    const box = selected ? (veg ? { borderColor: tw.green400, backgroundColor: 'rgba(20,83,45,0.4)', color: tw.green300 } : { borderColor: 'rgba(255,255,255,0.4)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }) : veg ? { borderColor: RT.softBorder, backgroundColor: tw.green50, color: RT.primaryStrong } : { borderColor: tw.red300, backgroundColor: tw.red50, color: tw.red700 };
     return (
-      <View style={[styles.badge, { borderColor: box.borderColor, backgroundColor: box.backgroundColor }]}>
-        <View style={[styles.badgeBox, { borderColor: border }]}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: border }} />
-        </View>
-        <Text style={[styles.badgeText, { color: box.color }]}>{scope}</Text>
+      <View style={styles.scope}>
+        <VegMark veg={scope === 'Veg'} size={14} />
+        <Text style={[type.caption, { color: color.textSecondary }]}>{scope === 'Veg' ? 'Veg' : 'Non-veg'}</Text>
       </View>
     );
   }
   return (
-    <View style={[styles.badge, selected ? { borderColor: 'rgba(255,255,255,0.4)', backgroundColor: 'rgba(255,255,255,0.15)' } : { borderColor: tw.slate200, backgroundColor: tw.slate100 }]}>
-      <Text style={[styles.badgeText, { color: selected ? '#fff' : tw.slate600 }]}>Both</Text>
+    <View style={styles.scope}>
+      <Text style={[type.caption, { color: color.textSecondary }]}>Both</Text>
     </View>
+  );
+}
+
+/** Veg / Non-veg choice: the FSSAI mark carries the colour, selection is brand green. */
+function DietOption({ veg, selected, onPress }) {
+  return (
+    <Press scale={0.98} onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected }} accessibilityLabel={veg ? 'Veg' : 'Non-veg'} style={[styles.diet, selected && styles.dietOn]}>
+      <VegMark veg={veg} size={18} />
+      <Text style={[type.bodyStrong, { flex: 1, color: color.text }]}>{veg ? 'Veg' : 'Non-veg'}</Text>
+      {selected ? <Check size={18} color={color.primary} /> : null}
+    </Press>
+  );
+}
+
+function ConfirmDialog({ visible, onClose, title, children, cancelLabel = 'Cancel', confirmLabel, onConfirm, busy }) {
+  return (
+    <Dialog visible={visible} onClose={onClose} backdrop={color.overlay} panelStyle={styles.dialog}>
+      <View style={styles.dialogIcon}>
+        <Trash2 size={26} color={color.danger} />
+      </View>
+      <Text style={[type.heading, { color: color.text, textAlign: 'center' }]} accessibilityRole="header">{title}</Text>
+      <Text style={[type.small, { color: color.textSecondary, textAlign: 'center', marginTop: space.sm, marginBottom: space.xl }]}>{children}</Text>
+      <View style={{ flexDirection: 'row', gap: space.md, alignSelf: 'stretch' }}>
+        <Button title={cancelLabel} variant="outline" onPress={onClose} disabled={busy} style={{ flex: 1 }} />
+        <Button title={confirmLabel} variant="danger" onPress={onConfirm} disabled={busy} loading={busy} style={{ flex: 1 }} />
+      </View>
+    </Dialog>
   );
 }
 
 /** Port of Food/pages/restaurant/ItemDetailsPage.jsx (/food/restaurant/hub-menu/item/:id). */
 export default function ItemDetailsPage() {
   const insets = useSafeAreaInsets();
+  const { height: winH } = useWindowDimensions();
   const h = useItemDetailsPage();
   const {
     goBack, navigate, location, isNewItem, itemName, setItemName, category, selectedCategoryId, itemDescription, setItemDescription, foodType, setFoodType, isPureVegRestaurant,
@@ -73,361 +89,265 @@ export default function ItemDetailsPage() {
   };
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
-        <Press onPress={goBack} accessibilityLabel="Go back" hitSlop={8} style={{ padding: 4 }}>
-          <ArrowLeft size={20} color={tw.gray700} />
-        </Press>
-        <Text style={styles.title} accessibilityRole="header">Item details</Text>
-      </View>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: color.bg }}>
+      <ScreenHeader title="Item details" subtitle={isNewItem ? 'Add a dish to your menu' : undefined} onBack={goBack} />
 
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
         {!isNewItem && currentApprovalStatus === 'rejected' && currentRejectionReason ? (
-          <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-            <View style={styles.rejected}>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.red700, ...poppins(600) }}>Approval rejected</Text>
-              <Text style={{ marginTop: 4, fontSize: 14, lineHeight: 20, color: RT.primary, ...poppins(400) }}>Reason: {currentRejectionReason}</Text>
-              <Text style={{ marginTop: 8, fontSize: 12, lineHeight: 16, letterSpacing: 2.2, color: RT.primary, ...poppins(500) }}>UPDATE THE DISH AND SAVE TO SEND IT FOR APPROVAL AGAIN</Text>
-            </View>
-          </View>
+          <Notice tone="danger" icon={X} title="Approval rejected">
+            <Text style={[type.small, { color: color.text }]}>Reason: {currentRejectionReason}</Text>
+            <Text style={[type.small, { color: color.textSecondary, marginTop: space.xs }]}>Update the dish and save to send it for approval again.</Text>
+          </Notice>
         ) : null}
 
-        <View style={{ backgroundColor: '#fff' }}>
+        <Card padded={false} style={{ overflow: 'hidden' }}>
           {images.length > 0 ? (
             <View>
-              <View style={{ width: '100%', height: 320, overflow: 'hidden', backgroundColor: tw.gray100 }} onTouchStart={touch(onTouchStart)} onTouchMove={touch(onTouchMove)} onTouchEnd={onTouchEnd}>
-                {images[currentImageIndex] ? <Img source={{ uri: images[currentImageIndex] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={`${itemName} - Image ${currentImageIndex + 1}`} /> : null}
+              <View style={styles.photo} onTouchStart={touch(onTouchStart)} onTouchMove={touch(onTouchMove)} onTouchEnd={onTouchEnd}>
+                {images[currentImageIndex] ? <Img source={{ uri: images[currentImageIndex] }} style={styles.fill} resizeMode="cover" accessibilityLabel={`${itemName} - Image ${currentImageIndex + 1}`} /> : null}
                 {images.length > 1 ? (
                   <>
-                    <Press onPress={goToPrevious} accessibilityLabel="Previous image" style={[styles.arrow, { left: 12 }]}>
-                      <ChevronLeft size={20} color={tw.gray900} />
-                    </Press>
-                    <Press onPress={goToNext} accessibilityLabel="Next image" style={[styles.arrow, { right: 12 }]}>
-                      <ChevronRight size={20} color={tw.gray900} />
-                    </Press>
+                    <IconButton icon={ChevronLeft} label="Previous image" variant="soft" onPress={goToPrevious} style={[styles.arrow, { left: space.md }]} />
+                    <IconButton icon={ChevronRight} label="Next image" variant="soft" onPress={goToNext} style={[styles.arrow, { right: space.md }]} />
+                    <View style={styles.counter}>
+                      <Text style={[type.caption, { color: color.textInverse }]}>{currentImageIndex + 1} / {images.length}</Text>
+                    </View>
                   </>
                 ) : null}
-                <Press onPress={() => setShowRemoveImageConfirm(true)} accessibilityLabel="Remove Dish Photo" style={styles.removePhoto}>
-                  <Trash2 size={20} color="#fff" strokeWidth={2.2} />
-                </Press>
-                {images.length > 1 ? (
-                  <View style={styles.counter}>
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(500) }}>{currentImageIndex + 1} / {images.length}</Text>
-                  </View>
-                ) : null}
+                <IconButton icon={Trash2} label="Remove dish photo" variant="danger" onPress={() => setShowRemoveImageConfirm(true)} style={styles.removePhoto} />
               </View>
               {images.length > 1 ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, backgroundColor: '#fff' }}>
+                <View style={styles.dots}>
                   {images.map((_, index) => (
                     <Press
                       key={index}
                       scale={1}
+                      hitSlop={10}
                       accessibilityLabel={`Image ${index + 1}`}
                       onPress={() => {
                         setDirection(index > currentImageIndex ? 1 : -1);
                         setCurrentImageIndex(index);
                       }}
                     >
-                      {index === currentImageIndex ? (
-                        <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 32, height: 8, borderRadius: 4 }} />
-                      ) : (
-                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: tw.gray300 }} />
-                      )}
+                      <View style={[styles.dot, index === currentImageIndex && styles.dotOn]} />
                     </Press>
                   ))}
                 </View>
               ) : null}
             </View>
           ) : (
-            <View style={{ width: '100%', height: 320, backgroundColor: tw.gray100, overflow: 'hidden' }}>
-              <Image source={dishFallbackImage} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel="Dish Fallback" />
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)', alignItems: 'center', justifyContent: 'center' }]}>
-                <View style={styles.noImage}>
-                  <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-                    <Camera size={24} color={tw.gray600} />
-                  </View>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>No Image Uploaded</Text>
-                  <Text style={{ marginTop: 2, fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>Optional: Tap button below to add a photo</Text>
+            <View style={styles.photo}>
+              <Image source={dishFallbackImage} style={[styles.fill, { opacity: 0.35 }]} resizeMode="cover" accessibilityLabel="Dish Fallback" />
+              <View style={[StyleSheet.absoluteFill, styles.noPhoto]}>
+                <View style={styles.noPhotoIcon}>
+                  <Camera size={24} color={color.primary} />
                 </View>
+                <Text style={[type.bodyStrong, { color: color.text }]}>No photo yet</Text>
+                <Text style={[type.caption, { color: color.textSecondary }]}>Optional · dishes with a photo sell better</Text>
               </View>
             </View>
           )}
-
-          <View style={{ paddingHorizontal: 16, paddingVertical: 16, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.gray100 }}>
-            <Press scale={0.95} onPress={handleCameraClick} style={shadow('md')}>
-              <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.addImage}>
-                <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
-                  <Plus size={16} color="#fff" />
-                </View>
-                <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) }}>{images.length > 0 ? 'Replace Image' : 'Add Image (Optional)'}</Text>
-              </LinearGradient>
-            </Press>
+          <View style={{ padding: space.md }}>
+            <Button title={images.length > 0 ? 'Replace photo' : 'Add photo'} icon={ImagePlus} variant="secondary" onPress={handleCameraClick} />
           </View>
-        </View>
+        </Card>
 
-        <View style={{ padding: 16, gap: 12 }}>
-          <Field label="Category">
-            <Press scale={1} onPress={() => setIsCategoryPopupOpen(true)} style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 8 }]}>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: selectedCategoryId ? tw.gray900 : tw.gray400, ...poppins(400) }}>{selectedCategoryId ? category : 'Select category'}</Text>
-              <ChevronDown size={20} color={tw.gray500} />
-            </Press>
-          </Field>
+        <View>
+          <SectionHeader title="Item" />
+          <Card style={{ gap: space.lg }}>
+            <Field label="Category">
+              <Press scale={1} onPress={() => setIsCategoryPopupOpen(true)} accessibilityRole="button" accessibilityLabel={`Category: ${selectedCategoryId ? category : 'not selected'}`} style={styles.select}>
+                <Text style={[type.body, { flex: 1, color: selectedCategoryId ? color.text : color.textMuted }]} numberOfLines={1}>{selectedCategoryId ? category : 'Select category'}</Text>
+                <ChevronDown size={20} color={color.textMuted} />
+              </Press>
+            </Field>
 
-          <Field label="Item name">
             <View>
-              <TextInput value={itemName} onChangeText={setItemName} maxLength={maxNameLength} placeholder="Enter item name" placeholderTextColor={tw.gray400} style={[styles.input, styles.text, { paddingRight: 48 }]} />
-              <View style={styles.editIcon} pointerEvents="none"><Edit size={16} color={tw.gray500} /></View>
+              <FieldLabel>Item name</FieldLabel>
+              <Input value={itemName} onChangeText={setItemName} maxLength={maxNameLength} placeholder="Enter item name" accessibilityLabel="Item name" />
+              <Text style={[styles.counterText, { textAlign: 'right' }]}>{nameLength} / {maxNameLength}</Text>
             </View>
-            <View style={{ alignItems: 'flex-end', marginTop: 4 }}>
-              <Text style={styles.count}>{nameLength} / {maxNameLength}</Text>
-            </View>
-          </Field>
 
-          <View style={{ marginTop: -4 }}>
-            <Text style={styles.label}>Item description</Text>
             <View>
-              <TextInput
+              <FieldLabel>Item description</FieldLabel>
+              <Input
                 value={itemDescription}
                 onChangeText={setItemDescription}
                 maxLength={maxDescriptionLength}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
-                placeholder="Eg: Yummy veg paneer burger with a soft patty, veggies, cheese, and special sauce"
-                placeholderTextColor={tw.gray400}
-                style={[styles.input, styles.text, { paddingRight: 48, minHeight: 112 }]}
+                placeholder="E.g. Soft paneer patty with veggies, cheese and our special sauce"
+                accessibilityLabel="Item description"
               />
-              <View style={[styles.editIcon, { top: 12 }]} pointerEvents="none"><Edit size={16} color={tw.gray500} /></View>
+              <View style={styles.counterRow}>
+                <Text style={[styles.counterText, descriptionLength < minDescriptionLength ? { color: color.danger } : null]}>{descriptionLength < minDescriptionLength ? 'Min 5 characters required' : ''}</Text>
+                <Text style={styles.counterText}>{descriptionLength} / {maxDescriptionLength}</Text>
+              </View>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-              <Text style={[styles.count, descriptionLength < minDescriptionLength ? { color: RT.primary } : null]}>{descriptionLength < minDescriptionLength ? 'Min 5 characters required' : ''}</Text>
-              <Text style={styles.count}>{descriptionLength} / {maxDescriptionLength}</Text>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-              <Press scale={1} onPress={() => setFoodType('Veg')} style={[styles.diet, foodType === 'Veg' ? { borderColor: tw.green600, borderWidth: 2 } : { backgroundColor: tw.gray100 }]}>
-                {foodType === 'Veg' ? <Check size={16} color={tw.green600} /> : null}
-                <Text style={[styles.dietText, { color: foodType === 'Veg' ? tw.green600 : tw.gray700 }]}>Veg</Text>
-              </Press>
-              {!isPureVegRestaurant ? (
-                <Press scale={1} onPress={() => setFoodType('Non-Veg')} style={[styles.diet, foodType === 'Non-Veg' ? { borderColor: tw.red600, borderWidth: 2 } : { backgroundColor: tw.gray100 }]}>
-                  {foodType === 'Non-Veg' ? <Check size={16} color={RT.primary} /> : null}
-                  <Text style={[styles.dietText, { color: foodType === 'Non-Veg' ? RT.primary : tw.gray700 }]}>Non-Veg</Text>
-                </Press>
-              ) : null}
-            </View>
-          </View>
 
-          <Field label="Item price">
-            <View style={{ gap: 12 }}>
-              {variants.length === 0 ? (
-                <Field label="Base price" small>
-                  <View>
-                    <TextInput value={basePrice} onChangeText={(v) => setBasePrice(cleanPrice(v))} placeholder="Enter price" placeholderTextColor={tw.gray400} keyboardType="decimal-pad" style={[styles.input, styles.text, { backgroundColor: tw.gray50, paddingLeft: 32, paddingRight: 48 }]} />
-                    <Text style={styles.rupee}>{'₹'}</Text>
-                    <View style={styles.editIcon} pointerEvents="none"><Edit size={16} color={tw.gray500} /></View>
-                  </View>
-                </Field>
-              ) : (
-                <View style={{ borderRadius: 8, borderWidth: 1, borderColor: RT.accentBorder, backgroundColor: RT.primarySoft, paddingHorizontal: 12, paddingVertical: 8 }}>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: RT.primaryStrong, ...poppins(400) }}>Customers will see the lowest variant price first.</Text>
+            <View>
+              <FieldLabel>Food type</FieldLabel>
+              <View style={{ flexDirection: 'row', gap: space.sm }} accessibilityRole="radiogroup">
+                <DietOption veg selected={foodType === 'Veg'} onPress={() => setFoodType('Veg')} />
+                {!isPureVegRestaurant ? <DietOption veg={false} selected={foodType === 'Non-Veg'} onPress={() => setFoodType('Non-Veg')} /> : null}
+              </View>
+            </View>
+          </Card>
+        </View>
+
+        <View>
+          <SectionHeader title="Price" />
+          <Card style={{ gap: space.lg }}>
+            {variants.length === 0 ? (
+              <Field label="Base price">
+                <Input value={basePrice} onChangeText={(v) => setBasePrice(cleanPrice(v))} placeholder="Enter price" keyboardType="decimal-pad" accessibilityLabel="Base price" left={Rupee} style={styles.priceInput} />
+              </Field>
+            ) : (
+              <Notice tone="primary">Customers will see the lowest variant price first.</Notice>
+            )}
+
+            <View style={styles.variants}>
+              <View style={styles.variantsHead}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.bodyStrong, { color: color.text }]}>Variants</Text>
+                  <Text style={[type.caption, { color: color.textMuted }]}>Optional · e.g. Half, Full, Small, Large</Text>
                 </View>
-              )}
-
-              <View style={styles.variants}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) }}>Variants</Text>
-                    <Text style={styles.count}>Optional. Add multiple names and prices like Half, Full, Small, Large.</Text>
-                  </View>
-                  <Press scale={1} onPress={handleAddVariant} style={styles.addVariant}>
-                    <Plus size={14} color={RT.primaryStrong} />
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: RT.primaryStrong, ...poppins(600) }}>Add variant</Text>
-                  </Press>
-                </View>
-
-                {variants.length > 0 ? (
-                  <View style={{ gap: 12 }}>
-                    {variants.map((variant, index) => (
-                      <View key={variant.localId} style={styles.variant}>
-                        <View style={{ flex: 1, gap: 12 }}>
-                          <Field label="Variant name" small>
-                            <TextInput value={variant.name} onChangeText={(v) => handleVariantChange(variant.localId, 'name', v)} placeholder={index === 0 ? 'e.g., Half' : 'e.g., Full'} placeholderTextColor={tw.gray400} style={[styles.input, styles.text, { backgroundColor: '#fff', paddingVertical: 10, paddingHorizontal: 12 }]} />
-                          </Field>
-                          <Field label="Variant price" small>
-                            <View>
-                              <TextInput value={variant.price} onChangeText={(v) => handleVariantChange(variant.localId, 'price', cleanPrice(v))} placeholder="Enter price" placeholderTextColor={tw.gray400} keyboardType="decimal-pad" style={[styles.input, styles.text, { backgroundColor: '#fff', paddingVertical: 10, paddingLeft: 32, paddingRight: 12 }]} />
-                              <Text style={styles.rupee}>{'₹'}</Text>
-                            </View>
-                          </Field>
-                        </View>
-                        <Press onPress={() => handleRemoveVariant(variant.localId)} accessibilityLabel="Remove variant" style={styles.removeVariant}>
-                          <X size={16} color={tw.gray500} />
-                        </Press>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <Text style={styles.count}>No variants added. This item will use the base price only.</Text>
-                )}
+                <Button title="Add variant" icon={Plus} size="sm" variant="secondary" fullWidth={false} onPress={handleAddVariant} style={{ minHeight: 44 }} />
               </View>
 
-              <Field label="Preparation Time" small>
-                <SelectField value={preparationTime} options={PREP_OPTIONS} onChange={setPreparationTime} accessibilityLabel="Preparation time" chevronColor={tw.gray500} style={[styles.input, { backgroundColor: tw.gray50, paddingHorizontal: 16 }]} textStyle={{ fontSize: 14, color: tw.gray900, ...poppins(400) }} />
-              </Field>
+              {variants.length > 0 ? (
+                <View style={{ gap: space.md }}>
+                  {variants.map((variant, index) => (
+                    <View key={variant.localId} style={styles.variant}>
+                      <View style={{ flex: 1, minWidth: 0, gap: space.md }}>
+                        <Field label="Variant name">
+                          <Input value={variant.name} onChangeText={(v) => handleVariantChange(variant.localId, 'name', v)} placeholder={index === 0 ? 'e.g. Half' : 'e.g. Full'} accessibilityLabel={`Variant ${index + 1} name`} />
+                        </Field>
+                        <Field label="Variant price">
+                          <Input value={variant.price} onChangeText={(v) => handleVariantChange(variant.localId, 'price', cleanPrice(v))} placeholder="Enter price" keyboardType="decimal-pad" accessibilityLabel={`Variant ${index + 1} price`} left={Rupee} style={styles.priceInput} />
+                        </Field>
+                      </View>
+                      <IconButton icon={X} label={`Remove variant ${index + 1}`} variant="soft" onPress={() => handleRemoveVariant(variant.localId)} />
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={[type.small, { color: color.textMuted }]}>No variants added. This item uses the base price only.</Text>
+              )}
             </View>
-          </Field>
+
+            <Field label="Preparation time">
+              <SelectField value={preparationTime} options={PREP_OPTIONS} onChange={setPreparationTime} accessibilityLabel="Preparation time" chevronColor={color.textMuted} style={styles.select} textStyle={[type.body, { color: preparationTime ? color.text : color.textMuted }]} />
+            </Field>
+          </Card>
         </View>
 
-        <View style={{ gap: 16, paddingVertical: 16, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: tw.gray200 }}>
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Recommended</Text>
-            <Toggle value={Boolean(isRecommended)} onValueChange={setIsRecommended} onColor="#16a34a" accessibilityLabel="Recommended" />
-          </View>
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>In stock</Text>
-            <Toggle value={Boolean(isInStock)} onValueChange={setIsInStock} onColor="#16a34a" accessibilityLabel="In stock" />
-          </View>
+        <View>
+          <SectionHeader title="Availability" />
+          <Card padded={false}>
+            <View style={[styles.switchRow, styles.switchDivider]}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[type.bodyStrong, { color: color.text }]}>Recommended</Text>
+                <Text style={[type.caption, { color: color.textMuted }]}>Highlight this dish to customers</Text>
+              </View>
+              <Switch value={Boolean(isRecommended)} onValueChange={setIsRecommended} accessibilityLabel="Recommended" />
+            </View>
+            <View style={styles.switchRow}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[type.bodyStrong, { color: color.text }]}>Stock</Text>
+                <Text style={[type.caption, { color: color.textMuted }]}>Out-of-stock items are hidden from customers</Text>
+              </View>
+              <StockSwitch value={Boolean(isInStock)} onValueChange={setIsInStock} accessibilityLabel="In stock" />
+            </View>
+          </Card>
         </View>
+
+        {!isNewItem ? (
+          <Button title="Delete item from menu" icon={Trash2} variant="dangerSoft" onPress={() => setShowDeleteItemConfirm(true)} />
+        ) : null}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
-        {!isNewItem ? (
-          <View style={{ paddingTop: 8, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: tw.gray100 }}>
-            <Press scale={1} onPress={() => setShowDeleteItemConfirm(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 12 }}>
-              <Trash2 size={14} color={tw.rose600} />
-              <Text style={{ fontSize: 12, lineHeight: 16, color: tw.rose600, ...poppins(600) }}>Delete Entire Item from Menu</Text>
-            </Press>
-          </View>
-        ) : null}
-        <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12 }}>
-          <Press scale={1} onPress={goBack} style={styles.cancel}>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, textTransform: 'uppercase', ...poppins(700) }}>Cancel</Text>
-          </Press>
-          <Press scale={1} onPress={handleSave} disabled={uploadingImages} style={{ flex: 1 }}>
-            {uploadingImages ? (
-              <View style={[styles.save, { backgroundColor: tw.gray300 }]}>
-                <ActivityIndicator size="small" color={tw.gray500} />
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, textTransform: 'uppercase', ...poppins(700) }}>Saving...</Text>
-              </View>
-            ) : (
-              <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.save}>
-                <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', textTransform: 'uppercase', ...poppins(700) }}>Save</Text>
-              </LinearGradient>
-            )}
-          </Press>
-        </View>
-      </View>
+      <PinnedBar style={{ flexDirection: 'row', gap: space.md }}>
+        <Button title="Cancel" variant="outline" onPress={goBack} style={{ flex: 1 }} />
+        <Button title={uploadingImages ? 'Saving…' : 'Save item'} loading={uploadingImages} disabled={uploadingImages} onPress={handleSave} style={{ flex: 2 }} />
+      </PinnedBar>
 
-      <BottomSheet visible={isCategoryPopupOpen} onClose={() => setIsCategoryPopupOpen(false)} backdrop="rgba(0,0,0,0.5)">
-        <View style={[styles.sheet, { paddingBottom: insets.bottom }]}>
-          <View style={styles.sheetHead}>
-            <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) }}>Select category</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Press onPress={openAddCategory} accessibilityLabel="Add Category">
-                <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8, borderRadius: 8 }}>
-                  <Plus size={16} color="#fff" />
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) }}>Add</Text>
-                </LinearGradient>
-              </Press>
-              <Press onPress={() => setIsCategoryPopupOpen(false)} accessibilityLabel="Close" hitSlop={8} style={{ padding: 4 }}>
-                <X size={20} color={tw.gray600} />
-              </Press>
-            </View>
+      <BottomSheet visible={isCategoryPopupOpen} onClose={() => setIsCategoryPopupOpen(false)} backdrop={color.overlay}>
+        <SheetPanel
+          title="Select category"
+          onClose={() => setIsCategoryPopupOpen(false)}
+          right={<Button title="Add" icon={Plus} size="sm" variant="secondary" fullWidth={false} onPress={openAddCategory} accessibilityLabel="Add Category" style={{ minHeight: 44 }} />}
+          style={{ height: winH * 0.85, paddingBottom: insets.bottom }}
+        >
+          <View style={{ paddingHorizontal: space.lg, paddingVertical: space.md }}>
+            <Input
+              ref={categorySearchInputRef}
+              value={categorySearchQuery}
+              onChangeText={setCategorySearchQuery}
+              placeholder="Search categories"
+              accessibilityLabel="Search categories"
+              left={<Search size={18} color={color.textMuted} />}
+              right={
+                categorySearchQuery ? (
+                  <Press onPress={() => setCategorySearchQuery('')} accessibilityLabel="Clear search" style={styles.clearBtn}>
+                    <X size={18} color={color.textMuted} />
+                  </Press>
+                ) : null
+              }
+            />
           </View>
-          <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200, backgroundColor: '#fff' }}>
-            <View>
-              <View style={{ position: 'absolute', left: 14, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 }} pointerEvents="none"><Search size={16} color={tw.gray400} /></View>
-              <TextInput ref={categorySearchInputRef} value={categorySearchQuery} onChangeText={setCategorySearchQuery} placeholder="Search categories..." placeholderTextColor={tw.gray400} style={styles.search} />
-              {categorySearchQuery ? (
-                <Press onPress={() => setCategorySearchQuery('')} accessibilityLabel="Clear search" style={{ position: 'absolute', right: 10, top: 0, bottom: 0, justifyContent: 'center' }}>
-                  <X size={16} color={tw.gray400} />
-                </Press>
-              ) : null}
-            </View>
-          </View>
-          <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ padding: 8, flexGrow: 1 }}>
+          <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: space.lg, paddingBottom: space.lg, flexGrow: 1 }}>
             {loadingCategories ? (
-              <View style={styles.center}><ActivityIndicator size="small" color={tw.gray600} /></View>
+              <View style={styles.center}><ActivityIndicator size="small" color={color.primary} /></View>
             ) : categories.length === 0 ? (
-              <View style={[styles.center, { gap: 16 }]}>
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) }}>No categories available</Text>
-                <Press onPress={openAddCategory}>
-                  <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 }}>
-                    <Plus size={20} color="#fff" />
-                    <Text style={{ fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(600) }}>Add Category</Text>
-                  </LinearGradient>
-                </Press>
-              </View>
+              <EmptyState title="No categories yet" message="Create a category, then add dishes to it." actionLabel="Add category" onAction={openAddCategory} />
             ) : filteredCategories.length === 0 ? (
-              <View style={styles.center}><Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) }}>No matching categories found.</Text></View>
+              <View style={styles.center}><Text style={[type.body, { color: color.textMuted }]}>No matching categories found.</Text></View>
             ) : (
-              <View style={{ gap: 6 }}>
+              <View style={{ gap: space.sm }}>
                 {filteredCategories.map((cat) => {
                   const isSelected = String(selectedCategoryId || '') === String(cat.id);
                   return (
-                    <Press key={cat.id} scale={1} onPress={() => handleCategorySelect(cat.id, cat.name)} style={isSelected ? shadow('md') : null}>
-                      {isSelected ? (
-                        <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.catRow}>
-                          <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(500) }}>{cat.name}</Text>
-                          <ScopeBadge scope={cat.foodTypeScope} selected />
-                        </LinearGradient>
-                      ) : (
-                        <View style={[styles.catRow, { backgroundColor: tw.gray50 }]}>
-                          <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) }}>{cat.name}</Text>
-                          <ScopeBadge scope={cat.foodTypeScope} />
-                        </View>
-                      )}
+                    <Press key={cat.id} scale={1} onPress={() => handleCategorySelect(cat.id, cat.name)} accessibilityRole="radio" accessibilityState={{ selected: isSelected }} accessibilityLabel={cat.name} style={[styles.catRow, isSelected && styles.catRowOn]}>
+                      <Text style={[type.bodyStrong, { flex: 1, minWidth: 0, color: color.text }]} numberOfLines={2}>{cat.name}</Text>
+                      <ScopeBadge scope={cat.foodTypeScope} />
+                      {isSelected ? <Check size={18} color={color.primary} /> : null}
                     </Press>
                   );
                 })}
               </View>
             )}
           </ScrollView>
-        </View>
+        </SheetPanel>
       </BottomSheet>
 
-      <Dialog visible={showRemoveImageConfirm} onClose={() => setShowRemoveImageConfirm(false)} blur={8} panelStyle={styles.dialog}>
-        <View style={styles.dialogIcon}><Trash2 size={28} color={tw.rose600} /></View>
-        <Text style={styles.dialogTitle}>Remove Dish Photo?</Text>
-        <Text style={styles.dialogBody}>
-          Are you sure you want to remove this dish photo? The photo will be removed once you click <Text style={poppins(700)}>SAVE</Text>.
-        </Text>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Press scale={1} onPress={() => setShowRemoveImageConfirm(false)} style={styles.dialogCancel}>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(600) }}>Cancel</Text>
-          </Press>
-          <Press
-            scale={1}
-            onPress={() => {
-              setImages([]);
-              setImageFiles(new Map());
-              setCurrentImageIndex(0);
-              setShowRemoveImageConfirm(false);
-              toast.info('Photo removed. Click SAVE to apply changes.');
-            }}
-            style={styles.dialogDanger}
-          >
-            <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) }}>Yes, Remove</Text>
-          </Press>
-        </View>
-      </Dialog>
+      <ConfirmDialog
+        visible={showRemoveImageConfirm}
+        onClose={() => setShowRemoveImageConfirm(false)}
+        title="Remove dish photo?"
+        confirmLabel="Remove"
+        onConfirm={() => {
+          setImages([]);
+          setImageFiles(new Map());
+          setCurrentImageIndex(0);
+          setShowRemoveImageConfirm(false);
+          toast.info('Photo removed. Click SAVE to apply changes.');
+        }}
+      >
+        The photo is removed once you tap <Text style={{ fontFamily: 'Poppins_600SemiBold' }}>Save item</Text>.
+      </ConfirmDialog>
 
-      <Dialog visible={showDeleteItemConfirm} onClose={() => (isDeletingItem ? null : setShowDeleteItemConfirm(false))} blur={8} panelStyle={styles.dialog}>
-        <View style={styles.dialogIcon}><Trash2 size={28} color={tw.rose600} /></View>
-        <Text style={styles.dialogTitle}>Delete Dish Item?</Text>
-        <Text style={styles.dialogBody}>
-          Are you sure you want to delete <Text style={poppins(700)}>{itemName || 'this item'}</Text> from your restaurant menu? This action cannot be undone.
-        </Text>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Press scale={1} disabled={isDeletingItem} onPress={() => setShowDeleteItemConfirm(false)} style={[styles.dialogCancel, isDeletingItem ? { opacity: 0.5 } : null]}>
-            <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(600) }}>Cancel</Text>
-          </Press>
-          <Press scale={1} disabled={isDeletingItem} onPress={handleDeleteItem} style={[styles.dialogDanger, { flexDirection: 'row', gap: 8 }, isDeletingItem ? { opacity: 0.5 } : null]}>
-            {isDeletingItem ? <ActivityIndicator size="small" color="#fff" /> : null}
-            <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) }}>{isDeletingItem ? 'Deleting...' : 'Yes, Delete'}</Text>
-          </Press>
-        </View>
-      </Dialog>
+      <ConfirmDialog
+        visible={showDeleteItemConfirm}
+        onClose={() => (isDeletingItem ? null : setShowDeleteItemConfirm(false))}
+        title="Delete this dish?"
+        confirmLabel={isDeletingItem ? 'Deleting…' : 'Delete'}
+        onConfirm={handleDeleteItem}
+        busy={isDeletingItem}
+      >
+        <Text style={{ fontFamily: 'Poppins_600SemiBold' }}>{itemName || 'This item'}</Text> will be removed from your menu. This can&apos;t be undone.
+      </ConfirmDialog>
 
       <ImageSourcePicker isOpen={isPhotoPickerOpen} onClose={() => setIsPhotoPickerOpen(false)} onFileSelect={handleImageAdd} title="Item Image" description="Choose how to upload your item image" fileNamePrefix="item-photo" />
     </KeyboardAvoidingView>
@@ -435,44 +355,33 @@ export default function ItemDetailsPage() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray200, paddingHorizontal: 16, paddingBottom: 12 },
-  title: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  rejected: { borderRadius: 16, borderWidth: 1, borderColor: tw.red200, backgroundColor: tw.red50, paddingHorizontal: 16, paddingVertical: 12 },
-  arrow: { position: 'absolute', top: '50%', marginTop: -20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', ...shadow('lg') },
-  removePhoto: { position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: RT.primary, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center', ...shadow('md') },
-  counter: { position: 'absolute', top: 16, left: 16, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
-  noImage: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', ...shadow('xl') },
-  addImage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12 },
-  label: { marginBottom: 8, fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  labelSm: { marginBottom: 4, fontSize: 12, lineHeight: 16, color: tw.gray600, ...poppins(400) },
-  input: { borderWidth: 1, borderColor: tw.gray300, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff' },
-  text: { fontSize: 14, color: tw.gray900, ...poppins(400) },
-  count: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  editIcon: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center', padding: 4 },
-  rupee: { position: 'absolute', left: 12, top: 0, bottom: 0, textAlignVertical: 'center', fontSize: 14, color: tw.gray600, ...poppins(400) },
-  diet: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  dietText: { fontSize: 14, lineHeight: 20, ...poppins(500) },
-  variants: { borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', padding: 12, gap: 12 },
-  addVariant: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, borderWidth: 1, borderColor: RT.accentBorder, backgroundColor: RT.primarySoft, paddingHorizontal: 12, paddingVertical: 6 },
-  variant: { flexDirection: 'row', gap: 12, borderRadius: 8, borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray50, padding: 12 },
-  removeVariant: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: tw.gray200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  switchLabel: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(500) },
-  footer: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.gray200 },
-  cancel: { flex: 1, paddingVertical: 12, paddingHorizontal: 16, borderWidth: 1, borderColor: tw.gray300, borderRadius: 8, backgroundColor: '#fff', alignItems: 'center' },
-  save: { paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, overflow: 'hidden' },
-  sheet: { height: '85%', backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, overflow: 'hidden' },
-  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  search: { borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, backgroundColor: tw.gray50, paddingLeft: 40, paddingRight: 40, paddingVertical: 10, fontSize: 14, color: tw.gray900, ...poppins(400) },
+  scroll: { padding: space.lg, gap: space.xxl, paddingBottom: space.xxxl },
+  fill: { width: '100%', height: '100%' },
+  photo: { width: '100%', aspectRatio: 4 / 3, backgroundColor: color.surfaceMuted, overflow: 'hidden' },
+  arrow: { position: 'absolute', top: '50%', marginTop: -22, backgroundColor: 'rgba(255,255,255,0.92)' },
+  removePhoto: { position: 'absolute', top: space.md, right: space.md },
+  counter: { position: 'absolute', top: space.md, left: space.md, backgroundColor: color.overlay, paddingHorizontal: space.md, paddingVertical: space.xs, borderRadius: radii.pill },
+  dots: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingTop: space.md },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.borderStrong },
+  dotOn: { width: 24, backgroundColor: color.primary },
+  noPhoto: { alignItems: 'center', justifyContent: 'center', gap: space.xs, padding: space.lg },
+  noPhotoIcon: { width: 52, height: 52, borderRadius: radii.lg, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.xs },
+  select: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  counterRow: { flexDirection: 'row', justifyContent: 'space-between', gap: space.md },
+  counterText: { ...type.caption, color: color.textMuted, marginTop: space.xs },
+  diet: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  dietOn: { borderColor: color.primary, borderWidth: 2, backgroundColor: color.primarySoft },
+  priceInput: { backgroundColor: color.surface },
+  variants: { gap: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surfaceMuted, padding: space.md },
+  variantsHead: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  variant: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, padding: space.md },
+  switchRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 64 },
+  switchDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  clearBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginRight: -space.xs },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 160 },
-  catRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1 },
-  badgeBox: { width: 14, height: 14, borderRadius: 2, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  badgeText: { fontSize: 11, lineHeight: 16, ...poppins(600) },
-  dialog: { width: 320, maxWidth: '90%', backgroundColor: '#fff', borderRadius: 16, padding: 24, borderWidth: 1, borderColor: tw.gray100, alignItems: 'center', ...shadow('2xl') },
-  dialogIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: tw.rose50, borderWidth: 1, borderColor: tw.rose100, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  dialogTitle: { fontSize: 18, lineHeight: 28, color: tw.gray900, marginBottom: 8, textAlign: 'center', ...poppins(700) },
-  dialogBody: { fontSize: 12, lineHeight: 20, color: tw.gray500, marginBottom: 24, textAlign: 'center', ...poppins(400) },
-  dialogCancel: { flex: 1, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, borderWidth: 1, borderColor: tw.gray200, alignItems: 'center' },
-  dialogDanger: { flex: 1, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, backgroundColor: tw.rose600, alignItems: 'center', justifyContent: 'center' },
+  catRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 52, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, paddingHorizontal: space.lg, paddingVertical: space.sm },
+  catRowOn: { borderColor: color.primary, borderWidth: 2, backgroundColor: color.primarySoft },
+  scope: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, height: 24, borderRadius: radii.pill, backgroundColor: color.surfaceMuted },
+  dialog: { width: 340, maxWidth: '90%', backgroundColor: color.surface, borderRadius: radii.lg, padding: space.xxl, alignItems: 'center' },
+  dialogIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: space.lg },
 });

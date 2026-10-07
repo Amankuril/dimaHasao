@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, CheckCircle, AlertCircle, Info, Tag } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { poppins, tw } from '../../theme';
+import { EmptyState, SectionHeader } from '../../components/ds';
+import { color, radii, space, tone, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
-import { HT } from '../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerNotifications.jsx
@@ -14,19 +15,8 @@ import { HT } from '../theme';
  * either. The GSAP stagger-in is an Animated fade/slide.
  */
 
-const ICONS = {
-  success: (p) => <CheckCircle size={18} color={tw.green600} {...p} />,
-  alert: (p) => <AlertCircle size={18} color={tw.red600} {...p} />,
-  info: (p) => <Info size={18} color={tw.blue600} {...p} />,
-  promo: (p) => <Tag size={18} color={tw.orange600} {...p} />,
-};
-
-const BG = {
-  success: tw.green50,
-  alert: tw.red50,
-  info: tw.blue50,
-  promo: tw.orange50,
-};
+const ICONS = { success: CheckCircle, alert: AlertCircle, info: Info, promo: Tag };
+const TONES = { success: 'success', alert: 'danger', info: 'info', promo: 'gold' };
 
 // gsap.fromTo({ y: 20, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1, duration: 0.4 })
 const Reveal = ({ index, children }) => {
@@ -43,18 +33,19 @@ const Reveal = ({ index, children }) => {
 
 const NotificationItem = ({ notif }) => {
   const Icon = ICONS[notif.type];
+  const t = tone[TONES[notif.type]] || tone.neutral;
   return (
-    <View style={[styles.item, notif.read ? styles.itemRead : styles.itemUnread]}>
-      <View style={[styles.iconWrap, { backgroundColor: BG[notif.type] }]}>{Icon ? <Icon /> : null}</View>
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-          <Text style={[styles.title, { color: notif.read ? tw.gray700 : tw.slate900 }]}>{notif.title}</Text>
+    <View style={[styles.item, notif.read ? styles.itemRead : styles.itemUnread]} accessibilityLabel={`${notif.read ? '' : 'Unread. '}${notif.title}. ${notif.desc}. ${notif.time}`}>
+      <View style={[styles.iconWrap, { backgroundColor: t.bg }]}>{Icon ? <Icon size={20} color={t.fg} /> : null}</View>
+      <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: space.sm }}>
+          <Text style={[styles.title, { color: color.text }]}>{notif.title}</Text>
           <Text style={styles.time}>{notif.time}</Text>
         </View>
         <Text style={styles.desc}>{notif.desc}</Text>
         {!notif.read && (
           <Press scale={1} style={styles.markRead}>
-            <Text style={styles.markReadText}>Mark as Read</Text>
+            <Text style={styles.markReadText}>Mark as read</Text>
           </Press>
         )}
       </View>
@@ -71,19 +62,15 @@ const notifications = [
 ];
 
 const PartnerNotifications = () => {
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.page}>
       <PartnerHeader title="Notifications" subtitle="Alerts & updates" />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 80 }} showsVerticalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <Text style={styles.recent}>Recent</Text>
-          <Press scale={1}>
-            <Text style={styles.markAll}>Mark all read</Text>
-          </Press>
-        </View>
+      <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxxl + insets.bottom }} showsVerticalScrollIndicator={false}>
+        <SectionHeader title="Recent" action="Mark all read" onAction={() => {}} />
 
-        <View>
+        <View style={{ gap: space.md }}>
           {notifications.length > 0 ? (
             notifications.map((n, i) => (
               <Reveal key={n.id} index={i}>
@@ -91,10 +78,7 @@ const PartnerNotifications = () => {
               </Reveal>
             ))
           ) : (
-            <View style={{ alignItems: 'center', paddingVertical: 80, opacity: 0.5 }}>
-              <Bell size={40} color={tw.gray300} style={{ marginBottom: 16 }} />
-              <Text style={{ fontSize: 14, color: tw.gray400, ...poppins(700) }}>No new notifications</Text>
-            </View>
+            <EmptyState icon={Bell} title="No new notifications" />
           )}
         </View>
       </ScrollView>
@@ -103,19 +87,17 @@ const PartnerNotifications = () => {
 };
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: HT.bg },
-  recent: { fontSize: 18, lineHeight: 28, color: tw.slate900, ...poppins(900) },
-  markAll: { fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(700) },
-  item: { padding: 16, borderRadius: 16, marginBottom: 12, flexDirection: 'row', gap: 16 },
-  itemRead: { backgroundColor: '#fff' },
-  itemUnread: { backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray200 },
+  page: { flex: 1, backgroundColor: color.bg },
+  item: { padding: space.lg, borderRadius: radii.lg, flexDirection: 'row', gap: space.md, borderWidth: 1 },
+  itemRead: { backgroundColor: color.surface, borderColor: color.border },
+  itemUnread: { backgroundColor: color.primarySoft, borderColor: color.primaryBorder },
   iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  title: { flex: 1, fontSize: 14, lineHeight: 20, ...poppins(700) },
-  time: { fontSize: 10, lineHeight: 15, color: tw.gray400, marginLeft: 8, ...poppins(500) },
-  desc: { fontSize: 12, lineHeight: 19.5, color: tw.gray500, marginBottom: 8, ...poppins(400) },
-  markRead: { alignSelf: 'flex-start', borderBottomWidth: 1, borderBottomColor: HT.primary },
-  markReadText: { fontSize: 10, lineHeight: 15, color: HT.primary, ...poppins(700) },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: tw.red500, marginTop: 8 },
+  title: { flex: 1, ...type.bodyStrong },
+  time: { ...type.caption, color: color.textMuted },
+  desc: { ...type.small, color: color.textSecondary },
+  markRead: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
+  markReadText: { ...type.label, color: color.primary },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.danger, marginTop: space.xs },
 });
 
 export default PartnerNotifications;

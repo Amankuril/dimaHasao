@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Dialog } from '../../../components/kit';
-import { Press } from '../../../components/ui';
-import { poppins, tw } from '../../../theme';
-import { RT } from '../../theme';
+import { Button } from '../../../components/ds';
+import { color, radii, space, type } from '../../../theme';
 
 const ITEM = 40;
 const PAD = 80;
@@ -72,31 +71,32 @@ export default function TimePickerWheel({ isOpen, onClose, initialHour, initialM
   };
 
   return (
-    <Dialog visible={Boolean(isOpen)} onClose={onClose} backdrop="rgba(0,0,0,0.5)" panelStyle={styles.panel}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 32, paddingHorizontal: 16 }}>
+    <Dialog visible={Boolean(isOpen)} onClose={onClose} backdrop={color.overlay} panelStyle={styles.panel}>
+      <Text style={[type.heading, { color: color.text, paddingHorizontal: space.lg, paddingTop: space.lg }]} accessibilityRole="header">Choose time</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: space.lg, paddingHorizontal: space.lg }}>
         <Wheel values={HOURS} selected={hour} onSelect={setHour} render={(v) => v} active={isOpen} />
         <View style={{ paddingHorizontal: 8 }}>
-          <Text style={{ fontSize: 24, lineHeight: 32, color: tw.gray900, ...poppins(700) }}>:</Text>
+          <Text style={[type.priceLg, { color: color.text }]}>:</Text>
         </View>
         <Wheel values={MINUTES} selected={minute} onSelect={setMinute} render={(v) => v.toString().padStart(2, '0')} active={isOpen} />
         <Wheel values={PERIODS} selected={period} onSelect={setPeriod} render={(v) => v} active={isOpen} />
         <View pointerEvents="none" style={styles.lines}>
-          <View style={{ borderTopWidth: 1, borderTopColor: tw.gray300, marginHorizontal: 16 }} />
-          <View style={{ borderBottomWidth: 1, borderBottomColor: tw.gray300, marginHorizontal: 16, marginTop: 40 }} />
+          <View style={styles.band} />
         </View>
       </View>
-      <View style={{ borderTopWidth: 1, borderTopColor: tw.gray200, paddingHorizontal: 16, paddingVertical: 16, alignItems: 'center' }}>
-        <Press scale={1} onPress={handleConfirm}>
-          <Text style={{ fontSize: 16, lineHeight: 24, color: RT.primary, ...poppins(500) }}>Okay</Text>
-        </Press>
+      <View style={styles.foot}>
+        <Button title="Cancel" variant="outline" onPress={onClose} style={{ flex: 1 }} />
+        <Button title="Okay" onPress={handleConfirm} style={{ flex: 1 }} />
       </View>
     </Dialog>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { width: 320, maxWidth: '90%', backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden' },
-  on: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  off: { fontSize: 16, lineHeight: 24, color: tw.gray400, ...poppins(400) },
-  lines: { position: 'absolute', left: 0, right: 0, top: '50%', marginTop: -20 },
+  panel: { width: 320, maxWidth: '90%', backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden' },
+  on: { ...type.heading, color: color.primary },
+  off: { ...type.body, color: color.textMuted },
+  lines: { position: 'absolute', left: space.lg, right: space.lg, top: '50%', marginTop: -20 },
+  band: { height: ITEM, borderRadius: radii.md, backgroundColor: color.primarySoft, opacity: 0.6 },
+  foot: { flexDirection: 'row', gap: space.md, padding: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
 });

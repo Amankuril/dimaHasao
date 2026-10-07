@@ -1,8 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { Camera, Upload } from 'lucide-react-native';
+import { Camera, ChevronRight, Upload } from 'lucide-react-native';
 import { Press } from '../../components/ui';
-import { poppins, tw } from '../../theme';
-import { RT } from '../theme';
+import { color, radii, space, type } from '../../theme';
 import { ShadDialog } from './ShadDialog';
 import { openCamera, openGallery } from '../utils/imageUploadUtils';
 
@@ -15,23 +14,24 @@ export function ImageSourcePicker({ isOpen, onClose, onFileSelect, title = 'Upda
   };
   return (
     <ShadDialog visible={Boolean(isOpen)} onClose={onClose} style={styles.panel}>
-      <View style={{ padding: 20, paddingBottom: 12 }}>
-        <Text style={styles.title}>{title}</Text>
+      <View style={styles.head}>
+        <Text style={styles.title} accessibilityRole="header">{title}</Text>
         <Text style={styles.body}>{description}</Text>
       </View>
-      <View style={{ gap: 8, paddingHorizontal: 20, paddingBottom: 20 }}>
-        <Press scale={0.98} onPress={() => pick(openCamera)} style={styles.option}>
-          <Text style={styles.optionText}>Use Camera</Text>
-          {/* bg-orange-50 / text-orange-600 are repainted by the restaurant theme */}
-          <View style={[styles.optionIcon, { backgroundColor: RT.primarySoft }]}>
-            <Camera size={20} color={RT.accent} />
+      <View style={styles.options}>
+        <Press scale={0.98} onPress={() => pick(openCamera)} accessibilityLabel="Use camera" style={styles.option}>
+          <View style={styles.optionIcon}>
+            <Camera size={20} color={color.primary} />
           </View>
+          <Text style={styles.optionText}>Use camera</Text>
+          <ChevronRight size={18} color={color.textDisabled} />
         </Press>
-        <Press scale={0.98} onPress={() => pick(openGallery)} style={styles.option}>
-          <Text style={styles.optionText}>Upload from Device</Text>
-          <View style={[styles.optionIcon, { backgroundColor: tw.blue50 }]}>
-            <Upload size={20} color={tw.blue600} />
+        <Press scale={0.98} onPress={() => pick(openGallery)} accessibilityLabel="Upload from device" style={styles.option}>
+          <View style={styles.optionIcon}>
+            <Upload size={20} color={color.primary} />
           </View>
+          <Text style={styles.optionText}>Upload from device</Text>
+          <ChevronRight size={18} color={color.textDisabled} />
         </Press>
       </View>
     </ShadDialog>
@@ -41,10 +41,12 @@ export function ImageSourcePicker({ isOpen, onClose, onFileSelect, title = 'Upda
 export default ImageSourcePicker;
 
 const styles = StyleSheet.create({
-  panel: { width: '92%', maxWidth: 384, padding: 0, overflow: 'hidden' },
-  title: { fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) },
-  body: { marginTop: 8, fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderRadius: 12, borderWidth: 2, borderColor: tw.gray200, backgroundColor: '#fff' },
-  optionText: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  optionIcon: { padding: 8, borderRadius: 8 },
+  panel: { width: '92%', maxWidth: 400, padding: 0, overflow: 'hidden' },
+  head: { padding: space.xl, paddingRight: 56, paddingBottom: space.md, gap: space.xs },
+  title: { ...type.heading, color: color.text },
+  body: { ...type.small, color: color.textSecondary },
+  options: { gap: space.sm, paddingHorizontal: space.xl, paddingBottom: space.xl },
+  option: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 60, paddingHorizontal: space.md, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  optionIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  optionText: { flex: 1, ...type.bodyStrong, color: color.text },
 });

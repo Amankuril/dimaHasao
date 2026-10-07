@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   MapPin, IndianRupee, Users, BedDouble, ArrowLeft, CheckCircle,
   X, ChevronRight, Info, FileText, Image as ImageIcon, List,
-  Clock, Map, Calendar, ChevronLeft, Download,
+  Clock, Map, Calendar, ChevronLeft, Download, AlertTriangle,
 } from 'lucide-react-native';
 import { useNavigate, useParams } from '../../lib/webRouter';
 import { openExternal } from '../../lib/links';
 import Img from '../../components/Img';
 import { BottomSheet } from '../../components/kit';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { Button, EmptyState, IconButton, Money, SectionHeader, StatusBadge } from '../../components/ds';
+import { color, elevation, radii, space, type } from '../../theme';
 import { propertyService } from '../services/apiService';
-import { HT } from '../theme';
+import { InfoTile, KeyValue, PageLoader, approvalTone, sentence } from '../components/dashboard/partnerUi';
 
 /* Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerPropertyDetails.jsx. */
 
@@ -75,20 +76,17 @@ const PartnerPropertyDetails = () => {
   ];
 
   if (loading) {
-    return (
-      <View style={[styles.center, { backgroundColor: HT.bg }]}>
-        <ActivityIndicator size="large" color={tw.emerald600} />
-      </View>
-    );
+    return <PageLoader />;
   }
 
   if (error || !property) {
     return (
-      <View style={[styles.center, { backgroundColor: HT.bg, padding: 16 }]}>
-        <Text style={{ color: tw.red500, marginBottom: 16, textAlign: 'center', fontSize: 16, lineHeight: 24, ...poppins(400) }}>{error || 'Property not found'}</Text>
-        <Pressable onPress={() => navigate(-1)} accessibilityRole="button">
-          <Text style={{ color: tw.gray600, textDecorationLine: 'underline', fontSize: 16, lineHeight: 24, ...poppins(400) }}>Go Back</Text>
-        </Pressable>
+      <View style={[styles.center, { backgroundColor: color.bg, padding: space.xxl, gap: space.lg }]}>
+        <View style={styles.errIcon}>
+          <AlertTriangle size={24} color={color.danger} />
+        </View>
+        <Text style={[type.body, { color: color.danger, textAlign: 'center' }]}>{error || 'Property not found'}</Text>
+        <Button title="Go back" variant="outline" fullWidth={false} onPress={() => navigate(-1)} />
       </View>
     );
   }
@@ -114,224 +112,206 @@ const PartnerPropertyDetails = () => {
   };
 
   const card = [styles.card];
+  const live = property.isLive ? { tone: 'success', label: 'Live' } : approvalTone(property.status);
 
   const renderSection = () => {
     switch (activeSection) {
       case 'basic':
         return (
-          <View style={{ gap: 16 }}>
-            <View style={[card, { gap: 8 }]}>
-              <Text style={styles.label}>Property Name</Text>
-              <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(500) }}>{property.propertyName}</Text>
+          <View style={{ gap: space.md }}>
+            <View style={[card, { gap: space.xs }]}>
+              <Text style={styles.label}>Property name</Text>
+              <Text style={[type.subheading, { color: color.text }]}>{property.propertyName}</Text>
             </View>
-            <View style={[card, { gap: 8 }]}>
+            <View style={[card, { gap: space.xs }]}>
               <Text style={styles.label}>Description</Text>
-              <Text style={{ fontSize: 14, lineHeight: 22.75, color: tw.gray600, ...poppins(400) }}>{property.description}</Text>
+              <Text style={[type.body, { color: color.textSecondary }]}>{property.description}</Text>
             </View>
-            <View style={[card, { gap: 8 }]}>
-              <Text style={styles.label}>Contact Number</Text>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) }}>{property.contactNumber || 'Not provided'}</Text>
+            <View style={[card, { gap: space.xs }]}>
+              <Text style={styles.label}>Contact number</Text>
+              <Text style={[type.bodyStrong, { color: color.text }]}>{property.contactNumber || 'Not provided'}</Text>
             </View>
           </View>
         );
       case 'location':
         return (
-          <View style={{ gap: 16 }}>
-            <View style={card}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                <MapPin size={20} color={tw.emerald600} style={{ marginTop: 4 }} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>Address</Text>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray600, marginTop: 4, ...poppins(400) }}>{property.address?.fullAddress}</Text>
-                  <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray400, marginTop: 8, ...poppins(400) }}>
-                    {property.address?.city}, {property.address?.state} - {property.address?.pincode}
-                  </Text>
-                </View>
+          <View style={card}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space.md }}>
+              <MapPin size={20} color={color.primary} style={{ marginTop: 2 }} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[type.bodyStrong, { color: color.text }]}>Address</Text>
+                <Text style={[type.body, { color: color.textSecondary, marginTop: space.xs }]}>{property.address?.fullAddress}</Text>
+                <Text style={[type.small, { color: color.textMuted, marginTop: space.sm }]}>
+                  {property.address?.city}, {property.address?.state} - {property.address?.pincode}
+                </Text>
               </View>
             </View>
           </View>
         );
       case 'images': {
-        const imgW = (screenW - 32 - 12) / 2;
+        const imgW = (screenW - space.lg * 2 - space.md) / 2;
         return (
-          <View style={{ gap: 12, paddingBottom: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <ImageIcon size={16} color={tw.emerald600} />
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>Property Photos</Text>
+          <View style={{ gap: space.md, paddingBottom: space.lg }}>
+            <View style={styles.rowBetween}>
+              <View style={styles.rowGap}>
+                <ImageIcon size={18} color={color.primary} />
+                <Text style={[type.bodyStrong, { color: color.text }]}>Property photos</Text>
               </View>
-              <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(500) }}>
+              <Text style={[type.caption, { color: color.textMuted }]}>
                 {(property.coverImage ? 1 : 0) + (property.propertyImages?.length || 0)} images
               </Text>
             </View>
 
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
               {property.coverImage ? (
-                <View style={{ width: '100%', aspectRatio: 16 / 10, borderRadius: 16, overflow: 'hidden', backgroundColor: tw.gray100, ...shadow('md') }}>
+                <View style={{ width: '100%', aspectRatio: 16 / 10, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.surfaceMuted }}>
                   <Img source={{ uri: property.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
                   <LinearGradient colors={['rgba(0,0,0,0.4)', 'transparent']} start={{ x: 0, y: 1 }} end={{ x: 0, y: 0.5 }} style={StyleSheet.absoluteFill} />
                   <View style={styles.coverTag}>
-                    <ImageIcon size={12} color={tw.gray900} />
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) }}>Cover Photo</Text>
+                    <ImageIcon size={14} color={color.text} />
+                    <Text style={[type.caption, { color: color.text }]}>Cover photo</Text>
                   </View>
                 </View>
               ) : null}
 
               {property.propertyImages?.map((img, i) => (
-                <View key={i} style={{ width: imgW, aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: tw.gray100, ...shadow('sm') }}>
+                <View key={i} style={{ width: imgW, aspectRatio: 1, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted }}>
                   <Img source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" />
                 </View>
               ))}
             </View>
 
             {!property.coverImage && (!property.propertyImages || property.propertyImages.length === 0) ? (
-              <View style={styles.noPhotos}>
-                <ImageIcon size={32} color={tw.gray400} style={{ opacity: 0.3, marginBottom: 8 }} />
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray400, ...poppins(400) }}>No property photos added.</Text>
-              </View>
+              <EmptyState icon={ImageIcon} title="No property photos added." style={styles.dashed} />
             ) : null}
           </View>
         );
       }
       case 'amenities':
         return (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
             {property.amenities?.map((am, i) => (
               <View key={i} style={styles.amenity}>
-                <CheckCircle size={12} color={tw.emerald500} />
-                <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(700) }}>{am}</Text>
+                <CheckCircle size={14} color={color.success} />
+                <Text style={[type.label, { color: color.text }]}>{am}</Text>
               </View>
             ))}
+            {!property.amenities || property.amenities.length === 0 ? <EmptyState icon={List} title="No amenities added." style={{ flex: 1 }} /> : null}
           </View>
         );
       case 'nearby':
         return (
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: space.md }}>
             {property.nearbyPlaces?.map((place, i) => (
-              <View key={i} style={[card, { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12 }]}>
+              <View key={i} style={[card, { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md }]}>
                 <View style={styles.nearbyCircle}>
-                  <Text style={{ color: tw.emerald600, fontSize: 16, lineHeight: 24, ...poppins(700) }}>{place.name?.charAt(0)}</Text>
+                  <Text style={[type.subheading, { color: color.primary }]}>{place.name?.charAt(0)}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>{place.name}</Text>
-                  <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, textTransform: 'capitalize', ...poppins(400) }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.bodyStrong, { color: color.text }]}>{place.name}</Text>
+                  <Text style={[type.small, { color: color.textMuted, textTransform: 'capitalize' }]}>
                     {place.type?.replace('_', ' ')} • {place.distanceKm}km
                   </Text>
                 </View>
               </View>
             ))}
-            {!property.nearbyPlaces || property.nearbyPlaces.length === 0 ? (
-              <Text style={{ textAlign: 'center', fontSize: 14, lineHeight: 20, color: tw.gray400, paddingVertical: 16, ...poppins(400) }}>No nearby places added.</Text>
-            ) : null}
+            {!property.nearbyPlaces || property.nearbyPlaces.length === 0 ? <EmptyState icon={Map} title="No nearby places added." /> : null}
           </View>
         );
       case 'rooms':
         return (
-          <View style={{ gap: 12, paddingHorizontal: 16 }}>
+          <View style={{ gap: space.md }}>
             {roomTypes.length > 0 ? (
               roomTypes.map((room) => (
-                <Press key={room._id} onPress={() => setSelectedRoom(room)} scale={0.98} style={[styles.roomCard]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 12 }}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, marginBottom: 4, ...poppins(700) }}>{room.name}</Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                        <View style={[styles.chip, { backgroundColor: tw.emerald50 }]}>
-                          <Text style={{ fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.emerald700, ...poppins(700) }}>{room.roomCategory}</Text>
-                        </View>
-                        <View style={[styles.chip, { backgroundColor: tw.gray100 }]}>
-                          <Text style={{ fontSize: 10, lineHeight: 15, textTransform: 'capitalize', color: tw.gray600, ...poppins(500) }}>{room.inventoryType}</Text>
-                        </View>
+                <Press key={room._id} onPress={() => setSelectedRoom(room)} scale={0.98} accessibilityLabel={`${room.name}, view details`} style={[card, { gap: space.md }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.lg }}>
+                    <View style={{ flex: 1, minWidth: 0, gap: space.sm }}>
+                      <Text style={[type.subheading, { color: color.text }]}>{room.name}</Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+                        {room.roomCategory ? <StatusBadge label={sentence(room.roomCategory)} tone="primary" /> : null}
+                        {room.inventoryType ? <StatusBadge label={sentence(room.inventoryType)} tone="neutral" /> : null}
                       </View>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontSize: 18, lineHeight: 28, color: tw.emerald700, ...poppins(700) }}>₹{room.pricePerNight}</Text>
-                      <Text style={{ fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(500) }}>/ night</Text>
+                      <Money value={`₹${room.pricePerNight}`} style={{ color: color.primary }} />
+                      <Text style={[type.caption, { color: color.textMuted }]}>/ night</Text>
                     </View>
                   </View>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space.lg, rowGap: space.xs }}>
                     <View style={styles.cap}>
-                      <Users size={12} color={tw.gray500} />
+                      <Users size={16} color={color.textMuted} />
                       <Text style={styles.capText}>{room.maxAdults} Adults</Text>
                     </View>
                     <View style={styles.cap}>
-                      <Users size={12} color={tw.gray500} />
+                      <Users size={16} color={color.textMuted} />
                       <Text style={styles.capText}>{room.maxChildren} Children</Text>
                     </View>
                     <View style={styles.cap}>
-                      <BedDouble size={12} color={tw.gray500} />
+                      <BedDouble size={16} color={color.textMuted} />
                       <Text style={styles.capText}>{room.totalInventory} Units</Text>
                     </View>
                   </View>
 
                   {room.amenities && room.amenities.length > 0 ? (
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs + 2 }}>
                       {room.amenities.slice(0, 3).map((am, idx) => (
                         <View key={idx} style={styles.miniChip}>
-                          <Text style={{ fontSize: 10, lineHeight: 15, color: tw.gray600, ...poppins(500) }}>{am}</Text>
+                          <Text style={[type.caption, { color: color.textSecondary }]}>{am}</Text>
                         </View>
                       ))}
                       {room.amenities.length > 3 ? (
                         <View style={styles.miniChip}>
-                          <Text style={{ fontSize: 10, lineHeight: 15, color: tw.gray500, ...poppins(500) }}>+{room.amenities.length - 3} more</Text>
+                          <Text style={[type.caption, { color: color.textMuted }]}>+{room.amenities.length - 3} more</Text>
                         </View>
                       ) : null}
                     </View>
                   ) : null}
 
-                  <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: tw.gray100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(500) }}>Tap to view full details</Text>
-                    <ChevronRight size={14} color={tw.gray300} />
+                  <View style={[styles.rowBetween, { paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border }]}>
+                    <Text style={[type.label, { color: color.primary }]}>View full details</Text>
+                    <ChevronRight size={16} color={color.primary} />
                   </View>
                 </Press>
               ))
             ) : (
-              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
-                <BedDouble size={48} color={tw.gray400} style={{ opacity: 0.2, marginBottom: 8 }} />
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray400, ...poppins(400) }}>No room types added yet.</Text>
-              </View>
+              <EmptyState icon={BedDouble} title="No room types added yet." />
             )}
           </View>
         );
       case 'rules':
         return (
-          <View style={{ gap: 16 }}>
-            <View style={{ flexDirection: 'row', gap: 16 }}>
-              <View style={[card, { flex: 1, padding: 12 }]}>
-                <Text style={[styles.label, { marginBottom: 4 }]}>Check-in</Text>
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>{property.checkInTime || 'N/A'}</Text>
-              </View>
-              <View style={[card, { flex: 1, padding: 12 }]}>
-                <Text style={[styles.label, { marginBottom: 4 }]}>Check-out</Text>
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>{property.checkOutTime || 'N/A'}</Text>
-              </View>
+          <View style={{ gap: space.md }}>
+            <View style={{ flexDirection: 'row', gap: space.md }}>
+              <InfoTile label="Check-in" value={property.checkInTime || 'N/A'} />
+              <InfoTile label="Check-out" value={property.checkOutTime || 'N/A'} />
             </View>
 
-            <View style={[card, { gap: 8 }]}>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>Cancellation Policy</Text>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) }}>{property.cancellationPolicy || 'No policy specified.'}</Text>
+            <View style={[card, { gap: space.sm }]}>
+              <Text style={[type.bodyStrong, { color: color.text }]}>Cancellation policy</Text>
+              <Text style={[type.body, { color: color.textSecondary }]}>{property.cancellationPolicy || 'No policy specified.'}</Text>
             </View>
 
-            <View style={[card, { gap: 8 }]}>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(700) }}>House Rules</Text>
+            <View style={[card, { gap: space.sm }]}>
+              <Text style={[type.bodyStrong, { color: color.text }]}>House rules</Text>
               {property.houseRules && property.houseRules.length > 0 ? (
-                <View style={{ gap: 4 }}>
+                <View style={{ gap: space.xs }}>
                   {property.houseRules.map((rule, i) => (
-                    <View key={i} style={{ flexDirection: 'row', gap: 8 }}>
-                      <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) }}>{'•'}</Text>
-                      <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) }}>{rule}</Text>
+                    <View key={i} style={{ flexDirection: 'row', gap: space.sm }}>
+                      <Text style={[type.body, { color: color.textSecondary }]}>{'•'}</Text>
+                      <Text style={[type.body, { flex: 1, color: color.textSecondary }]}>{rule}</Text>
                     </View>
                   ))}
                 </View>
               ) : (
-                <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray400, fontStyle: 'italic', ...poppins(400) }}>No specific house rules.</Text>
+                <Text style={[type.body, { color: color.textMuted }]}>No specific house rules.</Text>
               )}
             </View>
           </View>
         );
       case 'documents':
         return (
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: space.md }}>
             {property.documents?.map((doc, i) => (
               <Press
                 key={i}
@@ -342,26 +322,22 @@ const PartnerPropertyDetails = () => {
                   }
                 }}
                 scale={0.98}
-                style={[card, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderRadius: 12 }]}
+                accessibilityLabel={`${doc.name}, ${doc.fileUrl ? 'uploaded' : 'missing'}`}
+                style={[card, { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md }]}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                  <View style={[styles.docIcon, { backgroundColor: doc.fileUrl ? tw.emerald50 : tw.red50 }]}>
-                    <FileText size={16} color={doc.fileUrl ? tw.emerald600 : tw.red500} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray900, ...poppins(700) }}>{doc.name}</Text>
-                    <Text style={{ fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: doc.fileUrl ? tw.emerald600 : tw.red500, ...poppins(700) }}>
-                      {doc.fileUrl ? 'Uploaded' : 'Missing'}
-                    </Text>
-                  </View>
+                <View style={[styles.docIcon, { backgroundColor: doc.fileUrl ? color.successSoft : color.dangerSoft }]}>
+                  <FileText size={18} color={doc.fileUrl ? color.success : color.danger} />
                 </View>
-                {doc.fileUrl ? (
-                  <View style={{ padding: 8, backgroundColor: tw.gray50, borderRadius: 8 }}>
-                    <ChevronRight size={16} color={tw.gray500} />
-                  </View>
-                ) : null}
+                <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
+                  <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={2}>
+                    {doc.name}
+                  </Text>
+                  <StatusBadge label={doc.fileUrl ? 'Uploaded' : 'Missing'} tone={doc.fileUrl ? 'success' : 'danger'} />
+                </View>
+                {doc.fileUrl ? <ChevronRight size={18} color={color.textMuted} /> : null}
               </Press>
             ))}
+            {!property.documents || property.documents.length === 0 ? <EmptyState icon={FileText} title="No documents uploaded." /> : null}
           </View>
         );
       default:
@@ -370,30 +346,33 @@ const PartnerPropertyDetails = () => {
   };
 
   const heroH = Math.round(screenH * 0.35);
+  const gridW = (screenW - space.lg * 2 - space.md) / 2;
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}>
-        <View style={[styles.hero, { height: heroH }]}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: space.xxxl + insets.bottom }}>
+        <View style={[styles.hero, { height: Math.max(heroH, 220 + insets.top) }]}>
           {property.coverImage ? (
-            <Img source={{ uri: property.coverImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+            <Img source={{ uri: property.coverImage }} accessibilityLabel={property.propertyName} style={StyleSheet.absoluteFill} resizeMode="cover" />
           ) : (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray100 }}>
-              <ImageIcon size={48} color={tw.gray400} style={{ opacity: 0.2 }} />
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.surfaceMuted }}>
+              <ImageIcon size={48} color={color.textDisabled} />
             </View>
           )}
-          <LinearGradient colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.6)']} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={['rgba(0,0,0,0.45)', 'transparent', 'rgba(0,0,0,0.7)']} style={StyleSheet.absoluteFill} />
 
-          <View style={{ position: 'absolute', bottom: 24, left: 24, right: 24 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <View style={styles.heroText}>
+            {property.propertyType ? (
               <View style={styles.typeChip}>
-                <Text style={{ fontSize: 10, lineHeight: 15, letterSpacing: 1.5, textTransform: 'uppercase', color: '#fff', ...poppins(700) }}>{property.propertyType}</Text>
+                <Text style={[type.caption, { color: color.textInverse }]}>{sentence(property.propertyType)}</Text>
               </View>
-            </View>
-            <Text style={{ fontSize: 24, lineHeight: 30, color: '#fff', marginBottom: 4, textShadowColor: 'rgba(0,0,0,0.25)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 3, ...poppins(700) }}>{property.propertyName}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: 0.9 }}>
-              <MapPin size={12} color={tw.gray100} />
-              <Text style={{ flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray100, ...poppins(500) }} numberOfLines={1}>
+            ) : null}
+            <Text style={styles.heroTitle} numberOfLines={2}>
+              {property.propertyName}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 }}>
+              <MapPin size={14} color={color.textInverse} />
+              <Text style={[type.small, { flex: 1, color: color.textInverse }]} numberOfLines={2}>
                 {property.address?.fullAddress}
               </Text>
             </View>
@@ -401,34 +380,38 @@ const PartnerPropertyDetails = () => {
         </View>
 
         {/* Sections Grid */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 24, gap: 12 }}>
-          <Press onPress={() => navigate(`/hotel/partner/inventory/${id}`)} scale={0.99} style={styles.inventoryBtn}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }}>
-              <View style={styles.inventoryIcon}>
-                <Calendar size={24} color="#fff" />
-              </View>
-              <View>
-                <Text style={{ fontSize: 16, lineHeight: 24, color: '#fff', ...poppins(700) }}>Manage Inventory</Text>
-                <Text style={{ fontSize: 12, lineHeight: 16, color: 'rgba(255,255,255,0.8)', marginTop: 2, ...poppins(400) }}>Availability & Manual Blocks</Text>
-              </View>
+        <View style={{ paddingHorizontal: space.lg, paddingTop: space.xxl, gap: space.md }}>
+          <Press onPress={() => navigate(`/hotel/partner/inventory/${id}`)} scale={0.99} accessibilityLabel="Manage inventory" style={styles.inventoryBtn}>
+            <View style={styles.inventoryIcon}>
+              <Calendar size={24} color={color.goldOnDark} />
             </View>
-            <ChevronRight size={20} color="rgba(255,255,255,0.8)" />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[type.subheading, { color: color.textInverse }]}>Manage inventory</Text>
+              <Text style={[type.small, { color: color.textOnDarkMuted }]}>Availability & manual blocks</Text>
+            </View>
+            <ChevronRight size={20} color={color.textInverse} />
           </Press>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          <SectionHeader title="Listing details" style={{ marginTop: space.md, marginBottom: 0 }} />
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
             {sections.map((section) => {
               const Icon = section.icon;
               return (
-                <Press key={section.id} onPress={() => setActiveSection(section.id)} scale={0.98} style={[styles.gridCard, { width: (screenW - 32 - 12) / 2 }]}>
-                  <View style={styles.gridIcon}>
-                    <Icon size={16} color={tw.gray500} />
+                <Press key={section.id} onPress={() => setActiveSection(section.id)} scale={0.98} accessibilityLabel={`${section.label}, ${section.desc}`} style={[styles.gridCard, { width: gridW }]}>
+                  <View style={styles.rowBetween}>
+                    <View style={styles.gridIcon}>
+                      <Icon size={18} color={color.primary} />
+                    </View>
+                    <ChevronRight size={16} color={color.textDisabled} />
                   </View>
                   <View style={{ width: '100%' }}>
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray900, marginBottom: 2, ...poppins(700) }}>{section.label}</Text>
-                    <Text style={{ fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(500) }} numberOfLines={1}>{section.desc}</Text>
-                  </View>
-                  <View style={{ position: 'absolute', top: 12, right: 12 }}>
-                    <ChevronRight size={14} color={tw.gray200} />
+                    <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={1}>
+                      {section.label}
+                    </Text>
+                    <Text style={[type.caption, { color: color.textMuted, textTransform: 'capitalize' }]} numberOfLines={1}>
+                      {section.desc}
+                    </Text>
                   </View>
                 </Press>
               );
@@ -438,35 +421,30 @@ const PartnerPropertyDetails = () => {
       </ScrollView>
 
       {/* Custom header over the hero */}
-      <View pointerEvents="box-none" style={[styles.topBar, { paddingTop: 16 + insets.top }]}>
-        <Press onPress={() => navigate(-1)} accessibilityLabel="Back" style={styles.backBtn}>
-          <ArrowLeft size={20} color={tw.gray700} />
-        </Press>
-        <View style={styles.liveChip}>
-          <Text style={{ fontSize: 12, lineHeight: 16, letterSpacing: 0.6, textTransform: 'uppercase', color: property.isLive ? tw.emerald600 : tw.orange500, ...poppins(700) }}>
-            {property.isLive ? 'Live' : property.status || 'Pending'}
-          </Text>
-        </View>
+      <View pointerEvents="box-none" style={[styles.topBar, { paddingTop: space.sm + insets.top }]}>
+        <IconButton icon={ArrowLeft} label="Back" variant="soft" onPress={() => navigate(-1)} style={styles.onPhoto} />
+        <StatusBadge label={live.label} tone={live.tone} style={styles.liveChip} />
       </View>
 
       {/* Main Sections Bottom Sheet */}
       <BottomSheet
         visible={Boolean(activeSection)}
         onClose={() => setActiveSection(null)}
-        backdrop="rgba(0,0,0,0.6)"
+        backdrop={color.overlay}
         blur={8}
         panelStyle={[styles.sheet, { height: Math.round(screenH * 0.85) }]}
       >
         <View style={styles.sheetHead}>
           <View style={styles.handle} />
-          <Text style={{ fontSize: 16, lineHeight: 24, color: tw.gray800, textAlign: 'center', ...poppins(700) }}>
-            {sections.find((s) => s.id === activeSection)?.label}
-          </Text>
-          <Press onPress={() => setActiveSection(null)} accessibilityLabel="Close" scale={0.9} style={styles.sheetClose}>
-            <X size={16} color={tw.gray500} />
-          </Press>
+          <View style={styles.rowBetween}>
+            <View style={{ width: 44 }} />
+            <Text style={[type.heading, { color: color.text, textAlign: 'center', flex: 1 }]} numberOfLines={1}>
+              {sections.find((s) => s.id === activeSection)?.label}
+            </Text>
+            <IconButton icon={X} label="Close" variant="soft" onPress={() => setActiveSection(null)} />
+          </View>
         </View>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 + insets.bottom }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: space.lg, paddingBottom: space.lg + insets.bottom }} showsVerticalScrollIndicator={false}>
           {renderSection()}
         </ScrollView>
       </BottomSheet>
@@ -475,7 +453,7 @@ const PartnerPropertyDetails = () => {
       <BottomSheet
         visible={Boolean(selectedRoom)}
         onClose={closeRoom}
-        backdrop="rgba(0,0,0,0.6)"
+        backdrop={color.overlay}
         blur={8}
         panelStyle={[styles.sheet, { height: Math.round(screenH * 0.9) }]}
       >
@@ -492,40 +470,36 @@ const PartnerPropertyDetails = () => {
               onTouchEnd={onTouchEnd}
             >
               {roomImages.length > 0 ? (
-                <Img source={{ uri: roomImages[currentImageIndex] }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                <Img source={{ uri: roomImages[currentImageIndex] }} accessibilityLabel={selectedRoom.name} style={StyleSheet.absoluteFill} resizeMode="cover" />
               ) : (
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                  <BedDouble size={48} color={tw.gray400} style={{ opacity: 0.3 }} />
+                  <BedDouble size={48} color={color.textDisabled} />
                 </View>
               )}
 
-              <Pressable onPress={closeRoom} accessibilityRole="button" accessibilityLabel="Close" style={[styles.carBtn, { top: 16, right: 16 }]}>
-                <X size={20} color={tw.gray800} />
-              </Pressable>
+              <IconButton icon={X} label="Close" variant="soft" onPress={closeRoom} style={[styles.carBtn, { top: space.lg, right: space.lg }]} />
 
               {roomImages.length > 1 ? (
                 <>
-                  <Pressable
+                  <IconButton
+                    icon={ChevronLeft}
+                    label="Previous image"
+                    variant="soft"
                     onPress={() => setCurrentImageIndex(Math.max(0, currentImageIndex - 1))}
                     disabled={currentImageIndex === 0}
-                    accessibilityRole="button"
-                    accessibilityLabel="Previous image"
-                    style={[styles.carBtn, { left: 16, top: 112, opacity: currentImageIndex === 0 ? 0.3 : 1 }]}
-                  >
-                    <ChevronLeft size={20} color={tw.gray800} />
-                  </Pressable>
-                  <Pressable
+                    style={[styles.carBtn, { left: space.lg, top: 106 }]}
+                  />
+                  <IconButton
+                    icon={ChevronRight}
+                    label="Next image"
+                    variant="soft"
                     onPress={() => setCurrentImageIndex(Math.min(roomImages.length - 1, currentImageIndex + 1))}
                     disabled={currentImageIndex === roomImages.length - 1}
-                    accessibilityRole="button"
-                    accessibilityLabel="Next image"
-                    style={[styles.carBtn, { right: 16, top: 112, opacity: currentImageIndex === roomImages.length - 1 ? 0.3 : 1 }]}
-                  >
-                    <ChevronRight size={20} color={tw.gray800} />
-                  </Pressable>
+                    style={[styles.carBtn, { right: space.lg, top: 106 }]}
+                  />
 
                   <View style={styles.counter}>
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: '#fff', ...poppins(500) }}>
+                    <Text style={[type.caption, { color: color.textInverse }]}>
                       {currentImageIndex + 1} / {roomImages.length}
                     </Text>
                   </View>
@@ -539,7 +513,9 @@ const PartnerPropertyDetails = () => {
                       key={idx}
                       onPress={() => setCurrentImageIndex(idx)}
                       accessibilityRole="button"
-                      style={{ height: 8, width: idx === currentImageIndex ? 24 : 8, borderRadius: 4, backgroundColor: idx === currentImageIndex ? '#fff' : 'rgba(255,255,255,0.5)' }}
+                      accessibilityLabel={`Image ${idx + 1}`}
+                      hitSlop={10}
+                      style={{ height: 8, width: idx === currentImageIndex ? 24 : 8, borderRadius: 4, backgroundColor: idx === currentImageIndex ? color.surface : 'rgba(255,255,255,0.5)' }}
                     />
                   ))}
                 </View>
@@ -547,63 +523,56 @@ const PartnerPropertyDetails = () => {
             </View>
 
             {/* Room Details Body */}
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 24 + insets.bottom }} showsVerticalScrollIndicator={false}>
-              <View style={{ gap: 24 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 24, lineHeight: 30, color: tw.gray900, ...poppins(700) }}>{selectedRoom.name}</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                      <View style={[styles.chip, { backgroundColor: tw.emerald50, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }]}>
-                        <Text style={{ fontSize: 12, lineHeight: 16, letterSpacing: 0.6, textTransform: 'uppercase', color: tw.emerald700, ...poppins(700) }}>{selectedRoom.roomCategory}</Text>
-                      </View>
-                      <View style={[styles.chip, { backgroundColor: tw.gray100, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }]}>
-                        <Text style={{ fontSize: 12, lineHeight: 16, textTransform: 'capitalize', color: tw.gray600, ...poppins(500) }}>{selectedRoom.inventoryType}</Text>
-                      </View>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: space.xl, paddingBottom: space.xl + insets.bottom }} showsVerticalScrollIndicator={false}>
+              <View style={{ gap: space.xxl }}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.lg }}>
+                  <View style={{ flex: 1, minWidth: 0, gap: space.sm }}>
+                    <Text style={[type.heading, { color: color.text }]}>{selectedRoom.name}</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+                      {selectedRoom.roomCategory ? <StatusBadge label={sentence(selectedRoom.roomCategory)} tone="primary" /> : null}
+                      {selectedRoom.inventoryType ? <StatusBadge label={sentence(selectedRoom.inventoryType)} tone="neutral" /> : null}
                     </View>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 20, lineHeight: 28, color: tw.emerald700, ...poppins(700) }}>₹{selectedRoom.pricePerNight}</Text>
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(500) }}>/ night</Text>
+                    <Money value={`₹${selectedRoom.pricePerNight}`} style={{ color: color.primary }} />
+                    <Text style={[type.caption, { color: color.textMuted }]}>/ night</Text>
                   </View>
                 </View>
 
                 <View>
-                  <Text style={styles.sub}>Room Capacity</Text>
-                  <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <Text style={styles.sub}>Room capacity</Text>
+                  <View style={{ flexDirection: 'row', gap: space.md }}>
                     {[
                       { Icon: Users, value: selectedRoom.maxAdults, label: 'Adults' },
                       { Icon: Users, value: selectedRoom.maxChildren, label: 'Children' },
                       { Icon: BedDouble, value: selectedRoom.totalInventory, label: 'Units' },
                     ].map(({ Icon, value, label }) => (
                       <View key={label} style={styles.capBox}>
-                        <Icon size={20} color={tw.gray400} style={{ marginBottom: 4 }} />
-                        <Text style={{ fontSize: 18, lineHeight: 28, color: tw.gray900, ...poppins(700) }}>{value}</Text>
-                        <Text style={{ fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.gray500, ...poppins(500) }}>{label}</Text>
+                        <Icon size={20} color={color.textMuted} />
+                        <Text style={[type.price, { color: color.text }]}>{value}</Text>
+                        <Text style={[type.caption, { color: color.textMuted }]}>{label}</Text>
                       </View>
                     ))}
                   </View>
                 </View>
 
                 {/* Pricing Breakdown (Expandable) */}
-                <View style={{ borderWidth: 1, borderColor: tw.gray100, borderRadius: 16, overflow: 'hidden' }}>
-                  <Pressable onPress={() => setShowPricing(!showPricing)} accessibilityRole="button" style={styles.pricingHead}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <IndianRupee size={16} color={tw.emerald600} />
-                      <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(700) }}>Pricing Details</Text>
+                <View style={{ borderWidth: 1, borderColor: color.border, borderRadius: radii.lg, overflow: 'hidden' }}>
+                  <Pressable onPress={() => setShowPricing(!showPricing)} accessibilityRole="button" accessibilityState={{ expanded: showPricing }} style={styles.pricingHead}>
+                    <View style={styles.rowGap}>
+                      <IndianRupee size={18} color={color.primary} />
+                      <Text style={[type.bodyStrong, { color: color.text }]}>Pricing details</Text>
                     </View>
-                    <ChevronRight size={16} color={tw.gray400} style={{ transform: [{ rotate: showPricing ? '90deg' : '0deg' }] }} />
+                    <ChevronRight size={18} color={color.textMuted} style={{ transform: [{ rotate: showPricing ? '90deg' : '0deg' }] }} />
                   </Pressable>
                   {showPricing ? (
-                    <View style={{ padding: 16, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: tw.gray100, gap: 12 }}>
+                    <View style={{ padding: space.lg, backgroundColor: color.surface, borderTopWidth: 1, borderTopColor: color.border, gap: space.sm }}>
                       {[
-                        ['Base Price (Per Night)', selectedRoom.pricePerNight],
-                        ['Extra Adult Price', selectedRoom.extraAdultPrice],
-                        ['Extra Child Price', selectedRoom.extraChildPrice],
+                        ['Base price (per night)', selectedRoom.pricePerNight],
+                        ['Extra adult price', selectedRoom.extraAdultPrice],
+                        ['Extra child price', selectedRoom.extraChildPrice],
                       ].map(([label, value]) => (
-                        <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) }}>{label}</Text>
-                          <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) }}>₹{value}</Text>
-                        </View>
+                        <KeyValue key={label} label={label} value={`₹${value}`} />
                       ))}
                     </View>
                   ) : null}
@@ -611,14 +580,14 @@ const PartnerPropertyDetails = () => {
 
                 {selectedRoom.amenities && selectedRoom.amenities.length > 0 ? (
                   <View>
-                    <Text style={styles.sub}>Room Amenities</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    <Text style={styles.sub}>Room amenities</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
                       {selectedRoom.amenities.map((am, idx) => (
                         <View key={idx} style={styles.roomAmenity}>
-                          <View style={styles.amenityDot}>
-                            <CheckCircle size={12} color={tw.emerald600} />
-                          </View>
-                          <Text style={{ flex: 1, fontSize: 12, lineHeight: 16, color: tw.gray700, ...poppins(500) }} numberOfLines={1}>{am}</Text>
+                          <CheckCircle size={16} color={color.success} />
+                          <Text style={[type.small, { flex: 1, color: color.text }]} numberOfLines={2}>
+                            {am}
+                          </Text>
                         </View>
                       ))}
                     </View>
@@ -632,58 +601,40 @@ const PartnerPropertyDetails = () => {
 
       {/* Document Viewer Modal */}
       <Modal visible={Boolean(selectedDocument)} transparent animationType="fade" onRequestClose={() => setSelectedDocument(null)} statusBarTranslucent>
-        <View style={styles.docWrap}>
-          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.9)' }]} onPress={() => setSelectedDocument(null)} />
+        <View style={[styles.docWrap, { paddingTop: space.lg + insets.top, paddingBottom: space.lg + insets.bottom }]}>
+          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.9)' }]} onPress={() => setSelectedDocument(null)} accessibilityLabel="Close" />
           {selectedDocument ? (
-            <View style={[styles.docCard, { height: Math.round(screenH * 0.9) }]}>
+            <View style={[styles.docCard, { height: Math.round(screenH * 0.9) - insets.top - insets.bottom }]}>
               <View style={styles.docHead}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                  <View style={styles.docHeadIcon}>
-                    <FileText size={20} color={tw.emerald600} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, lineHeight: 24, color: tw.gray900, ...poppins(700) }} numberOfLines={1}>{selectedDocument.name}</Text>
-                    <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) }}>Document Preview</Text>
-                  </View>
+                <View style={styles.docHeadIcon}>
+                  <FileText size={20} color={color.primary} />
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Press onPress={() => openExternal(selectedDocument.fileUrl)} style={styles.download}>
-                    <Download size={16} color={tw.emerald700} />
-                    <Text style={{ fontSize: 14, lineHeight: 20, color: tw.emerald700, ...poppins(600) }}>Download</Text>
-                  </Press>
-                  <Press onPress={() => setSelectedDocument(null)} accessibilityLabel="Close" style={{ padding: 8, backgroundColor: tw.gray100, borderRadius: 8 }}>
-                    <X size={20} color={tw.gray600} />
-                  </Press>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.subheading, { color: color.text }]} numberOfLines={1}>
+                    {selectedDocument.name}
+                  </Text>
+                  <Text style={[type.caption, { color: color.textMuted }]}>Document preview</Text>
                 </View>
+                <IconButton icon={Download} label="Download" variant="primary" onPress={() => openExternal(selectedDocument.fileUrl)} />
+                <IconButton icon={X} label="Close" variant="soft" onPress={() => setSelectedDocument(null)} />
               </View>
 
               <View style={styles.docBody}>
                 {!docFailed ? (
                   <Img
                     source={{ uri: selectedDocument.fileUrl }}
-                    style={{ width: '100%', height: '100%', borderRadius: 8 }}
+                    style={{ width: '100%', height: '100%', borderRadius: radii.sm }}
                     resizeMode="contain"
                     onError={() => setDocFailed(true)}
                   />
                 ) : (
-                  <View style={{ width: '100%', height: 256, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <FileText size={48} color={tw.gray400} style={{ opacity: 0.3 }} />
-                    <Text style={{ fontSize: 14, lineHeight: 20, color: tw.gray400, ...poppins(400) }}>Unable to preview this document</Text>
-                    <Press onPress={() => openExternal(selectedDocument.fileUrl)} style={{ marginTop: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, backgroundColor: tw.emerald600 }}>
-                      <Text style={{ fontSize: 14, lineHeight: 20, color: '#fff', ...poppins(600) }}>Open in New Tab</Text>
-                    </Press>
-                  </View>
+                  <EmptyState icon={FileText} title="Unable to preview this document" actionLabel="Open in new tab" onAction={() => openExternal(selectedDocument.fileUrl)} />
                 )}
-                <Press onPress={() => setSelectedDocument(null)} accessibilityLabel="Close" scale={0.95} style={styles.docFloatClose}>
-                  <X size={24} color={tw.gray800} />
-                </Press>
               </View>
 
               <View style={styles.docFoot}>
-                <Text style={{ fontSize: 12, lineHeight: 16, color: tw.gray500, flex: 1, ...poppins(400) }}>Tap outside to close</Text>
-                <Text style={{ fontSize: 12, lineHeight: 16, color: tw.emerald600, ...poppins(600) }}>
-                  {selectedDocument.type?.toUpperCase() || 'DOCUMENT'}
-                </Text>
+                <Text style={[type.caption, { color: color.textMuted, flex: 1 }]}>Tap outside to close</Text>
+                <Text style={[type.caption, { color: color.primary }]}>{selectedDocument.type?.toUpperCase() || 'DOCUMENT'}</Text>
               </View>
             </View>
           ) : null}
@@ -695,48 +646,47 @@ const PartnerPropertyDetails = () => {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  hero: { width: '100%', backgroundColor: tw.gray200, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden', ...shadow('sm') },
-  topBar: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 16, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  liveChip: { paddingHorizontal: 12, paddingVertical: 4, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 999, ...shadow('sm') },
-  typeChip: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  inventoryBtn: { backgroundColor: HT.primary, padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, ...shadow('0 10px 15px -3px rgba(6,56,30,0.1)') },
-  inventoryIcon: { width: 48, height: 48, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  gridCard: { backgroundColor: '#fff', padding: 12, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, gap: 12, alignItems: 'flex-start', overflow: 'hidden', ...shadow('0 2px 8px rgba(0,0,0,0.02)') },
-  gridIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center' },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: 'hidden', position: 'absolute', bottom: 0, left: 0, right: 0, ...shadow('0 -4px 30px rgba(0,0,0,0.15)') },
-  sheetHead: { padding: 16, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: tw.gray50, backgroundColor: '#fff' },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: tw.gray200, alignSelf: 'center', marginBottom: 16 },
-  sheetClose: { position: 'absolute', top: 16, right: 16, padding: 6, backgroundColor: tw.gray100, borderRadius: 999 },
-  card: { backgroundColor: '#fff', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  label: { fontSize: 12, lineHeight: 16, textTransform: 'uppercase', color: tw.gray500, ...poppins(700) },
-  sub: { fontSize: 12, lineHeight: 16, letterSpacing: 1.8, textTransform: 'uppercase', color: tw.gray400, marginBottom: 12, ...poppins(700) },
-  coverTag: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 8, ...shadow('lg') },
-  noPhotos: { alignItems: 'center', paddingVertical: 32, backgroundColor: tw.gray50, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.gray200 },
-  amenity: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray200, borderRadius: 8, ...shadow('sm') },
-  nearbyCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.emerald50, alignItems: 'center', justifyContent: 'center' },
-  roomCard: { backgroundColor: '#fff', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  chip: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  miniChip: { paddingHorizontal: 8, paddingVertical: 2, backgroundColor: tw.gray50, borderWidth: 1, borderColor: tw.gray100, borderRadius: 4 },
-  cap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  capText: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  docIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  carousel: { height: 256, width: '100%', backgroundColor: tw.gray100, borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: 'hidden' },
-  carBtn: { position: 'absolute', padding: 8, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 999, ...shadow('lg') },
-  counter: { position: 'absolute', bottom: 16, right: 16, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 999 },
-  dotsRow: { position: 'absolute', bottom: 16, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  capBox: { flex: 1, padding: 12, backgroundColor: tw.gray50, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  pricingHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: 'rgba(249,250,251,0.5)' },
-  roomAmenity: { width: '48.5%', flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.gray100, borderRadius: 12 },
-  amenityDot: { width: 24, height: 24, borderRadius: 12, backgroundColor: tw.emerald50, alignItems: 'center', justifyContent: 'center' },
-  docWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  docCard: { width: '100%', maxWidth: 896, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', ...shadow('2xl') },
-  docHead: { paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.gray100, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  docHeadIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.emerald50, alignItems: 'center', justifyContent: 'center' },
-  download: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: tw.emerald50, borderRadius: 8 },
-  docBody: { flex: 1, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  docFloatClose: { position: 'absolute', top: 16, right: 16, padding: 12, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 999, ...shadow('lg') },
-  docFoot: { paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: tw.gray100, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  errIcon: { width: 56, height: 56, borderRadius: radii.lg, backgroundColor: color.dangerSoft, alignItems: 'center', justifyContent: 'center' },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  rowGap: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  hero: { width: '100%', backgroundColor: color.surfaceMuted, borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, overflow: 'hidden' },
+  heroText: { position: 'absolute', bottom: space.xl, left: space.xl, right: space.xl, gap: space.xs },
+  heroTitle: { ...type.heading, fontSize: 24, lineHeight: 30, color: color.textInverse },
+  topBar: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  onPhoto: { backgroundColor: 'rgba(255,255,255,0.92)', ...elevation.card },
+  liveChip: { alignSelf: 'center', ...elevation.card },
+  typeChip: { alignSelf: 'flex-start', paddingHorizontal: space.sm, height: 24, justifyContent: 'center', borderRadius: radii.pill, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  inventoryBtn: { backgroundColor: color.primaryDeep, padding: space.lg, borderRadius: radii.lg, flexDirection: 'row', alignItems: 'center', gap: space.lg, ...elevation.card },
+  inventoryIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  gridCard: { backgroundColor: color.surface, padding: space.md, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, gap: space.md, minHeight: 104, ...elevation.card },
+  gridIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  sheet: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, overflow: 'hidden', position: 'absolute', bottom: 0, left: 0, right: 0, ...elevation.sheet },
+  sheetHead: { paddingHorizontal: space.sm, paddingTop: space.sm, paddingBottom: space.xs, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border, backgroundColor: color.surface },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.borderStrong, alignSelf: 'center', marginBottom: space.xs },
+  card: { backgroundColor: color.surface, padding: space.lg, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border },
+  label: { ...type.caption, color: color.textMuted },
+  sub: { ...type.overline, color: color.textMuted, marginBottom: space.md },
+  coverTag: { position: 'absolute', bottom: space.md, left: space.md, flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.md, height: 28, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radii.pill },
+  dashed: { backgroundColor: color.surfaceMuted, borderRadius: radii.md, borderWidth: 1, borderStyle: 'dashed', borderColor: color.borderStrong, paddingVertical: space.xxl },
+  amenity: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.md, minHeight: 36, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.pill },
+  nearbyCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  miniChip: { paddingHorizontal: space.sm, height: 24, justifyContent: 'center', backgroundColor: color.surfaceMuted, borderRadius: radii.pill },
+  cap: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  capText: { ...type.small, color: color.textSecondary },
+  docIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  carousel: { height: 256, width: '100%', backgroundColor: color.surfaceMuted, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, overflow: 'hidden' },
+  carBtn: { position: 'absolute', backgroundColor: 'rgba(255,255,255,0.92)', ...elevation.card },
+  counter: { position: 'absolute', bottom: space.lg, right: space.lg, paddingHorizontal: space.md, height: 24, justifyContent: 'center', backgroundColor: color.overlay, borderRadius: radii.pill },
+  dotsRow: { position: 'absolute', bottom: space.lg, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  capBox: { flex: 1, padding: space.md, backgroundColor: color.surfaceMuted, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', gap: space.xxs },
+  pricingHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: space.lg, minHeight: 52, backgroundColor: color.surfaceMuted },
+  roomAmenity: { width: '48.5%', flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radii.md },
+  docWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
+  docCard: { width: '100%', maxWidth: 896, backgroundColor: color.surface, borderRadius: radii.lg, overflow: 'hidden', ...elevation.sheet },
+  docHead: { paddingLeft: space.lg, paddingRight: space.sm, paddingVertical: space.sm, borderBottomWidth: 1, borderBottomColor: color.border, backgroundColor: color.surface, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  docHeadIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  docBody: { flex: 1, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center', padding: space.xl },
+  docFoot: { paddingHorizontal: space.lg, paddingVertical: space.md, borderTopWidth: 1, borderTopColor: color.border, backgroundColor: color.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
 });
 
 export default PartnerPropertyDetails;

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CheckCircle, ExternalLink, Shield } from 'lucide-react-native';
+import { AlertTriangle, CheckCircle, ExternalLink, Shield } from 'lucide-react-native';
 import { Press } from '../../components/ui';
-import { poppins, shadow, tw } from '../../theme';
+import { Card } from '../../components/ds';
+import { color, radii, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
 import { legalService } from '../services/apiService';
-import { HT } from '../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerTerms.jsx
@@ -15,11 +15,15 @@ import { HT } from '../theme';
  */
 
 const Section = ({ title, children }) => (
-  <View style={{ marginBottom: 32 }}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-      <View style={styles.dot} />
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
+  <View style={{ marginBottom: space.xl }}>
+    {title ? (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.sm }}>
+        <View style={styles.dot} />
+        <Text style={styles.sectionTitle} accessibilityRole="header">
+          {title}
+        </Text>
+      </View>
+    ) : null}
     <View style={styles.sectionBody}>
       <Text style={styles.sectionText}>{children}</Text>
     </View>
@@ -53,17 +57,17 @@ const PartnerTerms = () => {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       <PartnerHeader title="Terms & Conditions" subtitle="Legal Agreement" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}>
-        <View style={{ maxWidth: 768, width: '100%', alignSelf: 'center', paddingHorizontal: 16, paddingTop: 24 }}>
-          <View style={styles.card}>
+      <ScrollView contentContainerStyle={{ paddingBottom: space.xxxl + insets.bottom }}>
+        <View style={{ maxWidth: 768, width: '100%', alignSelf: 'center', padding: space.lg }}>
+          <Card style={styles.card}>
             <View style={styles.head}>
               <View style={styles.headIcon}>
-                <Shield size={24} color={tw.gray400} />
+                <Shield size={24} color={color.primary} />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.title}>{page?.title || 'Partner Agreement'}</Text>
                 <Text style={styles.updated}>Last updated: August 15, 2024</Text>
               </View>
@@ -71,6 +75,7 @@ const PartnerTerms = () => {
 
             {error ? (
               <View style={styles.warn}>
+                <AlertTriangle size={18} color={color.warning} />
                 <Text style={styles.warnText}>{error}</Text>
               </View>
             ) : null}
@@ -98,16 +103,16 @@ const PartnerTerms = () => {
             )}
 
             <View style={styles.foot}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                <CheckCircle size={16} color={tw.green600} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+                <CheckCircle size={16} color={color.success} />
                 <Text style={styles.accepted}>You accepted these terms on 12 Aug 2024</Text>
               </View>
-              <Press scale={1} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Press scale={1} accessibilityLabel="Download PDF" style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, minHeight: 44, alignSelf: 'flex-start' }}>
                 <Text style={styles.download}>Download PDF</Text>
-                <ExternalLink size={12} color={HT.primary} />
+                <ExternalLink size={14} color={color.primary} />
               </Press>
             </View>
-          </View>
+          </Card>
         </View>
       </ScrollView>
     </View>
@@ -115,20 +120,20 @@ const PartnerTerms = () => {
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', padding: 32, borderRadius: 32, borderWidth: 1, borderColor: tw.gray100, ...shadow('sm') },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 32, paddingBottom: 32, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  headIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: tw.gray100, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 18, lineHeight: 28, color: tw.slate900, ...poppins(900) },
-  updated: { fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(400) },
-  warn: { marginBottom: 24, backgroundColor: tw.amber50, borderWidth: 1, borderColor: tw.amber200, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8 },
-  warnText: { fontSize: 12, lineHeight: 16, color: tw.amber800, ...poppins(400) },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: HT.primary },
-  sectionTitle: { flex: 1, fontSize: 16, lineHeight: 24, color: tw.slate900, ...poppins(700) },
-  sectionBody: { paddingLeft: 14, borderLeftWidth: 1, borderLeftColor: tw.gray100 },
-  sectionText: { fontSize: 12, lineHeight: 19.5, color: tw.gray500, ...poppins(400) },
-  foot: { marginTop: 32, paddingTop: 24, borderTopWidth: 1, borderTopColor: tw.gray100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  accepted: { flex: 1, fontSize: 12, lineHeight: 16, color: tw.green600, ...poppins(700) },
-  download: { fontSize: 12, lineHeight: 16, color: HT.primary, ...poppins(700) },
+  card: { padding: space.xl },
+  head: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.xl, paddingBottom: space.lg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  headIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  title: { ...type.heading, color: color.text },
+  updated: { ...type.caption, color: color.textMuted },
+  warn: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.xl, backgroundColor: color.warningSoft, borderRadius: radii.md, padding: space.md },
+  warnText: { flex: 1, ...type.small, color: color.text },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.gold },
+  sectionTitle: { flex: 1, ...type.subheading, color: color.text },
+  sectionBody: { paddingLeft: space.md + 2, borderLeftWidth: 2, borderLeftColor: color.border },
+  sectionText: { ...type.body, color: color.textSecondary },
+  foot: { marginTop: space.md, paddingTop: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, gap: space.sm },
+  accepted: { flex: 1, ...type.label, color: color.success },
+  download: { ...type.label, color: color.primary },
 });
 
 export default PartnerTerms;

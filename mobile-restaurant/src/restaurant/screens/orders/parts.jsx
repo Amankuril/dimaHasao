@@ -1,25 +1,61 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Path, Rect, Text as SvgText } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Check, X } from 'lucide-react-native';
+import { Banknote, Bike, CircleCheck, Clock, CreditCard, ShoppingBag, StickyNote, Timer, Utensils, UtensilsCrossed, X } from 'lucide-react-native';
 import Img from '../../../components/Img';
 import { Press } from '../../../components/ui';
+import { Button, StatusBadge } from '../../../components/ds';
 import { navigateTo } from '../../../lib/webRouter';
-import { poppins, shadow, tw } from '../../../theme';
+import { color, radii, space, type as t, elevation } from '../../../theme';
 import ResendNotificationButton from '../../components/ResendNotificationButton';
-import { RT, RT_GRADIENT } from '../../theme';
 
 /* Shared pieces of Food/pages/restaurant/OrdersMain.jsx: the order card every list draws and the closed-store empty state. */
 
-export const BRAND = '#0A4D2B';
+export const BRAND = color.primary;
 
-const BADGE = {
-  done: { bg: tw.emerald50, fg: tw.emerald600, border: tw.emerald100 },
-  wait: { bg: RT.primarySoft, fg: RT.accent, border: tw.amber100 }, // bg-amber-50 / text-amber-600 are repainted by the restaurant theme
-  stop: { bg: tw.rose50, fg: tw.rose600, border: tw.rose100 },
-  idle: { bg: tw.slate50, fg: tw.slate500, border: tw.slate100 },
+/** "out_for_delivery" -> "Out for delivery" (sentence case, per the design system). */
+export const sentence = (value) => {
+  const s = String(value || '').replace(/_/g, ' ').trim().toLowerCase();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 };
+
+/** Order status -> StatusBadge tone (DESIGN_SYSTEM.md state table). */
+export function orderStatusTone(status) {
+  const s = String(status || '').toLowerCase();
+  if (s.includes('cancel') || s.includes('reject') || s === 'failed' || s === 'expired') return 'danger';
+  if (s === 'delivered' || s === 'completed' || s === 'refunded') return 'success';
+  if (s === 'ready' || s === 'ready_for_pickup' || s === 'ready for pickup' || s === 'reached_pickup' || s === 'pending' || s === 'created') return 'warning';
+  if (s === 'picked_up' || s === 'picked up' || s === 'reached_drop') return 'info';
+  if (s === 'placed' || s === 'new') return 'primary';
+  if (s === 'confirmed' || s === 'accepted' || s === 'preparing' || s === 'out_for_delivery' || s === 'out for delivery' || s === 'out-for-delivery') return 'info';
+  return 'neutral';
+}
+
+/** Order type -> icon + sentence-case label. */
+export function orderTypeMeta(type) {
+  const s = String(type || '').toLowerCase();
+  if (s === 'takeaway') return { icon: ShoppingBag, label: 'Takeaway' };
+  if (s === 'dining') return { icon: Utensils, label: 'Dining' };
+  return { icon: Bike, label: sentence(type) || 'Delivery' };
+}
+
+/** Payment method -> badge, or null when the order does not say. */
+export function paymentMeta(method) {
+  const m = String(method || '').toLowerCase().trim();
+  if (!m) return null;
+  if (m === 'cash' || m === 'cod') return { icon: Banknote, label: 'Cash on delivery', tone: 'warning' };
+  return { icon: CreditCard, label: 'Paid online', tone: 'success' };
+}
+
+/** FSSAI veg / non-veg mark: a square outline with a filled dot (colour + accessible label). */
+export function VegMark({ nonVeg, size = 16 }) {
+  const c = nonVeg ? color.nonVeg : color.veg;
+  return (
+    <View accessible accessibilityLabel={nonVeg ? 'Non-veg' : 'Veg'} style={{ width: size, height: size, borderWidth: 1.5, borderColor: c, borderRadius: 3, alignItems: 'center', justifyContent: 'center', backgroundColor: color.surface }}>
+      <View style={{ width: size / 2, height: size / 2, borderRadius: size / 4, backgroundColor: c }} />
+    </View>
+  );
+}
 
 export const OrderCard = memo(function OrderCard({
   orderId,
@@ -53,32 +89,19 @@ export const OrderCard = memo(function OrderCard({
 
   const statusLabel =
     normalizedStatus === 'delivered' && normalizedType === 'takeaway'
-      ? 'Picked Up'
+      ? 'Picked up'
       : normalizedStatus === 'placed'
-        ? 'Order Placed'
+        ? 'Order placed'
         : isWaitingAcceptance
           ? 'Pending'
-          : String(status || '')
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (c) => c.toUpperCase());
-
-  const badge =
-    isReady || normalizedStatus === 'delivered' || normalizedStatus === 'completed' || normalizedStatus === 'picked_up'
-      ? BADGE.done
-      : isWaitingAcceptance || normalizedStatus === 'confirmed'
-        ? BADGE.wait
-        : normalizedStatus.includes('cancel') || normalizedStatus.includes('reject') || normalizedStatus === 'failed'
-          ? BADGE.stop
-          : BADGE.idle;
+          : sentence(status);
+  const statusTone = normalizedStatus === 'delivered' && normalizedType === 'takeaway' ? 'success' : isWaitingAcceptance ? 'warning' : orderStatusTone(normalizedStatus);
 
   const showActions = (!isReady && eta) || isPreparing || isReady || normalizedStatus === 'confirmed';
   const isDeliveryType = normalizedType !== 'takeaway' && normalizedType !== 'dining';
-  const typeTone =
-    normalizedType === 'takeaway'
-      ? { bg: RT.primarySoft, fg: '#D97706', border: 'rgba(253,230,138,0.5)', label: 'Takeaway' }
-      : normalizedType === 'dining'
-        ? { bg: tw.blue50, fg: tw.blue600, border: 'rgba(191,219,254,0.5)', label: 'Dining' }
-        : { bg: tw.slate50, fg: tw.slate500, border: 'rgba(226,232,240,0.5)', label: type };
+  const typeMeta = orderTypeMeta(type);
+  const pay = paymentMeta(paymentMethod);
+  const items = String(itemsSummary || '').split(/,\s*/).filter(Boolean);
 
   return (
     <Press
@@ -87,149 +110,170 @@ export const OrderCard = memo(function OrderCard({
       accessibilityLabel={`Order ${orderId}, ${statusLabel}, ${customerName}`}
       style={styles.card}
     >
-      <View style={styles.stripe} />
-      <View style={styles.photo}>
-        {photoUrl ? (
-          <Img source={{ uri: photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-        ) : (
-          <Text style={styles.photoAlt}>{String(photoAlt || '').toUpperCase()}</Text>
-        )}
+      <View style={styles.head}>
+        <View style={styles.photo}>
+          {photoUrl ? (
+            <Img source={{ uri: photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={photoAlt} />
+          ) : (
+            <UtensilsCrossed size={22} color={color.textDisabled} accessibilityLabel={photoAlt} />
+          )}
+        </View>
+        <View style={styles.headText}>
+          <View style={styles.idRow}>
+            <Text style={styles.id} numberOfLines={1} selectable>
+              #{orderId}
+            </Text>
+            <StatusBadge label={statusLabel} tone={statusTone} />
+          </View>
+          <Text style={styles.customer} numberOfLines={1}>
+            {customerName}
+          </Text>
+          <View style={styles.metaRow}>
+            <StatusBadge label={typeMeta.label} tone="neutral" icon={typeMeta.icon} />
+            {pay ? <StatusBadge label={pay.label} tone={pay.tone} icon={pay.icon} /> : null}
+          </View>
+        </View>
       </View>
 
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={styles.topRow}>
-          <Text style={styles.id} numberOfLines={1}>
-            #<Text style={{ color: BRAND }}>{orderId}</Text>
+      {adminStatusNote ? (
+        <Text style={styles.adminNote} numberOfLines={2}>
+          {adminStatusNote}
+        </Text>
+      ) : null}
+
+      <View style={styles.items}>
+        {items.map((itemStr, idx) => (
+          <View key={idx} style={styles.itemRow}>
+            <View style={styles.bullet} />
+            <Text style={styles.item}>{itemStr}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.timeRow}>
+        <Clock size={14} color={color.textMuted} />
+        <Text style={styles.time}>{timePlaced}</Text>
+      </View>
+
+      {restaurantNote ? (
+        <View style={styles.note}>
+          <StickyNote size={14} color={color.info} />
+          <Text style={styles.noteText} numberOfLines={2}>
+            Note: {restaurantNote}
           </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <Text style={[styles.badge, { backgroundColor: badge.bg, color: badge.fg, borderColor: badge.border }]}>{String(statusLabel).toUpperCase()}</Text>
-            {adminStatusNote ? <Text style={styles.adminNote} numberOfLines={1}>{adminStatusNote}</Text> : null}
-            {isPreparing && onCancel ? (
-              <Press onPress={() => onCancel({ orderId, mongoId, customerName })} accessibilityLabel={`Cancel order ${orderId}`} hitSlop={10} style={styles.cancel}>
-                <X size={12} color={tw.rose500} />
-              </Press>
+        </View>
+      ) : null}
+
+      {showActions ? (
+        <View style={styles.actions}>
+          <View style={styles.actionsInfo}>
+            {!isReady && eta ? (
+              <View style={styles.eta} accessibilityLabel={`Estimated time ${eta}`}>
+                <Timer size={16} color={color.text} />
+                <Text style={styles.etaLabel}>ETA</Text>
+                <Text style={styles.etaValue}>{eta}</Text>
+              </View>
+            ) : null}
+            {isPreparing || isReady || normalizedStatus === 'confirmed' ? (
+              <>
+                {deliveryPartnerId ? <StatusBadge label="Rider assigned" tone="info" icon={CircleCheck} /> : null}
+                {dispatchStatus && isDeliveryType && !isWaitingAcceptance ? <StatusBadge label={`Rider: ${sentence(dispatchStatus)}`} tone="neutral" /> : null}
+                {(isPreparing || isReady) && isDeliveryType && dispatchStatus !== 'accepted' && !deliveryPartnerId && !isWaitingAcceptance ? (
+                  <ResendNotificationButton orderId={orderId} mongoId={mongoId} />
+                ) : null}
+              </>
             ) : null}
           </View>
-        </View>
-
-        <View style={styles.customerRow}>
-          <Text style={styles.customer} numberOfLines={1}>{String(customerName || '').toUpperCase()}</Text>
-          <Text style={[styles.type, { backgroundColor: typeTone.bg, color: typeTone.fg, borderColor: typeTone.border }]}>{String(typeTone.label || '').toUpperCase()}</Text>
-        </View>
-
-        <View style={{ gap: 4, marginBottom: 6 }}>
-          {String(itemsSummary || '')
-            .split(/,\s*/)
-            .filter(Boolean)
-            .map((itemStr, idx) => (
-              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <View style={styles.bullet} />
-                <Text style={styles.item}>{itemStr}</Text>
-              </View>
-            ))}
-        </View>
-
-        <Text style={styles.time}>{String(timePlaced || '').toUpperCase()}</Text>
-
-        {restaurantNote ? (
-          <View style={styles.note}>
-            <Text style={styles.noteText} numberOfLines={1}>Note: {restaurantNote}</Text>
-          </View>
-        ) : null}
-
-        {showActions ? (
-          <View style={styles.actions}>
-            <View>
-              {!isReady && eta ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Text style={styles.etaLabel}>ETA</Text>
-                  <Text style={styles.eta}>{eta}</Text>
-                </View>
+          {isPreparing || isReady || normalizedStatus === 'confirmed' ? (
+            <View style={styles.buttons}>
+              {isPreparing && onCancel ? (
+                <Button
+                  title="Cancel"
+                  icon={X}
+                  variant="dangerSoft"
+                  size="sm"
+                  fullWidth={false}
+                  onPress={() => onCancel({ orderId, mongoId, customerName })}
+                  accessibilityLabel={`Cancel order ${orderId}`}
+                  style={styles.btn}
+                />
+              ) : null}
+              {isPreparing && onMarkReady ? (
+                <Button
+                  title="Mark ready"
+                  size="sm"
+                  fullWidth={false}
+                  loading={isMarkingReady}
+                  onPress={() => onMarkReady({ orderId, mongoId, customerName })}
+                  accessibilityLabel={`Mark order ${orderId} ready`}
+                  style={[styles.btn, styles.btnMain]}
+                />
+              ) : null}
+              {isReady && normalizedType === 'takeaway' && onVerifyTakeaway ? (
+                <Button
+                  title="Verify & complete"
+                  size="sm"
+                  fullWidth={false}
+                  onPress={() => onVerifyTakeaway({ orderId, mongoId, customerName, photoUrl, photoAlt, type, itemsSummary })}
+                  style={[styles.btn, styles.btnMain]}
+                />
               ) : null}
             </View>
-            <View style={styles.actionsRight}>
-              {isPreparing || isReady || normalizedStatus === 'confirmed' ? (
-                <>
-                  {deliveryPartnerId ? (
-                    <View style={styles.driver} accessibilityLabel="Driver assigned">
-                      <Check size={12} color={tw.emerald600} strokeWidth={3} />
-                    </View>
-                  ) : null}
-                  {dispatchStatus && isDeliveryType && !isWaitingAcceptance ? <Text style={styles.dispatch}>{String(dispatchStatus).toUpperCase()}</Text> : null}
-                  {(isPreparing || isReady) && isDeliveryType && dispatchStatus !== 'accepted' && !deliveryPartnerId && !isWaitingAcceptance ? (
-                    <ResendNotificationButton orderId={orderId} mongoId={mongoId} />
-                  ) : null}
-                  {isPreparing && onMarkReady ? (
-                    <Press onPress={() => onMarkReady({ orderId, mongoId, customerName })} disabled={isMarkingReady} accessibilityState={{ disabled: isMarkingReady, busy: isMarkingReady }} style={[styles.action, isMarkingReady ? { opacity: 0.7 } : null]}>
-                      <Text style={styles.actionText}>MARK READY</Text>
-                    </Press>
-                  ) : null}
-                  {isReady && normalizedType === 'takeaway' && onVerifyTakeaway ? (
-                    <Press onPress={() => onVerifyTakeaway({ orderId, mongoId, customerName, photoUrl, photoAlt, type, itemsSummary })} style={styles.action}>
-                      <Text style={styles.actionText}>VERIFY & COMPLETE</Text>
-                    </Press>
-                  ) : null}
-                </>
-              ) : null}
-            </View>
-          </View>
-        ) : null}
-      </View>
+          ) : null}
+        </View>
+      ) : null}
     </Press>
   );
 });
 
 /** The closed-store illustration with "View status". */
 export function EmptyState({ message = 'Temporarily closed' }) {
+  const line = color.borderStrong;
   return (
     <View style={styles.empty}>
-      <Svg width={200} height={200} viewBox="0 0 200 200" fill="none" style={{ marginBottom: 24 }}>
-        <Rect x={40} y={80} width={120} height={80} stroke={tw.gray300} strokeWidth={2} fill="white" />
-        <Path d="M30 80 L100 50 L170 80" stroke={tw.gray300} strokeWidth={2} fill="white" />
-        <Rect x={60} y={100} width={30} height={60} stroke={tw.gray300} strokeWidth={2} fill="white" />
-        <Rect x={110} y={100} width={30} height={60} stroke={tw.gray300} strokeWidth={2} fill="white" />
-        <Rect x={70} y={140} width={40} height={25} stroke={tw.gray300} strokeWidth={1.5} fill="white" />
-        <SvgText x={85} y={155} fontSize={8} fill={tw.gray300} textAnchor="middle">CLOSED</SvgText>
-        <Rect x={80} y={170} width={40} height={20} stroke={tw.gray300} strokeWidth={1.5} fill="white" />
+      <Svg width={168} height={168} viewBox="0 0 200 200" fill="none" style={{ marginBottom: space.xl }}>
+        <Rect x={40} y={80} width={120} height={80} stroke={line} strokeWidth={2} fill={color.surface} />
+        <Path d="M30 80 L100 50 L170 80" stroke={line} strokeWidth={2} fill={color.surface} />
+        <Rect x={60} y={100} width={30} height={60} stroke={line} strokeWidth={2} fill={color.surface} />
+        <Rect x={110} y={100} width={30} height={60} stroke={line} strokeWidth={2} fill={color.surface} />
+        <Rect x={70} y={140} width={40} height={25} stroke={line} strokeWidth={1.5} fill={color.surface} />
+        <SvgText x={90} y={156} fontSize={10} fill={color.textMuted} textAnchor="middle">
+          CLOSED
+        </SvgText>
+        <Rect x={80} y={170} width={40} height={20} stroke={line} strokeWidth={1.5} fill={color.surface} />
       </Svg>
       <Text style={styles.emptyText}>{message}</Text>
-      <Press onPress={() => navigateTo('/food/restaurant/status')}>
-        <LinearGradient colors={RT_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emptyButton}>
-          <Text style={styles.emptyButtonText}>View status</Text>
-        </LinearGradient>
-      </Press>
+      <Button title="View status" onPress={() => navigateTo('/food/restaurant/status')} fullWidth={false} style={{ alignSelf: 'center' }} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 12, padding: 12, paddingLeft: 16, marginBottom: 12, borderWidth: 1, borderColor: tw.slate100, overflow: 'hidden', ...shadow('sm') },
-  stripe: { position: 'absolute', top: 0, left: 0, bottom: 0, width: 4, backgroundColor: BRAND },
-  photo: { width: 60, height: 60, borderRadius: 8, overflow: 'hidden', backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
-  photoAlt: { fontSize: 8, lineHeight: 8, color: tw.slate300, textAlign: 'center', padding: 4, ...poppins(700) },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 },
-  id: { flex: 1, fontSize: 11, lineHeight: 16, color: tw.slate900, ...poppins(800) },
-  badge: { fontSize: 8, lineHeight: 12, letterSpacing: 0.4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, borderWidth: 1, overflow: 'hidden', ...poppins(800) },
-  adminNote: { maxWidth: 150, fontSize: 8, lineHeight: 12, color: tw.slate500, fontStyle: 'italic', ...poppins(500) },
-  cancel: { padding: 4, borderRadius: 999, backgroundColor: tw.rose50 },
-  customerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 },
-  customer: { flexShrink: 1, maxWidth: '65%', fontSize: 9, lineHeight: 14, letterSpacing: -0.2, color: tw.slate500, ...poppins(700) },
-  type: { fontSize: 9, lineHeight: 14, letterSpacing: -0.2, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, borderWidth: 1, overflow: 'hidden', ...poppins(700) },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: BRAND },
-  item: { flex: 1, fontSize: 12, lineHeight: 15, color: tw.slate900, ...poppins(800) },
-  time: { fontSize: 9, lineHeight: 14, letterSpacing: -0.2, color: tw.slate400, marginBottom: 4, ...poppins(700) },
-  note: { marginBottom: 8, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: tw.blue50, borderWidth: 1, borderColor: tw.blue100, borderRadius: 6 },
-  noteText: { fontSize: 9, lineHeight: 14, color: tw.blue700, fontStyle: 'italic', ...poppins(700) },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 8, marginTop: 6, borderTopWidth: 1, borderTopColor: tw.slate50 },
-  actionsRight: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
-  etaLabel: { fontSize: 8, lineHeight: 12, color: tw.slate400, ...poppins(700) },
-  eta: { fontSize: 11, lineHeight: 16, color: tw.slate800, ...poppins(800) },
-  driver: { width: 20, height: 20, borderRadius: 10, backgroundColor: tw.emerald100, alignItems: 'center', justifyContent: 'center' },
-  dispatch: { fontSize: 8, lineHeight: 12, letterSpacing: 0.4, color: tw.slate400, borderWidth: 1, borderColor: tw.slate100, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, ...poppins(800) },
-  action: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: BRAND, ...shadow('sm') },
-  actionText: { fontSize: 9, lineHeight: 14, color: '#fff', ...poppins(800) },
-  empty: { alignItems: 'center', justifyContent: 'center', minHeight: 420, paddingVertical: 48 },
-  emptyText: { fontSize: 18, lineHeight: 28, color: tw.gray600, marginBottom: 16, textAlign: 'center', ...poppins(600) },
-  emptyButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  emptyButtonText: { fontSize: 16, color: '#fff', ...poppins(500) },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, padding: space.lg, marginBottom: space.md, gap: space.md, ...elevation.card },
+  head: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  photo: { width: 56, height: 56, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  headText: { flex: 1, minWidth: 0, gap: space.xs },
+  idRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  id: { ...t.subheading, color: color.text, flexShrink: 1 },
+  customer: { ...t.small, color: color.textSecondary },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs + 2, marginTop: space.xxs },
+  adminNote: { ...t.caption, color: color.textMuted, fontStyle: 'italic' },
+  items: { gap: space.xs, paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  itemRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+  bullet: { width: 5, height: 5, borderRadius: 3, marginTop: 8, backgroundColor: color.textMuted },
+  item: { flex: 1, ...t.bodyStrong, color: color.text },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  time: { ...t.caption, color: color.textMuted },
+  note: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, padding: space.sm + 2, borderRadius: radii.md, backgroundColor: color.infoSoft },
+  noteText: { flex: 1, ...t.small, color: color.info },
+  actions: { gap: space.md, paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  actionsInfo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.sm },
+  eta: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, marginRight: space.xs },
+  etaLabel: { ...t.caption, color: color.textMuted },
+  etaValue: { ...t.bodyStrong, color: color.text },
+  buttons: { flexDirection: 'row', gap: space.sm, justifyContent: 'flex-end' },
+  btn: { height: 44 },
+  btnMain: { flexGrow: 1, flexShrink: 1, alignSelf: 'auto' },
+  empty: { alignItems: 'center', justifyContent: 'center', minHeight: 400, paddingVertical: space.xxxl + space.lg },
+  emptyText: { ...t.subheading, color: color.textSecondary, marginBottom: space.lg, textAlign: 'center' },
 });

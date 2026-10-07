@@ -3,10 +3,10 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, ChevronRight, CreditCard, Globe, Lock, LogOut, Moon, Smartphone } from 'lucide-react-native';
 import { Press } from '../../components/ui';
+import { Card, SectionHeader } from '../../components/ds';
 import { useNavigate } from '../../lib/webRouter';
-import { poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
-import { HT } from '../theme';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerSettings.jsx
@@ -16,33 +16,37 @@ import { HT } from '../theme';
  * The gsap entrance is dropped.
  */
 
-const SettingItem = ({ icon: Icon, label, type = 'toggle', value, onChange, last, onPress }) => {
+const SettingItem = ({ icon: Icon, label, type: kind = 'toggle', value, onChange, last, onPress }) => {
   const body = (
-    <View style={[styles.item, !last && { borderBottomWidth: 1, borderBottomColor: tw.gray50 }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <Icon size={18} color={tw.gray400} />
-        <Text style={styles.itemLabel}>{label}</Text>
+    <View style={[styles.item, !last && styles.itemDivider]}>
+      <View style={styles.itemIcon}>
+        <Icon size={18} color={color.primary} />
       </View>
+      <Text style={styles.itemLabel} numberOfLines={2}>
+        {label}
+      </Text>
 
-      {type === 'toggle' ? (
+      {kind === 'toggle' ? (
         <Press
           scale={1}
           accessibilityRole="switch"
+          accessibilityLabel={label}
           accessibilityState={{ checked: Boolean(value) }}
           onPress={() => onChange(!value)}
-          style={[styles.track, { backgroundColor: value ? HT.primary : tw.gray200 }]}
+          hitSlop={8}
+          style={[styles.track, { backgroundColor: value ? color.primary : color.borderStrong }]}
         >
-          <View style={[styles.thumb, { transform: [{ translateX: value ? 16 : 0 }] }]} />
+          <View style={[styles.thumb, { transform: [{ translateX: value ? 20 : 0 }] }]} />
         </Press>
       ) : null}
 
-      {type === 'link' ? <ChevronRight size={16} color={tw.gray300} /> : null}
+      {kind === 'link' ? <ChevronRight size={18} color={color.textDisabled} /> : null}
 
-      {type === 'value' ? <Text style={styles.itemValue}>{value}</Text> : null}
+      {kind === 'value' ? <Text style={styles.itemValue}>{value}</Text> : null}
     </View>
   );
   return onPress ? (
-    <Press scale={1} onPress={onPress}>
+    <Press scale={1} onPress={onPress} accessibilityLabel={label}>
       {body}
     </Press>
   ) : (
@@ -50,11 +54,7 @@ const SettingItem = ({ icon: Icon, label, type = 'toggle', value, onChange, last
   );
 };
 
-const Section = ({ title, top }) => (
-  <View style={[styles.section, top && { borderTopWidth: 1, borderTopColor: tw.gray100 }]}>
-    <Text style={styles.sectionText}>{title}</Text>
-  </View>
-);
+const Section = ({ title }) => <SectionHeader title={title} style={{ marginTop: space.xl, marginBottom: space.sm }} />;
 
 const PartnerSettings = () => {
   const navigate = useNavigate();
@@ -70,40 +70,48 @@ const PartnerSettings = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: HT.bg }}>
+    <View style={{ flex: 1, backgroundColor: color.bg }}>
       <PartnerHeader title="Settings" subtitle="Preferences" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}>
-        <View style={{ maxWidth: 576, width: '100%', alignSelf: 'center', paddingHorizontal: 16, paddingTop: 24 }}>
-          <View style={styles.card}>
-            {/* Wallet Section */}
-            <Section title="Payments" />
-            <SettingItem icon={CreditCard} label="Saved Bank Details" type="link" last onPress={() => navigate('/hotel/partner/bank-details')} />
+      <ScrollView contentContainerStyle={{ paddingBottom: space.xxxl + insets.bottom }}>
+        <View style={{ maxWidth: 576, width: '100%', alignSelf: 'center', paddingHorizontal: space.lg, paddingTop: space.xs }}>
+          {/* Wallet Section */}
+          <Section title="Payments" />
+          <Card padded={false}>
+            <SettingItem icon={CreditCard} label="Saved bank details" type="link" last onPress={() => navigate('/hotel/partner/bank-details')} />
+          </Card>
 
-            {/* Account Section */}
-            <Section title="General" />
-            <SettingItem icon={Bell} label="Push Notifications" value={settings.notifications} onChange={() => toggle('notifications')} />
-            <SettingItem icon={Smartphone} label="SMS Alerts" value={settings.emailAlerts} onChange={() => toggle('emailAlerts')} />
-            <SettingItem icon={Globe} label="Language" type="value" value="English (UK)" />
+          {/* Account Section */}
+          <Section title="General" />
+          <Card padded={false}>
+            <SettingItem icon={Bell} label="Push notifications" value={settings.notifications} onChange={() => toggle('notifications')} />
+            <SettingItem icon={Smartphone} label="SMS alerts" value={settings.emailAlerts} onChange={() => toggle('emailAlerts')} />
+            <SettingItem icon={Globe} label="Language" type="value" value="English (UK)" last />
+          </Card>
 
-            {/* Security Section */}
-            <Section title="Security" top />
-            <SettingItem icon={Lock} label="Two-Factor Authentication" type="link" />
-            <SettingItem icon={Lock} label="Change Password" type="link" />
+          {/* Security Section */}
+          <Section title="Security" />
+          <Card padded={false}>
+            <SettingItem icon={Lock} label="Two-factor authentication" type="link" />
+            <SettingItem icon={Lock} label="Change password" type="link" last />
+          </Card>
 
-            {/* App Section */}
-            <Section title="system" top />
-            <SettingItem icon={Moon} label="Dark Mode" value={settings.darkMode} onChange={() => toggle('darkMode')} />
+          {/* App Section */}
+          <Section title="System" />
+          <Card padded={false}>
+            <SettingItem icon={Moon} label="Dark mode" value={settings.darkMode} onChange={() => toggle('darkMode')} last />
+          </Card>
 
-            <Press scale={1} style={styles.signOut}>
-              <LogOut size={18} color={tw.red500} />
-              <Text style={styles.signOutText}>Sign Out</Text>
+          <Card padded={false} style={{ marginTop: space.xl }}>
+            <Press scale={1} accessibilityLabel="Sign out" style={styles.signOut}>
+              <View style={[styles.itemIcon, { backgroundColor: color.dangerSoft }]}>
+                <LogOut size={18} color={color.danger} />
+              </View>
+              <Text style={styles.signOutText}>Sign out</Text>
             </Press>
-          </View>
+          </Card>
 
-          <View style={{ marginTop: 24, alignItems: 'center' }}>
-            <Text style={styles.version}>Dima Hasao Partner App v1.0.2</Text>
-          </View>
+          <Text style={styles.version}>Dima Hasao Partner App v1.0.2</Text>
         </View>
       </ScrollView>
     </View>
@@ -111,17 +119,16 @@ const PartnerSettings = () => {
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 32, borderWidth: 1, borderColor: tw.gray100, overflow: 'hidden', ...shadow('sm') },
-  section: { backgroundColor: 'rgba(249,250,251,0.5)', paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  sectionText: { fontSize: 10, lineHeight: 15, letterSpacing: 1.5, textTransform: 'uppercase', color: tw.gray400, ...poppins(900) },
-  item: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
-  itemLabel: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(700) },
-  itemValue: { fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(700) },
-  track: { width: 40, height: 24, borderRadius: 12, padding: 4 },
-  thumb: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#fff' },
-  signOut: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  signOutText: { fontSize: 14, lineHeight: 20, color: tw.red500, ...poppins(700) },
-  version: { fontSize: 10, lineHeight: 15, color: tw.gray400, ...poppins(400) },
+  item: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 60 },
+  itemDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  itemIcon: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  itemLabel: { flex: 1, ...type.bodyStrong, color: color.text },
+  itemValue: { ...type.small, color: color.textMuted },
+  track: { width: 48, height: 28, borderRadius: 14, padding: 3 },
+  thumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: color.surface },
+  signOut: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 60 },
+  signOutText: { ...type.bodyStrong, color: color.danger },
+  version: { ...type.caption, color: color.textMuted, textAlign: 'center', marginTop: space.xl },
 });
 
 export default PartnerSettings;

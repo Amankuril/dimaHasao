@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { FileImage, Upload, X } from 'lucide-react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { CheckCircle2, Upload, X } from 'lucide-react-native';
+import { IconButton } from '../../components/ds';
 import { Press } from '../../components/ui';
 import { prepareUploadFile } from '../../lib/images';
-import { poppins, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
+import { Field } from '../components/dashboard/partnerUi';
 import ImageSourcePicker from '../../restaurant/components/ImageSourcePicker';
 
 /*
@@ -65,80 +67,40 @@ export const validateHotelDocumentFields = (values) => {
   return errors;
 };
 
-function Label({ children }) {
-  return <Text style={styles.label}>{children}</Text>;
-}
-
-function Input({ style, ...props }) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <TextInput
-      placeholderTextColor={tw.slate400}
-      {...props}
-      onFocus={(e) => {
-        setFocused(true);
-        props.onFocus?.(e);
-      }}
-      onBlur={(e) => {
-        setFocused(false);
-        props.onBlur?.(e);
-      }}
-      style={[styles.input, focused ? { borderColor: tw.slate900 } : null, style]}
-    />
-  );
-}
-
 export function HotelBusinessFields({ values, onChange }) {
   const set = (key) => (text) => onChange({ ...values, [key]: text });
 
   return (
-    <View style={{ gap: 16 }}>
-      <View>
-        <Label>Business / contact name</Label>
-        <Input value={values.businessName} onChangeText={set('businessName')} placeholder="e.g. Hasao Heritage Stays" accessibilityLabel="Business / contact name" />
+    <View style={{ gap: space.lg }}>
+      <Field label="Business / contact name" value={values.businessName} onChangeText={set('businessName')} placeholder="e.g. Hasao Heritage Stays" accessibilityLabel="Business / contact name" />
+      <Field label="Owner's full name" value={values.ownerName} onChangeText={set('ownerName')} placeholder="Full legal name" accessibilityLabel="Owner's full name" />
+      <Field
+        label={
+          <>
+            Email <Text style={styles.optional}>(optional)</Text>
+          </>
+        }
+        value={values.email}
+        onChangeText={set('email')}
+        placeholder="you@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        accessibilityLabel="Email"
+      />
+      <Field label="Address" value={values.addressLine1} onChangeText={set('addressLine1')} placeholder="Street / locality" accessibilityLabel="Address" />
+      <View style={{ flexDirection: 'row', gap: space.md }}>
+        <Field style={{ flex: 1 }} label="City" value={values.city} onChangeText={set('city')} placeholder="City" accessibilityLabel="City" />
+        <Field style={{ flex: 1 }} label="State" value={values.state} onChangeText={set('state')} placeholder="State" accessibilityLabel="State" />
       </View>
-      <View>
-        <Label>Owner&apos;s full name</Label>
-        <Input value={values.ownerName} onChangeText={set('ownerName')} placeholder="Full legal name" accessibilityLabel="Owner's full name" />
-      </View>
-      <View>
-        <Label>
-          Email <Text style={styles.optional}>(optional)</Text>
-        </Label>
-        <Input
-          value={values.email}
-          onChangeText={set('email')}
-          placeholder="you@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          accessibilityLabel="Email"
-        />
-      </View>
-      <View>
-        <Label>Address</Label>
-        <Input value={values.addressLine1} onChangeText={set('addressLine1')} placeholder="Street / locality" accessibilityLabel="Address" />
-      </View>
-      <View style={{ flexDirection: 'row', gap: 12 }}>
-        <View style={{ flex: 1 }}>
-          <Label>City</Label>
-          <Input value={values.city} onChangeText={set('city')} placeholder="City" accessibilityLabel="City" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Label>State</Label>
-          <Input value={values.state} onChangeText={set('state')} placeholder="State" accessibilityLabel="State" />
-        </View>
-      </View>
-      <View>
-        <Label>Pincode</Label>
-        <Input
-          value={values.pincode}
-          onChangeText={(text) => onChange({ ...values, pincode: text.replace(/\D/g, '').slice(0, 6) })}
-          keyboardType="number-pad"
-          placeholder="6-digit pincode"
-          accessibilityLabel="Pincode"
-        />
-      </View>
+      <Field
+        label="Pincode"
+        value={values.pincode}
+        onChangeText={(text) => onChange({ ...values, pincode: text.replace(/\D/g, '').slice(0, 6) })}
+        keyboardType="number-pad"
+        placeholder="6-digit pincode"
+        accessibilityLabel="Pincode"
+      />
     </View>
   );
 }
@@ -152,21 +114,22 @@ function DocumentUploadTile({ label, file, onSelect, onClear }) {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Label>{label}</Label>
+    <View style={{ flex: 1, minWidth: 0, gap: space.xs + 2 }}>
+      <Text style={styles.label}>{label}</Text>
       {file ? (
         <View style={styles.fileRow}>
-          <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <FileImage size={15} color={tw.slate400} />
-            <Text style={styles.fileName} numberOfLines={1}>{file.name || 'Photo selected'}</Text>
+          <CheckCircle2 size={18} color={color.success} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.fileName} numberOfLines={1}>
+              {file.name || 'Photo selected'}
+            </Text>
+            <Text style={styles.fileState}>Added</Text>
           </View>
-          <Press onPress={onClear} accessibilityLabel={`Remove ${label}`} hitSlop={8}>
-            <X size={15} color={tw.slate400} />
-          </Press>
+          <IconButton icon={X} label={`Remove ${label}`} onPress={onClear} size={40} iconSize={18} iconColor={color.textSecondary} />
         </View>
       ) : (
         <Press scale={0.98} onPress={() => setPickerOpen(true)} accessibilityLabel={`Upload ${label}`} style={styles.uploadTile}>
-          <Upload size={15} color={tw.slate500} />
+          <Upload size={18} color={color.primary} />
           <Text style={styles.uploadText}>Upload photo</Text>
         </Press>
       )}
@@ -183,18 +146,16 @@ function DocumentUploadTile({ label, file, onSelect, onClear }) {
 
 export function HotelDocumentsFields({ values, onChange }) {
   return (
-    <View style={{ gap: 16 }}>
-      <View>
-        <Label>Aadhaar number</Label>
-        <Input
-          value={values.aadhaarNumber}
-          onChangeText={(text) => onChange({ ...values, aadhaarNumber: text.replace(/\D/g, '').slice(0, 12) })}
-          keyboardType="number-pad"
-          placeholder="12-digit Aadhaar number"
-          accessibilityLabel="Aadhaar number"
-        />
-      </View>
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+    <View style={{ gap: space.lg }}>
+      <Field
+        label="Aadhaar number"
+        value={values.aadhaarNumber}
+        onChangeText={(text) => onChange({ ...values, aadhaarNumber: text.replace(/\D/g, '').slice(0, 12) })}
+        keyboardType="number-pad"
+        placeholder="12-digit Aadhaar number"
+        accessibilityLabel="Aadhaar number"
+      />
+      <View style={{ flexDirection: 'row', gap: space.md }}>
         <DocumentUploadTile
           label="Aadhaar front"
           file={values.aadhaarFront}
@@ -208,17 +169,15 @@ export function HotelDocumentsFields({ values, onChange }) {
           onClear={() => onChange({ ...values, aadhaarBack: null })}
         />
       </View>
-      <View>
-        <Label>PAN number</Label>
-        <Input
-          value={values.panNumber}
-          onChangeText={(text) => onChange({ ...values, panNumber: text.toUpperCase().slice(0, 10) })}
-          placeholder="ABCDE1234F"
-          autoCapitalize="characters"
-          autoCorrect={false}
-          accessibilityLabel="PAN number"
-        />
-      </View>
+      <Field
+        label="PAN number"
+        value={values.panNumber}
+        onChangeText={(text) => onChange({ ...values, panNumber: text.toUpperCase().slice(0, 10) })}
+        placeholder="ABCDE1234F"
+        autoCapitalize="characters"
+        autoCorrect={false}
+        accessibilityLabel="PAN number"
+      />
       <DocumentUploadTile
         label="PAN card photo"
         file={values.panCardImage}
@@ -250,11 +209,11 @@ export const buildHotelKycFormData = (businessValues, documentValues) => {
 };
 
 const styles = StyleSheet.create({
-  label: { marginBottom: 6, fontSize: 12, lineHeight: 16, letterSpacing: 0.6, color: tw.slate500, textTransform: 'uppercase', ...poppins(600) },
-  optional: { letterSpacing: 0, color: tw.slate400, textTransform: 'none', ...poppins(400) },
-  input: { borderRadius: 12, borderWidth: 1, borderColor: tw.slate200, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: tw.gray900, backgroundColor: '#fff', ...poppins(400) },
-  fileRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderRadius: 12, borderWidth: 1, borderColor: tw.slate200, paddingHorizontal: 16, paddingVertical: 12 },
-  fileName: { flex: 1, fontSize: 14, color: tw.slate700, ...poppins(400) },
-  uploadTile: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.slate300, paddingHorizontal: 16, paddingVertical: 12 },
-  uploadText: { fontSize: 14, color: tw.slate500, ...poppins(400) },
+  label: { ...type.label, color: color.text },
+  optional: { ...type.small, color: color.textMuted },
+  fileRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.successSoft, paddingLeft: space.md, paddingRight: space.xxs },
+  fileName: { ...type.small, color: color.text },
+  fileState: { ...type.caption, color: color.success },
+  uploadTile: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, borderRadius: radii.md, borderWidth: 1.5, borderStyle: 'dashed', borderColor: color.primaryBorder, backgroundColor: color.primarySoft, paddingHorizontal: space.md },
+  uploadText: { ...type.label, color: color.primary },
 });
