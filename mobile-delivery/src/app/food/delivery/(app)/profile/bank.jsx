@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Edit2, Save } from 'lucide-react-native';
+import { Edit2, Save } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../api/delivery';
+import { Button, Card, IconButton, ScreenHeader } from '../../../../../components/ds';
 import { Spinner } from '../../../../../components/Loader';
-import { Press, ThemedInput } from '../../../../../components/ui';
+import { ThemedInput } from '../../../../../components/ui';
 import useDeliveryBackNavigation from '../../../../../delivery/hooks/useDeliveryBackNavigation';
 import { toast } from '../../../../../lib/notify';
-import { display, ff, shadow, tw } from '../../../../../theme';
+import { color, radii, space, touch, type } from '../../../../../theme';
 
-// Web: pages/profile/ProfileBankV2.jsx. `font-poppins` -> Nunito; rounded-2xl -> #E5DDC3 + card shadow.
+// Web: pages/profile/ProfileBankV2.jsx. View mode lists the details; edit mode
+// turns them into inputs with the save action pinned above the keyboard.
 
 const FIELDS = [
-  ['Account Holder', 'accountHolderName'],
-  ['Account Number', 'accountNumber'],
-  ['IFSC Code', 'ifscCode'],
-  ['Bank Name', 'bankName'],
-  ['PAN Number', 'panNumber'],
+  ['Account holder', 'accountHolderName'],
+  ['Account number', 'accountNumber'],
+  ['IFSC code', 'ifscCode'],
+  ['Bank name', 'bankName'],
+  ['PAN number', 'panNumber'],
 ];
 
 export default function ProfileBankV2() {
@@ -74,70 +76,78 @@ export default function ProfileBankV2() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <Spinner size={32} color={tw.primary} />
+      <View style={styles.page}>
+        <ScreenHeader title="Bank details" onBack={goBack} />
+        <View style={styles.center} accessibilityLabel="Loading bank details">
+          <Spinner size={32} color={color.primary} />
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.page}>
-      <View style={[styles.header, shadow('sm'), { paddingTop: 20 + insets.top }]}>
-        <Press onPress={goBack} accessibilityLabel="Back" hitSlop={10}>
-          <ArrowLeft size={24} color="#1F1F24" />
-        </Press>
-        <Text style={styles.title}>Bank Details</Text>
-        {!isEditing ? (
-          <Press onPress={() => setIsEditing(true)} accessibilityLabel="Edit bank details" style={styles.edit}>
-            <Edit2 size={16} color={tw.primary} />
-          </Press>
-        ) : null}
-      </View>
+      <ScreenHeader
+        title="Bank details"
+        onBack={goBack}
+        right={!isEditing ? <IconButton icon={Edit2} label="Edit bank details" variant="primary" iconSize={18} onPress={() => setIsEditing(true)} /> : null}
+      />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.body, { paddingTop: 96 + insets.top }]}>
-          <View style={{ gap: 16 }}>
-            {FIELDS.map(([label, key]) => (
-              <View key={key} style={[styles.card, shadow('card')]}>
-                <Text style={styles.label}>{label}</Text>
-                {isEditing ? (
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.body, { paddingBottom: (isEditing ? space.xxl : space.xxxl + insets.bottom) }]}
+        >
+          {isEditing ? (
+            <Card style={{ gap: space.lg }}>
+              {FIELDS.map(([label, key]) => (
+                <View key={key} style={{ gap: space.sm }}>
+                  <Text style={styles.label}>{label}</Text>
                   <ThemedInput
                     value={form[key]}
                     onChangeText={(v) => setForm((f) => ({ ...f, [key]: v }))}
-                    radius={12}
-                    borderWidth={1}
+                    placeholder={`Enter ${label.replace(/^[A-Z][a-z]/, (m) => m.toLowerCase())}`}
+                    placeholderTextColor={color.textDisabled}
+                    radius={radii.md}
+                    borderWidth={1.5}
                     style={styles.input}
                     accessibilityLabel={label}
                   />
-                ) : (
-                  <Text style={styles.value}>{form[key] || 'Not provided'}</Text>
-                )}
-              </View>
-            ))}
-          </View>
-          {isEditing ? (
-            <Press onPress={handleSave} disabled={isSaving} accessibilityLabel="Save Changes" style={[styles.save, shadow('card')]}>
-              {isSaving ? <Spinner size={20} color="#fff" /> : <Save size={20} color="#fff" />}
-              <Text style={styles.saveText}>Save Changes</Text>
-            </Press>
-          ) : null}
+                </View>
+              ))}
+            </Card>
+          ) : (
+            <Card padded={false}>
+              {FIELDS.map(([label, key], i) => (
+                <View key={key} style={[styles.row, i < FIELDS.length - 1 && styles.divider]}>
+                  <Text style={styles.rowLabel}>{label}</Text>
+                  <Text style={[styles.value, !form[key] && { color: color.textMuted }]} numberOfLines={2}>
+                    {form[key] || 'Not provided'}
+                  </Text>
+                </View>
+              ))}
+            </Card>
+          )}
         </ScrollView>
+        {isEditing ? (
+          <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
+            <Button title="Save changes" size="lg" icon={Save} onPress={handleSave} disabled={isSaving} loading={isSaving} accessibilityLabel="Save Changes" />
+          </View>
+        ) : null}
       </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray50 },
-  page: { flex: 1, backgroundColor: tw.gray50 },
-  header: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  title: { fontSize: 20, lineHeight: 28, color: '#1F1F24', ...display(900, 20) },
-  edit: { marginLeft: 'auto', padding: 8, backgroundColor: tw.primarySoft, borderRadius: 12 },
-  body: { paddingHorizontal: 16, paddingBottom: 40, gap: 24 },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#E5DDC3' },
-  label: { fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.gray400, marginBottom: 8, ...display(900, 10) },
-  input: { height: 46, paddingHorizontal: 16, fontSize: 14, ...ff(700) },
-  value: { fontSize: 14, lineHeight: 20, color: tw.gray950, ...ff(700) },
-  save: { width: '100%', backgroundColor: '#000', paddingVertical: 20, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  saveText: { color: '#fff', fontSize: 14, lineHeight: 20, textTransform: 'uppercase', ...display(900, 14) },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  page: { flex: 1, backgroundColor: color.bg },
+  body: { padding: space.lg, gap: space.md },
+  label: { ...type.label, color: color.text },
+  input: { height: touch, paddingHorizontal: space.lg, ...type.body, color: color.text },
+  row: { paddingHorizontal: space.lg, paddingVertical: space.md, gap: space.xxs },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  rowLabel: { ...type.caption, color: color.textMuted },
+  value: { ...type.bodyStrong, color: color.text },
+  footer: { backgroundColor: color.surface, padding: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.borderStrong },
 });

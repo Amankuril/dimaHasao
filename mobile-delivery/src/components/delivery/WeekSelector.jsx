@@ -2,26 +2,31 @@ import { useCallback, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { addDays, endOfWeek, startOfWeek } from 'date-fns';
-import { ChevronDown } from 'lucide-react-native';
+import { CalendarDays } from 'lucide-react-native';
 import { Press } from '../ui';
-import { ff, shadow, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 
 /*
- * Port of components/WeekSelector.jsx: This week / Last week / Select day
- * pills and the centred range between hairlines. Pills are shadcn
- * `outline` buttons (colours read from the web's computed styles).
- * "Select day" opens the OS date picker where the web opens a
- * react-day-picker calendar in a popover (see CONVERSION.md, substitutions).
+ * This week / Last week / Select day chips and the selected range below.
+ * "Select day" opens the OS date picker and selects that day's week.
  */
 
 const fmt = (d) => new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(d);
 const sameRange = (a, b) => a.start.toDateString() === b.start.toDateString() && a.end.toDateString() === b.end.toDateString();
 
-function Pill({ label, active, onPress, children }) {
+function Chip({ label, active, onPress, icon: Icon }) {
   return (
-    <Press onPress={onPress} scale={1} accessibilityLabel={label} style={[styles.pill, shadow('xs'), active ? styles.pillOn : styles.pillOff]}>
-      <Text style={[styles.pillText, { color: active ? '#004F3B' : '#270E01' }]}>{label}</Text>
-      {children}
+    <Press
+      onPress={onPress}
+      scale={0.97}
+      accessibilityLabel={label}
+      accessibilityState={{ selected: Boolean(active) }}
+      style={[styles.chip, active ? styles.chipOn : styles.chipOff]}
+    >
+      {Icon ? <Icon size={16} color={active ? color.primary : color.textSecondary} /> : null}
+      <Text style={[type.label, { color: active ? color.primary : color.text }]} numberOfLines={1}>
+        {label}
+      </Text>
     </Press>
   );
 }
@@ -39,20 +44,21 @@ export default function WeekSelector({ weekStartsOn = 0, onChange, style }) {
     onChange?.(r);
   };
 
+  const isThisWeek = sameRange(range, computeRange(new Date()));
+  const isLastWeek = sameRange(range, computeRange(addDays(new Date(), -7)));
+
   return (
     <View style={[{ width: '100%' }, style]}>
-      <View style={styles.pills}>
-        <Pill label="This week" active={sameRange(range, computeRange(new Date()))} onPress={() => apply(new Date())} />
-        <Pill label="Last week" onPress={() => apply(addDays(new Date(), -7))} />
-        <Pill label="Select day" onPress={() => setOpen(true)}>
-          <ChevronDown size={16} color="#270E01" style={{ marginLeft: 8 }} />
-        </Pill>
+      <View style={styles.chips}>
+        <Chip label="This week" active={isThisWeek} onPress={() => apply(new Date())} />
+        <Chip label="Last week" active={isLastWeek} onPress={() => apply(addDays(new Date(), -7))} />
+        <Chip label="Select day" icon={CalendarDays} active={!isThisWeek && !isLastWeek} onPress={() => setOpen(true)} />
       </View>
 
       <View style={styles.rangeRow}>
         <View style={styles.hair} />
-        <Text style={styles.range}>
-          {fmt(range.start)} - {fmt(range.end)}
+        <Text style={[type.subheading, { color: color.primary }]} accessibilityLabel={`Selected week ${fmt(range.start)} to ${fmt(range.end)}`}>
+          {fmt(range.start)} – {fmt(range.end)}
         </Text>
         <View style={styles.hair} />
       </View>
@@ -64,7 +70,7 @@ export default function WeekSelector({ weekStartsOn = 0, onChange, style }) {
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
           minimumDate={new Date(2020, 0, 1)}
           maximumDate={new Date(2030, 11, 31)}
-          accentColor={tw.primary}
+          accentColor={color.primary}
           onChange={(event, date) => {
             setOpen(false);
             if (event.type === 'set' && date) apply(date);
@@ -76,12 +82,19 @@ export default function WeekSelector({ weekStartsOn = 0, onChange, style }) {
 }
 
 const styles = StyleSheet.create({
-  pills: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  pill: { height: 40, paddingHorizontal: 8, borderRadius: 6, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  pillOn: { backgroundColor: tw.primarySoft, borderColor: tw.primaryBorder },
-  pillOff: { backgroundColor: '#fff', borderColor: '#F1EEE7' },
-  pillText: { fontSize: 12, lineHeight: 16, ...ff(500) },
-  rangeRow: { marginTop: 24, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  hair: { height: 1, flex: 1, backgroundColor: tw.gray200 },
-  range: { fontSize: 18, lineHeight: 28, color: '#0A4D2B', ...ff(600) },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  chip: {
+    height: 44,
+    paddingHorizontal: space.md,
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space.xs + 2,
+  },
+  chipOn: { backgroundColor: color.primarySoft, borderColor: color.primary },
+  chipOff: { backgroundColor: color.surface, borderColor: color.borderStrong },
+  rangeRow: { marginTop: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  hair: { height: StyleSheet.hairlineWidth, flex: 1, backgroundColor: color.borderStrong },
 });

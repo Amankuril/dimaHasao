@@ -105,19 +105,23 @@ const NUNITO = {
 // CSS font matching with only 600/700 loaded: 400/500 resolve upward to 600.
 const SORA = { 400: 'Sora_600SemiBold', 500: 'Sora_600SemiBold', 600: 'Sora_600SemiBold', 700: 'Sora_700Bold', 800: 'Sora_700Bold', 900: 'Sora_700Bold' };
 
-/* The app-wide body font (global.css: Poppins). Also the delivery module's
- * default: the theme wrapper inherits it (see CONVERSION.md). */
-const POPPINS = {
-  300: 'Poppins_400Regular',
-  400: 'Poppins_400Regular',
-  500: 'Poppins_500Medium',
-  600: 'Poppins_600SemiBold',
-  700: 'Poppins_700Bold',
-  800: 'Poppins_800ExtraBold',
-  900: 'Poppins_800ExtraBold',
+/*
+ * poppins() used to draw a third family beside Nunito Sans and Sora, so one
+ * screen mixed three typefaces. It now resolves to Nunito Sans: the app has
+ * one text family (Nunito Sans) and one display family (Sora). Poppins sets
+ * heavier than Nunito at the same weight, so each weight steps up one.
+ */
+const POPPINS_AS_NUNITO = {
+  300: 'NunitoSans_500Medium',
+  400: 'NunitoSans_500Medium',
+  500: 'NunitoSans_600SemiBold',
+  600: 'NunitoSans_700Bold',
+  700: 'NunitoSans_800ExtraBold',
+  800: 'NunitoSans_800ExtraBold',
+  900: 'NunitoSans_800ExtraBold',
 };
 export function poppins(weight = 400) {
-  return { fontFamily: POPPINS[weight] || POPPINS[400] };
+  return { fontFamily: POPPINS_AS_NUNITO[weight] || POPPINS_AS_NUNITO[400] };
 }
 
 /**
@@ -203,3 +207,97 @@ export function buildTheme(primaryColor) {
     onPrimary: readableOn(primary),
   };
 }
+
+/* ───────────────────────── Design system ─────────────────────────
+ * The tokens every redesigned screen uses. See DESIGN_SYSTEM.md at the app
+ * root for when to use which. Screens should not invent colours, sizes or
+ * radii outside these; `tw` above stays only for code not yet migrated.
+ */
+
+/** Semantic colours. Text colours meet WCAG AA (4.5:1) on `surface` and `bg`. */
+export const color = {
+  primary: '#0A4D2B',
+  primaryPressed: '#06381E',
+  primarySoft: '#E8F2EC',
+  primaryBorder: '#BBCCC3',
+  onPrimary: '#FFFFFF',
+
+  bg: '#F5F6F4', // app background behind cards
+  surface: '#FFFFFF', // cards, sheets, headers
+  surfaceMuted: '#F3F4F6', // inset blocks inside a card, inputs at rest
+  border: '#E5E7EB',
+  borderStrong: '#D1D5DB',
+  overlay: 'rgba(15,23,42,0.5)',
+
+  text: '#111827',
+  textSecondary: '#4B5563',
+  textMuted: '#6B7280',
+  textDisabled: '#9CA3AF',
+  textInverse: '#FFFFFF',
+
+  success: '#15803D',
+  successSoft: '#DCFCE7',
+  warning: '#B45309',
+  warningSoft: '#FEF3C7',
+  danger: '#DC2626',
+  dangerSoft: '#FEE2E2',
+  info: '#1D4ED8',
+  infoSoft: '#DBEAFE',
+
+  // Rider state. Online is a brighter green than the brand so it reads as a
+  // live signal, not as decoration; offline is neutral, never red.
+  online: '#16A34A',
+  onlineSoft: '#DCFCE7',
+  offline: '#6B7280',
+  offlineSoft: '#F3F4F6',
+};
+
+/** Status tones for badges, banners and order states: [foreground, background]. */
+export const tone = {
+  primary: { fg: color.primary, bg: color.primarySoft },
+  success: { fg: color.success, bg: color.successSoft },
+  warning: { fg: color.warning, bg: color.warningSoft },
+  danger: { fg: color.danger, bg: color.dangerSoft },
+  info: { fg: color.info, bg: color.infoSoft },
+  neutral: { fg: color.textSecondary, bg: color.surfaceMuted },
+};
+
+/** 4-pt spacing scale. Screen gutter = space.lg, card padding = space.lg. */
+export const space = { xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 };
+
+/** Corner radii: controls md, cards lg, sheets xl, chips/toggles pill. */
+export const radii = { sm: 8, md: 12, lg: 16, xl: 24, pill: 999 };
+
+/** Minimum touch target (Android 48 dp). */
+export const touch = 48;
+
+const nun = (w) => ({ fontFamily: NUNITO[w] });
+const sora = (w) => ({ fontFamily: SORA[w] });
+
+/*
+ * Type scale. Nunito Sans for reading text, Sora for titles and money.
+ * Nothing below 12 px: riders read this outdoors, on the move.
+ */
+export const type = {
+  display: { ...sora(700), fontSize: 30, lineHeight: 36 }, // hero money
+  title: { ...sora(700), fontSize: 22, lineHeight: 28 }, // screen title
+  heading: { ...sora(600), fontSize: 18, lineHeight: 24 }, // section / sheet title
+  subheading: { ...nun(800), fontSize: 16, lineHeight: 22 }, // card title, names
+  body: { ...nun(500), fontSize: 15, lineHeight: 22 },
+  bodyStrong: { ...nun(700), fontSize: 15, lineHeight: 22 },
+  small: { ...nun(500), fontSize: 13, lineHeight: 18 }, // supporting text, addresses
+  label: { ...nun(700), fontSize: 13, lineHeight: 18 }, // field labels, row labels
+  caption: { ...nun(600), fontSize: 12, lineHeight: 16 }, // timestamps, hints
+  overline: { ...nun(800), fontSize: 12, lineHeight: 16, letterSpacing: 0.6, textTransform: 'uppercase' }, // short section kickers only
+  button: { ...nun(800), fontSize: 16, lineHeight: 20 },
+  buttonSm: { ...nun(800), fontSize: 14, lineHeight: 18 },
+  money: { ...sora(700), fontSize: 18, lineHeight: 24 }, // amounts in rows/cards
+  metric: { ...sora(700), fontSize: 24, lineHeight: 30 }, // HUD numbers
+};
+
+/** One elevation for raised cards, one for floating controls and sheets. */
+export const elevation = {
+  card: { boxShadow: '0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.08)' },
+  float: { boxShadow: '0 8px 24px -6px rgba(16,24,40,0.22)' },
+  sheet: { boxShadow: '0 -8px 32px -8px rgba(16,24,40,0.25)' },
+};

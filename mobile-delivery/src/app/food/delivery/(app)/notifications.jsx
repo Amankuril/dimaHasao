@@ -1,16 +1,17 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Bell, Clock, Trash2 } from 'lucide-react-native';
+import { Bell, Clock, Trash2 } from 'lucide-react-native';
 import useNotificationInbox from '../../../../delivery/hooks/useNotificationInbox';
 import { Press } from '../../../../components/ui';
-import { display, poppins, tw } from '../../../../theme';
+import { Card, EmptyState, ScreenHeader } from '../../../../components/ds';
+import { color, elevation, radii, space, type } from '../../../../theme';
 
 /*
- * Web: pages/NotificationsV2.jsx. No font-poppins root: Poppins; h1 Sora.
- * The local notification store (utils/deliveryNotifications) always returns
- * an empty list on the web, so only the broadcast inbox appears here.
- * text-[#EB590E] -> primary; bg-[#EB590E] stays orange.
+ * Web: pages/NotificationsV2.jsx. The local notification store
+ * (utils/deliveryNotifications) always returns an empty list on the web, so
+ * only the broadcast inbox appears here. Unread items carry a dot, a "New"
+ * word and a tinted card, never colour alone.
  */
 
 const toTimeLabel = (value) => {
@@ -24,76 +25,102 @@ export default function NotificationsV2() {
   const { items, unreadCount, loading, markAsRead, dismissAll } = useNotificationInbox('delivery', { limit: 100 });
   const merged = [...(items || [])].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
+  const renderItem = ({ item }) => {
+    const unread = !item.read;
+    return (
+      <Press
+        scale={1}
+        onPress={() => markAsRead(item.id)}
+        accessibilityLabel={`${unread ? 'Unread. ' : ''}${item.title}`}
+        style={[styles.item, unread && styles.itemUnread]}
+      >
+        <View style={[styles.itemIcon, unread && { backgroundColor: color.surface }]}>
+          <Bell size={20} color={unread ? color.primary : color.textMuted} />
+          {unread ? <View style={styles.dot} /> : null}
+        </View>
+        <View style={styles.itemMain}>
+          <View style={styles.itemTitleRow}>
+            <Text style={[styles.itemTitle, unread && styles.itemTitleUnread]} numberOfLines={2}>
+              {item.title}
+            </Text>
+            {unread ? <Text style={styles.newTag}>New</Text> : null}
+          </View>
+          <Text style={styles.itemMsg}>{item.message || 'Delivery notification'}</Text>
+          <View style={styles.timeRow}>
+            <Clock size={14} color={color.textMuted} />
+            <Text style={styles.time}>{toTimeLabel(item.createdAt)}</Text>
+          </View>
+        </View>
+      </Press>
+    );
+  };
+
   return (
     <View style={styles.page}>
-      <View style={[styles.header, { paddingTop: 16 + insets.top }]}>
-        <Press onPress={() => router.navigate('/food/delivery/profile')} scale={1} accessibilityLabel="Back" style={styles.back}>
-          <ArrowLeft size={20} color={tw.gray900} />
-        </Press>
-        <View style={styles.titleRow}>
-          <Bell size={20} color={tw.primary} />
-          <Text style={styles.title}>Notifications</Text>
-          {unreadCount > 0 ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount}</Text>
-            </View>
-          ) : null}
-        </View>
-        {merged.length > 0 ? (
-          <Press onPress={dismissAll} scale={1} accessibilityLabel="Clear all" style={styles.clear}>
-            <Trash2 size={16} color={tw.red600} />
-            <Text style={styles.clearText}>Clear all</Text>
-          </Press>
-        ) : null}
-      </View>
+      <ScreenHeader
+        title="Notifications"
+        subtitle={unreadCount > 0 ? `${unreadCount} unread` : undefined}
+        onBack={() => router.navigate('/food/delivery/profile')}
+        right={
+          merged.length > 0 ? (
+            <Press onPress={dismissAll} scale={0.96} accessibilityLabel="Clear all" style={styles.clear}>
+              <Trash2 size={18} color={color.danger} />
+              <Text style={styles.clearText}>Clear all</Text>
+            </Press>
+          ) : null
+        }
+      />
 
-      <ScrollView contentContainerStyle={styles.body}>
-        {loading ? (
-          <Text style={styles.state}>Loading notifications...</Text>
-        ) : merged.length === 0 ? (
-          <Text style={styles.state}>No notifications</Text>
-        ) : (
-          <View style={{ gap: 8 }}>
-            {merged.map((item) => (
-              <Press
-                key={item.id}
-                scale={1}
-                onPress={() => markAsRead(item.id)}
-                accessibilityLabel={item.title}
-                style={[styles.item, item.read ? { borderColor: tw.gray200 } : { borderColor: tw.primaryBorder, backgroundColor: tw.primarySoft }]}
-              >
-                <View style={{ minWidth: 0, flexShrink: 1 }}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.itemMsg}>{item.message || 'Delivery notification'}</Text>
-                  <View style={styles.timeRow}>
-                    <Clock size={14} color={tw.gray500} />
-                    <Text style={styles.time}>{toTimeLabel(item.createdAt)}</Text>
-                  </View>
-                </View>
-              </Press>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+      <FlatList
+        data={loading ? [] : merged}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderItem}
+        contentContainerStyle={[styles.body, { paddingBottom: space.xxxl + insets.bottom }]}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.state}>
+              <ActivityIndicator color={color.primary} />
+              <Text style={styles.stateText}>Loading notifications...</Text>
+            </View>
+          ) : (
+            <Card>
+              <EmptyState icon={Bell} title="No notifications" message="Updates from the team will show up here." style={styles.empty} />
+            </Card>
+          )
+        }
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' },
-  header: { paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: tw.gray200 },
-  back: { padding: 8, borderRadius: 999 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  title: { fontSize: 16, lineHeight: 24, color: tw.gray900, ...display(600, 16) },
-  badge: { minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: '#EB590E', alignItems: 'center', justifyContent: 'center' },
-  badgeText: { color: '#fff', fontSize: 10, lineHeight: 12, ...poppins(600) },
-  clear: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  clearText: { fontSize: 12, lineHeight: 16, color: tw.red600, ...poppins(600) },
-  body: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 112 },
-  state: { textAlign: 'center', fontSize: 14, lineHeight: 20, color: tw.gray600, paddingVertical: 48, ...poppins(400) },
-  item: { borderWidth: 1, borderRadius: 8, padding: 12, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  itemTitle: { fontSize: 14, lineHeight: 20, color: tw.gray900, ...poppins(500) },
-  itemMsg: { fontSize: 14, lineHeight: 20, color: tw.gray700, marginTop: 2, ...poppins(400) },
-  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  time: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
+  page: { flex: 1, backgroundColor: color.bg },
+  clear: { flexDirection: 'row', alignItems: 'center', gap: space.xs, minHeight: 44, paddingHorizontal: space.md, borderRadius: radii.pill },
+  clearText: { ...type.label, color: color.danger },
+  body: { padding: space.lg, gap: space.sm, flexGrow: 1 },
+  empty: { paddingVertical: space.xxl, paddingHorizontal: space.sm },
+  state: { paddingVertical: space.xxxl + space.lg, alignItems: 'center', gap: space.md },
+  stateText: { ...type.small, color: color.textMuted, textAlign: 'center' },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radii.lg,
+    backgroundColor: color.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: color.border,
+    ...elevation.card,
+  },
+  itemUnread: { backgroundColor: color.primarySoft, borderColor: color.primaryBorder },
+  itemIcon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  dot: { position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: color.primary, borderWidth: 2, borderColor: color.surface },
+  itemMain: { flex: 1, minWidth: 0, gap: space.xxs },
+  itemTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+  itemTitle: { ...type.bodyStrong, color: color.text, flex: 1, minWidth: 0 },
+  itemTitleUnread: { fontFamily: 'NunitoSans_800ExtraBold' },
+  newTag: { ...type.caption, color: color.primary, fontFamily: 'NunitoSans_800ExtraBold', marginTop: 2 },
+  itemMsg: { ...type.small, color: color.textSecondary },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: space.xs },
+  time: { ...type.caption, color: color.textMuted },
 });

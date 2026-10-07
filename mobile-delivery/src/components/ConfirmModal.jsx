@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { subscribeConfirm } from '../lib/notify';
-import { display, ff, radius, shadow, tw } from '../theme';
+import { color, elevation, radii, space, type } from '../theme';
 import { useAnimatedValue } from '../lib/useAnimatedValue';
 
 /*
@@ -49,7 +49,7 @@ export function ConfirmModalContainer() {
             <Pressable
               accessibilityRole="button"
               onPress={() => finish(true)}
-              style={({ pressed }) => [styles.btn, { backgroundColor: req?.destructive ? tw.red600 : tw.primary }, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.btn, { backgroundColor: req?.destructive ? color.danger : color.primary }, pressed && styles.pressed]}
             >
               <Text style={styles.okText}>{req?.confirmText}</Text>
             </Pressable>
@@ -61,15 +61,15 @@ export function ConfirmModalContainer() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.6)' },
-  card: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: radius.xl, padding: 24, ...shadow('2xl') },
-  title: { fontSize: 20, lineHeight: 28, color: tw.gray900, textAlign: 'center', ...display(700, 20) },
-  message: { marginTop: 8, fontSize: 14, lineHeight: 22, color: tw.gray500, textAlign: 'center', ...ff(500) },
-  row: { flexDirection: 'row', gap: 12, marginTop: 24 },
-  btn: { flex: 1, height: 48, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
-  cancel: { borderWidth: 2, borderColor: tw.gray200 },
-  cancelText: { fontSize: 15, color: tw.gray700, ...ff(700) },
-  okText: { fontSize: 15, color: '#fff', ...ff(700) },
+  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.lg },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: color.overlay },
+  card: { width: '100%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xxl, ...elevation.float },
+  title: { ...type.heading, color: color.text, textAlign: 'center' },
+  message: { ...type.body, marginTop: space.sm, color: color.textSecondary, textAlign: 'center' },
+  row: { flexDirection: 'row', gap: space.md, marginTop: space.xxl },
+  btn: { flex: 1, height: 48, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm },
+  cancel: { borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface },
+  cancelText: { ...type.button, color: color.text },
+  okText: { ...type.button, color: color.onPrimary },
   pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
 });

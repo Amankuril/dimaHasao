@@ -6,6 +6,7 @@ import { X } from 'lucide-react-native';
 import { subscribeToasts } from '../lib/notify';
 
 import { useAnimatedValue } from '../lib/useAnimatedValue';
+import { radii, type } from '../theme';
 
 /*
  * The web mounts sonner as <Toaster position="top-center" richColors
@@ -142,28 +143,26 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    padding: 16,
-    borderRadius: 8,
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: radii.md,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    boxShadow: '0 8px 24px -6px rgba(16,24,40,0.22)',
   },
   body: { flex: 1, gap: 1 },
   action: { height: 24, paddingHorizontal: 8, borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' },
-  actionText: { fontSize: 12, fontWeight: '500' },
-  title: { fontSize: 13, lineHeight: 19.5, fontWeight: '500' },
-  desc: { fontSize: 13, lineHeight: 19.5, fontWeight: '400', opacity: 0.9 },
+  actionText: { ...type.label },
+  // App text family, 15 px: toasts carry errors a rider must read on the move.
+  title: { ...type.bodyStrong },
+  desc: { ...type.small, opacity: 0.9 },
   close: {
     position: 'absolute',
     top: -8,
     left: -8,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

@@ -26,8 +26,8 @@ import Svg, {
   Path,
   Stop,
 } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Pencil, ShieldCheck, X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AlertCircle, Lock, Pencil, ShieldCheck, X } from 'lucide-react-native';
 import { deliveryApi } from '../../../api/delivery';
 import { useAuth } from '../../../context/AuthContext';
 import { useAnimatedValue } from '../../../lib/useAnimatedValue';
@@ -36,9 +36,10 @@ import { toast } from '../../../lib/notify';
 import { sessionStore } from '../../../lib/storage';
 import { collectFcmTokenFast, finalizeDeliveryPendingSubmission, persistModuleFcmToken, prefetchModuleFcmToken } from '../../../delivery/push';
 import AuthLegalLinks from '../../AuthLegalLinks';
-import { Dialog, GradientText } from '../../kit';
-import { GradientButton, Press, ThemedInput } from '../../ui';
-import { display, ff, gradients, shadow, tw } from '../../../theme';
+import { Button, IconButton } from '../../ds';
+import { Dialog } from '../../kit';
+import { Press } from '../../ui';
+import { color, elevation, radii, space, tone, type } from '../../../theme';
 
 /*
  * Port of pages/auth/SignIn.jsx. The web renders this one component for
@@ -137,6 +138,7 @@ export default function DeliverySignIn({ isOtpStep }) {
   const params = useLocalSearchParams();
   const { login } = useAuth();
   const { width: vw, height: vh } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const [phone, setPhone] = useState(() => {
     try {
@@ -166,6 +168,7 @@ export default function DeliverySignIn({ isOtpStep }) {
   const [showRestorePopup, setShowRestorePopup] = useState(false);
   const inputRefs = useRef([]);
   const [focusedBox, setFocusedBox] = useState(-1);
+  const [phoneFocused, setPhoneFocused] = useState(false);
 
   // AnimatePresence step transition: content slides in from +-20 px.
   const enter = useAnimatedValue(0);
@@ -456,6 +459,8 @@ export default function DeliverySignIn({ isOtpStep }) {
     opacity: enter,
     transform: [{ translateX: enter.interpolate({ inputRange: [0, 1], outputRange: [isOtpStep ? 20 : -20, 0] }) }],
   };
+  const otpLocked = loading || blockTimer > 0;
+  const logoSize = Math.round(Math.min(104, Math.max(72, vh * 0.12)));
 
   return (
     <View style={styles.root}>
@@ -463,72 +468,89 @@ export default function DeliverySignIn({ isOtpStep }) {
       <Animated.Image
         source={FLOAT_1}
         resizeMode="contain"
-        style={[styles.float, { top: vh * 0.4 * 0.08, left: vw * 0.05, width: vh * 0.14, height: vh * 0.14 }, float1]}
+        style={[styles.float, { top: insets.top + vh * 0.4 * 0.04, left: vw * 0.05, width: vh * 0.14, height: vh * 0.14 }, float1]}
       />
       <Wave id="botBlueGrad" height={vh * 0.5} d="M -50,370 L -50,220 C 640,220 1240,220 1490,40 L 1490,370 Z" />
       <Animated.Image
         source={FLOAT_2}
         resizeMode="contain"
-        style={[styles.float, { bottom: vh * 0.5 * 0.08, right: vw * 0.05, width: vh * 0.18, height: vh * 0.18 }, float2]}
+        style={[styles.float, { bottom: insets.bottom + vh * 0.5 * 0.06, right: vw * 0.05, width: vh * 0.18, height: vh * 0.18 }, float2]}
       />
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          contentContainerStyle={styles.main}
+          contentContainerStyle={[
+            styles.main,
+            { paddingTop: insets.top + space.xxxl, paddingBottom: insets.bottom + space.xxxl },
+          ]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.column}>
             <View style={styles.header}>
-              <Image source={DRIVER_LOGO} style={styles.logo} resizeMode="contain" accessibilityLabel="Dima Hasao" />
-              <GradientText colors={['#0A4D2B', '#06336B']} style={styles.title}>
+              <Image
+                source={DRIVER_LOGO}
+                // Shrinks on short phones so the CTA clears the bottom illustration.
+                style={[styles.logo, { width: logoSize, height: logoSize }]}
+                resizeMode="contain"
+                accessibilityLabel="Dima Hasao"
+              />
+              <Text style={styles.title} accessibilityRole="header">
                 Delivery Partner
-              </GradientText>
+              </Text>
               {!isOtpStep ? (
                 <Text style={styles.subtitle}>Enter your registered mobile number to start earning</Text>
               ) : (
-                <View style={styles.sentRow}>
-                  <Text style={styles.sentText} numberOfLines={1}>
-                    {`We've sent a code to ${getPhoneNumber()}`}
-                  </Text>
-                  <Press onPress={handleBackToLogin} accessibilityLabel="Edit phone number" hitSlop={12} style={[styles.editBtn, shadow('md')]}>
-                    <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.editGrad}>
-                      <Pencil size={14} color="#fff" strokeWidth={2.5} />
-                    </LinearGradient>
-                  </Press>
+                <View style={styles.sentBlock}>
+                  <Text style={styles.sentText}>We&apos;ve sent a 4-digit code to</Text>
+                  <View style={styles.sentRow}>
+                    <Text style={styles.sentPhone} numberOfLines={1}>
+                      {getPhoneNumber()}
+                    </Text>
+                    <Press onPress={handleBackToLogin} accessibilityLabel="Edit phone number" scale={0.96} style={styles.editBtn}>
+                      <Pencil size={16} color={color.primary} strokeWidth={2.4} />
+                      <Text style={styles.editText}>Edit</Text>
+                    </Press>
+                  </View>
                 </View>
               )}
             </View>
 
             <Animated.View style={contentAnim}>
               {!isOtpStep ? (
-                <View style={{ gap: 24 }}>
-                  <View>
-                    <ThemedInput
+                <View style={{ gap: space.lg }}>
+                  <View style={[styles.phoneField, phoneFocused && styles.phoneFieldFocused]}>
+                    <Text style={styles.prefixText}>+91</Text>
+                    <View style={styles.prefixDivider} />
+                    <TextInput
                       autoFocus
                       value={phone}
                       onChangeText={(t) => setPhone(t.replace(/\D/g, '').slice(0, 10))}
+                      onFocus={() => setPhoneFocused(true)}
+                      onBlur={() => setPhoneFocused(false)}
                       maxLength={10}
                       keyboardType="phone-pad"
                       textContentType="telephoneNumber"
                       autoComplete={Platform.OS === 'web' ? 'off' : 'tel'}
                       placeholder="Mobile number"
-                      placeholderTextColor={tw.gray400}
+                      placeholderTextColor={color.textDisabled}
                       returnKeyType="done"
                       onSubmitEditing={handleSendOTP}
                       accessibilityLabel="Mobile number"
                       style={styles.phoneInput}
                     />
-                    <View pointerEvents="none" style={styles.prefix}>
-                      <Text style={styles.prefixText}>+91</Text>
-                    </View>
                   </View>
-                  <GradientButton title="Log in" onPress={handleSendOTP} disabled={loading || phone.length < 10} loading={loading} />
+                  <Button title="Log in" size="lg" onPress={handleSendOTP} disabled={loading || phone.length < 10} loading={loading} />
                 </View>
               ) : (
                 <View>
-                  {error ? <Text style={styles.error}>{error}</Text> : null}
+                  {error ? (
+                    <View style={styles.errorBox} accessibilityRole="alert" accessibilityLiveRegion="polite">
+                      <AlertCircle size={18} color={color.danger} strokeWidth={2.4} />
+                      <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                  ) : null}
                   <View style={styles.otpRow}>
                     {[0, 1, 2, 3].map((index) => (
                       <TextInput
@@ -548,13 +570,15 @@ export default function DeliverySignIn({ isOtpStep }) {
                         autoComplete={index === 0 && Platform.OS !== 'web' ? 'sms-otp' : 'off'}
                         maxLength={index === 0 ? 4 : 1}
                         placeholder="•"
-                        placeholderTextColor={tw.gray400}
-                        accessibilityLabel={`Digit ${index + 1}`}
+                        placeholderTextColor={color.textDisabled}
+                        accessibilityLabel={`Digit ${index + 1} of 4`}
                         selectTextOnFocus
                         style={[
                           styles.otpBox,
-                          focusedBox === index && !(loading || blockTimer > 0) && styles.otpBoxFocused,
-                          blockTimer > 0 && { opacity: 0.5 },
+                          otp[index] !== '' && styles.otpBoxFilled,
+                          error && styles.otpBoxError,
+                          focusedBox === index && !otpLocked && styles.otpBoxFocused,
+                          blockTimer > 0 && styles.otpBoxLocked,
                         ]}
                       />
                     ))}
@@ -562,42 +586,46 @@ export default function DeliverySignIn({ isOtpStep }) {
 
                   <View style={styles.resendRow}>
                     {blockTimer > 0 ? (
-                      <Text style={[styles.resendMuted, { textTransform: 'uppercase' }]}>Resend SMS</Text>
+                      <Text style={styles.resendMuted}>Resend SMS</Text>
                     ) : resendTimer > 0 ? (
-                      <Text style={styles.resendMuted}>
+                      <Text style={styles.resendMuted} accessibilityLiveRegion="none">
                         Resend SMS in <Text style={styles.resendTime}>{formatResendTimer(resendTimer)}</Text>
                       </Text>
                     ) : (
-                      <Press onPress={handleResend} scale={1} hitSlop={10} accessibilityLabel="Resend SMS">
-                        <Text style={styles.resendLink}>{"Didn't receive SMS? Resend SMS"}</Text>
+                      <Press onPress={handleResend} scale={1} accessibilityLabel="Resend SMS" style={styles.resendBtn}>
+                        <Text style={styles.resendHint}>
+                          Didn&apos;t receive SMS? <Text style={styles.resendLink}>Resend SMS</Text>
+                        </Text>
                       </Press>
                     )}
                   </View>
 
-                  <GradientButton
-                    title="Verify & Continue"
-                    loadingTitle="Verifying..."
+                  <Button
+                    title={loading ? 'Verifying...' : 'Verify & Continue'}
+                    size="lg"
                     onPress={() => handleVerify()}
                     disabled={loading || !isOtpComplete || blockTimer > 0}
                     loading={loading}
-                    style={{ marginTop: 24 }}
+                    accessibilityLabel="Verify & Continue"
+                    style={{ marginTop: space.xl }}
                   />
 
                   {blockTimer > 0 ? (
-                    <View style={styles.blockBox}>
-                      <Text style={styles.blockKicker}>Too many failed attempts</Text>
-                      <Text style={styles.blockText}>
-                        Try again after {Math.floor((blockTimer - 1) / 60)}:{String((blockTimer - 1) % 60).padStart(2, '0')}
-                      </Text>
+                    <View style={styles.blockBox} accessibilityRole="alert">
+                      <Lock size={20} color={tone.danger.fg} strokeWidth={2.2} />
+                      <View style={styles.blockTextWrap}>
+                        <Text style={styles.blockKicker}>Too many failed attempts</Text>
+                        <Text style={styles.blockText}>
+                          Try again after {Math.floor((blockTimer - 1) / 60)}:{String((blockTimer - 1) % 60).padStart(2, '0')}
+                        </Text>
+                      </View>
                     </View>
                   ) : null}
                 </View>
               )}
             </Animated.View>
 
-            {!isOtpStep ? (
-              <AuthLegalLinks module="food" containerStyle={{ marginTop: 32 }} style={styles.legal} linkStyle={styles.legalLink} />
-            ) : null}
+            {!isOtpStep ? <AuthLegalLinks module="food" containerStyle={{ marginTop: space.xxl }} /> : null}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -609,119 +637,139 @@ export default function DeliverySignIn({ isOtpStep }) {
           router.dismissTo('/food/delivery/login');
         }}
         blur={8}
-        // rounded-3xl: the theme's card shadow replaces shadow-2xl.
-        panelStyle={[styles.restore, shadow('card')]}
+        panelStyle={styles.restore}
       >
-        <Press
+        <IconButton
+          icon={X}
+          label="Close and return to login"
+          iconColor={color.textMuted}
           onPress={() => {
             setShowRestorePopup(false);
             router.dismissTo('/food/delivery/login');
           }}
-          accessibilityLabel="Close and return to login"
           style={styles.restoreClose}
-        >
-          <X size={20} color={tw.gray400} />
-        </Press>
+        />
         <View style={styles.restoreIcon}>
-          <ShieldCheck size={40} color="#0A4D2B" />
+          <ShieldCheck size={32} color={color.primary} strokeWidth={2} />
         </View>
-        <Text style={styles.restoreTitle}>Account Found!</Text>
+        <Text style={styles.restoreTitle} accessibilityRole="header">
+          Account found
+        </Text>
         <Text style={styles.restoreBody}>
           An existing deleted delivery account for <Text style={styles.restoreBold}>{getPhoneNumber()}</Text> was found. Do you want to
           restore your old data or start fresh with a new account?
         </Text>
-        <View style={{ gap: 16 }}>
-          <Press onPress={() => handleRestoreAction('restore')} scale={0.98} style={[styles.restoreBtnWrap, shadow('card')]}>
-            <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.restoreBtn}>
-              <Text style={styles.restoreBtnText}>Restore My Account</Text>
-            </LinearGradient>
-          </Press>
-          <Press onPress={() => handleRestoreAction('new')} scale={0.98} style={[styles.restoreBtn, styles.restoreOutline, shadow('card')]}>
-            <Text style={[styles.restoreBtnText, { color: tw.gray700 }]}>Create New Account</Text>
-          </Press>
+        <View style={{ gap: space.md }}>
+          <Button title="Restore my account" size="lg" onPress={() => handleRestoreAction('restore')} />
+          <Button title="Create new account" size="lg" variant="outline" onPress={() => handleRestoreAction('new')} />
         </View>
       </Dialog>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#fff', overflow: 'hidden' },
+  root: { flex: 1, backgroundColor: color.surface, overflow: 'hidden' },
   flex: { flex: 1 },
   wave: { position: 'absolute', left: 0, width: '100%' },
   float: { position: 'absolute' },
-  // px-6 -> 1.1rem (deliveryTheme.css at <=640 px), py-12 pb-24
-  main: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 17.6, paddingTop: 48, paddingBottom: 96 },
-  column: { width: '100%', maxWidth: 384, top: -40 },
-  header: { marginBottom: 20, alignItems: 'center' },
-  // drop-shadow-md
-  logo: { height: 112, width: 112, marginBottom: -14, filter: [{ dropShadow: { offsetX: 0, offsetY: 3, standardDeviation: 3, color: 'rgba(0,0,0,0.12)' } }] },
-  // h2 text-[25px] font-extrabold: Sora with the theme's .01em tracking; line-height inherits 1.5.
-  title: { fontSize: 25, lineHeight: 37.5, paddingBottom: 2, ...display(800, 25) },
-  subtitle: {
-    marginTop: 12,
-    maxWidth: 310,
-    paddingHorizontal: 16,
-    fontSize: 13.5,
-    lineHeight: 21.94,
-    letterSpacing: 0.34,
-    color: tw.slate600,
-    textAlign: 'center',
-    ...ff(500),
-  },
-  sentRow: { marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  sentText: { fontSize: 13, lineHeight: 21.1, letterSpacing: 0.2, color: 'rgba(98,116,142,0.9)', ...ff(600) },
-  editBtn: { marginLeft: 4, borderRadius: 10 },
-  editGrad: { padding: 6, borderRadius: 10 },
-  phoneInput: { paddingLeft: 80, paddingRight: 24, height: 56, fontSize: 16 },
-  prefix: { position: 'absolute', top: 0, bottom: 0, left: 24, justifyContent: 'center' },
-  prefixText: { fontSize: 14, lineHeight: 20, color: tw.gray500, paddingRight: 12, borderRightWidth: 1, borderRightColor: tw.gray300, ...ff(500) },
-  error: { marginTop: 8, marginBottom: 16, fontSize: 15, lineHeight: 22.5, letterSpacing: 0.375, color: tw.red600, textAlign: 'center', ...ff(700) },
-  otpRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-  otpBox: {
-    width: 56,
+  main: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xl },
+  column: { width: '100%', maxWidth: 400 },
+  header: { marginBottom: space.xxl, alignItems: 'center' },
+  logo: { marginBottom: space.sm, filter: [{ dropShadow: { offsetX: 0, offsetY: 3, standardDeviation: 3, color: 'rgba(0,0,0,0.12)' } }] },
+  title: { ...type.title, color: color.primary, textAlign: 'center' },
+  subtitle: { ...type.body, marginTop: space.sm, maxWidth: 300, color: color.textSecondary, textAlign: 'center' },
+
+  sentBlock: { marginTop: space.sm, alignItems: 'center' },
+  sentText: { ...type.body, color: color.textSecondary, textAlign: 'center' },
+  sentRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs, maxWidth: '100%' },
+  sentPhone: { ...type.subheading, color: color.text, flexShrink: 1 },
+  editBtn: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, borderRadius: radii.md },
+  editText: { ...type.label, color: color.primary },
+
+  phoneField: {
     height: 56,
-    textAlign: 'center',
-    fontSize: 24,
-    color: '#1F1F24',
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#E8DEE7',
-    borderRadius: 20,
-    padding: 0,
-    ...ff(700),
-  },
-  otpBoxFocused: { borderColor: '#789D8A', boxShadow: '0 0 0 4px rgba(21,73,139,0.15)' },
-  resendRow: { marginTop: 24, alignItems: 'center' },
-  resendMuted: { fontSize: 12, lineHeight: 16, color: tw.gray400, ...display(800, 12) },
-  resendTime: { color: tw.slate800, ...display(900, 12) },
-  resendLink: { fontSize: 12, lineHeight: 16, color: tw.slate800, ...display(800, 12) },
-  blockBox: {
-    alignSelf: 'center',
-    // space-y-6 margin and mt-4 collapse to 24 px in block layout
-    marginTop: 24,
-    paddingHorizontal: 17.6,
-    paddingVertical: 10,
-    backgroundColor: tw.primarySoft,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: tw.primaryBorder,
+    flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: color.borderStrong,
+    borderRadius: radii.md,
+    backgroundColor: color.surface,
+    paddingLeft: space.lg,
   },
-  blockKicker: { fontSize: 11, lineHeight: 16.5, letterSpacing: 0.55, textTransform: 'uppercase', color: '#0A4D2B', ...ff(700) },
-  blockText: { fontSize: 14, lineHeight: 20, color: '#0A4D2B', ...ff(700) },
-  legal: { fontSize: 11, lineHeight: 16.5, letterSpacing: 0.55, textTransform: 'uppercase', color: 'rgba(153,161,175,0.8)', textAlign: 'center', ...ff(500) },
-  legalLink: { color: tw.gray400, ...ff(600) },
-  restore: { width: '100%', maxWidth: 384, backgroundColor: '#fff', borderRadius: 24, padding: 32, borderWidth: 1, borderColor: '#E5DDC3', alignItems: 'stretch' },
-  restoreClose: { position: 'absolute', top: 16, right: 16, padding: 8, borderRadius: 12, zIndex: 2 },
-  restoreIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(10,77,43,0.1)', alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  restoreTitle: { fontSize: 24, lineHeight: 32, color: tw.gray900, textAlign: 'center', marginBottom: 12, ...display(700, 24) },
-  restoreBody: { fontSize: 16, lineHeight: 26, color: tw.gray500, textAlign: 'center', marginBottom: 32, ...ff(500) },
-  restoreBold: { color: tw.gray900, ...ff(700) },
-  restoreBtnWrap: { borderRadius: 16 },
-  restoreBtn: { height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  // rounded-2xl: deliveryTheme.css repaints border-gray-200 as #E5DDC3.
-  restoreOutline: { borderWidth: 2, borderColor: '#E5DDC3', backgroundColor: '#fff' },
-  restoreBtnText: { fontSize: 16, color: '#fff', ...ff(700) },
+  phoneFieldFocused: { borderColor: color.primary, boxShadow: `0 0 0 3px ${color.primarySoft}` },
+  prefixText: { ...type.bodyStrong, fontSize: 17, color: color.text },
+  prefixDivider: { width: 1, height: 24, backgroundColor: color.borderStrong, marginHorizontal: space.md },
+  // No lineHeight on TextInput: it misaligns the caret on Android and web.
+  phoneInput: {
+    flex: 1,
+    height: '100%',
+    paddingRight: space.lg,
+    fontFamily: type.bodyStrong.fontFamily,
+    fontSize: 17,
+    letterSpacing: 0.5,
+    color: color.text,
+    outlineWidth: 0,
+    outlineStyle: 'none',
+  },
+
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    marginBottom: space.lg,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    borderRadius: radii.md,
+    backgroundColor: tone.danger.bg,
+  },
+  errorText: { ...type.bodyStrong, color: tone.danger.fg, flex: 1 },
+
+  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: space.md },
+  otpBox: {
+    width: 60,
+    height: 64,
+    textAlign: 'center',
+    fontFamily: type.subheading.fontFamily,
+    fontSize: 26,
+    color: color.text,
+    backgroundColor: color.surface,
+    borderWidth: 1.5,
+    borderColor: color.borderStrong,
+    borderRadius: radii.md,
+    padding: 0,
+    outlineWidth: 0,
+    outlineStyle: 'none',
+  },
+  otpBoxFilled: { borderColor: color.primaryBorder, backgroundColor: color.primarySoft },
+  otpBoxError: { borderColor: color.danger },
+  otpBoxFocused: { borderColor: color.primary, borderWidth: 2, boxShadow: `0 0 0 3px ${color.primarySoft}` },
+  otpBoxLocked: { backgroundColor: color.surfaceMuted, borderColor: color.border, color: color.textDisabled },
+
+  resendRow: { marginTop: space.md, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  resendMuted: { ...type.small, color: color.textMuted, textAlign: 'center' },
+  resendTime: { ...type.label, color: color.text },
+  resendBtn: { minHeight: 44, justifyContent: 'center', paddingHorizontal: space.sm },
+  resendHint: { ...type.small, color: color.textSecondary, textAlign: 'center' },
+  resendLink: { ...type.label, color: color.primary, textDecorationLine: 'underline' },
+
+  blockBox: {
+    marginTop: space.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.md,
+    borderRadius: radii.md,
+    backgroundColor: tone.danger.bg,
+  },
+  blockTextWrap: { flex: 1, minWidth: 0 },
+  blockKicker: { ...type.label, color: tone.danger.fg },
+  blockText: { ...type.bodyStrong, color: color.text },
+
+  restore: { width: '100%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xxl, alignItems: 'stretch', ...elevation.float },
+  restoreClose: { position: 'absolute', top: space.sm, right: space.sm, zIndex: 2 },
+  restoreIcon: { width: 64, height: 64, borderRadius: radii.pill, backgroundColor: color.primarySoft, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginBottom: space.lg, marginTop: space.sm },
+  restoreTitle: { ...type.title, color: color.text, textAlign: 'center', marginBottom: space.sm },
+  restoreBody: { ...type.body, color: color.textSecondary, textAlign: 'center', marginBottom: space.xxl },
+  restoreBold: { ...type.bodyStrong, color: color.text },
 });

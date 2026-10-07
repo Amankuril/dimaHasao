@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Package, Receipt, TrendingUp } from 'lucide-react-native';
+import { Package } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../api/delivery';
+import { Card, EmptyState, Money, ScreenHeader, StatusBadge, formatINR } from '../../../../../components/ds';
 import WeekSelector from '../../../../../components/delivery/WeekSelector';
-import { SoraMoney } from '../../../../../components/kit';
 import Skeleton from '../../../../../components/Skeleton';
 import { Spinner } from '../../../../../components/Loader';
-import { Press } from '../../../../../components/ui';
 import useDeliveryBackNavigation from '../../../../../delivery/hooks/useDeliveryBackNavigation';
-import { formatCurrency } from '../../../../../lib/format';
 import { useAnimatedValue } from '../../../../../lib/useAnimatedValue';
-import { display, ff, shadow, tw } from '../../../../../theme';
+import { color, radii, space, type } from '../../../../../theme';
 
-// Web: pages/pocket/PocketDetailsV2.jsx. `font-poppins` -> Nunito; rounded-2xl/3xl -> #E5DDC3 + card shadow.
+// Web: pages/pocket/PocketDetailsV2.jsx. Styled per DESIGN_SYSTEM.md.
+
+const inr = (n) => formatINR(n, { decimals: 2 });
 
 const toLocalDateKey = (date) => {
   const d = date instanceof Date ? date : new Date(date);
@@ -91,160 +91,118 @@ export default function PocketDetailsV2() {
     return b ? b.amount : 0;
   };
 
-  return (
-    <ScrollView style={styles.page} stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 48 }}>
-      <View style={[styles.header, { paddingTop: 20 + insets.top }]}>
-        <View style={styles.headerLeft}>
-          <Press onPress={goBack} scale={0.9} accessibilityLabel="Back" style={styles.back}>
-            <ArrowLeft size={20} color={tw.gray900} />
-          </Press>
-          <View>
-            <Text style={styles.h1}>Pocket Details</Text>
-            <Text style={styles.sub}>Trips & Earnings History</Text>
+  const header = (
+    <View style={styles.headerBlock}>
+      <WeekSelector onChange={setWeekRange} weekStartsOn={1} style={{ paddingVertical: space.xs }} />
+
+      <Card>
+        <Text style={[type.overline, { color: color.textMuted }]}>Total payout</Text>
+        <View style={styles.totalBox}>
+          {loading ? <Skeleton style={{ height: 32, width: 144 }} /> : <Money value={inr(summary.grandTotal)} style={type.display} />}
+        </View>
+        <View style={styles.grid}>
+          <View style={styles.mini}>
+            <Text style={[type.label, { color: color.textSecondary }]}>Trip earnings</Text>
+            <View style={styles.miniValueBox}>
+              {loading ? <Skeleton style={{ height: 20, width: 80 }} /> : <Money value={inr(summary.totalEarning)} style={styles.miniValue} />}
+            </View>
+          </View>
+          <View style={styles.mini}>
+            <Text style={[type.label, { color: color.textSecondary }]}>Weekly bonus</Text>
+            <View style={styles.miniValueBox}>
+              {loading ? (
+                <Skeleton style={{ height: 20, width: 80 }} />
+              ) : (
+                <Money value={`+${inr(summary.totalBonus)}`} style={[styles.miniValue, { color: color.success }]} />
+              )}
+            </View>
           </View>
         </View>
-        <View style={styles.receipt}>
-          <Receipt size={20} color={tw.primary} />
-        </View>
+      </Card>
+
+      <View style={styles.listHead}>
+        <Text style={[type.overline, { color: color.textMuted }]} accessibilityRole="header">
+          Trips history
+        </Text>
+        <StatusBadge label={`${orders.length} orders`} tone="neutral" />
       </View>
+    </View>
+  );
 
-      <View style={styles.body}>
-        <View style={[styles.weekBox, shadow('card')]}>
-          <WeekSelector onChange={setWeekRange} weekStartsOn={1} />
-        </View>
-
-        <View style={[styles.summary, shadow('card')]}>
-          {/* The web's blur-2xl blob is effectively invisible; RN's blur filter has no iOS support, so it is left out. */}
-          <View style={styles.summaryTop}>
-            <View>
-              <Text style={styles.kicker}>Total Payout</Text>
-              <View style={{ minHeight: 40, justifyContent: 'center' }}>
-                {loading ? <Skeleton style={{ height: 36, width: 144 }} /> : <SoraMoney style={styles.total}>{formatCurrency(summary.grandTotal)}</SoraMoney>}
-              </View>
-            </View>
-            <View style={[styles.trend, shadow('card')]}>
-              <TrendingUp size={24} color={tw.primary} />
-            </View>
-          </View>
-          <View style={styles.grid}>
-            <View style={[styles.mini, shadow('card')]}>
-              <Text style={styles.miniLabel}>Trip Earnings</Text>
-              <View style={{ minHeight: 28 }}>
-                {loading ? <Skeleton style={{ height: 20, width: 80 }} /> : <SoraMoney style={styles.miniValue}>{formatCurrency(summary.totalEarning)}</SoraMoney>}
-              </View>
-            </View>
-            <View style={[styles.mini, shadow('card')]}>
-              <Text style={styles.miniLabel}>Weekly Bonus</Text>
-              <View style={{ minHeight: 24 }}>
-                {loading ? (
-                  <Skeleton style={{ height: 20, width: 80 }} />
-                ) : (
-                  <SoraMoney style={[styles.miniValue, { color: tw.primary }]}>{`+${formatCurrency(summary.totalBonus)}`}</SoraMoney>
-                )}
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <View style={{ gap: 16 }}>
-          <View style={styles.listHead}>
-            <Text style={styles.listTitle}>Trips History</Text>
-            <Text style={styles.count}>{orders.length} Orders</Text>
-          </View>
-          {loading ? (
-            <View style={{ paddingVertical: 80, alignItems: 'center' }}>
-              <Spinner size={40} color={tw.primary} />
-              <Text style={styles.syncing}>Syncing History...</Text>
-            </View>
-          ) : orders.length > 0 ? (
-            <View style={{ gap: 12 }}>
-              {orders.map((order, idx) => {
-                const oid = order.orderId || order._id || order.id;
-                const earning = earningFor(oid);
-                const bonus = bonusFor(oid);
-                const cod = order.paymentMethod?.toLowerCase() === 'cod';
-                return (
-                  <FadeIn key={oid} delay={idx * 50}>
-                    <Press scale={0.98} accessibilityLabel={`Order ${oid}`} style={[styles.order, shadow('card')]}>
-                      <View style={styles.orderLeft}>
-                        <View style={[styles.pkg, shadow('card')]}>
-                          <Package size={24} color={tw.gray900} />
-                        </View>
-                        <View style={{ flexShrink: 1 }}>
-                          <View style={styles.orderIdRow}>
-                            <Text style={styles.orderId}>#{oid.toString().slice(-6)}</Text>
-                            <Text style={styles.orderDate}>• {new Date(order.deliveredAt || order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</Text>
-                          </View>
-                          <Text numberOfLines={1} style={styles.rest}>
-                            {order.restaurantName || order.restaurantId?.name || 'Premium Restaurant'}
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <SoraMoney style={styles.orderTotal}>{formatCurrency(earning + bonus)}</SoraMoney>
-                        <View style={styles.chips}>
-                          {bonus > 0 ? <Text style={styles.bp}>+{formatCurrency(bonus)} BP</Text> : null}
-                          <Text style={[styles.method, cod ? styles.methodCod : styles.methodOnline]}>{order.paymentMethod || 'Online'}</Text>
-                        </View>
-                      </View>
-                    </Press>
-                  </FadeIn>
-                );
-              })}
+  return (
+    <View style={styles.page}>
+      <ScreenHeader title="Pocket details" subtitle="Trips and earnings history" onBack={goBack} />
+      <FlatList
+        data={loading ? [] : orders}
+        keyExtractor={(order, idx) => String(order.orderId || order._id || order.id || idx)}
+        contentContainerStyle={[styles.body, { paddingBottom: space.xxxl + insets.bottom }]}
+        ListHeaderComponent={header}
+        initialNumToRender={12}
+        windowSize={7}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loading}>
+              <Spinner size={32} color={color.primary} />
+              <Text style={[type.small, { color: color.textMuted }]}>Syncing history…</Text>
             </View>
           ) : (
-            <View style={styles.empty}>
-              <View style={[styles.emptyIcon, shadow('card')]}>
-                <Package size={32} color={tw.gray200} />
-              </View>
-              <Text style={styles.emptyTitle}>No Trips Found</Text>
-              <Text style={styles.emptyText}>Check another week Range</Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </ScrollView>
+            <Card>
+              <EmptyState icon={Package} title="No trips found" message="Try another week." />
+            </Card>
+          )
+        }
+        renderItem={({ item: order, index: idx }) => {
+          const oid = order.orderId || order._id || order.id;
+          const earning = earningFor(oid);
+          const bonus = bonusFor(oid);
+          const cod = order.paymentMethod?.toLowerCase() === 'cod';
+          return (
+            <FadeIn delay={Math.min(idx, 10) * 50}>
+              <Card style={styles.order} accessibilityLabel={`Order ${oid}`}>
+                <View style={styles.pkg}>
+                  <Package size={20} color={color.text} />
+                </View>
+                <View style={styles.orderText}>
+                  <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={1}>
+                    #{oid.toString().slice(-6)}
+                  </Text>
+                  <Text style={[type.caption, { color: color.textMuted }]}>
+                    {new Date(order.deliveredAt || order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                  </Text>
+                  <Text numberOfLines={1} style={[type.small, { color: color.textSecondary }]}>
+                    {order.restaurantName || order.restaurantId?.name || 'Premium Restaurant'}
+                  </Text>
+                  <StatusBadge label={cod ? 'COD' : String(order.paymentMethod || 'Online').replace(/^./, (c) => c.toUpperCase())} tone={cod ? 'warning' : 'info'} style={{ marginTop: space.xs }} />
+                </View>
+                <View style={styles.amountCol}>
+                  <Money value={`+${inr(earning + bonus)}`} style={styles.orderTotal} />
+                  <Text style={[type.caption, { color: color.success }]}>Earned</Text>
+                  {bonus > 0 ? <Text style={[type.caption, { color: color.success }]}>incl. +{inr(bonus)} bonus</Text> : null}
+                </View>
+              </Card>
+            </FadeIn>
+          );
+        }}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.gray50 },
-  header: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: tw.gray100, paddingHorizontal: 17.6, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  back: { width: 40, height: 40, borderRadius: 20, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.gray100 },
-  h1: { fontSize: 20, lineHeight: 28, color: tw.gray950, textTransform: 'uppercase', ...display(900, 20) },
-  sub: { marginTop: 2, fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  receipt: { width: 40, height: 40, borderRadius: 12, backgroundColor: tw.primarySoft, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.primaryBorder },
-  body: { paddingHorizontal: 20, paddingVertical: 24, gap: 24 },
-  weekBox: { backgroundColor: '#fff', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3' },
-  summary: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5DDC3', borderRadius: 24, padding: 17.6, overflow: 'hidden' },
-  summaryTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  kicker: { fontSize: 10, lineHeight: 15, letterSpacing: 2, textTransform: 'uppercase', color: tw.gray400, marginBottom: 4, ...ff(700) },
-  total: { fontSize: 36, lineHeight: 40, color: tw.gray950, ...display(900, 36) },
-  trend: { width: 48, height: 48, backgroundColor: tw.gray100, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5DDC3' },
-  grid: { flexDirection: 'row', gap: 16 },
-  mini: { flex: 1, backgroundColor: tw.gray50, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3' },
-  miniLabel: { fontSize: 9, lineHeight: 13.5, letterSpacing: 0.9, textTransform: 'uppercase', color: tw.gray400, marginBottom: 4, ...ff(700) },
-  miniValue: { fontSize: 18, lineHeight: 28, color: tw.gray950, ...display(900, 18) },
-  listHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 },
-  listTitle: { fontSize: 12, lineHeight: 16, color: tw.gray950, textTransform: 'uppercase', ...display(900, 12) },
-  count: { backgroundColor: tw.gray200, color: tw.gray600, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 10, lineHeight: 15, ...ff(700) },
-  syncing: { marginTop: 16, fontSize: 12, lineHeight: 16, letterSpacing: 1.2, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  order: { backgroundColor: '#fff', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#E5DDC3', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  orderLeft: { flexDirection: 'row', alignItems: 'center', gap: 16, flexShrink: 1 },
-  pkg: { width: 48, height: 48, backgroundColor: tw.gray50, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5DDC3' },
-  orderIdRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  orderId: { fontSize: 14, lineHeight: 20, color: tw.gray950, textTransform: 'uppercase', ...display(900, 14) },
-  orderDate: { fontSize: 9, lineHeight: 13.5, letterSpacing: 0.9, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  rest: { maxWidth: 140, fontSize: 10, lineHeight: 15, letterSpacing: -0.25, textTransform: 'uppercase', color: tw.gray500, ...ff(700) },
-  orderTotal: { fontSize: 16, lineHeight: 16, color: tw.gray950, marginBottom: 4, ...display(900, 16) },
-  chips: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 6 },
-  bp: { fontSize: 9, lineHeight: 13.5, textTransform: 'uppercase', color: tw.primary, ...ff(700) },
-  method: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, overflow: 'hidden', fontSize: 8, lineHeight: 12, textTransform: 'uppercase', borderWidth: 1, ...display(900, 8) },
-  methodCod: { backgroundColor: tw.amber50, color: tw.amber600, borderColor: tw.amber100 },
-  methodOnline: { backgroundColor: tw.primarySoft, color: tw.primary, borderColor: tw.primaryBorder },
-  empty: { paddingVertical: 80, alignItems: 'center', backgroundColor: '#fff', borderRadius: 32, borderWidth: 2, borderStyle: 'dashed', borderColor: tw.gray100 },
-  emptyIcon: { width: 64, height: 64, backgroundColor: tw.gray50, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  emptyTitle: { fontSize: 18, lineHeight: 28, color: tw.gray950, textTransform: 'uppercase', ...display(900, 18) },
-  emptyText: { marginTop: 4, fontSize: 12, lineHeight: 16, letterSpacing: 1.2, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  body: { padding: space.lg, gap: space.md },
+  headerBlock: { gap: space.md, marginBottom: space.xs },
+  totalBox: { minHeight: 40, justifyContent: 'center', marginTop: space.xs, marginBottom: space.lg },
+  grid: { flexDirection: 'row', gap: space.md },
+  mini: { flex: 1, minWidth: 0, backgroundColor: color.surfaceMuted, padding: space.md, borderRadius: radii.md, gap: space.xxs },
+  miniValueBox: { minHeight: 24, justifyContent: 'center' },
+  miniValue: { ...type.money, fontSize: 16, lineHeight: 22 },
+  listHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xs, marginTop: space.sm },
+  loading: { paddingVertical: space.xxxl + space.lg, alignItems: 'center', gap: space.md },
+  // Wraps: a very large amount drops to its own line instead of clipping.
+  order: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', columnGap: space.md, rowGap: space.sm },
+  pkg: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  orderText: { flexGrow: 1, flexShrink: 1, flexBasis: 120, minWidth: 0, gap: space.xxs },
+  amountCol: { alignItems: 'flex-end', marginLeft: 'auto', flexShrink: 0, maxWidth: '100%', gap: space.xxs },
+  orderTotal: { ...type.money, color: color.success, textAlign: 'right' },
 });

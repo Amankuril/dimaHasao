@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Animated, Easing, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
-import { ChevronRight, FileText, HelpCircle, IndianRupee, LayoutGrid, Receipt, ShieldCheck, Wallet } from 'lucide-react-native';
+import { ChevronRight, FileText, IndianRupee, LayoutGrid, Receipt, ShieldCheck, Wallet } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../api/delivery';
 import { showUserFacingApiError } from '../../../lib/apiError';
 import { toast } from '../../../lib/notify';
@@ -10,23 +11,23 @@ import { initRazorpayPayment } from '../../../lib/razorpay';
 import { getCompanyNameAsync } from '../../../lib/platformSettings';
 import { useOnForeground } from '../../../lib/foreground';
 import { useAnimatedValue } from '../../../lib/useAnimatedValue';
-import { BottomSheet, SoraMoney } from '../../kit';
+import { BottomSheet } from '../../kit';
 import Skeleton from '../../Skeleton';
-import { Spinner } from '../../Loader';
-import { Press, ThemedInput } from '../../ui';
-import { display, ff, shadow, tw } from '../../../theme';
+import { Press } from '../../ui';
+import { Button, Card, ListRow, Money, SectionHeader, formatINR } from '../../ds';
+import { color, elevation, radii, space, tone, touch, type } from '../../../theme';
 
 /*
- * Port of pages/PocketV2.jsx. Root has `font-poppins` -> Nunito Sans.
- * bg-[#f6e9dc] and bg-yellow-300/400 -> #FAF6ED; #ff8100 -> primary;
- * the SVG progress stroke #ff8100 is an attribute, so it stays orange.
+ * Pocket tab body (renders below the shared HomeHeader). Wallet numbers,
+ * the weekly earnings hero, the active earnings guarantee and the deposit
+ * sheet. Styling follows DESIGN_SYSTEM.md; the data flow is the web port's.
  */
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const R = 45;
 const C = 2 * Math.PI * R;
 
-function Ring({ progress, color, children }) {
+function Ring({ progress, stroke, children }) {
   const p = useAnimatedValue(0);
   useEffect(() => {
     Animated.timing(p, { toValue: progress, duration: 1500, easing: Easing.out(Easing.ease), useNativeDriver: false }).start();
@@ -34,13 +35,13 @@ function Ring({ progress, color, children }) {
   return (
     <View style={styles.ring}>
       <Svg width={112} height={112} viewBox="0 0 100 100" style={{ transform: [{ rotate: '-90deg' }] }}>
-        <Circle cx={50} cy={50} r={R} fill="none" stroke="#f3f4f6" strokeWidth={8} />
+        <Circle cx={50} cy={50} r={R} fill="none" stroke={color.surfaceMuted} strokeWidth={8} />
         <AnimatedCircle
           cx={50}
           cy={50}
           r={R}
           fill="none"
-          stroke={color}
+          stroke={stroke}
           strokeWidth={8}
           strokeLinecap="round"
           strokeDasharray={`${C} ${C}`}
@@ -58,7 +59,7 @@ function LivePulse() {
     const e = Easing.bezier(0.4, 0, 0.6, 1);
     const a = Animated.loop(
       Animated.sequence([
-        Animated.timing(o, { toValue: 0.5, duration: 1000, easing: e, useNativeDriver: true }),
+        Animated.timing(o, { toValue: 0.4, duration: 1000, easing: e, useNativeDriver: true }),
         Animated.timing(o, { toValue: 1, duration: 1000, easing: e, useNativeDriver: true }),
       ]),
     );
@@ -66,6 +67,28 @@ function LivePulse() {
     return () => a.stop();
   }, [o]);
   return <Animated.View style={[styles.liveDot, { opacity: o }]} />;
+}
+
+/** ₹-prefixed amount input (local primitive; balance.jsx has the same one). */
+function AmountField({ value, onChangeText, placeholder, editable = true, accessibilityLabel }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <View style={[styles.field, focused && styles.fieldFocused, !editable && styles.fieldDisabled]}>
+      <Text style={[styles.fieldRupee, !editable && { color: color.textDisabled }]}>₹</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType="decimal-pad"
+        placeholder={placeholder}
+        placeholderTextColor={color.textMuted}
+        editable={editable}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        accessibilityLabel={accessibilityLabel}
+        style={[styles.fieldInput, !editable && { color: color.textDisabled }]}
+      />
+    </View>
+  );
 }
 
 const getCurrentWeekRange = () => {
@@ -86,17 +109,6 @@ const formatOfferValidTill = (validTill) => {
   if (Number.isNaN(parsed.getTime())) return String(validTill);
   return parsed.toLocaleDateString('en-US', { weekday: 'long' });
 };
-
-function Service({ onPress, iconBg, iconBorder, iconColor, Icon, children, between }) {
-  return (
-    <Press onPress={onPress} scale={1} style={[styles.service, shadow('card'), between && { justifyContent: 'space-between' }]}>
-      <View style={[styles.serviceIcon, { backgroundColor: iconBg, borderColor: iconBorder }]}>
-        <Icon size={20} color={iconColor} />
-      </View>
-      {children}
-    </Press>
-  );
-}
 
 export default function PocketV2() {
   const [loading, setLoading] = useState(true);
@@ -303,160 +315,182 @@ export default function PocketV2() {
   const earningsProgress = activeOffer.targetAmount > 0 ? Math.min(activeOffer.currentEarnings / activeOffer.targetAmount, 1) : 0;
   const hasActiveOffer = activeOffer.isLive && (activeOffer.targetAmount > 0 || activeOffer.targetOrders > 0);
 
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const validTill = formatOfferValidTill(activeOffer.validTill);
+
   return (
     <View style={styles.page}>
       {!loading && !walletState.bankDetailsFilled ? (
         <View style={styles.bank}>
-          <View style={[styles.bankIcon, shadow('lg')]}>
-            <FileText size={28} color="#fff" />
+          <View style={styles.bankIcon}>
+            <FileText size={22} color={color.warning} strokeWidth={2.2} />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bankTitle}>Submit bank details</Text>
-            <Text style={styles.bankSub}>PAN & bank details required for payouts</Text>
+          <View style={styles.bankText}>
+            <Text style={[type.subheading, { color: color.text }]}>Submit bank details</Text>
+            <Text style={[type.small, { color: color.textSecondary }]}>PAN and bank details are required for payouts</Text>
           </View>
-          <Press onPress={() => router.push('/food/delivery/profile/details')} scale={1} accessibilityLabel="Submit bank details" style={[styles.bankBtn, shadow('sm')]}>
-            <Text style={styles.bankBtnText}>Submit</Text>
-          </Press>
+          <Button
+            title="Submit"
+            size="sm"
+            variant="outline"
+            fullWidth={false}
+            accessibilityLabel="Submit bank details"
+            onPress={() => router.push('/food/delivery/profile/details')}
+          />
         </View>
       ) : null}
 
-      <View style={styles.body}>
-        <Press onPress={() => router.push('/food/delivery/pocket/details')} scale={0.98} accessibilityLabel="This week's earnings" style={[styles.week, shadow('sm')]}>
-          <Text style={styles.weekLabel}>Earnings: {getCurrentWeekRange()}</Text>
-          <View style={styles.weekValueBox}>
-            {loading ? <Skeleton style={{ height: 40, width: 112 }} /> : <SoraMoney style={styles.weekValue}>{`₹${walletState.weeklyEarnings.toFixed(0)}`}</SoraMoney>}
-          </View>
-        </Press>
-
-        {hasActiveOffer ? (
-          <View style={[styles.offer, shadow('card')]}>
-            <View style={styles.offerHead}>
-              <View>
-                <Text style={styles.offerTitle}>Earnings Guarantee</Text>
-                <View style={styles.offerMeta}>
-                  <Text style={styles.offerValid}>Valid till {formatOfferValidTill(activeOffer.validTill)}</Text>
-                  {activeOffer.isLive ? (
-                    <View style={styles.liveRow}>
-                      <LivePulse />
-                      <Text style={styles.liveText}>Live</Text>
-                    </View>
-                  ) : null}
-                </View>
-              </View>
-              <View style={styles.offerTarget}>
-                <SoraMoney style={styles.offerAmount}>{`₹${activeOffer.targetAmount}`}</SoraMoney>
-                <Text style={styles.offerOrders}>{activeOffer.targetOrders} orders</Text>
-              </View>
-            </View>
-            <View style={styles.rings}>
-              <View style={{ alignItems: 'center' }}>
-                <Ring progress={ordersProgress} color="#000">
-                  <Text style={styles.ringValue}>{activeOffer.currentOrders}</Text>
-                  <Text style={styles.ringOf}>of {activeOffer.targetOrders}</Text>
-                </Ring>
-                <Text style={styles.ringLabel}>Orders Done</Text>
-              </View>
-              <View style={{ alignItems: 'center' }}>
-                <Ring progress={earningsProgress} color="#ff8100">
-                  <SoraMoney numberOfLines={1} style={[styles.ringValue, { fontSize: 16, lineHeight: 16 }]}>
-                    {`₹${activeOffer.currentEarnings}`}
-                  </SoraMoney>
-                  <HelpCircle size={10} color={tw.gray300} style={{ marginTop: 4 }} />
-                </Ring>
-                <Text style={styles.ringLabel}>Earned Yet</Text>
-              </View>
-            </View>
-          </View>
-        ) : null}
-
-        <View style={[styles.actions, shadow('card')]}>
-          {[
-            { Icon: Wallet, title: 'Pocket balance', sub: 'Withdrawal Hub', value: walletState.totalBalance, href: '/food/delivery/pocket/balance' },
-            { Icon: ShieldCheck, title: 'Available cash limit', sub: 'Spend Control', value: walletState.availableCashLimit, href: '/food/delivery/pocket/cash-limit' },
-          ].map(({ Icon, title, sub, value, href }) => (
-            <Press key={title} onPress={() => router.push(href)} scale={1} accessibilityLabel={title} style={styles.actionRow}>
-              <View style={styles.actionLeft}>
-                <View style={styles.actionIcon}>
-                  <Icon size={24} color="#000" />
-                </View>
-                <View>
-                  <Text style={styles.actionTitle}>{title}</Text>
-                  <Text style={styles.actionSub}>{sub}</Text>
-                </View>
-              </View>
-              <View style={styles.actionRight}>
-                <View style={styles.actionValueBox}>
-                  {loading ? <Skeleton style={{ height: 20, width: 64 }} /> : <SoraMoney style={styles.actionValue}>{`₹${value.toFixed(2)}`}</SoraMoney>}
-                </View>
-                <ChevronRight size={16} color={tw.gray300} />
-              </View>
-            </Press>
-          ))}
-          <View style={{ padding: 20 }}>
-            <Press onPress={openDepositPopup} accessibilityLabel="Deposit Cash" style={[styles.depositBtn, shadow('lg')]}>
-              <Text style={styles.depositText}>Deposit Cash</Text>
-            </Press>
-          </View>
+      <Card onPress={() => router.push('/food/delivery/pocket/details')} accessibilityLabel="This week's earnings">
+        <View style={styles.heroHead}>
+          <Text style={[type.label, styles.heroLabel]} numberOfLines={1}>
+            Earnings · {getCurrentWeekRange()}
+          </Text>
+          <ChevronRight size={20} color={color.textMuted} />
         </View>
-
-        <View style={{ gap: 16 }}>
-          <View style={styles.grid}>
-            <Service onPress={() => router.push('/food/delivery/pocket/payout')} Icon={IndianRupee} iconBg={tw.primarySoft} iconBorder={tw.primaryBorder} iconColor={tw.primary}>
-              <Text style={styles.serviceKicker}>Last Payout</Text>
-              <View style={{ minHeight: 24, marginBottom: 4 }}>
-                {loading ? <Skeleton style={{ height: 24, width: 64 }} /> : <SoraMoney style={styles.serviceValue}>{`₹${walletState.payoutAmount}`}</SoraMoney>}
-              </View>
-              <Text style={styles.serviceHint}>Prev Week Info</Text>
-            </Service>
-            <Service between onPress={() => router.push('/food/delivery/pocket/limit-settlement')} Icon={Receipt} iconBg={tw.primarySoft} iconBorder={tw.primaryBorder} iconColor={tw.primary}>
-              <Text style={styles.serviceTitle}>Limit Settlement</Text>
-            </Service>
-          </View>
-          <View style={styles.grid}>
-            <Service between onPress={() => router.push('/food/delivery/pocket/deductions')} Icon={FileText} iconBg={tw.red50} iconBorder={tw.red100} iconColor={tw.red600}>
-              <Text style={styles.serviceTitle}>Deduction List</Text>
-            </Service>
-            <Service between onPress={() => router.push('/food/delivery/pocket/details')} Icon={LayoutGrid} iconBg={tw.purple50} iconBorder={tw.purple100} iconColor={tw.purple600}>
-              <Text style={styles.serviceTitle}>Pocket statement</Text>
-            </Service>
-          </View>
+        <View style={styles.heroValueBox}>
+          {loading ? (
+            <Skeleton style={{ height: 36, width: 140 }} />
+          ) : (
+            <Money value={formatINR(walletState.weeklyEarnings, { decimals: 0 })} style={type.display} />
+          )}
         </View>
-      </View>
+        <Text style={[type.small, { color: color.primary }]}>View trips and earnings</Text>
+      </Card>
 
-      <BottomSheet visible={showDepositPopup} onClose={closeDepositPopup} backdrop="rgba(0,0,0,0.8)" blur={8} spring={{ stiffness: 200, damping: 25 }}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={[styles.sheet, shadow('2xl')]}>
-            <Press onPress={closeDepositPopup} scale={1} accessibilityLabel="Close deposit popup" style={styles.sheetHandle}>
-              <View style={styles.sheetBar} />
-            </Press>
-
-            {hasPendingCashSubmission ? (
-              <View style={[styles.pending, shadow('card')]}>
-                <Text style={styles.pendingText}>
-                  You already paid ₹{walletState.pendingCashSubmission.toLocaleString('en-IN')}
-                  {'\n'}
-                  <Text style={styles.pendingSub}>Waiting for admin confirmation</Text>
-                </Text>
+      {hasActiveOffer ? (
+        <Card>
+          <View style={styles.offerHead}>
+            <View style={styles.offerHeadText}>
+              <Text style={[type.subheading, { color: color.text }]}>Earnings guarantee</Text>
+              {validTill ? <Text style={[type.caption, { color: color.textMuted }]}>Valid till {validTill}</Text> : null}
+            </View>
+            {activeOffer.isLive ? (
+              <View style={styles.live}>
+                <LivePulse />
+                <Text style={[type.caption, styles.liveText]}>Live</Text>
               </View>
             ) : null}
-
-            <View style={{ alignItems: 'center', marginBottom: 32 }}>
-              <View style={[styles.sheetIcon, shadow('card')]}>
-                <IndianRupee size={40} color={tw.primary} />
-              </View>
-              <Text style={styles.sheetTitle}>Deposit Cash</Text>
-              <Text style={styles.sheetSub}>Settle Hand Dues</Text>
+          </View>
+          <View style={styles.target}>
+            <Text style={[type.label, { color: color.textSecondary }]}>Target</Text>
+            <View style={styles.targetValue}>
+              <Money value={formatINR(activeOffer.targetAmount)} style={styles.targetMoney} />
+              <Text style={[type.small, { color: color.textSecondary }]}>· {activeOffer.targetOrders} orders</Text>
             </View>
+          </View>
+          <View style={styles.rings}>
+            <View style={styles.ringCol}>
+              <Ring progress={ordersProgress} stroke={color.text}>
+                <Text style={[type.metric, { color: color.text }]}>{activeOffer.currentOrders}</Text>
+                <Text style={[type.caption, { color: color.textMuted }]}>of {activeOffer.targetOrders}</Text>
+              </Ring>
+              <Text style={[type.label, styles.ringLabel]}>Orders done</Text>
+            </View>
+            <View style={styles.ringCol}>
+              <Ring progress={earningsProgress} stroke={color.primary}>
+                <Money value={formatINR(activeOffer.currentEarnings)} style={styles.ringMoney} />
+              </Ring>
+              <Text style={[type.label, styles.ringLabel]}>Earned so far</Text>
+            </View>
+          </View>
+        </Card>
+      ) : null}
 
-            <View style={[styles.box, shadow('card')]}>
-              <View style={styles.boxRow}>
-                <Text style={styles.boxLabel}>Cash in your hand</Text>
-                <SoraMoney style={styles.boxValue}>{`₹${walletState.cashInHand}`}</SoraMoney>
+      <Card padded={false}>
+        {[
+          { Icon: Wallet, title: 'Pocket balance', sub: 'Withdrawal hub', value: walletState.totalBalance, href: '/food/delivery/pocket/balance' },
+          { Icon: ShieldCheck, title: 'Available cash limit', sub: 'Spend control', value: walletState.availableCashLimit, href: '/food/delivery/pocket/cash-limit' },
+        ].map(({ Icon, title, sub, value, href }) => (
+          <Press key={title} onPress={() => router.push(href)} scale={0.99} accessibilityLabel={title} style={styles.walletRow}>
+            <View style={styles.walletIcon}>
+              <Icon size={22} color={color.primary} strokeWidth={2} />
+            </View>
+            <View style={styles.walletText}>
+              <Text style={[type.label, { color: color.textSecondary }]} numberOfLines={1}>
+                {title}
+              </Text>
+              <View style={styles.walletValueBox}>
+                {loading ? <Skeleton style={{ height: 24, width: 96 }} /> : <Money value={formatINR(value, { decimals: 2 })} style={type.metric} />}
               </View>
-              <View style={styles.modes}>
+              <Text style={[type.caption, { color: color.textMuted }]}>{sub}</Text>
+            </View>
+            <ChevronRight size={20} color={color.textMuted} />
+          </Press>
+        ))}
+        <View style={styles.depositWrap}>
+          <Button title="Deposit cash" icon={IndianRupee} size="lg" onPress={openDepositPopup} accessibilityLabel="Deposit cash" />
+        </View>
+      </Card>
+
+      <View>
+        <SectionHeader title="Payouts and statements" />
+        <Card padded={false}>
+          <ListRow
+            icon={IndianRupee}
+            tone="primary"
+            title="Last payout"
+            subtitle={loading ? 'Loading…' : walletState.payoutPeriod}
+            value={loading ? <Skeleton style={{ height: 20, width: 64 }} /> : formatINR(walletState.payoutAmount)}
+            onPress={() => router.push('/food/delivery/pocket/payout')}
+            divider
+          />
+          <ListRow
+            icon={Receipt}
+            tone="primary"
+            title="Limit settlement"
+            subtitle="Cash deposits you have made"
+            onPress={() => router.push('/food/delivery/pocket/limit-settlement')}
+            divider
+          />
+          <ListRow icon={FileText} title="Deduction list" subtitle="Amounts taken from your pocket" onPress={() => router.push('/food/delivery/pocket/deductions')} divider />
+          <ListRow icon={LayoutGrid} title="Pocket statement" subtitle="Trips and earnings by week" onPress={() => router.push('/food/delivery/pocket/details')} />
+        </Card>
+      </View>
+
+      <BottomSheet visible={showDepositPopup} onClose={closeDepositPopup} backdrop={color.overlay} blur={8} spring={{ stiffness: 200, damping: 25 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={[styles.sheet, { maxHeight: windowHeight * 0.92 }]}>
+            <Press onPress={closeDepositPopup} scale={1} accessibilityLabel="Close deposit sheet" style={styles.sheetHandle}>
+              <View style={styles.sheetBar} />
+            </Press>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              bounces={false}
+              contentContainerStyle={[styles.sheetBody, { paddingBottom: space.lg + insets.bottom }]}
+            >
+              <View style={styles.sheetHead}>
+                <View style={styles.sheetIcon}>
+                  <IndianRupee size={24} color={color.primary} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[type.heading, { color: color.text }]} accessibilityRole="header">
+                    Deposit cash
+                  </Text>
+                  <Text style={[type.small, { color: color.textMuted }]}>Settle the cash you are holding</Text>
+                </View>
+              </View>
+
+              {hasPendingCashSubmission ? (
+                <View style={styles.pending}>
+                  <Text style={[type.bodyStrong, { color: color.warning }]}>
+                    You already paid ₹{walletState.pendingCashSubmission.toLocaleString('en-IN')}
+                  </Text>
+                  <Text style={[type.small, { color: color.warning }]}>Waiting for admin confirmation</Text>
+                </View>
+              ) : null}
+
+              <View style={styles.box}>
+                <View style={styles.boxRow}>
+                  <Text style={[type.label, { color: color.textSecondary, flexShrink: 1 }]}>Cash in your hand</Text>
+                  <Money value={formatINR(walletState.cashInHand)} style={styles.boxMoney} />
+                </View>
+              </View>
+
+              <View style={styles.modes} accessibilityRole="radiogroup">
                 {[
-                  ['cash', 'Submit by Cash'],
-                  ['online', 'Deposit Online'],
+                  ['cash', 'Submit by cash'],
+                  ['online', 'Deposit online'],
                 ].map(([mode, label]) => {
                   const on = depositMode === mode;
                   return (
@@ -468,52 +502,50 @@ export default function PocketV2() {
                       }}
                       scale={1}
                       accessibilityRole="radio"
-                      accessibilityState={{ selected: on }}
-                      style={[styles.mode, on ? [styles.modeOn, shadow('lg')] : styles.modeOff]}
+                      accessibilityLabel={label}
+                      accessibilityState={{ selected: on, checked: on }}
+                      style={[styles.mode, on && styles.modeOn]}
                     >
-                      <Text style={[styles.modeText, { color: on ? '#fff' : tw.gray600 }]}>{label}</Text>
+                      <Text style={[type.buttonSm, { color: on ? color.onPrimary : color.textSecondary }]} numberOfLines={1}>
+                        {label}
+                      </Text>
                     </Press>
                   );
                 })}
               </View>
-              <View>
-                <ThemedInput
+
+              <View style={{ gap: space.sm }}>
+                <Text style={[type.label, { color: color.textSecondary }]}>Amount</Text>
+                <AmountField
                   key={depositMode}
                   value={depositAmount}
                   onChangeText={setDepositAmount}
-                  keyboardType="decimal-pad"
                   placeholder={depositMode === 'cash' ? 'Cash amount' : 'Enter amount to deposit'}
                   editable={!isDepositInputDisabled}
-                  radius={12}
-                  borderWidth={1}
-                  style={styles.amountInput}
                   accessibilityLabel="Amount"
                 />
-                <View pointerEvents="none" style={styles.rupee}>
-                  <IndianRupee size={20} color={tw.gray400} />
-                </View>
+                {canDepositMore ? (
+                  <Text style={[type.caption, { color: color.textMuted }]}>
+                    {depositMode === 'cash' ? 'Minimum ₹1 · Admin confirmation required' : 'Minimum deposit ₹1 · Limit updates instantly'}
+                  </Text>
+                ) : (
+                  <Text style={[type.caption, { color: color.textMuted }]}>There is no cash left to deposit right now.</Text>
+                )}
               </View>
-              {canDepositMore ? (
-                <Text style={styles.hint}>{depositMode === 'cash' ? 'Minimum ₹1 • Admin confirmation required' : 'Minimum deposit ₹1 • Instant limit update'}</Text>
-              ) : null}
-            </View>
 
-            <View style={{ gap: 12 }}>
-              <Press
-                onPress={depositMode === 'cash' ? handleCashSubmit : handleDeposit}
-                disabled={isSubmitDisabled}
-                accessibilityLabel={depositMode === 'cash' ? 'Cash Submit' : 'Proceed to Pay'}
-                style={[styles.submit, shadow('card'), { backgroundColor: isSubmitDisabled ? '#DBEAFE' : tw.primary }]}
-              >
-                {depositing ? <Spinner size={20} color={isSubmitDisabled ? '#51A2FF' : '#fff'} /> : <ShieldCheck size={20} color={isSubmitDisabled ? '#51A2FF' : '#fff'} />}
-                <Text style={[styles.submitText, { color: isSubmitDisabled ? '#51A2FF' : '#fff' }]}>
-                  {depositing ? 'Processing...' : depositMode === 'cash' ? 'Cash Submit' : 'Proceed to Pay'}
-                </Text>
-              </Press>
-              <Press onPress={closeDepositPopup} scale={1} accessibilityLabel="Maybe Later" style={{ paddingVertical: 12, alignItems: 'center' }}>
-                <Text style={styles.later}>Maybe Later</Text>
-              </Press>
-            </View>
+              <View style={{ gap: space.xs, marginTop: space.sm }}>
+                <Button
+                  size="lg"
+                  icon={ShieldCheck}
+                  loading={depositing}
+                  disabled={isSubmitDisabled}
+                  onPress={depositMode === 'cash' ? handleCashSubmit : handleDeposit}
+                  title={depositing ? 'Processing...' : depositMode === 'cash' ? 'Submit cash' : 'Proceed to pay'}
+                  accessibilityLabel={depositMode === 'cash' ? 'Submit cash' : 'Proceed to pay'}
+                />
+                <Button title="Maybe later" variant="ghost" onPress={closeDepositPopup} />
+              </View>
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </BottomSheet>
@@ -522,77 +554,81 @@ export default function PocketV2() {
 }
 
 const styles = StyleSheet.create({
-  page: { backgroundColor: '#FAF6ED', paddingBottom: 128 },
-  bank: { backgroundColor: '#FAF6ED', paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(240,177,0,0.2)' },
-  bankIcon: { width: 48, height: 48, backgroundColor: '#000', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  // h3 -> Sora
-  bankTitle: { fontSize: 14, lineHeight: 20, color: '#000', marginBottom: 2, ...display(700, 14) },
-  bankSub: { fontSize: 12, lineHeight: 16, color: 'rgba(0,0,0,0.8)', ...ff(500) },
-  bankBtn: { backgroundColor: '#FAF6ED', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  bankBtnText: { color: '#000', fontSize: 12, lineHeight: 16, ...ff(700) },
-  body: { paddingHorizontal: 16, paddingVertical: 24, backgroundColor: tw.gray100 },
-  week: { backgroundColor: '#fff', borderRadius: 12, padding: 17.6, borderWidth: 1, borderColor: tw.gray100, alignItems: 'center', marginBottom: 20 },
-  weekLabel: { color: tw.gray500, fontSize: 11, lineHeight: 16.5, letterSpacing: 1.1, textTransform: 'uppercase', marginBottom: 8, ...ff(700) },
-  weekValueBox: { minHeight: 40, alignItems: 'center', justifyContent: 'center' },
-  weekValue: { fontSize: 36, lineHeight: 40, color: '#000', ...display(900, 36) },
-  offer: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#E5DDC3', marginBottom: 24 },
-  offerHead: { backgroundColor: '#000', padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  offerTitle: { fontSize: 18, lineHeight: 18, color: '#fff', marginBottom: 4, ...display(900, 18) },
-  offerMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  offerValid: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  liveRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: tw.primarySoft },
-  liveText: { fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.primary, ...ff(700) },
-  offerTarget: { backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
-  offerAmount: { fontSize: 18, lineHeight: 18, color: '#fff', marginBottom: 2, ...display(900, 18) },
-  offerOrders: { fontSize: 9, lineHeight: 13.5, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  rings: { padding: 32, paddingBottom: 40, flexDirection: 'row', justifyContent: 'space-around', gap: 32 },
+  page: { backgroundColor: color.bg, padding: space.lg, gap: space.md, paddingBottom: space.xxxl },
+
+  bank: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radii.lg,
+    backgroundColor: color.warningSoft,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: color.borderStrong,
+  },
+  bankIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center' },
+  bankText: { flex: 1, minWidth: 0, gap: space.xxs },
+
+  heroHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  heroLabel: { color: color.textSecondary, flex: 1, minWidth: 0 },
+  heroValueBox: { minHeight: 44, justifyContent: 'center', marginVertical: space.xs },
+
+  offerHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: space.md },
+  offerHeadText: { flex: 1, minWidth: 0, gap: space.xxs },
+  live: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, height: 26, paddingHorizontal: space.sm + 2, borderRadius: radii.pill, backgroundColor: tone.success.bg },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.online },
+  liveText: { color: color.success, fontFamily: 'NunitoSans_800ExtraBold' },
+  target: { marginTop: space.md, padding: space.md, borderRadius: radii.md, backgroundColor: color.surfaceMuted, gap: space.xxs },
+  targetValue: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: space.sm },
+  targetMoney: { ...type.money, flexShrink: 1 },
+  rings: { flexDirection: 'row', justifyContent: 'space-around', gap: space.lg, paddingTop: space.xl, paddingBottom: space.xs },
+  ringCol: { alignItems: 'center', flexShrink: 1 },
   ring: { width: 112, height: 112 },
-  ringCenter: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
-  ringValue: { fontSize: 20, lineHeight: 20, color: '#000', ...display(900, 20) },
-  ringOf: { marginTop: 2, fontSize: 9, lineHeight: 13.5, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  ringLabel: { marginTop: 16, fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray500, ...ff(700) },
-  actions: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3', overflow: 'hidden', marginBottom: 24 },
-  actionRow: { width: '100%', padding: 20, borderBottomWidth: 1, borderBottomColor: tw.gray50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  actionLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  actionIcon: { width: 48, height: 48, backgroundColor: tw.gray50, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tw.gray100 },
-  actionTitle: { fontSize: 14, lineHeight: 20, color: tw.gray800, ...ff(700) },
-  actionSub: { fontSize: 10, lineHeight: 15, letterSpacing: -0.25, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  actionRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  actionValueBox: { minWidth: 72, alignItems: 'flex-end' },
-  actionValue: { fontSize: 16, lineHeight: 24, color: '#000', ...display(900, 16) },
-  depositBtn: { width: '100%', paddingVertical: 16, backgroundColor: tw.primary, borderRadius: 12, alignItems: 'center' },
-  depositText: { color: '#fff', fontSize: 14, lineHeight: 20, ...ff(700) },
-  grid: { flexDirection: 'row', gap: 16 },
-  service: { flex: 1, backgroundColor: '#fff', padding: 20, borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3' },
-  serviceIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 16, borderWidth: 1 },
-  serviceKicker: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, marginBottom: 6, ...ff(700) },
-  serviceValue: { fontSize: 20, lineHeight: 20, color: '#000', ...display(900, 20) },
-  serviceHint: { fontSize: 9, lineHeight: 13.5, letterSpacing: -0.225, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  serviceTitle: { fontSize: 14, lineHeight: 17.5, color: tw.gray800, ...ff(700) },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 32, paddingBottom: 48 },
-  sheetHandle: { width: '100%', alignItems: 'center', paddingVertical: 12, marginBottom: 20, marginTop: -8 },
-  sheetBar: { width: 64, height: 6, backgroundColor: tw.gray300, borderRadius: 999 },
-  pending: { marginBottom: 24, borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3', backgroundColor: tw.amber50, paddingHorizontal: 16, paddingVertical: 16 },
-  pendingText: { fontSize: 14, lineHeight: 22.75, color: '#7B3306', textAlign: 'center', ...ff(700) },
-  pendingSub: { fontSize: 12, lineHeight: 16, letterSpacing: 0.3, textTransform: 'uppercase', color: tw.amber700, ...ff(600) },
-  sheetIcon: { width: 80, height: 80, backgroundColor: tw.primarySoft, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 16, borderWidth: 1, borderColor: tw.primaryBorder },
-  sheetTitle: { fontSize: 24, lineHeight: 32, color: '#000', marginBottom: 4, ...display(900, 24) },
-  sheetSub: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  box: { backgroundColor: tw.gray50, borderRadius: 16, padding: 17.6, marginBottom: 24, borderWidth: 1, borderColor: '#E5DDC3' },
-  boxRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  boxLabel: { fontSize: 12, lineHeight: 16, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  boxValue: { fontSize: 16, lineHeight: 24, color: '#000', ...display(900, 16) },
-  modes: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  mode: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1, alignItems: 'center' },
-  // border-[#ff8100] -> #BBCCC3 via [class*="border-[#ff8100]"]
-  modeOn: { backgroundColor: tw.primary, borderColor: tw.primaryBorder },
-  modeOff: { backgroundColor: '#fff', borderColor: tw.gray200 },
-  modeText: { fontSize: 12, lineHeight: 16, textTransform: 'uppercase', ...display(900, 12) },
-  amountInput: { height: 62, paddingLeft: 48, paddingRight: 16, fontSize: 20, ...ff(700) },
-  rupee: { position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center' },
-  hint: { marginTop: 12, textAlign: 'center', fontSize: 10, lineHeight: 15, letterSpacing: -0.25, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  submit: { width: '100%', paddingVertical: 20, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  submitText: { fontSize: 14, lineHeight: 20, ...display(900, 14) },
-  later: { color: tw.gray400, fontSize: 12, lineHeight: 16, letterSpacing: 1.2, textTransform: 'uppercase', ...ff(700) },
+  ringCenter: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.md },
+  ringMoney: { ...type.money, fontSize: 16, lineHeight: 22 },
+  ringLabel: { marginTop: space.md, color: color.textSecondary, textAlign: 'center' },
+
+  walletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.lg,
+    minHeight: 88,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: color.border,
+  },
+  walletIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  walletText: { flex: 1, minWidth: 0 },
+  walletValueBox: { minHeight: 30, justifyContent: 'center' },
+  depositWrap: { padding: space.lg },
+
+  sheet: { backgroundColor: color.surface, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, ...elevation.sheet },
+  sheetHandle: { alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', height: touch - space.sm },
+  sheetBar: { width: 48, height: 5, backgroundColor: color.borderStrong, borderRadius: radii.pill },
+  sheetBody: { paddingHorizontal: space.xl, gap: space.lg },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  sheetIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  pending: { borderRadius: radii.md, backgroundColor: tone.warning.bg, padding: space.md, gap: space.xxs },
+  box: { borderRadius: radii.md, backgroundColor: color.surfaceMuted, padding: space.lg },
+  boxRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md },
+  boxMoney: { ...type.money, flexShrink: 1, textAlign: 'right' },
+  modes: { flexDirection: 'row', gap: space.sm, padding: space.xs, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
+  mode: { flex: 1, height: 44, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm },
+  modeOn: { backgroundColor: color.primary },
+
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 56,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderColor: color.borderStrong,
+    backgroundColor: color.surface,
+    paddingHorizontal: space.lg,
+    gap: space.sm,
+  },
+  fieldFocused: { borderColor: color.primary },
+  fieldDisabled: { backgroundColor: color.surfaceMuted, borderColor: color.border },
+  fieldRupee: { ...type.subheading, fontSize: 20, lineHeight: 26, color: color.textSecondary },
+  fieldInput: { flex: 1, minWidth: 0, height: '100%', ...type.subheading, fontSize: 20, lineHeight: 26, color: color.text, outlineWidth: 0, outlineStyle: 'none', padding: 0 },
 });

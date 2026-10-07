@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Animated, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAnimatedValue } from '../../../lib/useAnimatedValue';
+import { color, elevation, radii, space } from '../../../theme';
 
 /*
  * The trip panels' shared shell: a full-screen layer (it covers the header
@@ -30,12 +31,12 @@ export default function TripSheet({ visible = true, onBackdropPress, onRequestCl
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onRequestClose || onBackdropPress}>
       <View style={styles.wrap}>
-        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.4)', opacity: dim }]}>
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: color.overlay, opacity: dim }]}>
           {/* The pickup panel's dim has no click handler; the verification panels close on it. */}
           <Pressable style={StyleSheet.absoluteFill} onPress={onBackdropPress} disabled={!onBackdropPress} accessibilityLabel="Close" />
         </Animated.View>
         <Animated.View style={[styles.sheet, { maxHeight: height * 0.84, transform: [{ translateY: y }] }]}>
-          <ScrollView bounces={false} contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }, contentStyle]}>
+          <ScrollView bounces={false} contentContainerStyle={[styles.content, { paddingBottom: space.xxl + insets.bottom }, contentStyle]}>
             {children}
           </ScrollView>
         </Animated.View>
@@ -48,12 +49,12 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
   sheet: {
     width: '100%',
-    maxWidth: 448,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    boxShadow: '0 -20px 60px rgba(0,0,0,0.3)',
+    maxWidth: 520,
+    backgroundColor: color.surface,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    ...elevation.sheet,
     overflow: 'hidden',
   },
-  content: { padding: 16 },
+  content: { paddingHorizontal: space.lg, paddingTop: space.sm },
 });

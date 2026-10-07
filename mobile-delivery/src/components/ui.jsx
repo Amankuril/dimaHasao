@@ -94,7 +94,7 @@ export const ThemedInput = forwardRef(function ThemedInput(
   const [focused, setFocused] = useState(false);
   return (
     <View style={[{ borderRadius: r + 4, padding: 4, margin: -4 }, containerStyle]}>
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: r + 4, backgroundColor: focused ? 'rgba(21,73,139,0.15)' : 'transparent' }]} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: r + 4, backgroundColor: focused ? 'rgba(10,77,43,0.14)' : 'transparent' }]} />
       <TextInput
         ref={ref}
         // Tailwind v4 preflight: placeholder = currentColor at 50 %.

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2, DollarSign, Package, QrCode, RefreshCw, ShieldCheck, X } from 'lucide-react-native';
+import { Banknote, CheckCircle2, DollarSign, MessageSquareText, QrCode, RefreshCw, ShieldCheck, X } from 'lucide-react-native';
 import { ActionSlider } from '../ActionSlider';
 import TripSheet from './TripSheet';
 import { deliveryApi as deliveryAPI } from '../../../api/delivery';
@@ -9,13 +8,13 @@ import { showUserFacingApiError } from '../../../lib/apiError';
 import { toast } from '../../../lib/notify';
 import { Spinner } from '../../Loader';
 import { Press } from '../../ui';
-import { display, gradients, poppins, shadow, tw } from '../../../theme';
+import { Button, IconButton, StatusBadge } from '../../ds';
+import { color, radii, space, type } from '../../../theme';
 
 /*
- * Port of components/modals/DeliveryVerificationModal.jsx: OTP -> payment
- * (COD) or OTP -> complete (prepaid). Poppins base; h2/h3 and font-black are
- * Sora. The OTP boxes are <input>s, which the theme paints white with the
- * rounded-2xl rule's #E5DDC3 border whether or not they are verified.
+ * Handover at the door: OTP -> payment (COD) or OTP -> complete (prepaid).
+ * Each step: header with step number, the customer's instruction if any,
+ * the step's input, then one slider.
  */
 
 function Handle() {
@@ -27,18 +26,16 @@ function SheetHeader({ icon, iconBg, iconColor, title, step, stepColor, onClose 
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
-        <View style={[styles.headerIcon, shadow('card'), { backgroundColor: iconBg }]}>
-          <Icon size={28} color={iconColor} />
+        <View style={[styles.headerIcon, { backgroundColor: iconBg }]}>
+          <Icon size={24} color={iconColor} />
         </View>
-        <View>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.h2}>{title}</Text>
           <Text style={[styles.step, stepColor && { color: stepColor }]}>{step}</Text>
         </View>
       </View>
       {onClose ? (
-        <Press onPress={onClose} accessibilityLabel="Close" style={styles.close}>
-          <X size={20} color={tw.gray400} />
-        </Press>
+        <IconButton icon={X} label="Close" variant="soft" size={40} iconSize={20} onPress={onClose} />
       ) : null}
     </View>
   );
@@ -48,19 +45,11 @@ function DeliveryInstructionsPanel({ note }) {
   const text = String(note || '').trim();
   if (!text) return null;
   return (
-    <View style={[styles.instructions, shadow('card')]}>
-      {/* from-orange-500 to-amber-500, repainted by the theme */}
-      <LinearGradient colors={gradients.brandRemapped} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.instructionsHead}>
-        <View style={[styles.instructionsIcon, shadow('card')]}>
-          <Package size={20} color="#fff" />
-        </View>
-        <View>
-          <Text style={styles.instructionsKicker}>Delivery instruction</Text>
-          <Text style={styles.instructionsSub}>Read before handover</Text>
-        </View>
-      </LinearGradient>
-      <View style={styles.instructionsBody}>
-        <Text style={styles.instructionsText}>“{text}”</Text>
+    <View style={styles.instructions} accessibilityRole="alert">
+      <MessageSquareText size={20} color={color.info} style={{ marginTop: 1 }} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={styles.instructionsKicker}>Delivery instruction · read before handover</Text>
+        <Text style={styles.instructionsText}>{text}</Text>
       </View>
     </View>
   );
@@ -115,10 +104,10 @@ function OtpStep({ order, onVerified, onClose }) {
       <Handle />
       <SheetHeader
         icon={ShieldCheck}
-        iconBg={isOtpVerified ? '#DCFCE7' : tw.gray100}
-        iconColor={isOtpVerified ? tw.primary : tw.gray500}
-        title="Handover Code"
-        step="Step 1 of Verification"
+        iconBg={isOtpVerified ? color.successSoft : color.surfaceMuted}
+        iconColor={isOtpVerified ? color.success : color.textSecondary}
+        title="Handover code"
+        step="Step 1 of 2 · ask the customer for the 4-digit code"
         onClose={onClose}
       />
       <DeliveryInstructionsPanel note={order?.note} />
@@ -139,7 +128,7 @@ function OtpStep({ order, onVerified, onClose }) {
             onFocus={() => setFocused(i)}
             onBlur={() => setFocused(-1)}
             accessibilityLabel={`Handover digit ${i + 1}`}
-            style={[styles.otpBox, shadow('card'), focused === i && styles.otpFocused]}
+            style={[styles.otpBox, focused === i && styles.otpFocused, isOtpVerified && styles.otpVerified]}
           />
         ))}
       </View>
@@ -225,24 +214,25 @@ function PaymentStep({ order, otpString, onComplete, onClose }) {
         <Handle />
         <SheetHeader
           icon={DollarSign}
-          iconBg={isPaid ? '#DCFCE7' : tw.amber100}
-          iconColor={isPaid ? tw.primary : tw.amber600}
-          title="Collect Payment"
-          step="Step 2 of Verification"
+          iconBg={isPaid ? color.successSoft : color.warningSoft}
+          iconColor={isPaid ? color.success : color.warning}
+          title="Collect payment"
+          step="Step 2 of 2"
           onClose={onClose}
         />
         <DeliveryInstructionsPanel note={order?.note} />
-        <View style={[styles.amountBox, shadow('card')]}>
+        <View style={[styles.amountBox, { backgroundColor: isPaid ? color.successSoft : color.warningSoft }]}>
           <View style={styles.amountRow}>
-            <View>
-              <Text style={styles.amountLabel}>{isPaid ? 'Amount Paid Online' : 'Cash to Collect'}</Text>
-              <Text style={styles.amount}>₹{amountToCollect.toFixed(2)}</Text>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[styles.amountLabel, { color: isPaid ? color.success : color.warning }]}>{isPaid ? 'Amount paid online' : 'Cash to collect'}</Text>
+              <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
+                ₹{amountToCollect.toFixed(2)}
+              </Text>
             </View>
-            {/* bg-green-500 -> #E8F2EC via the substring rule */}
-            {isPaid ? <Text style={styles.paid}>PAID ✓</Text> : null}
+            {isPaid ? <StatusBadge label="Paid" tone="success" icon={CheckCircle2} style={{ backgroundColor: color.surface }} /> : null}
           </View>
           {!isPaid ? (
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: space.sm }}>
               <Press
                 onPress={() => {
                   setIsCashPayment(false);
@@ -251,19 +241,21 @@ function PaymentStep({ order, otpString, onComplete, onClose }) {
                 disabled={isGeneratingQr}
                 scale={1}
                 accessibilityLabel="Show Payment QR"
-                style={[styles.payBtn, shadow('card'), { backgroundColor: qrActive ? tw.amber100 : '#fff' }]}
+                accessibilityState={{ selected: qrActive, busy: isGeneratingQr }}
+                style={[styles.payBtn, qrActive && styles.payBtnOn]}
               >
-                {isGeneratingQr ? <Spinner size={16} color={qrActive ? '#7B3306' : tw.amber800} /> : <QrCode size={20} color={qrActive ? '#7B3306' : tw.amber800} />}
-                <Text style={[styles.payText, { color: qrActive ? '#7B3306' : tw.amber800 }]}>{qrActive ? 'QR Active - Waiting...' : 'Show Payment QR'}</Text>
+                {isGeneratingQr ? <Spinner size={18} color={qrActive ? color.onPrimary : color.text} /> : <QrCode size={20} color={qrActive ? color.onPrimary : color.text} />}
+                <Text style={[styles.payText, { color: qrActive ? color.onPrimary : color.text }]}>{qrActive ? 'QR active · waiting for payment' : 'Show payment QR'}</Text>
               </Press>
               <Press
                 onPress={() => setIsCashPayment(true)}
                 scale={1}
                 accessibilityLabel="Cash Payment"
-                style={[styles.payBtn, shadow('card'), { backgroundColor: isCashPayment ? '#0A4D2B' : '#fff' }]}
+                accessibilityState={{ selected: isCashPayment }}
+                style={[styles.payBtn, isCashPayment && styles.payBtnOn]}
               >
-                <DollarSign size={20} color={isCashPayment ? '#fff' : tw.amber800} />
-                <Text style={[styles.payText, { color: isCashPayment ? '#fff' : tw.amber800 }]}>Cash Payment</Text>
+                <Banknote size={20} color={isCashPayment ? color.onPrimary : color.text} />
+                <Text style={[styles.payText, { color: isCashPayment ? color.onPrimary : color.text }]}>{isCashPayment ? 'Cash received' : 'Customer paid in cash'}</Text>
               </Press>
             </View>
           ) : null}
@@ -280,11 +272,11 @@ function PaymentStep({ order, otpString, onComplete, onClose }) {
 
       <Modal visible={showQrModal} transparent animationType="fade" onRequestClose={() => setShowQrModal(false)} statusBarTranslucent>
         <Pressable style={styles.qrWrap} onPress={() => setShowQrModal(false)}>
-          <Pressable style={[styles.qrCard, shadow('card')]} onPress={() => {}}>
-            <Text style={styles.qrTitle}>Scan to Pay</Text>
-            <Text style={styles.qrSub}>Order Total: ₹{amountToCollect.toFixed(2)}</Text>
-            <View style={[styles.qrPanel, shadow('card')]}>
-              <View style={[styles.qrFrame, shadow('card')]}>
+          <Pressable style={styles.qrCard} onPress={() => {}}>
+            <Text style={styles.qrTitle}>Scan to pay</Text>
+            <Text style={styles.qrSub}>Order total ₹{amountToCollect.toFixed(2)}</Text>
+            <View style={styles.qrPanel}>
+              <View style={styles.qrFrame}>
                 <Image
                   source={{ uri: directImage ? collectQrLink : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(collectQrLink || '')}` }}
                   accessibilityLabel="Razorpay QR"
@@ -293,14 +285,9 @@ function PaymentStep({ order, otpString, onComplete, onClose }) {
                   resizeMode={directImage ? 'cover' : 'contain'}
                 />
               </View>
-              <Press onPress={handleManualCheck} disabled={isSyncing} accessibilityLabel="Check Payment Status" style={[styles.checkBtn, shadow('card'), isSyncing && { opacity: 0.6 }]}>
-                {isSyncing ? <Spinner size={16} color="#fff" /> : <RefreshCw size={16} color="#fff" />}
-                <Text style={styles.checkText}>Check Payment Status</Text>
-              </Press>
+              <Button title="Check payment status" icon={RefreshCw} loading={isSyncing} disabled={isSyncing} onPress={handleManualCheck} accessibilityLabel="Check Payment Status" />
             </View>
-            <Press onPress={() => setShowQrModal(false)} accessibilityLabel="Close QR" style={[styles.closeQr, shadow('card')]}>
-              <Text style={styles.closeQrText}>Close QR</Text>
-            </Press>
+            <Button title="Close QR" variant="outline" onPress={() => setShowQrModal(false)} accessibilityLabel="Close QR" />
           </Pressable>
         </Pressable>
       </Modal>
@@ -339,13 +326,13 @@ export function DeliveryVerificationModal({ order, onComplete, onClose }) {
   return (
     <TripSheet onBackdropPress={close}>
       <Handle />
-      <View style={[styles.headerLeft, { marginBottom: 32 }]}>
-        <View style={[styles.headerIcon, shadow('card'), { backgroundColor: '#DCFCE7' }]}>
-          <CheckCircle2 size={28} color={tw.primary} />
+      <View style={[styles.headerLeft, { marginBottom: space.xxl }]}>
+        <View style={[styles.headerIcon, { backgroundColor: color.successSoft }]}>
+          <CheckCircle2 size={24} color={color.success} />
         </View>
-        <View>
-          <Text style={styles.h2}>OTP Verified</Text>
-          <Text style={[styles.step, { color: tw.primary }]}>Payment Received Online</Text>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.h2}>Code verified</Text>
+          <Text style={[styles.step, { color: color.success }]}>Payment received online</Text>
         </View>
       </View>
       <ActionSlider key="action-complete" label="Slide to Complete Delivery" successLabel="Delivered! ✓" onConfirm={() => onComplete(verifiedOtp)} color="bg-green-600" />
@@ -356,40 +343,32 @@ export function DeliveryVerificationModal({ order, onComplete, onClose }) {
 export default DeliveryVerificationModal;
 
 const styles = StyleSheet.create({
-  handle: { width: 48, height: 6, backgroundColor: tw.gray200, borderRadius: 999, alignSelf: 'center', marginBottom: 24 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  h2: { fontSize: 20, lineHeight: 28, color: tw.gray900, ...display(700, 20) },
-  step: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
-  close: { padding: 8, backgroundColor: tw.gray50, borderRadius: 999 },
-  instructions: { width: '100%', borderRadius: 24, marginBottom: 24, overflow: 'hidden', borderWidth: 1, borderColor: tw.primaryBorder },
-  instructionsHead: { paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  instructionsIcon: { width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  instructionsKicker: { fontSize: 10, lineHeight: 15, color: '#fff', textTransform: 'uppercase', ...display(900, 10) },
-  instructionsSub: { fontSize: 11, lineHeight: 16.5, color: 'rgba(255,255,255,0.9)', ...poppins(600) },
-  instructionsBody: { backgroundColor: tw.primarySoft, paddingHorizontal: 20, paddingVertical: 16 },
-  instructionsText: { fontSize: 14, lineHeight: 22.75, color: tw.gray950, ...poppins(700) },
-  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 24 },
-  otpBox: { width: 48, height: 64, backgroundColor: '#fff', borderWidth: 2, borderColor: '#E5DDC3', borderRadius: 16, textAlign: 'center', fontSize: 24, color: '#1F1F24', padding: 0, ...poppins(700) },
-  otpFocused: { borderColor: '#789D8A', boxShadow: '0 0 0 4px rgba(21,73,139,0.15)' },
-  amountBox: { backgroundColor: tw.amber50, borderRadius: 24, padding: 16, borderWidth: 1, borderColor: '#E5DDC3', marginBottom: 24 },
-  amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  amountLabel: { color: tw.amber700, fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4, ...poppins(700) },
-  amount: { color: '#461901', fontSize: 30, lineHeight: 36, ...poppins(700) },
-  paid: { backgroundColor: tw.primarySoft, color: '#fff', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, overflow: 'hidden', fontSize: 10, lineHeight: 15, ...poppins(700) },
-  payBtn: { width: '100%', paddingVertical: 14, borderWidth: 2, borderColor: '#E5DDC3', borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  payText: { fontSize: 11, lineHeight: 16.5, letterSpacing: 1.1, textTransform: 'uppercase', ...poppins(700) },
-  qrWrap: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', alignItems: 'center', justifyContent: 'center', padding: 16 },
-  qrCard: { backgroundColor: '#fff', width: '100%', maxWidth: 384, borderRadius: 24, padding: 20, alignItems: 'center' },
-  qrTitle: { color: tw.gray950, fontSize: 20, lineHeight: 28, marginBottom: 8, ...display(700, 20) },
-  qrSub: { color: tw.gray500, fontSize: 14, lineHeight: 20, marginBottom: 32, ...poppins(500) },
-  qrPanel: { alignItems: 'center', gap: 16, backgroundColor: tw.gray50, borderRadius: 24, borderWidth: 2, borderColor: '#E5DDC3', padding: 12, marginBottom: 16, width: '100%' },
-  qrFrame: { width: 256, height: 256, borderRadius: 16, borderWidth: 2, borderColor: '#E5DDC3', backgroundColor: '#fff', overflow: 'hidden', alignItems: 'center', justifyContent: 'center', padding: 6 },
+  handle: { width: 40, height: 4, backgroundColor: color.borderStrong, borderRadius: 2, alignSelf: 'center', marginTop: space.xs, marginBottom: space.lg },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm, marginBottom: space.lg },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: space.md, flex: 1, minWidth: 0 },
+  headerIcon: { width: 48, height: 48, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  h2: { ...type.heading, color: color.text },
+  step: { ...type.small, color: color.textMuted, marginTop: 2 },
+  instructions: { flexDirection: 'row', gap: space.sm, backgroundColor: color.infoSoft, borderRadius: radii.md, padding: space.md, marginBottom: space.lg },
+  instructionsKicker: { ...type.label, color: color.info },
+  instructionsText: { ...type.bodyStrong, color: color.text, marginTop: 2 },
+  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: space.md, marginBottom: space.xxl },
+  otpBox: { width: 56, height: 64, backgroundColor: color.surface, borderWidth: 2, borderColor: color.borderStrong, borderRadius: radii.md, textAlign: 'center', fontSize: 26, color: color.text, padding: 0, fontFamily: 'Sora_700Bold', outlineWidth: 0 },
+  otpFocused: { borderColor: color.primary, boxShadow: '0 0 0 4px rgba(10,77,43,0.14)' },
+  otpVerified: { borderColor: color.success, backgroundColor: color.successSoft },
+  amountBox: { borderRadius: radii.lg, padding: space.lg, marginBottom: space.xl, gap: space.lg },
+  amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md },
+  amountLabel: { ...type.label },
+  amount: { ...type.display, color: color.text, marginTop: 2 },
+  payBtn: { minHeight: 52, paddingHorizontal: space.lg, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface, borderRadius: radii.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  payBtnOn: { backgroundColor: color.primary, borderColor: color.primary },
+  payText: { ...type.bodyStrong },
+  qrWrap: { flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', alignItems: 'center', justifyContent: 'center', padding: space.lg },
+  qrCard: { backgroundColor: color.surface, width: '100%', maxWidth: 384, borderRadius: radii.xl, padding: space.xl, gap: space.md, alignItems: 'stretch' },
+  qrTitle: { ...type.heading, color: color.text, textAlign: 'center' },
+  qrSub: { ...type.body, color: color.textSecondary, textAlign: 'center', marginTop: -space.sm },
+  qrPanel: { alignItems: 'center', gap: space.lg, backgroundColor: color.surfaceMuted, borderRadius: radii.lg, padding: space.md },
+  qrFrame: { width: 256, height: 256, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', padding: 6 },
   qrCropped: { width: '100%', height: '100%', transform: [{ scale: 1.6 }, { translateY: -9.5 }, { translateX: 1.3 }] },
   qrPlain: { width: '100%', height: '100%', padding: 8 },
-  checkBtn: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: '#0A4D2B', paddingHorizontal: 17.6, paddingVertical: 12, borderRadius: 16 },
-  checkText: { color: '#fff', fontSize: 12, lineHeight: 16, textTransform: 'uppercase', ...display(900, 12) },
-  closeQr: { width: '100%', paddingVertical: 14, backgroundColor: tw.gray900, borderRadius: 16, alignItems: 'center' },
-  closeQrText: { color: '#fff', fontSize: 12, lineHeight: 16, letterSpacing: 1.2, textTransform: 'uppercase', ...poppins(700) },
 });

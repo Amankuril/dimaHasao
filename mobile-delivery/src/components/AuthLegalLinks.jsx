@@ -3,6 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { platformApi } from '../api/delivery';
 import { openExternal } from '../lib/links';
+import { Press } from './ui';
+import { color, space, type } from '../theme';
 
 /*
  * Port of shared/components/auth/AuthLegalLinks.jsx (text variant).
@@ -44,25 +46,35 @@ export default function AuthLegalLinks({ module = 'platform', containerStyle, st
   return (
     <View style={[styles.row, containerStyle]}>
       {items.map((item, index) => (
-        <Text key={item.key} style={style}>
-          {index > 0 ? <Text style={[style, styles.dot]}>{'  •  '}</Text> : null}
-          <Text
+        <View key={item.key} style={styles.item}>
+          {index > 0 ? (
+            <Text style={[styles.text, style, styles.dot]} importantForAccessibility="no">
+              •
+            </Text>
+          ) : null}
+          <Press
             accessibilityRole="link"
-            suppressHighlighting={false}
+            accessibilityLabel={item.label}
+            scale={0.96}
             onPress={() =>
               item.href ? openExternal(item.href) : router.push({ pathname: '/legal/[slug]', params: { slug: item.slug, module } })
             }
-            style={linkStyle}
+            style={styles.link}
           >
-            {item.label}
-          </Text>
-        </Text>
+            <Text style={[styles.text, styles.linkText, style, linkStyle]}>{item.label}</Text>
+          </Press>
+        </View>
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap' },
-  dot: { opacity: 0.5 },
+  row: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' },
+  item: { flexDirection: 'row', alignItems: 'center' },
+  // 44 px tall tap target around a small text link.
+  link: { minHeight: 44, minWidth: 44, paddingHorizontal: space.sm, alignItems: 'center', justifyContent: 'center' },
+  text: { ...type.small, color: color.textMuted },
+  linkText: { ...type.label, color: color.textSecondary, textDecorationLine: 'underline' },
+  dot: { color: color.textDisabled },
 });

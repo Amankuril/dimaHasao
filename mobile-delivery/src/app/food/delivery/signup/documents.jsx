@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Camera, Check, Image as ImageIcon, Upload, X } from 'lucide-react-native';
+import { Camera, Check, Image as ImageIcon, Upload, X } from 'lucide-react-native';
 import { deliveryApi } from '../../../../api/delivery';
 import { getAuthToken } from '../../../../api/client';
-import { Press } from '../../../../components/ui';
+import { Button, Card, IconButton, ScreenHeader, StatusBadge } from '../../../../components/ds';
 import { Spinner } from '../../../../components/Loader';
 import useDeliveryOnboardingExitGuard from '../../../../delivery/hooks/useDeliveryOnboardingExitGuard';
 import {
@@ -21,7 +20,7 @@ import { getUserFacingApiError, isAlreadyExistsError, showUserFacingApiError } f
 import { openCamera, openGallery, prepareSignupDocumentFile, prepareUploadFile } from '../../../../lib/images';
 import { toast } from '../../../../lib/notify';
 import { localStore, sessionStore } from '../../../../lib/storage';
-import { display, gradients, poppins, shadow, tw } from '../../../../theme';
+import { color, elevation, radii, space, type } from '../../../../theme';
 
 // Web: pages/auth/SignupStep2.jsx (/food/delivery/signup/documents)
 
@@ -159,161 +158,149 @@ export default function SignupStep2() {
   const allDocumentsUploaded = DELIVERY_SIGNUP_DOC_TYPES.every((d) => Boolean(previews[d]));
   const disabled = isSubmitting || !allDocumentsUploaded;
 
+  const uploadedCount = DOCS.filter(({ docType }) => Boolean(previews[docType])).length;
+
   return (
     <View style={styles.page}>
-      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
-        <Press onPress={handleBack} accessibilityLabel="Back" style={styles.back} scale={1}>
-          <ArrowLeft size={20} color="#1F1F24" />
-        </Press>
-        <Text style={styles.headerTitle}>Upload Documents</Text>
-      </View>
+      <ScreenHeader title="Upload documents" subtitle="Step 2 of 2 · Document verification" onBack={handleBack} />
 
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}>
-        <View style={{ marginBottom: 24 }}>
-          <Text style={styles.h2}>Document Verification</Text>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.intro}>
+          <Text style={styles.h2} accessibilityRole="header">
+            Document verification
+          </Text>
           <Text style={styles.sub}>Please upload clear photos of your documents</Text>
+          <View style={styles.progressRow}>
+            <StatusBadge
+              label={`${uploadedCount} of ${DOCS.length} uploaded`}
+              tone={uploadedCount === DOCS.length ? 'success' : 'neutral'}
+              icon={uploadedCount === DOCS.length ? Check : undefined}
+            />
+          </View>
         </View>
 
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: space.md }}>
           {DOCS.map(({ docType, label }) => {
             const file = previews[docType];
             const isUploading = uploading[docType];
             return (
-              <View key={docType} style={styles.card}>
-                <Text style={styles.label}>
-                  {label} <Text style={{ color: tw.red500 }}>*</Text>
-                </Text>
+              <Card key={docType} style={styles.card}>
+                <View style={styles.cardHead}>
+                  <Text style={styles.label} numberOfLines={2}>
+                    {label}
+                    <Text style={styles.star} accessibilityLabel="required">
+                      {' *'}
+                    </Text>
+                  </Text>
+                  {file ? <StatusBadge label="Uploaded" tone="success" icon={Check} /> : null}
+                </View>
                 {file ? (
                   <View>
                     <Image source={{ uri: file.uri }} style={styles.preview} resizeMode="cover" accessibilityLabel={label} />
-                    <Press onPress={() => handleRemove(docType)} accessibilityLabel={`Remove ${label}`} style={styles.remove} scale={1}>
-                      <X size={16} color="#fff" />
-                    </Press>
-                    <View style={[styles.badge, shadow('md')]}>
-                      <Check size={14} color="#fff" />
-                      <Text style={styles.badgeText}>Uploaded</Text>
-                    </View>
+                    <IconButton
+                      icon={X}
+                      label={`Remove ${label}`}
+                      variant="danger"
+                      iconSize={20}
+                      onPress={() => handleRemove(docType)}
+                      style={[styles.remove, elevation.float]}
+                    />
                   </View>
                 ) : (
                   <View style={styles.drop}>
-                    <View style={styles.dropInner}>
-                      {isUploading ? (
-                        <>
-                          {/* border-2 transparent ring with a #00B761 bottom arc, spinning */}
-                          <View style={{ marginBottom: 8 }}>
-                            <Spinner size={32} color="#00B761" />
-                          </View>
-                          <Text style={styles.dropText}>Uploading...</Text>
-                        </>
-                      ) : (
-                        <>
-                          <Upload size={32} color={tw.gray400} style={{ marginBottom: 8 }} />
-                          <Text style={[styles.dropText, { marginBottom: 4 }]}>Upload document</Text>
-                          <Text style={styles.dropHint}>PNG, JPG up to 5MB</Text>
-                        </>
-                      )}
-                    </View>
-                    {!isUploading ? (
-                      <View style={styles.pickRow}>
-                        <Press
-                          onPress={() => openCamera({ onSelectFile: (f) => handleFileSelect(docType, f), fileNamePrefix: `signup-${docType}` })}
-                          accessibilityLabel={`Take photo for ${label}`}
-                          style={[styles.pickBtn, { backgroundColor: tw.gray900 }]}
-                        >
-                          <Camera size={16} color="#fff" />
-                          <Text style={styles.pickText}>Take Photo</Text>
-                        </Press>
-                        <Press
-                          onPress={() => openGallery({ onSelectFile: (f) => handleFileSelect(docType, f), fileNamePrefix: `signup-${docType}` })}
-                          accessibilityLabel={`Choose ${label} from gallery`}
-                          style={[styles.pickBtn, { backgroundColor: tw.primary }]}
-                        >
-                          <ImageIcon size={16} color="#fff" />
-                          <Text style={styles.pickText}>Gallery</Text>
-                        </Press>
+                    {isUploading ? (
+                      <View style={styles.dropInner} accessibilityLiveRegion="polite">
+                        <Spinner size={32} color={color.primary} />
+                        <Text style={styles.dropText}>Uploading...</Text>
                       </View>
-                    ) : null}
+                    ) : (
+                      <>
+                        <View style={styles.dropInner}>
+                          <View style={styles.dropIcon}>
+                            <Upload size={24} color={color.textMuted} strokeWidth={2} />
+                          </View>
+                          <Text style={styles.dropText}>Upload document</Text>
+                          <Text style={styles.dropHint}>PNG, JPG up to 5MB</Text>
+                        </View>
+                        <View style={styles.pickRow}>
+                          <Button
+                            title="Take photo"
+                            icon={Camera}
+                            variant="outline"
+                            fullWidth={false}
+                            onPress={() => openCamera({ onSelectFile: (f) => handleFileSelect(docType, f), fileNamePrefix: `signup-${docType}` })}
+                            accessibilityLabel={`Take photo for ${label}`}
+                            style={styles.pickBtn}
+                          />
+                          <Button
+                            title="Gallery"
+                            icon={ImageIcon}
+                            variant="secondary"
+                            fullWidth={false}
+                            onPress={() => openGallery({ onSelectFile: (f) => handleFileSelect(docType, f), fileNamePrefix: `signup-${docType}` })}
+                            accessibilityLabel={`Choose ${label} from gallery`}
+                            style={styles.pickBtn}
+                          />
+                        </View>
+                      </>
+                    )}
                   </View>
                 )}
-              </View>
+              </Card>
             );
           })}
-
-          {/* mt-6 inside space-y-4 collapses to 24 */}
-          <Press
-            onPress={handleSubmit}
-            disabled={disabled}
-            scale={0.98}
-            accessibilityLabel="Complete Signup"
-            style={[styles.submit, { marginTop: 8 }, !disabled && shadow('button')]}
-          >
-            {disabled ? (
-              <View style={[styles.submitInner, { backgroundColor: tw.gray400 }]}>
-                <Text style={styles.submitText}>{isSubmitting ? 'Submitting...' : 'Complete Signup'}</Text>
-              </View>
-            ) : (
-              <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.submitInner}>
-                <Text style={styles.submitText}>Complete Signup</Text>
-              </LinearGradient>
-            )}
-          </Press>
         </View>
       </ScrollView>
+
+      <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
+        <Button
+          title={isSubmitting ? 'Submitting...' : 'Complete signup'}
+          size="lg"
+          onPress={handleSubmit}
+          disabled={disabled}
+          loading={isSubmitting}
+          accessibilityLabel="Complete Signup"
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.gray100 },
-  header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: tw.gray200,
-  },
-  back: { padding: 8, borderRadius: 999 },
-  headerTitle: { fontSize: 18, lineHeight: 28, color: '#1F1F24', ...display(500, 18) },
-  content: { paddingHorizontal: 16, paddingTop: 24 },
-  h2: { fontSize: 20, lineHeight: 28, color: tw.gray900, marginBottom: 8, ...display(700, 20) },
-  sub: { fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
-  card: { backgroundColor: '#fff', borderRadius: 8, padding: 16, borderWidth: 1, borderColor: tw.gray200 },
-  label: { fontSize: 14, lineHeight: 20, color: tw.gray700, marginBottom: 8, ...poppins(500) },
-  preview: { width: '100%', height: 192, borderRadius: 8 },
-  remove: { position: 'absolute', top: 8, right: 8, backgroundColor: tw.red500, padding: 8, borderRadius: 999 },
-  badge: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#00B761',
-  },
-  badgeText: { color: '#fff', fontSize: 12, lineHeight: 16, ...poppins(600) },
+  page: { flex: 1, backgroundColor: color.bg },
+  content: { padding: space.lg, paddingBottom: space.xxxl },
+  intro: { marginBottom: space.xl, paddingHorizontal: space.xs },
+  h2: { ...type.title, color: color.text },
+  sub: { ...type.body, color: color.textSecondary, marginTop: space.xs },
+  progressRow: { marginTop: space.md, flexDirection: 'row' },
+  card: { gap: space.md },
+  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, minHeight: 26 },
+  label: { ...type.subheading, color: color.text, flex: 1, minWidth: 0 },
+  star: { color: color.danger },
+  preview: { width: '100%', height: 192, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
+  remove: { position: 'absolute', top: space.sm, right: space.sm, backgroundColor: color.surface },
   drop: {
-    height: 192,
-    borderWidth: 2,
+    minHeight: 192,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: tw.gray300,
-    borderRadius: 8,
-    paddingHorizontal: 16,
+    borderColor: color.borderStrong,
+    borderRadius: radii.md,
+    backgroundColor: color.surfaceMuted,
+    padding: space.md,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: space.md,
   },
-  dropInner: { alignItems: 'center', justifyContent: 'center', paddingTop: 20, paddingBottom: 12 },
-  dropText: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
-  dropHint: { fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(400) },
-  pickRow: { width: '100%', flexDirection: 'row', gap: 8, paddingBottom: 16 },
-  pickBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12 },
-  pickText: { color: '#fff', fontSize: 12, lineHeight: 16, ...poppins(700) },
-  submit: { borderRadius: 8 },
-  submitInner: { borderRadius: 8, paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  submitText: { color: '#fff', fontSize: 16, lineHeight: 24, ...poppins(700) },
+  dropInner: { alignItems: 'center', justifyContent: 'center', gap: space.xs, paddingTop: space.sm },
+  dropIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', marginBottom: space.xs },
+  dropText: { ...type.bodyStrong, color: color.textSecondary },
+  dropHint: { ...type.caption, color: color.textMuted },
+  pickRow: { alignSelf: 'stretch', flexDirection: 'row', gap: space.sm },
+  pickBtn: { flex: 1, paddingHorizontal: space.sm },
+  footer: {
+    backgroundColor: color.surface,
+    padding: space.lg,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: color.borderStrong,
+  },
 });

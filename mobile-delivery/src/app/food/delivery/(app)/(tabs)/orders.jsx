@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Inbox, PackageCheck } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../api/delivery';
 import { useDeliveryStore, resolveOrderKey, dedupeOrdersByIdentity } from '../../../../../delivery/store/useDeliveryStore';
 import { useOrderManager } from '../../../../../delivery/hooks/useOrderManager';
@@ -12,26 +11,32 @@ import NewOrderCard from '../../../../../components/delivery/orders/NewOrderCard
 import AcceptedOrderCard from '../../../../../components/delivery/orders/AcceptedOrderCard';
 import { Press } from '../../../../../components/ui';
 import { toast } from '../../../../../lib/notify';
-import { display, poppins, shadow, tw } from '../../../../../theme';
+import { Card, EmptyState, ScreenHeader, StatusBadge } from '../../../../../components/ds';
+import { color, elevation, radii, space, type } from '../../../../../theme';
 
-// Web: pages/OrdersV2.jsx. Poppins base; font-black is Sora.
-
-function TabButton({ active, label, count, onPress }) {
+/** One option of the New orders / Accepted switch, always showing its count. */
+function SegmentButton({ active, label, count, onPress }) {
+  const shown = count > 9 ? '9+' : String(count);
   return (
-    <Press onPress={onPress} scale={1} accessibilityRole="tab" accessibilityState={{ selected: active }} style={[styles.tab, active && [styles.tabOn, shadow('sm')]]}>
-      <Text style={[styles.tabText, { color: active ? tw.gray950 : 'rgba(255,255,255,0.7)' }]}>{label}</Text>
-      {count > 0 ? (
-        // !bg-orange-500 is an important utility in a cascade layer, so it beats the theme's repaint: real orange.
-        <View style={[styles.count, active ? { backgroundColor: '#0A4D2B' } : [{ backgroundColor: '#FF6900', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' }, shadow('sm')]]}>
-          <Text style={styles.countText}>{count > 9 ? '9+' : count}</Text>
-        </View>
-      ) : null}
+    <Press
+      onPress={onPress}
+      scale={1}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      accessibilityLabel={`${label}, ${count}`}
+      style={[styles.segmentBtn, active && styles.segmentBtnOn]}
+    >
+      <Text style={[styles.segmentText, { color: active ? color.text : color.textSecondary }]} numberOfLines={1}>
+        {label}
+      </Text>
+      <View style={[styles.count, { backgroundColor: active ? color.primary : count > 0 ? color.primarySoft : color.border }]}>
+        <Text style={[styles.countText, { color: active ? color.onPrimary : count > 0 ? color.primary : color.textSecondary }]}>{shown}</Text>
+      </View>
     </Press>
   );
 }
 
 export default function OrdersV2() {
-  const insets = useSafeAreaInsets();
   const newOrders = useDeliveryStore((state) => state.newOrders);
   const visibleNewOrders = useMemo(() => dedupeOrdersByIdentity(newOrders), [newOrders]);
   const acceptedOrders = useDeliveryStore((state) => state.acceptedOrders);
@@ -133,26 +138,27 @@ export default function OrdersV2() {
 
   return (
     <View style={styles.page}>
-      {/* bg-[#121212] -> linear-gradient(160deg, #15498b, #000) */}
-      <LinearGradient colors={['#15498B', '#000000']} start={{ x: 0.33, y: 0 }} end={{ x: 0.67, y: 1 }} style={[styles.header, { paddingTop: 24 + insets.top }]}>
-        <Text style={styles.h1}>Orders</Text>
-        <Text style={styles.slots}>
-          {capacity.active}/{capacity.max} active slots used
-        </Text>
-        <View style={[styles.tabs, shadow('card')]}>
-          <TabButton active={activeTab === 'new'} label="New Orders" count={visibleNewOrders.length} onPress={() => setActiveTab('new')} />
-          <TabButton active={activeTab === 'accepted'} label="Accepted" count={acceptedOrders.length} onPress={() => setActiveTab('accepted')} />
+      <ScreenHeader
+        title="Orders"
+        subtitle={`${capacity.active}/${capacity.max} active slots used`}
+        border={false}
+        right={acceptDisabled ? <StatusBadge label="Slots full" tone="warning" style={{ marginRight: space.sm }} /> : null}
+      />
+      <View style={styles.segmentBar}>
+        <View style={styles.segment} accessibilityRole="tablist">
+          <SegmentButton active={activeTab === 'new'} label="New orders" count={visibleNewOrders.length} onPress={() => setActiveTab('new')} />
+          <SegmentButton active={activeTab === 'accepted'} label="Accepted" count={acceptedOrders.length} onPress={() => setActiveTab('accepted')} />
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body}>
         {activeTab === 'new' ? (
           visibleNewOrders.length === 0 ? (
-            <View style={[styles.empty, shadow('card')]}>
-              <Text style={styles.emptyText}>No new order requests right now.</Text>
-            </View>
+            <Card>
+              <EmptyState icon={Inbox} title="No new order requests right now" message="Stay online. New requests near you will appear here." style={styles.empty} />
+            </Card>
           ) : (
-            <View style={{ gap: 12 }}>
+            <View style={styles.list}>
               {visibleNewOrders.map((order) => {
                 const orderId = resolveOrderKey(order);
                 return (
@@ -173,11 +179,11 @@ export default function OrdersV2() {
             </View>
           )
         ) : acceptedOrders.length === 0 ? (
-          <View style={[styles.empty, shadow('card')]}>
-            <Text style={styles.emptyText}>Accepted orders will appear here.</Text>
-          </View>
+          <Card>
+            <EmptyState icon={PackageCheck} title="No accepted orders" message="Accepted orders will appear here." style={styles.empty} />
+          </Card>
         ) : (
-          <View style={{ gap: 12 }}>
+          <View style={styles.list}>
             {acceptedOrders.map((order) => (
               <AcceptedOrderCard key={resolveOrderKey(order)} order={order} focused={resolveOrderKey(order) === focusedOrderId} onSelect={handleSelectAccepted} />
             ))}
@@ -189,20 +195,21 @@ export default function OrdersV2() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.slate50 },
-  header: { paddingHorizontal: 16, paddingBottom: 16 },
-  h1: { fontSize: 20, lineHeight: 28, color: '#fff', textTransform: 'uppercase', ...display(900, 20) },
-  slots: { marginTop: 4, fontSize: 12, lineHeight: 16, color: tw.gray400, ...poppins(600) },
-  // rounded-2xl: border-white/10 becomes #E5DDC3
-  tabs: { marginTop: 16, flexDirection: 'row', borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderWidth: 1, borderColor: '#E5DDC3' },
-  tab: { flex: 1, borderRadius: 12, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  tabOn: { backgroundColor: '#fff' },
-  tabText: { fontSize: 11, lineHeight: 16.5, textTransform: 'uppercase', ...display(900, 11) },
-  count: { marginLeft: 6, minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
-  countText: { fontSize: 10, lineHeight: 10, color: '#fff', ...display(900, 10) },
-  // pb-28 minus the fixed nav it clears (~80 px) leaves ~32 px visible at the end
-  body: { padding: 16, paddingBottom: 32 },
-  // rounded-2xl border-dashed: the theme recolours the dashed border to #E5DDC3; p-6 -> 17.6
-  empty: { borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5DDC3', backgroundColor: '#fff', padding: 17.6, alignItems: 'center' },
-  emptyText: { fontSize: 14, lineHeight: 20, color: tw.gray500, textAlign: 'center', ...poppins(400) },
+  page: { flex: 1, backgroundColor: color.bg },
+  segmentBar: {
+    backgroundColor: color.surface,
+    paddingHorizontal: space.lg,
+    paddingBottom: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: color.borderStrong,
+  },
+  segment: { flexDirection: 'row', gap: space.xs, padding: space.xs, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
+  segmentBtn: { flex: 1, minHeight: 44, borderRadius: radii.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingHorizontal: space.sm },
+  segmentBtnOn: { backgroundColor: color.surface, ...elevation.card },
+  segmentText: { ...type.buttonSm, flexShrink: 1 },
+  count: { minWidth: 24, height: 24, borderRadius: radii.pill, paddingHorizontal: space.sm - 2, alignItems: 'center', justifyContent: 'center' },
+  countText: { ...type.caption, fontFamily: 'NunitoSans_800ExtraBold' },
+  body: { padding: space.lg, paddingBottom: space.xxxl },
+  list: { gap: space.md },
+  empty: { paddingVertical: space.xxl, paddingHorizontal: space.sm },
 });

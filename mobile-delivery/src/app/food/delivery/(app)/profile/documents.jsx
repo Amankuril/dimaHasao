@@ -2,19 +2,24 @@ import { useEffect, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
-import { ArrowLeft, Camera, Eye, FileText, Image as ImageIcon, X } from 'lucide-react-native';
+import { Bike, Camera, Eye, FileText, Image as ImageIcon, X } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../api/delivery';
 import { mediaUrl } from '../../../../../api/client';
+import { Button, Card, IconButton, ScreenHeader, StatusBadge } from '../../../../../components/ds';
 import { Spinner } from '../../../../../components/Loader';
-import { Press } from '../../../../../components/ui';
 import useDeliveryBackNavigation from '../../../../../delivery/hooks/useDeliveryBackNavigation';
 import { openCamera, openGallery, prepareUploadFile } from '../../../../../lib/images';
 import { toast } from '../../../../../lib/notify';
-import { display, ff, shadow, tw } from '../../../../../theme';
+import { color, elevation, radii, space, touch, type } from '../../../../../theme';
 
-// Web: pages/profile/ProfileDocsV2.jsx. `font-poppins` -> Nunito; bg-[#ff8100] -> primary.
+// Web: pages/profile/ProfileDocsV2.jsx. One card per document: status, preview, and re-upload.
 
 const docStatus = (doc) => (!doc?.document ? 'Not Uploaded' : doc.verified ? 'Verified' : 'Pending Verification');
+const STATUS_BADGE = {
+  Verified: { tone: 'success', label: 'Verified' },
+  'Pending Verification': { tone: 'warning', label: 'Pending verification' },
+  'Not Uploaded': { tone: 'neutral', label: 'Not uploaded' },
+};
 
 export default function ProfileDocsV2() {
   const goBack = useDeliveryBackNavigation();
@@ -56,8 +61,11 @@ export default function ProfileDocsV2() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <Spinner size={32} color={tw.primary} />
+      <View style={styles.page}>
+        <ScreenHeader title="Registration documents" onBack={goBack} />
+        <View style={styles.center} accessibilityLabel="Loading documents">
+          <Spinner size={32} color={color.primary} />
+        </View>
       </View>
     );
   }
@@ -70,81 +78,91 @@ export default function ProfileDocsV2() {
 
   return (
     <View style={styles.page}>
-      <View style={[styles.header, shadow('sm'), { paddingTop: 20 + insets.top }]}>
-        <Press onPress={goBack} accessibilityLabel="Back" hitSlop={10} style={[styles.back, shadow('sm')]}>
-          <ArrowLeft size={16} color="#1F1F24" />
-        </Press>
-        <Text style={styles.title}>Registration Docs</Text>
-      </View>
+      <ScreenHeader title="Registration documents" onBack={goBack} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingTop: 96 + insets.top }]}>
-        <View style={[styles.vehicle, shadow('card')]}>
-          <View style={styles.vehicleBlob} />
-          <Text style={styles.vehicleKicker}>Vehicle Registered</Text>
-          <Text style={styles.vehicleNo}>{profile?.vehicle?.number || 'NO # REGISTERED'}</Text>
-          <Text style={styles.vehicleType}>{profile?.vehicle?.type || 'Standard Bike'}</Text>
-        </View>
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: space.xxxl + insets.bottom }]}>
+        <Card style={styles.vehicle}>
+          <View style={styles.iconTile}>
+            <Bike size={22} color={color.primary} />
+          </View>
+          <View style={styles.flexText}>
+            <Text style={styles.caption}>Vehicle registered</Text>
+            <Text style={styles.vehicleNo} numberOfLines={1}>
+              {profile?.vehicle?.number || 'No number registered'}
+            </Text>
+            <Text style={styles.small} numberOfLines={1}>
+              {(() => {
+                const t = String(profile?.vehicle?.type || 'Standard Bike');
+                return t.charAt(0).toUpperCase() + t.slice(1);
+              })()}
+            </Text>
+          </View>
+        </Card>
 
-        <View style={{ gap: 16 }}>
-          {docs.map((doc) => (
-            <View key={doc.field} style={[styles.doc, shadow('card')]}>
+        {docs.map((doc) => {
+          const badge = STATUS_BADGE[docStatus(doc.data)];
+          return (
+            <Card key={doc.field} style={styles.doc}>
               <View style={styles.docTop}>
-                <View>
-                  <Text style={styles.docLabel}>{doc.label}</Text>
-                  <Text style={styles.docStatus}>{docStatus(doc.data)}</Text>
+                <View style={[styles.iconTile, { backgroundColor: color.surfaceMuted }]}>
+                  <FileText size={20} color={color.textSecondary} />
                 </View>
-                <View style={styles.docActions}>
-                  {doc.data?.document ? (
-                    <Press onPress={() => setShowViewer({ title: doc.label, url: doc.data.document })} accessibilityLabel={`View ${doc.label}`} style={[styles.docBtn, { backgroundColor: tw.gray50 }]}>
-                      <Eye size={20} color={tw.gray600} />
-                    </Press>
-                  ) : null}
-                  <Press
-                    onPress={() => openCamera({ onSelectFile: (f) => handleUpdate(doc.field, f), fileNamePrefix: `profile-doc-${doc.field}` })}
-                    accessibilityLabel={`Photograph ${doc.label}`}
-                    style={[styles.docBtn, { backgroundColor: tw.gray900 }]}
-                  >
-                    <Camera size={20} color="#fff" />
-                  </Press>
-                  <Press
-                    onPress={() => openGallery({ onSelectFile: (f) => handleUpdate(doc.field, f), fileNamePrefix: `profile-doc-${doc.field}` })}
-                    accessibilityLabel={`Choose ${doc.label} from gallery`}
-                    style={[styles.docBtn, { backgroundColor: tw.primarySoft }]}
-                  >
-                    <ImageIcon size={20} color={tw.primary} />
-                  </Press>
+                <View style={styles.flexText}>
+                  <Text style={styles.docLabel} numberOfLines={1}>
+                    {doc.label}
+                  </Text>
+                  <StatusBadge tone={badge.tone} label={badge.label} />
                 </View>
+                {doc.data?.document ? (
+                  <IconButton icon={Eye} label={`View ${doc.label}`} variant="soft" iconSize={20} onPress={() => setShowViewer({ title: doc.label, url: doc.data.document })} />
+                ) : null}
               </View>
               {doc.data?.document ? (
                 <View style={styles.thumb}>
-                  {/* opacity-50 grayscale (grayscale needs Android's filter; iOS shows colour) */}
-                  <Image source={{ uri: mediaUrl(doc.data.document) }} style={[styles.thumbImg, { filter: [{ grayscale: 1 }] }]} />
+                  <Image source={{ uri: mediaUrl(doc.data.document) }} resizeMode="cover" style={styles.thumbImg} accessibilityLabel={`Preview of ${doc.label}`} />
                 </View>
               ) : null}
-            </View>
-          ))}
-        </View>
+              <View style={styles.docActions}>
+                <Button
+                  title="Camera"
+                  icon={Camera}
+                  variant="secondary"
+                  onPress={() => openCamera({ onSelectFile: (f) => handleUpdate(doc.field, f), fileNamePrefix: `profile-doc-${doc.field}` })}
+                  accessibilityLabel={`Photograph ${doc.label}`}
+                  style={styles.flex1}
+                />
+                <Button
+                  title="Gallery"
+                  icon={ImageIcon}
+                  variant="outline"
+                  onPress={() => openGallery({ onSelectFile: (f) => handleUpdate(doc.field, f), fileNamePrefix: `profile-doc-${doc.field}` })}
+                  accessibilityLabel={`Choose ${doc.label} from gallery`}
+                  style={styles.flex1}
+                />
+              </View>
+            </Card>
+          );
+        })}
 
-        {/* mt-10 collapses with space-y-8's 32 px margin: 40 total */}
         <View style={styles.footer}>
-          <FileText size={64} color="#1F1F24" style={{ marginBottom: 16 }} />
-          <Text style={styles.footerText}>Official Fleet Identity</Text>
+          <FileText size={24} color={color.textMuted} />
+          <Text style={styles.footerText}>Official fleet identity</Text>
         </View>
       </ScrollView>
 
       <Modal visible={Boolean(showViewer)} transparent animationType="fade" onRequestClose={() => setShowViewer(null)} statusBarTranslucent>
-        <View style={styles.viewerWrap}>
+        <View style={[styles.viewerWrap, { paddingTop: space.xxl + insets.top, paddingBottom: space.xxl + insets.bottom }]}>
           <BlurView intensity={48} tint="dark" style={StyleSheet.absoluteFill} experimentalBlurMethod="dimezisBlurView" />
           <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.9)' }]} onPress={() => setShowViewer(null)} accessibilityLabel="Close" />
-          <View style={[styles.viewer, shadow('card')]}>
+          <View style={styles.viewer}>
             <View style={styles.viewerHead}>
-              <Text style={styles.viewerTitle}>{showViewer?.title}</Text>
-              <Press onPress={() => setShowViewer(null)} accessibilityLabel="Close" style={styles.viewerClose}>
-                <X size={24} color={tw.gray400} />
-              </Press>
+              <Text style={styles.viewerTitle} numberOfLines={1}>
+                {showViewer?.title}
+              </Text>
+              <IconButton icon={X} label="Close" variant="soft" onPress={() => setShowViewer(null)} />
             </View>
-            <View style={{ padding: 8 }}>
-              {showViewer ? <Image source={{ uri: mediaUrl(showViewer.url) }} resizeMode="contain" style={{ width: '100%', height: height * 0.7, borderRadius: 16 }} /> : null}
+            <View style={{ padding: space.sm }}>
+              {showViewer ? <Image source={{ uri: mediaUrl(showViewer.url) }} resizeMode="contain" style={{ width: '100%', height: height * 0.7, borderRadius: radii.lg }} /> : null}
             </View>
           </View>
         </View>
@@ -154,31 +172,26 @@ export default function ProfileDocsV2() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.gray50 },
-  page: { flex: 1, backgroundColor: tw.gray50 },
-  header: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: '#fff', paddingHorizontal: 16, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  // w-6 h-6 p-1 rounded-full on the icon itself: a 16 px glyph in a 24 px chip
-  back: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(249,250,251,0.7)', alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 20, lineHeight: 28, color: '#1F1F24', ...display(900, 20) },
-  body: { paddingHorizontal: 16, paddingBottom: 80, gap: 32 },
-  vehicle: { backgroundColor: tw.primary, borderRadius: 16, padding: 17.6, gap: 8, overflow: 'hidden' },
-  vehicleBlob: { position: 'absolute', top: -80, right: -80, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.1)' },
-  vehicleKicker: { fontSize: 10, lineHeight: 15, color: '#fff', opacity: 0.8, textTransform: 'uppercase', ...display(900, 10) },
-  vehicleNo: { fontSize: 24, lineHeight: 32, color: '#fff', ...display(900, 24) },
-  vehicleType: { fontSize: 10, lineHeight: 15, color: '#fff', opacity: 0.7, letterSpacing: 1, textTransform: 'uppercase', ...ff(700) },
-  doc: { backgroundColor: '#fff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#E5DDC3', gap: 16 },
-  docTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  docLabel: { fontSize: 9, lineHeight: 13.5, textTransform: 'uppercase', color: tw.gray400, marginBottom: 4, ...display(900, 9) },
-  docStatus: { fontSize: 14, lineHeight: 20, color: tw.gray800, ...display(700, 14) },
-  docActions: { flexDirection: 'row', gap: 8 },
-  docBtn: { padding: 12, borderRadius: 12 },
-  thumb: { marginTop: 8, width: 96, height: 64, borderRadius: 12, borderWidth: 1, borderColor: tw.gray100, overflow: 'hidden', backgroundColor: tw.gray50, boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.05)' },
-  thumbImg: { width: '100%', height: '100%', opacity: 0.5 },
-  footer: { padding: 40, alignItems: 'center', opacity: 0.3, marginTop: 8 },
-  footerText: { fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: '#1F1F24', ...display(900, 10) },
-  viewerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  viewer: { width: '100%', maxWidth: 512, backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden' },
-  viewerHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 17.6, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  viewerTitle: { fontSize: 18, lineHeight: 28, textTransform: 'uppercase', color: tw.gray950, ...display(900, 18) },
-  viewerClose: { padding: 12, backgroundColor: tw.gray50, borderRadius: 999 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  page: { flex: 1, backgroundColor: color.bg },
+  body: { padding: space.lg, gap: space.md },
+  iconTile: { width: touch, height: touch, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  flexText: { flex: 1, minWidth: 0, gap: space.xs },
+  caption: { ...type.caption, color: color.textMuted },
+  small: { ...type.small, color: color.textSecondary },
+  vehicle: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  vehicleNo: { ...type.heading, color: color.text },
+  doc: { gap: space.lg },
+  docTop: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  docLabel: { ...type.subheading, color: color.text },
+  docActions: { flexDirection: 'row', gap: space.md },
+  flex1: { flex: 1 },
+  thumb: { width: 128, height: 84, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, overflow: 'hidden', backgroundColor: color.surfaceMuted },
+  thumbImg: { width: '100%', height: '100%' },
+  footer: { paddingVertical: space.xxl, alignItems: 'center', gap: space.sm },
+  footerText: { ...type.caption, color: color.textMuted },
+  viewerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.lg },
+  viewer: { width: '100%', maxWidth: 512, backgroundColor: color.surface, borderRadius: radii.xl, overflow: 'hidden', ...elevation.sheet },
+  viewerHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, paddingLeft: space.lg, paddingRight: space.sm, paddingVertical: space.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  viewerTitle: { flex: 1, minWidth: 0, ...type.heading, color: color.text },
 });

@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft } from 'lucide-react-native';
+import { Button, Card, ScreenHeader, SectionHeader } from '../../../../components/ds';
 import { SelectField } from '../../../../components/kit';
-import { Press, ThemedInput } from '../../../../components/ui';
 import OnboardingExitModal from '../../../../components/OnboardingExitModal';
 import useDeliveryOnboardingExitGuard from '../../../../delivery/hooks/useDeliveryOnboardingExitGuard';
 import { hasDeliveryStep1Progress } from '../../../../delivery/onboardingStorage';
 import { prefetchModuleFcmToken } from '../../../../delivery/push';
 import { sessionStore } from '../../../../lib/storage';
-import { display, gradients, poppins, shadow, tw } from '../../../../theme';
+import { color, radii, space, touch, type } from '../../../../theme';
 
 // Web: pages/auth/SignupStep1.jsx (/food/delivery/signup/details)
 
@@ -35,13 +33,23 @@ function Label({ children, required = true }) {
   return (
     <Text style={styles.label}>
       {children}
-      {required ? <Text style={styles.star}> *</Text> : null}
+      {required ? (
+        <Text style={styles.star} accessibilityLabel="required">
+          {' *'}
+        </Text>
+      ) : (
+        <Text style={styles.optional}> (optional)</Text>
+      )}
     </Text>
   );
 }
 
 function Err({ errors, name }) {
-  return errors[name] ? <Text style={styles.error}>{errors[name]}</Text> : null;
+  return errors[name] ? (
+    <Text style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
+      {errors[name]}
+    </Text>
+  ) : null;
 }
 
 export default function SignupStep1() {
@@ -166,47 +174,43 @@ export default function SignupStep1() {
   const submitDisabled =
     isSubmitting || !formData.email || !isValidEmailValue(formData.email) || Object.values(errors).some((err) => err !== '');
 
-  const field = (name, props = {}) => (
-    <ThemedInput
+  const field = (name, label, props = {}) => (
+    <FormInput
       value={formData[name]}
       onChangeText={handleChange(name)}
-      radius={8}
-      borderWidth={1}
-      style={styles.input}
-      accessibilityLabel={name}
+      accessibilityLabel={label}
+      invalid={Boolean(errors[name])}
       {...props}
     />
   );
 
   return (
     <View style={styles.page}>
-      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
-        <Press onPress={handleBack} accessibilityLabel="Back" style={styles.back} scale={1}>
-          <ArrowLeft size={20} color="#1F1F24" />
-        </Press>
-        <Text style={styles.headerTitle}>Complete Your Profile</Text>
-      </View>
+      <ScreenHeader title="Complete your profile" subtitle="Step 1 of 2 · Basic details" onBack={handleBack} />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}
+          contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
-          <View style={{ marginBottom: 24 }}>
-            <Text style={styles.h2}>Basic Details</Text>
+          <View style={styles.intro}>
+            <Text style={styles.h2} accessibilityRole="header">
+              Basic details
+            </Text>
             <Text style={styles.sub}>Please provide your information to continue</Text>
           </View>
 
-          <View style={{ gap: 16 }}>
+          <SectionHeader title="Personal" style={styles.sectionHeader} />
+          <Card style={styles.group}>
             <View>
-              <Label>Full Name</Label>
-              {field('name', { placeholder: 'Enter your full name', autoCapitalize: 'words', autoComplete: 'name' })}
+              <Label>Full name</Label>
+              {field('name', 'Full name', { placeholder: 'Enter your full name', autoCapitalize: 'words', autoComplete: 'name' })}
               <Err errors={errors} name="name" />
             </View>
             <View>
               <Label>Email</Label>
-              {field('email', {
+              {field('email', 'Email', {
                 placeholder: 'Enter your email',
                 keyboardType: 'email-address',
                 autoCapitalize: 'none',
@@ -217,83 +221,81 @@ export default function SignupStep1() {
             </View>
             <View>
               <Label>Address</Label>
-              {field('address', {
+              {field('address', 'Address', {
                 placeholder: 'Enter your address',
                 multiline: true,
                 numberOfLines: 3,
                 textAlignVertical: 'top',
-                style: [styles.input, styles.textarea],
+                style: styles.textarea,
               })}
               <Err errors={errors} name="address" />
             </View>
             <View style={styles.grid}>
               <View style={styles.cell}>
                 <Label>City</Label>
-                {field('city', { placeholder: 'City' })}
+                {field('city', 'City', { placeholder: 'City' })}
                 <Err errors={errors} name="city" />
               </View>
               <View style={styles.cell}>
                 <Label>State</Label>
-                {field('state', { placeholder: 'State' })}
+                {field('state', 'State', { placeholder: 'State' })}
                 <Err errors={errors} name="state" />
               </View>
             </View>
+          </Card>
+
+          <SectionHeader title="Vehicle" style={styles.sectionHeader} />
+          <Card style={styles.group}>
             <View>
-              <Label>Vehicle Type</Label>
+              <Label>Vehicle type</Label>
               <SelectField
                 value={formData.vehicleType}
                 options={VEHICLE_TYPES}
                 onChange={(v) => setFormData((prev) => ({ ...prev, vehicleType: v }))}
-                accessibilityLabel="Vehicle Type"
+                accessibilityLabel="Vehicle type"
                 style={styles.select}
                 textStyle={styles.selectText}
+                chevronColor={color.textMuted}
               />
             </View>
             <View>
-              <Label required={false}>Vehicle Name/Model (Optional)</Label>
-              {field('vehicleName', { placeholder: 'e.g., Honda Activa' })}
+              <Label required={false}>Vehicle name / model</Label>
+              {field('vehicleName', 'Vehicle name or model, optional', { placeholder: 'e.g., Honda Activa' })}
             </View>
             <View>
-              <Label>Vehicle Number</Label>
-              {field('vehicleNumber', { placeholder: 'e.g., MH12AB1234', maxLength: 10, autoCapitalize: 'characters' })}
+              <Label>Vehicle number</Label>
+              {field('vehicleNumber', 'Vehicle number', { placeholder: 'e.g., MH12AB1234', maxLength: 10, autoCapitalize: 'characters' })}
               <Err errors={errors} name="vehicleNumber" />
             </View>
+          </Card>
+
+          <SectionHeader title="Identity" style={styles.sectionHeader} />
+          <Card style={styles.group}>
             <View>
-              <Label>Driving License Number</Label>
-              {field('drivingLicenseNumber', { placeholder: 'e.g., MH1220110012345', maxLength: 15, autoCapitalize: 'characters' })}
+              <Label>Driving licence number</Label>
+              {field('drivingLicenseNumber', 'Driving licence number', {
+                placeholder: 'e.g., MH1220110012345',
+                maxLength: 15,
+                autoCapitalize: 'characters',
+              })}
               <Err errors={errors} name="drivingLicenseNumber" />
             </View>
             <View>
-              <Label>PAN Number</Label>
-              {field('panNumber', { placeholder: 'ABCDE1234F', maxLength: 10, autoCapitalize: 'characters' })}
+              <Label>PAN number</Label>
+              {field('panNumber', 'PAN number', { placeholder: 'ABCDE1234F', maxLength: 10, autoCapitalize: 'characters' })}
               <Err errors={errors} name="panNumber" />
             </View>
             <View>
-              <Label>Aadhar Number</Label>
-              {field('aadharNumber', { placeholder: '123456789012', maxLength: 12, keyboardType: 'number-pad' })}
+              <Label>Aadhar number</Label>
+              {field('aadharNumber', 'Aadhar number', { placeholder: '123456789012', maxLength: 12, keyboardType: 'number-pad' })}
               <Err errors={errors} name="aadharNumber" />
             </View>
-
-            {/* mt-6 inside space-y-4 collapses to 24 */}
-            <Press
-              onPress={handleSubmit}
-              disabled={submitDisabled}
-              scale={0.98}
-              accessibilityLabel="Continue"
-              style={[styles.submit, { marginTop: 8 }, !submitDisabled && shadow('button')]}
-            >
-              {submitDisabled ? (
-                <View style={[styles.submitInner, { backgroundColor: tw.gray400 }]}>
-                  <Text style={styles.submitText}>{isSubmitting ? 'Saving...' : 'Continue'}</Text>
-                </View>
-              ) : (
-                <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.submitInner}>
-                  <Text style={styles.submitText}>{isSubmitting ? 'Saving...' : 'Continue'}</Text>
-                </LinearGradient>
-              )}
-            </Press>
-          </View>
+          </Card>
         </ScrollView>
+
+        <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
+          <Button title={isSubmitting ? 'Saving...' : 'Continue'} size="lg" onPress={handleSubmit} disabled={submitDisabled} accessibilityLabel="Continue" />
+        </View>
       </KeyboardAvoidingView>
 
       <OnboardingExitModal open={showExitModal} onStay={handleStay} onExit={handleExit} theme="delivery" />
@@ -301,36 +303,70 @@ export default function SignupStep1() {
   );
 }
 
+/** Text input on the design-system tokens: 48 px, focus ring, red border when invalid. */
+function FormInput({ style, invalid, onFocus, onBlur, ...props }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <TextInput
+      placeholderTextColor={color.textDisabled}
+      onFocus={(e) => {
+        setFocused(true);
+        onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        setFocused(false);
+        onBlur?.(e);
+      }}
+      style={[styles.input, invalid && styles.inputInvalid, focused && styles.inputFocused, style]}
+      {...props}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tw.gray100 },
-  header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: tw.gray200,
+  page: { flex: 1, backgroundColor: color.bg },
+  content: { padding: space.lg, paddingBottom: space.xxxl },
+  intro: { marginBottom: space.xxl, paddingHorizontal: space.xs },
+  h2: { ...type.title, color: color.text },
+  sub: { ...type.body, color: color.textSecondary, marginTop: space.xs },
+  sectionHeader: { marginTop: space.xs },
+  group: { gap: space.lg, marginBottom: space.xxl },
+  label: { ...type.label, color: color.text, marginBottom: space.sm },
+  star: { color: color.danger },
+  optional: { ...type.caption, color: color.textMuted },
+  // No lineHeight on TextInput: it misaligns the caret on Android and web.
+  input: {
+    height: touch,
+    paddingHorizontal: space.md + 2,
+    borderWidth: 1.5,
+    borderColor: color.borderStrong,
+    borderRadius: radii.md,
+    backgroundColor: color.surface,
+    color: color.text,
+    fontFamily: type.body.fontFamily,
+    fontSize: type.body.fontSize + 1,
+    outlineWidth: 0,
+    outlineStyle: 'none',
   },
-  back: { padding: 8, borderRadius: 999 },
-  // h1 text-lg font-medium -> Sora (500 resolves to 600)
-  headerTitle: { fontSize: 18, lineHeight: 28, color: '#1F1F24', ...display(500, 18) },
-  content: { paddingHorizontal: 16, paddingTop: 24 },
-  h2: { fontSize: 20, lineHeight: 28, color: tw.gray900, marginBottom: 8, ...display(700, 20) },
-  sub: { fontSize: 14, lineHeight: 20, color: tw.gray600, ...poppins(400) },
-  label: { fontSize: 14, lineHeight: 20, color: tw.gray700, marginBottom: 4, ...poppins(500) },
-  star: { color: tw.red500 },
-  input: { height: 50, paddingHorizontal: 16, fontSize: 16, ...poppins(400) },
-  // An inline-block <textarea> leaves 7 px of descender space below it.
-  textarea: { height: 98, paddingTop: 12, paddingBottom: 12, marginBottom: 7 },
-  error: { marginTop: 4, fontSize: 14, lineHeight: 20, color: tw.red500, ...poppins(400) },
-  grid: { flexDirection: 'row', gap: 16 },
-  cell: { flex: 1 },
-  // Chrome draws the <select> 1 px taller than the inputs (51 px).
-  select: { height: 51, paddingHorizontal: 16, borderWidth: 1, borderColor: '#E8DEE7', borderRadius: 8, backgroundColor: '#fff' },
-  selectText: { fontSize: 16, color: '#1F1F24', ...poppins(400) },
-  submit: { borderRadius: 8 },
-  submitInner: { borderRadius: 8, paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  submitText: { color: '#fff', fontSize: 16, lineHeight: 24, ...poppins(700) },
+  inputFocused: { borderColor: color.primary, boxShadow: `0 0 0 3px ${color.primarySoft}` },
+  inputInvalid: { borderColor: color.danger },
+  textarea: { height: 96, paddingTop: space.md, paddingBottom: space.md },
+  error: { ...type.small, marginTop: space.xs, color: color.danger },
+  grid: { flexDirection: 'row', gap: space.md },
+  cell: { flex: 1, minWidth: 0 },
+  select: {
+    height: touch,
+    paddingHorizontal: space.md + 2,
+    borderWidth: 1.5,
+    borderColor: color.borderStrong,
+    borderRadius: radii.md,
+    backgroundColor: color.surface,
+  },
+  selectText: { ...type.body, fontSize: type.body.fontSize + 1, color: color.text },
+  footer: {
+    backgroundColor: color.surface,
+    padding: space.lg,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: color.borderStrong,
+  },
 });

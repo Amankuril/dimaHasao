@@ -1,29 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, PanResponder, StyleSheet, Text, View } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
-import { display, shadow, tw } from '../../theme';
+import { ChevronsRight } from 'lucide-react-native';
+import { color, elevation, radii, type } from '../../theme';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 
 /*
- * Port of components/ui/ActionSlider.jsx: "swipe to confirm".
+ * "Slide to confirm" for irreversible trip steps (accept, arrive, pick up).
  * Race-condition safe: isAcceptingRef prevents a double fire from rapid slides.
- *
- * `color` keeps the web's class name so call sites translate one to one;
- * the value is what deliveryTheme.css paints (bg-orange-500 really renders
- * the soft green through the [class*="bg-orange-50"] rule).
+ * Dark track + white label for sunlight contrast; the fill is the brand green.
+ * `color` keeps the call sites' class-name keys; all resolve to solid fills
+ * that keep the white label readable.
  */
 const FILL = {
-  'bg-green-600': tw.primary,
-  'bg-blue-600': tw.primary,
-  'bg-gray-900': tw.gray900,
-  'bg-black': tw.black,
-  'bg-orange-500': tw.primarySoft,
+  'bg-green-600': color.primary,
+  'bg-blue-600': color.primary,
+  'bg-gray-900': color.primary,
+  'bg-black': color.primary,
+  'bg-orange-500': color.primary,
 };
 
 const HANDLE = 56; // w-14
 const PAD = 6; // p-1.5
 
-export function ActionSlider({ label = 'Slide to Confirm', onConfirm, disabled = false, color = 'bg-green-600', successLabel = 'Confirmed ✓' }) {
+export function ActionSlider({ label = 'Slide to Confirm', onConfirm, disabled = false, color: fillKey = 'bg-green-600', successLabel = 'Confirmed ✓' }) {
   const [width, setWidth] = useState(300);
   const [progress, setProgress] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -111,12 +110,12 @@ export function ActionSlider({ label = 'Slide to Confirm', onConfirm, disabled =
   ).current;
 
   const labelOpacity = isSuccess ? 0 : disabled ? 0.5 : Math.max(0, 1 - progress * 2.2);
-  const fillColor = FILL[color] || color;
+  const fillColor = FILL[fillKey] || fillKey;
 
   return (
     <View
       onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-      style={[styles.track, shadow('lg')]}
+      style={[styles.track, disabled && styles.trackDisabled]}
       accessibilityRole="adjustable"
       accessibilityLabel={disabled ? 'Action Locked' : label}
       accessibilityActions={[{ name: 'activate', label }]}
@@ -146,7 +145,7 @@ export function ActionSlider({ label = 'Slide to Confirm', onConfirm, disabled =
         ]}
       />
       <View pointerEvents="none" style={styles.labelWrap}>
-        <Text numberOfLines={1} style={[styles.label, { opacity: labelOpacity }]}>
+        <Text numberOfLines={1} style={[styles.label, disabled && { color: color.textMuted }, { opacity: disabled ? 1 : labelOpacity }]}>
           {disabled ? 'Action Locked' : label}
         </Text>
       </View>
@@ -164,15 +163,11 @@ export function ActionSlider({ label = 'Slide to Confirm', onConfirm, disabled =
         {...responder.panHandlers}
         style={[
           styles.handle,
-          shadow('xl'),
-          { backgroundColor: disabled ? tw.gray200 : tw.white, transform: [{ translateX: x }] },
+          elevation.card,
+          { backgroundColor: disabled ? color.borderStrong : color.surface, transform: [{ translateX: x }] },
         ]}
       >
-        <ChevronRight
-          size={32}
-          color={disabled ? tw.gray400 : isSuccess ? tw.primary : tw.gray950}
-          style={isSuccess ? { transform: [{ scale: 1.1 }] } : undefined}
-        />
+        <ChevronsRight size={28} strokeWidth={2.6} color={disabled ? color.textMuted : color.primary} />
       </Animated.View>
     </View>
   );
@@ -181,21 +176,11 @@ export function ActionSlider({ label = 'Slide to Confirm', onConfirm, disabled =
 export default ActionSlider;
 
 const styles = StyleSheet.create({
-  track: { width: '100%', height: 68, borderRadius: 999, padding: PAD, overflow: 'hidden', backgroundColor: tw.gray950 },
-  fill: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: 999 },
-  labelWrap: { ...StyleSheet.absoluteFill, paddingHorizontal: 64, alignItems: 'center', justifyContent: 'center' },
-  // font-extrabold: Sora, and the theme's .01em letter-spacing beats tracking-[0.16em].
-  label: {
-    color: '#fff',
-    fontSize: 12,
-    lineHeight: 12,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-    ...display(800, 12),
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  successLabel: { fontSize: 14, lineHeight: 14, ...display(800, 14), textShadowColor: 'rgba(0,0,0,0.25)' },
-  handle: { width: HANDLE, height: HANDLE, borderRadius: 28, alignItems: 'center', justifyContent: 'center', zIndex: 30 },
+  track: { width: '100%', height: 68, borderRadius: radii.pill, padding: PAD, overflow: 'hidden', backgroundColor: color.text },
+  trackDisabled: { backgroundColor: color.surfaceMuted },
+  fill: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: radii.pill },
+  labelWrap: { ...StyleSheet.absoluteFill, paddingLeft: 68, paddingRight: 20, alignItems: 'center', justifyContent: 'center' },
+  label: { ...type.button, fontSize: 17, color: color.textInverse, textAlign: 'center' },
+  successLabel: { fontSize: 17 },
+  handle: { width: HANDLE, height: HANDLE, borderRadius: HANDLE / 2, alignItems: 'center', justifyContent: 'center', zIndex: 30 },
 });

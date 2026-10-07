@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CheckCircle, Clock } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../api/delivery';
-import PlainHeader from '../../../../../components/delivery/PlainHeader';
+import { Card, EmptyState, Money, ScreenHeader, formatINR } from '../../../../../components/ds';
 import WeekSelector from '../../../../../components/delivery/WeekSelector';
 import Skeleton from '../../../../../components/Skeleton';
 import { Spinner } from '../../../../../components/Loader';
-import { Press } from '../../../../../components/ui';
 import useDeliveryBackNavigation from '../../../../../delivery/hooks/useDeliveryBackNavigation';
 import { toast } from '../../../../../lib/notify';
-import { ff, shadow, tw } from '../../../../../theme';
+import { color, radii, space, type } from '../../../../../theme';
 
-// Web: pages/pocket/PocketStatementV2.jsx. `font-poppins` -> Nunito; #ff8100 / emerald-500/600 -> primary.
+// Web: pages/pocket/PocketStatementV2.jsx. Styled per DESIGN_SYSTEM.md.
 
 const toLocalDateKey = (date) => {
   const d = date instanceof Date ? date : new Date(date);
@@ -31,8 +31,6 @@ const initialWeek = () => {
 };
 
 const earningOf = (trip) => trip.deliveryEarning || trip.deliveryPayout || trip.payout || trip.estimatedEarnings?.totalEarning || 0;
-// bg-green-500 and bg-orange-500 -> #E8F2EC (substring rule), bg-blue-500 -> primary
-const DOTS = [tw.primarySoft, tw.primarySoft, tw.primary];
 
 export default function PocketStatementV2() {
   const goBack = useDeliveryBackNavigation();
@@ -81,113 +79,127 @@ export default function PocketStatementV2() {
     return { earning, bonus, total: earning + bonus };
   };
 
+  const insets = useSafeAreaInsets();
+  const whole = (n) => formatINR(n, { decimals: 0 });
+
+  const header = (
+    <View style={styles.headerBlock}>
+      <WeekSelector onChange={setWeekRange} weekStartsOn={1} style={{ paddingVertical: space.xs }} />
+
+      <Card>
+        <View style={styles.summaryHead}>
+          <CheckCircle size={18} color={color.primary} />
+          <Text style={[type.subheading, { color: color.text }]} accessibilityRole="header">
+            Pocket summary
+          </Text>
+        </View>
+        <Text style={[type.label, { color: color.textSecondary }]}>Total</Text>
+        <View style={styles.totalBox}>
+          {loading ? <Skeleton style={{ height: 28, width: 120 }} /> : <Money value={whole(summary.grandTotal)} style={[type.metric, { color: color.primary }]} />}
+        </View>
+        <View style={styles.grid}>
+          {[
+            ['Orders', summary.totalEarning, ''],
+            ['Bonus', summary.totalBonus, '+'],
+          ].map(([label, value, sign]) => (
+            <View key={label} style={styles.cell}>
+              <Text style={[type.label, { color: color.textSecondary }]}>{label}</Text>
+              <View style={{ minHeight: 24, justifyContent: 'center' }}>
+                {loading ? (
+                  <Skeleton style={{ height: 16, width: 56 }} />
+                ) : (
+                  <Money value={`${sign}${whole(value)}`} style={[styles.cellValue, sign && { color: color.success }]} />
+                )}
+              </View>
+            </View>
+          ))}
+        </View>
+      </Card>
+    </View>
+  );
+
   return (
     <View style={styles.page}>
-      <PlainHeader title="Pocket statement" size={20} leadingNone onBack={goBack} />
-      <ScrollView contentContainerStyle={styles.body}>
-        <WeekSelector onChange={setWeekRange} weekStartsOn={1} />
-
-        <View style={[styles.summary, shadow('sm')]}>
-          <View style={styles.summaryHead}>
-            <CheckCircle size={16} color={tw.primary} />
-            <Text style={styles.summaryTitle}>Pocket summary</Text>
-          </View>
-          <View style={styles.grid}>
-            {[
-              ['Orders', summary.totalEarning, 'flex-start', '#000'],
-              ['Bonus', summary.totalBonus, 'center', '#000'],
-              ['Total', summary.grandTotal, 'flex-end', tw.primary],
-            ].map(([label, value, align, color]) => (
-              <View key={label} style={[styles.cell, { alignItems: align }]}>
-                <Text style={styles.cellLabel}>{label}</Text>
-                <View style={{ minHeight: 20 }}>
-                  {loading ? <Skeleton style={{ height: 16, width: 56 }} /> : <Text style={[styles.cellValue, { color }]}>₹{value.toFixed(0)}</Text>}
+      <ScreenHeader title="Pocket statement" onBack={goBack} />
+      <FlatList
+        data={loading ? [] : orders}
+        keyExtractor={(trip, index) => String(trip.orderId || trip.id || trip._id || index)}
+        contentContainerStyle={[styles.body, { paddingBottom: space.xxxl + insets.bottom }]}
+        ListHeaderComponent={header}
+        initialNumToRender={12}
+        windowSize={7}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loading}>
+              <Spinner size={32} color={color.primary} />
+              <Text style={[type.small, { color: color.textMuted }]}>Loading statement…</Text>
+            </View>
+          ) : (
+            <Card>
+              <EmptyState icon={Clock} title="No transactions" message="Koi transaction nahi mili is hafta k liye." />
+            </Card>
+          )
+        }
+        renderItem={({ item: trip }) => {
+          const a = amountsFor(trip);
+          const createdAt = trip.deliveredAt || trip.completedAt || trip.createdAt || trip.orderTime;
+          const dateText = createdAt
+            ? new Date(createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+            : 'N/A';
+          const orderId = trip.orderId || trip.id || trip._id;
+          return (
+            <Card style={styles.order} accessibilityLabel={`Order ${orderId}`}>
+              <View style={styles.orderText}>
+                <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={1}>
+                  Order #{orderId?.slice(-6) || '...'}
+                </Text>
+                <Text style={[type.caption, { color: color.textMuted }]}>{dateText}</Text>
+                {trip.restaurantName ? (
+                  <Text style={[type.small, { color: color.textSecondary }]} numberOfLines={2}>
+                    {trip.restaurantName}
+                  </Text>
+                ) : null}
+              </View>
+              <View style={styles.amounts}>
+                <View style={styles.amountRow}>
+                  <Text style={[type.caption, { color: color.textMuted }]}>Earning</Text>
+                  <Money value={formatINR(a.earning)} style={styles.value} />
+                </View>
+                {a.bonus > 0 ? (
+                  <View style={styles.amountRow}>
+                    <Text style={[type.caption, { color: color.success }]}>Bonus</Text>
+                    <Money value={`+${formatINR(a.bonus)}`} style={[styles.value, { color: color.success }]} />
+                  </View>
+                ) : null}
+                <View style={[styles.amountRow, styles.totalRow]}>
+                  <Text style={[type.label, { color: color.text }]}>Total</Text>
+                  <Money value={formatINR(a.total)} style={styles.totalValue} />
                 </View>
               </View>
-            ))}
-          </View>
-        </View>
-
-        {loading ? (
-          <View style={styles.loading}>
-            <Spinner size={32} color={tw.primary} />
-            <Text style={styles.loadingText}>Loading Statement...</Text>
-          </View>
-        ) : orders.length === 0 ? (
-          <View style={[styles.empty, shadow('sm')]}>
-            <Clock size={40} color={tw.gray200} style={{ marginBottom: 16 }} />
-            <Text style={styles.emptyTitle}>No transactions</Text>
-            <Text style={styles.emptyText}>Koi transaction nahi mili is hafta k liye.</Text>
-          </View>
-        ) : (
-          <View style={{ gap: 16 }}>
-            {orders.map((trip, index) => {
-              const a = amountsFor(trip);
-              const createdAt = trip.deliveredAt || trip.completedAt || trip.createdAt || trip.orderTime;
-              const dateText = createdAt
-                ? new Date(createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
-                : 'N/A';
-              const orderId = trip.orderId || trip.id || trip._id;
-              return (
-                <Press key={orderId || index} scale={0.98} accessibilityLabel={`Order ${orderId}`} style={[styles.order, shadow('sm')]}>
-                  <View style={styles.orderLeft}>
-                    <View style={[styles.dot, { backgroundColor: DOTS[index % 3] }]} />
-                    <View style={{ flexShrink: 1 }}>
-                      <Text style={styles.orderId}>Order #{orderId?.slice(-6) || '...'}</Text>
-                      <Text style={styles.orderDate}>{dateText}</Text>
-                      {/* `italic` renders upright on the web (no italic face loaded) */}
-                      {trip.restaurantName ? <Text style={styles.orderRest}>{trip.restaurantName}</Text> : null}
-                    </View>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <View style={{ marginBottom: 8, alignItems: 'flex-end' }}>
-                      <Text style={styles.small}>Earning</Text>
-                      <Text style={styles.value}>₹{a.earning}</Text>
-                    </View>
-                    {a.bonus > 0 ? (
-                      <View style={{ marginBottom: 8, alignItems: 'flex-end' }}>
-                        <Text style={[styles.small, { color: tw.primary }]}>Bonus</Text>
-                        <Text style={[styles.value, { color: tw.primary }]}>+ ₹{a.bonus}</Text>
-                      </View>
-                    ) : null}
-                    <View style={styles.total}>
-                      <Text style={[styles.small, { color: tw.gray800 }]}>Total</Text>
-                      <Text style={styles.totalValue}>₹{a.total}</Text>
-                    </View>
-                  </View>
-                </Press>
-              );
-            })}
-          </View>
-        )}
-      </ScrollView>
+            </Card>
+          );
+        }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FAF6ED' },
-  body: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 128 + 24 },
-  summary: { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: tw.gray100, padding: 20, marginTop: 16, marginBottom: 24 },
-  summaryHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  summaryTitle: { fontSize: 14, lineHeight: 20, color: tw.gray800, letterSpacing: -0.35, textTransform: 'uppercase', ...ff(700) },
-  grid: { flexDirection: 'row', gap: 16 },
-  cell: { flex: 1 },
-  cellLabel: { fontSize: 10, lineHeight: 15, color: tw.gray400, textTransform: 'uppercase', marginBottom: 4, ...ff(700) },
-  cellValue: { fontSize: 16, lineHeight: 16, ...ff(700) },
-  loading: { paddingVertical: 80, alignItems: 'center', gap: 12 },
-  loadingText: { color: tw.gray400, fontSize: 12, lineHeight: 16, letterSpacing: 1.2, textTransform: 'uppercase', ...ff(700) },
-  empty: { backgroundColor: '#fff', borderRadius: 12, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: tw.gray100 },
-  emptyTitle: { color: tw.gray900, fontSize: 18, lineHeight: 28, marginBottom: 4, ...ff(700) },
-  emptyText: { color: tw.gray400, fontSize: 14, lineHeight: 20, textAlign: 'center', ...ff(500) },
-  order: { backgroundColor: '#fff', borderRadius: 12, padding: 20, borderWidth: 1, borderColor: tw.gray100, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  orderLeft: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, flexShrink: 1 },
-  dot: { width: 8, height: 8, borderRadius: 4, marginTop: 6 },
-  orderId: { color: tw.gray900, fontSize: 14, lineHeight: 20, marginBottom: 2, ...ff(700) },
-  orderDate: { color: tw.gray400, fontSize: 11, lineHeight: 16.5, marginBottom: 4, letterSpacing: -0.275, textTransform: 'uppercase', ...ff(700) },
-  orderRest: { color: tw.gray500, fontSize: 12, lineHeight: 16, ...ff(500) },
-  small: { fontSize: 10, lineHeight: 15, color: tw.gray400, textTransform: 'uppercase', ...ff(700) },
-  value: { fontSize: 14, lineHeight: 20, color: '#000', ...ff(700) },
-  total: { paddingTop: 8, borderTopWidth: 1, borderTopColor: tw.gray50, alignItems: 'flex-end' },
-  totalValue: { fontSize: 16, lineHeight: 24, color: tw.primary, ...ff(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  body: { padding: space.lg, gap: space.md },
+  headerBlock: { gap: space.md, marginBottom: space.xs },
+  summaryHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.md },
+  totalBox: { minHeight: 32, justifyContent: 'center', marginBottom: space.md },
+  grid: { flexDirection: 'row', gap: space.md },
+  cell: { flex: 1, minWidth: 0, backgroundColor: color.surfaceMuted, borderRadius: radii.md, padding: space.md, gap: space.xxs },
+  cellValue: { ...type.money, fontSize: 16, lineHeight: 22 },
+  loading: { paddingVertical: space.xxxl + space.lg, alignItems: 'center', gap: space.md },
+  // Wraps: when the amounts need the room, they move below the order info.
+  order: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', columnGap: space.md, rowGap: space.md },
+  orderText: { flexGrow: 1, flexShrink: 1, flexBasis: 130, minWidth: 0, gap: space.xxs },
+  amounts: { flexGrow: 1, flexShrink: 0, minWidth: 140, maxWidth: '100%', gap: space.xs },
+  amountRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: space.sm },
+  totalRow: { paddingTop: space.xs, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  value: { ...type.bodyStrong, fontFamily: type.money.fontFamily, flexShrink: 1, textAlign: 'right' },
+  totalValue: { ...type.money, fontSize: 16, lineHeight: 22, color: color.primary, flexShrink: 1, textAlign: 'right' },
 });

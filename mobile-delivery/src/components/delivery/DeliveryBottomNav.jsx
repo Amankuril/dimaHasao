@@ -5,19 +5,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { History, LayoutGrid, Package, User as UserIcon, Wallet } from 'lucide-react-native';
 import { useDeliveryStore, dedupeOrdersByIdentity } from '../../delivery/store/useDeliveryStore';
 import { Press } from '../ui';
-import { display, poppins, shadow, tw } from '../../theme';
+import { color, radii, space, type } from '../../theme';
 
 /*
- * Port of components/DeliveryBottomNav.jsx, used as the (tabs) tab bar.
- * `bg-white border-t border-gray-100 px-4 py-3 pb-6`, five buttons; the
- * active one is gray-950 and scale-110, the rest gray-400 at 70 % opacity.
- * The bottom padding adds the safe-area inset (permitted difference 1).
+ * The (tabs) tab bar. Five equal-width tabs; the active one is brand green
+ * with a tinted pill behind the icon, the rest a readable grey. Each tab is
+ * the full column (>= 56 px tall), so it is easy to hit on the move.
  */
 const TABS = [
   { key: 'feed', label: 'Feed', Icon: LayoutGrid, href: '/food/delivery' },
   { key: 'orders', label: 'Orders', Icon: Package, href: '/food/delivery/orders' },
   { key: 'pocket', label: 'Pocket', Icon: Wallet, href: '/food/delivery/pocket' },
-  { key: 'history', label: 'Trip History', Icon: History, href: '/food/delivery/history' },
+  { key: 'history', label: 'History', Icon: History, href: '/food/delivery/history' },
   { key: 'profile', label: 'Profile', Icon: UserIcon, href: '/food/delivery/profile' },
 ];
 
@@ -29,28 +28,32 @@ export function DeliveryBottomNav({ currentTab = 'feed' }) {
   const newOrdersCount = useMemo(() => dedupeOrdersByIdentity(newOrders).length, [newOrders]);
 
   return (
-    <View style={[styles.bar, shadow('navTop'), { paddingBottom: 24 + insets.bottom }]}>
+    <View style={[styles.bar, { paddingBottom: space.sm + insets.bottom }]} accessibilityRole="tablist">
       {TABS.map(({ key, label, Icon, href }) => {
         const active = currentTab === key;
-        const color = active ? tw.gray950 : tw.gray400;
+        const tint = active ? color.primary : color.textMuted;
+        const badge = key === 'orders' && newOrdersCount > 0 ? newOrdersCount : 0;
         return (
           <Press
             key={key}
-            scale={1}
+            scale={0.94}
             onPress={() => router.navigate(href)}
             accessibilityRole="tab"
-            accessibilityLabel={label}
+            accessibilityLabel={badge ? `${label}, ${badge} new` : label}
             accessibilityState={{ selected: active }}
-            hitSlop={8}
-            style={[styles.tab, active ? styles.active : styles.inactive]}
+            style={styles.tab}
           >
-            <Icon size={24} color={color} strokeWidth={2} />
-            <Text style={[styles.label, { color }]}>{label}</Text>
-            {key === 'orders' && newOrdersCount > 0 ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{newOrdersCount > 9 ? '9+' : newOrdersCount}</Text>
-              </View>
-            ) : null}
+            <View style={[styles.iconPill, active && styles.iconPillOn]}>
+              <Icon size={22} color={tint} strokeWidth={active ? 2.4 : 2} />
+              {badge ? (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+                </View>
+              ) : null}
+            </View>
+            <Text style={[styles.label, { color: tint }, active && styles.labelOn]} numberOfLines={1}>
+              {label}
+            </Text>
           </Press>
         );
       })}
@@ -68,36 +71,32 @@ export default DeliveryBottomNav;
 
 const styles = StyleSheet.create({
   bar: {
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: tw.gray100,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    backgroundColor: color.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: color.borderStrong,
+    paddingHorizontal: space.xs,
+    paddingTop: space.sm,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     zIndex: 200,
   },
-  tab: { alignItems: 'center', gap: 4 },
-  active: { transform: [{ scale: 1.1 }] },
-  inactive: { opacity: 0.7 },
-  // text-[11px] font-medium; `font-sans` loses to the theme's inherit rule,
-  // and DeliveryHomeV2's root has no font-poppins class, so this is Poppins.
-  label: { fontSize: 11, lineHeight: 16.5, ...poppins(500) },
+  tab: { flex: 1, alignItems: 'center', gap: 2, minHeight: 56, justifyContent: 'center' },
+  iconPill: { width: 56, height: 32, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center' },
+  iconPillOn: { backgroundColor: color.primarySoft },
+  label: { ...type.caption },
+  labelOn: { fontFamily: 'NunitoSans_800ExtraBold' },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: 0,
+    top: -2,
+    right: 6,
     minWidth: 18,
     height: 18,
     paddingHorizontal: 4,
     borderRadius: 9,
-    backgroundColor: tw.primary,
+    backgroundColor: color.danger,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: color.surface,
   },
-  // font-black -> Sora
-  badgeText: { fontSize: 9, lineHeight: 11, color: '#fff', ...display(900, 9) },
+  badgeText: { color: color.textInverse, fontSize: 12, lineHeight: 14, fontFamily: 'NunitoSans_800ExtraBold' },
 });

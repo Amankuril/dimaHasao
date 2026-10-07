@@ -3,18 +3,17 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Send } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../../api/delivery';
-import FixedHeader, { FIXED_HEADER_CONTENT_TOP } from '../../../../../../components/delivery/FixedHeader';
+import { Button, Card, ScreenHeader } from '../../../../../../components/ds';
 import { SelectField } from '../../../../../../components/kit';
-import { Spinner } from '../../../../../../components/Loader';
-import { Press, ThemedInput } from '../../../../../../components/ui';
+import { ThemedInput } from '../../../../../../components/ui';
 import useDeliveryBackNavigation from '../../../../../../delivery/hooks/useDeliveryBackNavigation';
 import { toast } from '../../../../../../lib/notify';
-import { display, ff, shadow, tw } from '../../../../../../theme';
+import { color, radii, space, touch, type } from '../../../../../../theme';
 
 /*
- * Web: pages/help/CreateSupportTicketV2.jsx (`font-poppins` -> Nunito Sans).
- * The fields are rounded-2xl, and that theme rule outranks the input rule:
- * border #E5DDC3 with the card shadow, white background.
+ * Web: pages/help/CreateSupportTicketV2.jsx. Labels above inputs; the submit
+ * button is pinned under the form inside the KeyboardAvoidingView so it stays
+ * above the keyboard.
  */
 
 const CATEGORIES = [
@@ -58,72 +57,72 @@ export default function CreateSupportTicketV2() {
 
   return (
     <View style={styles.page}>
-      <FixedHeader title="Raise Ticket" uppercase onBack={goBack} />
+      <ScreenHeader title="Raise a ticket" onBack={goBack} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[styles.body, { paddingTop: FIXED_HEADER_CONTENT_TOP + insets.top }]}>
-          <View style={{ gap: 24 }}>
-            <View style={{ gap: 8 }}>
-              <Text style={styles.label}>Issue Topic</Text>
+        <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={styles.body}>
+          <Card style={{ gap: space.xl }}>
+            <View style={styles.field}>
+              <Text style={styles.label}>Subject</Text>
               <ThemedInput
                 value={form.subject}
                 onChangeText={set('subject')}
                 placeholder="Main subject of your concern"
-                radius={16}
-                borderWidth={1}
-                containerStyle={shadow('card')}
-                style={[styles.field, { borderColor: '#E5DDC3' }]}
+                placeholderTextColor={color.textDisabled}
+                radius={radii.md}
+                borderWidth={1.5}
+                style={styles.input}
                 accessibilityLabel="Issue Topic"
               />
+              <Text style={styles.hint}>At least 3 characters</Text>
             </View>
-            <View style={{ gap: 8 }}>
-              <Text style={styles.label}>Detail Description</Text>
+            <View style={styles.field}>
+              <Text style={styles.label}>Description</Text>
               <ThemedInput
                 value={form.description}
                 onChangeText={set('description')}
                 placeholder="Explain your issue here..."
+                placeholderTextColor={color.textDisabled}
                 multiline
                 numberOfLines={6}
                 textAlignVertical="top"
-                radius={16}
-                borderWidth={1}
-                containerStyle={shadow('card')}
-                style={[styles.field, styles.textarea, { borderColor: '#E5DDC3' }]}
+                radius={radii.md}
+                borderWidth={1.5}
+                style={[styles.input, styles.textarea]}
                 accessibilityLabel="Detail Description"
               />
+              <Text style={styles.hint}>At least 10 characters</Text>
             </View>
             <View style={styles.grid}>
               <View style={styles.cell}>
                 <Text style={styles.label}>Category</Text>
-                <SelectField value={form.category} options={CATEGORIES} onChange={set('category')} accessibilityLabel="Category" style={[styles.select, shadow('card')]} textStyle={styles.selectText} chevronColor="#1F1F24" />
+                <SelectField value={form.category} options={CATEGORIES} onChange={set('category')} accessibilityLabel="Category" style={styles.select} textStyle={styles.selectText} chevronColor={color.textSecondary} />
               </View>
               <View style={styles.cell}>
                 <Text style={styles.label}>Priority</Text>
-                <SelectField value={form.priority} options={PRIORITIES} onChange={set('priority')} accessibilityLabel="Priority" style={[styles.select, shadow('card')]} textStyle={styles.selectText} chevronColor="#1F1F24" />
+                <SelectField value={form.priority} options={PRIORITIES} onChange={set('priority')} accessibilityLabel="Priority" style={styles.select} textStyle={styles.selectText} chevronColor={color.textSecondary} />
               </View>
             </View>
-          </View>
-          <Press onPress={handleSubmit} disabled={loading} accessibilityLabel="Submit Ticket" style={[styles.submit, shadow('card'), loading && { opacity: 0.5 }]}>
-            {loading ? <Spinner size={20} color="#fff" /> : <Send size={20} color="#fff" />}
-            <Text style={styles.submitText}>Submit Ticket</Text>
-          </Press>
+          </Card>
         </ScrollView>
+        <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
+          <Button title="Submit ticket" size="lg" icon={Send} onPress={handleSubmit} disabled={loading} loading={loading} accessibilityLabel="Submit Ticket" />
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' },
-  body: { paddingHorizontal: 16, paddingBottom: 40, gap: 32 },
-  // An inline <label>: its line box is the parent's 24 px strut.
-  label: { marginLeft: 4, fontSize: 10, lineHeight: 24, textTransform: 'uppercase', color: tw.gray400, ...display(900, 10) },
-  field: { paddingHorizontal: 20, height: 54, fontSize: 14, ...ff(700) },
-  // rows=6 at 20 px + 32 px padding + border; the inline-block textarea leaves descender space below
-  textarea: { height: 154, paddingTop: 16, paddingBottom: 16, marginBottom: 7 },
-  grid: { flexDirection: 'row', gap: 16 },
-  cell: { flex: 1, gap: 8 },
-  select: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5DDC3', borderRadius: 16, paddingHorizontal: 20, height: 50 },
-  selectText: { fontSize: 12, lineHeight: 16, color: '#1F1F24', textTransform: 'uppercase', ...display(900, 12) },
-  submit: { width: '100%', backgroundColor: '#000', padding: 20, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  submitText: { color: '#fff', fontSize: 14, lineHeight: 20, textTransform: 'uppercase', ...display(900, 14) },
+  page: { flex: 1, backgroundColor: color.bg },
+  body: { padding: space.lg, paddingBottom: space.xxl },
+  field: { gap: space.sm },
+  label: { ...type.label, color: color.text },
+  hint: { ...type.caption, color: color.textMuted },
+  input: { height: touch, paddingHorizontal: space.lg, ...type.body, color: color.text },
+  textarea: { height: 148, paddingTop: space.md, paddingBottom: space.md },
+  grid: { flexDirection: 'row', gap: space.md },
+  cell: { flex: 1, minWidth: 0, gap: space.sm },
+  select: { backgroundColor: color.surface, borderWidth: 1.5, borderColor: color.borderStrong, borderRadius: radii.md, paddingHorizontal: space.md, height: touch, gap: space.xs },
+  selectText: { ...type.body, color: color.text },
+  footer: { backgroundColor: color.surface, padding: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.borderStrong },
 });

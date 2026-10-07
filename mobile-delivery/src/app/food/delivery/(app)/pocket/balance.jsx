@@ -1,28 +1,50 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { AlertTriangle } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../api/delivery';
-import PlainHeader from '../../../../../components/delivery/PlainHeader';
-import { SoraMoney } from '../../../../../components/kit';
+import { Button, Card, Money, ScreenHeader, SectionHeader, StatusBadge, formatINR } from '../../../../../components/ds';
 import { Spinner } from '../../../../../components/Loader';
-import { Press } from '../../../../../components/ui';
 import useDeliveryBackNavigation from '../../../../../delivery/hooks/useDeliveryBackNavigation';
 import { showUserFacingApiError } from '../../../../../lib/apiError';
-import { formatCurrency } from '../../../../../lib/format';
 import { toast } from '../../../../../lib/notify';
-import { display, ff, shadow, tw } from '../../../../../theme';
+import { color, radii, space, tone, type } from '../../../../../theme';
 
-// Web: pages/pocket/PocketBalanceV2.jsx. `font-poppins` -> Nunito; bg-yellow-400 -> #FAF6ED.
+// Web: pages/pocket/PocketBalanceV2.jsx. Styled per DESIGN_SYSTEM.md.
 
-function DetailRow({ label, value, subLabel }) {
+const STATUS_TONE = { Approved: 'success', Rejected: 'danger', Pending: 'warning' };
+
+function DetailRow({ label, value, subLabel, strong, last }) {
   return (
-    <View style={styles.detail}>
-      <View style={{ flex: 1, paddingRight: 16 }}>
-        <Text style={styles.detailLabel}>{label}</Text>
-        {subLabel ? <Text style={styles.detailSub}>{subLabel}</Text> : null}
+    <View style={[styles.detail, !last && styles.detailDivider]}>
+      <View style={styles.detailText}>
+        <Text style={[strong ? type.bodyStrong : type.body, { color: color.text }]}>{label}</Text>
+        {subLabel ? <Text style={[type.caption, { color: color.textMuted }]}>{subLabel}</Text> : null}
       </View>
-      <Text style={styles.detailValue}>{value}</Text>
+      {typeof value === 'string' ? <Money value={value} style={[styles.detailValue, strong && { fontSize: 18, lineHeight: 24 }]} /> : value}
+    </View>
+  );
+}
+
+/** ₹-prefixed amount input (local primitive; PocketV2 has the same one). */
+function AmountField({ value, onChangeText, placeholder, editable = true, accessibilityLabel, invalid }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <View style={[styles.field, focused && styles.fieldFocused, invalid && styles.fieldInvalid, !editable && styles.fieldDisabled]}>
+      <Text style={[styles.fieldRupee, !editable && { color: color.textDisabled }]}>₹</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType="decimal-pad"
+        placeholder={placeholder}
+        placeholderTextColor={color.textMuted}
+        editable={editable}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        accessibilityLabel={accessibilityLabel}
+        style={[styles.fieldInput, !editable && { color: color.textDisabled }]}
+      />
     </View>
   );
 }
@@ -44,7 +66,6 @@ export default function PocketBalanceV2() {
   const [withdrawalStatus, setWithdrawalStatus] = useState({ status: 'No request', updatedAt: null });
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawSubmitting, setWithdrawSubmitting] = useState(false);
-  const [focused, setFocused] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -138,88 +159,82 @@ export default function PocketBalanceV2() {
     }
   };
 
+  const insets = useSafeAreaInsets();
+  const overMax = Boolean(withdrawAmount) && Number.isFinite(parsed) && parsed > w.withdrawableAmount;
+  const underMin = Boolean(withdrawAmount) && Number.isFinite(parsed) && parsed > 0 && parsed < w.withdrawalLimit;
+
   return (
     <View style={styles.page}>
-      <PlainHeader title="Pocket balance" leadingNone onBack={goBack} />
+      <ScreenHeader title="Pocket balance" onBack={goBack} />
       {loading ? (
         <View style={styles.loading}>
-          <Spinner size={32} color={tw.primary} />
-          <Text style={styles.loadingText}>Loading Balance...</Text>
+          <Spinner size={32} color={color.primary} />
+          <Text style={[type.small, { color: color.textMuted }]}>Loading balance…</Text>
         </View>
       ) : (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 128 }}>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.body, { paddingBottom: space.xxxl + insets.bottom }]}>
             {!w.canWithdraw ? (
-              <View style={styles.warn}>
-                <AlertTriangle size={20} color="#1F1F24" />
-                <View style={{ flexShrink: 1 }}>
-                  <Text style={styles.warnTitle}>Withdraw currently disabled</Text>
-                  <Text style={styles.warnText}>
+              <View style={styles.warn} accessibilityRole="alert">
+                <AlertTriangle size={20} color={color.warning} style={{ marginTop: 1 }} />
+                <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
+                  <Text style={[type.bodyStrong, { color: color.text }]}>Withdraw currently disabled</Text>
+                  <Text style={[type.small, { color: color.textSecondary }]}>
                     {w.withdrawableAmount <= 0 ? 'Withdrawable amount is ₹0' : `Minimum withdrawal requirement is ₹${w.withdrawalLimit}`}
                   </Text>
                 </View>
               </View>
             ) : null}
 
-            <View style={[styles.top, shadow('sm')]}>
-              <Text style={styles.kicker}>Withdrawable Amount</Text>
-              <SoraMoney style={styles.big}>{`₹${w.withdrawableAmount.toFixed(0)}`}</SoraMoney>
-              <View style={{ marginBottom: 16, alignSelf: 'stretch' }}>
-                <Text style={styles.label}>Enter amount to withdraw</Text>
-                <View style={[{ borderRadius: 16, padding: 4, margin: -4 }, focused && { backgroundColor: 'rgba(21,73,139,0.15)' }]}>
-                  <TextInput
-                    value={withdrawAmount}
-                    onChangeText={onAmountChange}
-                    keyboardType="decimal-pad"
-                    editable={!inputDisabled}
-                    placeholder={`Min ₹${w.withdrawalLimit}`}
-                    placeholderTextColor="rgba(31,31,36,0.5)"
-                    onFocus={() => setFocused(true)}
-                    onBlur={() => setFocused(false)}
-                    accessibilityLabel="Amount to withdraw"
-                    style={[styles.input, focused && { borderColor: '#789D8A' }, inputDisabled && { opacity: 0.5 }]}
-                  />
-                  <Text pointerEvents="none" style={styles.inputRupee}>
-                    ₹
-                  </Text>
-                </View>
-                {withdrawAmount && Number.isFinite(parsed) && parsed > w.withdrawableAmount ? (
-                  <Text style={styles.err}>Amount cannot exceed ₹{w.withdrawableAmount.toFixed(0)}</Text>
-                ) : null}
-                {withdrawAmount && Number.isFinite(parsed) && parsed > 0 && parsed < w.withdrawalLimit ? (
-                  <Text style={styles.err}>Minimum withdrawal is ₹{w.withdrawalLimit}</Text>
-                ) : null}
-                {hasPendingWithdrawal ? <Text style={[styles.err, { color: tw.amber600 }]}>A withdrawal request is already pending admin approval.</Text> : null}
+            <Card>
+              <Text style={[type.overline, { color: color.textMuted }]}>Withdrawable amount</Text>
+              <Money value={formatINR(w.withdrawableAmount, { decimals: 0 })} style={styles.big} />
+
+              <Text style={[type.label, styles.label]}>Amount to withdraw</Text>
+              <AmountField
+                value={withdrawAmount}
+                onChangeText={onAmountChange}
+                editable={!inputDisabled}
+                placeholder={`Min ₹${w.withdrawalLimit}`}
+                accessibilityLabel="Amount to withdraw"
+                invalid={overMax || underMin}
+              />
+              <View style={styles.messages}>
+                {overMax ? <Text style={[type.small, { color: color.danger }]}>Amount cannot exceed ₹{w.withdrawableAmount.toFixed(0)}</Text> : null}
+                {underMin ? <Text style={[type.small, { color: color.danger }]}>Minimum withdrawal is ₹{w.withdrawalLimit}</Text> : null}
+                {hasPendingWithdrawal ? <Text style={[type.small, { color: color.warning }]}>A withdrawal request is already pending admin approval.</Text> : null}
               </View>
-              <Press
+              <Button
+                title={withdrawSubmitting ? 'Processing...' : 'Withdraw'}
+                size="lg"
                 onPress={handleWithdraw}
                 disabled={!enabled || withdrawSubmitting}
-                scale={0.98}
+                loading={withdrawSubmitting}
                 accessibilityLabel="Withdraw"
-                style={[styles.withdraw, shadow('lg'), { backgroundColor: enabled ? '#000' : tw.gray100 }]}
-              >
-                {withdrawSubmitting ? <Spinner size={16} color={enabled ? '#fff' : tw.gray400} /> : null}
-                <Text style={[styles.withdrawText, { color: enabled ? '#fff' : tw.gray400 }]}>{withdrawSubmitting ? 'Processing...' : 'Withdraw'}</Text>
-              </Press>
-            </View>
-
-            <View style={styles.band}>
-              <Text style={styles.bandText}>Pocket Details</Text>
-            </View>
-            <View style={{ backgroundColor: '#fff', paddingHorizontal: 16 }}>
-              <DetailRow label="Earnings" value={formatCurrency(w.weeklyEarnings)} />
-              <DetailRow label="Bonus" value={formatCurrency(w.totalBonus)} />
-              <DetailRow label="Amount withdrawn" value={formatCurrency(w.totalWithdrawn)} />
-              <DetailRow label="Cash collected" value={formatCurrency(w.cashCollected)} />
-              <DetailRow label="Deductions" value={formatCurrency(w.deductions)} />
-              <DetailRow label="Pocket balance" value={formatCurrency(w.pocketBalance)} />
-              <DetailRow
-                label="Withdrawal status"
-                value={withdrawalStatus.status}
-                subLabel={withdrawalStatus.updatedAt ? `Updated: ${withdrawalStatus.updatedAt}` : 'Admin approval status'}
               />
-              <DetailRow label="Min. withdrawal amount" value={formatCurrency(w.withdrawalLimit)} subLabel="Withdrawal allowed only when withdrawable amount reaches this limit." />
-              <DetailRow label="Withdrawable amount" value={formatCurrency(w.withdrawableAmount)} />
+            </Card>
+
+            <View style={{ marginTop: space.md }}>
+              <SectionHeader title="Pocket details" />
+              <Card padded={false}>
+                <DetailRow label="Earnings" value={formatINR(w.weeklyEarnings, { decimals: 2 })} />
+                <DetailRow label="Bonus" value={formatINR(w.totalBonus, { decimals: 2 })} />
+                <DetailRow label="Amount withdrawn" value={formatINR(w.totalWithdrawn, { decimals: 2 })} />
+                <DetailRow label="Cash collected" value={formatINR(w.cashCollected, { decimals: 2 })} />
+                <DetailRow label="Deductions" value={formatINR(w.deductions, { decimals: 2 })} />
+                <DetailRow label="Pocket balance" value={formatINR(w.pocketBalance, { decimals: 2 })} strong />
+                <DetailRow
+                  label="Withdrawal status"
+                  value={<StatusBadge label={withdrawalStatus.status} tone={STATUS_TONE[withdrawalStatus.status] || 'neutral'} />}
+                  subLabel={withdrawalStatus.updatedAt ? `Updated: ${withdrawalStatus.updatedAt}` : 'Admin approval status'}
+                />
+                <DetailRow
+                  label="Min. withdrawal amount"
+                  value={formatINR(w.withdrawalLimit, { decimals: 2 })}
+                  subLabel="Withdrawal allowed only when withdrawable amount reaches this limit."
+                />
+                <DetailRow label="Withdrawable amount" value={formatINR(w.withdrawableAmount, { decimals: 2 })} strong last />
+              </Card>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -229,26 +244,32 @@ export default function PocketBalanceV2() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FAF6ED' },
-  loading: { paddingVertical: 80, alignItems: 'center', gap: 12 },
-  loadingText: { color: tw.gray400, fontSize: 12, lineHeight: 16, letterSpacing: 1.2, textTransform: 'uppercase', ...ff(700) },
-  warn: { backgroundColor: '#FAF6ED', padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(240,177,0,0.1)' },
-  warnTitle: { fontSize: 12, lineHeight: 16, color: '#1F1F24', ...ff(700) },
-  warnText: { fontSize: 10, lineHeight: 12.5, color: '#1F1F24', opacity: 0.8, marginTop: 4, ...ff(500) },
-  top: { backgroundColor: '#fff', padding: 32, marginBottom: 16, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  kicker: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, textTransform: 'uppercase', color: tw.gray400, marginBottom: 8, ...ff(700) },
-  big: { fontSize: 48, lineHeight: 48, color: '#000', marginBottom: 16, ...display(900, 48) },
-  label: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, marginBottom: 8, ...ff(700) },
-  // An <input>: the theme paints it white with a #E8DEE7 border.
-  input: { height: 58, paddingLeft: 32, paddingRight: 16, borderRadius: 12, borderWidth: 1, borderColor: '#E8DEE7', backgroundColor: '#fff', fontSize: 18, color: '#1F1F24', outlineWidth: 0, ...ff(700) },
-  inputRupee: { position: 'absolute', left: 20, top: 0, bottom: 0, textAlignVertical: 'center', lineHeight: 66, fontSize: 16, color: tw.gray400, ...ff(700) },
-  err: { fontSize: 11, lineHeight: 16.5, color: tw.red500, marginTop: 8, ...ff(600) },
-  withdraw: { width: '100%', paddingVertical: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  withdrawText: { fontSize: 14, lineHeight: 20, ...ff(700) },
-  band: { backgroundColor: 'rgba(243,244,246,0.5)', paddingVertical: 8, paddingHorizontal: 16 },
-  bandText: { fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.gray400, textAlign: 'center', ...display(900, 10) },
-  detail: { paddingVertical: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  detailLabel: { fontSize: 14, lineHeight: 20, color: tw.gray800, ...ff(600) },
-  detailSub: { fontSize: 10, lineHeight: 12.5, color: tw.gray400, marginTop: 2, ...ff(500) },
-  detailValue: { fontSize: 14, lineHeight: 20, color: '#000', ...ff(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  loading: { paddingVertical: space.xxxl * 2, alignItems: 'center', gap: space.md },
+  body: { padding: space.lg, gap: space.md },
+  warn: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, padding: space.lg, borderRadius: radii.lg, backgroundColor: tone.warning.bg },
+  big: { ...type.display, marginTop: space.xs, marginBottom: space.lg },
+  label: { color: color.textSecondary, marginBottom: space.sm },
+  messages: { gap: space.xs, marginTop: space.sm, marginBottom: space.lg },
+  detail: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 56 },
+  detailDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  detailText: { flex: 1, minWidth: 0, gap: space.xxs },
+  detailValue: { ...type.money, fontSize: 16, lineHeight: 22, flexShrink: 1, maxWidth: '55%', textAlign: 'right' },
+
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 56,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderColor: color.borderStrong,
+    backgroundColor: color.surface,
+    paddingHorizontal: space.lg,
+    gap: space.sm,
+  },
+  fieldFocused: { borderColor: color.primary },
+  fieldInvalid: { borderColor: color.danger },
+  fieldDisabled: { backgroundColor: color.surfaceMuted, borderColor: color.border },
+  fieldRupee: { ...type.subheading, fontSize: 20, lineHeight: 26, color: color.textSecondary },
+  fieldInput: { flex: 1, minWidth: 0, height: '100%', ...type.subheading, fontSize: 20, lineHeight: 26, color: color.text, outlineWidth: 0, outlineStyle: 'none', padding: 0 },
 });

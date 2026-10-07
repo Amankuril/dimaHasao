@@ -3,21 +3,27 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronRight, MessageSquare, Plus } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../../api/delivery';
-import FixedHeader, { FIXED_HEADER_CONTENT_TOP } from '../../../../../../components/delivery/FixedHeader';
+import { Button, Card, EmptyState, ScreenHeader, StatusBadge } from '../../../../../../components/ds';
 import { Spinner } from '../../../../../../components/Loader';
-import { Press } from '../../../../../../components/ui';
 import useDeliveryBackNavigation from '../../../../../../delivery/hooks/useDeliveryBackNavigation';
 import { toast } from '../../../../../../lib/notify';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { display, ff, shadow, tw } from '../../../../../../theme';
+import { color, radii, space, type } from '../../../../../../theme';
 
-// Web: pages/help/SupportTicketsV2.jsx (`font-poppins` -> Nunito Sans).
+// Web: pages/help/SupportTicketsV2.jsx. Raise action on top, then the rider's tickets.
 
-// open / in_progress / resolved all repaint to the same soft-green chip.
-const statusStyle = (status) =>
-  ['open', 'in_progress', 'resolved'].includes(String(status || '').toLowerCase())
-    ? { backgroundColor: tw.primarySoft, color: tw.primary, borderColor: tw.primaryBorder }
-    : { backgroundColor: tw.gray50, color: tw.gray600, borderColor: tw.gray100 };
+// Ticket status -> badge tone + sentence-case label (DESIGN_SYSTEM.md mapping).
+const TICKET_TONE = { open: 'warning', pending: 'warning', in_progress: 'info', resolved: 'success', closed: 'neutral' };
+const ticketBadge = (status) => {
+  const raw = String(status || '').toLowerCase();
+  const text = raw.replace(/_/g, ' ');
+  return { tone: TICKET_TONE[raw] || 'neutral', label: text ? text.charAt(0).toUpperCase() + text.slice(1) : 'Unknown' };
+};
+
+const sentence = (s) => {
+  const t = String(s || '');
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
+};
 
 export default function SupportTicketsV2() {
   const goBack = useDeliveryBackNavigation();
@@ -41,60 +47,47 @@ export default function SupportTicketsV2() {
 
   return (
     <View style={styles.page}>
-      <FixedHeader title="Support Tickets" onBack={goBack} />
-      <ScrollView contentContainerStyle={[styles.body, { paddingTop: FIXED_HEADER_CONTENT_TOP + insets.top }]}>
-        <Press onPress={() => router.push('/food/delivery/help/tickets/create')} accessibilityLabel="Raise New Ticket" style={[styles.create, shadow('card')]}>
-          <Plus size={20} color="#fff" />
-          <Text style={styles.createText}>Raise New Ticket</Text>
-        </Press>
+      <ScreenHeader title="Support tickets" onBack={goBack} />
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: space.xxxl + insets.bottom }]}>
+        <Button title="Raise new ticket" icon={Plus} onPress={() => router.push('/food/delivery/help/tickets/create')} accessibilityLabel="Raise New Ticket" />
 
         {loading ? (
-          <View style={styles.loading}>
-            <Spinner size={32} color={tw.gray200} />
-            <Text style={styles.loadingText}>Syncing Tickets...</Text>
+          <View style={styles.loading} accessibilityLabel="Loading tickets">
+            <Spinner size={32} color={color.primary} />
+            <Text style={styles.loadingText}>Loading tickets...</Text>
           </View>
         ) : tickets.length === 0 ? (
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <MessageSquare size={40} color={tw.gray200} />
-            </View>
-            <Text style={styles.emptyTitle}>No Active Tickets</Text>
-            <Text style={styles.emptySub}>Create a ticket if you need assistance</Text>
-          </View>
+          <EmptyState icon={MessageSquare} title="No active tickets" message="Create a ticket if you need assistance." />
         ) : (
-          <View style={{ gap: 16 }}>
+          <View style={{ gap: space.md }}>
             {tickets.map((ticket, idx) => {
-              const s = statusStyle(ticket.status);
+              const badge = ticketBadge(ticket.status);
               return (
-                <Press
-                  key={ticket._id || idx}
-                  scale={0.98}
-                  onPress={() => router.push(`/food/delivery/help/tickets/${ticket._id}`)}
-                  accessibilityLabel={ticket.subject}
-                  style={[styles.card, shadow('card')]}
-                >
+                <Card key={ticket._id || idx} onPress={() => router.push(`/food/delivery/help/tickets/${ticket._id}`)} accessibilityLabel={ticket.subject}>
                   <View style={styles.cardTop}>
-                    <View style={{ flex: 1, paddingRight: 16 }}>
-                      <View style={styles.titleRow}>
-                        <Text numberOfLines={1} style={styles.subject}>
-                          {ticket.subject}
-                        </Text>
-                        {ticket.ticketId ? <Text style={styles.ticketId}>#{ticket.ticketId}</Text> : null}
-                      </View>
-                      <Text numberOfLines={1} style={styles.desc}>
+                    <View style={styles.cardText}>
+                      <Text numberOfLines={2} style={styles.subject}>
+                        {ticket.subject}
+                      </Text>
+                      {ticket.ticketId ? <Text style={styles.ticketId}>#{ticket.ticketId}</Text> : null}
+                      <Text numberOfLines={2} style={styles.desc}>
                         {ticket.description}
                       </Text>
                     </View>
-                    <ChevronRight size={20} color={tw.gray200} />
+                    <ChevronRight size={20} color={color.textDisabled} />
                   </View>
                   <View style={styles.cardFoot}>
                     <View style={styles.footLeft}>
-                      <Text style={[styles.status, s]}>{ticket.status?.replace('_', ' ')}</Text>
-                      <Text style={styles.category}>{ticket.category}</Text>
+                      <StatusBadge tone={badge.tone} label={badge.label} />
+                      {ticket.category ? (
+                        <Text style={styles.meta} numberOfLines={1}>
+                          {sentence(ticket.category)}
+                        </Text>
+                      ) : null}
                     </View>
-                    <Text style={styles.date}>{new Date(ticket.createdAt).toLocaleDateString()}</Text>
+                    <Text style={styles.meta}>{new Date(ticket.createdAt).toLocaleDateString()}</Text>
                   </View>
-                </Press>
+                </Card>
               );
             })}
           </View>
@@ -105,28 +98,16 @@ export default function SupportTicketsV2() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff' },
-  body: { paddingHorizontal: 16, paddingBottom: 80, gap: 24 },
-  create: { width: '100%', backgroundColor: '#000', padding: 20, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  createText: { color: '#fff', fontSize: 14, lineHeight: 20, textTransform: 'uppercase', ...display(900, 14) },
-  loading: { paddingVertical: 80, alignItems: 'center', gap: 12 },
-  loadingText: { fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.gray400, ...display(900, 10) },
-  empty: { paddingVertical: 96, alignItems: 'center' },
-  emptyIcon: { width: 80, height: 80, backgroundColor: tw.gray50, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  emptyTitle: { fontSize: 14, lineHeight: 20, color: tw.gray950, textTransform: 'uppercase', ...display(900, 14) },
-  emptySub: { marginTop: 8, fontSize: 10, lineHeight: 15, color: tw.gray400, textTransform: 'uppercase', ...ff(700) },
-  card: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5DDC3', borderRadius: 16, padding: 20, overflow: 'hidden' },
-  // mb-3 collapses into the footer's mt-4 (block siblings)
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  // h4 + font-black -> Sora
-  subject: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: tw.gray950, textTransform: 'uppercase', ...display(900, 14) },
-  // font-mono loses to the theme's inherit rule: Nunito
-  ticketId: { fontSize: 9, lineHeight: 13.5, backgroundColor: tw.gray100, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, overflow: 'hidden', color: '#1F1F24', ...ff(700) },
-  desc: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...ff(500) },
-  cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: tw.gray50 },
-  footLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  status: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 9, lineHeight: 13.5, textTransform: 'uppercase', borderWidth: 1, ...display(900, 9) },
-  category: { fontSize: 9, lineHeight: 13.5, letterSpacing: 0.9, textTransform: 'uppercase', color: tw.gray400, ...ff(700) },
-  date: { fontSize: 9, lineHeight: 13.5, color: tw.gray300, ...ff(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  body: { padding: space.lg, gap: space.lg },
+  loading: { paddingVertical: space.xxxl * 2, alignItems: 'center', gap: space.md },
+  loadingText: { ...type.body, color: color.textSecondary },
+  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  cardText: { flex: 1, minWidth: 0, gap: space.xs },
+  subject: { ...type.subheading, color: color.text },
+  ticketId: { ...type.caption, color: color.textSecondary, alignSelf: 'flex-start', backgroundColor: color.surfaceMuted, paddingHorizontal: space.sm, paddingVertical: space.xxs, borderRadius: radii.sm, overflow: 'hidden' },
+  desc: { ...type.small, color: color.textMuted },
+  cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, marginTop: space.md, paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  footLeft: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 1, minWidth: 0 },
+  meta: { ...type.caption, color: color.textMuted, flexShrink: 1 },
 });

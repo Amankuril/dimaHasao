@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { Camera, CheckCircle2, ChefHat, ChevronDown, ChevronUp, Image as ImageIcon, MapPin, Navigation, Package, Phone } from 'lucide-react-native';
+import { Camera, CheckCircle2, ChefHat, ChevronDown, ChevronUp, Image as ImageIcon, MapPin, MessageSquareText, Navigation, Navigation2, Package, Phone } from 'lucide-react-native';
 import { ActionSlider } from '../ActionSlider';
 import TripSheet from './TripSheet';
 import { uploadApi } from '../../../api/delivery';
@@ -11,23 +11,19 @@ import { openExternal } from '../../../lib/links';
 import { toast } from '../../../lib/notify';
 import { Spinner } from '../../Loader';
 import { Press } from '../../ui';
-import { display, poppins, shadow, tw } from '../../../theme';
+import { Button, IconButton } from '../../ds';
+import { color, radii, space, type } from '../../../theme';
 
 /*
- * Port of components/modals/PickupActionModal.jsx. Poppins base;
- * font-extrabold and h3 are Sora. Greens/blues/oranges resolve through
- * deliveryTheme.css (text -> primary, *-50 backgrounds -> #E8F2EC,
- * *-100 borders -> #BBCCC3; bg-orange-500 slider fill -> #E8F2EC).
+ * The pickup leg: heading to the restaurant, then at the restaurant (bill
+ * photo + slide to pick up). Status first, then pickup and drop stops,
+ * then the step's action, then notes and the item list.
  */
 
 const mapsDir = (dest) => `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
 
 function ActionCircle({ Icon, dark, label, onPress }) {
-  return (
-    <Press onPress={onPress} accessibilityLabel={label} style={[styles.circle, dark ? [styles.circleDark, shadow('md')] : [styles.circleLight, shadow('sm')]]}>
-      <Icon size={20} color={dark ? '#fff' : tw.primary} />
-    </Press>
-  );
+  return <IconButton icon={Icon} label={label} onPress={onPress} variant={dark ? 'solid' : 'primary'} size={44} iconSize={20} />;
 }
 
 export function PickupActionModal({ order, status, distanceToTarget, eta, onReachedPickup, onPickedUp, onMinimize }) {
@@ -119,40 +115,39 @@ export function PickupActionModal({ order, status, distanceToTarget, eta, onReac
   };
   const prefix = `bill-${order.orderId || order._id}`;
 
+  const distanceLabel = formatTripDistanceKm(distanceToTarget);
+
   return (
     <TripSheet onRequestClose={onMinimize}>
-      <View style={styles.handleRow}>
-        <Press onPress={onMinimize} accessibilityLabel="Minimise" style={styles.handleBtn}>
-          <ChevronDown size={24} color={tw.gray400} strokeWidth={3} />
-        </Press>
+      <Press onPress={onMinimize} scale={1} accessibilityLabel="Minimise pickup panel" style={styles.handleRow}>
+        <View style={styles.grabber} />
+        <ChevronDown size={20} color={color.textMuted} />
+      </Press>
+
+      <View style={[styles.statusRow, isAtPickup && { backgroundColor: color.successSoft }]} accessibilityLiveRegion="polite">
+        {isAtPickup ? <CheckCircle2 size={18} color={color.success} /> : <Navigation2 size={18} color={color.primary} />}
+        <Text style={[styles.statusText, { color: isAtPickup ? color.success : color.primary }]}>
+          {isAtPickup ? 'Reached the restaurant' : distanceLabel === '--' ? 'Locating restaurant…' : `${distanceLabel} km · ${eta || '--'} min to store`}
+        </Text>
       </View>
 
-      <View style={[styles.party, { marginBottom: 16 }]}>
-        <View style={styles.partyMain}>
-          <View style={[styles.logo, shadow('card')]}>
-            <Image source={{ uri: restaurantLogo }} style={styles.logoImg} resizeMode="cover" />
+      <View style={styles.party}>
+        <View style={styles.logo}>
+          <Image source={{ uri: restaurantLogo }} style={styles.logoImg} resizeMode="cover" />
+        </View>
+        <View style={styles.partyText}>
+          <View style={styles.kickerRow}>
+            <ChefHat size={14} color={color.primary} />
+            <Text style={[styles.kicker, { color: color.primary }]}>Pickup</Text>
           </View>
-          <View style={styles.partyText}>
-            <View style={styles.kickerRow}>
-              <ChefHat size={14} color={tw.primary} />
-              <Text style={styles.kicker}>Restaurant Pickup</Text>
-            </View>
-            <Text numberOfLines={1} style={styles.partyName}>
-              {restaurantName}
+          <Text numberOfLines={2} style={styles.partyName}>
+            {restaurantName}
+          </Text>
+          {restaurantAddress ? (
+            <Text numberOfLines={2} style={styles.address}>
+              {restaurantAddress}
             </Text>
-            {restaurantAddress ? (
-              <Text numberOfLines={2} style={styles.address}>
-                {restaurantAddress}
-              </Text>
-            ) : null}
-            {isAtPickup ? (
-              <Text style={[styles.statusLine, styles.reached]}>Reached Location √</Text>
-            ) : (
-              <Text style={[styles.statusLine, { color: tw.primary }]}>
-                {formatTripDistanceKm(distanceToTarget) === '--' ? 'Locating restaurant…' : `${formatTripDistanceKm(distanceToTarget)} km • ${eta || '--'} min to Store`}
-              </Text>
-            )}
-          </View>
+          ) : null}
         </View>
         <View style={styles.actions}>
           <ActionCircle Icon={Phone} label="Call restaurant" onPress={() => call(restaurantPhone, 'Restaurant number not available')} />
@@ -160,26 +155,24 @@ export function PickupActionModal({ order, status, distanceToTarget, eta, onReac
         </View>
       </View>
 
-      <View style={[styles.party, { marginBottom: 20 }]}>
-        <View style={styles.partyMain}>
-          <View style={[styles.logo, styles.dropIcon, shadow('card')]}>
-            <MapPin size={24} color={tw.primary} />
+      <View style={[styles.party, styles.partyLast]}>
+        <View style={[styles.logo, styles.dropIcon]}>
+          <MapPin size={22} color={color.info} />
+        </View>
+        <View style={styles.partyText}>
+          <View style={styles.kickerRow}>
+            <MapPin size={14} color={color.info} />
+            <Text style={[styles.kicker, { color: color.info }]}>Drop</Text>
           </View>
-          <View style={styles.partyText}>
-            <View style={styles.kickerRow}>
-              <MapPin size={14} color={tw.primary} />
-              <Text style={styles.kicker}>Customer Drop</Text>
-            </View>
-            <Text numberOfLines={1} style={styles.partyName}>
-              {customerName}
+          <Text numberOfLines={1} style={styles.partyName}>
+            {customerName}
+          </Text>
+          {customerAddress ? (
+            <Text numberOfLines={2} style={styles.address}>
+              {customerAddress}
             </Text>
-            {customerAddress ? (
-              <Text numberOfLines={2} style={styles.address}>
-                {customerAddress}
-              </Text>
-            ) : null}
-            {customerPhone ? <Text style={styles.phone}>{customerPhone}</Text> : null}
-          </View>
+          ) : null}
+          {customerPhone ? <Text style={styles.phone}>{customerPhone}</Text> : null}
         </View>
         <View style={styles.actions}>
           <ActionCircle Icon={Phone} label="Call customer" onPress={() => call(customerPhone, 'Customer number not available')} />
@@ -187,86 +180,95 @@ export function PickupActionModal({ order, status, distanceToTarget, eta, onReac
         </View>
       </View>
 
-      <View style={{ gap: 16 }}>
+      <View style={{ gap: space.lg }}>
         {!isAtPickup ? (
-          <View>
-            <Text style={styles.hint}>Ready - Swipe to confirm arrival</Text>
+          <View style={{ gap: space.sm }}>
+            <Text style={styles.hint}>Swipe when you reach the restaurant</Text>
             <ActionSlider key="action-reach" label="Slide to Reach" successLabel="Reached!" disabled={false} onConfirm={onReachedPickup} color="bg-green-600" />
           </View>
         ) : (
-          <View style={{ gap: 16 }}>
-            <View style={styles.billRow}>
-              {!billImageUploaded && !isUploadingBill ? (
-                <>
-                  <Press
-                    onPress={() => openCamera({ onSelectFile: handleBillImageSelect, fileNamePrefix: prefix })}
-                    accessibilityLabel="Camera"
-                    style={[styles.billBtn, styles.billDark, shadow('card')]}
-                  >
-                    <Camera size={20} color="#fff" />
-                    <Text style={[styles.billText, { color: '#fff' }]}>Camera</Text>
-                  </Press>
-                  <Press
-                    onPress={() => openGallery({ onSelectFile: handleBillImageSelect, fileNamePrefix: prefix })}
-                    accessibilityLabel="Gallery"
-                    style={[styles.billBtn, styles.billLight, shadow('card')]}
-                  >
-                    <ImageIcon size={20} color={tw.primary} />
-                    <Text style={[styles.billText, { color: tw.primary }]}>Gallery</Text>
-                  </Press>
-                </>
-              ) : null}
-              {isUploadingBill ? (
-                <View style={[styles.billBtn, styles.billStatus, { backgroundColor: tw.gray50 }, shadow('card')]}>
-                  <Spinner size={16} color={tw.gray400} />
-                  <Text style={[styles.billText, { color: tw.gray400 }]}>Uploading...</Text>
-                </View>
-              ) : null}
-              {billImageUploaded ? (
-                <View style={[styles.billBtn, styles.billStatus, { backgroundColor: '#DCFCE7' }, shadow('card')]}>
-                  <CheckCircle2 size={16} color={tw.green700} />
-                  <Text style={[styles.billText, { color: tw.green700 }]}>Bill Uploaded</Text>
-                </View>
-              ) : null}
+          <View style={{ gap: space.lg }}>
+            <View style={{ gap: space.sm }}>
+              <Text style={styles.sectionLabel}>Bill photo</Text>
+              <View style={styles.billRow}>
+                {!billImageUploaded && !isUploadingBill ? (
+                  <>
+                    <Button
+                      title="Camera"
+                      icon={Camera}
+                      variant="secondary"
+                      onPress={() => openCamera({ onSelectFile: handleBillImageSelect, fileNamePrefix: prefix })}
+                      accessibilityLabel="Camera"
+                      style={{ flex: 1 }}
+                    />
+                    <Button
+                      title="Gallery"
+                      icon={ImageIcon}
+                      variant="outline"
+                      onPress={() => openGallery({ onSelectFile: handleBillImageSelect, fileNamePrefix: prefix })}
+                      accessibilityLabel="Gallery"
+                      style={{ flex: 1 }}
+                    />
+                  </>
+                ) : null}
+                {isUploadingBill ? (
+                  <View style={[styles.billStatus, { backgroundColor: color.surfaceMuted }]}>
+                    <Spinner size={16} color={color.textMuted} />
+                    <Text style={[styles.billText, { color: color.textSecondary }]}>Uploading…</Text>
+                  </View>
+                ) : null}
+                {billImageUploaded ? (
+                  <View style={[styles.billStatus, { backgroundColor: color.successSoft }]}>
+                    <CheckCircle2 size={18} color={color.success} />
+                    <Text style={[styles.billText, { color: color.success }]}>Bill uploaded</Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
-            <View>
-              <Text style={styles.hint}>Swipe to pick up</Text>
+            <View style={{ gap: space.sm }}>
+              <Text style={styles.hint}>Swipe once you have the order</Text>
               <ActionSlider key="action-pickup" label="Slide to Pick Up" successLabel="Picked Up!" disabled={false} onConfirm={() => onPickedUp(billImageUrl)} color="bg-orange-500" />
             </View>
           </View>
         )}
 
         {order?.note ? (
-          <View style={[styles.note, shadow('card')]}>
-            <ChefHat size={20} color={tw.primary} style={{ marginTop: 2 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.noteKicker}>User Instructions</Text>
-              <Text style={styles.noteText}>&quot;{order.note}&quot;</Text>
+          <View style={styles.note}>
+            <MessageSquareText size={18} color={color.info} style={{ marginTop: 1 }} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.noteKicker}>Customer instructions</Text>
+              <Text style={styles.noteText}>{order.note}</Text>
             </View>
           </View>
         ) : null}
 
-        <Press onPress={() => setShowItems(!showItems)} scale={1} accessibilityLabel="Order Details" style={[styles.detailsBtn, shadow('card')]}>
-          <View style={styles.detailsLeft}>
-            <Package size={20} color={tw.gray400} />
-            <Text style={styles.detailsText}>Order Details ({items.length || 0})</Text>
-          </View>
-          {showItems ? <ChevronDown size={16} color={tw.gray900} /> : <ChevronUp size={16} color={tw.gray900} />}
-        </Press>
+        <View style={styles.details}>
+          <Press
+            onPress={() => setShowItems(!showItems)}
+            scale={1}
+            accessibilityLabel={`Order details, ${items.length || 0} items`}
+            accessibilityState={{ expanded: showItems }}
+            style={styles.detailsBtn}
+          >
+            <View style={styles.detailsLeft}>
+              <Package size={20} color={color.textSecondary} />
+              <Text style={styles.detailsText}>Order details ({items.length || 0})</Text>
+            </View>
+            {showItems ? <ChevronUp size={20} color={color.textSecondary} /> : <ChevronDown size={20} color={color.textSecondary} />}
+          </Press>
 
-        {showItems ? (
-          <View style={{ gap: 8, paddingHorizontal: 4 }}>
-            {items.map((item, idx) => (
-              <View key={idx} style={[styles.item, idx === items.length - 1 && { borderBottomWidth: 0 }]}>
-                <View style={{ flexShrink: 1 }}>
-                  <Text style={styles.itemName}>{item.name || 'Item Name'}</Text>
-                  {item.variantName ? <Text style={styles.itemVariant}>{item.variantName}</Text> : null}
+          {showItems
+            ? items.map((item, idx) => (
+                <View key={idx} style={styles.item}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.itemName}>{item.name || 'Item Name'}</Text>
+                    {item.variantName ? <Text style={styles.itemVariant}>{item.variantName}</Text> : null}
+                  </View>
+                  <Text style={styles.qty}>×{item.quantity || 1}</Text>
                 </View>
-                <Text style={styles.qty}>x{item.quantity || 1}</Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
+              ))
+            : null}
+        </View>
       </View>
     </TripSheet>
   );
@@ -275,43 +277,36 @@ export function PickupActionModal({ order, status, distanceToTarget, eta, onReac
 export default PickupActionModal;
 
 const styles = StyleSheet.create({
-  handleRow: { width: '100%', alignItems: 'center', paddingBottom: 8, paddingTop: 4 },
-  handleBtn: { padding: 4, borderRadius: 999 },
-  party: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
-  partyMain: { flexDirection: 'row', gap: 12, minWidth: 0, flex: 1 },
-  // rounded-2xl: card shadow (shadow-md loses) and #E5DDC3 border
-  logo: { width: 52, height: 52, backgroundColor: '#fff', borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#E5DDC3' },
+  handleRow: { alignSelf: 'center', alignItems: 'center', paddingHorizontal: space.xl, minHeight: 36, marginTop: -space.sm },
+  grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.borderStrong, marginTop: space.sm },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.primarySoft, borderRadius: radii.md, paddingHorizontal: space.md, paddingVertical: space.sm + 2, marginBottom: space.md },
+  statusText: { ...type.bodyStrong, flex: 1 },
+  party: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingVertical: space.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.border },
+  partyLast: { marginBottom: space.lg },
+  logo: { width: 48, height: 48, backgroundColor: color.surfaceMuted, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   logoImg: { width: '100%', height: '100%' },
-  // bg-blue-50 -> #E8F2EC; .border-blue-100 comes after the rounded-2xl rule -> #BBCCC3
-  dropIcon: { backgroundColor: tw.primarySoft, borderColor: tw.primaryBorder },
-  partyText: { minWidth: 0, flex: 1, paddingRight: 4 },
-  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  kicker: { fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.primary, ...display(800, 10) },
-  // h3 -> Sora
-  partyName: { marginTop: 2, fontSize: 16, lineHeight: 20, color: tw.gray950, ...display(700, 16) },
-  address: { marginTop: 2, fontSize: 12, lineHeight: 16.5, color: tw.gray500, ...poppins(500) },
-  phone: { marginTop: 2, fontSize: 11, lineHeight: 16.5, color: tw.gray500, ...poppins(600) },
-  statusLine: { marginTop: 4, fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', ...poppins(700) },
-  reached: { color: tw.primary, letterSpacing: 0.1, ...display(800, 10) },
-  actions: { flexDirection: 'row', gap: 8, marginLeft: 4 },
-  circle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  circleLight: { backgroundColor: tw.primarySoft, borderWidth: 1, borderColor: tw.primaryBorder },
-  circleDark: { backgroundColor: tw.gray900 },
-  hint: { textAlign: 'center', fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12, color: tw.primary, ...poppins(700) },
-  billRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12, width: '100%' },
-  billBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 16 },
-  billDark: { backgroundColor: tw.gray900 },
-  billLight: { backgroundColor: tw.primarySoft, borderWidth: 1, borderColor: tw.primaryBorder },
-  billStatus: { width: '100%' },
-  billText: { fontSize: 11, lineHeight: 16.5, letterSpacing: 1.1, textTransform: 'uppercase', ...poppins(700) },
-  note: { backgroundColor: tw.primarySoft, borderWidth: 1, borderColor: tw.primaryBorder, borderRadius: 16, padding: 14, flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  noteKicker: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.primary, marginBottom: 6, ...poppins(700) },
-  noteText: { fontSize: 14, lineHeight: 17.5, color: tw.gray800, ...poppins(700) },
-  detailsBtn: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: tw.gray50, borderRadius: 16 },
-  detailsLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  detailsText: { fontSize: 12, lineHeight: 16, letterSpacing: 1.2, textTransform: 'uppercase', color: tw.gray900, ...poppins(700) },
-  item: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 12, borderBottomWidth: 1, borderBottomColor: tw.gray50 },
-  itemName: { fontSize: 14, lineHeight: 20, color: tw.gray700, ...poppins(700) },
-  itemVariant: { marginTop: 2, fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(500) },
-  qty: { marginLeft: 8, fontSize: 12, lineHeight: 16, color: tw.primary, backgroundColor: tw.primarySoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, overflow: 'hidden', ...poppins(700) },
+  dropIcon: { backgroundColor: color.infoSoft },
+  partyText: { minWidth: 0, flex: 1 },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  kicker: { ...type.overline },
+  partyName: { ...type.subheading, color: color.text, marginTop: 2 },
+  address: { ...type.small, color: color.textSecondary, marginTop: 2 },
+  phone: { ...type.small, color: color.textSecondary, marginTop: 2 },
+  actions: { flexDirection: 'row', gap: space.sm },
+  hint: { ...type.caption, color: color.textMuted, textAlign: 'center' },
+  sectionLabel: { ...type.label, color: color.textSecondary },
+  billRow: { flexDirection: 'row', gap: space.sm },
+  billStatus: { flex: 1, height: 48, borderRadius: radii.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  billText: { ...type.bodyStrong },
+  note: { backgroundColor: color.infoSoft, borderRadius: radii.md, padding: space.md, flexDirection: 'row', gap: space.sm, alignItems: 'flex-start' },
+  noteKicker: { ...type.label, color: color.info },
+  noteText: { ...type.body, color: color.text, marginTop: 2 },
+  details: { borderRadius: radii.md, backgroundColor: color.surfaceMuted, overflow: 'hidden' },
+  detailsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.md, minHeight: 52 },
+  detailsLeft: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  detailsText: { ...type.bodyStrong, color: color.text },
+  item: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: space.sm, paddingHorizontal: space.md, paddingVertical: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, backgroundColor: color.surface },
+  itemName: { ...type.bodyStrong, color: color.text },
+  itemVariant: { ...type.small, color: color.textMuted, marginTop: 2 },
+  qty: { ...type.label, color: color.primary, backgroundColor: color.primarySoft, paddingHorizontal: space.sm + 2, paddingVertical: space.xxs, borderRadius: radii.sm, overflow: 'hidden' },
 });

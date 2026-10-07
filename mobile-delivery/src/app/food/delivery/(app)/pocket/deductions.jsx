@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MinusCircle, Receipt } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../../../api/delivery';
-import PlainHeader from '../../../../../components/delivery/PlainHeader';
+import { Card, EmptyState, Money, ScreenHeader, formatINR } from '../../../../../components/ds';
 import WeekSelector from '../../../../../components/delivery/WeekSelector';
 import { Spinner } from '../../../../../components/Loader';
-import { Press } from '../../../../../components/ui';
 import useDeliveryBackNavigation from '../../../../../delivery/hooks/useDeliveryBackNavigation';
-import { formatCurrency } from '../../../../../lib/format';
 import { toast } from '../../../../../lib/notify';
-import { ff, shadow, tw } from '../../../../../theme';
+import { color, radii, space, tone, type } from '../../../../../theme';
 
-// Web: pages/pocket/DeductionStatementV2.jsx. `font-poppins` -> Nunito.
-
-const DOTS = [tw.primarySoft, tw.primarySoft, tw.primary];
+// Web: pages/pocket/DeductionStatementV2.jsx. Styled per DESIGN_SYSTEM.md.
 
 const initialRange = () => {
   const now = new Date();
@@ -52,68 +50,62 @@ export default function DeductionStatementV2() {
     })();
   }, [weekRange]);
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.page}>
-      <PlainHeader title="Deduction statement" size={20} leadingNone onBack={goBack} />
-      <ScrollView contentContainerStyle={styles.body}>
-        <WeekSelector onChange={setWeekRange} />
-        {loading ? (
-          <View style={styles.center}>
-            <Spinner size={32} color={tw.primary} />
-            <Text style={[styles.muted, { marginTop: 16 }]}>Loading deductions...</Text>
-          </View>
-        ) : deductions.length === 0 ? (
-          <View style={styles.center}>
-            <View style={{ gap: 8, marginBottom: 24 }}>
-              {[0, 1, 2].map((i) => (
-                <View key={i} style={[styles.ghost, shadow('sm')]}>
-                  <View style={[styles.dot, { marginTop: 4, backgroundColor: DOTS[i] }]} />
-                  <View style={{ flex: 1, gap: 8 }}>
-                    <View style={[styles.line, { width: '75%' }]} />
-                    <View style={[styles.line, { width: '50%' }]} />
-                  </View>
-                </View>
-              ))}
+      <ScreenHeader title="Deduction statement" onBack={goBack} />
+      <FlatList
+        data={loading ? [] : deductions}
+        keyExtractor={(item, index) => String(item._id || index)}
+        contentContainerStyle={[styles.body, { paddingBottom: space.xxxl + insets.bottom }]}
+        ListHeaderComponent={
+          <WeekSelector onChange={setWeekRange} style={{ paddingVertical: space.xs, marginBottom: space.xs }} />
+        }
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loading}>
+              <Spinner size={32} color={color.primary} />
+              <Text style={[type.small, { color: color.textMuted }]}>Loading deductions…</Text>
             </View>
-            <Text style={styles.emptyTitle}>No transactions</Text>
-            <Text style={styles.emptyText}>Is hafton mein koi deduction nahi hui.</Text>
-          </View>
-        ) : (
-          <View style={{ gap: 12, marginBottom: 24 }}>
-            {deductions.map((item, index) => (
-              <Press key={item._id || index} scale={0.98} accessibilityLabel={item.description || 'System Deduction'} style={[styles.item, shadow('sm')]}>
-                <View style={styles.itemLeft}>
-                  <View style={[styles.dot, { backgroundColor: DOTS[index % 3] }]} />
-                  <View style={{ flexShrink: 1 }}>
-                    <Text style={styles.itemTitle}>{item.description || 'System Deduction'}</Text>
-                    <Text style={styles.itemDate}>
-                      {new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.amount}>-{formatCurrency(item.amount)}</Text>
-              </Press>
-            ))}
-          </View>
+          ) : (
+            <Card>
+              <EmptyState icon={Receipt} title="No transactions" message="Is hafton mein koi deduction nahi hui." />
+            </Card>
+          )
+        }
+        renderItem={({ item }) => (
+          <Card style={styles.item} accessibilityLabel={item.description || 'System Deduction'}>
+            <View style={styles.icon}>
+              <MinusCircle size={20} color={color.danger} />
+            </View>
+            <View style={styles.itemText}>
+              <Text style={[type.bodyStrong, { color: color.text }]} numberOfLines={2}>
+                {item.description || 'System Deduction'}
+              </Text>
+              <Text style={[type.caption, { color: color.textMuted }]}>
+                {new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </View>
+            <View style={styles.amountCol}>
+              <Money value={`−${formatINR(item.amount, { decimals: 2 })}`} style={styles.amount} />
+              <Text style={[type.caption, { color: color.danger }]}>Debited</Text>
+            </View>
+          </Card>
         )}
-      </ScrollView>
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FAF6ED' },
-  body: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 128 + 24 },
-  center: { paddingVertical: 48, alignItems: 'center' },
-  muted: { color: tw.gray600, fontSize: 14, lineHeight: 20, ...ff(500) },
-  ghost: { backgroundColor: '#fff', borderRadius: 8, padding: 16, borderWidth: 1, borderColor: tw.gray100, width: 256, opacity: 0.5, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  line: { height: 6, backgroundColor: tw.gray100, borderRadius: 4 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  emptyTitle: { color: tw.gray600, fontSize: 16, lineHeight: 24, ...ff(700) },
-  emptyText: { color: tw.gray400, fontSize: 12, lineHeight: 16, marginTop: 4, ...ff(500) },
-  item: { backgroundColor: '#fff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: tw.gray100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  itemLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
-  itemTitle: { color: tw.gray900, fontSize: 14, lineHeight: 17.5, ...ff(700) },
-  itemDate: { color: tw.gray400, fontSize: 10, lineHeight: 15, marginTop: 4, letterSpacing: -0.25, textTransform: 'uppercase', ...ff(700) },
-  amount: { color: tw.red600, fontSize: 16, lineHeight: 24, ...ff(700) },
+  page: { flex: 1, backgroundColor: color.bg },
+  body: { padding: space.lg, gap: space.md },
+  loading: { paddingVertical: space.xxxl + space.lg, alignItems: 'center', gap: space.md },
+  // Wraps: a very large amount drops to its own line instead of clipping.
+  item: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space.md, rowGap: space.sm },
+  icon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: tone.danger.bg, alignItems: 'center', justifyContent: 'center' },
+  itemText: { flexGrow: 1, flexShrink: 1, flexBasis: 140, minWidth: 0, gap: space.xxs },
+  amountCol: { alignItems: 'flex-end', marginLeft: 'auto', flexShrink: 0, maxWidth: '100%' },
+  amount: { ...type.money, color: color.danger, textAlign: 'right' },
 });

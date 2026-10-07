@@ -1,23 +1,28 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { ChevronRight, Package } from 'lucide-react-native';
+import { ChevronRight, MapPin, Store } from 'lucide-react-native';
 import { resolveOrderKey, mapDeliveryPhaseToTripStatus, useDeliveryStore } from '../../../delivery/store/useDeliveryStore';
 import { Press } from '../../ui';
-import { display, poppins, shadow, tw } from '../../../theme';
+import { StatusBadge } from '../../ds';
+import { color, elevation, radii, space, tone, type } from '../../../theme';
 
-// Port of components/orders/AcceptedOrderCard.jsx. rounded-2xl: #E5DDC3 border and card shadow in both states.
+/*
+ * One accepted order in the Orders tab. The phase reads as a word + tone
+ * badge, and the leading tile tells pickup legs (store) from drop legs (pin).
+ */
 
-const phaseLabel = (order, session) => {
+// tone: info = moving, warning = arrived/waiting, success = done (DESIGN_SYSTEM.md).
+const phaseInfo = (order, session) => {
   switch (session?.tripStatus || mapDeliveryPhaseToTripStatus(order)) {
     case 'REACHED_PICKUP':
-      return 'At Pickup';
+      return { label: 'At pickup', tone: 'warning', leg: 'pickup' };
     case 'PICKED_UP':
-      return 'Delivering';
+      return { label: 'Delivering', tone: 'info', leg: 'drop' };
     case 'REACHED_DROP':
-      return 'At Drop';
+      return { label: 'At drop', tone: 'warning', leg: 'drop' };
     case 'COMPLETED':
-      return 'Completed';
+      return { label: 'Completed', tone: 'success', leg: 'drop' };
     default:
-      return 'Picking Up';
+      return { label: 'Picking up', tone: 'info', leg: 'pickup' };
   }
 };
 
@@ -26,39 +31,55 @@ export default function AcceptedOrderCard({ order, focused = false, onSelect }) 
   const session = useDeliveryStore((state) => (orderId ? state.orderSessions[orderId] : null));
   const displayId = order?.orderId || order?.displayOrderId || orderId;
   const restaurantName = order?.restaurantName || order?.restaurantId?.restaurantName || order?.restaurantId?.name || 'Restaurant';
+  const phase = phaseInfo(order, session);
+  const isPickup = phase.leg === 'pickup';
+  const LegIcon = isPickup ? Store : MapPin;
+  const legTone = isPickup ? tone.warning : tone.primary;
 
   return (
     <Press
       onPress={() => onSelect?.(order)}
       scale={0.98}
-      accessibilityLabel={`Order ${displayId}`}
-      style={[styles.card, shadow('card'), { backgroundColor: focused ? '#E7EFFA' : '#fff' }]}
+      accessibilityLabel={`Order ${displayId}, ${restaurantName}, ${phase.label}${focused ? ', current order' : ''}`}
+      accessibilityState={{ selected: focused }}
+      style={[styles.card, focused && styles.cardFocused]}
     >
-      <View style={styles.row}>
-        <View style={styles.main}>
-          <View style={[styles.icon, shadow('sm')]}>
-            <Package size={20} color="#fff" strokeWidth={2.25} />
-          </View>
-          <View style={{ minWidth: 0, flexShrink: 1 }}>
-            <Text style={styles.kicker}>Order #{displayId}</Text>
-            <Text numberOfLines={1} style={styles.name}>
-              {restaurantName}
-            </Text>
-            <Text style={styles.phase}>{phaseLabel(order, session)}</Text>
-          </View>
-        </View>
-        <ChevronRight size={20} color={focused ? '#0A4D2B' : tw.gray300} />
+      <View style={[styles.icon, { backgroundColor: legTone.bg }]}>
+        <LegIcon size={22} color={legTone.fg} strokeWidth={2.2} />
       </View>
+      <View style={styles.main}>
+        <Text style={styles.kicker} numberOfLines={1}>
+          {isPickup ? 'Pickup' : 'Drop'} · Order #{displayId}
+        </Text>
+        <Text numberOfLines={2} style={styles.name}>
+          {restaurantName}
+        </Text>
+        <View style={styles.badges}>
+          <StatusBadge label={phase.label} tone={phase.tone} />
+          {focused ? <StatusBadge label="Current" tone="primary" /> : null}
+        </View>
+      </View>
+      <ChevronRight size={22} color={focused ? color.primary : color.textDisabled} />
     </Press>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { width: '100%', borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3', padding: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  main: { flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0, flexShrink: 1 },
-  icon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0A4D2B' },
-  kicker: { fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.gray500, ...display(900, 10) },
-  name: { fontSize: 14, lineHeight: 20, color: tw.gray950, ...poppins(700) },
-  phase: { marginTop: 2, fontSize: 11, lineHeight: 16.5, color: '#0A4D2B', ...poppins(600) },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radii.lg,
+    backgroundColor: color.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: color.border,
+    ...elevation.card,
+  },
+  cardFocused: { borderWidth: 2, borderColor: color.primary, padding: space.lg - 2 },
+  icon: { width: 44, height: 44, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center' },
+  main: { flex: 1, minWidth: 0, gap: space.xxs },
+  kicker: { ...type.caption, color: color.textMuted },
+  name: { ...type.subheading, color: color.text },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.xs },
 });

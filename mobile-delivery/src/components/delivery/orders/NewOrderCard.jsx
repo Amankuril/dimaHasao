@@ -8,12 +8,13 @@ import { openExternal } from '../../../lib/links';
 import { toast } from '../../../lib/notify';
 import { Spinner } from '../../Loader';
 import { Press } from '../../ui';
-import { display, poppins, shadow, tw } from '../../../theme';
+import { Button, IconButton, StatusBadge } from '../../ds';
+import { color, elevation, radii, space, type } from '../../../theme';
 
 /*
- * Port of components/orders/NewOrderCard.jsx, as deliveryTheme.css paints it:
- * the card is rounded-2xl (border #E5DDC3, card shadow); green/blue 500-600
- * become the primary, bg-green-500 the soft green (substring rule).
+ * An incoming order offer. Collapsed: what, from where, how much, how far.
+ * Expanded: pickup and drop stops with call/navigate, time and distance,
+ * then the accept slider. Pickup is brand green, drop is blue throughout.
  */
 
 export function PickupMetricsValue({ metrics, label, unit }) {
@@ -24,7 +25,7 @@ export function PickupMetricsValue({ metrics, label, unit }) {
         <Text style={styles.metricValue}>{unit === 'km' ? `${Number(metrics.distanceKm).toFixed(1)} km` : `${metrics.etaMins} mins`}</Text>
       ) : (
         <View style={styles.locating}>
-          <Spinner size={14} color={tw.gray500} />
+          <Spinner size={14} color={color.textMuted} />
           <Text style={styles.locatingText}>Locating…</Text>
         </View>
       )}
@@ -35,11 +36,7 @@ export function PickupMetricsValue({ metrics, label, unit }) {
 const mapsDir = (dest) => `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
 
 function CircleButton({ onPress, label, dark, Icon }) {
-  return (
-    <Press onPress={onPress} accessibilityLabel={label} style={[styles.circle, dark ? [styles.circleDark, shadow('md')] : [styles.circleLight, shadow('sm')]]}>
-      <Icon size={16} color={dark ? '#fff' : tw.primary} />
-    </Press>
-  );
+  return <IconButton icon={Icon} label={label} onPress={onPress} variant={dark ? 'solid' : 'primary'} size={44} iconSize={20} />;
 }
 
 export default function NewOrderCard({
@@ -102,62 +99,71 @@ export default function NewOrderCard({
   };
 
   return (
-    // Expanded: .border-blue-200 is repainted by a rule later in deliveryTheme.css
-    // than the rounded-2xl one, so it wins (#BBCCC3); collapsed stays #E5DDC3.
-    <View style={[styles.card, shadow('card'), expanded && { borderColor: tw.primaryBorder }]}>
+    <View style={[styles.card, elevation.card, expanded && styles.cardExpanded]}>
       <View style={styles.top}>
-        <Press onPress={() => onToggle?.()} scale={0.99} accessibilityLabel={`New order ${displayId}`} style={styles.topMain}>
+        <Press onPress={() => onToggle?.()} scale={0.99} accessibilityLabel={`New order ${displayId}, ${restaurantName}, ₹${Number(earnings || 0).toFixed(2)}`} style={styles.topMain}>
           <View style={styles.pkg}>
-            <Package size={20} color="#fff" />
+            <Package size={22} color={color.primary} />
           </View>
-          <View style={{ flexShrink: 1 }}>
-            <Text style={styles.kicker}>New Order #{displayId}</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.kicker} numberOfLines={1}>
+              New order · #{displayId}
+            </Text>
             <Text numberOfLines={1} style={styles.name}>
               {restaurantName}
             </Text>
-            <Text style={[styles.summary, { color: metrics.isReady ? tw.primary : tw.gray500 }]}>
-              ₹{Number(earnings || 0).toFixed(2)} · {routeSummary}
-            </Text>
+            <View style={styles.summaryRow}>
+              <Text style={styles.earn}>₹{Number(earnings || 0).toFixed(2)}</Text>
+              <Text style={[styles.summary, { color: metrics.isReady ? color.textSecondary : color.textMuted }]} numberOfLines={1}>
+                · {routeSummary}
+              </Text>
+            </View>
           </View>
         </Press>
         <View style={styles.topActions}>
-          {acceptDisabled ? (
-            <View style={styles.lockChip}>
-              <Lock size={14} color={tw.gray500} />
-            </View>
-          ) : null}
-          <Press
+          {acceptDisabled ? <StatusBadge icon={Lock} label="Locked" tone="neutral" /> : null}
+          <IconButton
+            icon={isMuted ? VolumeX : Volume2}
+            label={isMuted ? 'Unmute order alerts' : 'Mute order alerts'}
             onPress={() => onToggleMute?.()}
-            scale={1}
-            accessibilityLabel={isMuted ? 'Unmute order alerts' : 'Mute order alerts'}
-            style={[styles.iconBtn, isMuted && styles.muted]}
-          >
-            {isMuted ? <VolumeX size={16} color={tw.red600} /> : <Volume2 size={16} color={tw.gray500} />}
-          </Press>
-          <Press onPress={() => onToggle?.()} scale={1} accessibilityLabel={expanded ? 'Collapse order' : 'Expand order'} style={styles.iconBtn}>
-            <ChevronDown size={20} color={tw.gray400} style={expanded ? { transform: [{ rotate: '180deg' }] } : undefined} />
-          </Press>
+            variant={isMuted ? 'danger' : 'ghost'}
+            iconColor={isMuted ? color.danger : color.textMuted}
+            size={40}
+            iconSize={20}
+          />
+          <IconButton
+            icon={ChevronDown}
+            label={expanded ? 'Collapse order' : 'Expand order'}
+            onPress={() => onToggle?.()}
+            iconColor={color.textMuted}
+            size={40}
+            iconSize={22}
+            style={expanded ? { transform: [{ rotate: '180deg' }] } : undefined}
+          />
         </View>
       </View>
 
       {expanded ? (
         <View style={styles.expanded}>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={styles.stops}>
             <View style={styles.timeline}>
-              {/* bg-green-500 -> #E8F2EC; border-green-50 is untouched Tailwind green-50 */}
-              <View style={[styles.dot, { backgroundColor: tw.primarySoft, borderColor: '#F0FDF4' }]} />
+              <View style={[styles.dot, { borderColor: color.primary }]} />
               <View style={styles.dash} />
-              <View style={[styles.dot, { backgroundColor: tw.primary, borderColor: '#EFF6FF' }]} />
+              <View style={[styles.dot, { borderColor: color.info }]} />
             </View>
-            <View style={{ flex: 1, gap: 16 }}>
+            <View style={{ flex: 1, gap: space.lg }}>
               <View style={styles.stop}>
                 <View style={styles.stopText}>
                   <View style={styles.stopLabel}>
-                    <ChefHat size={14} color={tw.primary} />
-                    <Text style={styles.stopLabelText}>Restaurant Pickup</Text>
+                    <ChefHat size={14} color={color.primary} />
+                    <Text style={[styles.stopLabelText, { color: color.primary }]}>Pickup</Text>
                   </View>
-                  <Text style={styles.stopName}>{restaurantName}</Text>
-                  <Text style={styles.stopSub}>{restaurantAddress}</Text>
+                  <Text style={styles.stopName} numberOfLines={2}>
+                    {restaurantName}
+                  </Text>
+                  <Text style={styles.stopSub} numberOfLines={2}>
+                    {restaurantAddress}
+                  </Text>
                 </View>
                 <View style={styles.stopActions}>
                   <CircleButton Icon={Phone} label="Call restaurant" onPress={() => call(restaurantPhone, 'Restaurant phone number not available')} />
@@ -172,10 +178,12 @@ export default function NewOrderCard({
               <View style={styles.stop}>
                 <View style={styles.stopText}>
                   <View style={styles.stopLabel}>
-                    <MapPin size={14} color={tw.primary} />
-                    <Text style={styles.stopLabelText}>Customer Drop</Text>
+                    <MapPin size={14} color={color.info} />
+                    <Text style={[styles.stopLabelText, { color: color.info }]}>Drop</Text>
                   </View>
-                  <Text style={styles.stopName}>{customerName}</Text>
+                  <Text style={styles.stopName} numberOfLines={1}>
+                    {customerName}
+                  </Text>
                   {customerPhone ? <Text style={styles.stopSub}>{customerPhone}</Text> : null}
                   <Text numberOfLines={2} style={styles.stopSub}>
                     {customerAddress}
@@ -190,28 +198,26 @@ export default function NewOrderCard({
           </View>
 
           <View style={styles.metrics}>
-            <View style={[styles.metricBox, shadow('card')]}>
-              <Clock size={16} color={tw.primary} />
+            <View style={styles.metricBox}>
+              <Clock size={18} color={color.primary} />
               <PickupMetricsValue metrics={metrics} label="Time" unit="min" />
             </View>
-            <View style={[styles.metricBox, shadow('card')]}>
-              <MapPin size={16} color={tw.gray400} />
+            <View style={styles.metricBox}>
+              <MapPin size={18} color={color.primary} />
               <PickupMetricsValue metrics={metrics} label="Distance" unit="km" />
             </View>
           </View>
 
           {acceptDisabled ? (
-            <View style={[styles.disabledBox, shadow('card')]}>
-              <Lock size={16} color={tw.amber700} style={{ marginTop: 2 }} />
+            <View style={styles.disabledBox} accessibilityRole="alert">
+              <Lock size={18} color={color.warning} style={{ marginTop: 1 }} />
               <Text style={styles.disabledText}>{disabledMessage}</Text>
             </View>
           ) : (
-            <ActionSlider label="Slide to Accept" onConfirm={() => onAccept?.(order)} color="bg-black" successLabel="Order Accepted" />
+            <ActionSlider label="Slide to Accept" onConfirm={() => onAccept?.(order)} color="bg-green-600" successLabel="Order Accepted" />
           )}
 
-          <Press onPress={() => onReject?.(order)} scale={1} accessibilityLabel="Pass this task" style={styles.pass}>
-            <Text style={styles.passText}>Pass this task</Text>
-          </Press>
+          <Button title="Pass this task" variant="ghost" size="sm" onPress={() => onReject?.(order)} accessibilityLabel="Pass this task" style={styles.pass} />
         </View>
       ) : null}
     </View>
@@ -219,40 +225,36 @@ export default function NewOrderCard({
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3', overflow: 'hidden' },
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 16 },
-  topMain: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  pkg: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#0A4D2B', alignItems: 'center', justifyContent: 'center' },
-  kicker: { fontSize: 10, lineHeight: 15, textTransform: 'uppercase', color: tw.gray400, ...display(900, 10) },
-  name: { fontSize: 14, lineHeight: 20, color: tw.gray950, ...poppins(700) },
-  summary: { marginTop: 2, fontSize: 11, lineHeight: 16.5, ...poppins(600) },
-  topActions: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  lockChip: { borderRadius: 999, backgroundColor: tw.gray100, borderWidth: 1, borderColor: tw.gray200, padding: 6 },
-  iconBtn: { borderRadius: 999, padding: 8 },
-  muted: { backgroundColor: tw.red50, borderWidth: 1, borderColor: tw.red200 },
-  expanded: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 16, gap: 16, borderTopWidth: 1, borderTopColor: tw.gray100 },
-  timeline: { alignItems: 'center', gap: 6, marginTop: 8 },
-  dot: { width: 16, height: 16, borderRadius: 8, borderWidth: 4 },
-  dash: { width: 2, height: 48, borderLeftWidth: 2, borderStyle: 'dashed', borderColor: tw.gray100 },
-  stop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  stopText: { minWidth: 0, flex: 1, paddingRight: 8 },
-  stopLabel: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  stopLabelText: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.primary, ...poppins(700) },
-  stopName: { fontSize: 14, lineHeight: 17.5, color: tw.gray950, ...poppins(700) },
-  stopSub: { fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
-  stopActions: { flexDirection: 'row', gap: 6, marginTop: 4 },
-  circle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  circleLight: { backgroundColor: tw.primarySoft, borderWidth: 1, borderColor: tw.primaryBorder },
-  circleDark: { backgroundColor: tw.gray900 },
-  metrics: { flexDirection: 'row', gap: 8 },
-  metricBox: { flex: 1, padding: 12, backgroundColor: tw.gray50, borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3', flexDirection: 'row', alignItems: 'center', gap: 8 },
-  // An inline <span> in a block <div>: its line box takes the parent's 24 px strut.
-  metricLabel: { fontSize: 10, lineHeight: 24, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
-  metricValue: { fontSize: 14, lineHeight: 20, color: tw.gray900, fontVariant: ['tabular-nums'], ...poppins(700) },
-  locating: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  locatingText: { fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(600) },
-  disabledBox: { borderRadius: 16, backgroundColor: tw.amber50, borderWidth: 1, borderColor: '#E5DDC3', paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  disabledText: { flex: 1, fontSize: 14, lineHeight: 20, color: tw.amber800, ...poppins(600) },
-  pass: { width: '100%', paddingVertical: 8, alignItems: 'center' },
-  passText: { fontSize: 10, lineHeight: 15, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...poppins(700) },
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden' },
+  cardExpanded: { borderColor: color.primaryBorder },
+  top: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.lg, paddingRight: space.sm, paddingVertical: space.md },
+  topMain: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  pkg: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  kicker: { ...type.caption, color: color.textMuted },
+  name: { ...type.subheading, color: color.text },
+  summaryRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.xs, marginTop: 2 },
+  earn: { ...type.bodyStrong, color: color.success },
+  summary: { ...type.small, flexShrink: 1 },
+  topActions: { flexDirection: 'row', alignItems: 'center' },
+  expanded: { paddingHorizontal: space.lg, paddingBottom: space.md, paddingTop: space.lg, gap: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  stops: { flexDirection: 'row', gap: space.md },
+  timeline: { alignItems: 'center', gap: space.xs, marginTop: 4 },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 4, backgroundColor: color.surface },
+  dash: { width: 2, flex: 1, minHeight: 40, borderLeftWidth: 2, borderStyle: 'dashed', borderColor: color.borderStrong },
+  stop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: space.sm },
+  stopText: { minWidth: 0, flex: 1 },
+  stopLabel: { flexDirection: 'row', alignItems: 'center', gap: space.xs, marginBottom: 2 },
+  stopLabelText: { ...type.overline },
+  stopName: { ...type.bodyStrong, color: color.text },
+  stopSub: { ...type.small, color: color.textSecondary },
+  stopActions: { flexDirection: 'row', gap: space.sm },
+  metrics: { flexDirection: 'row', gap: space.sm },
+  metricBox: { flex: 1, paddingHorizontal: space.md, paddingVertical: space.sm, backgroundColor: color.surfaceMuted, borderRadius: radii.md, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  metricLabel: { ...type.caption, color: color.textMuted },
+  metricValue: { ...type.bodyStrong, color: color.text, fontVariant: ['tabular-nums'] },
+  locating: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  locatingText: { ...type.bodyStrong, color: color.textMuted },
+  disabledBox: { borderRadius: radii.md, backgroundColor: color.warningSoft, paddingHorizontal: space.md, paddingVertical: space.md, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+  disabledText: { flex: 1, ...type.body, color: color.text },
+  pass: { alignSelf: 'center' },
 });
