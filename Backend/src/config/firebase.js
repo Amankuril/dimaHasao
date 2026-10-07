@@ -79,6 +79,8 @@ export const getFirebaseMessaging = () => {
 };
 
 export const getFirebaseDatabase = getFirebaseDB;
-export const firebaseServerTimestamp = admin.database.ServerValue.TIMESTAMP;
+// A function: every caller writes `updatedAt: firebaseServerTimestamp()`. As a
+// bare sentinel the call threw inside a setImmediate and crashed the process.
+export const firebaseServerTimestamp = () => admin.database.ServerValue.TIMESTAMP;
 
 export default admin;

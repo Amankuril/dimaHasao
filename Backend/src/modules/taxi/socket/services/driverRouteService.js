@@ -76,7 +76,14 @@ export const updateDriverRoute = ({ io, rideId, driverId, coordinates }) => {
 
   io.to(getRideRoom(rideId)).emit(SOCKET_EVENTS.RIDE_DRIVER_ROUTE_UPDATED, payload);
   // Firebase is best-effort; never hold up the socket location update path.
-  setImmediate(() => maybeWriteRouteToFirebase({ driverId, points: nextBuffer }));
+  // A throw in here is uncaught and kills the process, so it is contained.
+  setImmediate(() => {
+    try {
+      maybeWriteRouteToFirebase({ driverId, points: nextBuffer });
+    } catch (error) {
+      console.error(`Firebase route sync failed for driver ${driverId}:`, error.message);
+    }
+  });
 
   return payload;
 };
