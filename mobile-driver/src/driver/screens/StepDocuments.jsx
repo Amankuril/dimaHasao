@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Camera, Check, FileText, Image as ImageIcon, Loader2, RefreshCw, ShieldCheck } from 'lucide-react-native';
+import { Camera, Check, FileText, Loader2, RefreshCw, ShieldCheck } from 'lucide-react-native';
 import { File } from 'expo-file-system';
 import { useNavigate } from '../../lib/webRouter';
 import { Press } from '../../components/ui';
 import Img from '../../components/Img';
-import { BottomSheet } from '../../components/kit';
 import { openCamera, openGallery, prepareUploadFile } from '../../lib/images';
 import {
   clearDriverRegistrationSession,
@@ -18,6 +17,7 @@ import {
 } from '../services/registrationService';
 import { flattenDriverDocumentFields, getDocumentPreviewUrl } from '../utils/documentTemplates';
 import OnboardingShell from '../components/OnboardingShell';
+import DriverImageSourceSheet from '../components/DriverImageSourceSheet';
 import { DateField, Field, OnboardingLoading, Spin } from '../components/OnboardingFields';
 import { OB, jk, obCard } from '../components/onboardingTheme';
 
@@ -255,7 +255,7 @@ export default function StepDocuments() {
                   <Text numberOfLines={1} style={styles.docName}>
                     {field.label || field.templateName || field.key}
                   </Text>
-                  <Text style={styles.docReq}>{field.isRequired ? 'Required' : 'Optional'}</Text>
+                  <Text style={styles.docReq}>{field.isRequired ? 'REQUIRED' : 'OPTIONAL'}</Text>
                 </View>
 
                 <Press scale={1} onPress={() => setSourceFor(field)} disabled={busy} style={[styles.upload, busy && { opacity: 0.5 }]}>
@@ -299,18 +299,7 @@ export default function StepDocuments() {
         )}
       </OnboardingShell>
 
-      <BottomSheet visible={Boolean(sourceFor)} onClose={() => setSourceFor(null)}>
-        <View style={styles.sheet}>
-          <Press scale={1} onPress={() => chooseSource('camera')} style={styles.sheetRow}>
-            <Camera size={18} color={OB.primary} />
-            <Text style={styles.sheetText}>Take a photo</Text>
-          </Press>
-          <Press scale={1} onPress={() => chooseSource('gallery')} style={styles.sheetRow}>
-            <ImageIcon size={18} color={OB.primary} />
-            <Text style={styles.sheetText}>Choose from gallery</Text>
-          </Press>
-        </View>
-      </BottomSheet>
+      <DriverImageSourceSheet visible={Boolean(sourceFor)} onClose={() => setSourceFor(null)} onPick={chooseSource} />
     </>
   );
 }
@@ -321,13 +310,10 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   docName: { ...jk(700), fontSize: 14, color: OB.text },
-  docReq: { ...jk(600), fontSize: 11, letterSpacing: 0.55, textTransform: 'uppercase', color: OB.muted },
+  docReq: { ...jk(600), fontSize: 11, letterSpacing: 0.55, color: OB.muted },
   upload: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   uploadText: { ...jk(700), fontSize: 12, color: OB.primary },
   preview: { height: 144, width: '100%', borderRadius: 12, borderWidth: 1, borderColor: OB.border },
   empty: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 20 },
   emptyText: { ...jk(500), flex: 1, fontSize: 13, lineHeight: 21, color: OB.muted },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
-  sheetRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16 },
-  sheetText: { ...jk(700), fontSize: 15, color: OB.text },
 });

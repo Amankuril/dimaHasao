@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bot, CircleUser, Clock3, MessageCircle, RefreshCcw, Send, ShieldCheck, Trash2 } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
+import { useKeyboardHeight } from '../../lib/useKeyboard';
+import Text from './UpperText';
 import { localStore } from '../../lib/storage';
 import { outfit as fo, tw } from '../../theme';
 import { socketService } from '../api/socket';
@@ -79,6 +82,11 @@ function Dot({ color, animate }) {
 
 export default function UserSupportChatPanel({ title = 'Support Chat', subtitle = 'Live messages with admin', preferredRole, initialDraft = '', surface = 'card', style }) {
   const isPlainSurface = surface === 'plain';
+  // Android is edge-to-edge: the keyboard does not resize the window, so the panel is lifted by hand, and the
+  // composer clears the gesture bar.
+  const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardHeight();
+  const bottomGap = Platform.OS === 'android' && keyboard > 0 ? keyboard : insets.bottom;
   const session = useMemo(() => getChatSession(preferredRole), [preferredRole]);
   const isLiveEnabled = session.isAuthenticated;
 
@@ -343,11 +351,11 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
   const threadLabel = session.role === 'driver' ? 'Driver Support Thread' : 'User Support Thread';
 
   return (
-    <View style={[isPlainSurface ? { flex: 1, backgroundColor: '#fff', overflow: 'hidden' } : [st.card, { flex: 1 }], style]}>
+    <View style={[isPlainSurface ? { flex: 1, backgroundColor: '#fff', overflow: 'hidden' } : [st.card, { flex: 1 }], style, { paddingBottom: bottomGap }]}>
       <View style={st.head}>
-        <View style={[st.row, { flex: 1, minWidth: 0 }]}>
+        <View style={[st.row, { flexShrink: 1, minWidth: 0 }]}>
           <View style={[st.iconBox, { backgroundColor: '#405189', marginRight: 16, boxShadow: '0 10px 15px rgba(79,70,229,0.1)' }]}><MessageCircle size={20} color="#fff" /></View>
-          <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Text numberOfLines={1} style={[{ fontSize: 18, letterSpacing: -0.45, color: tw.slate900 }, fo(900)]}>{title}</Text>
             <View style={[st.row, { flexWrap: 'wrap' }]}>
               <Text style={[st.tiny, { color: tw.slate400 }, fo(900)]}>Desk Terminal</Text>
@@ -465,8 +473,8 @@ const st = StyleSheet.create({
   iconBox: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   eyebrow: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.55, color: tw.slate400 },
   tiny: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5 },
-  head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(226,232,240,0.6)', backgroundColor: '#fff' },
-  conn: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, maxWidth: 130 },
+  head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(226,232,240,0.6)', backgroundColor: '#fff' },
+  conn: { flexDirection: 'row', alignItems: 'center', flexShrink: 0, borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
   threadHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: tw.slate100, backgroundColor: '#fff' },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: tw.slate100, alignItems: 'center', justifyContent: 'center' },
   toolBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },

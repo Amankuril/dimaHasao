@@ -36,11 +36,11 @@ import { outfit as fo, shadow, tw } from '../../theme';
 import { socketService } from '../api/socket';
 import DriverBottomNav from '../components/DriverBottomNav';
 import { useSupportInfo } from '../hooks/useDriverSupportInfo';
-import { clearDriverAuthState, getCurrentDriver } from '../services/registrationService';
+import { clearDriverAuthState, getCurrentDriver, updateDriverProfile } from '../services/registrationService';
 
 // Web: Taxi/modules/driver/pages/DriverProfile.jsx (/taxi/driver/profile)
-// Web bug kept: updateDriverProfile is used by the route-booking toggle but never imported there, so the
-// toggle throws a ReferenceError that the handler's catch shows as the profile error line.
+// Fixed vs web: the web's route-booking toggle calls updateDriverProfile without importing it (a ReferenceError
+// shown as the profile error line); here it is imported so the toggle actually saves.
 
 const unwrapDriver = (response) => response?.data?.data || response?.data || response || null;
 const ROUTE_BOOKING_STORAGE_KEY = 'driver_route_booking_preferences';
@@ -262,7 +262,6 @@ export default function DriverProfile() {
       setRouteBookingBusy(true);
       setError('');
       try {
-        // eslint-disable-next-line no-undef -- the web never imports updateDriverProfile here (kept as is)
         const response = await updateDriverProfile({
           routeBooking: {
             enabled: false,
@@ -296,7 +295,6 @@ export default function DriverProfile() {
     const nextLabel = formatRouteBookingLabel(nextCoordinates);
 
     try {
-      // eslint-disable-next-line no-undef -- the web never imports updateDriverProfile here (kept as is)
       const response = await updateDriverProfile({
         routeBooking: {
           enabled: true,
@@ -410,7 +408,7 @@ export default function DriverProfile() {
         <View style={{ gap: 4 }}>
           {sections.map((section) => (
             <View key={section.title} style={{ paddingTop: 20 }}>
-              <Text style={st.sectionTitle}>{section.title}</Text>
+              <Text style={st.sectionTitle}>{section.title.toUpperCase()}</Text>
               {section.items.map((item) => (
                 <Pressable
                   key={item.id}
@@ -450,7 +448,7 @@ export default function DriverProfile() {
             <View style={st.support}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tw.emerald500 }} />
-                <Text style={st.supportTitle}>District Support</Text>
+                <Text style={st.supportTitle}>DISTRICT SUPPORT</Text>
               </View>
 
               <View style={{ gap: 20 }}>
@@ -460,7 +458,7 @@ export default function DriverProfile() {
                       <Mail size={18} color={tw.slate400} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={st.supportLabel}>Email Support</Text>
+                      <Text style={st.supportLabel}>EMAIL SUPPORT</Text>
                       <Text style={st.supportValue}>{supportInfo.email}</Text>
                     </View>
                   </Pressable>
@@ -472,7 +470,7 @@ export default function DriverProfile() {
                       <Phone size={18} color={tw.slate400} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={st.supportLabel}>Call Support</Text>
+                      <Text style={st.supportLabel}>CALL SUPPORT</Text>
                       <Text style={st.supportValue}>{supportInfo.phone}</Text>
                     </View>
                   </Pressable>
@@ -558,16 +556,16 @@ const st = StyleSheet.create({
   errorLine: { fontSize: 11, color: tw.rose500, ...fo(500) },
   infoLabel: { fontSize: 10, color: tw.slate400, ...fo(500) },
   infoValue: { fontSize: 12, color: tw.slate900, ...fo(700) },
-  sectionTitle: { paddingHorizontal: 24, fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: tw.slate400, marginBottom: 12, ...fo(600) },
+  sectionTitle: { paddingHorizontal: 24, fontSize: 11, letterSpacing: 1.1, color: tw.slate400, marginBottom: 12, ...fo(600) },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(248,250,252,0.5)' },
   rowLabel: { fontSize: 15, letterSpacing: -0.375, color: tw.slate800, ...fo(500) },
   rowSub: { fontSize: 11, color: tw.slate400, ...fo(500) },
   toggle: { width: 40, height: 22, borderRadius: 11 },
   knob: { position: 'absolute', top: 4, width: 14, height: 14, borderRadius: 7, backgroundColor: '#fff', ...shadow('sm') },
   support: { borderRadius: 28, borderWidth: 1, borderColor: tw.slate100, backgroundColor: 'rgba(248,250,252,0.5)', padding: 24 },
-  supportTitle: { fontSize: 13, letterSpacing: 0.65, textTransform: 'uppercase', color: tw.slate900, ...fo(700) },
+  supportTitle: { fontSize: 13, letterSpacing: 0.65, color: tw.slate900, ...fo(700) },
   supportIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: tw.slate100, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  supportLabel: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.slate400, ...fo(700) },
+  supportLabel: { fontSize: 10, letterSpacing: 1, color: tw.slate400, ...fo(700) },
   supportValue: { fontSize: 14, color: tw.slate800, ...fo(700) },
   logout: { fontSize: 13, color: tw.rose500, ...fo(700) },
   logoutPanel: { width: '100%', maxWidth: 320, borderRadius: 28, backgroundColor: '#fff', padding: 24, borderWidth: 1, borderColor: tw.slate100, ...shadow('2xl') },

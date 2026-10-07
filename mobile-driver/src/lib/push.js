@@ -72,6 +72,13 @@ export function usePushNotifications(isSignedIn) {
       const link = linkOf(response);
       if (link.startsWith('/taxi/driver')) navigateTo(link);
     });
+    // App opened from a killed state by tapping a notification.
+    Notifications.getLastNotificationResponseAsync()
+      .then((response) => {
+        const link = response ? linkOf(response) : '';
+        if (link.startsWith('/taxi/driver')) navigateTo(link);
+      })
+      .catch(() => {});
     return () => {
       tokenSub.remove();
       tapSub.remove();

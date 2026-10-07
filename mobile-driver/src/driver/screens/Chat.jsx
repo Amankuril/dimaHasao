@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Phone, Send, Smile } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import Img from '../../components/Img';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
+import { useKeyboardHeight } from '../../lib/useKeyboard';
 import { localStore } from '../../lib/storage';
+import Text from '../components/UpperText';
 import { useLocation, useNavigate } from '../../lib/webRouter';
 import { outfit, tw } from '../../theme';
 import { socketService } from '../api/socket';
@@ -80,6 +82,9 @@ export default function Chat() {
   const navigate = useNavigate();
   const location = useLocation();
   const insets = useSafeAreaInsets();
+  // Android is edge-to-edge: the keyboard does not resize the window, so the screen is lifted by hand.
+  const keyboard = useKeyboardHeight();
+  const androidKeyboard = Platform.OS === 'android' ? keyboard : 0;
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const routeRole = searchParams.get('role');
   // The web decides by path: /taxi/driver/* is the driver's chat.
@@ -189,7 +194,7 @@ export default function Chat() {
   return (
     <LinearGradient colors={['#F8FAFC', '#F3F4F6', '#EEF2F7']} locations={[0, 0.6, 1]} style={{ flex: 1, overflow: 'hidden' }}>
       <View pointerEvents="none" style={st.blob} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, paddingBottom: androidKeyboard }}>
         <View style={[st.header, { paddingTop: insets.top + 14 }]}>
           <Press onPress={() => navigate(-1)} style={st.backSquare}>
             <ArrowLeft size={18} color={tw.slate900} strokeWidth={2.5} />
@@ -236,7 +241,7 @@ export default function Chat() {
           )}
         </ScrollView>
 
-        <View style={[st.footer, { paddingBottom: Math.max(insets.bottom, 0) + 24 }]}>
+        <View style={[st.footer, { paddingBottom: androidKeyboard > 0 ? 12 : Math.max(insets.bottom, 0) + 24 }]}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 2 }} keyboardShouldPersistTaps="handled">
             {quickReplies.map((r) => (
               <Press key={r} scale={0.95} onPress={() => send(r)} style={st.chip}>

@@ -6,7 +6,7 @@
  * ("customercare@Appzeto 24.com") that no mail client would accept. Four
  * screens printed it as this district's support desk.
  *
- * It now reads what an admin sets in Global Settings â†’ Brand & Contact, the
+ * It now reads what an admin sets in Global Settings -> Brand & Contact, the
  * same record the sign-in screens use, with neutral copy as the fallback so a
  * screen never shows another company's details. Fields the district has not
  * filled in come back empty, and the screens hide those rows.

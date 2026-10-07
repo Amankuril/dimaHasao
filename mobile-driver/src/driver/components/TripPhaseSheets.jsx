@@ -1,12 +1,14 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Easing, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { useEffect } from 'react';
+import { Animated, Easing, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowUpRight, Banknote, Check, CheckCircle2, ChevronRight, Clock3, MessageSquare, Package, Phone, QrCode, Scan, ShieldAlert, Star, User } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
+import { useKeyboardHeight } from '../../lib/useKeyboard';
 import { openExternal } from '../../lib/links';
 import { outfit, tw } from '../../theme';
+import Text from './UpperText';
 import { formatCurrencyAmount, formatDateTimeLabel, formatTimerClock, formatWholeMinutes } from '../utils/activeTripHelpers';
 
 // Web: the bottom sheets of Taxi/modules/driver/pages/ActiveTrip.jsx, one per phase
@@ -24,6 +26,8 @@ const SHADOW_SM = '0 1px 2px rgba(0,0,0,0.05)';
 function Sheet({ phaseKey, fade, padding = 24, extra, children }) {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
+  // Android is edge-to-edge: the keyboard does not resize the window, so the sheet is lifted by hand (the PIN boxes).
+  const keyboard = useKeyboardHeight();
   const v = useAnimatedValue(0);
   useEffect(() => {
     v.setValue(0);
@@ -31,8 +35,8 @@ function Sheet({ phaseKey, fade, padding = 24, extra, children }) {
   }, [phaseKey, v]);
   const anim = fade ? { opacity: v } : { transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [height * 0.88, 0] }) }] };
   return (
-    <Animated.View style={[st.sheet, { maxHeight: height * 0.88 }, anim, extra]}>
-      <ScrollView bounces={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding, paddingBottom: 32 + insets.bottom }} showsVerticalScrollIndicator={false}>
+    <Animated.View style={[st.sheet, { maxHeight: (height - keyboard) * 0.88 }, anim, extra]}>
+      <ScrollView bounces={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding, paddingBottom: 32 + (keyboard > 0 ? 0 : insets.bottom) }} showsVerticalScrollIndicator={false}>
         {children}
       </ScrollView>
     </Animated.View>
@@ -565,8 +569,9 @@ function Review({ t }) {
 
 export default function TripPhaseSheets({ t }) {
   const { phase } = t;
+  const keyboard = useKeyboardHeight();
   return (
-    <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 40 }}>
+    <View style={{ position: 'absolute', left: 0, right: 0, bottom: keyboard, zIndex: 40 }}>
       {phase === 'to_pickup' ? <ToPickup t={t} /> : null}
       {phase === 'otp_verification' ? <OtpVerification t={t} /> : null}
       {phase === 'in_trip' ? <InTrip t={t} /> : null}

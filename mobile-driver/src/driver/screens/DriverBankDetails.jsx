@@ -31,7 +31,7 @@ function Field({ label, value, onChange, placeholder, keyboardType, maxLength, a
   const [focused, setFocused] = useState(false);
   return (
     <View style={{ gap: 8 }}>
-      <Text style={st.fieldLabel}>{label}</Text>
+      <Text style={st.fieldLabel}>{String(label).toUpperCase()}</Text>
       <TextInput
         value={value}
         onChangeText={onChange}
@@ -184,7 +184,7 @@ export default function DriverBankDetails() {
             <ArrowLeft size={18} color={tw.slate700} />
           </Press>
           <View>
-            <Text style={st.eyebrow}>Driver Profile</Text>
+            <Text style={st.eyebrow}>DRIVER PROFILE</Text>
             <Text style={st.h1}>Bank Details</Text>
           </View>
         </View>
@@ -195,7 +195,7 @@ export default function DriverBankDetails() {
               <Landmark size={24} color="#fff" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={st.darkEyebrow}>Payout Setup</Text>
+              <Text style={st.darkEyebrow}>PAYOUT SETUP</Text>
               <Text style={st.darkSummary}>{summary}</Text>
               <Text style={st.darkNote}>These details will be used when you send a withdrawal request.</Text>
             </View>
@@ -222,7 +222,7 @@ export default function DriverBankDetails() {
                     </View>
                     <Press onPress={handleQrUpload} disabled={uploading} scale={0.99} accessibilityLabel="Upload UPI QR code" style={[st.upload, { backgroundColor: uploading ? tw.slate200 : tw.slate950 }]}>
                       <Upload size={15} color={uploading ? tw.slate400 : '#fff'} />
-                      <Text style={[st.uploadText, { color: uploading ? tw.slate400 : '#fff' }]}>{uploading ? 'Uploading...' : 'Upload QR'}</Text>
+                      <Text style={[st.uploadText, { color: uploading ? tw.slate400 : '#fff' }]}>{uploading ? 'UPLOADING...' : 'UPLOAD QR'}</Text>
                     </Press>
                   </View>
                 </View>
@@ -257,23 +257,23 @@ export default function DriverBankDetails() {
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#f8fafc' },
   back: { width: 44, height: 44, borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  eyebrow: { fontSize: 11, letterSpacing: 2.64, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  eyebrow: { fontSize: 11, letterSpacing: 2.64, color: tw.slate400, ...fo(900) },
   h1: { marginTop: 4, fontSize: 24, letterSpacing: -0.6, color: tw.slate950, ...fo(900) },
   dark: { borderRadius: 32, backgroundColor: tw.slate950, padding: 24, ...shadow('xl') },
   darkIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  darkEyebrow: { fontSize: 11, letterSpacing: 2.2, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  darkEyebrow: { fontSize: 11, letterSpacing: 2.2, color: tw.slate400, ...fo(900) },
   darkSummary: { marginTop: 8, fontSize: 18, letterSpacing: -0.45, color: '#fff', ...fo(900) },
   darkNote: { marginTop: 8, fontSize: 14, color: tw.slate300, ...fo(500) },
   card: { borderRadius: 32, borderWidth: 1, borderColor: tw.slate200, backgroundColor: '#fff', padding: 24, ...shadow('sm') },
   loading: { paddingVertical: 64, textAlign: 'center', fontSize: 14, color: tw.slate500, ...fo(600) },
-  fieldLabel: { fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: tw.slate500, ...fo(700) },
+  fieldLabel: { fontSize: 11, letterSpacing: 1.1, color: tw.slate500, ...fo(700) },
   input: { height: 48, borderRadius: 16, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, paddingHorizontal: 16, paddingVertical: 0, fontSize: 15, color: tw.slate900, ...fo(700) },
   qrBox: { borderRadius: 28, borderWidth: 1, borderColor: tw.slate200, backgroundColor: tw.slate50, padding: 16 },
   qrPreview: { height: 144, width: '100%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: tw.slate300, backgroundColor: '#fff' },
   qrTitle: { fontSize: 13, color: tw.slate900, ...fo(700) },
   qrSub: { marginTop: 4, fontSize: 12, color: tw.slate500, ...fo(500) },
   upload: { height: 48, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  uploadText: { fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase', ...fo(700) },
+  uploadText: { flexShrink: 0, fontSize: 12, letterSpacing: 0.6, ...fo(700) },
   updated: { fontSize: 12, color: tw.slate400, ...fo(500) },
   error: { borderRadius: 16, backgroundColor: tw.rose50, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: tw.rose600, ...fo(700) },
   success: { borderRadius: 16, backgroundColor: tw.emerald50, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: tw.emerald700, ...fo(700) },

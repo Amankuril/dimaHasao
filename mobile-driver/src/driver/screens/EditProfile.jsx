@@ -8,6 +8,7 @@ import { Press } from '../../components/ui';
 import { toast } from '../../lib/notify';
 import { useNavigate } from '../../lib/webRouter';
 import { outfit as fo, shadow, tw } from '../../theme';
+import DriverImageSourceSheet from '../components/DriverImageSourceSheet';
 import { useDriverImageUpload } from '../hooks/useDriverImageUpload';
 import { getCurrentDriver, updateDriverProfile } from '../services/registrationService';
 
@@ -26,7 +27,7 @@ function ProfileField({ field, onChange, error }) {
     <View style={[st.field, field.disabled ? { opacity: 0.7, backgroundColor: tw.slate50 } : focused && { borderColor: tw.slate900, boxShadow: '0 0 0 4px rgba(15,23,43,0.05)' }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Icon size={16} color={tw.slate400} />
-        <Text style={st.fieldLabel}>{field.label}</Text>
+        <Text style={st.fieldLabel}>{field.label.toUpperCase()}</Text>
       </View>
       <TextInput
         value={field.value}
@@ -54,6 +55,7 @@ export default function EditProfile() {
   const [driver, setDriver] = useState(null);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
   const [errors, setErrors] = useState({});
+  const [sourceOpen, setSourceOpen] = useState(false);
 
   const { uploading: imageUploading, preview: imagePreview, pickImage } = useDriverImageUpload({
     folder: 'driver-profiles',
@@ -149,11 +151,11 @@ export default function EditProfile() {
                   </View>
                 ) : null}
               </View>
-              <Press onPress={() => pickImage('camera')} disabled={imageUploading} scale={0.9} accessibilityLabel="Change profile photo" style={st.camera}>
+              <Press onPress={() => setSourceOpen(true)} disabled={imageUploading} scale={0.9} accessibilityLabel="Change profile photo" style={st.camera}>
                 <Camera size={16} color={tw.slate900} />
               </Press>
             </View>
-            <Text style={st.photoLabel}>{imageUploading ? 'Optimizing For WebP...' : 'Profile Photo'}</Text>
+            <Text style={st.photoLabel}>{imageUploading ? 'OPTIMIZING FOR WEBP...' : 'PROFILE PHOTO'}</Text>
           </View>
 
           <View style={{ gap: 16 }}>
@@ -186,6 +188,15 @@ export default function EditProfile() {
         </View>
       </ScrollView>
 
+      <DriverImageSourceSheet
+        visible={sourceOpen}
+        onClose={() => setSourceOpen(false)}
+        onPick={(source) => {
+          setSourceOpen(false);
+          pickImage(source);
+        }}
+      />
+
       {showSuccess ? (
         <View style={[st.toast, { top: insets.top + 16 }]} pointerEvents="none">
           <CheckCircle2 size={20} strokeWidth={3} color="#fff" />
@@ -206,9 +217,9 @@ const st = StyleSheet.create({
   avatar: { width: 96, height: 96, borderRadius: 32, backgroundColor: tw.slate900, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...shadow('lg') },
   avatarSpin: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   camera: { position: 'absolute', bottom: 0, right: 0, width: 36, height: 36, borderRadius: 12, backgroundColor: '#fff', borderWidth: 2, borderColor: tw.slate50, alignItems: 'center', justifyContent: 'center', ...shadow('xl') },
-  photoLabel: { fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: tw.slate400, ...fo(700) },
+  photoLabel: { fontSize: 11, letterSpacing: 1.1, color: tw.slate400, ...fo(700) },
   field: { backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 20, borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, gap: 8, ...shadow('sm') },
-  fieldLabel: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.slate400, lineHeight: 10, ...fo(700) },
+  fieldLabel: { fontSize: 10, letterSpacing: 1, color: tw.slate400, lineHeight: 10, ...fo(700) },
   input: { padding: 0, fontSize: 15, letterSpacing: -0.375, color: tw.slate900, ...fo(600) },
   error: { fontSize: 11, color: tw.rose500, ...fo(700) },
   save: { width: '100%', height: 60, backgroundColor: tw.slate900, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, boxShadow: '0 20px 25px -5px rgba(15,23,43,0.2), 0 8px 10px -6px rgba(15,23,43,0.2)' },

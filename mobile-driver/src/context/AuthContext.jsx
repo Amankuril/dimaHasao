@@ -8,6 +8,8 @@ import { registerAuthHandlers } from '../driver/utils/authBridge';
 import { toast } from '../lib/notify';
 import { clearCache as clearDiskCache } from '../lib/cache';
 import { clearCache as clearApiCache } from '../lib/apiCache';
+import { socketService } from '../driver/api/socket';
+import { clearSavedFcmToken } from '../lib/push';
 
 /*
  * The driver session, ported from the web's registrationService (persistDriverAuthSession /
@@ -62,6 +64,9 @@ export function AuthProvider({ children }) {
   const expiredToastShown = useRef(false);
 
   const clearLocal = useCallback(async () => {
+    // Drop the live socket and the cached FCM token so the next sign-in (maybe another driver) re-registers both.
+    socketService.disconnect();
+    clearSavedFcmToken();
     applyToken(null);
     await secure.deleteItemAsync(KEY_TOKEN).catch(() => {});
     DRIVER_AUTH_KEYS.forEach((k) => {

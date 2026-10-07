@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Animated, Dimensions, Linking, Modal, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Banknote, Bike, Clock, CreditCard, Navigation, Package, Phone, Route, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
@@ -53,6 +54,8 @@ function PulseDot({ style }) {
 
 /** The card's intro: backdrop fade, card rises 80px from scale .96 (spring). */
 function Entrance({ children }) {
+  // Android is edge-to-edge: keep the card clear of the gesture / navigation bar.
+  const insets = useSafeAreaInsets();
   const fade = useAnimatedValue(0);
   const rise = useAnimatedValue(80);
   const scale = useAnimatedValue(0.96);
@@ -64,7 +67,7 @@ function Entrance({ children }) {
     ]).start();
   }, [fade, rise, scale]);
   return (
-    <Animated.View style={[styles.backdrop, { opacity: fade }]}>
+    <Animated.View style={[styles.backdrop, { opacity: fade, paddingBottom: 16 + insets.bottom }]}>
       <Animated.View style={[styles.card, { transform: [{ translateY: rise }, { scale }] }]}>{children}</Animated.View>
     </Animated.View>
   );

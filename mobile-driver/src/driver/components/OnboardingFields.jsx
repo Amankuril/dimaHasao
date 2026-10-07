@@ -5,7 +5,7 @@ import { Check } from 'lucide-react-native';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Press } from '../../components/ui';
 import { SelectField as KitSelect } from '../../components/kit';
-import { OB, jk, obLabel } from './onboardingTheme';
+import { OB, jk, obLabel, up } from './onboardingTheme';
 
 /*
  * Port of driver/pages/registration/OnboardingFields.jsx (+ the .dh-field / .dh-chip /
@@ -96,7 +96,7 @@ export function Field({
   const [focused, setFocused] = useState(false);
   return (
     <View>
-      <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{label}</Text>
+      <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up(label)}</Text>
       <FieldBox focused={focused} invalid={invalid}>
         {Icon ? <Icon size={18} strokeWidth={2.2} color={OB.muted} /> : null}
         <TextInput
@@ -127,7 +127,7 @@ export function SelectField({ label, icon: Icon, value, onChange, options, place
   const sheetOptions = [{ value: '', label: placeholder }, ...options];
   return (
     <View>
-      <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{label}</Text>
+      <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up(label)}</Text>
       <FieldBox invalid={invalid}>
         {Icon ? <Icon size={18} strokeWidth={2.2} color={OB.muted} /> : null}
         <KitSelect
@@ -162,7 +162,7 @@ export function DateField({ label, value, onChange, valid = false }) {
   const shown = value ? value.split('-').reverse().join('/') : 'dd/mm/yyyy';
   return (
     <View>
-      <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{label}</Text>
+      <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up(label)}</Text>
       <Press scale={1} onPress={Platform.OS === 'android' ? open : undefined}>
         <FieldBox>
           <Text style={[inputText, { color: value ? OB.text : '#c2bda9' }]}>{shown}</Text>
@@ -177,7 +177,7 @@ export function DateField({ label, value, onChange, valid = false }) {
 export function ChipGroup({ label, value, onChange, options, columns = 3 }) {
   return (
     <View>
-      <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{label}</Text>
+      <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up(label)}</Text>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {options.map((option) => {
           const optionValue = typeof option === 'string' ? option : option.value;
@@ -205,7 +205,7 @@ export function ReadOnlyRow({ label, icon: Icon, value }) {
     <View style={styles.readOnly}>
       {Icon ? <Icon size={18} strokeWidth={2.2} color={OB.primary} /> : null}
       <View style={{ minWidth: 0, flex: 1 }}>
-        <Text style={[obLabel, { color: 'rgba(10,77,43,0.7)' }]}>{label}</Text>
+        <Text style={[obLabel, { color: 'rgba(10,77,43,0.7)' }]}>{up(label)}</Text>
         <Text style={{ ...jk(700), fontSize: 15, color: OB.text, lineHeight: 22.5 }}>{value}</Text>
       </View>
     </View>

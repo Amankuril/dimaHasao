@@ -298,3 +298,5 @@ export const getDriverVehicleFieldTemplates = (role = 'driver') => api.get('/dri
 export const updateDriverDocument = (documentKey, document) =>
   api.patch(`/drivers/documents/${encodeURIComponent(documentKey)}`, { document }, withDriverAuth());
 export const getDriverIncentives = () => api.get('/drivers/incentives', withDriverAuth());
+
+export const claimDriverIncentiveReward = (payload) => api.post('/drivers/incentives/claim', payload, withDriverAuth());

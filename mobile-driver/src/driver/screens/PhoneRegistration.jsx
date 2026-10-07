@@ -16,7 +16,7 @@ import AuthLegalLinks from '../../components/AuthLegalLinks';
 import usePlatformSettings from '../../shared/hooks/usePlatformSettings';
 import { Alert, CtaButton, FieldBox, Spin } from '../components/OnboardingFields';
 import { DRIVER_BRAND_LOGO } from '../components/OnboardingShell';
-import { OB, jk, obLabel } from '../components/onboardingTheme';
+import { OB, jk, obLabel, up } from '../components/onboardingTheme';
 
 /*
  * Port of driver/pages/registration/PhoneRegistration.jsx. Mounted at both
@@ -143,7 +143,7 @@ export default function PhoneRegistration() {
         <Text style={styles.sub}>Enter your mobile number. We will send a code to confirm it is you.</Text>
 
         <View style={{ marginTop: 32 }}>
-          <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>Mobile number</Text>
+          <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up('Mobile number')}</Text>
           <FieldBox focused={focused} style={{ paddingVertical: 14 }}>
             <Phone size={18} strokeWidth={2.2} color={OB.muted} />
             <Text style={{ ...jk(700), fontSize: 15, color: OB.muted }}>+91</Text>

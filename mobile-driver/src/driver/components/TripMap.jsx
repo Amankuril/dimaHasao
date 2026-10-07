@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
@@ -10,6 +10,7 @@ import { outfit, tw } from '../../theme';
 import { HAS_VALID_GOOGLE_MAPS_KEY } from '../shared/utils/googleMaps';
 import { CircleLocationMarker, toSrc, useTrackViews } from '../shared/live/parts';
 import { normalizeHeading } from '../utils/activeTripHelpers';
+import Text from './UpperText';
 
 // Web: the map layer and its floating cards of Taxi/modules/driver/pages/ActiveTrip.jsx
 // (GoogleMap + RotatingVehicleMarker + top bar + stage / ETA / route cards + simulation panel).

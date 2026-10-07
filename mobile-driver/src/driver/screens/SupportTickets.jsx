@@ -146,7 +146,7 @@ export default function SupportTickets() {
                     <Text style={[styles.status, { backgroundColor: tone.bg, color: tone.fg, borderColor: tone.border }]}>{t.status}</Text>
                   </View>
                   <Text style={styles.ticketMeta} numberOfLines={1}>
-                    {t.supportType} Â· {new Date(t.updatedAt).toLocaleString('en-IN')}
+                    {t.supportType} · {new Date(t.updatedAt).toLocaleString('en-IN')}
                   </Text>
                 </View>
                 <ChevronRight size={15} color={tw.slate300} strokeWidth={2.5} style={{ marginTop: 4 }} />

@@ -11,8 +11,6 @@ import DriverBottomNav from '../components/DriverBottomNav';
 import { claimDriverIncentiveReward, getCurrentDriver, getDriverIncentives } from '../services/registrationService';
 
 // Web: Taxi/modules/driver/pages/DriverIncentives.jsx (/taxi/driver/incentives)
-// Web bug kept: claimDriverIncentiveReward is imported from registrationService but is not defined there,
-// so a claim tap throws "not a function" and shows it in the error toast.
 
 const unwrap = (response) => response?.data?.data || response?.data || response || {};
 
@@ -93,7 +91,7 @@ export default function DriverIncentives() {
     return (
       <View style={[st.root, { alignItems: 'center', justifyContent: 'center' }]}>
         <Spinner size={24} color="#000" />
-        <Text style={st.loadingText}>Loading Rewards</Text>
+        <Text style={st.loadingText}>LOADING REWARDS</Text>
       </View>
     );
   }
@@ -108,11 +106,11 @@ export default function DriverIncentives() {
             </Press>
             <View>
               <Text style={st.title}>Incentives</Text>
-              <Text style={st.sub}>Driver Earnings</Text>
+              <Text style={st.sub}>DRIVER EARNINGS</Text>
             </View>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={st.bonusLabel}>Bonus earned</Text>
+            <Text style={st.bonusLabel}>BONUS EARNED</Text>
             <Text style={st.bonusValue}>{formatCurrency(bonusEarnings)}</Text>
           </View>
         </View>
@@ -145,18 +143,18 @@ export default function DriverIncentives() {
 
           <View style={st.stats}>
             <View style={{ flex: 1 }}>
-              <Text style={st.statLabel}>Streak</Text>
+              <Text style={st.statLabel}>STREAK</Text>
               <View style={st.statRow}>
                 <Text style={st.statValue}>{summary.streakDays || 0}</Text>
                 <Flame size={14} color={tw.orange500} />
               </View>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={st.statLabel}>Weekly</Text>
+              <Text style={st.statLabel}>WEEKLY</Text>
               <Text style={st.statValue}>{summary.currentWeekTrips || 0} trips</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={st.statLabel}>Rating</Text>
+              <Text style={st.statLabel}>RATING</Text>
               <View style={st.statRow}>
                 <Text style={st.statValue}>{driverRating.toFixed(1)}</Text>
                 <Star size={14} color={tw.yellow500} fill={tw.yellow500} />
@@ -167,7 +165,7 @@ export default function DriverIncentives() {
 
         {/* Active Quests */}
         <View style={{ gap: 16 }}>
-          <Text style={st.sectionTitle}>Active Quests</Text>
+          <Text style={st.sectionTitle}>ACTIVE QUESTS</Text>
 
           <View style={{ gap: 12 }}>
             {milestones.map((milestone) => {
@@ -189,7 +187,7 @@ export default function DriverIncentives() {
                       <Text style={st.questSub}>{milestone.required_weeks} weeks consistency challenge</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={st.statLabelNoMb}>Reward</Text>
+                      <Text style={st.statLabelNoMb}>REWARD</Text>
                       <Text style={st.reward}>{formatCurrency(milestone.payout_amount)}</Text>
                     </View>
                   </View>
@@ -212,7 +210,7 @@ export default function DriverIncentives() {
                     scale={1}
                     style={[st.claim, btn]}
                   >
-                    <Text style={[st.claimText, { color: btnText }]}>{claimingKey === claimKey ? 'Claiming...' : milestone.isClaimed ? 'Reward Claimed' : 'Ongoing'}</Text>
+                    <Text style={[st.claimText, { color: btnText }]}>{claimingKey === claimKey ? 'CLAIMING...' : milestone.isClaimed ? 'REWARD CLAIMED' : 'ONGOING'}</Text>
                   </Press>
                 </View>
               );
@@ -230,7 +228,7 @@ export default function DriverIncentives() {
                 : 'Invite other drivers to join. Rewards are set by the district team.'}
             </Text>
             <Press onPress={() => navigate('/taxi/driver/referral')} style={st.invite}>
-              <Text style={st.inviteText}>Invite Now</Text>
+              <Text style={st.inviteText}>INVITE NOW</Text>
             </Press>
           </View>
           <View style={st.giftWrap} pointerEvents="none">
@@ -240,7 +238,7 @@ export default function DriverIncentives() {
 
         {/* Boosters */}
         <View style={{ gap: 16, paddingBottom: 40 }}>
-          <Text style={st.sectionTitle}>Bonus Boosters</Text>
+          <Text style={st.sectionTitle}>BONUS BOOSTERS</Text>
           <View style={{ gap: 12 }}>
             {features
               .filter((f) => f.enabled)
@@ -267,7 +265,7 @@ export default function DriverIncentives() {
                         scale={1}
                         style={[st.boostBtn, canClaim && { backgroundColor: '#000' }]}
                       >
-                        <Text style={[st.boostBtnText, { color: canClaim ? '#fff' : tw.gray300 }]}>{feature.isClaimed ? 'Done' : 'Claim'}</Text>
+                        <Text style={[st.boostBtnText, { color: canClaim ? '#fff' : tw.gray300 }]}>{feature.isClaimed ? 'DONE' : 'CLAIM'}</Text>
                       </Press>
                     </View>
                   </View>
@@ -284,12 +282,12 @@ export default function DriverIncentives() {
 
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fff' },
-  loadingText: { marginTop: 16, fontSize: 12, letterSpacing: 1.8, textTransform: 'uppercase', color: tw.gray400, ...fo(600) },
+  loadingText: { marginTop: 16, fontSize: 12, letterSpacing: 1.8, color: tw.gray400, ...fo(600) },
   header: { backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 24, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: tw.gray100 },
   back: { width: 40, height: 40, borderRadius: 16, borderWidth: 1, borderColor: tw.gray100, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)' },
   title: { fontSize: 20, color: tw.gray900, ...fo(700) },
-  sub: { fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: tw.gray400, ...fo(500) },
-  bonusLabel: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...fo(700) },
+  sub: { fontSize: 11, letterSpacing: 1.1, color: tw.gray400, ...fo(500) },
+  bonusLabel: { fontSize: 10, letterSpacing: 1, color: tw.gray400, ...fo(700) },
   bonusValue: { fontSize: 18, color: '#000', ...fo(700) },
   levelCard: { backgroundColor: tw.gray50, borderRadius: 24, padding: 24 },
   trophy: { width: 48, height: 48, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)' },
@@ -299,23 +297,23 @@ const st = StyleSheet.create({
   track: { height: 8, width: '100%', backgroundColor: tw.gray200, borderRadius: 999, overflow: 'hidden' },
   track6: { height: 6, width: '100%', backgroundColor: tw.gray100, borderRadius: 999, overflow: 'hidden' },
   stats: { marginTop: 24, flexDirection: 'row', gap: 16, paddingTop: 24, borderTopWidth: 1, borderTopColor: 'rgba(229,231,235,0.5)' },
-  statLabel: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, marginBottom: 4, ...fo(700) },
-  statLabelNoMb: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.gray400, ...fo(700) },
+  statLabel: { fontSize: 10, letterSpacing: 1, color: tw.gray400, marginBottom: 4, ...fo(700) },
+  statLabelNoMb: { fontSize: 10, letterSpacing: 1, color: tw.gray400, ...fo(700) },
   statRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statValue: { fontSize: 16, color: tw.gray900, ...fo(700) },
-  sectionTitle: { fontSize: 14, letterSpacing: 1.4, textTransform: 'uppercase', color: tw.gray900, ...fo(700) },
+  sectionTitle: { fontSize: 14, letterSpacing: 1.4, color: tw.gray900, ...fo(700) },
   quest: { borderWidth: 1, borderColor: tw.gray100, borderRadius: 24, padding: 20 },
   questName: { fontSize: 16, color: tw.gray900, ...fo(700) },
   questSub: { fontSize: 12, color: tw.gray500, ...fo(400) },
   reward: { fontSize: 14, color: tw.green600, ...fo(700) },
   progressText: { fontSize: 10, color: tw.gray400, ...fo(700) },
   claim: { width: '100%', paddingVertical: 12, borderRadius: 16, alignItems: 'center' },
-  claimText: { fontSize: 12, letterSpacing: 1.2, textTransform: 'uppercase', ...fo(700) },
+  claimText: { fontSize: 12, letterSpacing: 1.2, ...fo(700) },
   referral: { backgroundColor: '#000', borderRadius: 24, padding: 24, overflow: 'hidden' },
   refTitle: { fontSize: 18, color: '#fff', marginBottom: 8, ...fo(700) },
   refText: { fontSize: 14, color: tw.gray400, marginBottom: 24, ...fo(400) },
   invite: { alignSelf: 'flex-start', paddingHorizontal: 24, paddingVertical: 12, backgroundColor: '#fff', borderRadius: 16 },
-  inviteText: { fontSize: 12, letterSpacing: 1.2, textTransform: 'uppercase', color: '#000', ...fo(700) },
+  inviteText: { fontSize: 12, letterSpacing: 1.2, color: '#000', ...fo(700) },
   giftWrap: { position: 'absolute', right: -16, bottom: -16 },
   boost: { borderWidth: 1, borderColor: tw.gray100, borderRadius: 24, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   boostIcon: { width: 40, height: 40, borderRadius: 16, backgroundColor: tw.gray50, alignItems: 'center', justifyContent: 'center' },
@@ -323,5 +321,5 @@ const st = StyleSheet.create({
   boostSub: { fontSize: 10, color: tw.gray400, ...fo(500) },
   boostReward: { fontSize: 14, color: '#000', ...fo(700) },
   boostBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 12 },
-  boostBtnText: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', ...fo(700) },
+  boostBtnText: { flexShrink: 0, fontSize: 10, letterSpacing: 1, ...fo(700) },
 });

@@ -52,6 +52,6 @@ export const compressSelfieForUpload = async (asset) => {
 
 /** Web uploadService.uploadImage(base64Image, folder) */
 export const uploadImage = async (base64Image, folder = 'general') => {
-  const response = await api.post('/common/upload/image', { image: base64Image, folder });
+  const response = await api.post('/common/upload/image', { image: base64Image, folder }, { timeout: 60000 });
   return response?.data || response;
 };

@@ -6,6 +6,7 @@ import { useNavigate } from '../../lib/webRouter';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Press } from '../../components/ui';
 import { outfit, tw } from '../../theme';
+import { up } from '../components/onboardingTheme';
 
 /*
  * Port of driver/pages/registration/ApplicationStatus.jsx (/taxi/driver/status).
@@ -64,7 +65,7 @@ export default function ApplicationStatus() {
                 </View>
                 <View style={{ gap: 2 }}>
                   <Text style={styles.rowTitle}>KYC Verification</Text>
-                  <Text style={styles.rowSub}>In Progress</Text>
+                  <Text style={styles.rowSub}>{up('In Progress')}</Text>
                 </View>
               </View>
               <Animated.View style={{ opacity: pulse }}>
@@ -79,7 +80,7 @@ export default function ApplicationStatus() {
                 </View>
                 <View style={{ gap: 2, opacity: 0.4 }}>
                   <Text style={styles.rowTitle}>Background Check</Text>
-                  <Text style={styles.rowSub}>Waiting</Text>
+                  <Text style={styles.rowSub}>{up('Waiting')}</Text>
                 </View>
               </View>
             </View>
@@ -89,7 +90,7 @@ export default function ApplicationStatus() {
 
       <View style={[styles.bottom, { paddingBottom: 48 + insets.bottom }]}>
         <Press onPress={() => navigate('/taxi/driver/support')} style={styles.support}>
-          <Text style={styles.supportText}>Contact Support</Text>
+          <Text style={styles.supportText}>{up('Contact Support')}</Text>
           <HelpCircle size={20} strokeWidth={2.5} color={tw.slate500} />
         </Press>
       </View>
@@ -105,8 +106,8 @@ const styles = StyleSheet.create({
   row: { backgroundColor: '#fff', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: tw.slate50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 25px rgba(0,0,0,0.01)' },
   rowIcon: { width: 40, height: 40, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   rowTitle: { ...outfit(900), fontSize: 14, color: TEXT },
-  rowSub: { ...outfit(700), fontSize: 11, letterSpacing: -0.55, textTransform: 'uppercase', color: tw.slate400 },
+  rowSub: { ...outfit(700), fontSize: 11, letterSpacing: -0.55, color: tw.slate400 },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 32, paddingTop: 16, backgroundColor: 'rgba(255,255,255,0.5)' },
   support: { height: 64, backgroundColor: '#fff', borderWidth: 2, borderColor: tw.slate100, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  supportText: { ...outfit(900), fontSize: 16, letterSpacing: -0.4, textTransform: 'uppercase', color: tw.slate500 },
+  supportText: { ...outfit(900), fontSize: 16, letterSpacing: -0.4, color: tw.slate500 },
 });

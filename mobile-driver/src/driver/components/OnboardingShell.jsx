@@ -6,7 +6,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react-native';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Press } from '../../components/ui';
 import { Alert, CtaButton, Spin } from './OnboardingFields';
-import { OB, jk } from './onboardingTheme';
+import { OB, jk, up } from './onboardingTheme';
 
 export const DRIVER_BRAND_LOGO = require('../../../assets/images/driver-logo.png');
 
@@ -58,9 +58,7 @@ export default function OnboardingShell({
               ) : (
                 <Image source={DRIVER_BRAND_LOGO} style={{ width: 40, height: 40, borderRadius: 20 }} />
               )}
-              <Text style={styles.stepText}>
-                Step {index + 1} of {total}
-              </Text>
+              <Text style={styles.stepText}>{up(`Step ${index + 1} of ${total}`)}</Text>
             </View>
 
             <View style={styles.track} accessibilityRole="progressbar" accessibilityLabel="Onboarding progress">
@@ -68,7 +66,7 @@ export default function OnboardingShell({
             </View>
 
             <View style={{ gap: 6, paddingTop: 4 }}>
-              {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+              {eyebrow ? <Text style={styles.eyebrow}>{up(eyebrow)}</Text> : null}
               <Text style={styles.title}>{title}</Text>
               {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
             </View>
@@ -105,10 +103,10 @@ const styles = StyleSheet.create({
   maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
   headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   back: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: OB.border, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  stepText: { ...jk(800), fontSize: 11, letterSpacing: 1.54, textTransform: 'uppercase', color: OB.muted },
+  stepText: { ...jk(800), fontSize: 11, letterSpacing: 1.54, color: OB.muted, minWidth: 96, textAlign: 'right', flexShrink: 0 },
   track: { height: 4, borderRadius: 999, backgroundColor: OB.border, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 999, backgroundColor: OB.primary },
-  eyebrow: { ...jk(800), fontSize: 11, letterSpacing: 1.76, textTransform: 'uppercase', color: OB.primary },
+  eyebrow: { ...jk(800), fontSize: 11, letterSpacing: 1.76, color: OB.primary },
   title: { ...jk(800), fontSize: 28, lineHeight: 35, letterSpacing: -0.56, color: OB.text },
   subtitle: { ...jk(500), fontSize: 14, lineHeight: 22.75, color: OB.muted, maxWidth: 255 },
   fixed: { position: 'absolute', left: 0, right: 0, bottom: 0 },

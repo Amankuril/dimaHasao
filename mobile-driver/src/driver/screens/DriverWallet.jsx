@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppState, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AlertCircle, ArrowDownLeft, ArrowLeft, ArrowUpRight, CheckCircle2, Clock3, IndianRupee, RefreshCw, Wallet, X } from 'lucide-react-native';
@@ -15,7 +15,7 @@ import DriverRazorpayCheckout from '../components/DriverRazorpayCheckout';
 import SpinView from '../components/SpinView';
 import { useDriverAppSettings } from '../hooks/useDriverAppSettings';
 import { getLocalDriverToken } from '../services/registrationService';
-import { rememberPendingPhonePeRedirect } from '../utils/phonePeResume';
+import { clearPendingPhonePeRedirect, readPendingPhonePeRedirect, rememberPendingPhonePeRedirect } from '../utils/phonePeResume';
 
 // Web: Taxi/modules/driver/pages/DriverWallet.jsx (/taxi/driver/wallet)
 
@@ -142,7 +142,7 @@ const StatPill = ({ label, value, tone = 'dark', style }) => {
 
   return (
     <View style={[st.stat, { backgroundColor: t.bg }, style]}>
-      <Text style={[st.statLabel, { color: t.fg }]}>{label}</Text>
+      <Text style={[st.statLabel, { color: t.fg }]}>{String(label).toUpperCase()}</Text>
       <Text style={[st.statValue, { color: t.fg }]}>{value}</Text>
     </View>
   );
@@ -250,6 +250,41 @@ export default function DriverWallet() {
 
     return () => {
       socketService.off('driver:wallet:updated', onWalletUpdated);
+    };
+  }, [loadWallet]);
+
+  // The web finishes a PhonePe top-up on /taxi/phonepe-status (status poll, then back to the wallet). Here the
+  // app returns from the external checkout straight to this screen, so it settles the pending transaction itself.
+  useEffect(() => {
+    let cancelled = false;
+    const settlePendingPhonePe = async () => {
+      const pending = readPendingPhonePeRedirect(PHONEPE_DRIVER_WALLET_FLOW_KEY);
+      if (!pending?.merchantTransactionId || !getLocalDriverToken()) return;
+      try {
+        const response = await api.get(`/drivers/wallet/top-up/phonepe/status/${encodeURIComponent(pending.merchantTransactionId)}`, withDriverAuthorization());
+        if (cancelled) return;
+        const payload = response?.data || response || {};
+        const data = payload?.data || payload;
+        const nextStatus = String(data?.status || payload?.status || '').trim().toLowerCase();
+        if (nextStatus === 'paid') {
+          clearPendingPhonePeRedirect(PHONEPE_DRIVER_WALLET_FLOW_KEY);
+          setShowTopUp(false);
+          loadWallet({ quiet: true });
+        } else if (nextStatus === 'failed') {
+          clearPendingPhonePeRedirect(PHONEPE_DRIVER_WALLET_FLOW_KEY);
+          setError(String(data?.providerMessage || payload?.message || 'Transaction Rejected'));
+        }
+      } catch {
+        /* still pending or offline: the next return to the app tries again */
+      }
+    };
+    settlePendingPhonePe();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') settlePendingPhonePe();
+    });
+    return () => {
+      cancelled = true;
+      sub.remove();
     };
   }, [loadWallet]);
 
@@ -536,7 +571,7 @@ export default function DriverWallet() {
             <View style={st.hero}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                 <View style={{ flexShrink: 1 }}>
-                  <Text style={st.heroLabel}>Current balance</Text>
+                  <Text style={st.heroLabel}>CURRENT BALANCE</Text>
                   <Text style={st.balance}>{money(wallet.balance)}</Text>
                   <View style={[st.statusPill, { backgroundColor: rules.canReceiveOrders ? 'rgba(0,212,146,0.15)' : 'rgba(255,185,0,0.15)' }]}>
                     <Text style={[st.statusText, { color: rules.canReceiveOrders ? tw.emerald200 : tw.amber200 }]}>{statusCopy}</Text>
@@ -551,7 +586,7 @@ export default function DriverWallet() {
                 <LinearGradient colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.salary}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <View style={{ flexShrink: 1 }}>
-                      <Text style={st.heroSmall}>Monthly salary</Text>
+                      <Text style={st.heroSmall}>MONTHLY SALARY</Text>
                       <Text style={st.salaryValue}>{money(driverProfile.salary)}</Text>
                       <Text style={st.salaryNote}>Set by fleet owner for this driver profile</Text>
                     </View>
@@ -564,11 +599,11 @@ export default function DriverWallet() {
 
               <View style={[owner ? { gap: 12 } : { flexDirection: 'row', gap: 12 }, { marginTop: 20 }]}>
                 <View style={[st.miniCard, !owner && { flex: 1 }]}>
-                  <Text style={st.heroSmall}>Minimum needed</Text>
+                  <Text style={st.heroSmall}>MINIMUM NEEDED</Text>
                   <Text style={st.miniValue}>{money(rules.minimumBalance)}</Text>
                 </View>
                 <View style={[st.miniCard, !owner && { flex: 1 }]}>
-                  <Text style={st.heroSmall}>Available cash limit</Text>
+                  <Text style={st.heroSmall}>AVAILABLE CASH LIMIT</Text>
                   <Text style={[st.miniValue, { color: rules.availableForOrders >= 0 ? tw.emerald200 : tw.amber200 }]}>{money(rules.availableForOrders)}</Text>
                 </View>
               </View>
@@ -592,7 +627,7 @@ export default function DriverWallet() {
                 disabled={topUpDisabled}
                 style={[st.actionBtn, shadow('sm'), { backgroundColor: topUpDisabled ? tw.slate200 : '#009b72' }]}
               >
-                <Text style={[st.actionText, topUpDisabled && { color: tw.slate400 }]}>Top up</Text>
+                <Text style={[st.actionText, topUpDisabled && { color: tw.slate400 }]}>TOP UP</Text>
                 <ArrowUpRight size={17} color={topUpDisabled ? tw.slate400 : '#fff'} />
               </Press>
               <Press
@@ -600,7 +635,7 @@ export default function DriverWallet() {
                 disabled={withdrawDisabled}
                 style={[st.actionBtn, shadow('sm'), { backgroundColor: withdrawDisabled ? tw.slate200 : tw.slate900 }]}
               >
-                <Text style={[st.actionText, withdrawDisabled && { color: tw.slate400 }]}>Withdraw</Text>
+                <Text style={[st.actionText, withdrawDisabled && { color: tw.slate400 }]}>WITHDRAW</Text>
                 <ArrowDownLeft size={17} color={withdrawDisabled ? tw.slate400 : '#fff'} />
               </Press>
             </View>
@@ -622,7 +657,7 @@ export default function DriverWallet() {
                           <Text style={st.wdDate}>{formatDate(request.createdAt)}</Text>
                         </View>
                         <View style={[st.wdBadge, { backgroundColor: statusMeta.bg }]}>
-                          <Text style={[st.wdBadgeText, { color: statusMeta.fg }]}>{statusMeta.label}</Text>
+                          <Text style={[st.wdBadgeText, { color: statusMeta.fg }]}>{statusMeta.label.toUpperCase()}</Text>
                         </View>
                       </View>
                     );
@@ -680,7 +715,7 @@ export default function DriverWallet() {
                   const on = activeFilter === filter.id;
                   return (
                     <Press key={filter.id} onPress={() => setActiveFilter(filter.id)} scale={1} style={[st.filter, on ? { backgroundColor: tw.slate900 } : [{ backgroundColor: '#fff' }, shadow('sm')]]}>
-                      <Text style={[st.filterText, { color: on ? '#fff' : tw.slate500 }]}>{filter.label}</Text>
+                      <Text style={[st.filterText, { color: on ? '#fff' : tw.slate500 }]}>{filter.label.toUpperCase()}</Text>
                     </Press>
                   );
                 })}
@@ -709,7 +744,7 @@ export default function DriverWallet() {
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
                         <Text style={[st.txAmount, { color: isDebit ? tw.rose600 : tw.emerald700 }]}>{money(tx.amount)}</Text>
-                        <Text style={st.txBal}>Bal {money(tx.balanceAfter)}</Text>
+                        <Text style={st.txBal}>BAL {money(tx.balanceAfter).toUpperCase()}</Text>
                       </View>
                     </View>
                   );
@@ -747,8 +782,8 @@ export default function DriverWallet() {
             ) : (
               <View style={{ gap: 16 }}>
                 <View style={st.amountBox}>
-                  <Text style={st.amountLabel}>Amount</Text>
-                  <TextInput value={topUpAmount} onChangeText={setTopUpAmount} keyboardType="numeric" style={st.amountInput} />
+                  <Text style={st.amountLabel}>AMOUNT</Text>
+                  <TextInput value={topUpAmount} onChangeText={setTopUpAmount} keyboardType="decimal-pad" style={st.amountInput} />
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   {quickAmounts.map((amount) => (
@@ -767,7 +802,7 @@ export default function DriverWallet() {
                       <RefreshCw size={18} color={tw.slate400} />
                     </SpinView>
                   ) : (
-                    <Text style={[st.submitText, !rules.walletEnabled && { color: tw.slate400 }]}>Add money</Text>
+                    <Text style={[st.submitText, !rules.walletEnabled && { color: tw.slate400 }]}>ADD MONEY</Text>
                   )}
                 </Press>
               </View>
@@ -801,8 +836,8 @@ export default function DriverWallet() {
             ) : (
               <View style={{ gap: 16 }}>
                 <View style={st.amountBox}>
-                  <Text style={st.amountLabel}>Withdrawal amount</Text>
-                  <TextInput value={withdrawAmount} onChangeText={setWithdrawAmount} keyboardType="numeric" placeholder="0" placeholderTextColor={tw.slate400} style={st.amountInput} />
+                  <Text style={st.amountLabel}>WITHDRAWAL AMOUNT</Text>
+                  <TextInput value={withdrawAmount} onChangeText={setWithdrawAmount} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={tw.slate400} style={st.amountInput} />
                   <Text style={[st.cardMeta, { marginTop: 8, textAlign: 'center' }]}>Available balance: {money(wallet.balance)}</Text>
                 </View>
                 <Press
@@ -815,7 +850,7 @@ export default function DriverWallet() {
                       <RefreshCw size={18} color={tw.slate400} />
                     </SpinView>
                   ) : (
-                    <Text style={[st.submitText, !rules.transferEnabled && { color: tw.slate400 }]}>Send request</Text>
+                    <Text style={[st.submitText, !rules.transferEnabled && { color: tw.slate400 }]}>SEND REQUEST</Text>
                   )}
                 </Press>
               </View>
@@ -839,13 +874,13 @@ const st = StyleSheet.create({
   loading: { minHeight: 480, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { fontSize: 14, color: tw.slate500, ...fo(900) },
   hero: { borderRadius: 32, backgroundColor: '#101521', padding: 20, overflow: 'hidden', ...shadow('xl') },
-  heroLabel: { fontSize: 12, letterSpacing: 2.16, textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', ...fo(900) },
+  heroLabel: { fontSize: 12, letterSpacing: 2.16, color: 'rgba(255,255,255,0.45)', ...fo(900) },
   balance: { marginTop: 8, fontSize: 36, letterSpacing: -0.9, color: '#fff', ...fo(900) },
   statusPill: { marginTop: 12, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
   statusText: { fontSize: 12, ...fo(900) },
   walletIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
   salary: { marginTop: 20, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 16, overflow: 'hidden' },
-  heroSmall: { fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', ...fo(900) },
+  heroSmall: { fontSize: 10, letterSpacing: 1.6, color: 'rgba(255,255,255,0.45)', ...fo(900) },
   salaryValue: { marginTop: 4, fontSize: 24, color: tw.emerald200, ...fo(900) },
   salaryNote: { marginTop: 4, fontSize: 11, color: 'rgba(255,255,255,0.55)', ...fo(700) },
   salaryIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(0,212,146,0.15)', alignItems: 'center', justifyContent: 'center' },
@@ -856,7 +891,7 @@ const st = StyleSheet.create({
   warnBox: { borderRadius: 16, borderWidth: 1, borderColor: tw.amber100, backgroundColor: tw.amber50, padding: 16 },
   warnText: { fontSize: 14, color: tw.amber700, ...fo(700) },
   actionBtn: { flex: 1, height: 52, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  actionText: { fontSize: 14, letterSpacing: 1.12, textTransform: 'uppercase', color: '#fff', ...fo(900) },
+  actionText: { flexShrink: 0, fontSize: 14, letterSpacing: 1.12, color: '#fff', ...fo(900) },
   card: { borderRadius: 27.2, backgroundColor: '#fff', padding: 16, ...shadow('sm') },
   cardTitle: { fontSize: 14, color: tw.slate950, ...fo(900) },
   cardMeta: { fontSize: 12, color: tw.slate500, ...fo(700) },
@@ -864,16 +899,16 @@ const st = StyleSheet.create({
   wdAmount: { fontSize: 14, color: tw.slate900, ...fo(900) },
   wdDate: { marginTop: 2, fontSize: 11, color: tw.slate500, ...fo(700) },
   wdBadge: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
-  wdBadgeText: { fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', ...fo(900) },
+  wdBadgeText: { flexShrink: 0, fontSize: 10, letterSpacing: 1.6, ...fo(900) },
   guide: { borderRadius: 16, backgroundColor: tw.slate50, padding: 12 },
   guideTitle: { fontSize: 14, color: tw.slate900, ...fo(900) },
   guideText: { marginTop: 4, fontSize: 12, lineHeight: 19.5, color: tw.slate500, ...fo(700) },
   stat: { borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 },
-  statLabel: { fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', opacity: 0.7, ...fo(900) },
+  statLabel: { fontSize: 10, letterSpacing: 1.6, opacity: 0.7, ...fo(900) },
   statValue: { marginTop: 4, fontSize: 16, ...fo(900) },
   txSub: { marginTop: 4, fontSize: 11, color: tw.slate500, ...fo(700) },
   filter: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
-  filterText: { fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', ...fo(900) },
+  filterText: { fontSize: 10, letterSpacing: 1.6, ...fo(900) },
   empty: { borderRadius: 27.2, backgroundColor: '#fff', padding: 32, alignItems: 'center', ...shadow('sm') },
   emptyTitle: { marginTop: 12, fontSize: 14, color: tw.slate700, ...fo(900) },
   emptySub: { marginTop: 4, fontSize: 12, color: tw.slate400, textAlign: 'center', ...fo(700) },
@@ -883,7 +918,7 @@ const st = StyleSheet.create({
   txHint: { marginTop: 2, fontSize: 12, lineHeight: 20, color: tw.slate500, ...fo(700) },
   txDate: { marginTop: 4, fontSize: 11, color: tw.slate400, ...fo(700) },
   txAmount: { fontSize: 14, ...fo(900) },
-  txBal: { marginTop: 4, fontSize: 10, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  txBal: { marginTop: 4, fontSize: 10, color: tw.slate400, ...fo(900) },
   modalWrap: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(2,6,24,0.55)', paddingHorizontal: 12 },
   sheet: { borderTopLeftRadius: 32, borderTopRightRadius: 32, backgroundColor: '#fff', padding: 20, ...shadow('2xl') },
   sheetHead: { marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
@@ -893,10 +928,10 @@ const st = StyleSheet.create({
   okIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: tw.emerald50, alignItems: 'center', justifyContent: 'center' },
   okTitle: { marginTop: 16, fontSize: 18, color: tw.slate950, ...fo(900) },
   amountBox: { borderRadius: 24, backgroundColor: tw.slate50, padding: 20, alignItems: 'center' },
-  amountLabel: { fontSize: 12, letterSpacing: 1.92, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  amountLabel: { fontSize: 12, letterSpacing: 1.92, color: tw.slate400, ...fo(900) },
   amountInput: { marginTop: 8, width: '100%', padding: 0, textAlign: 'center', fontSize: 36, color: tw.slate950, ...fo(900) },
   quick: { flex: 1, borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', paddingVertical: 12, alignItems: 'center' },
   quickText: { fontSize: 14, color: tw.slate700, ...fo(900) },
   submit: { height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  submitText: { fontSize: 14, letterSpacing: 1.4, textTransform: 'uppercase', color: '#fff', ...fo(900) },
+  submitText: { fontSize: 14, letterSpacing: 1.4, color: '#fff', ...fo(900) },
 });

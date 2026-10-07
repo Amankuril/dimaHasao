@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, BackHandler, Dimensions, LayoutAnimation, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useIsFocused } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -141,6 +141,9 @@ function ScheduleSheet({ onClose, children }) {
 const DriverHome = () => {
   const navigate = useNavigate();
   const insets = useSafeAreaInsets();
+  // The web unmounts DriverHome when the driver leaves it; in the native stack it stays mounted underneath, so its
+  // realtime / polling work is gated on the screen being focused and it re-syncs when focus returns.
+  const isFocused = useIsFocused();
   const storedDriverInfo = useMemo(() => readStoredDriverInfo(), []);
   const [isOwnerManagedDriver, setIsOwnerManagedDriver] = useState(() => isOwnerManagedDriverProfile(storedDriverInfo));
   const [isOnline, setIsOnline] = useState(false);
@@ -304,6 +307,10 @@ const DriverHome = () => {
   }, [cancellingScheduledRideId, loadScheduledRides]);
 
   useEffect(() => {
+    if (!isFocused) {
+      return undefined;
+    }
+
     refreshNotificationCount();
     loadScheduledRides();
 
@@ -327,7 +334,7 @@ const DriverHome = () => {
       clearInterval(refreshInterval);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [loadScheduledRides, refreshNotificationCount]);
+  }, [isFocused, loadScheduledRides, refreshNotificationCount]);
 
   useEffect(() => {
     if (scheduledRides.length === 0) {
@@ -660,7 +667,83 @@ const DriverHome = () => {
     };
   }, [fetchActiveJob, hydrateDriverState, navigate, openActiveJob]);
 
+  // Leaving the screen == the web's unmount: drop the open request, the accept bookkeeping and any dialog, so none of
+  // it (a native Modal sits above every screen) lingers over the next route.
   useEffect(() => {
+    if (isFocused) {
+      return;
+    }
+
+    clearAcceptRecovery();
+    clearRecoveryBurst();
+    acceptingRideIdRef.current = '';
+    setAcceptingRideId('');
+    if (currentRequestRef.current) {
+      stopRideRequestAlertSound();
+    }
+    setShowRequest(false);
+    setCurrentRequest(null);
+    setShowOfflineConfirm(false);
+    setIsScheduleSheetOpen(false);
+    setSelectedScheduledRide(null);
+  }, [clearAcceptRecovery, clearRecoveryBurst, isFocused]);
+
+  // Returning to the screen == the web's remount: hydrate the driver again (online flag, wallet, selfie, documents,
+  // route booking) and resume an active trip if one is running.
+  const skipFirstFocusRef = useRef(true);
+  useEffect(() => {
+    if (!isFocused) {
+      return undefined;
+    }
+    if (skipFirstFocusRef.current) {
+      skipFirstFocusRef.current = false;
+      return undefined;
+    }
+
+    let active = true;
+    setRouteBookingPreferences(readRouteBookingPreferences());
+    setVehicleReapprovalPending(localStore.getItem(DRIVER_VEHICLE_REAPPROVAL_PENDING_KEY) === 'true');
+
+    (async () => {
+      try {
+        const [, activeDelivery, activeRide] = await Promise.allSettled([
+          hydrateDriverState(),
+          fetchActiveJob('parcel'),
+          fetchActiveJob('ride'),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        const deliveryPayload = activeDelivery.status === 'fulfilled' ? activeDelivery.value : null;
+        const ridePayload = activeRide.status === 'fulfilled' ? activeRide.value : null;
+        const currentJob = getJobRideId(deliveryPayload)
+          ? deliveryPayload
+          : getJobRideId(ridePayload)
+            ? ridePayload
+            : null;
+
+        if (getJobRideId(currentJob)) {
+          openActiveJob(currentJob);
+        }
+      } catch {
+        if (active) {
+          setStatusMessage('Could not restore driver status.');
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [fetchActiveJob, hydrateDriverState, isFocused, openActiveJob]);
+
+  useEffect(() => {
+    if (!isFocused) {
+      return undefined;
+    }
+
     let intervalId;
     let cancelled = false;
 
@@ -690,7 +773,7 @@ const DriverHome = () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isOnline, refreshTodaySummary]);
+  }, [isFocused, isOnline, refreshTodaySummary]);
 
   useEffect(() => {
     if (driverCoords) {
@@ -1022,6 +1105,12 @@ const DriverHome = () => {
 
   // Socket + location heartbeat while online
   useEffect(() => {
+    // Off screen (another route is on top): the web has unmounted DriverHome, so its listeners and heartbeat are gone
+    // (the socket itself stays up for the global request listener).
+    if (isOnline && !isFocused) {
+      return undefined;
+    }
+
     if (isOnline) {
       const socket = socketService.connect({ role: 'driver' });
 
@@ -1243,11 +1332,11 @@ const DriverHome = () => {
     setSocketStatus('offline');
     socketService.disconnect();
     return undefined;
-  }, [clearAcceptRecovery, clearRecoveryBurst, emitOnlineLocationUpdate, fetchActiveJob, isOnline, isOwnerManagedDriver, loadScheduledRides, navigate, refreshNotificationCount, scheduleRecoveryBurst]);
+  }, [clearAcceptRecovery, clearRecoveryBurst, emitOnlineLocationUpdate, fetchActiveJob, isFocused, isOnline, isOwnerManagedDriver, loadScheduledRides, navigate, refreshNotificationCount, scheduleRecoveryBurst]);
 
   // Recover the realtime session when the app returns to the foreground or the network comes back
   useEffect(() => {
-    if (!isOnline) {
+    if (!isOnline || !isFocused) {
       return undefined;
     }
 
@@ -1278,11 +1367,11 @@ const DriverHome = () => {
       window.removeEventListener('focus', handleWindowFocus);
       unsubscribeNet();
     };
-  }, [isOnline, scheduleRecoveryBurst]);
+  }, [isFocused, isOnline, scheduleRecoveryBurst]);
 
   // Socket health check
   useEffect(() => {
-    if (!isOnline) {
+    if (!isOnline || !isFocused) {
       return undefined;
     }
 
@@ -1298,7 +1387,7 @@ const DriverHome = () => {
     }, 8000);
 
     return () => clearInterval(healthCheckInterval);
-  }, [isOnline, scheduleRecoveryBurst]);
+  }, [isFocused, isOnline, scheduleRecoveryBurst]);
 
   const liveActiveSeconds = Math.max(0, Number(todaySummary.activeSeconds || 0));
   const dutyHours = Math.floor(liveActiveSeconds / 3600);
@@ -1693,7 +1782,7 @@ const st = StyleSheet.create({
   duty: { width: 112, height: 40, borderRadius: 20, padding: 4, justifyContent: 'center' },
   knob: { position: 'absolute', left: 4, top: 4, width: 32, height: 32, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
   dutyLabelWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingLeft: 8 },
-  dutyLabel: { fontSize: 9, letterSpacing: 0.9 },
+  dutyLabel: { fontSize: 9, letterSpacing: 0.9, minWidth: 52 },
   walletPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: '#000', paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' },
   walletText: { fontSize: 13, letterSpacing: -0.325, color: '#fff' },
 

@@ -138,8 +138,12 @@ export default function OTPVerification() {
     }
   };
 
-  const handleChange = (index, value) => {
+  const handleChange = (index, rawValue) => {
+    let value = rawValue;
     if (!/^\d*$/.test(value)) return;
+
+    // A digit typed into an already-filled first box arrives as two characters: keep the new one.
+    if (index === 0 && value.length === 2 && digits[0]) value = value.slice(-1);
 
     // More than one digit at once is a paste / SMS autofill (the web's onPaste).
     if (value.length > 1) {

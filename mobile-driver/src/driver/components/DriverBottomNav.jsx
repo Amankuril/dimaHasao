@@ -68,7 +68,7 @@ export default function DriverBottomNav() {
                 numberOfLines={1}
                 style={[st.label, { color: isActive ? '#000000' : 'rgba(0,0,0,0.6)', opacity: isActive ? 1 : 0.8, transform: [{ scale: isActive ? 1 : 0.95 }], ...outfit(isActive ? 900 : 700) }]}
               >
-                {item.label}
+                {item.label.toUpperCase()}
               </Text>
               {isActive ? <View style={st.bar} /> : null}
             </Press>
@@ -96,6 +96,6 @@ const st = StyleSheet.create({
   grid: { height: 68, flexDirection: 'row', alignItems: 'stretch', gap: 2 },
   item: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 16, paddingHorizontal: 4 },
   itemActive: { backgroundColor: tw.slate50, transform: [{ translateY: -1 }] },
-  label: { maxWidth: '100%', fontSize: 8, letterSpacing: 0.32, textTransform: 'uppercase', textAlign: 'center' },
+  label: { maxWidth: '100%', minWidth: 28, fontSize: 8, letterSpacing: 0.32, textAlign: 'center' },
   bar: { position: 'absolute', top: -8, width: 28, height: 2, borderRadius: 999, backgroundColor: tw.slate900 },
 });

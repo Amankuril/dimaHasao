@@ -251,8 +251,8 @@ export default function RideHistory() {
             <ArrowLeft size={16} color={tw.slate900} />
           </Press>
           <View style={{ alignItems: 'center' }}>
-            <Text style={st.eyebrow}>Driver log</Text>
-            <Text style={st.h1}>History</Text>
+            <Text style={st.eyebrow}>DRIVER LOG</Text>
+            <Text style={st.h1}>HISTORY</Text>
           </View>
           <Press onPress={() => setIsFilterOpen((value) => !value)} style={[st.sq, { borderColor: filterOn ? tw.slate900 : tw.slate100 }]}>
             <Filter size={16} color={filterOn ? tw.slate900 : tw.slate400} />
@@ -261,7 +261,7 @@ export default function RideHistory() {
 
         {isFilterOpen ? (
           <View style={st.filterBox}>
-            <Text style={st.filterTitle}>Filter history</Text>
+            <Text style={st.filterTitle}>FILTER HISTORY</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {STATUS_FILTERS.map((filter) => {
                 const on = statusFilter === filter.id;
@@ -275,7 +275,7 @@ export default function RideHistory() {
                     }}
                     style={[st.filterBtn, { backgroundColor: on ? tw.slate900 : tw.slate50 }]}
                   >
-                    <Text style={[st.filterBtnText, { color: on ? '#fff' : tw.slate500 }]}>{filter.label}</Text>
+                    <Text style={[st.filterBtnText, { color: on ? '#fff' : tw.slate500 }]}>{filter.label.toUpperCase()}</Text>
                   </Press>
                 );
               })}
@@ -288,7 +288,7 @@ export default function RideHistory() {
             const on = activeTab === tab.id;
             return (
               <Press key={tab.id} scale={1} onPress={() => setActiveTab(tab.id)} style={[st.tab, on && [{ backgroundColor: '#fff' }, shadow('sm')]]}>
-                <Text style={[st.tabText, { color: on ? tw.slate900 : tw.slate400 }]}>{tab.label}</Text>
+                <Text style={[st.tabText, { color: on ? tw.slate900 : tw.slate400 }]}>{tab.label.toUpperCase()}</Text>
               </Press>
             );
           })}
@@ -296,7 +296,7 @@ export default function RideHistory() {
 
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
           <View style={[st.stat, { flex: 1, backgroundColor: '#fff', borderColor: tw.slate50, ...shadow('sm') }]}>
-            <Text style={st.statLabel}>Completion Rate</Text>
+            <Text style={st.statLabel}>COMPLETION RATE</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={[st.statIcon, { backgroundColor: tw.emerald50 }]}>
                 <TrendingUp size={14} color={tw.emerald500} />
@@ -305,7 +305,7 @@ export default function RideHistory() {
             </View>
           </View>
           <View style={[st.stat, { flex: 1, backgroundColor: tw.slate900, ...shadow('xl') }]}>
-            <Text style={[st.statLabel, { color: 'rgba(255,255,255,0.4)' }]}>Total Earned</Text>
+            <Text style={[st.statLabel, { color: 'rgba(255,255,255,0.4)' }]}>TOTAL EARNED</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={[st.statIcon, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
                 <IndianRupee size={12} color="#fff" />
@@ -318,12 +318,12 @@ export default function RideHistory() {
         </View>
 
         <View style={st.trips}>
-          <Text style={st.tripsLabel}>Trips on record</Text>
+          <Text style={st.tripsLabel}>TRIPS ON RECORD</Text>
           <Text style={st.tripsValue}>{stats.totalTrips}</Text>
         </View>
 
         <View style={{ gap: 12 }}>
-          <Text style={st.logTitle}>Activity Log</Text>
+          <Text style={st.logTitle}>ACTIVITY LOG</Text>
 
           {loading ? (
             <View style={st.msg}>
@@ -335,7 +335,7 @@ export default function RideHistory() {
               <AlertCircle size={22} color={tw.rose500} />
               <Text style={[st.msgText, { color: tw.slate700 }]}>{error}</Text>
               <Press onPress={() => setReloadKey((k) => k + 1)} style={st.retry}>
-                <Text style={st.retryText}>Retry</Text>
+                <Text style={st.retryText}>RETRY</Text>
               </Press>
             </View>
           ) : filteredHistory.length === 0 ? (
@@ -354,29 +354,29 @@ export default function RideHistory() {
                         {item.type === 'parcel' ? <Package size={18} strokeWidth={2.5} color={tw.orange600} /> : <Bike size={18} strokeWidth={2.5} color={tw.slate900} />}
                       </View>
                       <View style={{ gap: 2, flexShrink: 1 }}>
-                        <Text style={st.itemTitle}>{item.title}</Text>
+                        <Text style={st.itemTitle}>{item.title.toUpperCase()}</Text>
                         <Text style={st.itemSub}>{item.subtitle}</Text>
-                        <Text style={st.itemDate}>{item.dateLabel}</Text>
+                        <Text style={st.itemDate}>{item.dateLabel.toUpperCase()}</Text>
                       </View>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <Text style={st.earn}>{item.earningsLabel}</Text>
                       <View style={[st.badge, { backgroundColor: badge.bg, borderColor: badge.border }]}>
-                        <Text style={[st.badgeText, { color: badge.fg }]}>{item.status}</Text>
+                        <Text style={[st.badgeText, { color: badge.fg }]}>{item.status.toUpperCase()}</Text>
                       </View>
                     </View>
                   </View>
 
                   <View style={{ flexDirection: 'row', gap: 12 }}>
                     <View style={st.mini}>
-                      <Text style={st.miniLabel}>Trip Date</Text>
+                      <Text style={st.miniLabel}>TRIP DATE</Text>
                       <View style={st.miniRow}>
                         <Calendar size={12} color={tw.slate700} />
                         <Text style={st.miniValue}>{item.shortDate}</Text>
                       </View>
                     </View>
                     <View style={st.mini}>
-                      <Text style={st.miniLabel}>Payment</Text>
+                      <Text style={st.miniLabel}>PAYMENT</Text>
                       <View style={st.miniRow}>
                         <IndianRupee size={12} color={tw.slate700} />
                         <Text style={st.miniValue}>{item.paymentMethod}</Text>
@@ -388,14 +388,14 @@ export default function RideHistory() {
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
                       <View style={[st.dot, { borderColor: tw.slate900 }]} />
                       <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={st.locLabel}>Pickup</Text>
+                        <Text style={st.locLabel}>PICKUP</Text>
                         <Text style={st.loc}>{item.pickup}</Text>
                       </View>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
                       <View style={[st.dot, { borderColor: tw.rose500 }]} />
                       <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={st.locLabel}>Drop</Text>
+                        <Text style={st.locLabel}>DROP</Text>
                         <Text style={st.loc}>{item.drop}</Text>
                       </View>
                     </View>
@@ -404,18 +404,16 @@ export default function RideHistory() {
                   <View style={st.foot}>
                     <View style={[st.footGroup, { flexShrink: 1 }]}>
                       <User size={12} color={tw.slate500} />
-                      <Text style={st.footText} numberOfLines={1}>
-                        {item.subtitle}
-                      </Text>
+                      <Text style={[st.footText, { flexShrink: 1 }]}>{item.subtitle.toUpperCase()}</Text>
                     </View>
                     <View style={[st.footGroup, { gap: 12 }]}>
                       <View style={[st.footGroup, { gap: 4 }]}>
                         <MapPin size={12} color={tw.slate500} />
-                        <Text style={st.footText}>{item.distanceKm.toFixed(1)} km</Text>
+                        <Text style={st.footText}>{item.distanceKm.toFixed(1)} KM</Text>
                       </View>
                       <View style={[st.footGroup, { gap: 4 }]}>
                         <CheckCircle2 size={12} color={tw.slate500} />
-                        <Text style={st.footText}>{item.fareLabel}</Text>
+                        <Text style={st.footText}>{item.fareLabel.toUpperCase()}</Text>
                       </View>
                     </View>
                   </View>
@@ -435,43 +433,43 @@ const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#f8f9fb' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, paddingTop: 8 },
   sq: { width: 40, height: 40, borderRadius: 12, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  eyebrow: { fontSize: 9, letterSpacing: 1.98, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
-  h1: { fontSize: 18, letterSpacing: -0.45, textTransform: 'uppercase', color: tw.slate900, ...fo(900) },
+  eyebrow: { fontSize: 9, letterSpacing: 1.98, color: tw.slate400, ...fo(900) },
+  h1: { fontSize: 18, letterSpacing: -0.45, color: tw.slate900, ...fo(900) },
   filterBox: { marginBottom: 20, borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', padding: 12, ...shadow('sm') },
-  filterTitle: { paddingHorizontal: 4, paddingBottom: 8, fontSize: 10, letterSpacing: 2.2, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  filterTitle: { paddingHorizontal: 4, paddingBottom: 8, fontSize: 10, letterSpacing: 2.2, color: tw.slate400, ...fo(900) },
   filterBtn: { width: '48.5%', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  filterBtnText: { fontSize: 11, letterSpacing: 0.55, textTransform: 'uppercase', ...fo(900) },
+  filterBtnText: { fontSize: 11, letterSpacing: 0.55, ...fo(900) },
   tabs: { flexDirection: 'row', backgroundColor: tw.slate100, padding: 4, borderRadius: 12, marginBottom: 24 },
   tab: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-  tabText: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', ...fo(900) },
+  tabText: { fontSize: 10, letterSpacing: 1, ...fo(900) },
   stat: { padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'transparent', gap: 4 },
-  statLabel: { fontSize: 9, letterSpacing: 0.9, textTransform: 'uppercase', color: tw.slate400, lineHeight: 9, marginBottom: 4, ...fo(900) },
+  statLabel: { fontSize: 9, letterSpacing: 0.9, color: tw.slate400, lineHeight: 9, marginBottom: 4, ...fo(900) },
   statIcon: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   statValue: { fontSize: 20, lineHeight: 20, ...fo(900) },
   trips: { marginBottom: 24, borderRadius: 16, borderWidth: 1, borderColor: tw.slate100, backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 12, ...shadow('sm') },
-  tripsLabel: { fontSize: 10, letterSpacing: 2.2, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  tripsLabel: { fontSize: 10, letterSpacing: 2.2, color: tw.slate400, ...fo(900) },
   tripsValue: { marginTop: 4, fontSize: 24, color: tw.slate900, ...fo(900) },
-  logTitle: { paddingLeft: 4, marginBottom: 4, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  logTitle: { paddingLeft: 4, marginBottom: 4, fontSize: 10, letterSpacing: 1, color: tw.slate400, ...fo(900) },
   msg: { backgroundColor: '#fff', padding: 24, borderRadius: 16, borderWidth: 1, borderColor: tw.slate50, alignItems: 'center', justifyContent: 'center', gap: 12, ...shadow('sm') },
   msgText: { fontSize: 13, textAlign: 'center', ...fo(900) },
   retry: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: tw.slate900 },
-  retryText: { fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: '#fff', ...fo(900) },
+  retryText: { fontSize: 11, letterSpacing: 1.1, color: '#fff', ...fo(900) },
   item: { backgroundColor: '#fff', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: tw.slate50, gap: 16, ...shadow('sm') },
   typeIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  itemTitle: { fontSize: 14, lineHeight: 14, letterSpacing: -0.35, textTransform: 'uppercase', color: tw.slate900, ...fo(900) },
+  itemTitle: { fontSize: 14, lineHeight: 14, letterSpacing: -0.35, color: tw.slate900, ...fo(900) },
   itemSub: { fontSize: 10, color: tw.slate500, ...fo(700) },
-  itemDate: { fontSize: 9, letterSpacing: 0.9, textTransform: 'uppercase', color: tw.slate400, ...fo(700) },
+  itemDate: { fontSize: 9, letterSpacing: 0.9, color: tw.slate400, ...fo(700) },
   earn: { fontSize: 16, lineHeight: 16, color: tw.slate900, ...fo(900) },
   badge: { marginTop: 4, borderRadius: 999, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4 },
-  badgeText: { fontSize: 8, letterSpacing: 0.8, textTransform: 'uppercase', ...fo(900) },
+  badgeText: { flexShrink: 0, fontSize: 8, letterSpacing: 0.8, ...fo(900) },
   mini: { flex: 1, borderRadius: 12, backgroundColor: tw.slate50, borderWidth: 1, borderColor: tw.slate100, paddingHorizontal: 12, paddingVertical: 10 },
-  miniLabel: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  miniLabel: { fontSize: 10, letterSpacing: 1, color: tw.slate400, ...fo(900) },
   miniRow: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 6 },
   miniValue: { fontSize: 10, color: tw.slate700, ...fo(900) },
   dot: { width: 8, height: 8, borderRadius: 4, borderWidth: 2, backgroundColor: '#fff', marginTop: 5 },
-  locLabel: { fontSize: 9, letterSpacing: 0.9, textTransform: 'uppercase', color: tw.slate400, ...fo(900) },
+  locLabel: { fontSize: 9, letterSpacing: 0.9, color: tw.slate400, ...fo(900) },
   loc: { fontSize: 12, lineHeight: 15, color: tw.slate600, ...fo(900) },
   foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderRadius: 12, borderWidth: 1, borderColor: tw.slate100, backgroundColor: tw.slate50, paddingHorizontal: 12, paddingVertical: 10 },
   footGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  footText: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: tw.slate500, ...fo(900) },
+  footText: { fontSize: 10, letterSpacing: 1, color: tw.slate500, ...fo(900) },
 });

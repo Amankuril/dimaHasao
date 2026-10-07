@@ -26,11 +26,16 @@ export const obCard = {
   borderRadius: 22,
 };
 
-/** font-extrabold uppercase label (.dh-label) */
+/*
+ * Android clips the last letter of a Text that combines textTransform:'uppercase' with letterSpacing, so every
+ * uppercase label is written out literally (up()) instead.
+ */
+export const up = (value) => String(value ?? '').toUpperCase();
+
+/** font-extrabold uppercase label (.dh-label): pass the text through up(). */
 export const obLabel = {
   ...jk(800),
   fontSize: 11,
   letterSpacing: 0.88,
-  textTransform: 'uppercase',
   color: OB.muted,
 };
