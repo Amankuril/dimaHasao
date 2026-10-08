@@ -66,10 +66,91 @@ Status: login against production — **Verified** with curl (2026-10-08); in-app
 None: there is no admin wrapper. Native capabilities the admin web itself needs: camera / photo picker (uploads),
 location (map centring), file export (share sheet), print (PDF). Permissions in `app.json`: location, camera only.
 
-## Units and screens
+## Units and screens (2026-10-08)
 
-Filled in per unit as the ports land (see `tools/units.json`).
+Every admin screen of all five panels is ported: **332 source files, 306 Expo Router routes**, no `PORT:` flags left,
+`npx expo lint` 0 errors, `npx expo export --platform android` builds (13 MB Hermes bundle).
+Each unit's own report (files, routes, deviations, kit gaps) is in `tools/port-reports.jsonl`.
+
+| Unit | Files | Routes | Lint errors | PORT flags |
+| --- | --- | --- | --- | --- |
+| food-catalog | 11 | 11 | 0 | 0 |
+| food-core | 36 | 11 | 0 | 0 |
+| food-customers | 17 | 14 | 0 | 0 |
+| food-delivery-ops | 18 | 9 | 0 | 0 |
+| food-delivery-partners | 10 | 8 | 0 | 0 |
+| food-landing | 5 | 3 | 0 | 0 |
+| food-orders | 20 | 14 | 0 | 0 |
+| food-promotions | 14 | 9 | 0 | 0 |
+| food-reports | 15 | 10 | 0 | 0 |
+| food-restaurants | 6 | 5 | 0 | 0 |
+| food-settings | 14 | 13 | 0 | 0 |
+| food-system | 22 | 20 | 0 | 0 |
+| food-zones | 10 | 8 | 0 | 0 |
+| hotel-core | 17 | 13 | 0 | 0 |
+| hotel-records | 23 | 8 | 0 | 0 |
+| taxi-core | 15 | 11 | 0 | 0 |
+| taxi-drivers | 11 | 10 | 0 | 0 |
+| taxi-drivers-settings | 22 | 27 | 0 | 0 |
+| taxi-geo-promo | 14 | 25 | 0 | 0 |
+| taxi-pricing | 13 | 27 | 0 | 0 |
+| taxi-users-ops | 23 | 18 | 0 | 0 |
+| tours-global | 32 | 22 | 0 | 0 |
+
+Left out on purpose (the only two):
+- `components/admin/campaigns/AddEditFoodCampaignDialog.jsx` — not imported by any routed page on the web.
+- `LandingPageManagement.jsx`'s delete-confirmation block — dead on the web (its `open` is always false).
+
+223 adaptations were recorded across the units (charts → `react-native-gifted-charts`, Google Maps JS →
+`react-native-maps`, file inputs → pickers, Blob downloads → the share sheet, `window.print` → native print,
+DOM scroll/focus → refs). They are listed per unit in `tools/port-reports.jsonl`.
+
+## Verified by running the app (2026-10-08)
+
+Run in the Expo web preview against the **live production API**, signed in as the seeded superadmin:
+
+| Check | Result |
+| --- | --- |
+| Admin login against production | **Verified** — lands on `/admin/food` |
+| Session survives a reload / app restart | **Verified** in the preview; on a device SecureStore holds the tokens — re-test on the phone |
+| Food dashboard | **Verified** — real figures (gross revenue, commission, delivery fee) |
+| Sidebar drawer + module switcher | **Verified** — sections, icons, badges, all five panels |
+| Taxi / Hotel / Tours / Global panels | **Verified** — each loads with real data |
+| 110 routes visited in one pass | **Verified** — 0 JS errors, 0 blank screens, 0 unexpected bounces to login |
+| Everything needing a device (maps, camera, pickers, print/share, back button) | Built, not tested |
+
+Six integration bugs were found this way and fixed (commit `88f02bb`): the tours API service still calling axios
+interceptors (crashed the route tree at import), `mx-auto` making pages wider than the screen, bundled images not
+rendering, the storage global shadowing AsyncStorage, a missing page padding, and the maps module breaking the preview.
 
 ## Device test list
 
-Written at hand-over.
+Walk these in order on the phone, signed in as an admin:
+
+1. **Login** — wrong password shows the server's message; correct password lands on the first panel you can open.
+2. **Session** — kill the app and reopen: still signed in. Leave it overnight and reopen: still signed in (token refresh).
+3. **Navigation** — open the drawer, switch between Food, Taxi, Hotel, Tours and Global; use the Android back button
+   after each (it should retrace, and ask nothing at the panel root).
+4. **Lists and filters** — Orders, Restaurants, Customers, Drivers, Bookings: filter, search, paginate, open a row's
+   detail and come back.
+5. **Tables** — scroll a wide table sideways; check no column is cut off mid-word.
+6. **Writes (use test data only)** — create and then delete one coupon; toggle a restaurant's status back and forth.
+7. **Uploads** — change the admin profile photo from camera and from gallery; check the permission prompts appear once.
+8. **Maps** — Food zone setup: draw a zone by tapping, drag a vertex, save; Taxi geo-fencing and god's-eye.
+   If the map is blank, the Maps key needs `com.dimahsao.admin` + the release SHA-1 added.
+9. **Exports** — export a report to CSV, Excel and PDF; each should open the Android share sheet with the right name.
+10. **Print** — print an order receipt; the Android print dialog should offer "Save as PDF".
+11. **No network** — turn on airplane mode: lists show their error state, the offline banner appears, and retry works
+    once you are back online.
+12. **Session expiry** — in Global › Administrators, sign out; you land on the login screen with everything cleared.
+13. **Logout** — then reopen the app: it asks you to sign in again.
+
+## Build
+
+- Signing: release keystore at `~/dimahasao-keystores/admin-release.jks` (alias `admin`), passwords in the user-level
+  `~/.gradle/gradle.properties` (`ADMIN_UPLOAD_*`). **Back this file up** — losing it means the app can never be updated.
+  Release SHA-1: `AF:8C:F2:F6:5C:13:A2:D2:C8:EF:40:D7:84:90:90:C6:F7:1F:C2:81`.
+- Local APK: `npx expo prebuild --platform android --no-install`, then in `android/`:
+  `./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a`.
+- EAS instead: `npx eas-cli login` then `npx eas-cli build --platform android --profile production --non-interactive`
+  (`eas.json` already outputs an APK and carries the production API and Maps keys).
