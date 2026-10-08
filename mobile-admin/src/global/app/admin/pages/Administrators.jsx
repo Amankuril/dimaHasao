@@ -16,8 +16,7 @@ import { toast } from '../../../../lib/notify';
 import globalService from '../../../services/globalService';
 import FeaturePermissionMatrix from '../components/FeaturePermissionMatrix';
 import { Button, Div, Form, H2, H3, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
-const field =
-  'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
+const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
 const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
 const LEVEL_LABELS = {
   platform_superadmin: 'Platform superadmin',
@@ -161,10 +160,12 @@ const Administrators = () => {
   };
   if (denied) {
     return (
-      <ScrollDiv className="p-4 pb-20 bg-white p-10 rounded-2xl border border-gray-200 text-center max-w-lg mx-auto">
-        <UiIcon as={ShieldCheck} size={28} className="text-amber-500 mx-auto mb-3" />
-        <H3 className="font-bold text-gray-900">Only a platform superadmin can manage administrators</H3>
-        <P className="text-sm text-gray-500 mt-1.5">Your account administers its own modules. Ask a platform superadmin for changes here.</P>
+      <ScrollDiv className="p-4 pb-20">
+        <Div className="bg-white p-10 rounded-2xl border border-gray-200 items-center text-center">
+          <UiIcon as={ShieldCheck} size={28} className="text-amber-500 mx-auto mb-3" />
+          <H3 className="font-bold text-gray-900">Only a platform superadmin can manage administrators</H3>
+          <P className="text-sm text-gray-500 mt-1.5">Your account administers its own modules. Ask a platform superadmin for changes here.</P>
+        </Div>
       </ScrollDiv>
     );
   }

@@ -16,8 +16,9 @@
  * renders — it just falls back to what it was given.
  */
 import { useEffect, useState } from 'react';
-const RAW_API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '/api/v1';
-const apiBase = String(RAW_API_BASE).replace(/\/+$/, '');
+import { API_URL } from '../../api/client';
+// The web's VITE_API_BASE_URL; the app always has an absolute API URL.
+const apiBase = String(API_URL).replace(/\/+$/, '');
 
 /** Ten minutes: brand details change when someone edits them, rarely. */
 const TTL_MS = 10 * 60 * 1000;

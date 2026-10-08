@@ -12,7 +12,7 @@ const defaultBackendOrigin = (API_BASE_URL || '').replace(/\/api\/v1\/?$/i, '').
  * pointed every uploaded image at somebody else's server. It now falls back to
  * the origin the API is on, which is where these files are actually served.
  */
-const ASSET_BASE_URL = String((typeof import.meta !== 'undefined' && import.meta.env?.VITE_ASSET_BASE_URL) || apiOrigin).replace(/\/$/, '');
+const ASSET_BASE_URL = String(process.env.EXPO_PUBLIC_ASSET_BASE_URL || apiOrigin).replace(/\/$/, '');
 const rewriteUploadsUrl = (absoluteUrl) => {
   try {
     const parsed = new URL(absoluteUrl);

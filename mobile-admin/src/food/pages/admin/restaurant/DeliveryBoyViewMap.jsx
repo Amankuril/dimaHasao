@@ -1,36 +1,28 @@
-/* Ported from Frontend/src/modules/Food/pages/admin/restaurant/DeliveryBoyViewMap.jsx (tools/port.js first pass). */
-import { useState, useEffect, useRef } from 'react';
+/* Ported from Frontend/src/modules/Food/pages/admin/restaurant/DeliveryBoyViewMap.jsx . */
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from '../../../../lib/webRouter';
 import { MapPin, ArrowLeft, Search, Bike } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import { getGoogleMapsApiKey } from '../../../utils/googleMapsApiKey';
-// PORT: @googlemaps/js-api-loader: rebuild with react-native-maps (MapView PROVIDER_GOOGLE, Marker, Polygon, Polyline, Circle)
-import { Loader } from '@googlemaps/js-api-loader';
 import { subscribeAllDeliveryLocations } from '../../../realtimeTracking';
 import bikeLogo from '../../../assets/bikelogo.png';
-import { Button, Div, H1, H3, Input, P, ScrollDiv, Span, Strong, Icon as UiIcon } from '../../../../components/web';
-import { document, window } from '../../../../lib/webShim';
-const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
+import { GMap, Polygon } from '../../../../components/maps';
+import { Button, Div, H1, H3, P, ScrollDiv, Span, Strong, Icon as UiIcon } from '../../../../components/web';
+import PlacesSearchInput from './PlacesSearchInput';
+import { INDIA_REGION, ImageMarker, InfoCard, MapTypeToggle, ZONE_COLORS, regionAtZoom, useMapTouchLock, withAlpha, zonePath } from './zoneMapParts';
 const debugError = (...args) => {};
 export default function DeliveryBoyViewMap() {
   const navigate = useNavigate();
-  const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const zonesPolygonsRef = useRef([]);
-  const infoWindowsRef = useRef([]);
-  const deliveryBoyMarkersRef = useRef([]);
-  const rotatedIconCacheRef = useRef(new Map()); // Cache for rotated bike icons
-
   const [googleMapsApiKey, setGoogleMapsApiKey] = useState('');
   const [mapLoading, setMapLoading] = useState(true);
+  const [mapType, setMapType] = useState('standard');
+  const [info, setInfo] = useState(null); // { kind: 'zone' | 'boy', item }
+  const [scrollEnabled, touchLock] = useMapTouchLock();
   const [zones, setZones] = useState([]);
   const [deliveryBoys, setDeliveryBoys] = useState([]);
   const deliveryMetaByIdRef = useRef(new Map());
   const [loading, setLoading] = useState(true);
-  const [locationSearch, setLocationSearch] = useState('');
-  const autocompleteInputRef = useRef(null);
-  const autocompleteRef = useRef(null);
   useEffect(() => {
     fetchZones();
     fetchDeliveryPartnerDirectory();
@@ -77,41 +69,6 @@ export default function DeliveryBoyViewMap() {
     };
   }, []);
 
-  // Initialize Places Autocomplete when map is loaded
-  useEffect(() => {
-    if (!mapLoading && mapInstanceRef.current && autocompleteInputRef.current && window.google?.maps?.places && !autocompleteRef.current) {
-      const autocomplete = new window.google.maps.places.Autocomplete(autocompleteInputRef.current, {
-        componentRestrictions: {
-          country: 'in',
-        },
-      });
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry && place.geometry.location && mapInstanceRef.current) {
-          const location = place.geometry.location;
-          mapInstanceRef.current.setCenter(location);
-          mapInstanceRef.current.setZoom(12);
-          setLocationSearch(place.formatted_address || place.name || '');
-        }
-      });
-      autocompleteRef.current = autocomplete;
-    }
-  }, [mapLoading]);
-
-  // Draw zones and delivery boy markers when map and data are ready
-  useEffect(() => {
-    if (!mapLoading && mapInstanceRef.current && window.google) {
-      if (zones.length > 0) {
-        drawAllZonesOnMap(window.google, mapInstanceRef.current);
-      }
-      if (deliveryBoys.length > 0) {
-        // drawDeliveryBoyMarkers is async, so handle it properly
-        drawDeliveryBoyMarkers(window.google, mapInstanceRef.current).catch((error) => {
-          debugError('Error drawing delivery boy markers:', error);
-        });
-      }
-    }
-  }, [zones, mapLoading, deliveryBoys]);
   const fetchZones = async () => {
     try {
       setLoading(true);
@@ -157,370 +114,90 @@ export default function DeliveryBoyViewMap() {
     try {
       const apiKey = await getGoogleMapsApiKey();
       setGoogleMapsApiKey(apiKey || 'loaded');
-      let retries = 0;
-      const maxRetries = 50;
-      while (!window.google && retries < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        retries++;
-      }
-      if (window.google && window.google.maps) {
-        initializeMap(window.google);
-        return;
-      }
-      if (apiKey) {
-        const loader = new Loader({
-          apiKey: apiKey,
-          version: 'weekly',
-          libraries: ['places', 'drawing', 'geometry'],
-        });
-        const google = await loader.load();
-        initializeMap(google);
-      } else {
-        setMapLoading(false);
-      }
     } catch (error) {
       debugError('Error loading Google Maps:', error);
       setMapLoading(false);
     }
   };
-  const initializeMap = (google) => {
-    if (!mapRef.current) return;
-    const initialLocation = {
-      lat: 20.5937,
-      lng: 78.9629,
-    };
-    const map = new google.maps.Map(mapRef.current, {
-      center: initialLocation,
-      zoom: 5,
-      mapTypeControl: true,
-      mapTypeControlOptions: {
-        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-        position: google.maps.ControlPosition.TOP_RIGHT,
-        mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE],
-      },
-      zoomControl: true,
-      streetViewControl: false,
-      fullscreenControl: true,
-      scrollwheel: true,
-      gestureHandling: 'greedy',
-      disableDoubleClickZoom: false,
-    });
-    mapInstanceRef.current = map;
-    setMapLoading(false);
-  };
 
-  // Draw all zones on the map
-  const drawAllZonesOnMap = (google, map) => {
-    if (!zones || zones.length === 0) {
-      zonesPolygonsRef.current.forEach((polygon) => {
-        if (polygon) polygon.setMap(null);
-      });
-      zonesPolygonsRef.current = [];
-      return;
-    }
-    zonesPolygonsRef.current.forEach((polygon) => {
-      if (polygon) polygon.setMap(null);
-    });
-    zonesPolygonsRef.current = [];
-    infoWindowsRef.current.forEach((infoWindow) => {
-      if (infoWindow) infoWindow.close();
-    });
-    infoWindowsRef.current = [];
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-    const bounds = new google.maps.LatLngBounds();
-    zones.forEach((zone, index) => {
-      if (!zone.coordinates || zone.coordinates.length < 3) return;
-      const path = zone.coordinates
-        .map((coord) => {
-          const lat = typeof coord === 'object' ? coord.latitude || coord.lat : null;
-          const lng = typeof coord === 'object' ? coord.longitude || coord.lng : null;
-          if (lat === null || lng === null) return null;
-          const latLng = new google.maps.LatLng(lat, lng);
-          bounds.extend(latLng);
-          return latLng;
+  // All zones as polygons.
+  const zonePolygons = useMemo(
+    () =>
+      zones
+        .map((zone, index) => {
+          if (!zone.coordinates || zone.coordinates.length < 3) return null;
+          const path = zonePath(zone.coordinates);
+          if (path.length < 3) return null;
+          return { zone, path, color: ZONE_COLORS[index % ZONE_COLORS.length] };
         })
-        .filter(Boolean);
-      if (path.length < 3) return;
-      const color = colors[index % colors.length];
-      const polygon = new google.maps.Polygon({
-        paths: path,
-        strokeColor: color,
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: color,
-        fillOpacity: 0.25,
-        editable: false,
-        draggable: false,
-        clickable: true,
-        zIndex: 1,
-      });
-      polygon.setMap(map);
-      zonesPolygonsRef.current.push(polygon);
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 12px; min-width: 200px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1e293b;">
-              ${zone.name || 'Unnamed Zone'}
-            </h3>
-            <div style="font-size: 13px; color: #64748b; line-height: 1.6;">
-              <div style="margin-bottom: 4px;">
-                <strong>Location:</strong> ${zone.serviceLocation || 'N/A'}
-              </div>
-              <div style="margin-bottom: 4px;">
-                <strong>Unit:</strong> ${zone.unit || 'km'}
-              </div>
-              <div style="margin-bottom: 4px;">
-                <strong>Points:</strong> ${zone.coordinates.length}
-              </div>
-              <div>
-                <strong>Status:</strong> 
-                <span style="color: ${zone.isActive ? '#10b981' : '#ef4444'}; font-weight: 600;">
-                  ${zone.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-            </div>
-          </div>
-        `,
-      });
-      polygon.addListener('click', () => {
-        infoWindowsRef.current.forEach((iw) => {
-          if (iw && iw !== infoWindow) iw.close();
-        });
-        infoWindow.setPosition(path[0]);
-        infoWindow.open(map);
-        infoWindowsRef.current.push(infoWindow);
-      });
-    });
-    if (zones.length > 0) {
-      map.fitBounds(bounds);
-      const padding = {
-        top: 50,
-        right: 50,
-        bottom: 50,
-        left: 50,
-      };
-      map.fitBounds(bounds, padding);
-    }
-  };
+        .filter(Boolean),
+    [zones],
+  );
 
-  // Function to get rotated bike icon (similar to delivery app)
-  const getRotatedBikeIcon = (heading = 0) => {
-    // Round heading to nearest 5 degrees for caching
-    const roundedHeading = Math.round(heading / 5) * 5;
-    const cacheKey = `${roundedHeading}`;
+  // Fit map to show all zones (fitBounds with 50px padding).
+  useEffect(() => {
+    if (mapLoading || !mapInstanceRef.current || zonePolygons.length === 0) return;
+    const coords = zonePolygons.flatMap((z) => z.path);
+    mapInstanceRef.current.fitToCoordinates(coords, { edgePadding: { top: 50, right: 50, bottom: 50, left: 50 }, animated: true });
+  }, [zonePolygons, mapLoading]);
 
-    // Check cache first
-    if (rotatedIconCacheRef.current.has(cacheKey)) {
-      return Promise.resolve(rotatedIconCacheRef.current.get(cacheKey));
-    }
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        try {
-          // PORT: document.createElement: DOM access has no React Native equivalent; use refs/state
-          const canvas = document.createElement('canvas');
-          const size = 50; // Icon size
-          canvas.width = size;
-          canvas.height = size;
-          const ctx = canvas.getContext('2d');
-
-          // Clear canvas
-          ctx.clearRect(0, 0, size, size);
-
-          // Move to center, rotate, then draw image
-          ctx.save();
-          ctx.translate(size / 2, size / 2);
-          ctx.rotate((roundedHeading * Math.PI) / 180); // Convert degrees to radians
-          ctx.drawImage(img, -size / 2, -size / 2, size, size);
-          ctx.restore();
-
-          // Get data URL and cache it
-          const dataUrl = canvas.toDataURL();
-          rotatedIconCacheRef.current.set(cacheKey, dataUrl);
-          resolve(dataUrl);
-        } catch (error) {
-          debugWarn('?? Error rotating bike icon:', error);
-          // Fallback to original image if rotation fails
-          resolve(bikeLogo);
-        }
-      };
-      img.onerror = () => {
-        // Fallback to original image if loading fails
-        resolve(bikeLogo);
-      };
-      img.src = bikeLogo;
-    });
-  };
-
-  // Draw delivery boy markers (bikes) on the map
-  const drawDeliveryBoyMarkers = async (google, map) => {
-    if (!deliveryBoys || deliveryBoys.length === 0) {
-      // Clear previous markers
-      deliveryBoyMarkersRef.current.forEach((marker) => {
-        if (marker) marker.setMap(null);
-      });
-      deliveryBoyMarkersRef.current = [];
-      return;
-    }
-
-    // Clear previous markers
-    deliveryBoyMarkersRef.current.forEach((marker) => {
-      if (marker) marker.setMap(null);
-    });
-    deliveryBoyMarkersRef.current = [];
-
-    // Track processed delivery boy IDs to prevent duplicates
+  // Delivery boy markers (bikes), rotated to their heading rounded to 5 degrees.
+  const bikeMarkers = useMemo(() => {
     const processedIds = new Set();
-
-    // Process all delivery boys and create markers
+    const list = [];
     for (const boy of deliveryBoys) {
-      // Get unique ID to prevent duplicate markers
       const fullData = boy.fullData || boy;
       const boyId = boy._id || boy.id || boy.deliveryId || fullData?._id || fullData?.id || fullData?.deliveryId;
-      if (!boyId) {
-        debugWarn('?? Skipping delivery boy without ID:', fullData.name || 'Unknown');
-        continue;
-      }
+      if (!boyId) continue;
       const idString = boyId.toString();
-
       // Skip if we've already processed this delivery boy
-      if (processedIds.has(idString)) {
-        debugWarn('?? Duplicate delivery boy detected, skipping:', fullData.name || 'Unknown', idString);
-        continue;
-      }
+      if (processedIds.has(idString)) continue;
       processedIds.add(idString);
-
-      // Try multiple sources for availability
-      const availability = boy.availability || fullData?.availability || (fullData && fullData.availability);
+      const availability = boy.availability || fullData?.availability;
       const currentLocation = availability?.currentLocation;
-      if (!currentLocation?.coordinates) {
-        debugWarn('?? No coordinates for delivery boy:', fullData.name || 'Unknown');
-        continue;
-      }
+      if (!currentLocation?.coordinates) continue;
       const coords = currentLocation.coordinates;
       // Handle both [lng, lat] and [lat, lng] formats
-      let lat, lng;
+      let lat;
+      let lng;
       if (Array.isArray(coords) && coords.length >= 2) {
-        // Try [lng, lat] format first (GeoJSON standard)
         if (coords[0] > -180 && coords[0] < 180 && coords[1] > -90 && coords[1] < 90) {
           lng = coords[0];
           lat = coords[1];
         } else {
-          // Try [lat, lng] format
           lat = coords[0];
           lng = coords[1];
         }
       } else {
-        debugWarn('?? Invalid coordinates format:', coords);
         continue;
       }
-      if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
-        debugWarn('?? Invalid lat/lng values:', {
-          lat,
-          lng,
-        });
-        continue;
-      }
-      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        debugWarn('?? Coordinates out of range:', {
-          lat,
-          lng,
-        });
-        continue;
-      }
-
-      // Get heading if available
+      if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) continue;
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) continue;
       const heading = currentLocation.heading || 0;
-
-      // Get name and phone from fullData
-      const boyName = fullData.name || 'Delivery Boy';
-      const boyPhone = fullData.phone || 'N/A';
-      debugLog('?? Creating bike marker for:', {
-        name: boyName,
-        lat,
-        lng,
-        heading,
+      list.push({
+        id: idString,
+        coordinate: { latitude: Number(lat), longitude: Number(lng) },
+        rotation: Math.round(heading / 5) * 5,
+        name: fullData.name || 'Delivery Boy',
+        phone: fullData.phone || 'N/A',
+        lastUpdate: availability?.lastLocationUpdate || currentLocation?.lastUpdate,
       });
-
-      // Get rotated bike icon
-      const rotatedIconUrl = await getRotatedBikeIcon(heading);
-
-      // Create bike icon using rotated bike logo image
-      const bikeIcon = {
-        url: rotatedIconUrl,
-        scaledSize: new google.maps.Size(50, 50),
-        // Size of bike icon
-        anchor: new google.maps.Point(25, 25), // Center point
-      };
-      const lastUpdate = availability?.lastLocationUpdate || currentLocation?.lastUpdate;
-
-      // Create marker
-      const marker = new google.maps.Marker({
-        position: {
-          lat,
-          lng,
-        },
-        map: map,
-        icon: bikeIcon,
-        title: boyName,
-        zIndex: 1000, // Show above zones
-      });
-
-      // Create info window
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 12px; min-width: 200px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1e293b;">
-              ${boyName}
-            </h3>
-            <div style="font-size: 13px; color: #64748b; line-height: 1.6;">
-              <div style="margin-bottom: 4px;">
-                <strong>Phone:</strong> ${boyPhone}
-              </div>
-              <div style="margin-bottom: 4px;">
-                <strong>Status:</strong> 
-                <span style="color: #10b981; font-weight: 600;">Online</span>
-              </div>
-              ${
-                lastUpdate
-                  ? `
-                <div style="margin-top: 8px; font-size: 12px; color: #94a3b8;">
-                  Last updated: ${new Date(lastUpdate).toLocaleTimeString()}
-                </div>
-              `
-                  : ''
-              }
-            </div>
-          </div>
-        `,
-      });
-
-      // Add click listener to show info window
-      marker.addListener('click', () => {
-        infoWindowsRef.current.forEach((iw) => {
-          if (iw && iw !== infoWindow) iw.close();
-        });
-        infoWindow.open(map, marker);
-        infoWindowsRef.current.push(infoWindow);
-      });
-      deliveryBoyMarkersRef.current.push(marker);
     }
-  };
-  // PORT: ref on a host element: check what the web did with it (scrollIntoView, focus, measure, DOM reads)
-  // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
+    return list;
+  }, [deliveryBoys]);
   return (
-    <ScrollDiv className="min-h-screen bg-slate-50">
+    <ScrollDiv className="min-h-screen bg-slate-50" scrollEnabled={scrollEnabled}>
       <Div className="p-4 lg:p-6">
         {/* Header */}
         <Div className="flex items-center gap-4 mb-6">
           <Button onClick={() => navigate('/admin/food/zone-setup')} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
             <UiIcon as={ArrowLeft} className="w-5 h-5 text-slate-600" />
           </Button>
-          <Div className="flex items-center gap-3">
+          <Div className="flex-1 flex items-center gap-3">
             <Div className="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center">
               <UiIcon as={Bike} className="w-5 h-5 text-white" />
             </Div>
-            <Div>
+            <Div className="flex-1">
               <H1 className="text-2xl font-bold text-slate-900">Delivery Boy View</H1>
               <P className="text-sm text-slate-600">View zones and online delivery boys on map</P>
             </Div>
@@ -530,31 +207,93 @@ export default function DeliveryBoyViewMap() {
         {/* Search Bar */}
         <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
           <Div className="relative">
-            <UiIcon as={Search} className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <Input
-              ref={autocompleteInputRef}
-              type="text"
+            <UiIcon as={Search} className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+            <PlacesSearchInput
               placeholder="Search location on map..."
-              value={locationSearch}
-              onChange={(e) => setLocationSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg"
+              onPlace={(place) => {
+                const lat = place?.geometry?.location?.lat?.();
+                const lng = place?.geometry?.location?.lng?.();
+                if (Number.isFinite(lat) && Number.isFinite(lng) && mapInstanceRef.current) {
+                  mapInstanceRef.current.animateToRegion(regionAtZoom(lat, lng, 12), 300);
+                }
+              }}
             />
           </Div>
         </Div>
 
         {/* Map Container */}
         <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-          <Div
-            className="relative"
-            style={{
-              height: 'calc(100vh - 250px)',
-              minHeight: '600px',
-            }}
-          >
-            <Div ref={mapRef} className="w-full h-full rounded-lg" />
+          <Div className="relative h-[600px]" {...touchLock}>
+            <GMap
+              ref={mapInstanceRef}
+              className="w-full h-full rounded-lg"
+              initialRegion={INDIA_REGION}
+              mapType={mapType}
+              zoomControlEnabled
+              onMapReady={() => setMapLoading(false)}
+            >
+              {zonePolygons.map(({ zone, path, color }, index) => (
+                <Polygon
+                  key={zone._id || zone.id || `z${index}`}
+                  coordinates={path}
+                  strokeColor={withAlpha(color, 0.8)}
+                  strokeWidth={2}
+                  fillColor={withAlpha(color, 0.25)}
+                  zIndex={1}
+                  tappable
+                  onPress={() => setInfo({ kind: 'zone', item: zone })}
+                />
+              ))}
+              {bikeMarkers.map((boy) => (
+                <ImageMarker
+                  key={boy.id}
+                  coordinate={boy.coordinate}
+                  source={bikeLogo}
+                  rotation={boy.rotation}
+                  title={boy.name}
+                  onPress={() => setInfo({ kind: 'boy', item: boy })}
+                />
+              ))}
+            </GMap>
+            <MapTypeToggle value={mapType} onChange={setMapType} />
+            {info?.kind === 'zone' ? (
+              <InfoCard onClose={() => setInfo(null)}>
+                <H3 className="text-base font-semibold text-slate-800 mb-2">{info.item.name || 'Unnamed Zone'}</H3>
+                <Div className="text-[13px] text-slate-500">
+                  <P className="mb-1">
+                    <Strong>Location:</Strong> {info.item.serviceLocation || 'N/A'}
+                  </P>
+                  <P className="mb-1">
+                    <Strong>Unit:</Strong> {info.item.unit || 'km'}
+                  </P>
+                  <P className="mb-1">
+                    <Strong>Points:</Strong> {info.item.coordinates.length}
+                  </P>
+                  <P>
+                    <Strong>Status:</Strong>{' '}
+                    <Span className={`font-semibold ${info.item.isActive ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>{info.item.isActive ? 'Active' : 'Inactive'}</Span>
+                  </P>
+                </Div>
+              </InfoCard>
+            ) : null}
+            {info?.kind === 'boy' ? (
+              <InfoCard onClose={() => setInfo(null)}>
+                <H3 className="text-base font-semibold text-slate-800 mb-2">{info.item.name}</H3>
+                <Div className="text-[13px] text-slate-500">
+                  <P className="mb-1">
+                    <Strong>Phone:</Strong> {info.item.phone}
+                  </P>
+                  <P className="mb-1">
+                    <Strong>Status:</Strong> <Span className="font-semibold text-[#10b981]">Online</Span>
+                  </P>
+                  {info.item.lastUpdate ? <P className="mt-2 text-xs text-slate-400">Last updated: {new Date(info.item.lastUpdate).toLocaleTimeString()}</P> : null}
+                </Div>
+              </InfoCard>
+            ) : null}
 
             {mapLoading && (
-              <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+              <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg" pointerEvents="none">
                 <Div className="text-center">
                   <Div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></Div>
                   <P className="text-slate-600">Loading map...</P>

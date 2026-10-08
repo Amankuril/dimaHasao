@@ -72,8 +72,10 @@ const Profile = () => {
   };
   if (loading) {
     return (
-      <ScrollDiv className="p-4 pb-20 p-12 text-center text-gray-400">
-        <UiIcon as={Loader2} size={22} className="animate-spin inline" />
+      <ScrollDiv className="p-4 pb-20">
+        <Div className="p-12 items-center">
+          <UiIcon as={Loader2} size={22} className="animate-spin inline" />
+        </Div>
       </ScrollDiv>
     );
   }

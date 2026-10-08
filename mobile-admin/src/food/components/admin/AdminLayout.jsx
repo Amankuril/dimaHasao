@@ -116,7 +116,9 @@ export default function AdminLayout() {
 
       {/* Backend disconnected banner */}
       {!API_BASE_URL && (
-        <Div className="w-full bg-amber-100 border-b border-amber-300 px-4 py-2 text-center text-sm text-amber-900">Backend disconnected. Data is not live.</Div>
+        <Div className="w-full bg-amber-100 border-b border-amber-300 px-4 py-2 text-center text-sm text-amber-900">
+          Backend disconnected. Data is not live.
+        </Div>
       )}
 
       {showBackButton && (

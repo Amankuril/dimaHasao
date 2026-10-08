@@ -20,8 +20,7 @@ import { StepIndicator } from '../app/admin/components/ui';
 import { Button, Div, Form, H3, Input, Label, Option, P, Section, Select, Span, Strong, Textarea, Icon as UiIcon } from '../../components/web';
 export const CATEGORIES = ['sightseeing', 'trekking', 'adventure', 'cultural', 'nature', 'family', 'couple', 'group'];
 export const DIFFICULTIES = ['Easy', 'Moderate', 'Challenging'];
-export const field =
-  'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
+export const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
 export const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
 const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const STEPS = [

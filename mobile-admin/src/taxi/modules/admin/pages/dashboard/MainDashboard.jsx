@@ -2,58 +2,56 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from '../../../../../lib/webRouter';
 import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Bell,
   Car,
   CircleAlert,
   Clock,
-  CreditCard,
-  History,
   IndianRupee,
-  Search,
-  ShieldCheck,
   UserCheck,
-  UserPlus,
   Users,
-  Wallet,
   Activity,
-  ChevronRight,
-  ArrowRight,
-  Zap,
   TrendingUp,
-  BarChart3,
   RefreshCw,
   Server,
   Database,
   Cpu,
-  Mail,
-  MessageSquare,
   MapPin,
   Map,
   Shield,
-  FileText,
   AlertTriangle,
   Award,
   Sparkles,
-  Play,
-  CheckCircle,
-  Eye,
-  Info,
   Building2,
   Loader2,
 } from 'lucide-react-native';
-import { motion, AnimatePresence } from '../../../../../lib/motion';
-// PORT: @react-google-maps/api: rebuild with react-native-maps (MapView PROVIDER_GOOGLE, Marker, Polygon, Polyline, Circle)
-import { GoogleMap, MarkerF } from '@react-google-maps/api';
-// PORT: needs modules/Taxi/modules/admin/services/adminService.js ported (node tools/port.js modules/Taxi/modules/admin/services/adminService.js)
+import { GMap, Marker, toLatLng } from '../../../../../components/maps';
 import { adminService } from '../../services/adminService';
-// PORT: needs modules/Taxi/shared/api/runtimeConfig.js ported (node tools/port.js modules/Taxi/shared/api/runtimeConfig.js)
 import { BACKEND_LABEL } from '../../../../shared/api/runtimeConfig';
-// PORT: needs modules/Taxi/modules/admin/utils/googleMaps.js ported (node tools/port.js modules/Taxi/modules/admin/utils/googleMaps.js)
-import { GOOGLE_MAPS_API_KEY, HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER, useBaseGoogleMapsLoader } from '../../utils/googleMaps';
+import { DISTRICT_CENTER, useBaseGoogleMapsLoader } from '../../utils/googleMaps';
+import { toast } from '../../../../../lib/notify';
 import { Button, Div, H1, H3, H4, P, ScrollDiv, Span, Strong, Icon as UiIcon } from '../../../../../components/web';
 import { Circle, Path, Svg } from 'react-native-svg';
+
+/*
+ * The web styles the dashboard map through the Maps JavaScript API's `styles`
+ * option; react-native-maps takes the same JSON as `customMapStyle`.
+ */
+const MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f5' }] },
+  { featureType: 'administrative.land_parcel', elementType: 'labels.text.fill', stylers: [{ color: '#bdbdbd' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#eeeeee' }] },
+  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.arterial', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#dadada' }] },
+  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9c9c9' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+];
+
+/* The web's <GoogleMap center={DISTRICT_CENTER} zoom={5}>: ~11 degrees across. */
+const MAP_REGION = { ...toLatLng(DISTRICT_CENTER), latitudeDelta: 11, longitudeDelta: 11 };
 const currency = (value) =>
   Number(value || 0).toLocaleString('en-IN', {
     minimumFractionDigits: 0,
@@ -73,6 +71,10 @@ const MainDashboard = () => {
   // Interactive Chart states
   const [hoveredRevenueIndex, setHoveredRevenueIndex] = useState(null);
   const [hoveredDonutSegment, setHoveredDonutSegment] = useState(null);
+
+  // The web's <svg className="w-full" viewBox="0 0 500 150"> scales to its box;
+  // react-native-svg needs the pixel width, so measure the wrapper.
+  const [chartBoxWidth, setChartBoxWidth] = useState(0);
 
   // Google Maps Loader
   const { isLoaded } = useBaseGoogleMapsLoader();
@@ -193,8 +195,8 @@ const MainDashboard = () => {
       };
     });
   }, [bookingDonutData, donutCircumference]);
-  // PORT: className on an svg element: give it width/height/style instead
-  // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
+  const chartScale = chartBoxWidth > 0 ? chartBoxWidth / chartWidth : 0;
+  const chartBoxHeight = chartHeight * chartScale;
   return (
     <ScrollDiv className="min-h-screen bg-[#F6F8FC] p-6 lg:p-8 font-sans redigo-admin-root animate-in fade-in duration-300">
       <Div className="max-w-7xl mx-auto space-y-6">
@@ -368,33 +370,32 @@ const MainDashboard = () => {
               </Div>
             ) : (
               <>
-                <Div className="relative pt-2">
-                  <Svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full overflow-visible">
-                    <Path d={areaPath} fill="rgba(255, 196, 0, 0.05)" />
-                    <Path d={linePath} fill="none" stroke="#FFC400" strokeWidth="2.5" />
-                    {revenuePoints.map((pt, idx) => (
-                      <Circle
-                        key={idx}
-                        cx={pt.x}
-                        cy={pt.y}
-                        r={hoveredRevenueIndex === idx ? 6 : 4}
-                        fill={hoveredRevenueIndex === idx ? '#FFC400' : '#FFFFFF'}
-                        stroke="#FFC400"
-                        strokeWidth="2"
-                        className="cursor-pointer"
-                        onMouseEnter={() => setHoveredRevenueIndex(idx)}
-                        onMouseLeave={() => setHoveredRevenueIndex(null)}
-                      />
-                    ))}
-                  </Svg>
+                <Div className="relative pt-2" onLayout={(e) => setChartBoxWidth(e.nativeEvent.layout.width)}>
+                  {chartBoxWidth > 0 && (
+                    <Svg width={chartBoxWidth} height={chartBoxHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+                      <Path d={areaPath} fill="rgba(255, 196, 0, 0.05)" />
+                      <Path d={linePath} fill="none" stroke="#FFC400" strokeWidth="2.5" />
+                      {revenuePoints.map((pt, idx) => (
+                        <Circle
+                          key={idx}
+                          cx={pt.x}
+                          cy={pt.y}
+                          r={hoveredRevenueIndex === idx ? 6 : 4}
+                          fill={hoveredRevenueIndex === idx ? '#FFC400' : '#FFFFFF'}
+                          stroke="#FFC400"
+                          strokeWidth="2"
+                          onPress={() => setHoveredRevenueIndex(hoveredRevenueIndex === idx ? null : idx)}
+                        />
+                      ))}
+                    </Svg>
+                  )}
 
                   {hoveredRevenueIndex !== null && revenuePoints[hoveredRevenueIndex] && (
                     <Div
-                      className="absolute bg-slate-900 !text-white rounded p-2 text-[10px] pointer-events-none shadow-xl border border-slate-800"
+                      className="absolute w-[130px] bg-slate-900 !text-white rounded p-2 text-[10px] shadow-xl border border-slate-800"
                       style={{
-                        left: `${(revenuePoints[hoveredRevenueIndex].x / chartWidth) * 100}%`,
-                        top: `${(revenuePoints[hoveredRevenueIndex].y / chartHeight) * 100 - 35}%`,
-                        transform: 'translateX(-50%)',
+                        left: (revenuePoints[hoveredRevenueIndex].x / chartWidth) * chartBoxWidth - 65,
+                        top: (revenuePoints[hoveredRevenueIndex].y / chartHeight) * chartBoxHeight - 0.35 * chartBoxHeight,
                       }}
                     >
                       <Span className="font-semibold block">{revenuePoints[hoveredRevenueIndex].label}</Span>
@@ -427,7 +428,7 @@ const MainDashboard = () => {
             ) : (
               <>
                 <Div className="flex items-center justify-center relative py-1">
-                  <Svg width="100" height="100" viewBox="0 0 100 100" className="transform -rotate-90">
+                  <Svg width={100} height={100} viewBox="0 0 100 100" style={{ transform: [{ rotate: '-90deg' }] }}>
                     {donutSegments.map((seg, i) => (
                       <Circle
                         key={i}
@@ -439,14 +440,12 @@ const MainDashboard = () => {
                         strokeWidth="8"
                         strokeDasharray={seg.strokeDasharray}
                         strokeDashoffset={seg.strokeDashoffset}
-                        className="cursor-pointer transition-all hover:stroke-[10px]"
-                        onMouseEnter={() => setHoveredDonutSegment(seg)}
-                        onMouseLeave={() => setHoveredDonutSegment(null)}
+                        onPress={() => setHoveredDonutSegment(hoveredDonutSegment?.label === seg.label ? null : seg)}
                       />
                     ))}
                   </Svg>
 
-                  <Div className="absolute text-center">
+                  <Div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                     <Span className="text-[8px] text-[#64748B] uppercase block">{hoveredDonutSegment ? hoveredDonutSegment.label : 'Trips'}</Span>
                     <Span className="text-sm font-bold text-[#0B1220] block mt-0.5">
                       {hoveredDonutSegment ? `${hoveredDonutSegment.percent}%` : todayTrips.total || 0}
@@ -679,124 +678,10 @@ const MainDashboard = () => {
 
           <Div className="w-full h-80 rounded-xl overflow-hidden border border-[#E5E7EB] bg-slate-50 flex items-center justify-center relative shadow-sm">
             {isLoaded ? (
-              <GoogleMap
-                mapContainerClassName="w-full h-full"
-                center={DISTRICT_CENTER}
-                zoom={5}
-                options={{
-                  disableDefaultUI: true,
-                  styles: [
-                    {
-                      elementType: 'geometry',
-                      stylers: [
-                        {
-                          color: '#f5f5f5',
-                        },
-                      ],
-                    },
-                    {
-                      elementType: 'labels.text.fill',
-                      stylers: [
-                        {
-                          color: '#616161',
-                        },
-                      ],
-                    },
-                    {
-                      elementType: 'labels.text.stroke',
-                      stylers: [
-                        {
-                          color: '#f5f5f5',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'administrative.land_parcel',
-                      elementType: 'labels.text.fill',
-                      stylers: [
-                        {
-                          color: '#bdbdbd',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'poi',
-                      elementType: 'geometry',
-                      stylers: [
-                        {
-                          color: '#eeeeee',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'poi',
-                      elementType: 'labels.text.fill',
-                      stylers: [
-                        {
-                          color: '#757575',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'road',
-                      elementType: 'geometry',
-                      stylers: [
-                        {
-                          color: '#ffffff',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'road.arterial',
-                      elementType: 'labels.text.fill',
-                      stylers: [
-                        {
-                          color: '#757575',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'road.highway',
-                      elementType: 'geometry',
-                      stylers: [
-                        {
-                          color: '#dadada',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'road.highway',
-                      elementType: 'labels.text.fill',
-                      stylers: [
-                        {
-                          color: '#616161',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'water',
-                      elementType: 'geometry',
-                      stylers: [
-                        {
-                          color: '#c9c9c9',
-                        },
-                      ],
-                    },
-                    {
-                      featureType: 'water',
-                      elementType: 'labels.text.fill',
-                      stylers: [
-                        {
-                          color: '#9e9e9e',
-                        },
-                      ],
-                    },
-                  ],
-                }}
-              >
+              <GMap className="w-full h-full" initialRegion={MAP_REGION} customMapStyle={MAP_STYLE} zoomControlEnabled={false}>
                 {/* Central operational coordinate */}
-                <MarkerF position={DISTRICT_CENTER} />
-              </GoogleMap>
+                <Marker coordinate={toLatLng(DISTRICT_CENTER)} />
+              </GMap>
             ) : (
               <Div className="text-center text-xs text-[#64748B] flex flex-col items-center gap-2">
                 <UiIcon as={Loader2} size={24} className="animate-spin text-[#0B1220]" />

@@ -648,66 +648,66 @@ export default function AdminHome() {
               </CardHeader>
               <CardContent className="pt-4 h-[300px]">
                 <ScrollDiv className="flex-1" contentClassName="gap-3" nestedScrollEnabled>
-                {activityFeed.length === 0 ? (
-                  <Div className="flex flex-col items-center justify-center py-10 text-neutral-400">
-                    <UiIcon as={Activity} className="h-10 w-10 mb-2 opacity-20" />
-                    <P className="text-sm">No recent signals</P>
-                  </Div>
-                ) : (
-                  activityFeed.map((item, idx) => {
-                    const getIcon = (type) => {
-                      switch (type) {
-                        case 'order_pending':
-                          return <UiIcon as={Clock} className="h-4 w-4 text-amber-600" />;
-                        case 'order_delivered':
-                          return <UiIcon as={CheckCircle} className="h-4 w-4 text-emerald-600" />;
-                        case 'order_cancelled':
-                          return <UiIcon as={XCircle} className="h-4 w-4 text-red-600" />;
-                        case 'restaurant':
-                          return <UiIcon as={Store} className="h-4 w-4 text-blue-600" />;
-                        case 'delivery':
-                          return <UiIcon as={Truck} className="h-4 w-4 text-purple-600" />;
-                        case 'customer':
-                          return <UiIcon as={UserCircle} className="h-4 w-4 text-pink-600" />;
-                        default:
-                          return <UiIcon as={Activity} className="h-4 w-4 text-neutral-600" />;
-                      }
-                    };
-                    const getBg = (type) => {
-                      switch (type) {
-                        case 'order_pending':
-                          return 'bg-amber-50';
-                        case 'order_delivered':
-                          return 'bg-emerald-50';
-                        case 'order_cancelled':
-                          return 'bg-red-50';
-                        case 'restaurant':
-                          return 'bg-blue-50';
-                        case 'delivery':
-                          return 'bg-purple-50';
-                        case 'customer':
-                          return 'bg-pink-50';
-                        default:
-                          return 'bg-neutral-50';
-                      }
-                    };
-                    return (
-                      <Div
-                        key={idx}
-                        className={`flex items-start gap-3 rounded-xl border border-neutral-200 ${getBg(item.type)} px-3 py-3 hover:border-neutral-300 transition-all`}
-                      >
-                        <Div className="mt-0.5">{getIcon(item.type)}</Div>
-                        <Div className="flex-1 min-w-0">
-                          <Div className="flex items-center justify-between gap-2">
-                            <P className="text-sm font-semibold text-neutral-900 truncate">{item.title}</P>
-                            <Span className="text-[10px] text-neutral-400 whitespace-nowrap">{item.time}</Span>
+                  {activityFeed.length === 0 ? (
+                    <Div className="flex flex-col items-center justify-center py-10 text-neutral-400">
+                      <UiIcon as={Activity} className="h-10 w-10 mb-2 opacity-20" />
+                      <P className="text-sm">No recent signals</P>
+                    </Div>
+                  ) : (
+                    activityFeed.map((item, idx) => {
+                      const getIcon = (type) => {
+                        switch (type) {
+                          case 'order_pending':
+                            return <UiIcon as={Clock} className="h-4 w-4 text-amber-600" />;
+                          case 'order_delivered':
+                            return <UiIcon as={CheckCircle} className="h-4 w-4 text-emerald-600" />;
+                          case 'order_cancelled':
+                            return <UiIcon as={XCircle} className="h-4 w-4 text-red-600" />;
+                          case 'restaurant':
+                            return <UiIcon as={Store} className="h-4 w-4 text-blue-600" />;
+                          case 'delivery':
+                            return <UiIcon as={Truck} className="h-4 w-4 text-purple-600" />;
+                          case 'customer':
+                            return <UiIcon as={UserCircle} className="h-4 w-4 text-pink-600" />;
+                          default:
+                            return <UiIcon as={Activity} className="h-4 w-4 text-neutral-600" />;
+                        }
+                      };
+                      const getBg = (type) => {
+                        switch (type) {
+                          case 'order_pending':
+                            return 'bg-amber-50';
+                          case 'order_delivered':
+                            return 'bg-emerald-50';
+                          case 'order_cancelled':
+                            return 'bg-red-50';
+                          case 'restaurant':
+                            return 'bg-blue-50';
+                          case 'delivery':
+                            return 'bg-purple-50';
+                          case 'customer':
+                            return 'bg-pink-50';
+                          default:
+                            return 'bg-neutral-50';
+                        }
+                      };
+                      return (
+                        <Div
+                          key={idx}
+                          className={`flex items-start gap-3 rounded-xl border border-neutral-200 ${getBg(item.type)} px-3 py-3 hover:border-neutral-300 transition-all`}
+                        >
+                          <Div className="mt-0.5">{getIcon(item.type)}</Div>
+                          <Div className="flex-1 min-w-0">
+                            <Div className="flex items-center justify-between gap-2">
+                              <P className="text-sm font-semibold text-neutral-900 truncate">{item.title}</P>
+                              <Span className="text-[10px] text-neutral-400 whitespace-nowrap">{item.time}</Span>
+                            </Div>
+                            <P className="text-xs text-neutral-600 line-clamp-1">{item.detail}</P>
                           </Div>
-                          <P className="text-xs text-neutral-600 line-clamp-1">{item.detail}</P>
                         </Div>
-                      </Div>
-                    );
-                  })
-                )}
+                      );
+                    })
+                  )}
                 </ScrollDiv>
               </CardContent>
             </Card>
@@ -764,10 +764,7 @@ export default function AdminHome() {
 function MetricCard({ title, value, helper, icon, accent, path, loading = false }) {
   const navigate = useNavigate();
   return (
-    <Card
-      className="relative overflow-hidden border-neutral-200 bg-white p-0"
-      onClick={() => path && navigate(path)}
-    >
+    <Card className="relative overflow-hidden border-neutral-200 bg-white p-0" onClick={() => path && navigate(path)}>
       <CardContent className="relative flex flex-col gap-2 px-4 pb-4 pt-4 h-full">
         <Div className={`absolute inset-0 opacity-40 ${accent}`} />
         <Div className="relative flex items-center justify-between z-10">
@@ -782,9 +779,7 @@ function MetricCard({ title, value, helper, icon, accent, path, loading = false 
               <P className="text-[10px] text-neutral-500 font-medium line-clamp-2 leading-snug">{helper}</P>
             )}
           </Div>
-          <Div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/90 border border-neutral-200 shadow-sm">
-            {icon}
-          </Div>
+          <Div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/90 border border-neutral-200 shadow-sm">{icon}</Div>
         </Div>
       </CardContent>
     </Card>

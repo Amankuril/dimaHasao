@@ -585,9 +585,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
           className={cn(
             'flex flex-row items-center gap-2.5 px-3 py-2 rounded-lg text-left',
             isInSection ? 'text-sm font-semibold' : 'text-sm',
-            isActive(item.path)
-              ? 'bg-white/10 text-white border border-white/15 font-semibold'
-              : 'text-neutral-300 border border-transparent',
+            isActive(item.path) ? 'bg-white/10 text-white border border-white/15 font-semibold' : 'text-neutral-300 border border-transparent',
             isCollapsed && 'justify-center px-2',
           )}
           accessibilityLabel={isCollapsed ? item.label : undefined}
@@ -621,10 +619,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
           <Div key={index}>
             <Button
               onClick={() => toggleSection(sectionKey)}
-              className={cn(
-                'w-full flex items-center justify-center px-2 py-2 rounded-lg text-sm font-medium',
-                'text-white',
-              )}
+              className={cn('w-full flex items-center justify-center px-2 py-2 rounded-lg text-sm font-medium', 'text-white')}
             >
               <Div className="relative">
                 <UiIcon as={Icon} className="w-4 h-4 shrink-0 text-neutral-300" />
@@ -640,10 +635,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
         <Div key={index}>
           <Button
             onClick={() => toggleSection(sectionKey)}
-            className={cn(
-              'w-full flex flex-row items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm font-medium text-left',
-              'text-white',
-            )}
+            className={cn('w-full flex flex-row items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm font-medium text-left', 'text-white')}
           >
             <Div className="flex items-center gap-2.5 text-left flex-1 min-w-0">
               <UiIcon as={Icon} className="w-4 h-4 shrink-0 text-neutral-300" />
@@ -682,9 +674,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                     }}
                     className={cn(
                       'flex flex-row items-center gap-2 px-3 py-1.5 rounded-md text-sm font-normal text-left',
-                      isActive(subItem.path, allSubPaths)
-                        ? 'bg-white/10 text-white font-semibold'
-                        : 'text-neutral-300',
+                      isActive(subItem.path, allSubPaths) ? 'bg-white/10 text-white font-semibold' : 'text-neutral-300',
                     )}
                   >
                     <Div className={cn('w-1.5 h-1.5 rounded-full shrink-0', isActive(subItem.path, allSubPaths) ? 'bg-white' : 'bg-neutral-400')} />
@@ -729,7 +719,11 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
             )}
             <Div className={cn('flex items-center gap-2 shrink-0 absolute top-0 bottom-0 z-[60]', isCollapsed ? '-right-3' : 'right-0')}>
               <Button onClick={toggleCollapse} className="p-1.5 rounded-lg" accessibilityLabel={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-                {isCollapsed ? <UiIcon as={ChevronRight} className="w-4 h-4 text-neutral-300" /> : <UiIcon as={ChevronLeft} className="w-4 h-4 text-neutral-300" />}
+                {isCollapsed ? (
+                  <UiIcon as={ChevronRight} className="w-4 h-4 text-neutral-300" />
+                ) : (
+                  <UiIcon as={ChevronLeft} className="w-4 h-4 text-neutral-300" />
+                )}
               </Button>
               {!isCollapsed && (
                 <Button onClick={onClose} className="p-1" accessibilityLabel="Close menu">
@@ -762,7 +756,10 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                 placeholderTextColor="#737373"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn('w-full pl-9 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-sm text-white text-left', searchQuery ? 'pr-9' : 'pr-3')}
+                className={cn(
+                  'w-full pl-9 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-sm text-white text-left',
+                  searchQuery ? 'pr-9' : 'pr-3',
+                )}
               />
               {searchQuery ? (
                 <Button onClick={() => setSearchQuery('')} className="absolute right-3 z-10" accessibilityLabel="Clear search">

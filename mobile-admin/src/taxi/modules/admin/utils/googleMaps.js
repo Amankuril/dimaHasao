@@ -1,7 +1,10 @@
-/* Ported from Frontend/src/modules/Taxi/modules/admin/utils/googleMaps.js (tools/port.js first pass). */
-// PORT: @react-google-maps/api: rebuild with react-native-maps (MapView PROVIDER_GOOGLE, Marker, Polygon, Polyline, Circle)
-import { useJsApiLoader } from '@react-google-maps/api';
-export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+/* Ported from Frontend/src/modules/Taxi/modules/admin/utils/googleMaps.js. */
+/*
+ * The web loads the Maps JavaScript API here. The app draws maps natively
+ * (components/maps: react-native-maps, key baked in by app.config.js), so the
+ * loader hooks only report whether a key is configured.
+ */
+export const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 export const HAS_VALID_GOOGLE_MAPS_KEY =
   typeof GOOGLE_MAPS_API_KEY === 'string' && GOOGLE_MAPS_API_KEY.trim() !== '' && GOOGLE_MAPS_API_KEY !== 'your-google-maps-browser-key';
 
@@ -28,13 +31,10 @@ export const getLatLng = (source, fallback = DISTRICT_CENTER) => {
   }
   return fallback;
 };
-const useGoogleMapsLoader = () =>
-  useJsApiLoader({
-    id: GOOGLE_MAPS_LOADER_ID,
-    googleMapsApiKey: HAS_VALID_GOOGLE_MAPS_KEY ? GOOGLE_MAPS_API_KEY : '',
-    libraries: GOOGLE_MAPS_LIBRARIES,
-    version: '3.64',
-  });
+const LOADER_STATE = HAS_VALID_GOOGLE_MAPS_KEY
+  ? { isLoaded: true, loadError: undefined }
+  : { isLoaded: false, loadError: new Error('Google Maps API key is not configured') };
+const useGoogleMapsLoader = () => LOADER_STATE;
 export const useBaseGoogleMapsLoader = () => useGoogleMapsLoader();
 export const usePlacesGoogleMapsLoader = () => useGoogleMapsLoader();
 export const useDrawingGoogleMapsLoader = () => useGoogleMapsLoader();

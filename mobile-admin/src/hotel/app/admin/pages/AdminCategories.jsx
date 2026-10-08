@@ -5,7 +5,10 @@ import { toast } from '../../../../lib/notify';
 import { pickImage } from '../../../../lib/files';
 import { window } from '../../../../lib/webShim';
 import adminService from '../../../services/adminService';
-import * as LucideIcons from 'lucide-react-native';
+import * as LucideIconSet from 'lucide-react-native';
+
+// Category icons are stored by lucide name, looked up at render as on the web.
+const LucideIcons = { ...LucideIconSet };
 
 // Icon Picker Component
 import {

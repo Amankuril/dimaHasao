@@ -22,23 +22,23 @@ export const exportDeliverymenToPDF = (deliverymen, filename = 'deliverymen') =>
     return;
   }
   try {
-      const exportDate = new Date().toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      // Prepare table data
-      const tableData = deliverymen.map((dm) => [
-        dm.sl || 'N/A',
-        dm.name || 'N/A',
-        dm.phone || 'N/A',
-        dm.email || 'N/A',
-        dm.zone || 'N/A',
-        dm.totalOrders || 0,
-        dm.status || 'N/A',
-      ]);
+    const exportDate = new Date().toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    // Prepare table data
+    const tableData = deliverymen.map((dm) => [
+      dm.sl || 'N/A',
+      dm.name || 'N/A',
+      dm.phone || 'N/A',
+      dm.email || 'N/A',
+      dm.zone || 'N/A',
+      dm.totalOrders || 0,
+      dm.status || 'N/A',
+    ]);
 
     return tableToPdf({
       filename: `${filename}_${new Date().toISOString().split('T')[0]}.pdf`,
@@ -218,45 +218,44 @@ export const exportBonusToPDF = (transactions, filename = 'deliveryman_bonus') =
     return;
   }
   try {
-      const exportDate = new Date().toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      // Prepare table data - ensure bonus is properly formatted
-      const tableData = transactions.map((transaction) => {
-        // ALWAYS use raw amount value - don't rely on formatted bonus string
-        let bonusAmount = '?0.00';
+    const exportDate = new Date().toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    // Prepare table data - ensure bonus is properly formatted
+    const tableData = transactions.map((transaction) => {
+      // ALWAYS use raw amount value - don't rely on formatted bonus string
+      let bonusAmount = '?0.00';
 
-        // First priority: Use raw numeric amount from transaction.amount
-        if (transaction.amount !== undefined && transaction.amount !== null) {
-          const numAmount =
-            typeof transaction.amount === 'string' ? parseFloat(transaction.amount.replace(/[^\d.-]/g, '')) : parseFloat(transaction.amount);
-          if (!isNaN(numAmount)) {
-            bonusAmount = `?${numAmount.toFixed(2)}`;
-          }
+      // First priority: Use raw numeric amount from transaction.amount
+      if (transaction.amount !== undefined && transaction.amount !== null) {
+        const numAmount = typeof transaction.amount === 'string' ? parseFloat(transaction.amount.replace(/[^\d.-]/g, '')) : parseFloat(transaction.amount);
+        if (!isNaN(numAmount)) {
+          bonusAmount = `?${numAmount.toFixed(2)}`;
         }
-        // Second priority: Extract number from bonus string and rebuild
-        else if (transaction.bonus) {
-          // Extract only numeric part (digits and decimal point)
-          const numericPart = String(transaction.bonus).replace(/[^\d.-]/g, '');
-          const numAmount = parseFloat(numericPart);
-          if (!isNaN(numAmount) && numAmount > 0) {
-            bonusAmount = `?${numAmount.toFixed(2)}`;
-          }
+      }
+      // Second priority: Extract number from bonus string and rebuild
+      else if (transaction.bonus) {
+        // Extract only numeric part (digits and decimal point)
+        const numericPart = String(transaction.bonus).replace(/[^\d.-]/g, '');
+        const numAmount = parseFloat(numericPart);
+        if (!isNaN(numAmount) && numAmount > 0) {
+          bonusAmount = `?${numAmount.toFixed(2)}`;
         }
-        return [
-          transaction.sl || 'N/A',
-          transaction.transactionId || 'N/A',
-          transaction.deliveryId || 'N/A',
-          transaction.deliveryman || 'N/A',
-          bonusAmount,
-          transaction.reference || 'N/A',
-          transaction.createdAt || 'N/A',
-        ];
-      });
+      }
+      return [
+        transaction.sl || 'N/A',
+        transaction.transactionId || 'N/A',
+        transaction.deliveryId || 'N/A',
+        transaction.deliveryman || 'N/A',
+        bonusAmount,
+        transaction.reference || 'N/A',
+        transaction.createdAt || 'N/A',
+      ];
+    });
     return tableToPdf({
       filename: `${filename}_${new Date().toISOString().split('T')[0]}.pdf`,
       title: 'Deliveryman Bonus Transactions Report',

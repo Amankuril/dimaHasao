@@ -42,7 +42,6 @@ const ComparisonField = ({ label, oldVal, newVal, type = 'text' }) => {
     if (type === 'boolean') return val ? 'On' : 'Off';
     return val || 'None';
   };
-  // PORT: className on an svg element: give it width/height/style instead
   return (
     <Div className="p-3 bg-white rounded-lg border border-gray-100 shadow-sm">
       <Label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</Label>
@@ -53,8 +52,8 @@ const ComparisonField = ({ label, oldVal, newVal, type = 'text' }) => {
           {formatValue(oldVal)}
         </Span>
         <Div className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-50 text-gray-400">
-          <Svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <Path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 5l7 7-7 7" />
+          <Svg width={12} height={12} fill="none" viewBox="0 0 24 24">
+            <Path stroke="#9ca3af" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 5l7 7-7 7" />
           </Svg>
         </Div>
         <Span
@@ -77,7 +76,6 @@ const ImageComparison = ({ oldImage, newImage, oldImages = [], newImages = [] })
   const added = (newImages || []).filter((img) => !oldSet.has(img));
   const hasChanges = isSingleImageChanged || removed.length > 0 || added.length > 0;
   if (!hasChanges) return null;
-  // PORT: className on an svg element: give it width/height/style instead
   return (
     <Div className="col-span-full space-y-4 pt-4 border-t border-gray-100">
       <Label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Image Variations</Label>
@@ -92,8 +90,8 @@ const ImageComparison = ({ oldImage, newImage, oldImages = [], newImages = [] })
               <Span className="absolute -top-2 -left-2 bg-red-100 text-red-600 text-[8px] font-bold px-1.5 py-0.5 rounded">OLD</Span>
             </Div>
             <Div className="text-gray-300">
-              <Svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <Path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 5l7 7-7 7" />
+              <Svg width={20} height={20} fill="none" viewBox="0 0 24 24">
+                <Path stroke="#d1d5db" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 5l7 7-7 7" />
               </Svg>
             </Div>
             <Div className="relative">
@@ -307,9 +305,6 @@ export default function FoodApproval() {
     setSelectedRequest(request);
     setShowRejectModal(true);
   };
-  // PORT: overflow-x-auto: this row scrolls sideways on the web -> use <HScroll> (tables: <Table cols>)
-  // PORT: <Table>: set cols={[...]} widths (px) for each column; the table scrolls sideways like the web's overflow-x-auto
-  // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
   return (
     <ScrollDiv className="p-6 space-y-4">
       {/* Page Header */}
@@ -354,8 +349,10 @@ export default function FoodApproval() {
             </Div>
           ) : (
             <Div className="border-t border-gray-200">
-              <Div className="w-full overflow-x-auto">
-                <Table className="min-w-full divide-y divide-gray-200 text-sm">
+              <Table
+                cols={[70, 200, 150, 200, 100, 130, 110, 150, 120, 132]}
+                className="min-w-full divide-y divide-gray-200 text-sm"
+              >
                   <Thead
                     style={{
                       backgroundColor: 'rgba(0, 111, 189, 0.1)',
@@ -453,8 +450,7 @@ export default function FoodApproval() {
                       ))
                     )}
                   </Tbody>
-                </Table>
-              </Div>
+              </Table>
 
               <AdminListPagination
                 currentPage={currentPage}
@@ -663,9 +659,6 @@ export default function FoodApproval() {
                               alt="Item preview"
                               className="w-24 h-24 object-cover rounded-xl border border-gray-100 shadow-sm hover:scale-105 transition-transform cursor-zoom-in"
                               onClick={() => window.open(img, '_blank')}
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
                             />
                           ))}
                         </Div>

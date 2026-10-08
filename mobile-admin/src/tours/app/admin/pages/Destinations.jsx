@@ -46,8 +46,7 @@ const CATEGORY_ICON = {
   lake: Waves,
   wildlife: PawPrint,
 };
-const field =
-  'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
+const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
 const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
 const toLines = (v) =>
   String(v || '')
@@ -333,7 +332,7 @@ const Destinations = () => {
               <Div>
                 <Label className={label}>Pin it on the map</Label>
                 <P className="text-xs text-gray-400 mb-2">
-                  Click anywhere on the map, or drag the pin once it's placed. This is exactly what visitors see on the place's page.
+                  Click anywhere on the map, or drag the pin once it&apos;s placed. This is exactly what visitors see on the place&apos;s page.
                 </P>
                 <LocationPicker lat={latNum} lng={lngNum} onChange={setCoords} className="h-64" />
                 <Div className="grid grid-cols-2 gap-3 mt-3">
@@ -348,7 +347,7 @@ const Destinations = () => {
                 </Div>
                 {!latNum && (
                   <P className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mt-2 flex items-center gap-1.5">
-                    <UiIcon as={MapPinOff} size={13} /> Not pinned yet — the app will show "location not pinned" instead of a map until this is set.
+                    <UiIcon as={MapPinOff} size={13} /> Not pinned yet — the app will show &quot;location not pinned&quot; instead of a map until this is set.
                   </P>
                 )}
               </Div>
@@ -464,7 +463,7 @@ const Destinations = () => {
                     <UiIcon as={Plus} size={12} /> Add
                   </Button>
                 </Div>
-                {tags.length === 0 && <P className="text-xs text-gray-400">Small badges like "Scenic View" or "Family friendly" shown on the place's card.</P>}
+                {tags.length === 0 && <P className="text-xs text-gray-400">Small badges like &quot;Scenic View&quot; or &quot;Family friendly&quot; shown on the place&apos;s card.</P>}
                 {tags.map((tag, index) => (
                   <Div key={index} className="flex items-center gap-2">
                     <Span

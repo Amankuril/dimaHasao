@@ -180,7 +180,7 @@ export default function AdminNavbar({ onMenuClick }) {
     setNotificationsOpen(false);
     if (item?.path) navigate(item.path);
   };
-      return (
+  return (
     <>
       <Header className="z-50 bg-white border-b border-neutral-200 shadow-sm" style={{ paddingTop: insets.top }}>
         <Div className="flex items-center justify-between px-4 py-3">

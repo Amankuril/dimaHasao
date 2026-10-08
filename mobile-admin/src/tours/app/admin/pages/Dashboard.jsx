@@ -83,19 +83,13 @@ const Dashboard = () => {
 
       {/* Queues needing attention */}
       <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link
-          to="/tours/admin/packages?status=pending"
-          className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between"
-        >
+        <Link to="/tours/admin/packages?status=pending" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
           <Div>
             <P className="text-xs font-bold text-gray-400 uppercase tracking-wider">Awaiting review</P>
             <P className="text-xl font-black text-gray-900 mt-1">{s.pendingPackages ?? 0} packages</P>
           </Div>
         </Link>
-        <Link
-          to="/tours/admin/reviews"
-          className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between"
-        >
+        <Link to="/tours/admin/reviews" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
           <Div>
             <P className="text-xs font-bold text-gray-400 uppercase tracking-wider">Reviews to moderate</P>
             <P className="text-xl font-black text-gray-900 mt-1">{s.pendingReviews ?? 0} pending</P>

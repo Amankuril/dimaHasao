@@ -1,6 +1,10 @@
-/* Ported from Frontend/src/modules/Food/realtimeTracking.js (tools/port.js first pass). */
-import { onValue, ref, set, update } from 'firebase/database';
+/*
+ * Port of Frontend/src/modules/Food/realtimeTracking.js. Same paths, same payloads, same
+ * function signatures; the Firebase SDK's onValue/set/update are served by the Realtime
+ * Database REST + event-stream transport in ./firebase.
+ */
 import { firebaseRealtimeDb, ensureFirebaseInitialized } from './firebase';
+
 function sanitizeRealtimeKey(value) {
   return String(value || '')
     .trim()
@@ -28,10 +32,9 @@ export function subscribeOrderTracking(orderId, onChange, onError) {
     enableRealtimeDb: true,
   });
   const path = getOrderTrackingPath(orderId);
-  const unsub = onValue(
-    ref(firebaseRealtimeDb, path),
-    (snapshot) => {
-      const data = snapshot.val();
+  const unsub = firebaseRealtimeDb.subscribe(
+    path,
+    (data) => {
       if (!data) return;
       onChange(data, path);
     },
@@ -48,10 +51,9 @@ export function subscribeDeliveryLocation(deliveryId, onChange, onError) {
     enableRealtimeDb: true,
   });
   const path = getDeliveryLocationPath(deliveryId);
-  const unsub = onValue(
-    ref(firebaseRealtimeDb, path),
-    (snapshot) => {
-      const data = snapshot.val();
+  const unsub = firebaseRealtimeDb.subscribe(
+    path,
+    (data) => {
       if (!data) return;
       onChange(data, path);
     },
@@ -68,10 +70,10 @@ export function subscribeAllDeliveryLocations(onChange, onError) {
     enableRealtimeDb: true,
   });
   const path = 'delivery';
-  const unsub = onValue(
-    ref(firebaseRealtimeDb, path),
-    (snapshot) => {
-      onChange(snapshot.val() || {}, path);
+  const unsub = firebaseRealtimeDb.subscribe(
+    path,
+    (data) => {
+      onChange(data || {}, path);
     },
     (error) => {
       if (typeof onError === 'function') onError(error, path);
@@ -86,10 +88,9 @@ export function subscribeRestaurantLocation(restaurantId, onChange, onError) {
     enableRealtimeDb: true,
   });
   const path = getRestaurantLocationPath(restaurantId);
-  const unsub = onValue(
-    ref(firebaseRealtimeDb, path),
-    (snapshot) => {
-      const data = snapshot.val();
+  const unsub = firebaseRealtimeDb.subscribe(
+    path,
+    (data) => {
       if (!data) return;
       onChange(data, path);
     },
@@ -126,7 +127,7 @@ export async function writeDeliveryLocation({
     isOnline: Boolean(isOnline),
     activeOrderId: activeOrderId ? String(activeOrderId) : null,
   };
-  await set(ref(firebaseRealtimeDb, getDeliveryLocationPath(deliveryId)), payload);
+  await firebaseRealtimeDb.set(getDeliveryLocationPath(deliveryId), payload);
   return true;
 }
 
@@ -151,6 +152,6 @@ export async function writeOrderTracking(orderId, payload = {}) {
   if (payload.timestamp != null) {
     toWrite.timestamp = toFiniteNumber(payload.timestamp) || Date.now();
   }
-  await update(ref(firebaseRealtimeDb, getOrderTrackingPath(orderId)), toWrite);
+  await firebaseRealtimeDb.update(getOrderTrackingPath(orderId), toWrite);
   return true;
 }

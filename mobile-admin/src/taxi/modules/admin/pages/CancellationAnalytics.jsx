@@ -1,7 +1,7 @@
-/* Ported from Frontend/src/modules/Taxi/modules/admin/pages/CancellationAnalytics.jsx (tools/port.js first pass). */
-import React, { useEffect, useState } from 'react';
-import { Ban, TrendingDown, UserX, Car, DollarSign, ShieldAlert, AlertTriangle, RefreshCw, Clock, ChevronRight } from 'lucide-react-native';
-// PORT: needs modules/Taxi/shared/api/axiosInstance.js ported (node tools/port.js modules/Taxi/shared/api/axiosInstance.js)
+/* Ported from Frontend/src/modules/Taxi/modules/admin/pages/CancellationAnalytics.jsx. */
+import { useEffect, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ban, TrendingDown, UserX, Car, DollarSign, ShieldAlert, AlertTriangle, RefreshCw, Clock } from 'lucide-react-native';
 import api from '../../../shared/api/axiosInstance';
 import { toast } from '../../../../lib/notify';
 import { Button, Div, H1, H2, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
@@ -50,21 +50,20 @@ export default function CancellationAnalytics() {
     topDriverCancellations = [],
     flaggedRides = [],
   } = data || {};
-  // PORT: overflow-y-auto: this element scrolls on the web -> use <ScrollDiv> (or a FlatList for a long list)
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen max-w-7xl mx-auto space-y-6">
+    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 space-y-6">
       {/* Top Bar */}
       <Div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Div>
-          <H1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <Div className="flex flex-row items-center gap-2">
             <UiIcon as={Ban} className="w-7 h-7 text-red-600" />
-            Ride Cancellation Analytics
-          </H1>
+            <H1 className="flex-1 text-2xl font-bold text-slate-900">Ride Cancellation Analytics</H1>
+          </Div>
           <P className="text-xs text-slate-500 mt-1">Real-time breakdown of ride cancellations, driver misconduct flags, and revenue impact.</P>
         </Div>
         <Button
           onClick={fetchAnalytics}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm self-start sm:self-auto"
+          className="flex-row items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-sm self-start"
         >
           <UiIcon as={RefreshCw} className="w-4 h-4 text-slate-500" />
           Refresh
@@ -120,23 +119,28 @@ export default function CancellationAnalytics() {
               <UiIcon as={DollarSign} className="w-5 h-5" />
             </Div>
           </Div>
-          <Span className="text-2xl font-black text-slate-900">₹{totalRevenueLost.toLocaleString()}</Span>
-          <P className="text-[11px] text-emerald-600 font-semibold">₹{totalCancellationFeesCollected.toLocaleString()} fees collected</P>
+          <Span className="text-2xl font-black text-slate-900">₹{totalRevenueLost.toLocaleString('en-IN')}</Span>
+          <P className="text-[11px] text-emerald-600 font-semibold">₹{totalCancellationFeesCollected.toLocaleString('en-IN')} fees collected</P>
         </Div>
       </Div>
 
       {/* Flagged Driver Behavior Alerts */}
       {flaggedRides.length > 0 && (
-        <Div className="bg-gradient-to-r from-red-50 to-amber-50 border border-red-200 rounded-2xl p-5 space-y-4">
-          <Div className="flex items-center justify-between">
-            <Div className="flex items-center gap-2">
+        <LinearGradient
+          colors={['#FEF2F2', '#FFFBEB']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{ borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 20, gap: 16 }}
+        >
+          <Div className="flex items-center justify-between gap-2">
+            <Div className="flex flex-1 items-center gap-2">
               <UiIcon as={ShieldAlert} className="w-5 h-5 text-red-600" />
-              <H2 className="text-sm font-bold text-red-900">Flagged Driver Behavior Reports ({flaggedRides.length})</H2>
+              <H2 className="flex-1 text-sm font-bold text-red-900">Flagged Driver Behavior Reports ({flaggedRides.length})</H2>
             </Div>
             <Span className="text-[11px] font-bold text-red-700 bg-red-100 px-2.5 py-1 rounded-full uppercase">Action Required</Span>
           </Div>
 
-          <Div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+          <ScrollDiv nestedScrollEnabled className="space-y-2 max-h-60 pr-1">
             {flaggedRides.map((item, idx) => (
               <Div
                 key={idx}
@@ -144,7 +148,7 @@ export default function CancellationAnalytics() {
               >
                 <Div>
                   <Span className="font-bold text-slate-900">{item.reason}</Span>
-                  {item.comment && <P className="text-slate-500 italic mt-0.5">"{item.comment}"</P>}
+                  {item.comment && <P className="text-slate-500 italic mt-0.5">&quot;{item.comment}&quot;</P>}
                   <P className="text-[11px] text-slate-400 mt-1">
                     Customer: <Span className="font-semibold text-slate-700">{item.customerName}</Span> ({item.customerPhone}) | Driver:{' '}
                     <Span className="font-semibold text-slate-700">{item.driverName}</Span> ({item.driverPhone})
@@ -162,24 +166,23 @@ export default function CancellationAnalytics() {
                 </Div>
               </Div>
             ))}
-          </Div>
-        </Div>
+          </ScrollDiv>
+        </LinearGradient>
       )}
 
       {/* Main Grid: Reasons & Stages */}
       <Div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Reasons Breakdown */}
         <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-          <H2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <Div className="flex flex-row items-center gap-2">
             <UiIcon as={TrendingDown} className="w-4 h-4 text-orange-500" />
-            Most Common Cancellation Reasons
-          </H2>
+            <H2 className="flex-1 text-sm font-bold text-slate-900">Most Common Cancellation Reasons</H2>
+          </Div>
 
-          <Div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+          <ScrollDiv nestedScrollEnabled className="space-y-3 max-h-80 pr-1">
             {reasonsBreakdown.length > 0 ? (
               reasonsBreakdown.map((item, idx) => {
                 const pct = totalCancelledRides > 0 ? Math.round((item.count / totalCancelledRides) * 100) : 0;
-                // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
                 return (
                   <Div key={idx} className="space-y-1">
                     <Div className="flex justify-between text-xs font-semibold">
@@ -189,11 +192,11 @@ export default function CancellationAnalytics() {
                       </Span>
                     </Div>
                     <Div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <Div
-                        className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.max(pct, 4)}%`,
-                        }}
+                      <LinearGradient
+                        colors={['#F97316', '#EF4444']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{ height: '100%', borderRadius: 9999, width: `${Math.max(pct, 4)}%` }}
                       />
                     </Div>
                   </Div>
@@ -202,35 +205,35 @@ export default function CancellationAnalytics() {
             ) : (
               <P className="text-xs text-slate-400 italic">No cancellation reasons recorded yet.</P>
             )}
-          </Div>
+          </ScrollDiv>
         </Div>
 
         {/* Stage & Driver Breakdown */}
         <Div className="space-y-6">
           {/* Stage Breakdown Card */}
           <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-            <H2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <Div className="flex flex-row items-center gap-2">
               <UiIcon as={Clock} className="w-4 h-4 text-blue-500" />
-              Cancellation Stage Breakdown
-            </H2>
+              <H2 className="flex-1 text-sm font-bold text-slate-900">Cancellation Stage Breakdown</H2>
+            </Div>
 
-            <Div className="grid grid-cols-3 gap-3 text-center">
-              <Div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100">
+            <Div className="flex flex-row gap-3">
+              <Div className="flex-1 items-center p-3 bg-blue-50/60 rounded-xl border border-blue-100">
                 <P className="text-xs font-bold text-blue-600 uppercase">Searching</P>
                 <P className="text-xl font-black text-slate-900 mt-1">{stageBreakdown.searching || 0}</P>
-                <P className="text-[10px] text-slate-400 mt-0.5">Before Driver Acceptance</P>
+                <P className="text-[10px] text-slate-400 mt-0.5 text-center">Before Driver Acceptance</P>
               </Div>
 
-              <Div className="p-3 bg-amber-50/60 rounded-xl border border-amber-100">
+              <Div className="flex-1 items-center p-3 bg-amber-50/60 rounded-xl border border-amber-100">
                 <P className="text-xs font-bold text-amber-600 uppercase">Accepted</P>
                 <P className="text-xl font-black text-slate-900 mt-1">{stageBreakdown.accepted || 0}</P>
-                <P className="text-[10px] text-slate-400 mt-0.5">Driver On The Way</P>
+                <P className="text-[10px] text-slate-400 mt-0.5 text-center">Driver On The Way</P>
               </Div>
 
-              <Div className="p-3 bg-red-50/60 rounded-xl border border-red-100">
+              <Div className="flex-1 items-center p-3 bg-red-50/60 rounded-xl border border-red-100">
                 <P className="text-xs font-bold text-red-600 uppercase">Arrived</P>
                 <P className="text-xl font-black text-slate-900 mt-1">{stageBreakdown.arrived || 0}</P>
-                <P className="text-[10px] text-slate-400 mt-0.5">At Pickup Location</P>
+                <P className="text-[10px] text-slate-400 mt-0.5 text-center">At Pickup Location</P>
               </Div>
             </Div>
           </Div>
@@ -238,15 +241,15 @@ export default function CancellationAnalytics() {
           {/* Top Driver Offender Cancellations */}
           {topDriverCancellations.length > 0 && (
             <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
-              <H2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Div className="flex flex-row items-center gap-2">
                 <UiIcon as={AlertTriangle} className="w-4 h-4 text-amber-500" />
-                Drivers With Frequent Cancellations
-              </H2>
+                <H2 className="flex-1 text-sm font-bold text-slate-900">Drivers With Frequent Cancellations</H2>
+              </Div>
 
               <Div className="space-y-2">
                 {topDriverCancellations.map((driver, idx) => (
-                  <Div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl text-xs">
-                    <Div>
+                  <Div key={idx} className="flex items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl text-xs">
+                    <Div className="flex-1">
                       <P className="font-bold text-slate-900">{driver.driverName}</P>
                       <P className="text-[11px] text-slate-500">{driver.driverPhone}</P>
                     </Div>

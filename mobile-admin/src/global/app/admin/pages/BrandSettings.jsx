@@ -57,8 +57,10 @@ const BrandSettings = () => {
   };
   if (loading) {
     return (
-      <ScrollDiv className="p-4 pb-20 flex justify-center py-16">
-        <UiIcon as={Loader2} className="h-6 w-6 animate-spin text-gray-400" />
+      <ScrollDiv className="p-4 pb-20">
+        <Div className="flex justify-center py-16">
+          <UiIcon as={Loader2} className="h-6 w-6 animate-spin text-gray-400" />
+        </Div>
       </ScrollDiv>
     );
   }

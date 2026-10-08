@@ -73,7 +73,7 @@ const Switch = ({ checked, onChange, disabled }) => (
     onClick={() => onChange(!checked)}
     className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${checked ? 'bg-[#0a4d2b]' : 'bg-gray-300'}`}
   >
-    <Span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+    <Div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ${checked ? 'left-[22px]' : 'left-0.5'}`} />
   </Button>
 );
 const ToggleManagement = () => {
@@ -171,16 +171,20 @@ const ToggleManagement = () => {
   };
   if (denied) {
     return (
-      <ScrollDiv className="p-4 pb-20 bg-white p-10 rounded-2xl border border-gray-200 text-center max-w-lg mx-auto">
-        <UiIcon as={ToggleRight} size={28} className="text-amber-500 mx-auto mb-3" />
-        <H3 className="font-bold text-gray-900">Only a platform superadmin can change these</H3>
+      <ScrollDiv className="p-4 pb-20">
+        <Div className="bg-white p-10 rounded-2xl border border-gray-200 items-center text-center">
+          <UiIcon as={ToggleRight} size={28} className="text-amber-500 mx-auto mb-3" />
+          <H3 className="font-bold text-gray-900">Only a platform superadmin can change these</H3>
+        </Div>
       </ScrollDiv>
     );
   }
   if (loading) {
     return (
-      <ScrollDiv className="p-4 pb-20 p-12 text-center text-gray-400">
-        <UiIcon as={Loader2} size={22} className="animate-spin inline" />
+      <ScrollDiv className="p-4 pb-20">
+        <Div className="p-12 items-center">
+          <UiIcon as={Loader2} size={22} className="animate-spin inline" />
+        </Div>
       </ScrollDiv>
     );
   }

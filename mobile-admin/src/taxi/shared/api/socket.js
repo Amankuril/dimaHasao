@@ -2,11 +2,11 @@
 import { io } from 'socket.io-client';
 import { BACKEND_ORIGIN } from './runtimeConfig';
 import { getSocketOrigin } from '../../../shared/utils/socketOrigin';
-
-// Socket.IO runs on its own port now, so the API origin is only the fallback.
-// The shared resolver still honours VITE_SOCKET_URL first.
 import { window } from '../../../lib/webShim';
 import { getUnifiedAdminToken } from '../../../admin/session';
+
+// Socket.IO runs on its own port now, so the API origin is only the fallback.
+// The shared resolver still honours EXPO_PUBLIC_SOCKET_URL first.
 const SOCKET_ORIGIN = getSocketOrigin() || BACKEND_ORIGIN;
 const isLocalLikeHostname = (hostname = '') => {
   const value = String(hostname || '')

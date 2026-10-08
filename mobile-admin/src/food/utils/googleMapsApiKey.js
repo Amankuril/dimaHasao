@@ -1,7 +1,8 @@
 /* Ported from Frontend/src/modules/Food/utils/googleMapsApiKey.js (tools/port.js first pass). */
 /**
  * Google Maps API Key Utility
- * Uses build-time env only (no backend calls).
+ * Uses build-time env only (no backend calls): EXPO_PUBLIC_GOOGLE_MAPS_API_KEY, the
+ * app's counterpart of the web's VITE_GOOGLE_MAPS_API_KEY.
  */
 
 let cachedApiKey = null;
@@ -22,7 +23,7 @@ export async function getGoogleMapsApiKey() {
   if (cachedApiKey) {
     return cachedApiKey;
   }
-  cachedApiKey = sanitizeApiKey(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+  cachedApiKey = sanitizeApiKey(process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY);
   return cachedApiKey;
 }
 

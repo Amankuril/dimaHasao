@@ -27,7 +27,7 @@ const getReadIds = () => getStoredIds(READ_STORAGE_KEY);
 const saveReadIds = (ids) => saveStoredIds(READ_STORAGE_KEY, ids);
 export const dispatchAdminNotificationsUpdated = () => {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new Event(UPDATE_EVENT));
+  window.dispatchEvent({ type: UPDATE_EVENT });
 };
 const toDateValue = (value) => {
   const date = value ? new Date(value) : null;
@@ -253,13 +253,13 @@ export default function useAdminNotifications(options = {}) {
     return () => window.removeEventListener(UPDATE_EVENT, handler);
   }, [loadNotifications]);
   useEffect(() => {
-    const timer = window.setInterval(
+    const timer = setInterval(
       () => {
         loadNotifications();
       },
       5 * 60 * 1000,
     );
-    return () => window.clearInterval(timer);
+    return () => clearInterval(timer);
   }, [loadNotifications]);
   const markAsRead = useCallback((id) => {
     if (!id) return;

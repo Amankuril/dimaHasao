@@ -62,8 +62,7 @@ const PRIORITY_TONE = {
   high: 'bg-amber-100 text-amber-800',
   urgent: 'bg-red-100 text-red-700',
 };
-const field =
-  'px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
+const field = 'px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
 const when = (value) =>
   value
     ? new Date(value).toLocaleString('en-IN', {
@@ -144,7 +143,7 @@ const Support = () => {
       <Div className="flex flex-wrap items-start justify-between gap-4">
         <Div>
           <H1 className="text-xl font-bold text-gray-900">Support</H1>
-          <P className="text-sm text-gray-500 mt-0.5">Every module's tickets, in one place.</P>
+          <P className="text-sm text-gray-500 mt-0.5">Every module&apos;s tickets, in one place.</P>
         </Div>
 
         {stats && (
@@ -198,7 +197,7 @@ const Support = () => {
       </Div>
 
       {loading ? (
-        <Div className="py-16 grid place-items-center">
+        <Div className="py-16 items-center">
           <UiIcon as={Loader2} className="animate-spin text-gray-400" />
         </Div>
       ) : tickets.length === 0 ? (
@@ -208,7 +207,6 @@ const Support = () => {
           {tickets.map((t) => {
             const isOpen = open === t._id;
             const statuses = STATUSES_BY_MODULE[t.module] || ['open', 'resolved', 'closed'];
-            // PORT: overflow-y-auto: this element scrolls on the web -> use <ScrollDiv> (or a FlatList for a long list)
             return (
               <Div key={t._id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                 <Div className="p-4 flex flex-wrap items-start gap-4">
@@ -287,7 +285,7 @@ const Support = () => {
 
                 {isOpen && (
                   <Div className="border-t border-gray-100 bg-gray-50/60 p-4 space-y-3">
-                    <Div className="space-y-2 max-h-72 overflow-y-auto">
+                    <ScrollDiv nestedScrollEnabled className="space-y-2 max-h-72">
                       {(t.messages || []).length === 0 ? (
                         <P className="text-xs text-gray-400">No messages on this ticket yet.</P>
                       ) : (
@@ -308,7 +306,7 @@ const Support = () => {
                           );
                         })
                       )}
-                    </Div>
+                    </ScrollDiv>
 
                     <Div className="flex items-center gap-2">
                       <Input

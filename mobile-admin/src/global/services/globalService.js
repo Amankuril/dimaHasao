@@ -101,8 +101,8 @@ const globalService = {
       .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
       .join('&');
     const url = `${API_URL}/admin/reports/export/${report}${qs ? `?${qs}` : ''}`;
-    const ok = await downloadAndShare(url, `${report}.csv`);
-    if (!ok) throw { message: 'Could not download the report', status: 0 };
+    // downloadAndShare reports its own failure with a toast.
+    await downloadAndShare(url, `${report}.csv`);
   },
 };
 export default globalService;

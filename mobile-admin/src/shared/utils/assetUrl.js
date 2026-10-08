@@ -1,5 +1,5 @@
 /* Ported from Frontend/src/shared/utils/assetUrl.js (tools/port.js first pass). */
-import { window } from '../../lib/webShim';
+import { API_URL } from '../../api/client';
 /**
  * Turning a stored upload path into something the browser can fetch.
  *
@@ -17,7 +17,8 @@ import { window } from '../../lib/webShim';
  * already in the database, without a migration having to reach every one.
  */
 
-const RAW_API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '/api/v1';
+// The web's VITE_API_BASE_URL; the app always has an absolute API URL.
+const RAW_API_BASE = API_URL;
 
 /**
  * Where the API lives, without the `/api/v1` suffix.
@@ -35,7 +36,7 @@ export const apiOrigin = (() => {
       return '';
     }
   }
-  return typeof window !== 'undefined' ? window.location.origin : '';
+  return '';
 })();
 
 /**

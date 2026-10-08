@@ -175,10 +175,14 @@ export default function AdminForgotPassword() {
     <AdminAuthShell>
       <Div className="flex items-center justify-center gap-2.5">
         <UiIcon as={KeyRound} size={15} className="text-[#caa83e]" />
-        <Span style={CINZEL} className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa83e]">Step {step} of 3</Span>
+        <Span style={CINZEL} className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa83e]">
+          Step {step} of 3
+        </Span>
       </Div>
 
-      <H2 style={MONTSERRAT} className="mt-3 text-center text-2xl font-black tracking-wide text-[#f4efe2]">{heading}</H2>
+      <H2 style={MONTSERRAT} className="mt-3 text-center text-2xl font-black tracking-wide text-[#f4efe2]">
+        {heading}
+      </H2>
       <P className="mt-1.5 break-words text-center text-[13px] text-[#9fb3a4]">{subheading}</P>
 
       {error && <P className="mt-5 rounded-xl border border-red-400/40 bg-red-500/10 px-3.5 py-2.5 text-[12px] leading-relaxed text-red-200">{error}</P>}
@@ -186,7 +190,9 @@ export default function AdminForgotPassword() {
       {step === 1 && (
         <Form onSubmit={handleEmailSubmit} className="mt-6 gap-4">
           <Div>
-            <Label className={authLabelClass} style={MONTSERRAT}>Email</Label>
+            <Label className={authLabelClass} style={MONTSERRAT}>
+              Email
+            </Label>
             <Div className={authFieldClass(false)}>
               <Div className="w-11 h-12 shrink-0 items-center justify-center">
                 <UiIcon as={Mail} size={16} className="text-[#caa83e]" />
@@ -237,29 +243,33 @@ export default function AdminForgotPassword() {
                   onKeyPress={(e) => handleOtpKeyDown(index, { key: e.nativeEvent.key })}
                   editable={!isLoading}
                   selectTextOnFocus
-                  style={{ flex: 1, height: 52, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', backgroundColor: '#02130a', textAlign: 'center', fontSize: 20, fontWeight: '700', color: '#f4efe2', paddingVertical: 0 }}
+                  style={{
+                    flex: 1,
+                    height: 52,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: 'rgba(202,168,62,0.35)',
+                    backgroundColor: '#02130a',
+                    textAlign: 'center',
+                    fontSize: 20,
+                    fontWeight: '700',
+                    color: '#f4efe2',
+                    paddingVertical: 0,
+                  }}
                 />
               ))}
             </Div>
           </Div>
 
           <Div className="flex items-center justify-between text-[12px]">
-            <Button
-              type="button"
-              onClick={() => setStep(1)}
-              disabled={isLoading}
-              className="flex flex-row items-center gap-1.5"
-            >
+            <Button type="button" onClick={() => setStep(1)} disabled={isLoading} className="flex flex-row items-center gap-1.5">
               <UiIcon as={ArrowLeft} size={13} className="text-[#9fb3a4]" />
               <Span className="text-[12px] font-semibold text-[#9fb3a4]">Change email</Span>
             </Button>
-            <Button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={resendTimer > 0 || isLoading}
-              className="items-center"
-            >
-              <Span className={`text-[12px] font-semibold ${resendTimer > 0 || isLoading ? 'text-[#5d7264]' : 'text-[#caa83e]'}`}>{resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend code'}</Span>
+            <Button type="button" onClick={handleResendOtp} disabled={resendTimer > 0 || isLoading} className="items-center">
+              <Span className={`text-[12px] font-semibold ${resendTimer > 0 || isLoading ? 'text-[#5d7264]' : 'text-[#caa83e]'}`}>
+                {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend code'}
+              </Span>
             </Button>
           </Div>
 
@@ -298,7 +308,9 @@ export default function AdminForgotPassword() {
             },
           ].map((field) => (
             <Div key={field.id}>
-              <Label className={authLabelClass} style={MONTSERRAT}>{field.label}</Label>
+              <Label className={authLabelClass} style={MONTSERRAT}>
+                {field.label}
+              </Label>
               <Div className={authFieldClass(false)}>
                 <Div className="w-11 h-12 shrink-0 items-center justify-center">
                   <UiIcon as={Shield} size={16} className="text-[#caa83e]" />
@@ -338,11 +350,7 @@ export default function AdminForgotPassword() {
         </Form>
       )}
 
-      <Button
-        type="button"
-        onClick={() => navigate('/admin/login')}
-        className="mt-7 flex w-full flex-row items-center justify-center gap-1.5"
-      >
+      <Button type="button" onClick={() => navigate('/admin/login')} className="mt-7 flex w-full flex-row items-center justify-center gap-1.5">
         <UiIcon as={ArrowLeft} size={13} className="text-[#9fb3a4]" />
         <Span className="text-[12px] font-semibold text-[#9fb3a4]">Back to sign in</Span>
       </Button>

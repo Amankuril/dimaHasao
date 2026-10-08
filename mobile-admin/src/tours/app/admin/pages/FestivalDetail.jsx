@@ -240,9 +240,7 @@ const FestivalDetail = ({ festivalId, onBack }) => {
                   <Td className="px-4 py-3 text-right text-gray-700">{c.bookedSeats}</Td>
                   <Td className="px-4 py-3 text-right font-semibold text-emerald-700">{c.paidSeats}</Td>
                   <Td className="px-4 py-3 text-right text-amber-700">{c.heldSeats || '—'}</Td>
-                  <Td className={`px-4 py-3 text-right font-bold ${soldOut ? 'text-red-600' : 'text-gray-900'}`}>
-                    {soldOut ? 'Sold out' : c.availableSeats}
-                  </Td>
+                  <Td className={`px-4 py-3 text-right font-bold ${soldOut ? 'text-red-600' : 'text-gray-900'}`}>{soldOut ? 'Sold out' : c.availableSeats}</Td>
                   <Td className="px-4 py-3 text-right text-gray-700">{currency(c.revenue)}</Td>
                 </Tr>
               );

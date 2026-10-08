@@ -4,7 +4,7 @@ import { CircleAlert, CircleCheck, Loader2, Percent, Save } from 'lucide-react-n
 import adminService from '../../../services/adminService';
 import { PageHeader, Spinner } from '../components/ui';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, Form, H3, Input, Label, P, Section, Span, Strong, Textarea, Icon as UiIcon, ScrollDiv } from '../../../../components/web';
+import { Button, Div, Form, H3, Input, Label, P, Section, Strong, Textarea, Icon as UiIcon, ScrollDiv } from '../../../../components/web';
 const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
 const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
 const Settings = () => {

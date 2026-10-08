@@ -380,11 +380,6 @@ export default function JoiningRequest() {
     if (typeof image === 'string') return image;
     return image?.url || '';
   };
-  // PORT: overflow-x-auto: this row scrolls sideways on the web -> use <HScroll> (tables: <Table cols>)
-  // PORT: <Table>: set cols={[...]} widths (px) for each column; the table scrolls sideways like the web's overflow-x-auto
-  // PORT: fixed inset-0 modal -> <Overlay> (a Modal). Give it onClose for the back button; a tall panel inside should be a ScrollDiv with max-h-[90vh]
-  // PORT: overflow-y-auto: this element scrolls on the web -> use <ScrollDiv> (or a FlatList for a long list)
-  // PORT: `sticky`: no sticky positioning; move the element outside the scroll view if it must stay visible
   return (
     <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
       <Div className="max-w-7xl mx-auto">
@@ -427,8 +422,7 @@ export default function JoiningRequest() {
           </Div>
 
           {/* Table */}
-          <Div className="overflow-x-auto">
-            <Table className="w-full">
+          <Table cols={[70, 240, 180, 140, 130, 132]} className="w-full">
               <Thead className="bg-slate-50 border-b border-slate-200">
                 <Tr>
                   <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
@@ -516,9 +510,7 @@ export default function JoiningRequest() {
                                 }
                                 alt={request.restaurantName || 'Restaurant'}
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.src = 'https://via.placeholder.com/40?text=' + (request.restaurantName?.slice(0, 2) || 'R').toUpperCase();
-                                }}
+                                fallback={'https://via.placeholder.com/40?text=' + (request.restaurantName?.slice(0, 2) || 'R').toUpperCase()}
                               />
                             </Div>
                             <Span
@@ -585,8 +577,7 @@ export default function JoiningRequest() {
                   })
                 )}
               </Tbody>
-            </Table>
-          </Div>
+          </Table>
 
           <AdminListPagination
             currentPage={currentPage}
@@ -608,8 +599,9 @@ export default function JoiningRequest() {
       {/* Filter Dialog */}
       {showFilterDialog && (
         <Overlay
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4"
           onClick={() => setShowFilterDialog(false)}
+          onClose={() => setShowFilterDialog(false)}
         >
           <Div className="bg-white rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <Div className="p-6">
@@ -724,7 +716,7 @@ export default function JoiningRequest() {
             <DialogTitle>Approve Request</DialogTitle>
           </DialogHeader>
           <Div className="px-6 pb-6">
-            <P className="text-sm text-slate-700">Are you sure you want to approve "{selectedRequest?.restaurantName}"'s join request?</P>
+            <P className="text-sm text-slate-700">{`Are you sure you want to approve "${selectedRequest?.restaurantName ?? ''}"'s join request?`}</P>
           </Div>
           <DialogFooter className="px-6 pb-6">
             <Button
@@ -749,8 +741,11 @@ export default function JoiningRequest() {
       {/* Reject Confirmation Dialog */}
       {showRejectDialog && selectedRequest && (
         <Overlay
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4"
           onClick={() => {
+            if (!processing) setShowRejectDialog(false);
+          }}
+          onClose={() => {
             if (!processing) setShowRejectDialog(false);
           }}
         >
@@ -815,15 +810,15 @@ export default function JoiningRequest() {
 
       {/* Restaurant Details Side Panel */}
       {showDetailsModal && selectedRequest && (
-        <Overlay className="fixed inset-0 z-[60] flex justify-end">
-          <Overlay className="fixed inset-0 bg-slate-900/10 backdrop-blur-sm transition-opacity" onClick={closeDetailsModal} />
+        <Overlay className="fixed inset-0 z-[60] flex justify-end" onClose={closeDetailsModal}>
+          <Div className="absolute inset-0 bg-slate-900/10" onClick={closeDetailsModal} />
 
           <Div
-            className="relative w-full max-w-4xl bg-white h-full shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300"
+            className="relative w-full max-w-4xl bg-white h-full shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Panel Header */}
-            <Div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-5 flex items-center justify-between z-10">
+            <Div className="bg-white border-b border-slate-100 px-6 py-5 flex items-center justify-between z-10">
               <Div className="flex items-center gap-3">
                 <Div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
                   <UiIcon as={UtensilsCrossed} className="w-5 h-5 text-blue-600" />
@@ -839,7 +834,7 @@ export default function JoiningRequest() {
             </Div>
 
             {/* Modal Content */}
-            <Div className="p-6">
+            <ScrollDiv className="flex-1" contentClassName="p-6">
               {loadingDetails && (
                 <Div className="flex items-center justify-center py-20">
                   <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600" />
@@ -868,9 +863,7 @@ export default function JoiningRequest() {
                             src={profileImgUrl || 'https://via.placeholder.com/96'}
                             alt={r?.restaurantName || r?.name || 'Restaurant'}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.src = 'https://via.placeholder.com/96';
-                            }}
+                            fallback="https://via.placeholder.com/96"
                           />
                         </Div>
                         <Div className="flex-1">
@@ -1027,9 +1020,7 @@ export default function JoiningRequest() {
                                     src={imgUrl}
                                     alt={`Restaurant ${idx + 1}`}
                                     className="w-full h-32 object-cover"
-                                    onError={(e) => {
-                                      e.target.src = 'https://via.placeholder.com/200';
-                                    }}
+                                    fallback="https://via.placeholder.com/200"
                                   />
                                 </A>
                               ) : null;
@@ -1227,9 +1218,7 @@ export default function JoiningRequest() {
                                     src={imgUrl}
                                     alt={`Menu ${idx + 1}`}
                                     className="w-full h-32 object-cover"
-                                    onError={(e) => {
-                                      e.target.src = 'https://via.placeholder.com/200';
-                                    }}
+                                    fallback="https://via.placeholder.com/200"
                                   />
                                 </A>
                               ) : null;
@@ -1319,7 +1308,7 @@ export default function JoiningRequest() {
                   <P className="text-sm text-slate-500">Unable to load restaurant details</P>
                 </Div>
               )}
-            </Div>
+            </ScrollDiv>
           </Div>
         </Overlay>
       )}

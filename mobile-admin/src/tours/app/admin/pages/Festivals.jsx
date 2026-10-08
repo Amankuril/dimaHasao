@@ -35,8 +35,7 @@ const STEPS = [
     icon: Sparkles,
   },
 ];
-const field =
-  'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
+const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
 const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
 const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const toLines = (v) =>
@@ -431,7 +430,12 @@ const Festivals = () => {
               {categories.map((cat, index) => (
                 <Div key={index} className="p-4 bg-gray-50 rounded-xl space-y-3">
                   <Div className="flex items-center gap-2">
-                    <Input className={field} value={cat.name} placeholder="e.g. 3-Day Season Pass" onChange={(e) => setCategory(index, 'name', e.target.value)} />
+                    <Input
+                      className={`${field} flex-1`}
+                      value={cat.name}
+                      placeholder="e.g. 3-Day Season Pass"
+                      onChange={(e) => setCategory(index, 'name', e.target.value)}
+                    />
                     <Button
                       type="button"
                       onClick={() => setCategories((c) => c.filter((_, i) => i !== index))}
@@ -604,7 +608,7 @@ const Festivals = () => {
           <UiIcon as={QrCode} size={16} className="text-[#0a4d2b]" /> Gate check-in
         </H3>
         <Div className="flex gap-2">
-          <Input className={field} value={scan} onChange={(e) => setScan(e.target.value)} placeholder="Scan or type a pass code, e.g. DH-PASS-…" />
+          <Input className={`${field} flex-1`} value={scan} onChange={(e) => setScan(e.target.value)} placeholder="Scan or type a pass code, e.g. DH-PASS-…" />
           <Button
             type="submit"
             disabled={scanning || !scan.trim()}
@@ -618,8 +622,8 @@ const Festivals = () => {
             className={`flex items-start gap-2 p-3 rounded-xl text-sm ${scanResult.valid ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}
           >
             <Span className="font-bold">{scanResult.valid ? 'Accepted' : 'Refused'}</Span>
-            <Span>— {scanResult.message}</Span>
-            <Button type="button" onClick={() => setScanResult(null)} className="ml-auto text-gray-400">
+            <Span className="flex-1">— {scanResult.message}</Span>
+            <Button type="button" onClick={() => setScanResult(null)} className="text-gray-400">
               <UiIcon as={X} size={14} />
             </Button>
           </Div>

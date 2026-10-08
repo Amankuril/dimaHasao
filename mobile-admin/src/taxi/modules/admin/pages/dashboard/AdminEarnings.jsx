@@ -1,5 +1,5 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/dashboard/AdminEarnings.jsx (tools/port.js first pass). */
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   BarChart3,
   CalendarDays,
@@ -19,14 +19,12 @@ import {
   X,
   Clock,
   AlertTriangle,
-  ArrowRight,
   CheckCircle,
-  HelpCircle,
   SlidersHorizontal,
 } from 'lucide-react-native';
-import { motion, AnimatePresence } from '../../../../../lib/motion';
-// PORT: needs modules/Taxi/modules/admin/services/adminService.js ported (node tools/port.js modules/Taxi/modules/admin/services/adminService.js)
+import { motion } from '../../../../../lib/motion';
 import { adminService } from '../../services/adminService';
+import { saveTextFile } from '../../../../../lib/files';
 import {
   Button,
   Div,
@@ -49,7 +47,7 @@ import {
   Icon as UiIcon,
 } from '../../../../../components/web';
 import { Circle, Line, Path, Svg } from 'react-native-svg';
-import { document, window } from '../../../../../lib/webShim';
+import { window } from '../../../../../lib/webShim';
 const RIDER_TYPES = [
   {
     value: '',
@@ -128,42 +126,26 @@ const unwrapResults = (payload, key = 'results') => {
 };
 const getOptionLabel = (item) => item?.name || item?.type_name || item?.service_location_name || item?.title || 'Option';
 const getOptionValue = (item) => String(item?._id || item?.id || getOptionLabel(item));
-const DatePickerField = ({ label, value, onChange }) => {
-  const inputRef = React.useRef(null);
-  const openPicker = () => {
-    if (typeof inputRef.current?.showPicker === 'function') {
-      inputRef.current.showPicker();
-      return;
-    }
-    inputRef.current?.focus();
-    inputRef.current?.click();
-  };
-  // PORT: ref on a host element: check what the web did with it (scrollIntoView, focus, measure, DOM reads)
-  return (
-    <Label className="space-y-1 block">
-      <Span className="flex items-center gap-1 text-[10px] font-semibold text-[#64748B] uppercase tracking-wider">
-        <UiIcon as={CalendarDays} size={12} className="text-[#64748B]" /> {label}
-      </Span>
-      <Div className="relative">
-        <Button
-          type="button"
-          onClick={openPicker}
-          className="flex h-10 w-full items-center justify-between rounded-lg border border-[#E5E7EB] bg-white px-3 text-xs font-semibold text-slate-700 outline-none transition focus:border-[#FFC400]"
-        >
-          <Span>{formatFilterDate(value)}</Span>
-          <UiIcon as={ChevronDown} size={14} className="text-slate-400" />
-        </Button>
-        <Input
-          ref={inputRef}
-          type="date"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="pointer-events-none absolute inset-0 opacity-0"
-        />
+/*
+ * The web paints its own field and keeps a transparent <input type="date"> on
+ * top of it, opening the native picker through showPicker()/click(). The kit's
+ * Input type="date" IS the native picker, so the transparent layer stays and
+ * becomes the tap target; the field below keeps the web's formatted label.
+ */
+const DatePickerField = ({ label, value, onChange }) => (
+  <Label className="space-y-1 block">
+    <Span className="flex items-center gap-1 text-[10px] font-semibold text-[#64748B] uppercase tracking-wider">
+      <UiIcon as={CalendarDays} size={12} className="text-[#64748B]" /> {label}
+    </Span>
+    <Div className="relative">
+      <Div className="flex h-10 w-full items-center justify-between rounded-lg border border-[#E5E7EB] bg-white px-3 text-xs font-semibold text-slate-700">
+        <Span>{formatFilterDate(value)}</Span>
+        <UiIcon as={ChevronDown} size={14} className="text-slate-400" />
       </Div>
-    </Label>
-  );
-};
+      <Input type="date" value={value} onChange={(event) => onChange(event.target.value)} className="absolute inset-0 opacity-0" />
+    </Div>
+  </Label>
+);
 const AdminEarnings = () => {
   const [filters, setFilters] = useState(emptyFilters);
   const [pendingFilters, setPendingFilters] = useState(emptyFilters);
@@ -173,6 +155,9 @@ const AdminEarnings = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // The web's <svg className="w-full" viewBox="0 0 500 120"> scales to its box;
+  // react-native-svg needs the pixel width, so measure the wrapper.
+  const [trendBoxWidth, setTrendBoxWidth] = useState(0);
 
   // Drawer state
   const [selectedTx, setSelectedTx] = useState(null);
@@ -308,16 +293,7 @@ const AdminEarnings = () => {
           `"${row.requestId || ''}","${formatDate(row.completedAt)}","${row.userName || ''}","${row.driverName || ''}","${row.zoneName || ''}","${row.vehicleName || ''}","${row.riderType || ''}","${row.paymentMethod || ''}",${row.grossFare || 0},${row.adminCommission || 0},${(row.grossFare || 0) - (row.adminCommission || 0)}`,
       )
       .join('\n');
-    // PORT: new Blob: browser API; see the porting guide
-    const blob = new Blob([headers + rows], {
-      type: 'text/csv',
-    });
-    const url = window.URL.createObjectURL(blob);
-    // PORT: document.createElement: DOM access has no React Native equivalent; use refs/state
-    const a = document.createElement('a');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `Finance_Report_AdminEarnings_${new Date().toISOString().split('T')[0]}.csv`);
-    a.click();
+    saveTextFile(`Finance_Report_AdminEarnings_${new Date().toISOString().split('T')[0]}.csv`, headers + rows, 'text/csv');
   };
 
   // Performance calculations
@@ -401,10 +377,6 @@ const AdminEarnings = () => {
       },
     ];
   }, [data.results]);
-  // PORT: className on an svg element: give it width/height/style instead
-  // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
-  // PORT: overflow-x-auto: this row scrolls sideways on the web -> use <HScroll> (tables: <Table cols>)
-  // PORT: <Table>: set cols={[...]} widths (px) for each column; the table scrolls sideways like the web's overflow-x-auto
   return (
     <ScrollDiv className="min-h-screen bg-[#F6F8FC] p-6 lg:p-8 font-sans redigo-admin-root animate-in fade-in duration-300">
       {/* 1. HEADER SECTION */}
@@ -623,17 +595,19 @@ const AdminEarnings = () => {
           {revenueVsCommissionPoints.length === 0 ? (
             <Div className="h-[140px] flex flex-col items-center justify-center text-xs text-slate-400">No historical data available</Div>
           ) : (
-            <Div className="py-2.5">
-              <Svg viewBox="0 0 500 120" className="w-full overflow-visible">
-                {/* Gridlines */}
-                {[0, 1, 2].map((g) => (
-                  <Line key={g} x1="0" y1={40 * g + 10} x2="500" y2={40 * g + 10} stroke="#F1F5F9" strokeWidth="1" />
-                ))}
-                {/* Revenue Path */}
-                <Path d={revenueLinePath} fill="none" stroke="#3B82F6" strokeWidth="2.5" />
-                {/* Commission Path */}
-                <Path d={commissionLinePath} fill="none" stroke="#FFC400" strokeWidth="2.5" />
-              </Svg>
+            <Div className="py-2.5" onLayout={(event) => setTrendBoxWidth(event.nativeEvent.layout.width)}>
+              {trendBoxWidth > 0 && (
+                <Svg width={trendBoxWidth} height={(trendBoxWidth * 120) / 500} viewBox="0 0 500 120">
+                  {/* Gridlines */}
+                  {[0, 1, 2].map((g) => (
+                    <Line key={g} x1="0" y1={40 * g + 10} x2="500" y2={40 * g + 10} stroke="#F1F5F9" strokeWidth="1" />
+                  ))}
+                  {/* Revenue Path */}
+                  <Path d={revenueLinePath} fill="none" stroke="#3B82F6" strokeWidth="2.5" />
+                  {/* Commission Path */}
+                  <Path d={commissionLinePath} fill="none" stroke="#FFC400" strokeWidth="2.5" />
+                </Svg>
+              )}
               <Div className="flex justify-between text-[9px] text-slate-400 mt-2">
                 <Span>Earliest Transaction</Span>
                 <Span>Latest Transaction</Span>
@@ -657,7 +631,7 @@ const AdminEarnings = () => {
             <P className="text-[10px] text-[#64748B] mt-0.5">Segment splits by volume.</P>
           </Div>
           <Div className="flex items-center justify-center gap-6 py-2.5">
-            <Svg width="90" height="90" viewBox="0 0 100 100" className="transform -rotate-90">
+            <Svg width={90} height={90} viewBox="0 0 100 100" style={{ transform: [{ rotate: '-90deg' }] }}>
               <Circle
                 cx="50"
                 cy="50"
@@ -705,19 +679,14 @@ const AdminEarnings = () => {
           <Div className="py-2.5 flex items-end justify-between h-[100px] px-2">
             {data.results.slice(0, 10).map((r, i) => {
               const heightPercent = maxCommission > 0 ? Math.max(10, Math.min(100, (Number(r.adminCommission || 0) / maxCommission) * 100)) : 10;
-              // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
               return (
                 <Div
                   key={i}
-                  className="w-5 bg-amber-100 hover:bg-[#FFC400] transition-colors rounded-sm group relative"
+                  className="w-5 bg-amber-100 rounded-sm"
                   style={{
                     height: `${heightPercent}%`,
                   }}
-                >
-                  <Div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-slate-900 !text-white rounded p-1.5 text-[8px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none mb-1 z-10 whitespace-nowrap">
-                    ₹{r.adminCommission}
-                  </Div>
-                </Div>
+                />
               );
             })}
           </Div>
@@ -820,8 +789,10 @@ const AdminEarnings = () => {
           </Div>
         </Div>
 
-        <Div className="overflow-x-auto">
-          <Table className="w-full min-w-[1250px] text-left font-sans">
+        <Table
+          cols={[120, 150, 170, 170, 140, 140, 110, 110, 120, 120, 130, 110, 110, 110]}
+          className="w-full text-left font-sans"
+        >
             <Thead>
               <Tr className="bg-slate-50 text-[12px] font-bold text-[#64748B] border-b border-[#E5E7EB]">
                 <Th className="px-5 py-3">Request ID</Th>
@@ -1023,8 +994,7 @@ const AdminEarnings = () => {
                 </Tr>
               )}
             </Tbody>
-          </Table>
-        </Div>
+        </Table>
 
         <Div className="flex flex-col justify-between gap-3 border-t border-slate-100 p-4 md:flex-row md:items-center">
           <P className="text-xs font-semibold text-slate-500">
@@ -1071,7 +1041,6 @@ const BreakdownPanel = ({ title, icon: Icon, rows, emptyText }) => {
         <Div className="space-y-4">
           {rows.slice(0, 5).map((row) => {
             const percent = max ? Math.max(6, (Number(row.adminCommission || 0) / max) * 100) : 0;
-            // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
             return (
               <Div key={row.label}>
                 <Div className="mb-2 flex items-center justify-between gap-3 text-xs">

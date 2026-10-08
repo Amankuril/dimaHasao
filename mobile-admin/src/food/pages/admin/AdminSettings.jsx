@@ -1,16 +1,12 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/AdminSettings.jsx (tools/port.js first pass). */
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../../../api/food';
-import { Button } from '../../../components/shadcn';
-import { Input } from '../../../components/shadcn';
-import { Label } from '../../../components/shadcn';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/shadcn';
+import { ActivityIndicator } from 'react-native';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '../../../components/shadcn';
 import { toast } from '../../../lib/notify';
-import { Lock, Eye, EyeOff, Save, Loader2, Shield, User, Mail, Truck } from 'lucide-react-native';
-import { Button, Div, Form, H1, P, ScrollDiv, Span, Icon as UiIcon } from '../../../components/web';
-const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
-const debugError = (...args) => {};
+import { Lock, Eye, EyeOff, Save, Shield, User, Mail, Truck } from 'lucide-react-native';
+import { Button as HtmlButton, Div, Form, H1, P, ScrollDiv, Span, Icon as UiIcon } from '../../../components/web';
+const debugError = () => {};
 export default function AdminSettings() {
   const [adminInfo, setAdminInfo] = useState(null);
   const [passwordForm, setPasswordForm] = useState({
@@ -129,7 +125,7 @@ export default function AdminSettings() {
     }
   };
   return (
-    <ScrollDiv className="p-6 space-y-6">
+    <ScrollDiv className="flex-1 p-6 space-y-6">
       <Div>
         <H1 className="text-3xl font-bold text-neutral-900">Settings</H1>
         <P className="text-neutral-600 mt-1">Manage your account settings and preferences</P>
@@ -194,14 +190,14 @@ export default function AdminSettings() {
                   disabled={saving}
                   required
                 />
-                <Button
+                <HtmlButton
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-800 transition-colors"
+                  className="absolute right-3 top-0 bottom-0 justify-center"
                   disabled={saving}
                 >
-                  {showCurrentPassword ? <UiIcon as={EyeOff} className="w-5 h-5" /> : <UiIcon as={Eye} className="w-5 h-5" />}
-                </Button>
+                  <UiIcon as={showCurrentPassword ? EyeOff : Eye} className="w-5 h-5 text-neutral-500" />
+                </HtmlButton>
               </Div>
               {errors.currentPassword && <P className="text-sm text-red-600">{errors.currentPassword}</P>}
             </Div>
@@ -222,14 +218,14 @@ export default function AdminSettings() {
                   disabled={saving}
                   required
                 />
-                <Button
+                <HtmlButton
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-800 transition-colors"
+                  className="absolute right-3 top-0 bottom-0 justify-center"
                   disabled={saving}
                 >
-                  {showNewPassword ? <UiIcon as={EyeOff} className="w-5 h-5" /> : <UiIcon as={Eye} className="w-5 h-5" />}
-                </Button>
+                  <UiIcon as={showNewPassword ? EyeOff : Eye} className="w-5 h-5 text-neutral-500" />
+                </HtmlButton>
               </Div>
               {errors.newPassword && <P className="text-sm text-red-600">{errors.newPassword}</P>}
               <P className="text-xs text-neutral-500">Password must be at least 6 characters long</P>
@@ -251,23 +247,23 @@ export default function AdminSettings() {
                   disabled={saving}
                   required
                 />
-                <Button
+                <HtmlButton
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-800 transition-colors"
+                  className="absolute right-3 top-0 bottom-0 justify-center"
                   disabled={saving}
                 >
-                  {showConfirmPassword ? <UiIcon as={EyeOff} className="w-5 h-5" /> : <UiIcon as={Eye} className="w-5 h-5" />}
-                </Button>
+                  <UiIcon as={showConfirmPassword ? EyeOff : Eye} className="w-5 h-5 text-neutral-500" />
+                </HtmlButton>
               </Div>
               {errors.confirmPassword && <P className="text-sm text-red-600">{errors.confirmPassword}</P>}
             </Div>
 
             <Div className="flex justify-end pt-4 border-t border-neutral-200">
-              <Button type="submit" disabled={saving} className="bg-black text-white hover:bg-neutral-900 h-11 px-8">
+              <Button onClick={() => handlePasswordSubmit({ preventDefault() {} })} disabled={saving} className="bg-black text-white h-11 px-8">
                 {saving ? (
                   <>
-                    <UiIcon as={Loader2} className="w-4 h-4 mr-2 animate-spin" />
+                    <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
                     Changing Password...
                   </>
                 ) : (

@@ -144,13 +144,31 @@ const fetchBlob = async (url, config = {}) => {
   return res.blob();
 };
 
+// The web sends no token on the public rider/driver routes (bootstrap, OTP,
+// onboarding); `auth: false` keeps that.
+const isPublicRoute = (url = '') => {
+  const requestPath = String(url || '').split('?')[0];
+  return (
+    /^\/users\/(bootstrap|app-modules|settings|vehicle-types|register|signup|login|profile-image|auth\/send-otp|auth\/verify-otp|otp-login)(\/|$)/.test(requestPath) ||
+    /^\/drivers\/(register|login|auth\/send-otp|auth\/verify-otp|onboarding\/send-otp|onboarding\/verify-otp|onboarding\/personal|onboarding\/referral|onboarding\/vehicle|onboarding\/documents|onboarding\/complete|onboarding\/session\/|service-locations)(\/|$)/.test(
+      requestPath,
+    )
+  );
+};
+const withAuth = (url, config = {}) => {
+  const hasOwnAuth = config?.headers?.Authorization || config?.headers?.authorization;
+  return !hasOwnAuth && isPublicRoute(url) ? { ...config, auth: false } : config;
+};
+
 const api = {
   get: (url, config = {}) =>
-    config?.responseType === 'blob' || config?.responseType === 'arraybuffer' ? fetchBlob(url, config) : client.get(url, config).then(toResponse, toError),
-  post: (url, data, config = {}) => client.post(url, data, config).then(toResponse, toError),
-  put: (url, data, config = {}) => client.put(url, data, config).then(toResponse, toError),
-  patch: (url, data, config = {}) => client.patch(url, data, config).then(toResponse, toError),
-  delete: (url, config = {}) => client.delete(url, config).then(toResponse, toError),
+    config?.responseType === 'blob' || config?.responseType === 'arraybuffer'
+      ? fetchBlob(url, config)
+      : client.get(url, withAuth(url, config)).then(toResponse, toError),
+  post: (url, data, config = {}) => client.post(url, data, withAuth(url, config)).then(toResponse, toError),
+  put: (url, data, config = {}) => client.put(url, data, withAuth(url, config)).then(toResponse, toError),
+  patch: (url, data, config = {}) => client.patch(url, data, withAuth(url, config)).then(toResponse, toError),
+  delete: (url, config = {}) => client.delete(url, withAuth(url, config)).then(toResponse, toError),
 };
 const rawGet = api.get;
 api.get = (url, config = {}) => {

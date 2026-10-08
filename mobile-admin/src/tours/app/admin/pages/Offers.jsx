@@ -12,8 +12,7 @@ import { toast } from '../../../../lib/notify';
 import adminService from '../../../services/adminService';
 import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator } from '../components/ui';
 import { Button, Div, Form, H3, Input, Label, Option, P, ScrollDiv, Section, Select, Span, Strong, Icon as UiIcon } from '../../../../components/web';
-const field =
-  'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
+const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
 const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
 const STEPS = [
   {
@@ -277,7 +276,14 @@ const Offers = () => {
                 {form.discountType === 'percentage' && (
                   <Div>
                     <Label className={label}>Cap the discount at (₹)</Label>
-                    <Input className={field} type="number" min="0" value={form.maxDiscount} onChange={set('maxDiscount')} placeholder="Leave blank for no cap" />
+                    <Input
+                      className={field}
+                      type="number"
+                      min="0"
+                      value={form.maxDiscount}
+                      onChange={set('maxDiscount')}
+                      placeholder="Leave blank for no cap"
+                    />
                   </Div>
                 )}
                 <Div>
@@ -350,7 +356,11 @@ const Offers = () => {
                       <P className="text-xs text-gray-400 p-3">No approved packages.</P>
                     ) : (
                       packages.map((p) => (
-                        <Div key={p._id} onClick={() => toggleScope('packageIds', String(p._id))} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700">
+                        <Div
+                          key={p._id}
+                          onClick={() => toggleScope('packageIds', String(p._id))}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700"
+                        >
                           <Input type="checkbox" checked={form.packageIds.includes(String(p._id))} onChange={() => toggleScope('packageIds', String(p._id))} />
                           <Span className="truncate flex-1">{p.title}</Span>
                         </Div>

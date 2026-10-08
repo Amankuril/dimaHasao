@@ -1,71 +1,30 @@
-/* Ported from Frontend/src/modules/Food/pages/admin/restaurant/AllZonesMap.jsx (tools/port.js first pass). */
-import { useState, useEffect, useRef } from 'react';
+/* Ported from Frontend/src/modules/Food/pages/admin/restaurant/AllZonesMap.jsx . */
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from '../../../../lib/webRouter';
 import { MapPin, ArrowLeft, Search } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import { getGoogleMapsApiKey } from '../../../utils/googleMapsApiKey';
-// PORT: @googlemaps/js-api-loader: rebuild with react-native-maps (MapView PROVIDER_GOOGLE, Marker, Polygon, Polyline, Circle)
-import { Loader } from '@googlemaps/js-api-loader';
-import { Button, Div, H1, H3, Input, P, ScrollDiv, Span, Strong, Icon as UiIcon } from '../../../../components/web';
-import { window } from '../../../../lib/webShim';
-const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
+import { GMap, Polygon } from '../../../../components/maps';
+import { Button, Div, H1, H3, P, ScrollDiv, Span, Strong, Icon as UiIcon } from '../../../../components/web';
+import PlacesSearchInput from './PlacesSearchInput';
+import { DotMarker, INDIA_REGION, InfoCard, MapTypeToggle, ZONE_COLORS, regionAtZoom, useMapTouchLock, withAlpha, zonePath } from './zoneMapParts';
 const debugError = (...args) => {};
 export default function AllZonesMap() {
   const navigate = useNavigate();
-  const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const zonesPolygonsRef = useRef([]);
-  const infoWindowsRef = useRef([]);
-  const restaurantMarkersRef = useRef([]);
   const [googleMapsApiKey, setGoogleMapsApiKey] = useState('');
   const [mapLoading, setMapLoading] = useState(true);
+  const [mapType, setMapType] = useState('standard');
   const [zones, setZones] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [locationSearch, setLocationSearch] = useState('');
-  const autocompleteInputRef = useRef(null);
-  const autocompleteRef = useRef(null);
+  const [info, setInfo] = useState(null); // { kind: 'zone' | 'restaurant', item }
+  const [scrollEnabled, touchLock] = useMapTouchLock();
   useEffect(() => {
     fetchZones();
     fetchRestaurants();
     loadGoogleMaps();
   }, []);
-
-  // Initialize Places Autocomplete when map is loaded
-  useEffect(() => {
-    if (!mapLoading && mapInstanceRef.current && autocompleteInputRef.current && window.google?.maps?.places && !autocompleteRef.current) {
-      const autocomplete = new window.google.maps.places.Autocomplete(autocompleteInputRef.current, {
-        componentRestrictions: {
-          country: 'in',
-        }, // Restrict to India
-      });
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry && place.geometry.location && mapInstanceRef.current) {
-          const location = place.geometry.location;
-          mapInstanceRef.current.setCenter(location);
-          mapInstanceRef.current.setZoom(12); // Zoom in when location is selected
-
-          // Set the search input value
-          setLocationSearch(place.formatted_address || place.name || '');
-        }
-      });
-      autocompleteRef.current = autocomplete;
-    }
-  }, [mapLoading]);
-
-  // Draw zones and restaurant markers when map and data are ready
-  useEffect(() => {
-    if (!mapLoading && mapInstanceRef.current && window.google) {
-      if (zones.length > 0 && restaurants.length > 0) {
-        drawAllZonesOnMap(window.google, mapInstanceRef.current);
-      }
-      if (restaurants.length > 0) {
-        drawRestaurantMarkers(window.google, mapInstanceRef.current);
-      }
-    }
-  }, [zones, mapLoading, restaurants]);
   const fetchZones = async () => {
     try {
       setLoading(true);
@@ -102,302 +61,67 @@ export default function AllZonesMap() {
     try {
       const apiKey = await getGoogleMapsApiKey();
       setGoogleMapsApiKey(apiKey || 'loaded');
-
-      // Wait for Google Maps to be loaded from main.jsx if it's loading
-      let retries = 0;
-      const maxRetries = 50; // Wait up to 5 seconds (50 * 100ms)
-
-      while (!window.google && retries < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        retries++;
-      }
-
-      // If Google Maps is already loaded (from main.jsx), use it directly
-      if (window.google && window.google.maps) {
-        initializeMap(window.google);
-        return;
-      }
-
-      // If Google Maps is not loaded yet and we have an API key, use Loader as fallback
-      if (apiKey) {
-        const loader = new Loader({
-          apiKey: apiKey,
-          version: 'weekly',
-          libraries: ['places', 'drawing', 'geometry'],
-        });
-        const google = await loader.load();
-        initializeMap(google);
-      } else {
-        setMapLoading(false);
-      }
     } catch (error) {
       debugError('Error loading Google Maps:', error);
       setMapLoading(false);
     }
   };
-  const initializeMap = (google) => {
-    if (!mapRef.current) return;
 
-    // Initial location (India center)
-    const initialLocation = {
-      lat: 20.5937,
-      lng: 78.9629,
-    };
+  // As on the web, zones are drawn once both zones and restaurants have loaded.
+  const zonePolygons = useMemo(() => {
+    if (zones.length === 0 || restaurants.length === 0) return [];
+    return zones
+      .map((zone, index) => {
+        if (!zone.coordinates || zone.coordinates.length < 3) return null;
+        const path = zonePath(zone.coordinates);
+        if (path.length < 3) return null;
+        return { zone, path, color: ZONE_COLORS[index % ZONE_COLORS.length] };
+      })
+      .filter(Boolean);
+  }, [zones, restaurants]);
 
-    // Create map
-    const map = new google.maps.Map(mapRef.current, {
-      center: initialLocation,
-      zoom: 5,
-      mapTypeControl: true,
-      mapTypeControlOptions: {
-        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-        position: google.maps.ControlPosition.TOP_RIGHT,
-        mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE],
-      },
-      zoomControl: true,
-      streetViewControl: false,
-      fullscreenControl: true,
-      scrollwheel: true,
-      gestureHandling: 'greedy',
-      disableDoubleClickZoom: false,
-    });
-    mapInstanceRef.current = map;
-    setMapLoading(false);
-  };
-
-  // Draw all zones on the map
-  const drawAllZonesOnMap = (google, map) => {
-    if (!zones || zones.length === 0) {
-      // Clear zones if no zones exist
-      zonesPolygonsRef.current.forEach((polygon) => {
-        if (polygon) polygon.setMap(null);
-      });
-      zonesPolygonsRef.current = [];
-      return;
-    }
-
-    // Clear previous polygons and info windows
-    zonesPolygonsRef.current.forEach((polygon) => {
-      if (polygon) polygon.setMap(null);
-    });
-    zonesPolygonsRef.current = [];
-    infoWindowsRef.current.forEach((infoWindow) => {
-      if (infoWindow) infoWindow.close();
-    });
-    infoWindowsRef.current = [];
-
-    // Colors for different zones
-    const colors = [
-      '#3b82f6',
-      // Blue
-      '#10b981',
-      // Green
-      '#f59e0b',
-      // Orange
-      '#ef4444',
-      // Red
-      '#8b5cf6',
-      // Purple
-      '#ec4899',
-      // Pink
-      '#06b6d4',
-      // Cyan
-      '#84cc16', // Lime
-    ];
-    const bounds = new google.maps.LatLngBounds();
-    zones.forEach((zone, index) => {
-      if (!zone.coordinates || zone.coordinates.length < 3) return;
-
-      // Convert coordinates to LatLng array
-      const path = zone.coordinates
-        .map((coord) => {
-          const lat = typeof coord === 'object' ? coord.latitude || coord.lat : null;
-          const lng = typeof coord === 'object' ? coord.longitude || coord.lng : null;
-          if (lat === null || lng === null) return null;
-          const latLng = new google.maps.LatLng(lat, lng);
-          bounds.extend(latLng);
-          return latLng;
+  // Restaurant markers: GeoJSON [lng, lat] or { latitude, longitude }.
+  const restaurantMarkers = useMemo(
+    () =>
+      restaurants
+        .map((restaurant, index) => {
+          if (!restaurant.location) return null;
+          let lat = null;
+          let lng = null;
+          if (restaurant.location.coordinates && Array.isArray(restaurant.location.coordinates) && restaurant.location.coordinates.length >= 2) {
+            lng = restaurant.location.coordinates[0];
+            lat = restaurant.location.coordinates[1];
+          } else if (restaurant.location.latitude && restaurant.location.longitude) {
+            lat = parseFloat(restaurant.location.latitude);
+            lng = parseFloat(restaurant.location.longitude);
+          }
+          if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return null;
+          if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+          return { key: restaurant._id || restaurant.id || `r${index}`, restaurant, coordinate: { latitude: Number(lat), longitude: Number(lng) } };
         })
-        .filter(Boolean);
-      if (path.length < 3) return;
+        .filter(Boolean),
+    [restaurants],
+  );
 
-      // Select color based on index
-      const color = colors[index % colors.length];
-
-      // Create polygon for zone
-      const polygon = new google.maps.Polygon({
-        paths: path,
-        strokeColor: color,
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: color,
-        fillOpacity: 0.25,
-        editable: false,
-        draggable: false,
-        clickable: true,
-        zIndex: 1,
-      });
-      polygon.setMap(map);
-      zonesPolygonsRef.current.push(polygon);
-
-      // Add info window on click
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 12px; min-width: 200px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1e293b;">
-              ${zone.name || zone.zoneName || 'Unnamed Zone'}
-            </h3>
-            <div style="font-size: 13px; color: #64748b; line-height: 1.6;">
-              <div style="margin-bottom: 4px;">
-                <strong>Country:</strong> ${zone.country || 'N/A'}
-              </div>
-              <div style="margin-bottom: 4px;">
-                <strong>Unit:</strong> ${zone.unit || 'km'}
-              </div>
-              <div style="margin-bottom: 4px;">
-                <strong>Points:</strong> ${zone.coordinates.length}
-              </div>
-              <div>
-                <strong>Status:</strong> 
-                <span style="color: ${zone.isActive ? '#10b981' : '#ef4444'}; font-weight: 600;">
-                  ${zone.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-            </div>
-          </div>
-        `,
-      });
-      polygon.addListener('click', () => {
-        // Close all other info windows
-        infoWindowsRef.current.forEach((iw) => {
-          if (iw && iw !== infoWindow) iw.close();
-        });
-        infoWindow.setPosition(path[0]);
-        infoWindow.open(map);
-        infoWindowsRef.current.push(infoWindow);
-      });
-    });
-
-    // Fit map to show all zones
-    if (zones.length > 0) {
-      map.fitBounds(bounds);
-      // Add some padding
-      const padding = {
-        top: 50,
-        right: 50,
-        bottom: 50,
-        left: 50,
-      };
-      map.fitBounds(bounds, padding);
-    }
-  };
-
-  // Draw restaurant markers on the map
-  const drawRestaurantMarkers = (google, map) => {
-    if (!restaurants || restaurants.length === 0) return;
-
-    // Clear previous markers
-    restaurantMarkersRef.current.forEach((marker) => {
-      if (marker) marker.setMap(null);
-    });
-    restaurantMarkersRef.current = [];
-    restaurants.forEach((restaurant) => {
-      if (!restaurant.location) return;
-
-      // Get coordinates from restaurant location
-      let lat = null;
-      let lng = null;
-      if (restaurant.location.coordinates && Array.isArray(restaurant.location.coordinates) && restaurant.location.coordinates.length >= 2) {
-        lng = restaurant.location.coordinates[0];
-        lat = restaurant.location.coordinates[1];
-      } else if (restaurant.location.latitude && restaurant.location.longitude) {
-        lat = parseFloat(restaurant.location.latitude);
-        lng = parseFloat(restaurant.location.longitude);
-      }
-
-      // Skip if no valid coordinates
-      if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
-        return;
-      }
-
-      // Validate coordinates are in valid range
-      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        return;
-      }
-
-      // Create custom icon for restaurant
-      const restaurantIcon = {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: '#ef4444',
-        // Red color
-        fillOpacity: 1,
-        strokeColor: '#ffffff',
-        strokeWeight: 2,
-      };
-
-      // Create marker
-      const marker = new google.maps.Marker({
-        position: {
-          lat,
-          lng,
-        },
-        map: map,
-        icon: restaurantIcon,
-        title: restaurant.name || 'Restaurant',
-        zIndex: 1000, // Show above zones
-      });
-
-      // Create info window
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 12px; min-width: 200px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1e293b;">
-              ${restaurant.name || 'Unnamed Restaurant'}
-            </h3>
-            <div style="font-size: 13px; color: #64748b; line-height: 1.6;">
-              ${restaurant.location?.formattedAddress || restaurant.location?.address || restaurant.location?.area || 'Location not specified'}
-            </div>
-            ${
-              restaurant.ownerName
-                ? `
-              <div style="margin-top: 8px; font-size: 12px; color: #94a3b8;">
-                <strong>Owner:</strong> ${restaurant.ownerName}
-              </div>
-            `
-                : ''
-            }
-          </div>
-        `,
-      });
-
-      // Add click listener to show info window
-      marker.addListener('click', () => {
-        // Close all other info windows
-        infoWindowsRef.current.forEach((iw) => {
-          if (iw && iw !== infoWindow) iw.close();
-        });
-        infoWindow.open(map, marker);
-        infoWindowsRef.current.push(infoWindow);
-      });
-      restaurantMarkersRef.current.push(marker);
-    });
-  };
-  // PORT: ref on a host element: check what the web did with it (scrollIntoView, focus, measure, DOM reads)
-  // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
+  // Fit map to show all zones (fitBounds with 50px padding).
+  useEffect(() => {
+    if (mapLoading || !mapInstanceRef.current || zonePolygons.length === 0) return;
+    const coords = zonePolygons.flatMap((z) => z.path);
+    mapInstanceRef.current.fitToCoordinates(coords, { edgePadding: { top: 50, right: 50, bottom: 50, left: 50 }, animated: true });
+  }, [zonePolygons, mapLoading]);
   return (
-    <ScrollDiv className="min-h-screen bg-slate-50">
+    <ScrollDiv className="min-h-screen bg-slate-50" scrollEnabled={scrollEnabled}>
       <Div className="p-4 lg:p-6">
         {/* Header */}
         <Div className="flex items-center gap-4 mb-6">
           <Button onClick={() => navigate('/admin/food/zone-setup')} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
             <UiIcon as={ArrowLeft} className="w-5 h-5 text-slate-600" />
           </Button>
-          <Div className="flex items-center gap-3">
+          <Div className="flex-1 flex items-center gap-3">
             <Div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
               <UiIcon as={MapPin} className="w-5 h-5 text-white" />
             </Div>
-            <Div>
+            <Div className="flex-1">
               <H1 className="text-2xl font-bold text-slate-900">All Zones Map</H1>
               <P className="text-sm text-slate-600">View all restaurant delivery zones on map</P>
             </Div>
@@ -407,31 +131,91 @@ export default function AllZonesMap() {
         {/* Search Bar */}
         <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
           <Div className="relative">
-            <UiIcon as={Search} className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <Input
-              ref={autocompleteInputRef}
-              type="text"
+            <UiIcon as={Search} className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+            <PlacesSearchInput
               placeholder="Search location on map..."
-              value={locationSearch}
-              onChange={(e) => setLocationSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg"
+              onPlace={(place) => {
+                const lat = place?.geometry?.location?.lat?.();
+                const lng = place?.geometry?.location?.lng?.();
+                if (Number.isFinite(lat) && Number.isFinite(lng) && mapInstanceRef.current) {
+                  mapInstanceRef.current.animateToRegion(regionAtZoom(lat, lng, 12), 300); // Zoom in when location is selected
+                }
+              }}
             />
           </Div>
         </Div>
 
         {/* Map Container */}
         <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-          <Div
-            className="relative"
-            style={{
-              height: 'calc(100vh - 250px)',
-              minHeight: '600px',
-            }}
-          >
-            <Div ref={mapRef} className="w-full h-full rounded-lg" />
+          <Div className="relative h-[600px]" {...touchLock}>
+            <GMap
+              ref={mapInstanceRef}
+              className="w-full h-full rounded-lg"
+              initialRegion={INDIA_REGION}
+              mapType={mapType}
+              zoomControlEnabled
+              onMapReady={() => setMapLoading(false)}
+            >
+              {zonePolygons.map(({ zone, path, color }, index) => (
+                <Polygon
+                  key={zone._id || zone.id || `z${index}`}
+                  coordinates={path}
+                  strokeColor={withAlpha(color, 0.8)}
+                  strokeWidth={2}
+                  fillColor={withAlpha(color, 0.25)}
+                  zIndex={1}
+                  tappable
+                  onPress={() => setInfo({ kind: 'zone', item: zone })}
+                />
+              ))}
+              {restaurantMarkers.map(({ key, restaurant, coordinate }) => (
+                <DotMarker
+                  key={key}
+                  coordinate={coordinate}
+                  color="#ef4444"
+                  title={restaurant.name || 'Restaurant'}
+                  onPress={() => setInfo({ kind: 'restaurant', item: restaurant })}
+                />
+              ))}
+            </GMap>
+            <MapTypeToggle value={mapType} onChange={setMapType} />
+            {info?.kind === 'zone' ? (
+              <InfoCard onClose={() => setInfo(null)}>
+                <H3 className="text-base font-semibold text-slate-800 mb-2">{info.item.name || info.item.zoneName || 'Unnamed Zone'}</H3>
+                <Div className="text-[13px] text-slate-500">
+                  <P className="mb-1">
+                    <Strong>Country:</Strong> {info.item.country || 'N/A'}
+                  </P>
+                  <P className="mb-1">
+                    <Strong>Unit:</Strong> {info.item.unit || 'km'}
+                  </P>
+                  <P className="mb-1">
+                    <Strong>Points:</Strong> {info.item.coordinates.length}
+                  </P>
+                  <P>
+                    <Strong>Status:</Strong>{' '}
+                    <Span className={`font-semibold ${info.item.isActive ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>{info.item.isActive ? 'Active' : 'Inactive'}</Span>
+                  </P>
+                </Div>
+              </InfoCard>
+            ) : null}
+            {info?.kind === 'restaurant' ? (
+              <InfoCard onClose={() => setInfo(null)}>
+                <H3 className="text-base font-semibold text-slate-800 mb-2">{info.item.name || 'Unnamed Restaurant'}</H3>
+                <P className="text-[13px] text-slate-500">
+                  {info.item.location?.formattedAddress || info.item.location?.address || info.item.location?.area || 'Location not specified'}
+                </P>
+                {info.item.ownerName ? (
+                  <P className="mt-2 text-xs text-slate-400">
+                    <Strong>Owner:</Strong> {info.item.ownerName}
+                  </P>
+                ) : null}
+              </InfoCard>
+            ) : null}
 
             {mapLoading && (
-              <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+              <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg" pointerEvents="none">
                 <Div className="text-center">
                   <Div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></Div>
                   <P className="text-slate-600">Loading map...</P>

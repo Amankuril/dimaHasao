@@ -1,13 +1,15 @@
-/* Ported from Frontend/src/modules/Food/pages/admin/restaurant/AddZone.jsx (tools/port.js first pass). */
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from '../../../../lib/webRouter';
-import { MapPin, ArrowLeft, Save, X, Hand, Shapes, Search } from 'lucide-react-native';
+/* Ported from Frontend/src/modules/Food/pages/admin/restaurant/AddZone.jsx . */
+import { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate, useParams } from '../../../../lib/webRouter';
+import { MapPin, ArrowLeft, Save, X, Shapes, Search } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import { getGoogleMapsApiKey } from '../../../utils/googleMapsApiKey';
-import { Button, Div, Form, H1, H2, Input, Label, Option, P, ScrollDiv, Select, Span, Strong, Icon as UiIcon } from '../../../../components/web';
-import { alert, document, window } from '../../../../lib/webShim';
+import { EditablePolygon, GMap, Polygon, fromLatLng, regionFor, toLatLng } from '../../../../components/maps';
+import { Button, Div, Form, H1, H2, Input, Label, Option, P, ScrollDiv, Select, Small, Span, Strong, Icon as UiIcon } from '../../../../components/web';
+import { alert } from '../../../../lib/webShim';
+import PlacesSearchInput from './PlacesSearchInput';
+import { DotMarker, INDIA_REGION, InfoCard, MapTypeToggle, regionAtZoom, useMapTouchLock, zonePath } from './zoneMapParts';
 const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 
 // Zone drawing limits.
@@ -33,19 +35,17 @@ const orderPointsRadially = (pts) => {
 export default function AddZone() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const isEditMode = !!id && !window.location.pathname.includes('/view/');
-  const mapRef = useRef(null);
+  const { pathname } = useLocation();
+  const isEditMode = !!id && !pathname.includes('/view/');
   const mapInstanceRef = useRef(null);
-  const polygonRef = useRef(null);
-  const markersRef = useRef([]);
-  const pathMarkersRef = useRef([]);
-  // Manual drawing state (DrawingManager is deprecated/removed by Google).
-  const mapClickListenerRef = useRef(null);
-  const drawPointsRef = useRef([]); // LatLng[] collected while drawing
+  // Manual drawing state (each map tap adds a vertex while drawing).
   const isDrawingRef = useRef(false);
+  const [drawPoints, setDrawPoints] = useState([]); // {lat,lng}[] collected while drawing, in tap order
   const [googleMapsApiKey, setGoogleMapsApiKey] = useState('');
   const [mapLoading, setMapLoading] = useState(true);
+  const [mapType, setMapType] = useState('standard');
   const [loading, setLoading] = useState(false);
+  const [scrollEnabled, touchLock] = useMapTouchLock();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -55,11 +55,8 @@ export default function AddZone() {
   });
   const [coordinates, setCoordinates] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [locationSearch, setLocationSearch] = useState('');
   const [existingZones, setExistingZones] = useState([]);
-  const autocompleteInputRef = useRef(null);
-  const autocompleteRef = useRef(null);
-  const existingZonesPolygonsRef = useRef([]);
+  const [infoZone, setInfoZone] = useState(null);
   useEffect(() => {
     fetchExistingZones();
     loadGoogleMaps();
@@ -68,73 +65,20 @@ export default function AddZone() {
     }
   }, [id, isEditMode]);
 
-  // Center map on India when country is selected
+  // Fit the map to the existing polygon in edit mode once map and coordinates are ready.
   useEffect(() => {
-    if (formData.country === 'India' && mapInstanceRef.current) {
-      const indiaCenter = {
-        lat: 20.5937,
-        lng: 78.9629,
-      };
-      mapInstanceRef.current.setCenter(indiaCenter);
-      mapInstanceRef.current.setZoom(5);
+    if (isEditMode && coordinates.length >= 3 && mapInstanceRef.current && !mapLoading) {
+      isDrawingRef.current = false;
+      setIsDrawing(false);
+      fitTo(coordinates);
     }
-  }, [formData.country]);
-
-  // Initialize Places Autocomplete when map is loaded
-  useEffect(() => {
-    if (mapLoading || !mapInstanceRef.current || !autocompleteInputRef.current || !window.google?.maps?.places || autocompleteRef.current) {
-      return;
-    }
-    const autocomplete = new window.google.maps.places.Autocomplete(autocompleteInputRef.current, {
-      // No `geocode` type — it routes predictions through Geocoding-style endpoints.
-      componentRestrictions: {
-        country: 'in',
-      },
-      // Restrict to India
-      fields: ['geometry', 'formatted_address', 'name'],
-    });
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (place.geometry && place.geometry.location && mapInstanceRef.current) {
-        const location = place.geometry.location;
-        mapInstanceRef.current.setCenter(location);
-        mapInstanceRef.current.setZoom(15); // Zoom in when location is selected
-
-        // Set the search input value
-        setLocationSearch(place.formatted_address || place.name || '');
-      }
-    });
-    autocompleteRef.current = autocomplete;
-
-    // The Places suggestion dropdown (.pac-container) is appended to <body> and
-    // can render behind the map / modal. Force it on top so suggestions are visible.
-    // PORT: document.getElementById: DOM access has no React Native equivalent; use refs/state
-    if (!document.getElementById('pac-container-zindex-fix')) {
-      // PORT: document.createElement: DOM access has no React Native equivalent; use refs/state
-      const style = document.createElement('style');
-      style.id = 'pac-container-zindex-fix';
-      style.textContent = '.pac-container { z-index: 10000 !important; }';
-      document.head.appendChild(style);
-    }
-  }, [mapLoading]);
-
-  // Draw existing polygon when in edit mode and coordinates are loaded
-  useEffect(() => {
-    if (isEditMode && coordinates.length >= 3 && mapInstanceRef.current && window.google && !mapLoading) {
-      debugLog('Drawing existing polygon in edit mode, coordinates:', coordinates.length);
-      setTimeout(() => {
-        if (mapInstanceRef.current && window.google) {
-          // Ensure manual drawing mode is off when editing an existing polygon.
-          isDrawingRef.current = false;
-          setIsDrawing(false);
-          mapInstanceRef.current.setOptions({
-            draggableCursor: null,
-          });
-          drawExistingPolygon(window.google, mapInstanceRef.current, coordinates);
-        }
-      }, 500);
-    }
-  }, [isEditMode, coordinates.length, mapLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, coordinates.length >= 3, mapLoading]);
+  const fitTo = (coords) => {
+    const path = zonePath(coords);
+    if (path.length < 3 || !mapInstanceRef.current) return;
+    mapInstanceRef.current.animateToRegion(regionFor(path, { padding: 1.3, minDelta: 0.005 }), 300);
+  };
   const fetchExistingZones = async () => {
     try {
       const response = await adminAPI.getZones({
@@ -173,334 +117,34 @@ export default function AddZone() {
       setLoading(false);
     }
   };
-
-  // Wait until a condition is true, polling every 100ms up to `timeoutMs`.
-  const waitFor = async (predicate, timeoutMs = 8000) => {
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-      if (predicate()) return true;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    return predicate();
-  };
   const loadGoogleMaps = async () => {
     try {
       const apiKey = await getGoogleMapsApiKey();
       setGoogleMapsApiKey(apiKey || 'loaded');
       if (!apiKey) {
         setMapLoading(false);
-        return;
       }
-
-      // We only need `places` (search autocomplete) and `geometry`. We do NOT use the
-      // `drawing` library — Google has retired DrawingManager (it throws "no longer
-      // available"). We draw polygons manually via map clicks instead. So we can happily
-      // reuse whatever Maps script another page already loaded (they all include places).
-
-      const existingScript = Array.from(document.getElementsByTagName('script')).find((s) => s.src?.includes('maps.googleapis.com/maps/api/js'));
-      if (!window.google?.maps && !existingScript) {
-        // No maps script yet -> inject our own with the libraries we actually use.
-        await new Promise((resolve) => {
-          // PORT: document.createElement: DOM access has no React Native equivalent; use refs/state
-          const script = document.createElement('script');
-          script.id = 'google-maps-sdk';
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&v=weekly`;
-          script.async = true;
-          script.defer = true;
-          script.onload = () => resolve(true);
-          script.onerror = () => resolve(false);
-          document.head.appendChild(script);
-        });
-      }
-
-      // Wait for the core maps object (loaded by us or another page).
-      const ready = await waitFor(() => !!window.google?.maps);
-      if (!ready) {
-        debugError('Google Maps failed to load');
-        setMapLoading(false);
-        return;
-      }
-      initializeMap(window.google);
     } catch (error) {
       debugError('Error loading Google Maps:', error);
       setMapLoading(false);
     }
   };
-  const initializeMap = (google) => {
-    if (!mapRef.current) return;
 
-    // Initial location (India center)
-    const initialLocation = {
-      lat: 20.5937,
-      lng: 78.9629,
-    };
-
-    // Create map
-    const map = new google.maps.Map(mapRef.current, {
-      center: initialLocation,
-      zoom: 5,
-      mapTypeControl: true,
-      mapTypeControlOptions: {
-        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-        position: google.maps.ControlPosition.TOP_RIGHT,
-        mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE],
-      },
-      zoomControl: true,
-      streetViewControl: false,
-      fullscreenControl: true,
-      scrollwheel: true,
-      // Enable mouse wheel zoom
-      gestureHandling: 'greedy',
-      // Allow zoom with mouse wheel and touch gestures
-      disableDoubleClickZoom: false,
-      // Allow double-click zoom
-      clickableIcons: false, // Don't let POI labels swallow map clicks while drawing
-    });
-    mapInstanceRef.current = map;
-
-    // NOTE: google.maps.drawing.DrawingManager has been retired by Google and throws
-    // "The DrawingManager functionality in the Maps JavaScript API is no longer
-    // available". So we implement manual polygon drawing using the core Maps API:
-    // while in drawing mode, each map click adds a vertex; the polygon + vertex markers
-    // are rebuilt live and stay editable after drawing finishes.
-    pathMarkersRef.current = [];
-
-    // Add a map-click listener that appends a vertex while drawing is active.
-    mapClickListenerRef.current = google.maps.event.addListener(map, 'click', (event) => {
-      if (!isDrawingRef.current) return;
-      // Enforce maximum number of points.
-      if (drawPointsRef.current.length >= MAX_POINTS) {
-        alert(`You can add at most ${MAX_POINTS} points. Click "Finish Drawing" to complete the zone.`);
-        return;
-      }
-      drawPointsRef.current.push(event.latLng);
-      renderDrawingPolygon(google, map);
-    });
-    setMapLoading(false);
-
-    // Existing zones will be drawn by useEffect when data is ready
-
-    // If in edit mode and coordinates are already loaded, draw the polygon
-    if (isEditMode && coordinates.length >= 3) {
-      setTimeout(() => {
-        if (mapInstanceRef.current && window.google) {
-          drawExistingPolygon(window.google, mapInstanceRef.current, coordinates);
-        }
-      }, 500); // Small delay to ensure map is fully loaded
-    }
-  };
-
-  // Draw existing zones on the map
-  const drawExistingZonesOnMap = (google, map) => {
-    if (!existingZones || existingZones.length === 0) return;
-
-    // Clear previous existing zone polygons
-    existingZonesPolygonsRef.current.forEach((polygon) => {
-      if (polygon) polygon.setMap(null);
-    });
-    existingZonesPolygonsRef.current = [];
-    existingZones.forEach((zone, index) => {
-      if (!zone.coordinates || zone.coordinates.length < 3) return;
-
-      // Convert coordinates to LatLng array
-      const path = zone.coordinates
-        .map((coord) => {
-          const lat = typeof coord === 'object' ? coord.latitude || coord.lat : null;
-          const lng = typeof coord === 'object' ? coord.longitude || coord.lng : null;
-          if (lat === null || lng === null) return null;
-          return new google.maps.LatLng(lat, lng);
-        })
-        .filter(Boolean);
-      if (path.length < 3) return;
-
-      // Create polygon for existing zone with different color (gray/blue)
-      const polygon = new google.maps.Polygon({
-        paths: path,
-        strokeColor: '#3b82f6',
-        // Blue color for existing zones
-        strokeOpacity: 0.6,
-        strokeWeight: 2,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.15,
-        // Lighter opacity so new zone stands out
-        editable: false,
-        // Not editable
-        draggable: false,
-        clickable: true,
-        zIndex: 0, // Lower z-index so new zone appears on top
-      });
-      polygon.setMap(map);
-      existingZonesPolygonsRef.current.push(polygon);
-
-      // Add info window on click
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 8px;">
-            <strong>${zone.name || zone.zoneName || 'Unnamed Zone'}</strong><br/>
-            <small>Country: ${zone.country || 'N/A'}</small>
-          </div>
-        `,
-      });
-      polygon.addListener('click', () => {
-        infoWindow.setPosition(polygon.getPath().getAt(0));
-        infoWindow.open(map);
-      });
-    });
-  };
-
-  // Redraw existing zones when zones data changes or map is ready
-  useEffect(() => {
-    if (!mapLoading && mapInstanceRef.current && existingZones.length > 0 && window.google) {
-      drawExistingZonesOnMap(window.google, mapInstanceRef.current);
-    }
-  }, [existingZones, mapLoading]);
-  const updateCoordinatesFromPolygon = (polygon) => {
-    const path = polygon.getPath();
-    const coords = [];
-    path.forEach((latLng) => {
-      coords.push({
-        latitude: latLng.lat(),
-        longitude: latLng.lng(),
-      });
-    });
-    setCoordinates(coords);
-  };
-  const drawExistingPolygon = (google, map, coords) => {
-    if (!coords || coords.length < 3) {
-      debugLog('drawExistingPolygon: Not enough coordinates', coords?.length);
+  // While drawing, each map tap appends a vertex.
+  const handleMapPress = (event) => {
+    if (!isDrawingRef.current) return;
+    const coordinate = event?.nativeEvent?.coordinate;
+    if (!coordinate) return;
+    // Enforce maximum number of points.
+    if (drawPoints.length >= MAX_POINTS) {
+      alert(`You can add at most ${MAX_POINTS} points. Click "Finish Drawing" to complete the zone.`);
       return;
     }
-    debugLog('drawExistingPolygon: Drawing polygon with', coords.length, 'coordinates');
-
-    // Clear existing polygon
-    if (polygonRef.current) {
-      polygonRef.current.setMap(null);
-    }
-
-    // Clear existing markers
-    if (pathMarkersRef.current && pathMarkersRef.current.length > 0) {
-      pathMarkersRef.current.forEach((marker) => marker.setMap(null));
-      pathMarkersRef.current = [];
-    }
-
-    // Convert coordinates to LatLng array
-    const path = coords
-      .map((coord) => {
-        const lat = typeof coord === 'object' ? coord.latitude || coord.lat : null;
-        const lng = typeof coord === 'object' ? coord.longitude || coord.lng : null;
-        if (lat === null || lng === null) {
-          debugError('Invalid coordinate in drawExistingPolygon:', coord);
-          return null;
-        }
-        return new google.maps.LatLng(lat, lng);
-      })
-      .filter(Boolean);
-    if (path.length < 3) {
-      debugError('Not enough valid coordinates after conversion');
-      return;
-    }
-
-    // Create polygon
-    const polygon = new google.maps.Polygon({
-      paths: path,
-      strokeColor: '#9333ea',
-      strokeOpacity: 0.8,
-      strokeWeight: 3,
-      fillColor: '#9333ea',
-      fillOpacity: 0.35,
-      editable: true,
-      draggable: false,
-      clickable: false,
-    });
-    polygon.setMap(map);
-    polygonRef.current = polygon;
-
-    // Ensure polygon is editable
-    polygon.setEditable(true);
-    polygon.setDraggable(false);
-    debugLog('Polygon created and set to editable:', polygon.getEditable());
-
-    // Fit map to polygon bounds
-    const bounds = new google.maps.LatLngBounds();
-    path.forEach((latLng) => bounds.extend(latLng));
-    map.fitBounds(bounds);
-    debugLog('Map fitted to polygon bounds');
-
-    // NOTE: We intentionally do NOT add separate circle markers on the vertices.
-    // An editable polygon already shows its own draggable white vertex handles
-    // (and midpoint handles to add points) — exactly like the old DrawingManager.
-    // Extra markers on top would intercept the mouse and block dragging.
-    pathMarkersRef.current = [];
-    debugLog('drawExistingPolygon: editable polygon created');
-
-    // Update coordinates when the polygon is edited (vertex dragged / added / removed).
-    const handlePolygonEdit = () => {
-      updateCoordinatesFromPolygon(polygon);
-    };
-    const polygonPath = polygon.getPath();
-    google.maps.event.addListener(polygonPath, 'set_at', handlePolygonEdit);
-    google.maps.event.addListener(polygonPath, 'insert_at', handlePolygonEdit);
-    google.maps.event.addListener(polygonPath, 'remove_at', handlePolygonEdit);
-    debugLog('Event listeners attached for polygon editing');
-  };
-
-  // Build the vertex markers for a given set of LatLngs.
-  const renderVertexMarkers = (google, map, latLngs) => {
-    if (pathMarkersRef.current?.length) {
-      pathMarkersRef.current.forEach((m) => m.setMap(null));
-    }
-    pathMarkersRef.current = latLngs.map(
-      (latLng, i) =>
-        new google.maps.Marker({
-          position: latLng,
-          map,
-          clickable: false,
-          // don't block map clicks while drawing
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#9333ea',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          },
-          zIndex: 1000,
-          title: `Point ${i + 1}`,
-        }),
-    );
-  };
-
-  // Live-render the polygon being drawn (called on every map click while drawing).
-  const renderDrawingPolygon = (google, map) => {
-    const points = drawPointsRef.current;
-    if (polygonRef.current) {
-      polygonRef.current.setMap(null);
-      polygonRef.current = null;
-    }
-
+    const points = [...drawPoints, fromLatLng(coordinate)];
+    setDrawPoints(points);
     // Order points radially around their centroid so edges never overlap, while still
-    // keeping every clicked point. Below 3 points just use them as-is.
-    const ordered =
-      points.length >= 3
-        ? orderPointsRadially(points)
-        : points.map((p) => ({
-            lat: p.lat(),
-            lng: p.lng(),
-          }));
-    if (ordered.length >= 2) {
-      polygonRef.current = new google.maps.Polygon({
-        paths: ordered,
-        fillColor: '#9333ea',
-        fillOpacity: 0.35,
-        strokeColor: '#9333ea',
-        strokeWeight: 2,
-        clickable: false,
-        editable: false,
-        zIndex: 1,
-      });
-      polygonRef.current.setMap(map);
-    }
-    renderVertexMarkers(google, map, points);
+    // keeping every tapped point. Below 3 points just use them as-is.
+    const ordered = points.length >= 3 ? orderPointsRadially(points) : points;
     setCoordinates(
       ordered.map((p) => ({
         latitude: parseFloat(p.lat.toFixed(6)),
@@ -511,40 +155,24 @@ export default function AddZone() {
 
   // Convert the in-progress points into a final editable polygon.
   const finishDrawing = () => {
-    const google = window.google;
-    const map = mapInstanceRef.current;
-    if (!google || !map) return;
-    const points = drawPointsRef.current;
-    if (points.length < MIN_POINTS) {
+    if (drawPoints.length < MIN_POINTS) {
       // Not enough points yet — keep drawing mode on.
       alert(`Please click at least ${MIN_POINTS} points on the map to form a zone.`);
       return false;
     }
-
-    // Replace the preview polygon with a finalized editable one and wire up edit events.
-    if (polygonRef.current) {
-      polygonRef.current.setMap(null);
-      polygonRef.current = null;
-    }
-    if (pathMarkersRef.current?.length) {
-      pathMarkersRef.current.forEach((m) => m.setMap(null));
-      pathMarkersRef.current = [];
-    }
-
     // Radially order so the final polygon has no overlapping edges, keeping all points.
-    const ordered = orderPointsRadially(points);
+    const ordered = orderPointsRadially(drawPoints);
     const coords = ordered.map((p) => ({
       latitude: parseFloat(p.lat.toFixed(6)),
       longitude: parseFloat(p.lng.toFixed(6)),
     }));
     setCoordinates(coords);
-    drawExistingPolygon(google, map, coords); // reuse: draws editable polygon + markers + listeners
+    setDrawPoints([]);
+    fitTo(coords);
     return true;
   };
   const toggleDrawingMode = () => {
-    const google = window.google;
-    const map = mapInstanceRef.current;
-    if (!google || !map) {
+    if (!mapInstanceRef.current || mapLoading) {
       alert('Map is still loading. Please wait a moment and try again.');
       return;
     }
@@ -554,46 +182,29 @@ export default function AddZone() {
       if (ok === false) return; // not enough points; stay in drawing mode
       isDrawingRef.current = false;
       setIsDrawing(false);
-      map.setOptions({
-        draggableCursor: null,
-      });
-      // Re-enable existing-zone info windows now that drawing is done.
-      existingZonesPolygonsRef.current.forEach((p) =>
-        p?.setOptions?.({
-          clickable: true,
-        }),
-      );
     } else {
       // Start a fresh drawing session.
       clearDrawing();
-      drawPointsRef.current = [];
+      setInfoZone(null);
       isDrawingRef.current = true;
       setIsDrawing(true);
-      map.setOptions({
-        draggableCursor: 'crosshair',
-      });
-      // Make existing zones non-clickable so taps over them add points instead of
-      // opening their info windows.
-      existingZonesPolygonsRef.current.forEach((p) =>
-        p?.setOptions?.({
-          clickable: false,
-        }),
-      );
     }
   };
   const clearDrawing = () => {
-    drawPointsRef.current = [];
-    if (polygonRef.current) {
-      polygonRef.current.setMap(null);
-      polygonRef.current = null;
-    }
-    // Clear all markers
-    if (pathMarkersRef.current && pathMarkersRef.current.length > 0) {
-      pathMarkersRef.current.forEach((marker) => marker.setMap(null));
-      pathMarkersRef.current = [];
-    }
+    setDrawPoints([]);
     setCoordinates([]);
   };
+
+  // A vertex of the finished polygon was dragged.
+  const handlePolygonEdit = (points) => {
+    setCoordinates(
+      points.map((p) => ({
+        latitude: Number(p.lat ?? p.latitude),
+        longitude: Number(p.lng ?? p.longitude),
+      })),
+    );
+  };
+  const drawingPreview = drawPoints.length >= 3 ? orderPointsRadially(drawPoints) : drawPoints;
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -678,21 +289,19 @@ export default function AddZone() {
       setLoading(false);
     }
   };
-  // PORT: ref on a host element: check what the web did with it (scrollIntoView, focus, measure, DOM reads)
-  // PORT: inline style object: check every property is valid in React Native (no backgroundImage, cursor, gridTemplate..., strings like "1rem")
   return (
-    <ScrollDiv className="min-h-screen bg-slate-50">
+    <ScrollDiv className="min-h-screen bg-slate-50" scrollEnabled={scrollEnabled}>
       <Div className="p-4 lg:p-6 max-w-7xl mx-auto">
         {/* Header */}
         <Div className="flex items-center gap-4 mb-6">
           <Button onClick={() => navigate('/admin/food/zone-setup')} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
             <UiIcon as={ArrowLeft} className="w-5 h-5 text-slate-600" />
           </Button>
-          <Div className="flex items-center gap-3">
+          <Div className="flex-1 flex items-center gap-3">
             <Div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
               <UiIcon as={MapPin} className="w-5 h-5 text-white" />
             </Div>
-            <Div>
+            <Div className="flex-1">
               <H1 className="text-2xl font-bold text-slate-900">{isEditMode ? 'Edit Zone' : 'Add New Zone'}</H1>
               <P className="text-sm text-slate-600">{isEditMode ? 'Update delivery zone for customer' : 'Create a delivery zone for customer'}</P>
             </Div>
@@ -758,7 +367,7 @@ export default function AddZone() {
 
             {/* Right Panel - Map */}
             <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <Div className="flex items-center justify-between mb-4">
+              <Div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                 <H2 className="text-lg font-semibold text-slate-900">Draw Zone on Map</H2>
                 <Div className="flex items-center gap-2">
                   <Button
@@ -784,14 +393,17 @@ export default function AddZone() {
 
               <Div className="mb-4">
                 <Div className="relative">
-                  <UiIcon as={Search} className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    ref={autocompleteInputRef}
-                    type="text"
+                  <UiIcon as={Search} className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <PlacesSearchInput
                     placeholder="Search location on map..."
-                    value={locationSearch}
-                    onChange={(e) => setLocationSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg"
+                    onPlace={(place) => {
+                      const lat = place?.geometry?.location?.lat?.();
+                      const lng = place?.geometry?.location?.lng?.();
+                      if (Number.isFinite(lat) && Number.isFinite(lng) && mapInstanceRef.current) {
+                        mapInstanceRef.current.animateToRegion(regionAtZoom(lat, lng, 15), 300); // Zoom in when location is selected
+                      }
+                    }}
                   />
                 </Div>
                 {isDrawing && (
@@ -802,21 +414,67 @@ export default function AddZone() {
                 {coordinates.length > 0 && (
                   <P className="text-xs text-slate-600 mt-2">
                     Points drawn: <Strong>{coordinates.length}</Strong>
-                    {coordinates.length < 3 && <Span className="text-red-600 ml-2">(Minimum 3 points required)</Span>}
+                    {coordinates.length < 3 && <Span className="text-red-600 ml-2"> (Minimum 3 points required)</Span>}
                   </P>
                 )}
               </Div>
 
-              <Div
-                className="relative"
-                style={{
-                  height: '600px',
-                }}
-              >
-                <Div ref={mapRef} className="w-full h-full rounded-lg" />
+              <Div className="relative h-[600px]" {...touchLock}>
+                <GMap
+                  ref={mapInstanceRef}
+                  className="w-full h-full rounded-lg"
+                  initialRegion={INDIA_REGION}
+                  mapType={mapType}
+                  zoomControlEnabled
+                  onMapReady={() => setMapLoading(false)}
+                  onPress={handleMapPress}
+                >
+                  {existingZones.map((zone) => {
+                    const path = zonePath(zone.coordinates);
+                    if (path.length < 3) return null;
+                    return (
+                      <Polygon
+                        key={zone._id || zone.id}
+                        coordinates={path}
+                        strokeColor="rgba(59,130,246,0.6)"
+                        strokeWidth={2}
+                        fillColor="rgba(59,130,246,0.15)"
+                        zIndex={0}
+                        tappable={!isDrawing}
+                        onPress={() => setInfoZone(zone)}
+                      />
+                    );
+                  })}
+                  {isDrawing ? (
+                    <>
+                      {drawingPreview.length >= 2 ? (
+                        <Polygon coordinates={drawingPreview.map(toLatLng)} strokeColor="#9333ea" strokeWidth={2} fillColor="rgba(147,51,234,0.35)" zIndex={1} tappable={false} />
+                      ) : null}
+                      {drawPoints.map((p, i) => (
+                        <DotMarker key={`d${i}`} coordinate={toLatLng(p)} title={`Point ${i + 1}`} />
+                      ))}
+                    </>
+                  ) : coordinates.length >= 3 ? (
+                    <EditablePolygon
+                      points={coordinates}
+                      onChange={handlePolygonEdit}
+                      strokeColor="rgba(147,51,234,0.8)"
+                      strokeWidth={3}
+                      fillColor="rgba(147,51,234,0.35)"
+                      vertexColor="#9333ea"
+                    />
+                  ) : null}
+                </GMap>
+                <MapTypeToggle value={mapType} onChange={setMapType} />
+                {infoZone && !isDrawing ? (
+                  <InfoCard onClose={() => setInfoZone(null)}>
+                    <Strong className="text-sm text-slate-900">{infoZone.name || infoZone.zoneName || 'Unnamed Zone'}</Strong>
+                    <Small className="text-xs text-slate-600">Country: {infoZone.country || 'N/A'}</Small>
+                  </InfoCard>
+                ) : null}
 
                 {mapLoading && (
-                  <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+                  <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg" pointerEvents="none">
                     <Div className="text-center">
                       <Div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></Div>
                       <P className="text-slate-600">Loading map...</P>

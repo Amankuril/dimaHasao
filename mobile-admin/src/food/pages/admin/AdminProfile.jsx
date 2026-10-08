@@ -1,13 +1,12 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/AdminProfile.jsx (tools/port.js first pass). */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { adminAPI, uploadAPI } from '../../../api/food';
-import { Button } from '../../../components/shadcn';
-import { Input } from '../../../components/shadcn';
-import { Label } from '../../../components/shadcn';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/shadcn';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '../../../components/shadcn';
+import { objectUrl, pickImage } from '../../../lib/files';
 import { toast } from '../../../lib/notify';
-import { User, Mail, Phone, Save, Loader2, Upload, X, Pencil, Eye, EyeOff } from 'lucide-react-native';
-import { Button, Div, Form, H1, Img, Input, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../components/web';
+import { User, Mail, Phone, Save, Upload, X, Pencil, Eye, EyeOff } from 'lucide-react-native';
+import { ActivityIndicator } from 'react-native';
+import { Button as HtmlButton, Div, Form, H1, Img, P, ScrollDiv, Span, Icon as UiIcon } from '../../../components/web';
 import { window } from '../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -20,7 +19,6 @@ export default function AdminProfile() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -93,9 +91,10 @@ export default function AdminProfile() {
       [field]: value,
     }));
   };
-  const handleFileSelect = (e) => {
-    // PORT: e.target.files: file inputs become pickers (lib/files)
-    const file = e.target.files?.[0];
+  // The web's hidden <input type="file">: the image picker, with the same checks.
+  const handleFileSelect = async () => {
+    if (!isEditMode || saving || uploading) return;
+    const file = await pickImage();
     if (!file) return;
 
     // Validate file type
@@ -114,19 +113,11 @@ export default function AdminProfile() {
 
     // Set file and create preview
     setSelectedFile(file);
-    // PORT: new FileReader: browser API; see the porting guide
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
+    setImagePreview(objectUrl(file));
   };
   const handleRemoveImage = () => {
     setSelectedFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
   const resetPasswordFields = () => {
     setPasswordData({
@@ -205,13 +196,10 @@ export default function AdminProfile() {
         // Clear selected file and preview
         setSelectedFile(null);
         setImagePreview(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
         // Update localStorage with new admin data
         localStorage.setItem('admin_user', JSON.stringify(updatedAdmin));
         // Dispatch event to notify other components
-        window.dispatchEvent(new Event('adminAuthChanged'));
+        window.dispatchEvent({ type: 'adminAuthChanged' });
         if (wantsPasswordChange) {
           try {
             await adminAPI.changePassword(currentPassword, newPassword);
@@ -245,9 +233,6 @@ export default function AdminProfile() {
     });
     setSelectedFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
     resetPasswordFields();
     setIsEditMode(true);
   };
@@ -260,22 +245,19 @@ export default function AdminProfile() {
     });
     setSelectedFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
     resetPasswordFields();
     setIsEditMode(false);
   };
   if (loading) {
     return (
-      <ScrollDiv className="flex items-center justify-center h-64">
-        <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-neutral-600" />
-      </ScrollDiv>
+      <Div className="flex items-center justify-center h-64">
+        <ActivityIndicator size="large" color="#525252" />
+      </Div>
     );
   }
   if (!profile) {
     return (
-      <ScrollDiv className="p-6">
+      <ScrollDiv className="flex-1 p-6">
         <Card>
           <CardContent className="pt-6">
             <P className="text-neutral-600">Failed to load profile data</P>
@@ -303,10 +285,8 @@ export default function AdminProfile() {
     const masked = localPart[0] + '*'.repeat(Math.min(localPart.length - 1, 5)) + '@' + domain;
     return masked;
   };
-  // PORT: ref on a host element: check what the web did with it (scrollIntoView, focus, measure, DOM reads)
-  // PORT: <input type="file">: use pickImage / pickDocument / pickSpreadsheet from lib/files (a button that opens the picker)
   return (
-    <ScrollDiv className="p-6 space-y-6">
+    <ScrollDiv className="flex-1 p-6 space-y-6">
       <Div>
         <H1 className="text-3xl font-bold text-neutral-900">Profile</H1>
         <P className="text-neutral-600 mt-1">Manage your admin profile information</P>
@@ -314,8 +294,8 @@ export default function AdminProfile() {
 
       <Card>
         <CardHeader>
-          <Div className="flex items-center justify-between gap-4">
-            <Div>
+          <Div className="flex flex-row flex-wrap items-center justify-between gap-4 w-full">
+            <Div className="flex-1">
               <CardTitle>Profile Information</CardTitle>
               <CardDescription>{isEditMode ? 'Update your profile details below' : 'View your admin profile details'}</CardDescription>
             </Div>
@@ -329,15 +309,20 @@ export default function AdminProfile() {
                 <Button type="button" variant="outline" onClick={handleCancelEditing} disabled={saving || uploading} className="h-10 px-6">
                   Cancel
                 </Button>
-                <Button type="submit" form="admin-profile-form" disabled={saving || uploading} className="bg-black text-white hover:bg-neutral-900 h-10 px-6">
+                <Button
+                  type="button"
+                  onClick={() => handleSubmit({ preventDefault() {} })}
+                  disabled={saving || uploading}
+                  className="bg-black text-white hover:bg-neutral-900 h-10 px-6"
+                >
                   {uploading ? (
                     <>
-                      <UiIcon as={Loader2} className="w-4 h-4 mr-2 animate-spin" />
+                      <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
                       Uploading image...
                     </>
                   ) : saving ? (
                     <>
-                      <UiIcon as={Loader2} className="w-4 h-4 mr-2 animate-spin" />
+                      <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
                       Saving...
                     </>
                   ) : (
@@ -426,46 +411,38 @@ export default function AdminProfile() {
 
               <Div className="space-y-2 md:col-span-2">
                 <Label htmlFor="profileImage">Profile Image</Label>
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  nativeID="profileImage"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  onChange={handleFileSelect}
-                  disabled={!isEditMode || saving || uploading}
-                  className="hidden"
-                />
                 {imagePreview || profile.profileImage ? (
-                  <Div className="relative w-48 h-48 border-2 border-neutral-300 rounded-lg overflow-hidden group">
+                  <Div className="relative w-48 h-48 border-2 border-neutral-300 rounded-lg overflow-hidden">
                     <Img src={imagePreview || profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
                     {isEditMode && (
                       <>
-                        <Div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <Label className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors">
-                            Change Image
-                          </Label>
+                        {/* Hover reveals "Change Image" on the web; on touch it is always shown. */}
+                        <Div className="absolute inset-0 bg-black/40 flex items-center justify-center" onClick={handleFileSelect}>
+                          <Span className="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium overflow-hidden">Change Image</Span>
                         </Div>
-                        <Button
+                        <HtmlButton
                           type="button"
                           onClick={handleRemoveImage}
-                          className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg z-10"
+                          className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-full shadow-lg z-10"
+                          accessibilityLabel="Remove image"
                         >
-                          <UiIcon as={X} className="w-4 h-4" />
-                        </Button>
+                          <UiIcon as={X} className="w-4 h-4 text-white" />
+                        </HtmlButton>
                       </>
                     )}
                   </Div>
                 ) : (
-                  <Label
-                    className={`flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed border-neutral-300 rounded-lg transition-colors bg-neutral-50 ${isEditMode ? 'cursor-pointer hover:border-neutral-400' : 'cursor-not-allowed opacity-70'}`}
+                  <Div
+                    onClick={isEditMode && !saving && !uploading ? handleFileSelect : undefined}
+                    className={`flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed border-neutral-300 rounded-lg bg-neutral-50 ${isEditMode ? '' : 'opacity-70'}`}
                   >
                     <UiIcon as={Upload} className="w-8 h-8 text-neutral-400 mb-2" />
                     <P className="text-sm text-neutral-600">{isEditMode ? 'Click to upload' : 'No profile image'}</P>
                     <P className="text-xs text-neutral-500 mt-1">PNG, JPG, WEBP (max 5MB)</P>
-                  </Label>
+                  </Div>
                 )}
-                {isEditMode && imagePreview && <P className="text-xs text-green-600 mt-1">New image selected. Click "Save Changes" to upload.</P>}
-                {isEditMode && profile.profileImage && !imagePreview && <P className="text-xs text-neutral-500 mt-1">Hover over the image to change it</P>}
+                {isEditMode && imagePreview && <P className="text-xs text-green-600 mt-1">New image selected. Click &quot;Save Changes&quot; to upload.</P>}
+                {isEditMode && profile.profileImage && !imagePreview && <P className="text-xs text-neutral-500 mt-1">Tap the image to change it</P>}
               </Div>
 
               <Div className="space-y-2">
@@ -485,7 +462,7 @@ export default function AdminProfile() {
                     disabled={!isEditMode || saving || uploading}
                     className={`h-11 pr-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
                   />
-                  <Button
+                  <HtmlButton
                     type="button"
                     onClick={() =>
                       setShowPasswords((prev) => ({
@@ -494,11 +471,15 @@ export default function AdminProfile() {
                       }))
                     }
                     disabled={!isEditMode || saving || uploading}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 disabled:opacity-50"
+                    className="absolute right-3 top-0 bottom-0 justify-center disabled:opacity-50"
                     accessibilityLabel={showPasswords.currentPassword ? 'Hide old password' : 'Show old password'}
                   >
-                    {showPasswords.currentPassword ? <UiIcon as={EyeOff} className="w-4 h-4" /> : <UiIcon as={Eye} className="w-4 h-4" />}
-                  </Button>
+                    {showPasswords.currentPassword ? (
+                      <UiIcon as={EyeOff} className="w-4 h-4 text-neutral-500" />
+                    ) : (
+                      <UiIcon as={Eye} className="w-4 h-4 text-neutral-500" />
+                    )}
+                  </HtmlButton>
                 </Div>
               </Div>
 
@@ -519,7 +500,7 @@ export default function AdminProfile() {
                     disabled={!isEditMode || saving || uploading}
                     className={`h-11 pr-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
                   />
-                  <Button
+                  <HtmlButton
                     type="button"
                     onClick={() =>
                       setShowPasswords((prev) => ({
@@ -528,11 +509,15 @@ export default function AdminProfile() {
                       }))
                     }
                     disabled={!isEditMode || saving || uploading}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 disabled:opacity-50"
+                    className="absolute right-3 top-0 bottom-0 justify-center disabled:opacity-50"
                     accessibilityLabel={showPasswords.newPassword ? 'Hide new password' : 'Show new password'}
                   >
-                    {showPasswords.newPassword ? <UiIcon as={EyeOff} className="w-4 h-4" /> : <UiIcon as={Eye} className="w-4 h-4" />}
-                  </Button>
+                    {showPasswords.newPassword ? (
+                      <UiIcon as={EyeOff} className="w-4 h-4 text-neutral-500" />
+                    ) : (
+                      <UiIcon as={Eye} className="w-4 h-4 text-neutral-500" />
+                    )}
+                  </HtmlButton>
                 </Div>
               </Div>
 
@@ -553,7 +538,7 @@ export default function AdminProfile() {
                     disabled={!isEditMode || saving || uploading}
                     className={`h-11 pr-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
                   />
-                  <Button
+                  <HtmlButton
                     type="button"
                     onClick={() =>
                       setShowPasswords((prev) => ({
@@ -562,11 +547,15 @@ export default function AdminProfile() {
                       }))
                     }
                     disabled={!isEditMode || saving || uploading}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 disabled:opacity-50"
+                    className="absolute right-3 top-0 bottom-0 justify-center disabled:opacity-50"
                     accessibilityLabel={showPasswords.confirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                   >
-                    {showPasswords.confirmPassword ? <UiIcon as={EyeOff} className="w-4 h-4" /> : <UiIcon as={Eye} className="w-4 h-4" />}
-                  </Button>
+                    {showPasswords.confirmPassword ? (
+                      <UiIcon as={EyeOff} className="w-4 h-4 text-neutral-500" />
+                    ) : (
+                      <UiIcon as={Eye} className="w-4 h-4 text-neutral-500" />
+                    )}
+                  </HtmlButton>
                 </Div>
               </Div>
             </Div>

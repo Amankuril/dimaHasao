@@ -84,7 +84,6 @@ const ImageField = ({ label, value, onChange, folder = 'tours/destinations', hin
           )}
         </Div>
       </Div>
-
     </Div>
   );
 };

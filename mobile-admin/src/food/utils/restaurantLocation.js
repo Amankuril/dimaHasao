@@ -99,6 +99,6 @@ export function getRestaurantDisplayAddress(restaurant) {
   return formatRestaurantDisplayAddress(locationForDisplay, restaurant);
 }
 export function dispatchRestaurantLocationUpdated() {
-  window.dispatchEvent(new Event('ownerDataUpdated'));
-  window.dispatchEvent(new Event('addressUpdated'));
+  window.dispatchEvent({ type: 'ownerDataUpdated' });
+  window.dispatchEvent({ type: 'addressUpdated' });
 }
