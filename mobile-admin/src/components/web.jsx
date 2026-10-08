@@ -394,7 +394,8 @@ function fitFrom(className) {
 export function Img({ src, source, alt, className, style, fallback, onError, onLoad, contentFit, ...rest }) {
   const [failed, setFailed] = useState(false);
   const uri = failed ? fallback : src;
-  const resolved = source || (typeof uri === 'number' ? uri : uri ? { uri: mediaUrl(uri) } : null);
+  // A bundled asset is a module reference: a number on native, an object on web. Only a path needs resolving.
+  const resolved = source || (uri && typeof uri !== 'string' ? uri : uri ? { uri: mediaUrl(uri) } : null);
   if (!resolved) return <View style={[tw.style(className), style]} />;
   return (
     <ExpoImage

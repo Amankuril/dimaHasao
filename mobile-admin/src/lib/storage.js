@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 /*
  * The web reads localStorage and sessionStorage synchronously all over the
@@ -21,6 +22,47 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  */
 
 const PREFIX = 'dha:';
+/*
+ * On a device the tokens live in SecureStore and never touch this store's disk
+ * copy. The Expo web preview has no SecureStore, so there they are persisted
+ * here instead (which is what the admin web itself does with localStorage) —
+ * otherwise a page reload in the preview signs you out on every navigation.
+ */
+const PERSIST_SECRETS = Platform.OS === 'web';
+
+/*
+ * AsyncStorage's web backend IS window.localStorage, which installWebStorage()
+ * replaces with the store below — so on web every disk write would come straight
+ * back in and be prefixed again, growing "dha:dha:dha:..." keys forever. Capture
+ * the browser's real storage here, at import time, before that swap happens.
+ */
+const browserStorage = Platform.OS === 'web' && typeof globalThis.localStorage !== 'undefined' ? globalThis.localStorage : null;
+const disk = {
+  getAllKeys: async () => (browserStorage ? Object.keys(browserStorage) : AsyncStorage.getAllKeys()),
+  multiGet: async (keys) => (browserStorage ? keys.map((k) => [k, browserStorage.getItem(k)]) : AsyncStorage.multiGet(keys)),
+  setItem: (k, v) => {
+    if (browserStorage) {
+      try {
+        browserStorage.setItem(k, v);
+      } catch {
+        /* quota or private mode */
+      }
+      return;
+    }
+    AsyncStorage.setItem(k, v).catch(() => {});
+  },
+  removeItem: (k) => {
+    if (browserStorage) {
+      try {
+        browserStorage.removeItem(k);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    AsyncStorage.removeItem(k).catch(() => {});
+  },
+};
 const mem = new Map();
 const secrets = new Map();
 let hydrated = false;
@@ -32,10 +74,14 @@ const SECRET_KEYS = new Set(['admin_accessToken', 'admin_refreshToken', 'adminTo
 export async function hydrateLocalStore() {
   if (hydrated) return;
   try {
-    const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(PREFIX));
-    const pairs = await AsyncStorage.multiGet(keys);
+    const keys = (await disk.getAllKeys()).filter((k) => k.startsWith(PREFIX) && !k.startsWith(PREFIX + PREFIX));
+    const pairs = await disk.multiGet(keys);
     pairs.forEach(([k, v]) => {
-      if (v != null) mem.set(k.slice(PREFIX.length), v);
+      if (v == null) return;
+      const key = k.slice(PREFIX.length);
+      if (SECRET_KEYS.has(key)) {
+        if (PERSIST_SECRETS) secrets.set(key, v);
+      } else mem.set(key, v);
     });
   } catch {
     // A broken store must not keep the app on the splash.
@@ -50,24 +96,26 @@ export const localStore = {
     if (SECRET_KEYS.has(key)) {
       if (secrets.get(key) === v) return;
       secrets.set(key, v);
+      if (PERSIST_SECRETS) disk.setItem(PREFIX + key, v);
       secretListener?.(key, v);
       return;
     }
     mem.set(key, v);
-    AsyncStorage.setItem(PREFIX + key, v).catch(() => {});
+    disk.setItem(PREFIX + key, v);
   },
   removeItem: (key) => {
     if (SECRET_KEYS.has(key)) {
       if (!secrets.has(key)) return;
       secrets.delete(key);
+      if (PERSIST_SECRETS) disk.removeItem(PREFIX + key);
       secretListener?.(key, null);
       return;
     }
     mem.delete(key);
-    AsyncStorage.removeItem(PREFIX + key).catch(() => {});
+    disk.removeItem(PREFIX + key);
   },
   clear: () => {
-    [...mem.keys()].forEach((k) => AsyncStorage.removeItem(PREFIX + k).catch(() => {}));
+    [...mem.keys()].forEach((k) => disk.removeItem(PREFIX + k));
     mem.clear();
   },
   key: (i) => [...mem.keys()][i] ?? null,

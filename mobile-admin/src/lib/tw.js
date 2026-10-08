@@ -111,15 +111,21 @@ const BORDER_WIDTH = /^border(-[trblxy])?(-(\d+|\[\d+px\]))?$/;
 const BORDER_STYLE = /^border-(solid|dashed|dotted|double|none|hidden)$/;
 
 /** The class list React Native can paint, at phone width. */
+const WIDTH_CLASS = /^(w-|size-|flex-1$|flex-auto$)/;
+
 export function nativeClasses(input) {
   const out = [];
+  const parts = String(input || '').split(/\s+/);
+  // `mx-auto` on the web centres a block that still fills its container (`max-w-7xl mx-auto`).
+  // In React Native an auto horizontal margin makes the view shrink to its content instead, which
+  // pushed whole pages wider than the screen. Centre it, and give it the full width the block had
+  // unless the classes set a width of their own.
+  const autoFill = parts.includes('mx-auto') && !parts.some((p) => WIDTH_CLASS.test(p));
   let display = false;
   let direction = false;
   let hasBorder = false;
   let hasBorderColor = false;
-  String(input || '')
-    .split(/\s+/)
-    .forEach((raw) => {
+  parts.forEach((raw) => {
       if (!raw) return;
       let cls = raw.replace(/^!/, '').replace(/!$/, '');
       if (DROP_VARIANT.test(cls)) return;
@@ -129,6 +135,11 @@ export function nativeClasses(input) {
         return;
       }
       if (DROP_UTILITY.test(cls)) return;
+      if (cls === 'mx-auto') {
+        out.push('self-center');
+        if (autoFill) out.push('w-full');
+        return;
+      }
       // `space-y-4` puts margin between children: a gap does the same.
       const space = cls.match(/^space-([xy])-(.+)$/);
       if (space) cls = `gap-${space[1]}-${space[2]}`;

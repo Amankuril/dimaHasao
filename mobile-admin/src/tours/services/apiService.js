@@ -9,14 +9,9 @@
  */
 import { createApi } from '../../api/client';
 
-// The app client sends the platform admin token (admin_accessToken) on every request.
+// The app client sends the platform admin token (admin_accessToken) on every
+// request, which is what the web's request interceptor did here by hand.
 const api = createApi('/tours');
-const resolveToken = () => localStorage.getItem('admin_accessToken') || localStorage.getItem('adminToken');
-api.interceptors.request.use((config) => {
-  const token = resolveToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
 
 /** Unwraps to the payload and rethrows the server's message, not axios's. */
 const request = async (promise) => {

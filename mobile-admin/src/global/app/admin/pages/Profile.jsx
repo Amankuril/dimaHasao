@@ -80,57 +80,60 @@ const Profile = () => {
     );
   }
   return (
-    <Form onSubmit={submit} className="space-y-6 max-w-3xl">
-      <Div>
-        <H2 className="text-2xl font-bold text-gray-900">My Profile</H2>
-        <P className="text-gray-500 text-sm mt-0.5">Your administrator account, shared across every module.</P>
-      </Div>
-
-      {admin && (
-        <Div className="bg-[#0a4d2b]/5 border border-[#0a4d2b]/15 rounded-2xl p-4 flex items-start gap-3">
-          <UiIcon as={ShieldCheck} size={18} className="text-[#0a4d2b] mt-0.5 shrink-0" />
-          <Div className="text-sm">
-            <P className="font-bold text-gray-900">{LEVEL_LABELS[admin.adminLevel] || admin.adminLevel}</P>
-            <P className="text-gray-600 mt-0.5">
-              {admin.servicesAccess?.length ? `Modules: ${admin.servicesAccess.join(', ')}` : 'No module restriction'}
-              {admin.module ? ` · scoped to ${admin.module}` : ''}
-            </P>
-            <P className="text-xs text-gray-400 mt-1">Only a platform superadmin can change an access level.</P>
-          </Div>
-        </Div>
-      )}
-
-      <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-        <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100">Details</H3>
-
-        <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Div>
-            <Label className={label}>Name</Label>
-            <Input nativeID="admin-name" className={field} value={form.name} onChange={set('name')} />
-          </Div>
-          <Div>
-            <Label className={label}>Phone</Label>
-            <Input nativeID="admin-phone" className={field} value={form.phone} onChange={set('phone')} />
-          </Div>
-        </Div>
-
+    // The web's page padding comes from the panel's <main className="p-4 pb-20">; here each page carries it.
+    <ScrollDiv className="p-4 pb-20">
+      <Form onSubmit={submit} className="space-y-6 max-w-3xl">
         <Div>
-          <Label className={label}>
-            Email <Span className="text-red-500">*</Span>
-          </Label>
-          <Input nativeID="admin-email" className={field} type="email" value={form.email} onChange={set('email')} />
-          <P className="text-xs text-gray-400 mt-1.5">This is what you sign in with.</P>
+          <H2 className="text-2xl font-bold text-gray-900">My Profile</H2>
+          <P className="text-gray-500 text-sm mt-0.5">Your administrator account, shared across every module.</P>
         </Div>
-      </Section>
 
-      <Button
-        type="submit"
-        disabled={saving}
-        className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
-      >
-        {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />} Save changes
-      </Button>
-    </Form>
+        {admin && (
+          <Div className="bg-[#0a4d2b]/5 border border-[#0a4d2b]/15 rounded-2xl p-4 flex items-start gap-3">
+            <UiIcon as={ShieldCheck} size={18} className="text-[#0a4d2b] mt-0.5 shrink-0" />
+            <Div className="text-sm">
+              <P className="font-bold text-gray-900">{LEVEL_LABELS[admin.adminLevel] || admin.adminLevel}</P>
+              <P className="text-gray-600 mt-0.5">
+                {admin.servicesAccess?.length ? `Modules: ${admin.servicesAccess.join(', ')}` : 'No module restriction'}
+                {admin.module ? ` · scoped to ${admin.module}` : ''}
+              </P>
+              <P className="text-xs text-gray-400 mt-1">Only a platform superadmin can change an access level.</P>
+            </Div>
+          </Div>
+        )}
+
+        <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+          <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100">Details</H3>
+
+          <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Div>
+              <Label className={label}>Name</Label>
+              <Input nativeID="admin-name" className={field} value={form.name} onChange={set('name')} />
+            </Div>
+            <Div>
+              <Label className={label}>Phone</Label>
+              <Input nativeID="admin-phone" className={field} value={form.phone} onChange={set('phone')} />
+            </Div>
+          </Div>
+
+          <Div>
+            <Label className={label}>
+              Email <Span className="text-red-500">*</Span>
+            </Label>
+            <Input nativeID="admin-email" className={field} type="email" value={form.email} onChange={set('email')} />
+            <P className="text-xs text-gray-400 mt-1.5">This is what you sign in with.</P>
+          </Div>
+        </Section>
+
+        <Button
+          type="submit"
+          disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
+        >
+          {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />} Save changes
+        </Button>
+      </Form>
+    </ScrollDiv>
   );
 };
 export default Profile;

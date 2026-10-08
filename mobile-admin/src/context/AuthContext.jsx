@@ -28,14 +28,13 @@ const LOCAL_KEYS = ['admin_authenticated', 'admin_user', 'adminInfo', 'fcm_web_r
 
 installWebStorage();
 
-// SecureStore has no web implementation; the Expo web preview keeps tokens in memory.
-const memory = new Map();
+// SecureStore has no web implementation; the Expo web preview falls back to the local store.
 const secure =
   Platform.OS === 'web'
     ? {
-        getItemAsync: async (k) => memory.get(k) ?? null,
-        setItemAsync: async (k, v) => memory.set(k, v),
-        deleteItemAsync: async (k) => memory.delete(k),
+        getItemAsync: async (k) => localStore.getItem(k),
+        setItemAsync: async (k, v) => localStore.setItem(k, v),
+        deleteItemAsync: async (k) => localStore.removeItem(k),
       }
     : SecureStore;
 
