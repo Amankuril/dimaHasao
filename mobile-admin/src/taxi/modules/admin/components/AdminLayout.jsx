@@ -1211,7 +1211,7 @@ const AdminLayoutShell = () => {
     </Button>
   );
   return (
-    <FontFamily family="Inter">
+    <FontFamily family="Poppins">
       <Div className="flex-1 flex-col bg-neutral-100 font-sans text-gray-900">
         <Header className="z-40 border-b border-neutral-200 bg-white shadow-sm" style={{ paddingTop: insets.top }}>
           <Div className="flex h-16 flex-row items-center justify-between px-4">
@@ -1494,7 +1494,7 @@ const AdminLayoutShell = () => {
         {/* Sidebar drawer */}
         {isSidebarOpen && (
           <Overlay className="bg-black/50" onClick={() => setIsSidebarOpen(false)} onClose={() => setIsSidebarOpen(false)}>
-            <FontFamily family="Inter">
+            <FontFamily family="Poppins">
               <Aside
                 onClick={() => {}}
                 className="absolute left-0 top-0 bottom-0 w-80 max-w-[85%] flex flex-col bg-neutral-950 border-r border-neutral-800/60"

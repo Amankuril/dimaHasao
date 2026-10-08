@@ -8,10 +8,10 @@ import { StyleSheet, Text as RNText, TextInput as RNTextInput } from 'react-nati
  * `fontWeight` on a custom family is ignored. These wrappers read the CSS
  * weight a style asks for (`font-semibold` -> '600') and swap in the bundled
  * family for it, so ported screens can keep writing `font-semibold`.
- * The family comes from the nearest <FontFamily> (the web sets it per panel:
- * Poppins in Food/Hotel/Tours/Global from shared/styles/global.css, Inter in
- * the Taxi admin from `.redigo-admin-root *` in Taxi/index.css), or from an
- * explicit `fontFamily: 'Inter'` / 'Poppins' / 'Outfit' in the style.
+ * The family comes from the nearest <FontFamily>. The web runs two families
+ * (Poppins in Food/Hotel/Tours/Global, Inter plus serif headings in the Taxi
+ * admin); the app standardises on Poppins everywhere so the five panels read
+ * as one product. Cinzel and Playfair stay for the sign-in crest only.
  *
  * Inheritance: in CSS, colour, font and alignment flow from a <div> down to
  * the text inside it. components/web.jsx's containers put their text styles
@@ -77,6 +77,21 @@ export function useInheritedText() {
   return useContext(InheritedText);
 }
 
+/**
+ * The type scale. The port inherited the web's ad-hoc sizes (8, 9, 10, 11, 13,
+ * 15, 30 px …); every size snaps to the nearest step here, so the app has one
+ * scale instead of thirteen arbitrary sizes. 11 px is the floor: anything
+ * smaller is unreadable on a phone (the web had 8 px labels in reports).
+ */
+const SCALE = [11, 12, 14, 16, 18, 20, 24, 28, 34];
+
+export function snapFontSize(size) {
+  const n = Number(size);
+  if (!Number.isFinite(n)) return size;
+  if (n >= SCALE[SCALE.length - 1]) return Math.round(n);
+  return SCALE.reduce((best, step) => (Math.abs(step - n) < Math.abs(best - n) ? step : best), SCALE[0]);
+}
+
 function familyKey(name, fallback) {
   if (!name) return fallback;
   const n = String(name);
@@ -85,19 +100,37 @@ function familyKey(name, fallback) {
   if (/outfit|jakarta/i.test(n)) return 'Outfit';
   if (/montserrat/i.test(n)) return 'Montserrat';
   if (/cinzel/i.test(n)) return 'Cinzel';
-  if (/playfair/i.test(n)) return 'Playfair';
-  return null; // a family we don't map (monospace, an exact loaded name): leave it alone
+  if (/playfair|times|serif/i.test(n) && !/sans-serif/i.test(n)) return 'Playfair';
+  if (/mono|courier/i.test(n)) return 'mono';
+  /*
+   * `font-sans` and the CSS system stacks (ui-sans-serif, system-ui,
+   * -apple-system) are not a family this app bundles: left alone they render
+   * in the OS font while the screen beside them renders in Poppins. They take
+   * the panel's family instead — 65 `font-sans` uses across the panels were
+   * silently opting out of the app's typography.
+   */
+  if (/ui-sans-serif|system-ui|-apple-system|sans-serif|segoe|roboto|helvetica|arial/i.test(n)) return fallback;
+  // A family the app does not bundle (e.g. NunitoSans) would fall back to the OS font.
+  if (!FAMILIES[n] && !/_/.test(n)) return fallback;
+  return null; // an exact loaded face name (Poppins_600SemiBold): leave it alone
 }
 
 /** The style with fontWeight replaced by the matching font file. */
 export function resolveFont(style, fallback = 'Poppins') {
   const flat = StyleSheet.flatten(style) || {};
-  const key = familyKey(flat.fontFamily, fallback);
-  if (!key) return flat;
-  const raw = flat.fontWeight;
+  const sized = flat.fontSize != null && snapFontSize(flat.fontSize) !== flat.fontSize ? { ...flat, fontSize: snapFontSize(flat.fontSize) } : flat;
+  const key = familyKey(sized.fontFamily, fallback);
+  if (!key) return sized;
+  if (key === 'mono') {
+    // Admin screens set `font-mono` on ids and amounts; Android's own monospace keeps that intent.
+    const { fontWeight: mw, ...monoRest } = sized; // eslint-disable-line no-unused-vars
+    return { ...monoRest, fontFamily: 'monospace' };
+  }
+  const flat2 = sized;
+  const raw = flat2.fontWeight;
   const w = typeof raw === 'number' ? raw : WEIGHT[raw] || Number(raw) || 400;
   const snapped = Math.min(900, Math.max(300, Math.round(w / 100) * 100));
-  const { fontWeight, ...rest } = flat; // eslint-disable-line no-unused-vars
+  const { fontWeight, ...rest } = flat2; // eslint-disable-line no-unused-vars
   return { ...rest, fontFamily: FAMILIES[key][snapped] };
 }
 

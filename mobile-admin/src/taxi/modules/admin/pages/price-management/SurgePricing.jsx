@@ -99,7 +99,6 @@ const SurgePricing = () => {
           <H1
             className="text-xl font-bold text-[#1E293B]"
             style={{
-              fontFamily: 'Playfair',
             }}
           >
             Surge Pricing

@@ -592,8 +592,7 @@ const SetPrices = ({ mode }) => {
               <H1
                 className="text-2xl font-bold text-[#1E293B]"
                 style={{
-                  fontFamily: 'Playfair',
-                }}
+                    }}
               >
                 Set Prices
               </H1>
@@ -909,8 +908,7 @@ const SetPrices = ({ mode }) => {
               <H1
                 className="text-xl font-bold text-[#1E293B]"
                 style={{
-                  fontFamily: 'Playfair',
-                }}
+                    }}
               >
                 {mode === 'edit' ? 'Edit Set Price' : 'Create Set Price'}
               </H1>

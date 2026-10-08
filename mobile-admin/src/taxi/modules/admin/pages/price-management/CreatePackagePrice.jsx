@@ -205,7 +205,6 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
           <H1
             className="text-2xl font-bold text-[#1E293B]"
             style={{
-              fontFamily: 'Playfair',
             }}
           >
             {isEdit ? 'Edit Package Pricing' : 'Create Package Pricing'}
