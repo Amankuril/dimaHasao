@@ -1,0 +1,133 @@
+/* Ported from Frontend/src/modules/Global/app/admin/components/FeaturePermissionMatrix.jsx (tools/port.js first pass). */
+/**
+ * What a sub-admin may see and change, module by module.
+ *
+ * The catalogue comes from the server (`/v1/admin/meta`) rather than a list
+ * kept here, because the same catalogue is what the server enforces — a second
+ * copy would drift the first time a feature is added and hand out grants that
+ * nothing checks.
+ *
+ * Only modules the admin has been given appear. Ticking a feature nobody can
+ * reach is a grant that reads as access and is not one.
+ */
+import React from 'react';
+import { Check } from 'lucide-react-native';
+import { Button, Div, P, Span, Icon as UiIcon } from '../../../../components/web';
+const ACTION_LABELS = {
+  view: 'View',
+  create: 'Create',
+  edit: 'Edit',
+  delete: 'Delete',
+};
+const Box = ({ checked, onChange, title }) => (
+  <Button
+    type="button"
+    onClick={onChange}
+    className={`h-6 w-6 rounded-md border flex items-center justify-center transition ${checked ? 'bg-[#0a4d2b] border-[#0a4d2b] text-white' : 'bg-white border-gray-300 text-transparent hover:border-[#0a4d2b]'}`}
+  >
+    <UiIcon as={Check} size={13} strokeWidth={3} />
+  </Button>
+);
+export default function FeaturePermissionMatrix({ catalogue = [], actions = ['view', 'create', 'edit', 'delete'], modules = [], value = {}, onChange }) {
+  const granted = (permission, action) => Boolean(value?.[permission]?.[action]);
+  const setOne = (permission, action, next) => {
+    const current = {
+      ...(value[permission] || {}),
+    };
+    if (next) {
+      current[action] = true;
+      // Anything you can change, you can see — granting edit without view
+      // produces a row the admin can act on but never open.
+      if (action !== 'view') current.view = true;
+    } else {
+      delete current[action];
+      // Losing sight of a row means losing the right to change it too.
+      if (action === 'view') actions.forEach((item) => delete current[item]);
+    }
+    const nextValue = {
+      ...value,
+    };
+    if (Object.keys(current).length) nextValue[permission] = current;
+    else delete nextValue[permission];
+    onChange(nextValue);
+  };
+  const setRow = (permission, next) => {
+    const nextValue = {
+      ...value,
+    };
+    if (next) nextValue[permission] = Object.fromEntries(actions.map((a) => [a, true]));
+    else delete nextValue[permission];
+    onChange(nextValue);
+  };
+  const setModule = (moduleFeatures, next) => {
+    const nextValue = {
+      ...value,
+    };
+    moduleFeatures.forEach(({ permission }) => {
+      if (next) nextValue[permission] = Object.fromEntries(actions.map((a) => [a, true]));
+      else delete nextValue[permission];
+    });
+    onChange(nextValue);
+  };
+  const visible = catalogue.filter((entry) => modules.includes(entry.module));
+  if (!visible.length) {
+    return (
+      <P className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-4">
+        Choose at least one module above, then pick what this admin may do inside it.
+      </P>
+    );
+  }
+  return (
+    <Div className="space-y-5">
+      {visible.map(({ module, features }) => {
+        const allOn = features.every(({ permission }) => actions.every((action) => granted(permission, action)));
+        return (
+          <Div key={module} className="border border-gray-200 rounded-xl overflow-hidden">
+            <Div className="flex items-center justify-between bg-gray-50 px-4 py-2.5 border-b border-gray-200">
+              <Span className="text-[13px] font-bold text-gray-800 capitalize">{module}</Span>
+              <Button
+                type="button"
+                onClick={() => setModule(features, !allOn)}
+                className="text-[11px] font-bold uppercase tracking-wide text-[#0a4d2b] hover:underline"
+              >
+                {allOn ? 'Clear all' : 'Select all'}
+              </Button>
+            </Div>
+
+            <Div className="divide-y divide-gray-100">
+              <Div className="hidden sm:flex items-center px-4 py-1.5 bg-white">
+                <Span className="flex-1" />
+                {actions.map((action) => (
+                  <Span key={action} className="w-16 text-center text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                    {ACTION_LABELS[action] || action}
+                  </Span>
+                ))}
+              </Div>
+
+              {features.map(({ key, label, permission }) => {
+                const rowOn = actions.every((action) => granted(permission, action));
+                return (
+                  <Div key={key} className="flex items-center px-4 py-2 hover:bg-gray-50/70">
+                    <Button type="button" onClick={() => setRow(permission, !rowOn)} className="flex-1 text-left text-[13px] text-gray-700">
+                      {label}
+                    </Button>
+
+                    {actions.map((action) => (
+                      <Span key={action} className="w-16 flex justify-center">
+                        <Box
+                          checked={granted(permission, action)}
+                          onChange={() => setOne(permission, action, !granted(permission, action))}
+                          title={`${ACTION_LABELS[action] || action} — ${label}`}
+                        />
+                      </Span>
+                    ))}
+                  </Div>
+                );
+              })}
+            </Div>
+          </Div>
+        );
+      })}
+    </Div>
+  );
+}
