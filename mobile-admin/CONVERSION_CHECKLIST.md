@@ -19,7 +19,7 @@ Status values: **Verified** (run and seen working) · **Built, not tested** · *
 | Maps key (Android) | the Android Maps key the other apps' `eas.json` use | `mobile-delivery/eas.json` |
 | Firebase / push | **not needed**: the admin web registers no FCM token and receives no push (no `firebaseMessaging` / `getToken` in any admin file) | grep over the admin source |
 | Payment key | not needed: the admin panels take no payments | — |
-| Test login | `admin@gmail.com` / `admin123` (platform superadmin from `Backend/scripts/seed-super-admin.js`); works on production 2026-10-08 | seed script defaults |
+| Test login | the platform superadmin created by `Backend/scripts/seed-super-admin.js` (ask the owner for the current password; it is **not** recorded here) | seed script |
 
 ## Preconditions (2026-10-08)
 
@@ -28,8 +28,9 @@ Status values: **Verified** (run and seen working) · **Built, not tested** · *
 2. Web source and backend source present; no wrapper (see 1). OK
 3. `https://tourismdimahasao.in/api/v1/food/admin/business-settings/public` answers 200 over HTTPS. OK
 4. Credentials: Maps key present. No Firebase needed (no push in the admin web). OK
-5. Login: the seeded superadmin signs in on production. OK — **and a security problem**: the production superadmin still
-   has the seed script's default password. Change it (Global › Profile) after testing.
+5. Login: the seeded superadmin signs in on production. OK — **and a security problem**: on 2026-10-08 that account still
+   accepted the default password that `Backend/scripts/seed-super-admin.js` hard-codes, so anyone who has read the
+   repository can sign in as a platform superadmin. Change it (Global › Profile) and give the script no default.
 6. Expo: `eas whoami` → not logged in. The release build is done locally with the Android SDK (`~/Android/Sdk`, JDK 17)
    or with `eas login` + `eas build`.
 

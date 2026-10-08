@@ -35,5 +35,6 @@ Web preview of a screen: `BROWSER=none npx expo start --web --port 8091`, screen
 
 ## Known
 
-- Production superadmin still uses the seed default password `admin123` (see checklist).
-- `admin@gmail.com` / `admin123` is the test login.
+- Sign in as the platform superadmin that `Backend/scripts/seed-super-admin.js` creates; ask the owner for the
+  password (deliberately not recorded here). On 2026-10-08 that account still accepted the script's hard-coded
+  default, which is a live security hole — see CONVERSION_CHECKLIST.md.
