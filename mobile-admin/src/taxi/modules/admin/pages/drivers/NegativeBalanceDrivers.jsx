@@ -4,7 +4,8 @@ import { ChevronRight, Eye, FileSearch, MoreHorizontal, Search } from 'lucide-re
 import { useNavigate } from '../../../../../lib/webRouter';
 import { Button, Div, H1, Input, Option, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../../components/web';
 import { window } from '../../../../../lib/webShim';
-const BASE = () => `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/wallet/drivers/negative-balance`;
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
+const BASE = () => `${API_BASE_URL}/admin/wallet/drivers/negative-balance`;
 const NegativeBalanceDrivers = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');

@@ -52,6 +52,7 @@ import {
   Icon as UiIcon,
 } from '../../../../../components/web';
 import { alert } from '../../../../../lib/webShim';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 const UserDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ const UserDetails = () => {
       setIsLoading(true);
 
       // Fetch User Info
-      const userRes = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/users/${id}`, {
+      const userRes = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -128,7 +129,7 @@ const UserDetails = () => {
       }
 
       // Fetch Requests
-      const reqRes = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/users/${id}/requests`, {
+      const reqRes = await fetch(`${API_BASE_URL}/admin/users/${id}/requests`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -160,7 +161,7 @@ const UserDetails = () => {
       }
 
       // Fetch Wallet History
-      const walletRes = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/users/${id}/wallet-history`, {
+      const walletRes = await fetch(`${API_BASE_URL}/admin/users/${id}/wallet-history`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -214,7 +215,7 @@ const UserDetails = () => {
     if (!walletAmount || isSubmitting) return;
     try {
       setIsSubmitting(true);
-      const res = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/wallet/users/${id}/adjust`, {
+      const res = await fetch(`${API_BASE_URL}/admin/wallet/users/${id}/adjust`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -3,7 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Eye, FileSearch, QrCode, Search } from 'lucide-react-native';
 import { useNavigate } from '../../../../../lib/webRouter';
 import { Button, Div, H1, Input, Option, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../../components/web';
-const BASE = () => `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/wallet/drivers/withdrawals`;
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
+const BASE = () => `${API_BASE_URL}/admin/wallet/drivers/withdrawals`;
 const formatDateTime = (value) => {
   if (!value) return '-';
   const date = new Date(value);

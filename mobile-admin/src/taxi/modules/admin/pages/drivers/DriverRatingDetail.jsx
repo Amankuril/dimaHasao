@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ChevronRight, Mail, MapPin, Phone, Star } from 'lucide-react-native';
 import { useNavigate, useParams } from '../../../../../lib/webRouter';
 import { Button, Div, H1, H2, Img, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 const DriverRatingDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -15,7 +16,7 @@ const DriverRatingDetail = () => {
       setError('');
       try {
         const token = localStorage.getItem('adminToken');
-        const res = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/driver-ratings/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/admin/driver-ratings/${id}`, {
           headers: token
             ? {
                 Authorization: `Bearer ${token}`,

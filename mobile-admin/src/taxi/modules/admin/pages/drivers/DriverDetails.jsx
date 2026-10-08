@@ -42,6 +42,7 @@ import {
 } from '../../../../../components/web';
 import { Line, Polyline as SvgPolyline, Svg } from 'react-native-svg';
 import { window } from '../../../../../lib/webShim';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 /* The web's `absolute inset-0 w-full h-full` on the chart <svg>. */
 const CHART_OVERLAY_STYLE = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 };
 const getMapIconForVehicle = (iconType = '') => {
@@ -451,7 +452,7 @@ const DriverDetails = () => {
           }
         : {};
       const [res, walletRes] = await Promise.all([
-        fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}/profile?t=${Date.now()}`, {
+        fetch(`${API_BASE_URL}/admin/drivers/${id}/profile?t=${Date.now()}`, {
           headers,
           cache: 'no-store',
         }),
@@ -858,7 +859,7 @@ const DriverDetails = () => {
                       }));
                       try {
                         const token = localStorage.getItem('adminToken');
-                        await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/wallet/drivers/${id}/adjust`, {
+                        await fetch(`${API_BASE_URL}/admin/wallet/drivers/${id}/adjust`, {
                           method: 'POST',
                           headers: {
                             ...(token
@@ -1189,7 +1190,7 @@ const DriverDetails = () => {
                                       reverificationRequestedAt: null,
                                     },
                                   };
-                                  const response = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}`, {
+                                  const response = await fetch(`${API_BASE_URL}/admin/drivers/${id}`, {
                                     method: 'PATCH',
                                     headers: {
                                       ...(token
@@ -1249,7 +1250,7 @@ const DriverDetails = () => {
                                       reverificationRequestedAt: null,
                                     },
                                   };
-                                  const response = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}`, {
+                                  const response = await fetch(`${API_BASE_URL}/admin/drivers/${id}`, {
                                     method: 'PATCH',
                                     headers: {
                                       ...(token

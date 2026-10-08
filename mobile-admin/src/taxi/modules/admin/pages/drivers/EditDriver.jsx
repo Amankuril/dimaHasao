@@ -6,6 +6,7 @@ import { adminService } from '../../services/adminService';
 import { useTaxiTransportTypes } from '../../../../shared/hooks/useTaxiTransportTypes';
 import { objectUrl, pickImage } from '../../../../../lib/files';
 import { Button, Div, Form, H1, H3, Img, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 const serviceCategoryOptions = [
   {
     value: 'taxi',
@@ -115,7 +116,7 @@ const EditDriver = () => {
     const fetchInitialData = async () => {
       setIsFetching(true);
       try {
-        const locRes = await fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/service-locations', {
+        const locRes = await fetch(API_BASE_URL + '/admin/service-locations', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -125,7 +126,7 @@ const EditDriver = () => {
           const results = locData.data?.results || locData.data || locData.results || [];
           setLocations(Array.isArray(results) ? results : []);
         }
-        const zoneRes = await fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/zones', {
+        const zoneRes = await fetch(API_BASE_URL + '/admin/zones', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -135,7 +136,7 @@ const EditDriver = () => {
           const results = zoneData.data?.results || zoneData.data || zoneData.results || [];
           setZones(Array.isArray(results) ? results : []);
         }
-        const countRes = await fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/countries', {
+        const countRes = await fetch(API_BASE_URL + '/countries', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -147,7 +148,7 @@ const EditDriver = () => {
         }
 
         // Fetching driver details
-        const response = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/admin/drivers/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -343,7 +344,7 @@ const EditDriver = () => {
           },
         },
       };
-      const response = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/drivers/${id}`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,

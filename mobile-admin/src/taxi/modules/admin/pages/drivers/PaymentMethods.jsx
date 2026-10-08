@@ -3,7 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Plus, Search, Trash2, Edit2, ChevronDown, Loader2, ArrowLeft } from 'lucide-react-native';
 import { Button, Div, H1, Input, Label, Option, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../../components/web';
 import { Switch } from '../../../../../components/shadcn';
-const BASE = () => `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/payment-methods`;
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
+const BASE = () => `${API_BASE_URL}/admin/payment-methods`;
 const inputClass =
   'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors';
 const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';

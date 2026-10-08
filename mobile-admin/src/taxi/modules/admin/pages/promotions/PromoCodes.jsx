@@ -43,7 +43,8 @@ import {
   Icon as UiIcon,
 } from '../../../../../components/web';
 import { alert, window } from '../../../../../lib/webShim';
-const BASE = globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/promos';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
+const BASE = API_BASE_URL + '/admin/promos';
 const LIST_PATH = '/taxi/admin/promotions/promo-codes';
 const CREATE_PATH = '/taxi/admin/promotions/promo-codes/create';
 const Motion = motion;
@@ -307,7 +308,7 @@ const PromoCodes = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/promotions/bootstrap`, {
+      const res = await fetch(`${API_BASE_URL}/admin/promotions/bootstrap`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

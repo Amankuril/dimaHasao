@@ -26,6 +26,7 @@ import {
 import { alert, window } from '../../../../../lib/webShim';
 import { objectUrl, pickImage } from '../../../../../lib/files';
 import fileToDataUrl from './fileToDataUrl';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 const Motion = motion;
 const LIST_PATH = '/taxi/admin/promotions/banner-image';
 const CREATE_PATH = '/taxi/admin/promotions/banner-image/create';
@@ -44,7 +45,7 @@ const BannerImage = () => {
   const [formData, setFormData] = useState(createInitialFormData);
   const [imagePreview, setImagePreview] = useState(null);
   const token = localStorage.getItem('adminToken') || '';
-  const baseUrl = globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin';
+  const baseUrl = API_BASE_URL + '/admin';
   const resolveImageUrl = useCallback(
     (img) => {
       if (!img) return null;
@@ -58,7 +59,7 @@ const BannerImage = () => {
     async (bannersList) => {
       if (!token) return;
       try {
-        const homeRes = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/general-settings/user-home-management`, {
+        const homeRes = await fetch(`${API_BASE_URL}/admin/general-settings/user-home-management`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -80,7 +81,7 @@ const BannerImage = () => {
           ...currentSettings,
           promos: nextPromos,
         };
-        await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/general-settings/user-home-management`, {
+        await fetch(`${API_BASE_URL}/admin/general-settings/user-home-management`, {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -100,7 +101,7 @@ const BannerImage = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const bootstrapRes = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/promotions/bootstrap`, {
+      const bootstrapRes = await fetch(`${API_BASE_URL}/admin/promotions/bootstrap`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
