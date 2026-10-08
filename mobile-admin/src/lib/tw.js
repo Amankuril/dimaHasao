@@ -29,6 +29,14 @@ function buildColors() {
     colors[m[1]] = colors[m[1]] || {};
     colors[m[1]][m[2]] = hex;
   });
+  /*
+   * The panels use Tailwind's `gray` and `slate` ramps interchangeably — 647
+   * screens on `bg-slate-50` against 611 on `bg-gray-50`, and the same split
+   * on borders and body text. They are different hues (gray is neutral, slate
+   * is cooler), so a page mixing them looks subtly dirty. One neutral ramp:
+   * `gray-*` resolves to the `slate-*` value.
+   */
+  colors.gray = colors.slate;
   return colors;
 }
 
