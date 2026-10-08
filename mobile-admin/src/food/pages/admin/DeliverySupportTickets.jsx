@@ -5,11 +5,18 @@ import { MessageSquare, Search, Clock, CheckCircle, XCircle, Loader2, Eye, Edit 
 import { adminAPI } from '../../../api/food';
 import { toast } from '../../../lib/notify';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Textarea } from '../../../components/shadcn';
-import { Button, Div, H1, H3, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, StatCard, Toolbar, StatusBadge, LoadingState, EmptyState, Field, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../admin/ui';
+import { Button, Div, Input, Option, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../components/web';
+
+/* The kit's status words don't cover a ticket's lifecycle, so the tone is mapped here. */
+const TICKET_TONE = { open: 'warning', in_progress: 'info', resolved: 'success', closed: 'neutral' };
+const ticketStatusLabel = (status) => String(status || '').replace('_', ' ').replace(/^./, (c) => c.toUpperCase());
+const PAGE_MAX = 1200;
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 export default function DeliverySupportTickets() {
+  const { width, tablet, wide } = useLayoutWidth();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,30 +127,14 @@ export default function DeliverySupportTickets() {
   };
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'open':
-        return <UiIcon as={Clock} className="w-5 h-5 text-orange-500" />;
-      case 'in_progress':
-        return <UiIcon as={Clock} className="w-5 h-5 text-blue-500" />;
       case 'resolved':
-        return <UiIcon as={CheckCircle} className="w-5 h-5 text-green-500" />;
+        return <UiIcon as={CheckCircle} size={18} className="text-green-700" />;
       case 'closed':
-        return <UiIcon as={XCircle} className="w-5 h-5 text-gray-500" />;
-      default:
-        return <UiIcon as={Clock} className="w-5 h-5 text-gray-500" />;
-    }
-  };
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'open':
-        return 'bg-orange-100 text-orange-700';
+        return <UiIcon as={XCircle} size={18} className="text-slate-400" />;
       case 'in_progress':
-        return 'bg-blue-100 text-blue-700';
-      case 'resolved':
-        return 'bg-green-100 text-green-700';
-      case 'closed':
-        return 'bg-gray-100 text-gray-700';
+        return <UiIcon as={Clock} size={18} className="text-blue-700" />;
       default:
-        return 'bg-gray-100 text-gray-700';
+        return <UiIcon as={Clock} size={18} className="text-amber-700" />;
     }
   };
   const formatDate = (dateString) => {
@@ -166,142 +157,153 @@ export default function DeliverySupportTickets() {
       minute: '2-digit',
     });
   };
+  const statColumns = wide ? 5 : tablet ? 3 : 2;
+  const statWidth = (Math.min(width, PAGE_MAX) - 32 - 32 - 12 * (statColumns - 1)) / statColumns;
+  const statTiles = stats
+    ? [
+        { label: 'Total', value: stats.total, tone: 'neutral' },
+        { label: 'Open', value: stats.open, tone: 'warning' },
+        { label: 'In progress', value: stats.inProgress, tone: 'info' },
+        { label: 'Resolved', value: stats.resolved, tone: 'success' },
+        { label: 'Closed', value: stats.closed, tone: 'neutral' },
+      ]
+    : [];
   const listHeader = (
-    <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-3">
-          {/* Header */}
-          <Div className="flex items-center gap-3 mb-6">
-            <UiIcon as={MessageSquare} className="w-6 h-6 text-slate-600" />
-            <Div>
-              <H1 className="text-2xl font-bold text-slate-900">Delivery Support Tickets</H1>
-              <P className="text-sm text-slate-600 mt-1">Manage and respond to support tickets from delivery partners</P>
+    <Div>
+      <PageHeader
+        icon={MessageSquare}
+        title="Delivery support tickets"
+        subtitle="Manage and respond to support tickets raised by delivery partners."
+        breadcrumb={[{ label: 'Food' }, { label: 'Delivery' }, { label: 'Support tickets' }]}
+      />
+      {stats ? (
+        <Div className="flex-row flex-wrap gap-3 mb-3">
+          {statTiles.map((tile) => (
+            <Div key={tile.label} style={{ width: statWidth }}>
+              <StatCard label={tile.label} value={String(tile.value ?? 0)} tone={tile.tone} />
             </Div>
+          ))}
+        </Div>
+      ) : null}
+      <Card className="mb-3">
+        <SectionTitle>Filters</SectionTitle>
+        <Div className="flex-row items-center gap-2 mb-3">
+          <UiIcon as={Search} size={16} className="text-slate-400" />
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Search subject, description, ticket ID or partner"
+            className={`${INPUT} flex-1`}
+          />
+        </Div>
+        <Toolbar className="mb-0">
+          <Div className="flex-1 min-w-[150px]">
+            <Field label="Status">
+              <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={INPUT}>
+                <Option value="">All status</Option>
+                <Option value="open">Open</Option>
+                <Option value="in_progress">In progress</Option>
+                <Option value="resolved">Resolved</Option>
+                <Option value="closed">Closed</Option>
+              </Select>
+            </Field>
           </Div>
-
-          {/* Stats */}
-          {stats && (
-            <Div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              <Div className="bg-slate-50 rounded-lg p-4 text-center">
-                <P className="text-2xl font-bold text-slate-900">{stats.total}</P>
-                <P className="text-xs text-slate-600 mt-1">Total</P>
-              </Div>
-              <Div className="bg-orange-50 rounded-lg p-4 text-center">
-                <P className="text-2xl font-bold text-orange-700">{stats.open}</P>
-                <P className="text-xs text-orange-600 mt-1">Open</P>
-              </Div>
-              <Div className="bg-blue-50 rounded-lg p-4 text-center">
-                <P className="text-2xl font-bold text-blue-700">{stats.inProgress}</P>
-                <P className="text-xs text-blue-600 mt-1">In Progress</P>
-              </Div>
-              <Div className="bg-green-50 rounded-lg p-4 text-center">
-                <P className="text-2xl font-bold text-green-700">{stats.resolved}</P>
-                <P className="text-xs text-green-600 mt-1">Resolved</P>
-              </Div>
-              <Div className="bg-gray-50 rounded-lg p-4 text-center">
-                <P className="text-2xl font-bold text-gray-700">{stats.closed}</P>
-                <P className="text-xs text-gray-600 mt-1">Closed</P>
-              </Div>
-            </Div>
-          )}
-
-          {/* Filters */}
-          <Div className="flex flex-col md:flex-row gap-4 mb-6">
-            <Div className="flex-1">
-              <Div className="relative">
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="Search by subject, description, ticket ID, or delivery partner..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </Div>
-            </Div>
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <Option value="">All Status</Option>
-              <Option value="open">Open</Option>
-              <Option value="in_progress">In Progress</Option>
-              <Option value="resolved">Resolved</Option>
-              <Option value="closed">Closed</Option>
-            </Select>
-            <Select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <Option value="">All Priority</Option>
-              <Option value="low">Low</Option>
-              <Option value="medium">Medium</Option>
-              <Option value="high">High</Option>
-              <Option value="urgent">Urgent</Option>
-            </Select>
+          <Div className="flex-1 min-w-[150px]">
+            <Field label="Priority">
+              <Select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className={INPUT}>
+                <Option value="">All priority</Option>
+                <Option value="low">Low</Option>
+                <Option value="medium">Medium</Option>
+                <Option value="high">High</Option>
+                <Option value="urgent">Urgent</Option>
+              </Select>
+            </Field>
           </Div>
+          <Button onClick={handleSearch} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Search</Span>
+          </Button>
+        </Toolbar>
+      </Card>
+    </Div>
+  );
+  const detailBlock = (label, value) => (
+    <Div className="gap-1">
+      <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</Span>
+      <Span className="text-sm text-slate-900">{value}</Span>
     </Div>
   );
   return (
-    <Div className="flex-1 bg-slate-50">
+    <AdminPage scroll={false} padded={false} maxWidth={PAGE_MAX} contentClassName="flex-1">
       <FlatList
         data={loading ? [] : tickets}
         keyExtractor={(item) => String(item._id)}
         renderItem={({ item: ticket }) => (
-            <Div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <Div className="flex items-center justify-between">
-                <Div className="flex items-center gap-3 flex-1 min-w-0">
-                  {getStatusIcon(ticket.status)}
-                  <Div className="flex-1 min-w-0">
-                    <Div className="flex items-center gap-2 mb-1 flex-wrap">
-                      {ticket.ticketId && (
-                        <Span className="text-xs font-mono font-semibold bg-gray-100 text-gray-700 px-2 py-0.5 rounded">#{ticket.ticketId}</Span>
-                      )}
-                      <Span className="text-sm font-medium text-gray-900 truncate">{ticket.subject}</Span>
-                      <Span className="text-xs text-gray-600">{ticket.deliveryPartner?.name || 'N/A'}</Span>
-                      {ticket.deliveryPartner?._id && (
-                        <Span className="text-xs text-gray-500">ID: DP-{String(ticket.deliveryPartner._id).slice(-8).toUpperCase()}</Span>
-                      )}
-                      <Span className="text-xs text-gray-500">{formatDateTime(ticket.createdAt)}</Span>
-                    </Div>
-                  </Div>
+          <Card>
+            <Div className="flex-row items-start gap-3">
+              {getStatusIcon(ticket.status)}
+              <Div className="flex-1 min-w-0 gap-1.5">
+                <Div className="flex-row items-center flex-wrap gap-2">
+                  {ticket.ticketId ? <Span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">#{ticket.ticketId}</Span> : null}
+                  <StatusBadge status={ticket.status} tone={TICKET_TONE[ticket.status] || 'neutral'} label={ticketStatusLabel(ticket.status)} />
                 </Div>
-                <Div className="flex items-center gap-2 shrink-0">
-                  <Button onClick={() => handleViewTicket(ticket)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <UiIcon as={Eye} className="w-4 h-4 text-gray-600" />
-                  </Button>
-                  <Button onClick={() => handleRespond(ticket)} className="p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                    <UiIcon as={Edit} className="w-4 h-4 text-blue-600" />
-                  </Button>
-                  {ticket.status !== 'closed' && (
-                    <Select
-                      value={ticket.status}
-                      onChange={(e) => handleStatusChange(ticket._id, e.target.value)}
-                      className="text-xs px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Option value="open">Open</Option>
-                      <Option value="in_progress">In Progress</Option>
-                      <Option value="resolved">Resolved</Option>
-                      <Option value="closed">Closed</Option>
-                    </Select>
-                  )}
-                </Div>
+                <Span className="text-sm font-semibold text-slate-900">{ticket.subject}</Span>
+                <Span className="text-xs text-slate-500">
+                  {`${ticket.deliveryPartner?.name || 'N/A'}${ticket.deliveryPartner?._id ? ` · DP-${String(ticket.deliveryPartner._id).slice(-8).toUpperCase()}` : ''} · ${formatDateTime(ticket.createdAt)}`}
+                </Span>
               </Div>
             </Div>
+            <Div className="flex-row items-center gap-2 mt-3 pt-3 border-t border-slate-100 flex-wrap">
+              <Button
+                onClick={() => handleViewTicket(ticket)}
+                accessibilityLabel="View ticket"
+                className="w-11 h-11 rounded-lg border border-slate-200 bg-white items-center justify-center"
+              >
+                <UiIcon as={Eye} size={16} className="text-slate-600" />
+              </Button>
+              <Button
+                onClick={() => handleRespond(ticket)}
+                accessibilityLabel="Respond to ticket"
+                className="w-11 h-11 rounded-lg border border-slate-200 bg-white items-center justify-center"
+              >
+                <UiIcon as={Edit} size={16} className="text-blue-700" />
+              </Button>
+              {ticket.status !== 'closed' ? (
+                <Div className="flex-1 min-w-[150px]">
+                  <Select
+                    value={ticket.status}
+                    onChange={(e) => handleStatusChange(ticket._id, e.target.value)}
+                    className={INPUT}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Option value="open">Open</Option>
+                    <Option value="in_progress">In progress</Option>
+                    <Option value="resolved">Resolved</Option>
+                    <Option value="closed">Closed</Option>
+                  </Select>
+                </Div>
+              ) : null}
+            </Div>
+          </Card>
         )}
         ItemSeparatorComponent={() => <Div className="h-3" />}
         ListHeaderComponent={listHeader}
         ListEmptyComponent={
           loading ? (
-            <Div className="flex items-center justify-center py-12">
-              <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-gray-600" />
-            </Div>
+            <LoadingState label="Loading tickets…" />
           ) : (
-            <Div className="bg-slate-50 rounded-lg p-8 text-center">
-              <P className="text-gray-600">No tickets found</P>
-            </Div>
+            <EmptyState
+              icon={MessageSquare}
+              title="No tickets found"
+              message="No delivery support tickets match these filters."
+              actionLabel="Clear filters"
+              onAction={() => {
+                setSearchQuery('');
+                setStatusFilter('');
+                setPriorityFilter('');
+              }}
+            />
           )
         }
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
@@ -310,199 +312,122 @@ export default function DeliverySupportTickets() {
 
       {/* View Ticket Dialog - Full Details */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="flex w-[calc(100%-2rem)] max-w-[600px] max-h-[85vh] flex-col overflow-hidden border border-slate-200 bg-white p-0 shadow-2xl">
-          <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-14">
-            <DialogTitle className="text-xl font-semibold text-gray-900">Ticket Details</DialogTitle>
-            <P className="text-sm text-gray-600 mt-1">Complete information about the support ticket</P>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-[600px] max-h-[85vh] border border-slate-200 bg-white p-0">
+          <DialogHeader className="border-b border-slate-200 px-4 py-4 pr-14">
+            <DialogTitle className="text-base font-semibold text-slate-900">Ticket details</DialogTitle>
+            <Span className="text-sm text-slate-500 mt-0.5">Everything recorded against this support ticket</Span>
           </DialogHeader>
-          {selectedTicket && (
-            <Div className="flex-1 px-6 py-5">
-              <Div className="space-y-6">
-                {/* Ticket Information Section */}
-                <Div>
-                  <Div className="flex items-center gap-3 mb-4">
-                    <Div className="w-1 h-6 bg-blue-500 rounded"></Div>
-                    <H3 className="text-base font-semibold text-gray-900">Ticket Information</H3>
-                  </Div>
-                  <Div className="pl-4 space-y-4">
-                    {/* Ticket ID */}
-                    {selectedTicket.ticketId && (
-                      <Div>
-                        <P className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Ticket ID</P>
-                        <Div className="bg-gray-200 text-gray-800 px-4 py-2.5 rounded-lg inline-block">
-                          <P className="text-base font-mono font-semibold">#{selectedTicket.ticketId}</P>
-                        </Div>
-                      </Div>
-                    )}
-
-                    {/* Subject */}
-                    <Div>
-                      <P className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Subject</P>
-                      <P className="text-base text-gray-900 font-semibold">{selectedTicket.subject}</P>
-                    </Div>
-
-                    {/* Description / Issue */}
-                    <Div>
-                      <P className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Description / Issue</P>
-                      <ScrollDiv nestedScrollEnabled className="bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-64">
-                        <P className="text-sm text-gray-900 leading-relaxed">{selectedTicket.description}</P>
-                      </ScrollDiv>
-                    </Div>
-
-                    {/* Status, Priority, Category */}
-                    <Div className="grid grid-cols-3 gap-4">
-                      <Div>
-                        <P className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Status</P>
-                        <Span className={`inline-block px-4 py-2 rounded-full text-xs font-semibold ${getStatusColor(selectedTicket.status)}`}>
-                          {selectedTicket.status.charAt(0).toUpperCase() + selectedTicket.status.slice(1).replace('_', ' ')}
-                        </Span>
-                      </Div>
-                      <Div>
-                        <P className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Priority</P>
-                        <P className="text-sm text-gray-900 capitalize font-semibold">{selectedTicket.priority}</P>
-                      </Div>
-                      <Div>
-                        <P className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Category</P>
-                        <P className="text-sm text-gray-900 capitalize font-semibold">{selectedTicket.category}</P>
-                      </Div>
-                    </Div>
-
-                    {/* Created Date */}
-                    <Div>
-                      <P className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Created</P>
-                      <P className="text-sm text-gray-900">{formatDateTime(selectedTicket.createdAt)}</P>
-                    </Div>
+          {selectedTicket ? (
+            <ScrollDiv nestedScrollEnabled contentStyle={{ padding: 16, gap: 16 }}>
+              <Div className="gap-3">
+                <SectionTitle className="mb-0">Ticket information</SectionTitle>
+                {selectedTicket.ticketId ? detailBlock('Ticket ID', `#${selectedTicket.ticketId}`) : null}
+                {detailBlock('Subject', selectedTicket.subject)}
+                <Div className="gap-1">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Description / issue</Span>
+                  <Div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <Span className="text-sm text-slate-900">{selectedTicket.description}</Span>
                   </Div>
                 </Div>
-
-                {/* Delivery Partner Section */}
-                <Div>
-                  <Div className="flex items-center gap-3 mb-4">
-                    <Div className="w-1 h-6 bg-orange-500 rounded"></Div>
-                    <H3 className="text-base font-semibold text-gray-900">Delivery Partner</H3>
+                <Div className="flex-row flex-wrap gap-3">
+                  <Div className="gap-1 min-w-[110px]">
+                    <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</Span>
+                    <StatusBadge
+                      status={selectedTicket.status}
+                      tone={TICKET_TONE[selectedTicket.status] || 'neutral'}
+                      label={ticketStatusLabel(selectedTicket.status)}
+                    />
                   </Div>
-                  <Div className="pl-4 space-y-3">
-                    <Div>
-                      <P className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Name</P>
-                      <P className="text-sm text-gray-900 font-semibold">{selectedTicket.deliveryPartner?.name || 'N/A'}</P>
-                    </Div>
-                    <Div>
-                      <P className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Phone Number</P>
-                      <P className="text-sm text-gray-900">{selectedTicket.deliveryPartner?.phone || 'N/A'}</P>
-                    </Div>
-                    {selectedTicket.deliveryPartner?._id && (
-                      <Div>
-                        <P className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">ID</P>
-                        <P className="text-sm text-gray-900">DP-{String(selectedTicket.deliveryPartner._id).slice(-8).toUpperCase()}</P>
-                      </Div>
-                    )}
+                  <Div className="min-w-[110px]">{detailBlock('Priority', selectedTicket.priority)}</Div>
+                  <Div className="min-w-[110px]">{detailBlock('Category', selectedTicket.category)}</Div>
+                </Div>
+                {detailBlock('Created', formatDateTime(selectedTicket.createdAt))}
+              </Div>
+
+              <Div className="gap-3">
+                <SectionTitle className="mb-0">Delivery partner</SectionTitle>
+                {detailBlock('Name', selectedTicket.deliveryPartner?.name || 'N/A')}
+                {detailBlock('Phone number', selectedTicket.deliveryPartner?.phone || 'N/A')}
+                {selectedTicket.deliveryPartner?._id ? detailBlock('ID', `DP-${String(selectedTicket.deliveryPartner._id).slice(-8).toUpperCase()}`) : null}
+              </Div>
+
+              {selectedTicket.adminResponse ? (
+                <Div className="gap-3">
+                  <SectionTitle className="mb-0">Admin response</SectionTitle>
+                  <Div className="bg-slate-50 border border-slate-200 p-3 rounded-lg gap-2">
+                    <Span className="text-sm text-slate-900">{selectedTicket.adminResponse}</Span>
+                    {selectedTicket.respondedAt ? (
+                      <Span className="text-xs text-slate-500">{`Responded on ${formatDateTime(selectedTicket.respondedAt)}`}</Span>
+                    ) : null}
                   </Div>
                 </Div>
+              ) : null}
 
-                {/* Admin Response Section */}
-                {selectedTicket.adminResponse && (
-                  <Div>
-                    <Div className="flex items-center gap-3 mb-4">
-                      <Div className="w-1 h-6 bg-green-500 rounded"></Div>
-                      <H3 className="text-base font-semibold text-gray-900">Admin Response</H3>
-                    </Div>
-                    <Div className="pl-4">
-                      <Div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                        <P className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">{selectedTicket.adminResponse}</P>
-                        {selectedTicket.respondedAt && (
-                          <P className="text-xs text-gray-500 mt-3 pt-3 border-t border-blue-200">Responded on: {formatDateTime(selectedTicket.respondedAt)}</P>
-                        )}
-                      </Div>
-                    </Div>
-                  </Div>
-                )}
-
-                {/* Action Buttons */}
-                {selectedTicket.status !== 'closed' && (
-                  <Div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-gray-200">
-                    <Button
-                      onClick={() => handleRespond(selectedTicket)}
-                      className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
-                    >
-                      {selectedTicket.adminResponse ? 'Edit Response' : 'Send Response'}
-                    </Button>
-                    {selectedTicket.status === 'in_progress' && (
-                      <Button
-                        onClick={() => {
-                          handleStatusChange(selectedTicket._id, 'resolved');
-                          setIsViewOpen(false);
-                        }}
-                        className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors shadow-sm"
-                      >
-                        Mark Resolved
-                      </Button>
-                    )}
+              {selectedTicket.status !== 'closed' ? (
+                <Div className="flex-row flex-wrap gap-2 pt-3 border-t border-slate-200">
+                  <Button onClick={() => handleRespond(selectedTicket)} className={BTN_PRIMARY}>
+                    <Span className={BTN_TEXT_PRIMARY}>{selectedTicket.adminResponse ? 'Edit response' : 'Send response'}</Span>
+                  </Button>
+                  {selectedTicket.status === 'in_progress' ? (
                     <Button
                       onClick={() => {
-                        handleStatusChange(selectedTicket._id, 'closed');
+                        handleStatusChange(selectedTicket._id, 'resolved');
                         setIsViewOpen(false);
                       }}
-                      className="px-5 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors shadow-sm"
+                      className={BTN_SECONDARY}
                     >
-                      Close Ticket
+                      <Span className={BTN_TEXT_SECONDARY}>Mark resolved</Span>
                     </Button>
-                  </Div>
-                )}
-              </Div>
-            </Div>
-          )}
+                  ) : null}
+                  <Button
+                    onClick={() => {
+                      handleStatusChange(selectedTicket._id, 'closed');
+                      setIsViewOpen(false);
+                    }}
+                    className={BTN_SECONDARY}
+                  >
+                    <Span className={BTN_TEXT_SECONDARY}>Close ticket</Span>
+                  </Button>
+                </Div>
+              ) : null}
+            </ScrollDiv>
+          ) : null}
         </DialogContent>
       </Dialog>
 
       {/* Respond Dialog */}
       <Dialog open={isResponseOpen} onOpenChange={setIsResponseOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-[560px] overflow-hidden border border-slate-200 bg-white p-0 shadow-2xl">
-          <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-14">
-            <DialogTitle className="text-xl font-semibold text-slate-900">Respond to Ticket</DialogTitle>
-            {selectedTicket && (
-              <Div className="mt-2 space-y-1">
-                <P className="text-sm font-medium text-slate-600">{selectedTicket.ticketId ? `#${selectedTicket.ticketId}` : 'Support Ticket'}</P>
-                <P className="text-sm text-slate-500 line-clamp-2">{selectedTicket.subject || 'Send an update that the delivery partner can see.'}</P>
-              </Div>
-            )}
+        <DialogContent className="w-[calc(100%-2rem)] max-w-[560px] border border-slate-200 bg-white p-0">
+          <DialogHeader className="border-b border-slate-200 px-4 py-4 pr-14">
+            <DialogTitle className="text-base font-semibold text-slate-900">Respond to ticket</DialogTitle>
+            {selectedTicket ? (
+              <Span className="text-sm text-slate-500 mt-0.5">
+                {`${selectedTicket.ticketId ? `#${selectedTicket.ticketId} · ` : ''}${selectedTicket.subject || 'Send an update the delivery partner can see.'}`}
+              </Span>
+            ) : null}
           </DialogHeader>
-          <Div className="space-y-4 px-6 py-5">
-            <Div>
-              <Label className="mb-2 block text-sm font-medium text-slate-700">Response</Label>
+          <Div className="px-4 py-4">
+            <Field label="Response" hint="This message is visible to the delivery partner in their support ticket.">
               <Textarea
                 value={responseText}
                 onChange={(e) => setResponseText(e.target.value)}
-                placeholder="Enter your response..."
+                placeholder="Enter your response…"
                 rows={6}
-                className="min-h-[180px] resize-y rounded-xl border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-800 shadow-sm focus-visible:border-blue-500 focus-visible:ring-4 focus-visible:ring-blue-100"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
               />
-              <P className="mt-2 text-xs text-slate-500">This message will be visible to the delivery partner in their support ticket.</P>
-            </Div>
+            </Field>
           </Div>
-          <DialogFooter className="border-t border-slate-200 px-6 py-4">
-            <Button
-              onClick={() => setIsResponseOpen(false)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-            >
-              Cancel
+          <DialogFooter className="border-t border-slate-200 px-4 py-3 gap-2 flex-row">
+            <Button onClick={() => setIsResponseOpen(false)} className={`${BTN_SECONDARY} flex-1`}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button
-              onClick={handleUpdateTicket}
-              disabled={updating || !responseText.trim()}
-              className="flex min-w-[140px] items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {updating ? (
-                <>
-                  <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                'Update Ticket'
-              )}
+            <Button onClick={handleUpdateTicket} disabled={updating || !responseText.trim()} className={`${BTN_PRIMARY} flex-1`}>
+              {updating ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>{updating ? 'Updating…' : 'Update ticket'}</Span>
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Div>
+    </AdminPage>
   );
 }

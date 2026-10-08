@@ -1,6 +1,6 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/reports/RegularOrderReport.jsx (tools/port.js first pass). */
 import { useState, useEffect } from 'react';
-import { BarChart3, ChevronDown, Settings, FileText, FileSpreadsheet, Code, Loader2, RefreshCw } from 'lucide-react-native';
+import { BarChart3, ChevronDown, Settings, FileText, FileSpreadsheet, Code, Loader2, RefreshCw, Search, Download } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
 import {
@@ -11,11 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../../../components/shadcn';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../../components/shadcn';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../../components/shadcn';
 import { exportReportsToCSV, exportReportsToExcel, exportReportsToPDF, exportReportsToJSON } from '../../../components/admin/reports/reportsExportUtils';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
-import searchIcon from '../../../assets/Dashboard-icons/image8.png';
-import exportIcon from '../../../assets/Dashboard-icons/image9.png';
 import {
   StatusSvg,
   acceptedIcon,
@@ -29,26 +27,30 @@ import {
   scheduledIcon,
 } from '../../../components/admin/reports/dashboardStatusIcons';
 import {
-  Button,
-  Div,
-  H1,
-  H2,
-  Img,
-  Input,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { alert } from '../../../../lib/webShim';
+const COLS = [50, 120, 160, 160, 130, 130, 100, 130, 110, 120, 130];
+const LABELS = ['SI', 'Order Id', 'Restaurant', 'Customer Name', 'Total Item Amount', 'Coupon Discount', 'Vat/Tax', 'Delivery Charge', 'Platform Fee', 'Order Amount', 'Status'];
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -109,6 +111,7 @@ const statusMeta = {
   },
 };
 export default function RegularOrderReport() {
+  const { tablet } = useLayoutWidth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
@@ -428,379 +431,259 @@ export default function RegularOrderReport() {
     const meta = statusMeta[statusKey];
     if (!meta) return null;
     return (
-      <Div key={statusKey} className="flex items-center justify-between bg-white rounded-lg border border-slate-200 px-3 py-2 shadow-sm">
-        <Div className="flex items-center gap-2">
-          <Div className={`w-8 h-8 rounded-lg ${meta.bg} flex items-center justify-center overflow-hidden`}>
+      <Card key={statusKey} className="flex-row items-center justify-between gap-2 px-3 py-3">
+        <Div className="flex-row items-center gap-2 flex-1 min-w-0">
+          <Div className="w-9 h-9 rounded-lg bg-slate-100 items-center justify-center overflow-hidden shrink-0">
             <StatusSvg xml={meta.icon} size={20} />
           </Div>
-          <Span className="text-[11px] font-medium text-slate-800">{meta.label}</Span>
+          <Span className="text-xs font-medium text-slate-700 flex-1">{meta.label}</Span>
         </Div>
-        <Span className={`text-xs font-semibold ${meta.color}`}>{statusCounts[statusKey] || 0}</Span>
-      </Div>
+        <Span className="text-base font-bold text-slate-900">{statusCounts[statusKey] || 0}</Span>
+      </Card>
     );
   };
   if (loading) {
     return (
-      <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen flex items-center justify-center">
-        <Div className="flex flex-col items-center gap-4">
-          <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-500" />
-          <P className="text-gray-600">Loading orders...</P>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={BarChart3}
+          title="Order Report"
+          subtitle="Every regular order with its charges and status"
+          breadcrumb={[{ label: 'Food' }, { label: 'Reports' }, { label: 'Order report' }]}
+        />
+        <LoadingState label="Loading orders…" />
+      </AdminPage>
     );
   }
   if (error) {
     return (
-      <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen flex items-center justify-center">
-        <Div className="text-center">
-          <P className="text-red-600 mb-2">Error: {error}</P>
-          <Button onClick={handleRefresh} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            Retry
-          </Button>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={BarChart3}
+          title="Order Report"
+          subtitle="Every regular order with its charges and status"
+          breadcrumb={[{ label: 'Food' }, { label: 'Reports' }, { label: 'Order report' }]}
+        />
+        <ErrorState title="Could not load the order report" message={error} onRetry={handleRefresh} />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto">
-        {/* Page Header */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
-          <Div className="flex items-center gap-2">
-            <Div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
-              <UiIcon as={BarChart3} className="w-3.5 h-3.5 text-white" />
-            </Div>
-            <H1 className="text-lg font-bold text-slate-900">Order Report</H1>
-          </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={BarChart3}
+        title="Order Report"
+        subtitle="Every regular order with its charges and status"
+        breadcrumb={[{ label: 'Food' }, { label: 'Reports' }, { label: 'Order report' }]}
+      />
+
+      <Card className="mb-4">
+        <SectionTitle>Search data</SectionTitle>
+        <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+          <Field label="Zone">
+            <Select value={filters.zone} onChange={(e) => handleFilterChange('zone', e.target.value)} className={INPUT}>
+              <Option value="All Zones">All Zones</Option>
+              {zones.map((zone) => (
+                <Option key={zone._id} value={zone._id}>
+                  {zone.zoneName || zone.name}
+                </Option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Restaurant">
+            <Select value={filters.restaurant} onChange={(e) => handleFilterChange('restaurant', e.target.value)} className={INPUT}>
+              <Option value="All restaurants">All restaurants</Option>
+              {restaurants.map((restaurant) => (
+                <Option key={restaurant._id} value={restaurant._id}>
+                  {restaurant.restaurantName || restaurant.name}
+                </Option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Customer">
+            <Select value={filters.customer} onChange={(e) => handleFilterChange('customer', e.target.value)} className={INPUT}>
+              <Option value="All customers">All customers</Option>
+              {customers.map((customer) => (
+                <Option key={customer._id} value={customer._id}>
+                  {customer.name}
+                </Option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Time">
+            <Select value={filters.time} onChange={(e) => handleFilterChange('time', e.target.value)} className={INPUT}>
+              <Option key="all-time" value="All Time">
+                All Time
+              </Option>
+              <Option key="today" value="Today">
+                Today
+              </Option>
+              <Option key="this-week" value="This Week">
+                This Week
+              </Option>
+              <Option key="this-month" value="This Month">
+                This Month
+              </Option>
+            </Select>
+          </Field>
         </Div>
 
-        {/* Search Data Filters */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
-          <Div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <Div className="relative flex-1 min-w-0">
-              <Select
-                value={filters.zone}
-                onChange={(e) => handleFilterChange('zone', e.target.value)}
-                className="w-full px-2.5 py-1.5 pr-5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs appearance-none cursor-pointer"
-              >
-                <Option value="All Zones">All Zones</Option>
-                {zones.map((zone) => (
-                  <Option key={zone._id} value={zone._id}>
-                    {zone.zoneName || zone.name}
-                  </Option>
-                ))}
-              </Select>
-              <UiIcon as={ChevronDown} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 pointer-events-none" />
-            </Div>
+        <Toolbar className="mt-3 mb-0">
+          <Button type="button" onClick={handleResetFilters} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+          </Button>
+          <Button
+            type="button"
+            onClick={handleRefresh}
+            disabled={filterLoading || loading}
+            accessibilityLabel="Refresh report"
+            className="w-11 h-11 rounded-lg border border-slate-300 bg-white items-center justify-center"
+          >
+            <UiIcon as={RefreshCw} size={18} className="text-slate-600" />
+          </Button>
+        </Toolbar>
+      </Card>
 
-            <Div className="relative flex-1 min-w-0">
-              <Select
-                value={filters.restaurant}
-                onChange={(e) => handleFilterChange('restaurant', e.target.value)}
-                className="w-full px-2.5 py-1.5 pr-5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs appearance-none cursor-pointer"
-              >
-                <Option value="All restaurants">All restaurants</Option>
-                {restaurants.map((restaurant) => (
-                  <Option key={restaurant._id} value={restaurant._id}>
-                    {restaurant.restaurantName || restaurant.name}
-                  </Option>
-                ))}
-              </Select>
-              <UiIcon as={ChevronDown} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 pointer-events-none" />
-            </Div>
-
-            <Div className="relative flex-1 min-w-0">
-              <Select
-                value={filters.customer}
-                onChange={(e) => handleFilterChange('customer', e.target.value)}
-                className="w-full px-2.5 py-1.5 pr-5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs appearance-none cursor-pointer"
-              >
-                <Option value="All customers">All customers</Option>
-                {customers.map((customer) => (
-                  <Option key={customer._id} value={customer._id}>
-                    {customer.name}
-                  </Option>
-                ))}
-              </Select>
-              <UiIcon as={ChevronDown} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 pointer-events-none" />
-            </Div>
-
-            <Div className="relative flex-1 min-w-0">
-              <Select
-                value={filters.time}
-                onChange={(e) => handleFilterChange('time', e.target.value)}
-                className="w-full px-2.5 py-1.5 pr-5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs appearance-none cursor-pointer"
-              >
-                <Option key="all-time" value="All Time">
-                  All Time
-                </Option>
-                <Option key="today" value="Today">
-                  Today
-                </Option>
-                <Option key="this-week" value="This Week">
-                  This Week
-                </Option>
-                <Option key="this-month" value="This Month">
-                  This Month
-                </Option>
-              </Select>
-              <UiIcon as={ChevronDown} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 pointer-events-none" />
-            </Div>
-
-            <Button
-              type="button"
-              onClick={handleRefresh}
-              disabled={filterLoading || loading}
-              accessibilityLabel="Refresh"
-              className="p-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-50"
-            >
-              <UiIcon as={RefreshCw} className={`w-3.5 h-3.5 ${filterLoading ? 'animate-spin' : ''}`} />
-            </Button>
-            <Button
-              type="button"
-              onClick={handleResetFilters}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all whitespace-nowrap"
-            >
-              Reset
-            </Button>
-          </Div>
-        </Div>
-
-        {/* Status Summary Cards */}
-        <Div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mb-3">
-          {renderStatusRow('Scheduled')}
-          {renderStatusRow('Pending')}
-          {renderStatusRow('Processing')}
-          {renderStatusRow('Food On The Way')}
-          {renderStatusRow('Accepted')}
-          {renderStatusRow('Delivered')}
-          {renderStatusRow('Canceled')}
-          {renderStatusRow('Payment Failed')}
-          {renderStatusRow('Refunded')}
-        </Div>
-
-        {/* Total Orders & Table */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-            <H2 className="text-base font-bold text-slate-900">
-              Total Orders <Span className="text-blue-600">{statusCounts.total}</Span>
-            </H2>
-
-            <Div className="flex items-center gap-2">
-              <Div className="relative flex-1 sm:flex-initial min-w-[180px]">
-                <Input
-                  type="text"
-                  placeholder="Search by Order ID, customer, restaurant"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-7 pr-2 py-1.5 w-full text-[11px] rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <Img src={searchIcon} alt="Search" className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3" />
-              </Div>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="px-2.5 py-1.5 text-[11px] font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1 transition-all">
-                    <Img src={exportIcon} alt="Export" className="w-3 h-3" />
-                    <Span>Export</Span>
-                    <UiIcon as={ChevronDown} className="w-2.5 h-2.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
-                >
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleExport('csv')} className="cursor-pointer">
-                    <UiIcon as={FileText} className="w-4 h-4 mr-2" />
-                    Export as CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('excel')} className="cursor-pointer">
-                    <UiIcon as={FileSpreadsheet} className="w-4 h-4 mr-2" />
-                    Export as Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer">
-                    <UiIcon as={FileText} className="w-4 h-4 mr-2" />
-                    Export as PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('json')} className="cursor-pointer">
-                    <UiIcon as={Code} className="w-4 h-4 mr-2" />
-                    Export as JSON
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
-              >
-                <UiIcon as={Settings} className="w-3 h-3" />
-              </Button>
-            </Div>
-          </Div>
-
-          {filterLoading && (
-            <Div className="mb-3 flex items-center gap-2 text-[11px] text-slate-500">
-              <UiIcon as={Loader2} className="w-3.5 h-3.5 animate-spin text-blue-500" />
-              Updating report...
-            </Div>
-          )}
-
-          {/* Table */}
-            <Table cols={[46, 110, 150, 150, 110, 110, 90, 110, 100, 110, 110]} className="w-full">
-              <Thead className="bg-slate-50 border-b border-slate-200">
-                <Tr>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    SI
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Order Id
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Restaurant
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Customer Name
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Total Item Amount
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Coupon Discount
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Vat/Tax
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Delivery Charge
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Platform Fee
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Order Amount
-                  </Th>
-                  <Th
-                    className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Status
-                  </Th>
-                </Tr>
-              </Thead>
-              <Tbody className="bg-white divide-y divide-slate-100">
-                {orders.length === 0 ? (
-                  <Tr>
-                    <Td colSpan={11} className="px-6 py-20 text-center">
-                      <Div className="flex flex-col items-center justify-center">
-                        <P className="text-lg font-semibold text-slate-700 mb-1">No Data Found</P>
-                        <P className="text-sm text-slate-500">No orders match your filters</P>
-                      </Div>
-                    </Td>
-                  </Tr>
-                ) : (
-                  orders.map((order, index) => (
-                    <Tr key={order.orderId} className="hover:bg-slate-50 transition-colors">
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] text-blue-600 hover:underline cursor-pointer">{order.orderId}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] text-slate-700 truncate block">{order.restaurant}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] text-slate-700 truncate block">{order.customerName}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] text-slate-700">{formatAmount(order.totalAmount)}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] text-slate-700">{formatAmount(order.couponDiscount)}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] text-slate-700">{formatAmount(order.vatTax)}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] text-slate-700">{formatAmount(order.deliveryCharge)}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] text-slate-700">{formatAmount(order.platformFee)}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="text-[10px] font-medium text-slate-900">{formatAmount(order.totalAmount || order.totalItemAmount)}</Span>
-                      </Td>
-                      <Td className="px-1.5 py-1">
-                        <Span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-700">
-                          {order.orderStatus}
-                        </Span>
-                      </Td>
-                    </Tr>
-                  ))
-                )}
-              </Tbody>
-            </Table>
-
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalOrders}
-            itemLabel="orders"
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              localStorage.setItem('admin_order_report_pageSize', String(size));
-              setCurrentPage(1);
-            }}
-          />
-        </Div>
+      <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3 mb-4`}>
+        {renderStatusRow('Scheduled')}
+        {renderStatusRow('Pending')}
+        {renderStatusRow('Processing')}
+        {renderStatusRow('Food On The Way')}
+        {renderStatusRow('Accepted')}
+        {renderStatusRow('Delivered')}
+        {renderStatusRow('Canceled')}
+        {renderStatusRow('Payment Failed')}
+        {renderStatusRow('Refunded')}
       </Div>
+
+      <Card className="mb-4">
+        <SectionTitle>Total orders ({statusCounts.total})</SectionTitle>
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center flex-1 min-w-[200px] gap-2">
+            <Input
+              type="text"
+              placeholder="Search by Order ID, customer, restaurant"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`${INPUT} flex-1`}
+            />
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+          </Div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className={BTN_SECONDARY}>
+                <UiIcon as={Download} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-500" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg">
+              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <UiIcon as={FileSpreadsheet} size={16} className="mr-2 text-slate-500" />
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
+                Export as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('json')}>
+                <UiIcon as={Code} size={16} className="mr-2 text-slate-500" />
+                Export as JSON
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            onClick={() => setIsSettingsOpen(true)}
+            accessibilityLabel="Report settings"
+            className="w-11 h-11 rounded-lg border border-slate-300 bg-white items-center justify-center"
+          >
+            <UiIcon as={Settings} size={18} className="text-slate-600" />
+          </Button>
+        </Toolbar>
+        {filterLoading && (
+          <Div className="flex-row items-center gap-2 mt-3">
+            <UiIcon as={Loader2} size={14} className="text-blue-600" />
+            <Span className="text-xs text-slate-500">Updating report…</Span>
+          </Div>
+        )}
+      </Card>
+
+      {orders.length === 0 ? (
+        <EmptyState title="No data found" message="No orders match your filters." actionLabel="Reset filters" onAction={handleResetFilters} />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={LABELS} />
+          <TBody>
+            {orders.map((order, index, all) => (
+              <Row key={order.orderId} last={index === all.length - 1}>
+                <Cell width={COLS[0]}>{(currentPage - 1) * pageSize + index + 1}</Cell>
+                <Cell width={COLS[1]}>
+                  <Span className="text-sm font-medium text-blue-600">{order.orderId}</Span>
+                </Cell>
+                <Cell width={COLS[2]}>{order.restaurant}</Cell>
+                <Cell width={COLS[3]}>{order.customerName}</Cell>
+                <Cell width={COLS[4]} align="right">{formatAmount(order.totalAmount)}</Cell>
+                <Cell width={COLS[5]} align="right">{formatAmount(order.couponDiscount)}</Cell>
+                <Cell width={COLS[6]} align="right">{formatAmount(order.vatTax)}</Cell>
+                <Cell width={COLS[7]} align="right">{formatAmount(order.deliveryCharge)}</Cell>
+                <Cell width={COLS[8]} align="right">{formatAmount(order.platformFee)}</Cell>
+                <Cell width={COLS[9]} align="right">
+                  <Span className="text-sm font-semibold text-slate-900">{formatAmount(order.totalAmount || order.totalItemAmount)}</Span>
+                </Cell>
+                <Cell width={COLS[10]}>
+                  <StatusBadge status={order.orderStatus} />
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalOrders}
+        itemLabel="orders"
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          localStorage.setItem('admin_order_report_pageSize', String(size));
+          setCurrentPage(1);
+        }}
+      />
 
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <UiIcon as={Settings} className="w-5 h-5" />
+        <DialogContent className="max-w-md bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-2">
+            <DialogTitle className="flex-row items-center gap-2">
+              <UiIcon as={Settings} size={18} className="text-slate-600" />
               Report Settings
             </DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6">
+          <Div className="px-4 pb-4">
             <P className="text-sm text-slate-700">Regular order report settings and preferences will be available here.</P>
           </Div>
-          <Div className="px-6 pb-6 flex items-center justify-end">
-            <Button
-              onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
-            >
-              Close
+          <Div className="px-4 pb-4 flex-row items-center justify-end">
+            <Button onClick={() => setIsSettingsOpen(false)} className="flex-row items-center justify-center gap-2 h-11 px-4 rounded-lg bg-blue-600">
+              <Span className="text-sm font-semibold text-white">Close</Span>
             </Button>
           </Div>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

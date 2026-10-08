@@ -1,11 +1,14 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/users/UserCreate.jsx (tools/port.js first pass). */
 import React, { useCallback, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 import { useNavigate } from '../../../../../lib/webRouter';
-import { ArrowLeft, CheckCircle2, ChevronRight, ImagePlus, Loader2, Lock, Mail, Phone, Save, User, Users } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle2, ImagePlus, Save, UserPlus } from 'lucide-react-native';
 import { toast } from '../../../../../lib/notify';
 import { useImageUpload } from '../../../../shared/hooks/useImageUpload';
 import { adminService } from '../../services/adminService';
-import { Button, Div, Form, H1, H3, Img, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+import { Button, Div, Form, Img, Input, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../../admin/ui';
+
 const initialFormData = {
   name: '',
   gender: '',
@@ -15,11 +18,9 @@ const initialFormData = {
   confirmPassword: '',
   profileImage: '',
 };
-const inputClass =
-  'admin-user-field w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors';
-const labelClass = 'block text-xs font-semibold text-black mb-1.5';
 const UserCreate = () => {
   const navigate = useNavigate();
+  const { tablet } = useLayoutWidth();
   const [formData, setFormData] = useState(initialFormData);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,187 +92,104 @@ const UserCreate = () => {
       setIsSubmitting(false);
     }
   };
+  const cols = tablet ? 2 : 1;
+  const saveDisabled = isSubmitting || imageUploading || success;
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8">
-      <Div className="mb-6">
-        <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-          <Span>Users</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700">Create User</Span>
-        </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={UserPlus}
+        title="Add User"
+        subtitle="Create a passenger account and its login"
+        breadcrumb={[{ label: 'Users' }, { label: 'Create User' }]}
+        actions={
+          <Button type="button" onClick={() => navigate('/taxi/admin/users')} className={BTN_SECONDARY} accessibilityLabel="Back to users">
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+          </Button>
+        }
+      />
 
-        <Div className="flex items-center justify-between">
-          <H1 className="text-xl text-gray-900 font-bold">Add User</H1>
+      <Form onSubmit={handleSubmit} className="gap-4">
+        <Card>
+          <SectionTitle>User Details</SectionTitle>
+          <Div className={`grid grid-cols-${cols} gap-3`}>
+            <Field label="Name" required>
+              <Input type="text" name="name" required value={formData.name} onChange={handleChange} placeholder="Enter name" className={INPUT} />
+            </Field>
+
+            <Field label="Select Gender" required>
+              <Select name="gender" required value={formData.gender} onChange={handleChange} className={INPUT} placeholder="Choose gender">
+                <Option value="">Choose gender</Option>
+                <Option value="male">Male</Option>
+                <Option value="female">Female</Option>
+                <Option value="other">Other</Option>
+              </Select>
+            </Field>
+
+            <Field label="Mobile" required hint="10 digits, no country code">
+              <Input type="tel" name="mobile" required value={formData.mobile} onChange={handleChange} placeholder="Enter mobile number" className={INPUT} />
+            </Field>
+
+            <Field label="Email" required>
+              <Input type="email" name="email" required value={formData.email} onChange={handleChange} placeholder="Enter email" className={INPUT} />
+            </Field>
+
+            <Field label="Password" required hint="At least 5 characters">
+              <Input type="password" name="password" required value={formData.password} onChange={handleChange} placeholder="Enter password" className={INPUT} />
+            </Field>
+
+            <Field label="Confirm Password" required>
+              <Input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm password" className={INPUT} />
+            </Field>
+          </Div>
+        </Card>
+
+        <Card>
+          <SectionTitle>Profile Picture</SectionTitle>
           <Button
             type="button"
-            onClick={() => navigate('/taxi/admin/users')}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            onClick={imageUploading ? undefined : handleFileChange}
+            disabled={imageUploading}
+            accessibilityLabel="Upload a profile picture"
+            className="h-40 rounded-lg border border-dashed border-slate-300 bg-slate-50 items-center justify-center overflow-hidden"
           >
-            <UiIcon as={ArrowLeft} size={16} /> Back
-          </Button>
-        </Div>
-      </Div>
-
-      <Form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Div className="lg:col-span-2">
-          <Div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <Div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-              <Div className="w-9 h-9 rounded-lg bg-yellow-50 flex items-center justify-center text-gray-900 border border-yellow-100">
-                <UiIcon as={User} size={18} />
-              </Div>
-              <Div>
-                <H3 className="text-sm text-gray-900 font-bold">User Details</H3>
-                <P className="text-xs text-gray-400">Customer identity and login information</P>
-              </Div>
-            </Div>
-
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Div>
-                <Label className={labelClass}>
-                  <UiIcon as={User} size={12} className="inline mr-1 text-gray-400" />
-                  Name *
-                </Label>
-                <Input type="text" name="name" required value={formData.name} onChange={handleChange} placeholder="Enter name" className={inputClass} />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>
-                  <UiIcon as={Users} size={12} className="inline mr-1 text-gray-400" />
-                  Select Gender *
-                </Label>
-                <Select name="gender" required value={formData.gender} onChange={handleChange} className={inputClass}>
-                  <Option value="">Choose gender</Option>
-                  <Option value="male">Male</Option>
-                  <Option value="female">Female</Option>
-                  <Option value="other">Other</Option>
-                </Select>
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>
-                  <UiIcon as={Phone} size={12} className="inline mr-1 text-gray-400" />
-                  Mobile *
-                </Label>
-                <Input
-                  type="tel"
-                  name="mobile"
-                  required
-                  value={formData.mobile}
-                  onChange={handleChange}
-                  placeholder="Enter mobile number"
-                  className={inputClass}
-                />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>
-                  <UiIcon as={Mail} size={12} className="inline mr-1 text-gray-400" />
-                  Email *
-                </Label>
-                <Input type="email" name="email" required value={formData.email} onChange={handleChange} placeholder="Enter email" className={inputClass} />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>
-                  <UiIcon as={Lock} size={12} className="inline mr-1 text-gray-400" />
-                  Password *
-                </Label>
-                <Input
-                  type="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter password"
-                  className={inputClass}
-                />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>
-                  <UiIcon as={CheckCircle2} size={12} className="inline mr-1 text-gray-400" />
-                  Confirm Password *
-                </Label>
-                <Input
-                  type="password"
-                  name="confirmPassword"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm password"
-                  className={inputClass}
-                />
-              </Div>
-            </Div>
-          </Div>
-        </Div>
-
-        <Div className="space-y-6">
-          <Div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <Div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-              <Div className="w-9 h-9 rounded-lg bg-yellow-50 flex items-center justify-center text-gray-900 border border-yellow-100">
-                <UiIcon as={ImagePlus} size={18} />
-              </Div>
-              <Div>
-                <H3 className="text-sm text-gray-900 font-bold">Profile Picture</H3>
-                <P className="text-xs text-gray-400">Optional user photo</P>
-              </Div>
-            </Div>
-
-            <Div onClick={imageUploading ? undefined : handleFileChange} className="group relative block cursor-pointer">
-              <Div className="flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-200 bg-gray-50 transition-colors group-hover:border-yellow-400 group-hover:bg-yellow-50">
-                {imagePreview || formData.profileImage ? (
-                  <Img src={imagePreview || formData.profileImage} alt="Profile preview" className="h-full w-full object-cover" />
-                ) : (
-                  <Div className="flex flex-col items-center text-gray-400">
-                    <UiIcon as={ImagePlus} size={34} strokeWidth={1.5} className="mb-3" />
-                    <P className="text-xs font-bold">Upload image</P>
-                  </Div>
-                )}
-                {imageUploading && (
-                  <Div className="absolute inset-0 flex items-center justify-center bg-white/70">
-                    <UiIcon as={Loader2} className="animate-spin text-yellow-500" size={28} />
-                  </Div>
-                )}
-              </Div>
-            </Div>
-
-            <P className="mt-4 text-center text-xs text-gray-400">Supported formats: JPG, PNG, WEBP</P>
-          </Div>
-
-          <Div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3 shadow-sm">
-            <Button
-              type="submit"
-              disabled={isSubmitting || imageUploading || success}
-              className="w-full py-3 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-900 transition-colors disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm"
-            >
-              {isSubmitting ? (
-                <UiIcon as={Loader2} className="animate-spin" size={16} />
-              ) : success ? (
-                <UiIcon as={CheckCircle2} size={16} />
-              ) : (
-                <UiIcon as={Save} size={16} />
-              )}
-              {success ? 'User Created' : isSubmitting ? 'Saving...' : 'Create User'}
-            </Button>
-
-            <Button
-              type="button"
-              onClick={() => navigate('/taxi/admin/users')}
-              className="w-full py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors"
-            >
-              Cancel
-            </Button>
-
-            {error && (
-              <Div className="rounded-lg border border-rose-100 bg-rose-50 px-4 py-3">
-                <P className="text-sm font-semibold text-rose-600">{error}</P>
+            {imagePreview || formData.profileImage ? (
+              <Img src={imagePreview || formData.profileImage} alt="Profile preview" className="w-full h-40" contentFit="cover" />
+            ) : imageUploading ? (
+              <ActivityIndicator size="small" color="#155DFC" />
+            ) : (
+              <Div className="items-center gap-2">
+                <UiIcon as={ImagePlus} size={28} className="text-slate-400" />
+                <Span className="text-sm font-medium text-slate-500">Upload image</Span>
               </Div>
             )}
-          </Div>
+          </Button>
+          <Span className="text-xs text-slate-500 mt-2">Optional. JPG, PNG or WEBP.</Span>
+        </Card>
+
+        {error ? (
+          <Card className="border-red-200 bg-red-50">
+            <Span className="text-sm font-medium text-red-600">{error}</Span>
+          </Card>
+        ) : null}
+
+        <Div className="flex-row gap-2">
+          <Button type="submit" disabled={saveDisabled} className={`${BTN_PRIMARY} flex-1 ${saveDisabled ? 'opacity-50' : ''}`}>
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : success ? (
+              <UiIcon as={CheckCircle2} size={16} className="text-white" />
+            ) : (
+              <UiIcon as={Save} size={16} className="text-white" />
+            )}
+            <Span className={BTN_TEXT_PRIMARY}>{success ? 'User Created' : isSubmitting ? 'Saving…' : 'Create User'}</Span>
+          </Button>
+          <Button type="button" onClick={() => navigate('/taxi/admin/users')} className={`${BTN_SECONDARY} flex-1`}>
+            <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+          </Button>
         </Div>
       </Form>
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default UserCreate;

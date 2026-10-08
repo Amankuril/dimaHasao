@@ -1,7 +1,10 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/CleanDatabase.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { AlertCircle } from 'lucide-react-native';
-import { Button, Div, H1, Input, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { AlertCircle, Database } from 'lucide-react-native';
+import { AdminPage, PageHeader, Card, SectionTitle, BTN_DANGER, BTN_TEXT_PRIMARY, useLayoutWidth } from '../../../../admin/ui';
+import { Button, Div, Input, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { alert, window } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -520,101 +523,48 @@ export default function CleanDatabase() {
     }
   };
 
-  // Split tables into 3 columns
-  const column1 = databaseTables.slice(0, 42);
-  const column2 = databaseTables.slice(42, 84);
-  const column3 = databaseTables.slice(84);
+  const { tablet, wide } = useLayoutWidth();
+  const rowWidth = wide ? { width: '32%' } : tablet ? { width: '48.5%' } : { width: '100%' };
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto max-w-7xl">
-        {/* Page Title */}
-        <Div className="mb-3">
-          <H1 className="text-lg font-bold text-slate-900">Clean Database</H1>
-        </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Database}
+        title="Clean Database"
+        subtitle="Pick the tables to empty, then clear them"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Clean database' }]}
+      />
 
-        {/* Warning Banner */}
-        <Div className="bg-red-500 rounded-lg p-3 mb-4 flex items-center gap-3">
-          <Div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-            <UiIcon as={AlertCircle} className="w-3 h-3 text-red-500" />
-          </Div>
-          <P className="text-xs text-white">Note: This page contains sensitive information. Please make sure before click the button.</P>
-        </Div>
+      <Card className="mb-4 bg-red-50 border-red-200 flex-row items-start gap-3">
+        <UiIcon as={AlertCircle} size={16} className="text-red-700 shrink-0 mt-0.5" />
+        <Text style={tw`text-sm text-slate-700 flex-1`}>This page permanently empties tables. Check your selection before clearing — it cannot be undone.</Text>
+      </Card>
 
-        {/* Database Tables Grid */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
-          <Div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Column 1 */}
-            <Div className="space-y-2">
-              {column1.map((table) => (
-                <Div
-                  key={table.name}
-                  className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer"
-                  onClick={() => handleToggleTable(table.name)}
-                >
-                  <Input
-                    type="checkbox"
-                    checked={selectedTables.has(table.name)}
-                    onChange={() => handleToggleTable(table.name)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
-                  />
-                  <Span className="text-xs text-slate-700 flex-1">{table.name}</Span>
-                  <Span className="px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-700 rounded-full">{table.count}</Span>
-                </Div>
-              ))}
+      <Card className="mb-4">
+        <SectionTitle>{`Tables (${selectedTables.size} selected)`}</SectionTitle>
+        <Div className="flex-row flex-wrap gap-x-3">
+          {databaseTables.map((table) => (
+            <Div key={table.name} style={rowWidth} className="flex-row items-center gap-2 min-h-11 px-1 rounded-lg" onClick={() => handleToggleTable(table.name)}>
+              <Input
+                type="checkbox"
+                checked={selectedTables.has(table.name)}
+                onChange={() => handleToggleTable(table.name)}
+                onClick={(e) => e.stopPropagation()}
+                className="w-5 h-5 border-slate-300 rounded"
+              />
+              <Text style={tw`text-sm text-slate-700 flex-1`} numberOfLines={1}>
+                {table.name}
+              </Text>
+              <Span className="px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-700 rounded-full">{table.count}</Span>
             </Div>
-
-            {/* Column 2 */}
-            <Div className="space-y-2">
-              {column2.map((table) => (
-                <Div
-                  key={table.name}
-                  className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer"
-                  onClick={() => handleToggleTable(table.name)}
-                >
-                  <Input
-                    type="checkbox"
-                    checked={selectedTables.has(table.name)}
-                    onChange={() => handleToggleTable(table.name)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
-                  />
-                  <Span className="text-xs text-slate-700 flex-1">{table.name}</Span>
-                  <Span className="px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-700 rounded-full">{table.count}</Span>
-                </Div>
-              ))}
-            </Div>
-
-            {/* Column 3 */}
-            <Div className="space-y-2">
-              {column3.map((table) => (
-                <Div
-                  key={table.name}
-                  className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer"
-                  onClick={() => handleToggleTable(table.name)}
-                >
-                  <Input
-                    type="checkbox"
-                    checked={selectedTables.has(table.name)}
-                    onChange={() => handleToggleTable(table.name)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
-                  />
-                  <Span className="text-xs text-slate-700 flex-1">{table.name}</Span>
-                  <Span className="px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-700 rounded-full">{table.count}</Span>
-                </Div>
-              ))}
-            </Div>
-          </Div>
+          ))}
         </Div>
+      </Card>
 
-        {/* Clear Button */}
-        <Div className="flex justify-end">
-          <Button onClick={handleClear} className="px-6 py-2.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Clear
-          </Button>
-        </Div>
+      <Div className="flex-row justify-end">
+        <Button onClick={handleClear} className={BTN_DANGER}>
+          <Span className={BTN_TEXT_PRIMARY}>Clear selected</Span>
+        </Button>
       </Div>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

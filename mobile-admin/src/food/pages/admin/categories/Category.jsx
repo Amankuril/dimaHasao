@@ -1,35 +1,33 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/categories/Category.jsx (tools/port.js first pass). */
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from '../../../../lib/motion';
-import { BadgeCheck, Download, Globe, Loader2, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react-native';
+import { BadgeCheck, Download, Globe, Loader2, Pencil, Plus, Trash2, Upload, X, LayoutGrid } from 'lucide-react-native';
 import { adminAPI, uploadAPI } from '../../../../api/food';
 import { API_BASE_URL } from '../../../../api/config';
 import { toast } from '../../../../lib/notify';
 import { tableToPdf, pickImage, objectUrl } from '../../../../lib/files';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
+import { Button, Div, Form, Img, Input, Label, Option, Overlay, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import {
-  Button,
-  Div,
-  Form,
-  H1,
-  H2,
-  Img,
-  Input,
-  Label,
-  Option,
-  Overlay,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 import { window } from '../../../../lib/webShim';
 const defaultFormData = {
   name: '',
@@ -38,12 +36,6 @@ const defaultFormData = {
   type: '',
   zoneId: 'global',
   foodTypeScope: 'Both',
-};
-const approvalBadgeClass = (status) => {
-  const value = String(status || 'pending').toLowerCase();
-  if (value === 'approved') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-  if (value === 'rejected') return 'bg-rose-50 text-rose-700 border-rose-200';
-  return 'bg-amber-50 text-amber-700 border-amber-200';
 };
 const scopeBadgeClass = (scope) => {
   if (scope === 'Veg') return 'bg-green-50 text-green-700 border-green-200';
@@ -376,425 +368,363 @@ export default function Category() {
       setUploadingImage(false);
     }
   };
+  const COLS = [210, 170, 140, 100, 110, 140, 210];
   return (
-    <ScrollDiv className="min-h-screen bg-slate-50 p-4 lg:p-6">
-      <Div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <Div className="flex flex-wrap items-start justify-between gap-4">
-          <Div>
-            <Div className="flex items-center gap-3">
-              <H1 className="text-2xl font-bold text-slate-900">Categories</H1>
-            </Div>
-            <P className="mt-2 max-w-2xl text-sm text-slate-500">
-              Restaurant-created categories now move through approval, rejection, and optional globalization before every restaurant can use them.
-            </P>
-          </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={LayoutGrid}
+        title="Categories"
+        subtitle="Restaurant-created categories move through approval, rejection and optional globalization before every restaurant can use them."
+        breadcrumb={[{ label: 'Food' }, { label: 'Categories' }]}
+        actions={
+          <>
+            <Button onClick={handleAddNew} className={BTN_PRIMARY}>
+              <UiIcon as={Plus} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Add category</Span>
+            </Button>
+            <Button onClick={handleExportPDF} disabled={categories.length === 0} className={BTN_SECONDARY}>
+              <UiIcon as={Download} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+            </Button>
+          </>
+        }
+      />
 
-          <Div className="flex flex-wrap items-center gap-3">
-            <Div className="flex items-center gap-2 rounded-full border border-slate-200 p-1">
-              <Button
-                type="button"
-                onClick={() => setShowPendingOnly(false)}
-                className={`rounded-full px-3 py-2 text-xs font-semibold ${!showPendingOnly ? 'bg-slate-900 text-white' : 'text-slate-600'}`}
-              >
-                All
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setShowPendingOnly(true)}
-                className={`rounded-full px-3 py-2 text-xs font-semibold ${showPendingOnly ? 'bg-amber-600 text-white' : 'text-slate-600'}`}
-              >
-                Pending
-              </Button>
-            </Div>
-
-            <Div className="relative min-w-[220px]">
-              <UiIcon as={Search} className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Search categories"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-slate-900"
-              />
-            </Div>
-
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Input
+            type="search"
+            placeholder="Search categories"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className={`${INPUT} flex-1 min-w-[200px]`}
+          />
+          <Div className="flex-row items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1">
             <Button
-              onClick={handleExportPDF}
-              disabled={categories.length === 0}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              onClick={() => setShowPendingOnly(false)}
+              className={`h-9 px-4 rounded-lg items-center justify-center ${!showPendingOnly ? 'bg-blue-600' : 'bg-transparent'}`}
             >
-              <UiIcon as={Download} className="h-4 w-4" />
-              Export
+              <Span className={`text-sm font-semibold ${!showPendingOnly ? 'text-white' : 'text-slate-500'}`}>All</Span>
             </Button>
-
-            <Button onClick={handleAddNew} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white">
-              <UiIcon as={Plus} className="h-4 w-4" />
-              Add Category
+            <Button
+              type="button"
+              onClick={() => setShowPendingOnly(true)}
+              className={`h-9 px-4 rounded-lg items-center justify-center ${showPendingOnly ? 'bg-blue-600' : 'bg-transparent'}`}
+            >
+              <Span className={`text-sm font-semibold ${showPendingOnly ? 'text-white' : 'text-slate-500'}`}>Pending</Span>
             </Button>
           </Div>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
-      <Div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <Div>
-          <Table className="min-w-full" cols={[200, 160, 140, 100, 110, 130, 220]}>
-            <Thead className="border-b border-slate-200 bg-slate-50">
-              <Tr>
-                <Th className="w-[25%] px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-600">Category</Th>
-                <Th className="w-[17%] px-4 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-600">Owner</Th>
-                <Th className="w-[15%] px-4 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-600">Zone</Th>
-                <Th className="w-[10%] px-4 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-600">Diet</Th>
-                <Th className="w-[10%] px-4 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-600">Status</Th>
-                <Th className="w-[13%] px-4 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-600">Approval</Th>
-                <Th className="w-[20%] px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-600">Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody className="divide-y divide-slate-100">
-              {loading ? (
-                <Tr>
-                  <Td colSpan={7} className="px-6 py-20 text-center">
-                    <UiIcon as={Loader2} className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-                    <P className="mt-2 text-sm text-slate-500">Loading categories...</P>
-                  </Td>
-                </Tr>
-              ) : categories.length === 0 ? (
-                <Tr>
-                  <Td colSpan={7} className="px-6 py-20 text-center">
-                    <P className="text-lg font-semibold text-slate-700">No categories found</P>
-                    <P className="mt-1 text-sm text-slate-500">Try a different search or create a new category.</P>
-                  </Td>
-                </Tr>
-              ) : (
-                categories.map((category) => {
-                  const creatorName = category?.createdByRestaurant?.name || category?.restaurant?.name || 'Admin';
-                  const approvalStatus = category?.approvalStatus || 'pending';
-                  const isRestaurantCategory = Boolean(category?.createdByRestaurantId || category?.restaurantId);
-                  const zoneText = zoneLabel(category?.zoneId);
-                  return (
-                    <Tr key={category.id} className="align-top hover:bg-slate-50/80">
-                      <Td className="px-5 py-5">
-                        <Div className="flex items-start gap-3">
-                          <Div className="h-11 w-11 overflow-hidden rounded-2xl bg-slate-100">
-                            {category?.image ? (
-                              <Img src={category.image} alt={category.name} className="h-full w-full object-cover" />
-                            ) : (
-                              <Div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-500">
-                                {String(category?.name || 'C')
-                                  .slice(0, 1)
-                                  .toUpperCase()}
-                              </Div>
-                            )}
-                          </Div>
-                          <Div className="min-w-0">
-                            <P className="truncate text-lg font-semibold leading-6 text-slate-900">{category?.name || '-'}</P>
-                            <Div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                              <Span>{category?.type || 'No type'}</Span>
-                              <Span className="text-slate-300">•</Span>
-                              <Span>Items linked: {category?.itemCount || 0}</Span>
-                            </Div>
-                          </Div>
-                        </Div>
-                      </Td>
-                      <Td className="px-4 py-5 text-sm text-slate-600">
-                        <Div className="space-y-1">
-                          <P className="font-medium leading-6 text-slate-800">{creatorName}</P>
-                          <P className="text-xs text-slate-400">{category?.isGlobal ? 'Global category' : 'Private to creator'}</P>
-                          {category?.isGlobal && isRestaurantCategory && (
-                            <Span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[11px] font-semibold text-sky-700">
-                              <UiIcon as={Globe} className="mr-1 h-3.5 w-3.5" />
-                              Shared
-                            </Span>
-                          )}
-                        </Div>
-                      </Td>
-                      <Td className="px-4 py-5">
-                        <Div className="max-w-[180px]">
-                          <P className="truncate text-sm font-medium text-slate-700">{zoneText}</P>
-                        </Div>
-                      </Td>
-                      <Td className="px-4 py-5 text-center">
-                        <Span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${scopeBadgeClass(category?.foodTypeScope)}`}>
-                          {category?.foodTypeScope || 'Both'}
-                        </Span>
-                      </Td>
-                      <Td className="px-4 py-5 text-center">
-                        <Button
-                          onClick={() => handleToggleStatus(category.id)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full ${category?.status ? 'bg-blue-600' : 'bg-slate-300'}`}
-                        >
-                          <Span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${category?.status ? 'translate-x-6' : 'translate-x-1'}`}
-                          />
-                        </Button>
-                      </Td>
-                      <Td className="px-4 py-5">
-                        <Div className="space-y-2">
-                          <Span
-                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${approvalBadgeClass(approvalStatus)}`}
-                          >
-                            {approvalStatus === 'approved' && <UiIcon as={BadgeCheck} className="mr-1 h-3.5 w-3.5" />}
-                            {approvalStatus.charAt(0).toUpperCase() + approvalStatus.slice(1)}
-                          </Span>
-                          {category?.rejectionReason && <P className="max-w-[180px] text-xs leading-5 text-rose-600">{category.rejectionReason}</P>}
-                        </Div>
-                      </Td>
-                      <Td className="px-5 py-5">
-                        <Div className="flex flex-col items-end gap-2">
-                          <Div className="flex flex-wrap justify-end gap-2">
-                            {approvalStatus !== 'approved' && (
-                              <Button
-                                onClick={() => handleApprove(category.id)}
-                                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm"
-                              >
-                                Approve
-                              </Button>
-                            )}
-                            {isRestaurantCategory && approvalStatus !== 'rejected' && (
-                              <Button
-                                onClick={() => handleReject(category)}
-                                className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm"
-                              >
-                                Reject
-                              </Button>
-                            )}
-                            {isRestaurantCategory && !category?.isGlobal && approvalStatus === 'approved' && (
-                              <Button
-                                onClick={() => handleMakeGlobal(category)}
-                                className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm"
-                              >
-                                Make Global
-                              </Button>
-                            )}
-                          </Div>
-                          <Div className="flex items-center justify-end gap-1">
-                            <Button onClick={() => handleEdit(category)} className="rounded-lg p-2 text-blue-600 hover:bg-blue-50">
-                              <UiIcon as={Pencil} className="h-4 w-4" />
-                            </Button>
-                            <Button onClick={() => handleDelete(category.id)} className="rounded-lg p-2 text-rose-600 hover:bg-rose-50">
-                              <UiIcon as={Trash2} className="h-4 w-4" />
-                            </Button>
-                          </Div>
-                        </Div>
-                      </Td>
-                    </Tr>
-                  );
-                })
-              )}
-            </Tbody>
-          </Table>
-        </Div>
-
-        <AdminListPagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            try {
-              localStorage.setItem('admin_categories_pageSize', String(size));
-            } catch {}
-            setCurrentPage(1);
-          }}
-          itemLabel="categories"
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : categories.length === 0 ? (
+        <EmptyState
+          icon={LayoutGrid}
+          title="No categories found"
+          message="Try a different search or create a new category."
+          actionLabel="Add category"
+          onAction={handleAddNew}
         />
-      </Div>
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={['Category', 'Owner', 'Zone', 'Diet', 'Status', 'Approval', 'Actions']} />
+          <TBody>
+            {categories.map((category, idx) => {
+              const creatorName = category?.createdByRestaurant?.name || category?.restaurant?.name || 'Admin';
+              const approvalStatus = category?.approvalStatus || 'pending';
+              const isRestaurantCategory = Boolean(category?.createdByRestaurantId || category?.restaurantId);
+              const zoneText = zoneLabel(category?.zoneId);
+              return (
+                <Row key={category.id} last={idx === categories.length - 1}>
+                  <Cell width={COLS[0]}>
+                    <Div className="flex-row items-start gap-2">
+                      <Div className="h-10 w-10 overflow-hidden rounded-lg bg-slate-100 items-center justify-center shrink-0">
+                        {category?.image ? (
+                          <Img src={category.image} alt={category.name} className="h-full w-full" contentFit="cover" />
+                        ) : (
+                          <Span className="text-sm font-semibold text-slate-500">
+                            {String(category?.name || 'C')
+                              .slice(0, 1)
+                              .toUpperCase()}
+                          </Span>
+                        )}
+                      </Div>
+                      <Div className="flex-1 min-w-0 gap-0.5">
+                        <Span className="text-sm font-semibold text-slate-900">{category?.name || '-'}</Span>
+                        <Span className="text-xs text-slate-500">{category?.type || 'No type'}</Span>
+                        <Span className="text-xs text-slate-500">Items linked: {category?.itemCount || 0}</Span>
+                      </Div>
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[1]}>
+                    <Div className="gap-1">
+                      <Span className="text-sm font-medium text-slate-900">{creatorName}</Span>
+                      <Span className="text-xs text-slate-500">{category?.isGlobal ? 'Global category' : 'Private to creator'}</Span>
+                      {category?.isGlobal && isRestaurantCategory ? <StatusBadge tone="info" label="Shared" icon={Globe} /> : null}
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[2]}>{zoneText}</Cell>
+                  <Cell width={COLS[3]}>
+                    <Span className={`self-start rounded-full border px-2 py-1 text-xs font-semibold ${scopeBadgeClass(category?.foodTypeScope)}`}>
+                      {category?.foodTypeScope || 'Both'}
+                    </Span>
+                  </Cell>
+                  <Cell width={COLS[4]}>
+                    <Button
+                      onClick={() => handleToggleStatus(category.id)}
+                      className="h-11 justify-center"
+                      accessibilityLabel={category?.status ? 'Deactivate category' : 'Activate category'}
+                    >
+                      <StatusBadge status={category?.status ? 'active' : 'inactive'} label={category?.status ? 'Active' : 'Inactive'} />
+                    </Button>
+                  </Cell>
+                  <Cell width={COLS[5]}>
+                    <Div className="gap-1">
+                      <StatusBadge
+                        status={approvalStatus}
+                        label={approvalStatus.charAt(0).toUpperCase() + approvalStatus.slice(1)}
+                        icon={approvalStatus === 'approved' ? BadgeCheck : undefined}
+                      />
+                      {category?.rejectionReason ? <Span className="text-xs text-red-600">{category.rejectionReason}</Span> : null}
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[6]}>
+                    <Div className="gap-2">
+                      <Div className="flex-row flex-wrap gap-2">
+                        {approvalStatus !== 'approved' && (
+                          <Button onClick={() => handleApprove(category.id)} className="h-9 px-3 rounded-lg bg-blue-600 items-center justify-center">
+                            <Span className="text-xs font-semibold text-white">Approve</Span>
+                          </Button>
+                        )}
+                        {isRestaurantCategory && approvalStatus !== 'rejected' && (
+                          <Button onClick={() => handleReject(category)} className="h-9 px-3 rounded-lg bg-red-600 items-center justify-center">
+                            <Span className="text-xs font-semibold text-white">Reject</Span>
+                          </Button>
+                        )}
+                        {isRestaurantCategory && !category?.isGlobal && approvalStatus === 'approved' && (
+                          <Button onClick={() => handleMakeGlobal(category)} className="h-9 px-3 rounded-lg border border-slate-300 bg-white items-center justify-center">
+                            <Span className="text-xs font-semibold text-slate-700">Make global</Span>
+                          </Button>
+                        )}
+                      </Div>
+                      <Div className="flex-row items-center gap-1">
+                        <Button onClick={() => handleEdit(category)} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Edit category">
+                          <UiIcon as={Pencil} size={16} className="text-blue-600" />
+                        </Button>
+                        <Button onClick={() => handleDelete(category.id)} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Delete category">
+                          <UiIcon as={Trash2} size={16} className="text-red-600" />
+                        </Button>
+                      </Div>
+                    </Div>
+                  </Cell>
+                </Row>
+              );
+            })}
+          </TBody>
+        </DataTable>
+      )}
+
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          try {
+            localStorage.setItem('admin_categories_pageSize', String(size));
+          } catch {}
+          setCurrentPage(1);
+        }}
+        itemLabel="categories"
+      />
 
       <AnimatePresence>
-            {isModalOpen && (
-        <Overlay onClose={resetModal} className="fixed inset-0 z-[200]">
-                <Div className="absolute inset-0 bg-black/50" onClick={resetModal} />
-                <Div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
-                  <motion.div
-                    initial={{
-                      opacity: 0,
-                      scale: 0.95,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                    }}
-                    exit={{
-                      opacity: 0,
-                      scale: 0.95,
-                    }}
-                    className="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl max-h-[min(720px,calc(100vh-32px))]"
-                  >
-                    <Div className="flex items-center justify-between border-b px-6 py-4">
-                      <Div>
-                        <H2 className="text-xl font-bold text-slate-900">{editingCategory ? 'Edit Category' : 'Add Category'}</H2>
-                        <P className="text-xs text-slate-500">
-                          Admin categories are approved immediately. Restaurant-created categories can also be updated here.
-                        </P>
-                      </Div>
-                      <Button onClick={resetModal} className="rounded-lg p-1 hover:bg-slate-100">
-                        <UiIcon as={X} className="h-5 w-5 text-slate-500" />
-                      </Button>
-                    </Div>
-
-                    <Form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-                      <ScrollDiv className="min-h-0 flex-1" contentClassName="space-y-4 px-6 py-5">
-                        <Div>
-                          <Label className="mb-2 block text-sm font-medium text-slate-700">Zone</Label>
-                          <Select
-                            value={formData.zoneId}
-                            onChange={(event) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                zoneId: event.target.value,
-                              }))
-                            }
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-slate-900"
-                          >
-                            <Option value="global">Global (all zones)</Option>
-                            {zonesLoading && (
-                              <Option value="" disabled>
-                                Loading zones...
-                              </Option>
-                            )}
-                            {zones.map((zone) => {
-                              const id = String(zone?._id || zone?.id || '');
-                              const label = zone?.name || zone?.zoneName || zone?.serviceLocation || id;
-                              return (
-                                <Option key={id} value={id}>
-                                  {label}
-                                </Option>
-                              );
-                            })}
-                          </Select>
-                        </Div>
-
-                        <Div>
-                          <Label className="mb-2 block text-sm font-medium text-slate-700">Diet Scope</Label>
-                          <Select
-                            value={formData.foodTypeScope}
-                            onChange={(event) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                foodTypeScope: event.target.value,
-                              }))
-                            }
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-slate-900"
-                          >
-                            <Option value="Veg">Veg</Option>
-                            <Option value="Non-Veg">Non-Veg</Option>
-                            <Option value="Both">Both</Option>
-                          </Select>
-                        </Div>
-
-                        <Div>
-                          <Label className="mb-2 block text-sm font-medium text-slate-700">Category Type</Label>
-                          <Input
-                            type="text"
-                            value={formData.type}
-                            onChange={(event) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                type: event.target.value,
-                              }))
-                            }
-                            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
-                            placeholder="Examples: Starters, Desserts, Drinks"
-                          />
-                        </Div>
-
-                        <Div>
-                          <Label className="mb-2 block text-sm font-medium text-slate-700">Category Name</Label>
-                          <Input
-                            type="text"
-                            required
-                            value={formData.name}
-                            onChange={(event) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                name: event.target.value,
-                              }))
-                            }
-                            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
-                            placeholder="Enter category name"
-                          />
-                        </Div>
-
-                        <Div>
-                          <Label className="mb-2 block text-sm font-medium text-slate-700">Category Image</Label>
-                          <Div className="space-y-3">
-                            {(imagePreview || formData.image) && (
-                              <Div className="relative h-32 w-32 overflow-hidden rounded-2xl border border-slate-300">
-                                <Img src={imagePreview || formData.image} alt="Category preview" className="h-full w-full object-cover" />
-                              </Div>
-                            )}
-                            <Div className="flex items-center gap-3">
-                              <Button
-                                type="button"
-                                onClick={handleImageSelect}
-                                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700"
-                              >
-                                <UiIcon as={Upload} className="h-4 w-4" />
-                                {imagePreview ? 'Change Image' : 'Upload Image'}
-                              </Button>
-                              {uploadingImage && <UiIcon as={Loader2} className="h-5 w-5 animate-spin text-blue-600" />}
-                            </Div>
-                          </Div>
-                        </Div>
-
-                        <Label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-                          <Input
-                            type="checkbox"
-                            checked={formData.status}
-                            onChange={(event) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                status: event.target.checked,
-                              }))
-                            }
-                            className="h-4 w-4 rounded border-slate-300"
-                          />
-                          Active Status
-                        </Label>
-                      </ScrollDiv>
-
-                      <Div className="flex items-center gap-3 border-t bg-white px-6 py-4">
-                        <Button type="button" onClick={resetModal} className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-700">
-                          Cancel
-                        </Button>
-                        <Button type="submit" className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-white">
-                          {editingCategory ? 'Update' : 'Create'}
-                        </Button>
-                      </Div>
-                    </Form>
-                  </motion.div>
+        {isModalOpen && (
+          <Overlay onClose={resetModal} className="fixed inset-0 z-[200]">
+            <Div className="absolute inset-0 bg-black/50" onClick={resetModal} />
+            <Div className="absolute inset-0 flex items-center justify-center p-4">
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  scale: 0.95,
+                }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.95,
+                }}
+                className="flex w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white border border-slate-200 max-h-[min(720px,calc(100vh-32px))]"
+              >
+                <Div className="flex-row items-start justify-between gap-3 border-b border-slate-200 px-4 py-3">
+                  <Div className="flex-1 min-w-0 gap-0.5">
+                    <Span className="text-xl font-bold text-slate-900">{editingCategory ? 'Edit category' : 'Add category'}</Span>
+                    <Span className="text-xs text-slate-500">Admin categories are approved immediately. Restaurant-created categories can also be updated here.</Span>
+                  </Div>
+                  <Button onClick={resetModal} className="w-11 h-11 rounded-lg items-center justify-center shrink-0" accessibilityLabel="Close">
+                    <UiIcon as={X} size={18} className="text-slate-500" />
+                  </Button>
                 </Div>
-              </Overlay>
-            )}
+
+                <Form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+                  <ScrollDiv className="min-h-0 flex-1" contentClassName="gap-3 px-4 py-4">
+                    <Field label="Zone">
+                      <Select
+                        value={formData.zoneId}
+                        onChange={(event) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            zoneId: event.target.value,
+                          }))
+                        }
+                        className={INPUT}
+                      >
+                        <Option value="global">Global (all zones)</Option>
+                        {zonesLoading && (
+                          <Option value="" disabled>
+                            Loading zones…
+                          </Option>
+                        )}
+                        {zones.map((zone) => {
+                          const id = String(zone?._id || zone?.id || '');
+                          const label = zone?.name || zone?.zoneName || zone?.serviceLocation || id;
+                          return (
+                            <Option key={id} value={id}>
+                              {label}
+                            </Option>
+                          );
+                        })}
+                      </Select>
+                    </Field>
+
+                    <Field label="Diet scope">
+                      <Select
+                        value={formData.foodTypeScope}
+                        onChange={(event) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            foodTypeScope: event.target.value,
+                          }))
+                        }
+                        className={INPUT}
+                      >
+                        <Option value="Veg">Veg</Option>
+                        <Option value="Non-Veg">Non-Veg</Option>
+                        <Option value="Both">Both</Option>
+                      </Select>
+                    </Field>
+
+                    <Field label="Category type" hint="Examples: Starters, Desserts, Drinks">
+                      <Input
+                        type="text"
+                        value={formData.type}
+                        onChange={(event) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            type: event.target.value,
+                          }))
+                        }
+                        className={INPUT}
+                        placeholder="Examples: Starters, Desserts, Drinks"
+                      />
+                    </Field>
+
+                    <Field label="Category name" required>
+                      <Input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(event) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            name: event.target.value,
+                          }))
+                        }
+                        className={INPUT}
+                        placeholder="Enter category name"
+                      />
+                    </Field>
+
+                    <Field label="Category image">
+                      <Div className="gap-2">
+                        {(imagePreview || formData.image) && (
+                          <Div className="h-28 w-28 overflow-hidden rounded-xl border border-slate-200">
+                            <Img src={imagePreview || formData.image} alt="Category preview" className="h-full w-full" contentFit="cover" />
+                          </Div>
+                        )}
+                        <Div className="flex-row items-center gap-2">
+                          <Button type="button" onClick={handleImageSelect} className={BTN_SECONDARY}>
+                            <UiIcon as={Upload} size={16} className="text-slate-600" />
+                            <Span className={BTN_TEXT_SECONDARY}>{imagePreview ? 'Change image' : 'Upload image'}</Span>
+                          </Button>
+                          {uploadingImage && <UiIcon as={Loader2} size={18} className="text-blue-600" />}
+                        </Div>
+                      </Div>
+                    </Field>
+
+                    <Label className="flex-row items-center gap-3 h-11 text-sm font-medium text-slate-700">
+                      <Input
+                        type="checkbox"
+                        checked={formData.status}
+                        onChange={(event) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            status: event.target.checked,
+                          }))
+                        }
+                        className="h-5 w-5 rounded border-slate-300"
+                      />
+                      Active status
+                    </Label>
+                  </ScrollDiv>
+
+                  <Div className="flex-row items-center gap-2 border-t border-slate-200 bg-white px-4 py-3">
+                    <Button type="button" onClick={resetModal} className={`${BTN_SECONDARY} flex-1`}>
+                      <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+                    </Button>
+                    <Button type="submit" className={`${BTN_PRIMARY} flex-1`}>
+                      <Span className={BTN_TEXT_PRIMARY}>{editingCategory ? 'Update' : 'Create'}</Span>
+                    </Button>
+                  </Div>
+                </Form>
+              </motion.div>
+            </Div>
+          </Overlay>
+        )}
       </AnimatePresence>
 
       {rejectTarget && (
         <Overlay onClose={() => setRejectTarget(null)} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4">
-          <Div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-            <H2 className="text-lg font-bold text-slate-900">Reject &quot;{rejectTarget?.name}&quot;</H2>
-            <P className="mt-1 text-xs text-slate-500">A rejection reason is required.</P>
-            <Input
-              type="text"
-              value={rejectReason}
-              onChange={(event) => setRejectReason(event.target.value)}
-              placeholder="Reason"
-              className="mt-3 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
-            />
-            <Div className="mt-5 flex items-center gap-3">
-              <Button
-                type="button"
-                onClick={() => setRejectTarget(null)}
-                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-700"
-              >
-                Cancel
+          <Div className="w-full max-w-md rounded-xl bg-white border border-slate-200 p-4">
+            <Span className="text-base font-semibold text-slate-900">Reject &quot;{rejectTarget?.name}&quot;</Span>
+            <Div className="mt-3">
+              <Field label="Rejection reason" required hint="A rejection reason is required.">
+                <Input
+                  type="text"
+                  value={rejectReason}
+                  onChange={(event) => setRejectReason(event.target.value)}
+                  placeholder="Reason"
+                  className={INPUT}
+                />
+              </Field>
+            </Div>
+            <Div className="mt-4 flex-row items-center gap-2">
+              <Button type="button" onClick={() => setRejectTarget(null)} className={`${BTN_SECONDARY} flex-1`}>
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
-              <Button type="button" onClick={submitReject} className="flex-1 rounded-xl bg-rose-600 px-4 py-3 text-white">
-                Reject
+              <Button type="button" onClick={submitReject} className="flex-1 flex-row items-center justify-center h-11 px-4 rounded-lg bg-red-600">
+                <Span className={BTN_TEXT_PRIMARY}>Reject</Span>
               </Button>
             </Div>
           </Div>
         </Overlay>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 }

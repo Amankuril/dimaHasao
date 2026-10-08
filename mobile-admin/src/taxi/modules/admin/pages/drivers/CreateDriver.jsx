@@ -1,38 +1,33 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/drivers/CreateDriver.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Camera, ChevronRight, FileText, ImagePlus, Loader2, ShieldCheck, UploadCloud, User, Car } from 'lucide-react-native';
+import { Camera, FileText, ImagePlus, Loader2, ShieldCheck, UploadCloud, User } from 'lucide-react-native';
 import { useNavigate } from '../../../../../lib/webRouter';
 import { File } from 'expo-file-system';
 import { useTaxiTransportTypes } from '../../../../shared/hooks/useTaxiTransportTypes';
 import { normalizeDriverDocumentTemplates } from '../../../driver/utils/documentTemplates';
 import { pickImage } from '../../../../../lib/files';
 import { adminService } from '../../services/adminService';
+import { Button, Div, Form, Img, Input, Option, P, Select, Span, Textarea, Icon as UiIcon } from '../../../../../components/web';
 import {
-  Button,
-  Div,
-  Form,
-  H1,
-  H2,
-  H3,
-  Img,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Section,
-  Select,
-  Span,
-  Textarea,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  Field,
+  useLayoutWidth,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../../admin/ui';
 const NAME_REGEX = /^[A-Za-z]+(?:[ .'-][A-Za-z]+)*$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const VEHICLE_NUMBER_REGEX = /^[A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4}$/;
-const inputClass =
-  'w-full rounded-[1.4rem] border-2 border-slate-100 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-900/10 focus:bg-white focus:ring-0';
-const selectClass = `${inputClass} appearance-none`;
-const cardClass = 'rounded-[2rem] border border-slate-100 bg-white p-6 shadow-[0_10px_40px_rgba(0,0,0,0.04)]';
 const defaultVehicleFieldConfigs = [
   {
     field_key: 'locationId',
@@ -234,6 +229,7 @@ const initialFormData = {
 };
 const CreateDriver = () => {
   const navigate = useNavigate();
+  const { tablet } = useLayoutWidth();
   const { transportTypes } = useTaxiTransportTypes();
   const [formData, setFormData] = useState(initialFormData);
   const [areas, setAreas] = useState([]);
@@ -620,12 +616,15 @@ const CreateDriver = () => {
       setSubmitting(false);
     }
   };
+  const col = tablet ? 'w-1/2 px-1.5 mb-4' : 'w-full';
+  const grid = tablet ? 'flex-row flex-wrap -mx-1.5' : 'gap-4';
+  const breadcrumb = [{ label: 'Drivers' }, { label: 'Admin onboarding' }, { label: 'Create driver' }];
   if (isLoading) {
     return (
-      <ScrollDiv className="flex min-h-[70vh] flex-col items-center justify-center gap-4 text-slate-400">
-        <UiIcon as={Loader2} size={34} className="animate-spin text-slate-900" />
-        <P className="text-sm font-semibold">Preparing onboarding form...</P>
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        <PageHeader icon={User} title="Create driver" breadcrumb={breadcrumb} />
+        <LoadingState label="Preparing the onboarding form…" />
+      </AdminPage>
     );
   }
   const locationField = getFieldConfig('locationId', {
@@ -658,492 +657,392 @@ const CreateDriver = () => {
     placeholder: 'e.g. White, Black',
   });
   return (
-    <ScrollDiv className="min-h-screen bg-[#fcfaf6] px-5 pb-24 pt-8 text-slate-900">
-      <Div className="mx-auto max-w-5xl space-y-6">
-        <Div className="flex items-center justify-between gap-4">
-          <Div>
-            <Div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
-              <Span>Drivers</Span>
-              <UiIcon as={ChevronRight} size={12} />
-              <Span className="text-slate-700">Admin Onboarding</Span>
-            </Div>
-            <H1 className="font-['Outfit'] text-4xl font-black tracking-[-0.04em] text-slate-900">
-              Create Driver <Span className="text-slate-400">With Full Onboarding</Span>
-            </H1>
-            <P className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
-              Fill personal info, vehicle setup, and required KYC here so the driver shows up ready across the app.
-            </P>
-          </Div>
-          <Button
-            type="button"
-            onClick={() => navigate('/taxi/admin/drivers')}
-            className="rounded-full border border-slate-200 bg-white px-5 py-2 text-xs font-black uppercase tracking-widest text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
-          >
-            Back To Drivers
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={User}
+        title="Create driver"
+        subtitle="Fill personal info, vehicle setup and required KYC so the driver shows up ready across the app."
+        breadcrumb={breadcrumb}
+        actions={
+          <Button type="button" onClick={() => navigate('/taxi/admin/drivers')} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Back to drivers</Span>
           </Button>
-        </Div>
+        }
+      />
 
-        <Form onSubmit={handleSubmit} className="space-y-6">
-          {error ? <Div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600">{error}</Div> : null}
+      <Form onSubmit={handleSubmit}>
+        {error ? <ErrorState title="Could not save this driver" message={error} className="mb-4" /> : null}
 
-          <Section className={cardClass}>
-            <Div className="mb-5 flex items-center gap-4">
-              <Div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-slate-900 text-white shadow-xl shadow-slate-900/10">
-                <UiIcon as={User} size={22} strokeWidth={2.5} />
+        <Card className="mb-4">
+          <SectionTitle>Step 1 · Personal info</SectionTitle>
+          <Div className={grid}>
+            <Field label="Full name" required className={col}>
+              <Input
+                value={formData.name}
+                onChange={(event) => setField('name', event.target.value.replace(/[^A-Za-z .'-]/g, ''))}
+                placeholder="Enter driver name"
+                className={INPUT}
+              />
+            </Field>
+            <Field label="Mobile number" required className={col}>
+              <Input
+                value={formData.mobile}
+                onChange={(event) => setField('mobile', event.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="10 digit mobile number"
+                className={INPUT}
+              />
+            </Field>
+            <Field label="Email" required className={col}>
+              <Input type="email" value={formData.email} onChange={(event) => setField('email', event.target.value)} placeholder="name@gmail.com" className={INPUT} />
+            </Field>
+            <Field label="Gender" required className={col}>
+              <Div className="flex-row flex-wrap gap-2">
+                {['male', 'female', 'other'].map((gender) => (
+                  <Button
+                    key={gender}
+                    type="button"
+                    onClick={() => setField('gender', gender)}
+                    className={`h-11 flex-1 min-w-[88px] items-center justify-center rounded-lg ${formData.gender === gender ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
+                  >
+                    <Span className={`text-sm font-semibold capitalize ${formData.gender === gender ? 'text-white' : 'text-slate-700'}`}>{gender}</Span>
+                  </Button>
+                ))}
               </Div>
-              <Div>
-                <P className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Step 1</P>
-                <H2 className="text-xl font-black tracking-tight text-slate-900">Personal Info</H2>
-              </Div>
-            </Div>
+            </Field>
+            <Field label="Password" required hint="Minimum 6 characters" className={col}>
+              <Input type="password" value={formData.password} onChange={(event) => setField('password', event.target.value)} placeholder="Minimum 6 characters" className={INPUT} />
+            </Field>
+            <Field label="Confirm password" required className={col}>
+              <Input
+                type="password"
+                value={formData.password_confirmation}
+                onChange={(event) => setField('password_confirmation', event.target.value)}
+                placeholder="Re-enter password"
+                className={INPUT}
+              />
+            </Field>
+          </Div>
 
-            <Div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Div>
-                <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Full Name</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(event) => setField('name', event.target.value.replace(/[^A-Za-z .'-]/g, ''))}
-                  placeholder="Enter driver name"
-                  className={inputClass}
-                />
-              </Div>
-              <Div>
-                <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Mobile Number</Label>
-                <Input
-                  value={formData.mobile}
-                  onChange={(event) => setField('mobile', event.target.value.replace(/\D/g, '').slice(0, 10))}
-                  placeholder="10 digit mobile number"
-                  className={inputClass}
-                />
-              </Div>
-              <Div>
-                <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Email</Label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(event) => setField('email', event.target.value)}
-                  placeholder="name@gmail.com"
-                  className={inputClass}
-                />
-              </Div>
-              <Div>
-                <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Gender</Label>
-                <Div className="grid grid-cols-3 gap-3">
-                  {['male', 'female', 'other'].map((gender) => (
-                    <Button
-                      key={gender}
-                      type="button"
-                      onClick={() => setField('gender', gender)}
-                      className={`rounded-[1.1rem] border px-4 py-3 text-xs font-black uppercase tracking-widest transition-all ${formData.gender === gender ? 'border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'border-slate-100 bg-slate-50 text-slate-500 hover:bg-white'}`}
-                    >
-                      {gender}
-                    </Button>
-                  ))}
-                </Div>
-              </Div>
-              <Div>
-                <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Password</Label>
-                <Input
-                  type="password"
-                  value={formData.password}
-                  onChange={(event) => setField('password', event.target.value)}
-                  placeholder="Minimum 6 characters"
-                  className={inputClass}
-                />
-              </Div>
-              <Div>
-                <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Confirm Password</Label>
-                <Input
-                  type="password"
-                  value={formData.password_confirmation}
-                  onChange={(event) => setField('password_confirmation', event.target.value)}
-                  placeholder="Re-enter password"
-                  className={inputClass}
-                />
-              </Div>
-            </Div>
+          <Field label="Profile image" className="mt-1">
+            <Button
+              type="button"
+              onClick={() => handleProfileChange()}
+              accessibilityLabel="Upload profile photo"
+              className="w-full min-h-[160px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50"
+            >
+              {formData.profile_picture ? (
+                <Img src={formData.profile_picture} alt="Driver profile" className="h-40 w-full rounded-lg" contentFit="cover" />
+              ) : (
+                <>
+                  <UiIcon as={Camera} size={24} className="mb-2 text-slate-400" />
+                  <Span className="text-sm font-semibold text-slate-700">{profileName || 'Upload profile photo'}</Span>
+                </>
+              )}
+            </Button>
+          </Field>
+        </Card>
 
-            <Div className="mt-5 max-w-md">
-              <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Profile Image</Label>
-              <Button
-                type="button"
-                onClick={() => handleProfileChange()}
-                className="flex min-h-[180px] w-full cursor-pointer flex-col items-center justify-center rounded-[1.6rem] border-2 border-dashed border-slate-200 bg-slate-50 text-center transition-colors hover:border-slate-300 hover:bg-white"
-              >
-                {formData.profile_picture ? (
-                  <Img src={formData.profile_picture} alt="Driver profile" className="h-[180px] w-full rounded-[1.4rem] object-cover" />
-                ) : (
-                  <>
-                    <UiIcon as={Camera} size={26} className="mb-3 text-slate-400" />
-                    <Span className="text-xs font-black uppercase tracking-widest text-slate-500">{profileName || 'Upload Profile Photo'}</Span>
-                  </>
-                )}
-              </Button>
-            </Div>
-          </Section>
-
-          <Section className={cardClass}>
-            <Div className="mb-5 flex items-center gap-4">
-              <Div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-slate-900 text-white shadow-xl shadow-slate-900/10">
-                <UiIcon as={Car} size={22} strokeWidth={2.5} />
-              </Div>
-              <Div>
-                <P className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Step 2</P>
-                <H2 className="text-xl font-black tracking-tight text-slate-900">Vehicle Setup</H2>
-              </Div>
-            </Div>
-
-            <Div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {shouldShowField('locationId', true) ? (
-                <Div>
-                  <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{locationField.name}</Label>
-                  <Select value={formData.service_location_id} onChange={handleAreaChange} className={selectClass}>
-                    <Option value="">Select area</Option>
-                    {areas.map((area) => (
-                      <Option key={area._id} value={area._id}>
-                        {area.service_location_name || area.name || 'Area'}
-                      </Option>
-                    ))}
-                  </Select>
-                </Div>
-              ) : null}
-
-              <Div>
-                <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Transport Type</Label>
-                <Select value={formData.transport_type} onChange={handleTransportChange} className={selectClass}>
-                  <Option value="">Select transport type</Option>
-                  {transportTypes.map((type) => (
-                    <Option key={type.id || type._id || type.name} value={type.name}>
-                      {type.display_name || type.name}
+        <Card className="mb-4">
+          <SectionTitle>Step 2 · Vehicle setup</SectionTitle>
+          <Div className={grid}>
+            {shouldShowField('locationId', true) ? (
+              <Field label={locationField.name} className={col}>
+                <Select value={formData.service_location_id} onChange={handleAreaChange} className={INPUT}>
+                  <Option value="">Select area</Option>
+                  {areas.map((area) => (
+                    <Option key={area._id} value={area._id}>
+                      {area.service_location_name || area.name || 'Area'}
                     </Option>
                   ))}
                 </Select>
-              </Div>
-            </Div>
-
-            {shouldShowField('serviceCategories', true) ? (
-              <Div className="mt-5">
-                <Label className="mb-3 block text-[11px] font-black uppercase tracking-widest text-slate-400">{serviceCategoryField.name}</Label>
-                <Div className="flex flex-wrap gap-3">
-                  {serviceCategoryChoices.map((item) => {
-                    const selected = formData.service_categories.includes(item.id);
-                    return (
-                      <Button
-                        key={item.id}
-                        type="button"
-                        onClick={() => toggleServiceCategory(item.id)}
-                        className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition-all ${selected ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
-                      >
-                        {item.label}
-                      </Button>
-                    );
-                  })}
-                </Div>
-              </Div>
+              </Field>
             ) : null}
 
-            <Div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-              {shouldShowField('vehicleTypeId', true) ? (
-                <Div>
-                  <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{vehicleTypeField.name}</Label>
-                  <Select
-                    value={formData.vehicle_type_id}
-                    onChange={(event) => setField('vehicle_type_id', event.target.value)}
-                    className={selectClass}
-                    disabled={!formData.service_location_id || isLoadingVehicles}
-                  >
-                    <Option value="">{isLoadingVehicles ? 'Loading...' : 'Select vehicle type'}</Option>
-                    {vehicleTypes.map((vehicle) => (
-                      <Option key={vehicle.id} value={vehicle.id}>
-                        {vehicle.label}
-                      </Option>
-                    ))}
-                  </Select>
-                </Div>
-              ) : null}
+            <Field label="Transport type" className={col}>
+              <Select value={formData.transport_type} onChange={handleTransportChange} className={INPUT}>
+                <Option value="">Select transport type</Option>
+                {transportTypes.map((type) => (
+                  <Option key={type.id || type._id || type.name} value={type.name}>
+                    {type.display_name || type.name}
+                  </Option>
+                ))}
+              </Select>
+            </Field>
+          </Div>
 
-              {shouldShowField('make', true) ? (
-                <Div>
-                  <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{makeField.name}</Label>
-                  <Input
-                    value={formData.vehicle_make}
-                    onChange={(event) => setField('vehicle_make', event.target.value)}
-                    placeholder={makeField.placeholder}
-                    className={inputClass}
-                  />
-                </Div>
-              ) : null}
+          {shouldShowField('serviceCategories', true) ? (
+            <Field label={serviceCategoryField.name} className="mb-4">
+              <Div className="flex-row flex-wrap gap-2">
+                {serviceCategoryChoices.map((item) => {
+                  const selected = formData.service_categories.includes(item.id);
+                  return (
+                    <Button
+                      key={item.id}
+                      type="button"
+                      onClick={() => toggleServiceCategory(item.id)}
+                      className={`h-11 justify-center rounded-full px-4 ${selected ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
+                    >
+                      <Span className={`text-sm font-semibold ${selected ? 'text-white' : 'text-slate-700'}`}>{item.label}</Span>
+                    </Button>
+                  );
+                })}
+              </Div>
+            </Field>
+          ) : null}
 
-              {shouldShowField('model', true) ? (
-                <Div>
-                  <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{modelField.name}</Label>
-                  <Input
-                    value={formData.vehicle_model}
-                    onChange={(event) => setField('vehicle_model', event.target.value)}
-                    placeholder={modelField.placeholder}
-                    className={inputClass}
-                  />
-                </Div>
-              ) : null}
+          <Div className={grid}>
+            {shouldShowField('vehicleTypeId', true) ? (
+              <Field label={vehicleTypeField.name} className={col}>
+                <Select
+                  value={formData.vehicle_type_id}
+                  onChange={(event) => setField('vehicle_type_id', event.target.value)}
+                  className={INPUT}
+                  disabled={!formData.service_location_id || isLoadingVehicles}
+                >
+                  <Option value="">{isLoadingVehicles ? 'Loading…' : 'Select vehicle type'}</Option>
+                  {vehicleTypes.map((vehicle) => (
+                    <Option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+            ) : null}
 
-              {shouldShowField('year', true) ? (
-                <Div>
-                  <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{yearField.name}</Label>
-                  <Input
-                    value={formData.vehicle_year}
-                    onChange={(event) => setField('vehicle_year', event.target.value.replace(/\D/g, '').slice(0, 4))}
-                    placeholder={yearField.placeholder}
-                    className={inputClass}
-                  />
-                </Div>
-              ) : null}
+            {shouldShowField('make', true) ? (
+              <Field label={makeField.name} className={col}>
+                <Input value={formData.vehicle_make} onChange={(event) => setField('vehicle_make', event.target.value)} placeholder={makeField.placeholder} className={INPUT} />
+              </Field>
+            ) : null}
 
-              {shouldShowField('number', true) ? (
-                <Div>
-                  <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{numberField.name}</Label>
-                  <Input
-                    value={formData.vehicle_number}
-                    onChange={(event) => setField('vehicle_number', normalizeVehicleNumber(event.target.value))}
-                    placeholder={numberField.placeholder}
-                    className={inputClass}
-                  />
-                </Div>
-              ) : null}
+            {shouldShowField('model', true) ? (
+              <Field label={modelField.name} className={col}>
+                <Input value={formData.vehicle_model} onChange={(event) => setField('vehicle_model', event.target.value)} placeholder={modelField.placeholder} className={INPUT} />
+              </Field>
+            ) : null}
 
-              {shouldShowField('color', true) ? (
-                <Div>
-                  <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{colorField.name}</Label>
-                  <Input
-                    value={formData.vehicle_color}
-                    onChange={(event) => setField('vehicle_color', event.target.value)}
-                    placeholder={colorField.placeholder}
-                    className={inputClass}
-                  />
-                </Div>
-              ) : null}
-            </Div>
+            {shouldShowField('year', true) ? (
+              <Field label={yearField.name} className={col}>
+                <Input
+                  value={formData.vehicle_year}
+                  onChange={(event) => setField('vehicle_year', event.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder={yearField.placeholder}
+                  className={INPUT}
+                />
+              </Field>
+            ) : null}
 
-            {customVehicleFields.length > 0 ? (
-              <Div className="mt-6 space-y-4">
-                <Div>
-                  <H3 className="text-sm font-black uppercase tracking-widest text-slate-500">Additional Fields</H3>
-                  <P className="mt-1 text-sm font-semibold text-slate-400">These are configured from admin onboarding settings.</P>
-                </Div>
+            {shouldShowField('number', true) ? (
+              <Field label={numberField.name} className={col}>
+                <Input
+                  value={formData.vehicle_number}
+                  onChange={(event) => setField('vehicle_number', normalizeVehicleNumber(event.target.value))}
+                  placeholder={numberField.placeholder}
+                  className={INPUT}
+                />
+              </Field>
+            ) : null}
 
-                <Div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {customVehicleFields.map((field) => {
-                    const fieldKey = String(field.field_key || '').trim();
-                    const fieldType = String(field.field_type || 'text')
-                      .trim()
-                      .toLowerCase();
-                    const value = formData.customFields?.[fieldKey] || (fieldType === 'multi_select' ? [] : '');
-                    const options = Array.isArray(field.options) ? field.options : [];
-                    if (fieldType === 'textarea') {
-                      return (
-                        <Div key={fieldKey} className="md:col-span-2">
-                          <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{field.name}</Label>
-                          <Textarea
-                            value={value}
-                            onChange={(event) => handleCustomFieldChange(fieldKey, event.target.value)}
-                            placeholder={field.placeholder || ''}
-                            rows={4}
-                            className={`${inputClass} min-h-[120px] resize-none`}
-                          />
-                        </Div>
-                      );
-                    }
-                    if (fieldType === 'select') {
-                      return (
-                        <Div key={fieldKey}>
-                          <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{field.name}</Label>
-                          <Select value={value} onChange={(event) => handleCustomFieldChange(fieldKey, event.target.value)} className={selectClass}>
-                            <Option value="">{field.placeholder || `Select ${field.name}`}</Option>
-                            {options.map((option) => (
-                              <Option key={option} value={option}>
-                                {option}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Div>
-                      );
-                    }
-                    if (fieldType === 'multi_select') {
-                      const selectedValues = Array.isArray(value) ? value : [];
-                      return (
-                        <Div key={fieldKey} className="md:col-span-2">
-                          <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{field.name}</Label>
-                          <Div className="flex flex-wrap gap-3">
-                            {options.map((option) => {
-                              const selected = selectedValues.includes(option);
-                              return (
-                                <Button
-                                  key={option}
-                                  type="button"
-                                  onClick={() =>
-                                    handleCustomFieldChange(fieldKey, selected ? selectedValues.filter((item) => item !== option) : [...selectedValues, option])
-                                  }
-                                  className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition-all ${selected ? 'bg-slate-900 text-white' : 'border border-slate-200 bg-white text-slate-500'}`}
-                                >
-                                  {option}
-                                </Button>
-                              );
-                            })}
-                          </Div>
-                        </Div>
-                      );
-                    }
+            {shouldShowField('color', true) ? (
+              <Field label={colorField.name} className={col}>
+                <Input value={formData.vehicle_color} onChange={(event) => setField('vehicle_color', event.target.value)} placeholder={colorField.placeholder} className={INPUT} />
+              </Field>
+            ) : null}
+          </Div>
+
+          {customVehicleFields.length > 0 ? (
+            <Div className="mt-2 border-t border-slate-100 pt-4">
+              <SectionTitle>Additional fields</SectionTitle>
+              <P className="text-sm text-slate-500 mb-3">These are configured from admin onboarding settings.</P>
+              <Div className={grid}>
+                {customVehicleFields.map((field) => {
+                  const fieldKey = String(field.field_key || '').trim();
+                  const fieldType = String(field.field_type || 'text')
+                    .trim()
+                    .toLowerCase();
+                  const value = formData.customFields?.[fieldKey] || (fieldType === 'multi_select' ? [] : '');
+                  const options = Array.isArray(field.options) ? field.options : [];
+                  if (fieldType === 'textarea') {
                     return (
-                      <Div key={fieldKey}>
-                        <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{field.name}</Label>
-                        <Input
-                          type={fieldType === 'number' ? 'tel' : 'text'}
-                          value={Array.isArray(value) ? value.join(', ') : value}
-                          onChange={(event) =>
-                            handleCustomFieldChange(fieldKey, fieldType === 'number' ? event.target.value.replace(/\D/g, '') : event.target.value)
-                          }
+                      <Field key={fieldKey} label={field.name} className={tablet ? 'w-full px-1.5 mb-4' : 'w-full'}>
+                        <Textarea
+                          value={value}
+                          onChange={(event) => handleCustomFieldChange(fieldKey, event.target.value)}
                           placeholder={field.placeholder || ''}
-                          className={inputClass}
+                          rows={4}
+                          className="min-h-[120px] px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
                         />
-                      </Div>
+                      </Field>
                     );
-                  })}
-                </Div>
-              </Div>
-            ) : null}
-          </Section>
-
-          <Section className={cardClass}>
-            <Div className="mb-5 flex items-center gap-4">
-              <Div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-slate-900 text-white shadow-xl shadow-slate-900/10">
-                <UiIcon as={ShieldCheck} size={22} strokeWidth={2.5} />
-              </Div>
-              <Div>
-                <P className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Step 3</P>
-                <H2 className="text-xl font-black tracking-tight text-slate-900">Documents Vault</H2>
+                  }
+                  if (fieldType === 'select') {
+                    return (
+                      <Field key={fieldKey} label={field.name} className={col}>
+                        <Select value={value} onChange={(event) => handleCustomFieldChange(fieldKey, event.target.value)} className={INPUT}>
+                          <Option value="">{field.placeholder || `Select ${field.name}`}</Option>
+                          {options.map((option) => (
+                            <Option key={option} value={option}>
+                              {option}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Field>
+                    );
+                  }
+                  if (fieldType === 'multi_select') {
+                    const selectedValues = Array.isArray(value) ? value : [];
+                    return (
+                      <Field key={fieldKey} label={field.name} className={tablet ? 'w-full px-1.5 mb-4' : 'w-full'}>
+                        <Div className="flex-row flex-wrap gap-2">
+                          {options.map((option) => {
+                            const selected = selectedValues.includes(option);
+                            return (
+                              <Button
+                                key={option}
+                                type="button"
+                                onClick={() =>
+                                  handleCustomFieldChange(fieldKey, selected ? selectedValues.filter((item) => item !== option) : [...selectedValues, option])
+                                }
+                                className={`h-11 justify-center rounded-full px-4 ${selected ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
+                              >
+                                <Span className={`text-sm font-semibold ${selected ? 'text-white' : 'text-slate-700'}`}>{option}</Span>
+                              </Button>
+                            );
+                          })}
+                        </Div>
+                      </Field>
+                    );
+                  }
+                  return (
+                    <Field key={fieldKey} label={field.name} className={col}>
+                      <Input
+                        type={fieldType === 'number' ? 'tel' : 'text'}
+                        value={Array.isArray(value) ? value.join(', ') : value}
+                        onChange={(event) => handleCustomFieldChange(fieldKey, fieldType === 'number' ? event.target.value.replace(/\D/g, '') : event.target.value)}
+                        placeholder={field.placeholder || ''}
+                        className={INPUT}
+                      />
+                    </Field>
+                  );
+                })}
               </Div>
             </Div>
+          ) : null}
+        </Card>
 
-            <Div className="space-y-6">
-              {visibleDocumentTemplates.length === 0 ? (
-                <Div className="rounded-[1.6rem] border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center text-sm font-semibold text-slate-400">
-                  No driver document templates are configured yet.
-                </Div>
-              ) : (
-                visibleDocumentTemplates.map((template) => (
-                  <Div key={template.id} className="rounded-[1.6rem] border border-slate-100 bg-slate-50/70 p-5">
-                    <Div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                      <Div>
-                        <H3 className="text-lg font-black tracking-tight text-slate-900">{template.name}</H3>
-                        <P className="mt-1 text-xs font-black uppercase tracking-widest text-slate-400">
-                          {template.is_required ? 'Required' : 'Optional'} • {typeLabel(template.account_type || 'individual')}
-                        </P>
-                      </Div>
-                      <Div className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500 shadow-sm">
-                        {template.fields?.length > 1 ? 'Multiple Sides' : 'Single Side'}
-                      </Div>
+        <Card className="mb-4">
+          <SectionTitle>Step 3 · Documents vault</SectionTitle>
+          {visibleDocumentTemplates.length === 0 ? (
+            <EmptyState
+              icon={ShieldCheck}
+              title="No document templates"
+              message="No driver document templates are configured yet, so there is nothing to upload here."
+            />
+          ) : (
+            <Div className="gap-4">
+              {visibleDocumentTemplates.map((template) => (
+                <Div key={template.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <Div className="mb-3 flex-row flex-wrap items-start justify-between gap-2">
+                    <Div className="flex-1 min-w-0">
+                      <P className="text-base font-semibold text-slate-900">{template.name}</P>
+                      <P className="mt-0.5 text-xs text-slate-500">
+                        {template.is_required ? 'Required' : 'Optional'} · {typeLabel(template.account_type || 'individual')}
+                      </P>
                     </Div>
+                    <StatusBadge tone="neutral" label={template.fields?.length > 1 ? 'Multiple sides' : 'Single side'} />
+                  </Div>
 
-                    <Div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                      {(template.fields || []).map((field) => {
-                        const doc = documents[field.key];
-                        const isUploading = uploadingDocKey === field.key;
-                        return (
-                          <Div key={field.key} className="rounded-[1.5rem] border border-slate-100 bg-white p-4 shadow-sm">
-                            <Div className="mb-3 flex items-center justify-between gap-3">
-                              <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400">{field.label}</Label>
-                              <Span
-                                className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${(field.required ?? template.is_required) ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}
-                              >
-                                {(field.required ?? template.is_required) ? 'Required' : 'Optional'}
-                              </Span>
+                  <Div className={grid}>
+                    {(template.fields || []).map((field) => {
+                      const doc = documents[field.key];
+                      const isUploading = uploadingDocKey === field.key;
+                      const required = field.required ?? template.is_required;
+                      return (
+                        <Div key={field.key} className={`${col} `}>
+                          <Div className="rounded-xl border border-slate-200 bg-white p-3">
+                            <Div className="mb-2 flex-row items-center justify-between gap-2">
+                              <Span className="text-sm font-medium text-slate-700 flex-1">{field.label}</Span>
+                              <StatusBadge tone={required ? 'info' : 'neutral'} label={required ? 'Required' : 'Optional'} />
                             </Div>
 
-                            <Div className="relative mb-3 flex min-h-[180px] items-center justify-center overflow-hidden rounded-[1.2rem] border-2 border-dashed border-slate-200 bg-slate-50">
+                            <Div className="mb-3 h-36 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50">
                               {isUploading ? (
-                                <Div className="flex flex-col items-center gap-3">
-                                  <UiIcon as={Loader2} size={24} className="animate-spin text-slate-500" />
-                                  <Span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Uploading</Span>
+                                <Div className="items-center gap-2">
+                                  <UiIcon as={Loader2} size={22} className="text-slate-500" />
+                                  <Span className="text-xs text-slate-500">Uploading…</Span>
                                 </Div>
                               ) : doc?.previewUrl ? (
-                                <Img src={doc.previewUrl} alt={field.label} className="h-full w-full object-cover" />
+                                <Img src={doc.previewUrl} alt={field.label} className="h-full w-full" contentFit="cover" />
                               ) : (
-                                <Div className="text-center">
-                                  <UiIcon as={UploadCloud} size={24} className="mx-auto mb-3 text-slate-400" />
-                                  <P className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tap To Upload</P>
+                                <Div className="items-center">
+                                  <UiIcon as={UploadCloud} size={22} className="mb-2 text-slate-400" />
+                                  <P className="text-xs text-slate-500">Tap a button below to upload</P>
                                 </Div>
                               )}
                             </Div>
 
-                            <Div className="grid grid-cols-2 gap-3">
+                            <Div className="flex-row gap-2">
                               <Button
                                 type="button"
                                 onClick={() => handleDocumentFileChange(template.id, field.key)}
-                                className="relative flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[1rem] border border-slate-200 bg-white text-[11px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-50"
+                                className={`${BTN_SECONDARY} flex-1 px-2`}
                               >
-                                <UiIcon as={ImagePlus} size={15} />
-                                Gallery
+                                <UiIcon as={ImagePlus} size={15} className="text-slate-700" />
+                                <Span className={BTN_TEXT_SECONDARY}>Gallery</Span>
                               </Button>
                               <Button
                                 type="button"
                                 onClick={() => handleDocumentFileChange(template.id, field.key, { camera: true })}
-                                className="relative flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[1rem] bg-slate-900 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-slate-900/10 transition-colors hover:bg-black"
+                                className={`${BTN_PRIMARY} flex-1 px-2`}
                               >
-                                <UiIcon as={Camera} size={15} />
-                                Camera
+                                <UiIcon as={Camera} size={15} className="text-white" />
+                                <Span className={BTN_TEXT_PRIMARY}>Camera</Span>
                               </Button>
                             </Div>
                           </Div>
-                        );
-                      })}
-                    </Div>
-
-                    {template.has_identify_number || template.has_expiry_date ? (
-                      <Div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {template.has_identify_number ? (
-                          <Div>
-                            <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">
-                              {typeLabel(template.identify_number_key) || `${template.name} Number`}
-                            </Label>
-                            <Input
-                              value={documentMeta[template.id]?.identifyNumber || ''}
-                              onChange={(event) => handleMetaChange(template.id, 'identifyNumber', event.target.value.toUpperCase())}
-                              placeholder={`Enter ${typeLabel(template.identify_number_key) || 'document number'}`}
-                              className={inputClass}
-                            />
-                          </Div>
-                        ) : null}
-                        {template.has_expiry_date ? (
-                          <Div>
-                            <Label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Expiry Date</Label>
-                            <Input
-                              type="date"
-                              value={documentMeta[template.id]?.expiryDate || ''}
-                              onChange={(event) => handleMetaChange(template.id, 'expiryDate', event.target.value)}
-                              className={inputClass}
-                            />
-                          </Div>
-                        ) : null}
-                      </Div>
-                    ) : null}
+                        </Div>
+                      );
+                    })}
                   </Div>
-                ))
-              )}
-            </Div>
-          </Section>
 
-          <Div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex h-14 items-center justify-center gap-3 rounded-[1.4rem] bg-slate-900 px-8 text-sm font-black uppercase tracking-widest text-white shadow-[0_20px_40px_rgba(0,0,0,0.18)] transition-all hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {submitting ? <UiIcon as={Loader2} size={18} className="animate-spin" /> : <UiIcon as={FileText} size={18} />}
-              {submitting ? 'Creating Driver...' : 'Create Driver'}
-            </Button>
-          </Div>
-        </Form>
-      </Div>
-    </ScrollDiv>
+                  {template.has_identify_number || template.has_expiry_date ? (
+                    <Div className={grid}>
+                      {template.has_identify_number ? (
+                        <Field label={typeLabel(template.identify_number_key) || `${template.name} number`} className={col}>
+                          <Input
+                            value={documentMeta[template.id]?.identifyNumber || ''}
+                            onChange={(event) => handleMetaChange(template.id, 'identifyNumber', event.target.value.toUpperCase())}
+                            placeholder={`Enter ${typeLabel(template.identify_number_key) || 'document number'}`}
+                            className={INPUT}
+                          />
+                        </Field>
+                      ) : null}
+                      {template.has_expiry_date ? (
+                        <Field label="Expiry date" className={col}>
+                          <Input
+                            type="date"
+                            value={documentMeta[template.id]?.expiryDate || ''}
+                            onChange={(event) => handleMetaChange(template.id, 'expiryDate', event.target.value)}
+                            className={INPUT}
+                          />
+                        </Field>
+                      ) : null}
+                    </Div>
+                  ) : null}
+                </Div>
+              ))}
+            </Div>
+          )}
+        </Card>
+
+        <Card>
+          <Button type="submit" disabled={submitting} className={`${BTN_PRIMARY} w-full ${submitting ? 'opacity-70' : ''}`}>
+            <UiIcon as={submitting ? Loader2 : FileText} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>{submitting ? 'Creating driver…' : 'Create driver'}</Span>
+          </Button>
+        </Card>
+      </Form>
+    </AdminPage>
   );
 };
 export default CreateDriver;

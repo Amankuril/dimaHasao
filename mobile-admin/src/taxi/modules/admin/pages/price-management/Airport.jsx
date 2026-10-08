@@ -1,55 +1,39 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/price-management/Airport.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from '../../../../../lib/motion';
 import { useNavigate, useParams } from '../../../../../lib/webRouter';
 import { EditablePolygon, GMap, Marker, fromLatLng, regionFor, toLatLng } from '../../../../../components/maps';
 import PlaceSearchField from './PlaceSearchField';
-import {
-  ArrowLeft,
-  Edit2,
-  Eraser,
-  Loader2,
-  MapPin,
-  Plus,
-  Save,
-  Search,
-  Trash2,
-  ChevronRight,
-  Plane,
-  FileSearch,
-  Maximize2,
-  Filter,
-  Globe,
-  Tag,
-  Info,
-} from 'lucide-react-native';
+import { ArrowLeft, Edit2, Loader2, Plus, Save, Search, Trash2, Plane, Filter, Info, MapPinned, CheckCircle2, XCircle } from 'lucide-react-native';
 import { adminService } from '../../services/adminService';
 import { DISTRICT_CENTER, useDrawingGoogleMapsLoader } from '../../utils/googleMaps';
 import {
-  Button,
-  Div,
-  H1,
-  H3,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  EmptyState,
+  ErrorState,
+  TableSkeleton,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, Input, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 import { alert, window } from '../../../../../lib/webShim';
-const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
-const cardClass = 'bg-white rounded-xl border border-gray-200 p-6';
+const AIRPORT_COLS = [210, 170, 150, 96];
+const AIRPORT_LABELS = ['Airport', 'Service location', 'Status', 'Actions'];
 const AIRPORT_STATUS_OPTIONS = [
   {
     value: '',
@@ -98,6 +82,7 @@ const Airport = ({ mode: initialMode = 'list' }) => {
     status: '',
   });
   const mapRef = useRef(null);
+  const { columns, tablet } = useLayoutWidth();
   const { isLoaded, loadError } = useDrawingGoogleMapsLoader();
   useEffect(() => {
     setView(initialMode);
@@ -326,553 +311,400 @@ const Airport = ({ mode: initialMode = 'list' }) => {
       service_location_id: '',
       status: '',
     });
-  return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8 animate-in fade-in duration-500 font-sans">
-      <AnimatePresence mode="wait">
-        {view === 'list' ? (
-          <motion.div
-            key="list"
-            initial={{
-              opacity: 0,
-              y: 10,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -10,
-            }}
-            className="max-w-7xl mx-auto space-y-6"
+  const totalAirports = airports.length;
+  const activeAirports = airports.filter((a) => (a.status || 'active').toLowerCase() === 'active' || a.active).length;
+  const inactiveAirports = airports.filter((a) => (a.status || '').toLowerCase() === 'inactive' || a.active === false).length;
+  const locationsCovered = new Set(airports.map((a) => a.service_location_id?._id || a.service_location_id).filter(Boolean)).size;
+  if (view === 'list') {
+    return (
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={Plane}
+          title="Airport Management"
+          subtitle="Airport pickup zones, surge and support fees"
+          breadcrumb={[{ label: 'Taxi' }, { label: 'Pricing' }, { label: 'Airports' }]}
+          actions={
+            <Button type="button" onClick={() => navigate('/taxi/admin/pricing/airport/create')} className={BTN_PRIMARY}>
+              <UiIcon as={Plus} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Add airport</Span>
+            </Button>
+          }
+        />
+
+        <StatGrid className="mb-4">
+          <StatCard label="Total airports" value={String(totalAirports)} icon={Plane} tone="info" />
+          <StatCard label="Active" value={String(activeAirports)} icon={CheckCircle2} tone="success" />
+          <StatCard label="Inactive" value={String(inactiveAirports)} icon={XCircle} tone="danger" />
+          <StatCard label="Locations covered" value={String(locationsCovered)} icon={MapPinned} tone="warning" hint="Service locations with an airport" />
+        </StatGrid>
+
+        <Card className="mb-4">
+          <SectionTitle
+            action={
+              <Button
+                type="button"
+                onClick={() => setIsFilterOpen((current) => !current)}
+                accessibilityLabel={isFilterOpen ? 'Hide filters' : 'Show filters'}
+                className={BTN_SECONDARY}
+              >
+                <UiIcon as={Filter} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>{isFilterOpen ? 'Hide filters' : 'Filters'}</Span>
+              </Button>
+            }
           >
-            <Div className="mb-6">
-              <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-                <Span>Pricing</Span>
-                <UiIcon as={ChevronRight} size={12} />
-                <Span className="text-gray-700">Airport Management</Span>
-              </Div>
-              <Div className="flex items-center justify-between">
-                <H1 className="text-xl text-gray-900 font-bold">Airport Management</H1>
-                <Button
-                  type="button"
-                  onClick={() => navigate('/taxi/admin/pricing/airport/create')}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#FFC400] text-[#0B1220] rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm"
+            Search
+          </SectionTitle>
+          <Toolbar className="mb-0">
+            <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white flex-1 min-w-[200px]">
+              <UiIcon as={Search} size={16} className="text-slate-400" />
+              <Input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search airports"
+                className="flex-1 text-sm text-slate-900"
+              />
+            </Div>
+            <Select value={entriesPerPage} onChange={(e) => setEntriesPerPage(Number(e.target.value))} className={`${INPUT} w-32`}>
+              <Option value={10}>10 per page</Option>
+              <Option value={20}>20 per page</Option>
+              <Option value={50}>50 per page</Option>
+            </Select>
+          </Toolbar>
+          {isFilterOpen ? (
+            <Div className={`grid grid-cols-${columns} gap-3 mt-3`}>
+              <Field label="Service location">
+                <Select
+                  value={filters.service_location_id}
+                  onChange={(e) =>
+                    setFilters((current) => ({
+                      ...current,
+                      service_location_id: e.target.value,
+                    }))
+                  }
+                  className={INPUT}
                 >
-                  <UiIcon as={Plus} size={16} /> Add Airport
+                  <Option value="">All service locations</Option>
+                  {serviceLocations.map((sl) => (
+                    <Option key={sl._id || sl.id} value={sl._id || sl.id}>
+                      {sl.name || sl.service_location_name}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Status">
+                <Select
+                  value={filters.status}
+                  onChange={(e) =>
+                    setFilters((current) => ({
+                      ...current,
+                      status: e.target.value,
+                    }))
+                  }
+                  className={INPUT}
+                >
+                  {AIRPORT_STATUS_OPTIONS.map((option) => (
+                    <Option key={option.value || 'all'} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+              <Div className="justify-end">
+                <Button type="button" onClick={clearFilters} className={BTN_SECONDARY}>
+                  <Span className={BTN_TEXT_SECONDARY}>Reset filters</Span>
                 </Button>
               </Div>
             </Div>
+          ) : null}
+        </Card>
 
-            {/* Summary Cards */}
-            <Div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                <P className="text-xs font-semibold text-gray-500 mb-1">Total Airports</P>
-                <H3 className="text-2xl font-bold text-gray-900">{airports.length}</H3>
-              </Div>
-              <Div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                <P className="text-xs font-semibold text-gray-500 mb-1">Active Airports</P>
-                <H3 className="text-2xl font-bold text-gray-900">
-                  {airports.filter((a) => (a.status || 'active').toLowerCase() === 'active' || a.active).length}
-                </H3>
-              </Div>
-              <Div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                <P className="text-xs font-semibold text-gray-500 mb-1">Inactive Airports</P>
-                <H3 className="text-2xl font-bold text-gray-900">
-                  {airports.filter((a) => (a.status || '').toLowerCase() === 'inactive' || a.active === false).length}
-                </H3>
-              </Div>
-              <Div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                <P className="text-xs font-semibold text-gray-500 mb-1">Locations Covered</P>
-                <H3 className="text-2xl font-bold text-gray-900">
-                  {new Set(airports.map((a) => a.service_location_id?._id || a.service_location_id).filter(Boolean)).size}
-                </H3>
-              </Div>
-            </Div>
-
-            <Div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <Div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
-                <Div className="flex items-center gap-3 text-sm text-gray-500">
-                  <Span>Show</Span>
-                  <Select
-                    value={entriesPerPage}
-                    onChange={(e) => setEntriesPerPage(Number(e.target.value))}
-                    className="border border-gray-200 rounded px-2 py-1 bg-white outline-none focus:border-indigo-500"
-                  >
-                    <Option value={10}>10</Option>
-                    <Option value={20}>20</Option>
-                    <Option value={50}>50</Option>
-                  </Select>
-                  <Span>entries</Span>
-                </Div>
-                <Div className="flex items-center gap-2">
-                  <Div className="relative">
-                    <UiIcon as={Search} size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search airports..."
-                      className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all w-64"
-                    />
-                  </Div>
-                  <Button
-                    type="button"
-                    onClick={() => setIsFilterOpen((current) => !current)}
-                    accessibilityLabel={isFilterOpen ? 'Hide filters' : 'Show filters'}
-                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${isFilterOpen ? 'border-indigo-200 bg-indigo-50 text-indigo-600' : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'}`}
-                  >
-                    <UiIcon as={Filter} size={18} />
-                    <Span>{isFilterOpen ? 'Hide Filters' : 'Filters'}</Span>
-                  </Button>
-                </Div>
-              </Div>
-
-              {isFilterOpen ? (
-                <Div className="grid grid-cols-1 gap-4 border-b border-gray-100 bg-white px-4 py-4 md:grid-cols-3">
-                  <Div>
-                    <Label className={labelClass}>Service Location</Label>
+        {loading ? (
+          <TableSkeleton rows={6} />
+        ) : errorMessage ? (
+          <ErrorState title="Could not load airports" message={errorMessage} onRetry={fetchData} />
+        ) : filteredAirports.length === 0 ? (
+          <EmptyState
+            icon={Plane}
+            title={airports.length ? 'No airports match these filters' : 'No airports yet'}
+            message={airports.length ? 'Clear the search or filters to see every airport.' : 'Create your first airport to enable airport pricing.'}
+            actionLabel={airports.length ? 'Reset filters' : 'Add airport'}
+            onAction={airports.length ? clearFilters : () => navigate('/taxi/admin/pricing/airport/create')}
+          />
+        ) : (
+          <DataTable cols={AIRPORT_COLS}>
+            <THead cols={AIRPORT_COLS} labels={AIRPORT_LABELS} />
+            <TBody>
+              {filteredAirports.slice(0, entriesPerPage).map((airport, i, all) => (
+                <Row key={airport._id || airport.id} last={i === all.length - 1}>
+                  <Cell width={AIRPORT_COLS[0]}>
+                    <Span className="text-sm font-semibold text-slate-900">{airport.name || 'Unnamed airport'}</Span>
+                    {airport.code ? <Span className="text-xs text-slate-500 mt-0.5">{String(airport.code).toUpperCase()}</Span> : null}
+                  </Cell>
+                  <Cell width={AIRPORT_COLS[1]}>{airport.service_location_id?.name || '—'}</Cell>
+                  <Cell width={AIRPORT_COLS[2]}>
                     <Select
-                      value={filters.service_location_id}
-                      onChange={(e) =>
-                        setFilters((current) => ({
-                          ...current,
-                          service_location_id: e.target.value,
-                        }))
-                      }
-                      className={inputClass}
+                      value={String(airport.status || 'active').toLowerCase()}
+                      onChange={(event) => handleStatusUpdate(airport, event.target.value)}
+                      className={`${INPUT} w-full`}
                     >
-                      <Option value="">All service locations</Option>
-                      {serviceLocations.map((sl) => (
-                        <Option key={sl._id || sl.id} value={sl._id || sl.id}>
-                          {sl.name || sl.service_location_name}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Div>
-
-                  <Div>
-                    <Label className={labelClass}>Status</Label>
-                    <Select
-                      value={filters.status}
-                      onChange={(e) =>
-                        setFilters((current) => ({
-                          ...current,
-                          status: e.target.value,
-                        }))
-                      }
-                      className={inputClass}
-                    >
-                      {AIRPORT_STATUS_OPTIONS.map((option) => (
-                        <Option key={option.value || 'all'} value={option.value}>
+                      {AIRPORT_FORM_STATUS_OPTIONS.map((option) => (
+                        <Option key={option.value} value={option.value}>
                           {option.label}
                         </Option>
                       ))}
                     </Select>
-                  </Div>
+                  </Cell>
+                  <Cell width={AIRPORT_COLS[3]}>
+                    <Div className="flex-row items-center gap-1">
+                      <Button
+                        type="button"
+                        accessibilityLabel={`Edit ${airport.name || 'airport'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate(`/taxi/admin/pricing/airport/edit/${airport._id || airport.id}`);
+                        }}
+                        className="w-11 h-11 rounded-lg items-center justify-center"
+                      >
+                        <UiIcon as={Edit2} size={16} className="text-slate-600" />
+                      </Button>
+                      <Button
+                        type="button"
+                        accessibilityLabel={`Delete ${airport.name || 'airport'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDelete(airport._id || airport.id);
+                        }}
+                        className="w-11 h-11 rounded-lg items-center justify-center"
+                      >
+                        <UiIcon as={Trash2} size={16} className="text-red-600" />
+                      </Button>
+                    </Div>
+                  </Cell>
+                </Row>
+              ))}
+            </TBody>
+          </DataTable>
+        )}
+      </AdminPage>
+    );
+  }
+  return (
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Plane}
+        title={id ? 'Edit airport' : 'Add airport'}
+        subtitle="Pin the terminal, draw its boundary and set the airport fees"
+        breadcrumb={[{ label: 'Taxi' }, { label: 'Pricing' }, { label: 'Airports' }, { label: id ? 'Edit' : 'Create' }]}
+        actions={
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate('/taxi/admin/pricing/airport');
+              setView('list');
+            }}
+            className={BTN_SECONDARY}
+          >
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+          </Button>
+        }
+      />
 
-                  <Div className="flex items-end">
-                    <Button
-                      type="button"
-                      onClick={clearFilters}
-                      className="h-[42px] w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
-                    >
-                      Reset Filters
-                    </Button>
-                  </Div>
-                </Div>
+      <Card className="mb-4">
+        <SectionTitle>Airport details</SectionTitle>
+        <Div className={`grid grid-cols-${columns} gap-3`}>
+          <Field label="Service location" required>
+            <Select
+              value={formData.service_location_id}
+              onChange={(e) => {
+                const sid = e.target.value;
+                setFormData((p) => ({
+                  ...p,
+                  service_location_id: sid,
+                }));
+                const loc = serviceLocations.find((l) => (l._id || l.id) === sid);
+                if (loc) {
+                  const center = {
+                    lat: Number(loc.latitude),
+                    lng: Number(loc.longitude),
+                  };
+                  setMapCenter(center);
+                  panTo(center);
+                }
+              }}
+              className={INPUT}
+            >
+              <Option value="">Select service location</Option>
+              {serviceLocations.map((sl) => (
+                <Option key={sl._id || sl.id} value={sl._id || sl.id}>
+                  {sl.name}
+                </Option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Airport name" required>
+            <Input
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  name: e.target.value,
+                }))
+              }
+              placeholder="Enter airport name"
+              className={INPUT}
+            />
+          </Field>
+
+          <Field label="Airport surge fee" hint="Extra pickup/drop charge for airport trips">
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.airport_surge}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  airport_surge: e.target.value,
+                }))
+              }
+              placeholder="0.00"
+              className={INPUT}
+            />
+          </Field>
+
+          <Field label="Support airport fee" hint="Additional operational airport support fee">
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.support_airport_fee}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  support_airport_fee: e.target.value,
+                }))
+              }
+              placeholder="0.00"
+              className={INPUT}
+            />
+          </Field>
+
+          <Field label="Status">
+            <Select
+              value={formData.status}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  status: e.target.value,
+                }))
+              }
+              className={INPUT}
+            >
+              {AIRPORT_FORM_STATUS_OPTIONS.map((option) => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
+              ))}
+            </Select>
+          </Field>
+        </Div>
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            boundaryCoords.length > 0 ? (
+              <Button type="button" onClick={clearBoundary} className={BTN_SECONDARY}>
+                <Span className="text-sm font-semibold text-red-600">Clear boundary</Span>
+              </Button>
+            ) : null
+          }
+        >
+          Location &amp; boundary
+        </SectionTitle>
+        {loadError ? (
+          <ErrorState title="Map could not load" message="Check the Google Maps key, then try again." />
+        ) : isLoaded ? (
+          <Div className="gap-3">
+            <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white">
+              <UiIcon as={Search} size={16} className="text-slate-400" />
+              <PlaceSearchField placeholder="Search for a city or airport" onPlace={handlePlaceChanged} icon={null} className="flex-1 text-sm text-slate-900" />
+            </Div>
+            <Button type="button" onClick={() => setDrawingBoundary((current) => !current)} className={drawingBoundary ? BTN_PRIMARY : BTN_SECONDARY}>
+              <Span className={drawingBoundary ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{drawingBoundary ? 'Done drawing' : 'Draw boundary'}</Span>
+            </Button>
+            <GMap
+              ref={mapRef}
+              className="w-full h-[360px] rounded-lg"
+              initialRegion={regionFor(boundaryCoords.length ? boundaryCoords : [mapCenter])}
+              mapType="standard"
+              onPress={handleMapClick}
+            >
+              {boundaryCoords.length > 0 ? (
+                <EditablePolygon
+                  points={boundaryCoords}
+                  onChange={setBoundaryCoords}
+                  editable={drawingBoundary}
+                  strokeColor="#155DFC"
+                  fillColor="rgba(21,93,252,0.1)"
+                  onVertexPress={(index) => {
+                    if (drawingBoundary) setBoundaryCoords((prev) => prev.filter((_, i) => i !== index));
+                  }}
+                />
               ) : null}
 
-              <Table cols={[220, 170, 140, 110]} className="w-full text-sm">
-                  <Thead>
-                    <Tr className="bg-gray-50 border-b border-gray-200">
-                      <Th className="px-6 py-4 text-left font-semibold text-gray-700">Airport Name</Th>
-                      <Th className="px-6 py-4 text-left font-semibold text-gray-700">Service Location</Th>
-                      <Th className="px-6 py-4 text-center font-semibold text-gray-700">Status</Th>
-                      <Th className="px-6 py-4 text-right font-semibold text-gray-700">Actions</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody className="divide-y divide-gray-100">
-                    {loading ? (
-                      <Tr>
-                        <Td colSpan="4" className="py-20 text-center text-gray-400">
-                          <UiIcon as={Loader2} className="animate-spin mx-auto mb-2" />
-                          <Span>Loading data...</Span>
-                        </Td>
-                      </Tr>
-                    ) : filteredAirports.length > 0 ? (
-                      filteredAirports.slice(0, entriesPerPage).map((airport) => (
-                        <Tr key={airport._id || airport.id} className="hover:bg-gray-50/50 transition-colors">
-                          <Td className="px-6 py-4">
-                            <Div className="flex items-center gap-3">
-                              <Div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                <UiIcon as={Plane} size={14} />
-                              </Div>
-                              <Span className="font-medium text-gray-900">
-                                {airport.name}
-                                {airport.code && (
-                                  <Span className="ml-2 text-[10px] font-bold tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200 uppercase">
-                                    {airport.code}
-                                  </Span>
-                                )}
-                              </Span>
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4 text-gray-600">{airport.service_location_id?.name || 'N/A'}</Td>
-                          <Td className="px-6 py-4 text-center">
-                            <Select
-                              value={String(airport.status || 'active').toLowerCase()}
-                              onChange={(event) => handleStatusUpdate(airport, event.target.value)}
-                              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-700 outline-none transition-colors hover:border-indigo-200 focus:border-indigo-500"
-                            >
-                              {AIRPORT_FORM_STATUS_OPTIONS.map((option) => (
-                                <Option key={option.value} value={option.value}>
-                                  {option.label}
-                                </Option>
-                              ))}
-                            </Select>
-                          </Td>
-                          <Td className="px-6 py-4 text-right">
-                            <Div className="flex justify-end gap-2 text-gray-400 relative z-50">
-                              <Button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  navigate(`/taxi/admin/pricing/airport/edit/${airport._id || airport.id}`);
-                                }}
-                                className="p-1.5 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-lg transition-colors"
-                              >
-                                <UiIcon as={Edit2} size={14} />
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleDelete(airport._id || airport.id);
-                                }}
-                                className="p-1.5 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                              >
-                                <UiIcon as={Trash2} size={14} />
-                              </Button>
-                            </Div>
-                          </Td>
-                        </Tr>
-                      ))
-                    ) : (
-                      <Tr>
-                        <Td colSpan="4" className="py-24 text-center">
-                          <UiIcon as={Plane} size={48} className="mx-auto mb-4 text-gray-300" />
-                          <H3 className="text-gray-900 mb-1 font-bold">No Airports Available</H3>
-                          <P className="text-sm text-gray-500 mb-6">Create your first airport to enable airport pricing.</P>
-                          <Button
-                            type="button"
-                            onClick={() => navigate('/taxi/admin/pricing/airport/create')}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFC400] text-[#0B1220] rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm"
-                          >
-                            <UiIcon as={Plus} size={16} /> Add Airport
-                          </Button>
-                        </Td>
-                      </Tr>
-                    )}
-                  </Tbody>
-              </Table>
+              <Marker
+                coordinate={toLatLng({
+                  lat: Number(formData.latitude || mapCenter.lat),
+                  lng: Number(formData.longitude || mapCenter.lng),
+                })}
+                draggable
+                pinColor="#155DFC"
+                onDragEnd={handleMarkerDragEnd}
+              />
+            </GMap>
+            <Div className="flex-row items-start gap-2 p-3 rounded-lg bg-blue-50">
+              <UiIcon as={Info} size={16} className="text-blue-700 shrink-0 mt-0.5" />
+              <Span className="text-xs text-slate-700 flex-1">
+                Tap Draw boundary, then tap the map to add each corner of the operational boundary. Drag the pin to move the terminal itself.
+              </Span>
             </Div>
-          </motion.div>
+          </Div>
         ) : (
-          <motion.div
-            key="form"
-            initial={{
-              opacity: 0,
-              x: 20,
-            }}
-            animate={{
-              opacity: 1,
-              x: 0,
-            }}
-            exit={{
-              opacity: 0,
-              x: -20,
-            }}
-            className="max-w-7xl mx-auto space-y-6"
-          >
-            <Div className="mb-6">
-              <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-                <Span>Pricing</Span>
-                <UiIcon as={ChevronRight} size={12} />
-                <Span>Airport Management</Span>
-                <UiIcon as={ChevronRight} size={12} />
-                <Span className="text-gray-700">{id ? 'Edit' : 'Create'}</Span>
-              </Div>
-              <Div className="flex items-center justify-between">
-                <H1 className="text-xl text-gray-900 font-bold">{id ? 'Edit Airport' : 'Add Airport'}</H1>
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigate('/taxi/admin/pricing/airport');
-                    setView('list');
-                  }}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm relative z-50"
-                >
-                  <UiIcon as={ArrowLeft} size={14} /> Back
-                </Button>
-              </Div>
-            </Div>
-
-            <Div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-              <Div className="xl:col-span-12 lg:xl:col-span-5 space-y-6">
-                <Div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                  <Div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                    <Div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-                      <UiIcon as={Plane} size={18} />
-                    </Div>
-                    <Div>
-                      <H3 className="text-sm text-gray-900 font-bold">Airport Details</H3>
-                      <P className="text-xs text-gray-400">Configure core airport terminal data</P>
-                    </Div>
-                  </Div>
-
-                  <Div className="space-y-5">
-                    <Div>
-                      <Label className={labelClass}>
-                        <UiIcon as={MapPin} size={12} className="inline mr-1 text-gray-400" />
-                        Service Location *
-                      </Label>
-                      <Select
-                        value={formData.service_location_id}
-                        onChange={(e) => {
-                          const sid = e.target.value;
-                          setFormData((p) => ({
-                            ...p,
-                            service_location_id: sid,
-                          }));
-                          const loc = serviceLocations.find((l) => (l._id || l.id) === sid);
-                          if (loc) {
-                            const center = {
-                              lat: Number(loc.latitude),
-                              lng: Number(loc.longitude),
-                            };
-                            setMapCenter(center);
-                            panTo(center);
-                          }
-                        }}
-                        className={inputClass}
-                      >
-                        <Option value="">Select Service Location</Option>
-                        {serviceLocations.map((sl) => (
-                          <Option key={sl._id || sl.id} value={sl._id || sl.id}>
-                            {sl.name}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Div>
-
-                    <Div>
-                      <Label className={labelClass}>
-                        <UiIcon as={Tag} size={12} className="inline mr-1 text-gray-400" />
-                        Airport Name *
-                      </Label>
-                      <Input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            name: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter Airport Name"
-                        className={inputClass}
-                      />
-                    </Div>
-
-                    <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Div>
-                        <Label className={labelClass}>
-                          <UiIcon as={Globe} size={12} className="inline mr-1 text-gray-400" />
-                          Airport Surge Fee
-                        </Label>
-                        <P className="text-[10px] text-gray-400 mb-2">Extra pickup/drop charge for airport trips.</P>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.airport_surge}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              airport_surge: e.target.value,
-                            }))
-                          }
-                          placeholder="Enter airport surge fee"
-                          className={inputClass}
-                        />
-                      </Div>
-
-                      <Div>
-                        <Label className={labelClass}>
-                          <UiIcon as={Globe} size={12} className="inline mr-1 text-gray-400" />
-                          Support Airport Fee
-                        </Label>
-                        <P className="text-[10px] text-gray-400 mb-2">Additional operational airport support fee.</P>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.support_airport_fee}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              support_airport_fee: e.target.value,
-                            }))
-                          }
-                          placeholder="Enter support airport fee"
-                          className={inputClass}
-                        />
-                      </Div>
-                    </Div>
-
-                    <Div>
-                      <Label className={labelClass}>
-                        <UiIcon as={Tag} size={12} className="inline mr-1 text-gray-400" />
-                        Status
-                      </Label>
-                      <Select
-                        value={formData.status}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            status: e.target.value,
-                          }))
-                        }
-                        className={inputClass}
-                      >
-                        {AIRPORT_FORM_STATUS_OPTIONS.map((option) => (
-                          <Option key={option.value} value={option.value}>
-                            {option.label}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Div>
-                  </Div>
-                </Div>
-
-                <Div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="w-full py-3 bg-[#FFC400] text-[#0B1220] rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />}
-                    {id ? 'Update Airport' : 'Save Airport'}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      navigate('/taxi/admin/pricing/airport');
-                      setView('list');
-                    }}
-                    className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-                  >
-                    Cancel
-                  </Button>
-                </Div>
-              </Div>
-
-              <Div className="xl:col-span-12 lg:xl:col-span-7">
-                <Div className="bg-white rounded-xl border border-gray-200 p-2 shadow-sm relative overflow-hidden">
-                  {isLoaded ? (
-                    <Div className="w-full rounded-lg overflow-hidden relative">
-                      <Div className="flex flex-col gap-3 pb-3">
-                        <Div className="w-full">
-                          <Div className="flex w-full items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 shadow-sm">
-                            <UiIcon as={Search} className="text-gray-400" size={18} />
-                            <PlaceSearchField
-                              placeholder="Search for a city or airport"
-                              onPlace={handlePlaceChanged}
-                              icon={null}
-                              className="w-full bg-transparent text-sm font-semibold text-gray-800 outline-none"
-                            />
-                          </Div>
-                        </Div>
-
-                        <Div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            onClick={() => setDrawingBoundary((current) => !current)}
-                            className={`rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-widest shadow-sm transition-all border ${drawingBoundary ? 'border-indigo-200 bg-indigo-600 text-white' : 'border-gray-100 bg-white text-indigo-600'}`}
-                          >
-                            {drawingBoundary ? 'Done Drawing' : 'Draw Boundary'}
-                          </Button>
-                          {boundaryCoords.length > 0 ? (
-                            <Button
-                              type="button"
-                              onClick={clearBoundary}
-                              className="rounded-xl bg-white px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-rose-600 shadow-sm transition-all border border-gray-100 active:scale-95"
-                            >
-                              Clear Boundary
-                            </Button>
-                          ) : null}
-                        </Div>
-                      </Div>
-
-                      <GMap
-                        ref={mapRef}
-                        className="w-full h-[420px] rounded-lg"
-                        initialRegion={regionFor(boundaryCoords.length ? boundaryCoords : [mapCenter])}
-                        mapType="standard"
-                        onPress={handleMapClick}
-                      >
-                        {boundaryCoords.length > 0 ? (
-                          <EditablePolygon
-                            points={boundaryCoords}
-                            onChange={setBoundaryCoords}
-                            editable={drawingBoundary}
-                            strokeColor="#4f46e5"
-                            fillColor="rgba(79,70,229,0.1)"
-                            onVertexPress={(index) => {
-                              if (drawingBoundary) setBoundaryCoords((prev) => prev.filter((_, i) => i !== index));
-                            }}
-                          />
-                        ) : null}
-
-                        <Marker
-                          coordinate={toLatLng({
-                            lat: Number(formData.latitude || mapCenter.lat),
-                            lng: Number(formData.longitude || mapCenter.lng),
-                          })}
-                          draggable
-                          pinColor="#4f46e5"
-                          onDragEnd={handleMarkerDragEnd}
-                        />
-                      </GMap>
-                    </Div>
-                  ) : (
-                    <Div className="flex items-center justify-center h-[420px] bg-gray-50 rounded-lg">
-                      <UiIcon as={Loader2} className="animate-spin text-gray-300" size={32} />
-                    </Div>
-                  )}
-                </Div>
-
-                <Div className="mt-6 bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-start gap-3">
-                  <UiIcon as={Info} size={18} className="text-indigo-600 shrink-0 mt-0.5" />
-                  <P className="text-xs text-indigo-900 leading-relaxed font-medium">
-                    Use the Draw Boundary button above the map and tap the map to define the precise operational boundary for this airport. This allows for
-                    automated geofencing of ride requests.
-                  </P>
-                </Div>
-              </Div>
-            </Div>
-          </motion.div>
+          <Div className="h-[360px] rounded-lg bg-slate-100 items-center justify-center">
+            <UiIcon as={Loader2} size={28} className="text-slate-400" />
+            <Span className="text-sm text-slate-500 mt-2">Loading map…</Span>
+          </Div>
         )}
-      </AnimatePresence>
-    </ScrollDiv>
+      </Card>
+
+      <Card className={`${tablet ? 'flex-row justify-end' : ''} gap-3`}>
+        <Button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigate('/taxi/admin/pricing/airport');
+            setView('list');
+          }}
+          className={BTN_SECONDARY}
+        >
+          <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+        </Button>
+        <Button type="button" onClick={handleSave} disabled={saving} className={BTN_PRIMARY}>
+          <UiIcon as={Save} size={16} className="text-white" />
+          <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : id ? 'Update airport' : 'Save airport'}</Span>
+        </Button>
+      </Card>
+    </AdminPage>
   );
 };
 export default Airport;

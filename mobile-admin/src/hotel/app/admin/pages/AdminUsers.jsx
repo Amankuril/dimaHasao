@@ -1,26 +1,39 @@
 /* Ported from Frontend/src/modules/Hotel/app/admin/pages/AdminUsers.jsx (tools/port.js first pass). */
 import React, { useState, useEffect, useCallback } from 'react';
-import { AnimatePresence } from '../../../../lib/motion';
-import { Search, MoreVertical, Ban, CheckCircle, Mail, Phone, Trash2, Unlock, Eye, ChevronLeft, ChevronRight, Download } from 'lucide-react-native';
+import { Search, MoreVertical, Ban, Mail, Phone, Trash2, Unlock, Eye, Download, Users } from 'lucide-react-native';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, H2, Input, Link, Option, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Input, Link, Option, Overlay, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { saveTextFile } from '../../../../lib/files';
-const UserStatusBadge = ({ status }) => {
-  const isBlocked = status === 'BLOCKED';
-  return (
-    <Span
-      className={`flex items-center w-fit px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${isBlocked ? 'bg-red-100 text-red-700 border-red-200 font-bold' : 'bg-green-100 text-green-700 border-green-200 font-bold'}`}
-    >
-      {isBlocked ? <UiIcon as={Ban} size={10} className="mr-1" /> : <UiIcon as={CheckCircle} size={10} className="mr-1" />}
-      {status || 'ACTIVE'}
-    </Span>
-  );
-};
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  Pagination,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
+
+const COLS = [190, 200, 110, 120, 130, 56];
+const LABELS = ['User', 'Contact', 'Role', 'Status', 'Joined', ''];
+const MENU_ITEM = 'flex-row items-center gap-2 px-4 h-11';
+
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [totalUsers, setTotalUsers] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -53,6 +66,7 @@ const AdminUsers = () => {
         };
         const data = await adminService.getUsers(params);
         if (data.success) {
+          setLoadError(null);
           setUsers(data.users);
           setTotalUsers(data.total);
           setTotalPages(Math.ceil(data.total / limit));
@@ -60,6 +74,7 @@ const AdminUsers = () => {
       } catch (error) {
         if (error.response?.status !== 401) {
           console.error('Error fetching users:', error);
+          setLoadError(error.message || 'Failed to load users');
           toast.error('Failed to load users');
         }
       } finally {
@@ -150,8 +165,26 @@ const AdminUsers = () => {
     saveTextFile(`users-export-${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv;charset=utf-8;');
     toast.success('CSV exported successfully');
   };
+
+  const menuUser = users.find((u) => u._id === activeDropdown);
+
+  const header = (
+    <PageHeader
+      icon={Users}
+      title="User management"
+      subtitle={`${totalUsers} registered guest${totalUsers === 1 ? '' : 's'} — view, track and manage accounts`}
+      breadcrumb={[{ label: 'Hotel' }, { label: 'Users' }]}
+      actions={
+        <Button onClick={handleExportCSV} className={BTN_SECONDARY} accessibilityLabel="Export users as CSV">
+          <UiIcon as={Download} size={16} className="text-slate-600" />
+          <Span className={BTN_TEXT_SECONDARY}>Export CSV</Span>
+        </Button>
+      }
+    />
+  );
+
   return (
-    <ScrollDiv className="space-y-6 relative" onClick={() => setActiveDropdown(null)}>
+    <AdminPage maxWidth={1200}>
       <ConfirmationModal
         isOpen={modalConfig.isOpen}
         onClose={() =>
@@ -163,217 +196,148 @@ const AdminUsers = () => {
         {...modalConfig}
       />
 
-      {/* Page Header */}
-      <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Div>
-          <H2 className="text-2xl font-bold text-gray-900 uppercase">User Management ({totalUsers})</H2>
-          <P className="text-gray-500 text-[10px] font-bold uppercase tracking-tight">View, track, and manage registered guests and partners.</P>
-        </Div>
-        <Div className="flex gap-2">
-          <Button
-            onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            <UiIcon as={Download} size={14} /> Export CSV
-          </Button>
-        </Div>
-      </Div>
+      {header}
 
-      {/* Filter Bar */}
-      <Div className="bg-white p-4 border border-gray-200 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <Div className="relative flex-1">
-          <UiIcon as={Search} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search via name, email or phone..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-transparent rounded-xl text-xs font-bold uppercase focus:bg-white focus:border-black outline-none transition-all tracking-tight"
-          />
-        </Div>
-        <Div className="flex gap-2 w-full md:w-auto">
-          <Select
-            value={filters.role}
-            onChange={(e) => handleFilterChange('role', e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
-          >
-            <Option value="">All Roles</Option>
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center gap-2 flex-1 min-w-[200px] h-11 px-3 rounded-lg border border-slate-300 bg-white">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Search name, email or phone"
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              className="flex-1 text-sm text-slate-900"
+            />
+          </Div>
+          <Select value={filters.role} onChange={(e) => handleFilterChange('role', e.target.value)} className={`${INPUT} w-36`} placeholder="All roles">
+            <Option value="">All roles</Option>
             <Option value="user">User</Option>
             <Option value="partner">Partner</Option>
             <Option value="admin">Admin</Option>
           </Select>
-          <Select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
-          >
-            <Option value="">All Status</Option>
+          <Select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} className={`${INPUT} w-36`} placeholder="All status">
+            <Option value="">All status</Option>
             <Option value="active">Active</Option>
             <Option value="blocked">Blocked</Option>
           </Select>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
-      {/* Table Card */}
-      <Div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden min-h-[400px]">
-        <Table cols={[200, 200, 110, 130, 140, 80]} className="w-full text-left border-collapse">
-            <Thead>
-              <Tr className="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
-                <Th className="p-4">User Details</Th>
-                <Th className="p-4">Contact Info</Th>
-                <Th className="p-4">Role</Th>
-                <Th className="p-4">Account Status</Th>
-                <Th className="p-4">Joined Date</Th>
-                <Th className="p-4 text-center">Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody className="divide-y divide-gray-100">
-              {loading ? (
-                [1, 2, 3, 4, 5].map((i) => (
-                  <Tr key={i} className="animate-pulse">
-                    <Td colSpan="6" className="p-4">
-                      <Div className="h-10 bg-gray-50 rounded-lg"></Div>
-                    </Td>
-                  </Tr>
-                ))
-              ) : (
-                <AnimatePresence>
-                  {users.length > 0 ? (
-                    users.map((user) => (
-                      <Tr key={user._id} className="transition-colors group relative font-bold">
-                        <Td className="p-4">
-                          <Link to={`/hotel/admin/users/${user._id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                            <Div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shrink-0 border border-white shadow-sm font-bold uppercase text-xs">
-                              {user.name?.charAt(0) || 'U'}
-                            </Div>
-                            <Div>
-                              <P className="text-sm font-bold text-gray-900 uppercase tracking-tight">{user.name}</P>
-                              <P className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">ID: {user._id.slice(-6)}</P>
-                            </Div>
-                          </Link>
-                        </Td>
-                        <Td className="p-4">
-                          <Div className="flex flex-col gap-1">
-                            <Div className="flex items-center text-[10px] font-bold text-gray-600 uppercase tracking-tight">
-                              <UiIcon as={Mail} size={12} className="mr-1.5 text-gray-400" />
-                              {user.email || 'N/A'}
-                            </Div>
-                            <Div className="flex items-center text-[10px] font-bold text-gray-600 uppercase tracking-tight">
-                              <UiIcon as={Phone} size={12} className="mr-1.5 text-gray-400" />
-                              {user.phone}
-                            </Div>
-                          </Div>
-                        </Td>
-                        <Td className="p-4">
-                          <Span
-                            className={`text-[10px] font-bold uppercase py-1 px-2 rounded-md ${user.role === 'admin' ? 'bg-purple-100 text-purple-700 font-bold' : user.role === 'partner' ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-700 font-bold'}`}
-                          >
-                            {user.role}
-                          </Span>
-                        </Td>
-                        <Td className="p-4">
-                          <UserStatusBadge status={user.isBlocked ? 'BLOCKED' : 'ACTIVE'} />
-                        </Td>
-                        <Td className="p-4 text-[10px] font-bold text-gray-500 uppercase">
-                          {new Date(user.createdAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </Td>
-                        <Td className="p-4 text-center relative">
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveDropdown(activeDropdown === user._id ? null : user._id);
-                            }}
-                            className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-colors"
-                          >
-                            <UiIcon as={MoreVertical} size={16} />
-                          </Button>
-
-                          {activeDropdown === user._id && (
-                            <Div className="absolute right-8 top-8 w-40 bg-white border border-gray-200 rounded-lg shadow-xl z-20 py-1 text-left">
-                              <Link
-                                to={`/hotel/admin/users/${user._id}`}
-                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-xs font-bold uppercase text-gray-700"
-                              >
-                                <UiIcon as={Eye} size={14} /> View Profile
-                              </Link>
-                              {user.isBlocked ? (
-                                <Button
-                                  onClick={() => handleAction('unblock', user)}
-                                  className="w-full flex items-center gap-2 px-4 py-2 hover:bg-green-50 text-xs font-bold uppercase text-green-600"
-                                >
-                                  <UiIcon as={Unlock} size={14} /> Unblock
-                                </Button>
-                              ) : (
-                                <Button
-                                  onClick={() => handleAction('block', user)}
-                                  className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-xs font-bold uppercase text-red-600"
-                                >
-                                  <UiIcon as={Ban} size={14} /> Block
-                                </Button>
-                              )}
-                              <Button
-                                onClick={() => handleAction('delete', user)}
-                                className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-xs font-bold uppercase text-red-600"
-                                disabled={user.role === 'admin'}
-                              >
-                                <UiIcon as={Trash2} size={14} /> Delete
-                              </Button>
-                            </Div>
-                          )}
-                        </Td>
-                      </Tr>
-                    ))
-                  ) : (
-                    <Tr>
-                      <Td colSpan="6" className="p-8 text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">
-                        No users found matching query
-                      </Td>
-                    </Tr>
-                  )}
-                </AnimatePresence>
-              )}
-            </Tbody>
-        </Table>
-
-        {/* Pagination */}
-        {!loading && users.length > 0 && (
-          <Div className="p-4 border-t border-gray-100 flex items-center justify-between">
-            <P className="text-[10px] font-bold uppercase text-gray-500 tracking-tight">
-              Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalUsers)} of {totalUsers} users
-            </P>
-            <Div className="flex items-center gap-1">
-              <Button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-black disabled:opacity-50 transition-colors"
-              >
-                <UiIcon as={ChevronLeft} size={16} />
-              </Button>
-              {[...Array(totalPages)].map((_, i) => (
-                <Button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-10 h-10 rounded-lg text-[10px] font-bold uppercase transition-all ${currentPage === i + 1 ? 'bg-black text-white' : 'hover:bg-gray-100 text-gray-600 border border-transparent hover:border-gray-200'}`}
-                >
-                  {i + 1}
-                </Button>
+      {loading ? (
+        <LoadingState label="Loading users…" />
+      ) : loadError ? (
+        <ErrorState title="Could not load users" message={loadError} onRetry={() => fetchUsers(currentPage, filters)} />
+      ) : users.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title={filters.search || filters.status ? 'No matching users' : 'No users yet'}
+          message={filters.search || filters.status ? 'No account matches the current search or filter.' : 'Guests appear here once they register on the hotel app.'}
+        />
+      ) : (
+        <>
+          <DataTable cols={COLS}>
+            <THead cols={COLS} labels={LABELS} />
+            <TBody>
+              {users.map((user, i) => (
+                <Row key={user._id} last={i === users.length - 1}>
+                  <Cell width={COLS[0]}>
+                    <Div className="flex-row items-center gap-2">
+                      <Div className="w-9 h-9 rounded-full bg-slate-100 items-center justify-center shrink-0">
+                        <Span className="text-xs font-semibold text-slate-600">{user.name?.charAt(0)?.toUpperCase() || 'U'}</Span>
+                      </Div>
+                      <Link to={`/hotel/admin/users/${user._id}`} className="flex-1 min-w-0">
+                        <Span className="text-sm font-medium text-slate-900" numberOfLines={2}>
+                          {user.name}
+                        </Span>
+                        <Span className="text-xs text-slate-500" numberOfLines={1}>
+                          ID: {user._id.slice(-6)}
+                        </Span>
+                      </Link>
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[1]}>
+                    <Div className="gap-1">
+                      <Div className="flex-row items-center gap-1.5">
+                        <UiIcon as={Mail} size={12} className="text-slate-400" />
+                        <Span className="text-xs text-slate-600 flex-1" numberOfLines={1}>
+                          {user.email || 'N/A'}
+                        </Span>
+                      </Div>
+                      <Div className="flex-row items-center gap-1.5">
+                        <UiIcon as={Phone} size={12} className="text-slate-400" />
+                        <Span className="text-xs text-slate-600 flex-1" numberOfLines={1}>
+                          {user.phone}
+                        </Span>
+                      </Div>
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[2]}>
+                    <StatusBadge tone={user.role === 'admin' ? 'info' : user.role === 'partner' ? 'info' : 'neutral'} label={String(user.role || 'user')} />
+                  </Cell>
+                  <Cell width={COLS[3]}>
+                    <StatusBadge status={user.isBlocked ? 'blocked' : 'active'} label={user.isBlocked ? 'Blocked' : 'Active'} />
+                  </Cell>
+                  <Cell width={COLS[4]}>
+                    {new Date(user.createdAt).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </Cell>
+                  <Cell width={COLS[5]} align="center">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdown(activeDropdown === user._id ? null : user._id);
+                      }}
+                      accessibilityLabel={`Actions for ${user.name}`}
+                      className="w-11 h-11 items-center justify-center rounded-lg"
+                    >
+                      <UiIcon as={MoreVertical} size={18} className="text-slate-500" />
+                    </Button>
+                  </Cell>
+                </Row>
               ))}
-              <Button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-black disabled:opacity-50 transition-colors"
-              >
-                <UiIcon as={ChevronRight} size={16} />
+            </TBody>
+          </DataTable>
+          <Pagination
+            page={currentPage}
+            pages={totalPages}
+            total={totalUsers}
+            onPrev={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            onNext={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          />
+        </>
+      )}
+
+      {activeDropdown && menuUser ? (
+        <Overlay onClose={() => setActiveDropdown(null)} className="flex-1 items-center justify-center p-4 bg-black/40" onClick={() => setActiveDropdown(null)}>
+          <Div className="w-60 bg-white rounded-xl border border-slate-200 py-1" onClick={(e) => e.stopPropagation()}>
+            <Link to={`/hotel/admin/users/${menuUser._id}`} onClick={() => setActiveDropdown(null)} className={MENU_ITEM}>
+              <UiIcon as={Eye} size={16} className="text-slate-500" />
+              <Span className="text-sm font-medium text-slate-700">View profile</Span>
+            </Link>
+            {menuUser.isBlocked ? (
+              <Button onClick={() => handleAction('unblock', menuUser)} className={MENU_ITEM}>
+                <UiIcon as={Unlock} size={16} className="text-slate-500" />
+                <Span className="text-sm font-medium text-slate-700">Unblock</Span>
               </Button>
-            </Div>
+            ) : (
+              <Button onClick={() => handleAction('block', menuUser)} className={MENU_ITEM}>
+                <UiIcon as={Ban} size={16} className="text-slate-500" />
+                <Span className="text-sm font-medium text-slate-700">Block</Span>
+              </Button>
+            )}
+            <Div className="h-px bg-slate-100 my-1" />
+            <Button onClick={() => handleAction('delete', menuUser)} className={MENU_ITEM} disabled={menuUser.role === 'admin'}>
+              <UiIcon as={Trash2} size={16} className="text-red-600" />
+              <Span className="text-sm font-medium text-red-600">Delete</Span>
+            </Button>
           </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+        </Overlay>
+      ) : null}
+    </AdminPage>
   );
 };
 export default AdminUsers;

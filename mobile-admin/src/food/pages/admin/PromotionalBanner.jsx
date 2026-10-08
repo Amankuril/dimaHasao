@@ -1,27 +1,32 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/PromotionalBanner.jsx. */
 import { useEffect, useState } from "react";
-import { Edit, Upload, Info } from "lucide-react-native";
+import { Image as ImageIcon, Upload } from "lucide-react-native";
 import { StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { File } from "expo-file-system";
 import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_TEXT_PRIMARY,
+} from "../../../admin/ui";
+import {
   Button,
   Div,
   Form,
-  H1,
-  H2,
   HScroll,
   Img,
   Input,
-  Label,
   P,
-  ScrollDiv,
+  Span,
   Icon as UiIcon,
 } from "../../../components/web";
 import { pickImage } from "../../../lib/files";
 import { alert } from "../../../lib/webShim";
-const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 
 // Using placeholder for promotional banner
@@ -64,9 +69,13 @@ export default function PromotionalBanner() {
     },
     {
       key: "es",
-      label: "Spanish - espa�ol(ES)",
+      label: "Spanish - español(ES)",
     },
   ];
+  const activeLanguageLabel =
+    activeLanguage === "default"
+      ? "Default"
+      : languageTabs.find((t) => t.key === activeLanguage)?.label;
   const handleSubmit = (e) => {
     e.preventDefault();
     localStorage.setItem(
@@ -97,132 +106,116 @@ export default function PromotionalBanner() {
     }
   };
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-5xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          {/* Header */}
-          <Div className="flex items-center gap-3 mb-6">
-            <UiIcon as={Edit} className="w-5 h-5 text-slate-600" />
-            <H1 className="text-2xl font-bold text-slate-900">
-              Promotional Banner
-            </H1>
-          </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={ImageIcon}
+        title="Promotional Banner"
+        subtitle="The wide banner shown at the top of the customer app"
+        breadcrumb={[
+          { label: "Food" },
+          { label: "Promotions" },
+          { label: "Promotional banner" },
+        ]}
+      />
 
-          {/* Language Tabs */}
-          <HScroll className="flex items-center gap-2 border-b border-slate-200 mb-6">
-            {languageTabs.map((tab) => (
-              <Button
-                key={tab.key}
-                onClick={() => setActiveLanguage(tab.key)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeLanguage === tab.key ? "border-blue-600 text-blue-600" : "border-transparent text-slate-600 hover:text-slate-900"}`}
+      <Card>
+        {/* Language Tabs */}
+        <HScroll
+          className="mb-4 border-b border-slate-200"
+          contentClassName="flex-row items-center"
+        >
+          {languageTabs.map((tab) => (
+            <Button
+              key={tab.key}
+              onClick={() => setActiveLanguage(tab.key)}
+              className={`px-4 h-11 justify-center border-b-2 ${activeLanguage === tab.key ? "border-blue-600" : "border-transparent"}`}
+            >
+              <Span
+                className={`text-sm font-semibold ${activeLanguage === tab.key ? "text-blue-600" : "text-slate-600"}`}
               >
                 {tab.label}
-              </Button>
-            ))}
-          </HScroll>
+              </Span>
+            </Button>
+          ))}
+        </HScroll>
 
-          <Form onSubmit={handleSubmit}>
-            {/* Title Input */}
-            <Div className="mb-6">
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Title (
-                {activeLanguage === "default"
-                  ? "Default"
-                  : languageTabs.find((t) => t.key === activeLanguage)?.label}
-                )
-              </Label>
-              <Input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-            </Div>
+        <Form onSubmit={handleSubmit}>
+          <Field label={`Title (${activeLanguageLabel})`} className="mb-4">
+            <Input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={INPUT}
+            />
+          </Field>
 
-            {/* Upload Banner Section */}
-            <Div className="mb-6">
-              <Div className="flex items-center gap-2 mb-3">
-                <H2 className="text-lg font-semibold text-slate-900">
-                  Upload Banner
-                </H2>
-                <UiIcon as={Info} className="w-4 h-4 text-slate-400" />
-              </Div>
+          <SectionTitle>Upload Banner</SectionTitle>
 
-              {/* Banner Preview */}
-              <Div className="border-2 border-slate-200 rounded-lg overflow-hidden mb-4">
-                <Div
-                  className="relative w-full"
-                  style={{
-                    aspectRatio: 5,
-                    minHeight: 200,
-                  }}
-                >
-                  <LinearGradient
-                    colors={["#1e293b", "#0f172a"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={[
-                      StyleSheet.absoluteFill,
-                      { alignItems: "center", justifyContent: "center" },
-                    ]}
-                  >
-                    <Div className="text-white text-center px-8">
-                      <P className="text-2xl font-bold mb-2">
-                        Fresh Flavors Delivered Right to You
-                      </P>
-                    </Div>
-                  </LinearGradient>
-                  <Div className="absolute right-0 top-0 bottom-0 w-1/2">
-                    {!imageFailed && (
-                      <Img
-                        src={bannerImage}
-                        alt="Banner preview"
-                        className="w-full h-full object-cover"
-                        onError={() => setImageFailed(true)}
-                      />
-                    )}
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Upload Instructions */}
-              <Div className="text-sm text-slate-600 space-y-1">
-                <P>Min Size for Better Resolution 5:1</P>
-                <P>
-                  Image format: jpeg, jpg, png, gif, webp | maximum size: 2 MB
-                </P>
-              </Div>
-
-              {/* Upload Button */}
-              <Div className="mt-4">
-                <Div
-                  onClick={handleBannerUpload}
-                  className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer block"
-                >
-                  <UiIcon
-                    as={Upload}
-                    className="w-12 h-12 text-slate-400 mx-auto mb-3"
-                  />
-                  <P className="text-sm font-medium text-blue-600 mb-1">
-                    Click to upload
-                  </P>
-                  <P className="text-xs text-slate-500">Or drag and drop</P>
-                </Div>
-              </Div>
-            </Div>
-
-            {/* Save Button */}
-            <Div className="flex items-center justify-end">
-              <Button
-                type="submit"
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+          {/* Banner Preview */}
+          <Div className="border border-slate-200 rounded-lg overflow-hidden mb-3">
+            <Div
+              className="w-full"
+              style={{
+                aspectRatio: 5,
+                minHeight: 140,
+              }}
+            >
+              <LinearGradient
+                colors={["#1e293b", "#0f172a"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[
+                  StyleSheet.absoluteFill,
+                  { alignItems: "center", justifyContent: "center" },
+                ]}
               >
-                Save
-              </Button>
+                <Div className="px-4">
+                  <P className="text-base font-bold text-white text-center">
+                    Fresh Flavors Delivered Right to You
+                  </P>
+                </Div>
+              </LinearGradient>
+              <Div className="absolute right-0 top-0 bottom-0 w-1/2">
+                {!imageFailed && (
+                  <Img
+                    src={bannerImage}
+                    alt="Banner preview"
+                    className="w-full h-full object-cover"
+                    onError={() => setImageFailed(true)}
+                  />
+                )}
+              </Div>
             </Div>
-          </Form>
-        </Div>
-      </Div>
-    </ScrollDiv>
+          </Div>
+
+          {/* Upload Button */}
+          <Button
+            onClick={handleBannerUpload}
+            className="border border-dashed border-slate-300 rounded-lg py-8 px-4 items-center gap-1 bg-slate-50 mb-2"
+            accessibilityLabel="Upload promotional banner image"
+          >
+            <UiIcon as={Upload} size={28} className="text-slate-400 mb-1" />
+            <P className="text-sm font-semibold text-blue-600">
+              Click to upload
+            </P>
+            <P className="text-xs text-slate-500">Or drag and drop</P>
+          </Button>
+
+          {/* Upload Instructions */}
+          <Div className="gap-1 mb-4">
+            <P className="text-xs text-slate-500">
+              Min size for better resolution 5:1
+            </P>
+            <P className="text-xs text-slate-500">
+              Image format: jpeg, jpg, png, gif, webp — maximum size 2 MB
+            </P>
+          </Div>
+
+          <Button type="submit" className={BTN_PRIMARY}>
+            <Span className={BTN_TEXT_PRIMARY}>Save</Span>
+          </Button>
+        </Form>
+      </Card>
+    </AdminPage>
   );
 }

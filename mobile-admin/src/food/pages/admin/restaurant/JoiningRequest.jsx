@@ -33,29 +33,46 @@ import {
   A,
   Button,
   Div,
-  H1,
   H2,
   H3,
   H4,
   H5,
   Img,
   Input,
-  Label,
   Option,
   Overlay,
   P,
   ScrollDiv,
   Select,
   Span,
-  Table,
-  Tbody,
-  Td,
   Textarea,
-  Th,
-  Thead,
-  Tr,
   Icon as UiIcon,
 } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  Field,
+  BTN_PRIMARY,
+  BTN_DANGER,
+  BTN_TEXT_PRIMARY,
+  DataTable,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  useLayoutWidth,
+  INPUT,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 import { document, window } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -103,6 +120,7 @@ export default function JoiningRequest() {
     dateTo: '',
   });
   const today = new Date().toISOString().slice(0, 10);
+  const { tablet } = useLayoutWidth();
 
   // Track first render to avoid duplicate fetch in React StrictMode
   const hasFetchedOnceRef = useRef(false);
@@ -231,10 +249,6 @@ export default function JoiningRequest() {
       key,
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
     }));
-  };
-  const getSortIconClassName = (key) => {
-    if (sortConfig.key !== key) return 'w-3 h-3 text-slate-400';
-    return sortConfig.direction === 'asc' ? 'w-3 h-3 text-blue-600' : 'w-3 h-3 text-slate-700';
   };
   const clearFilters = () => {
     setFilters({
@@ -380,234 +394,179 @@ export default function JoiningRequest() {
     if (typeof image === 'string') return image;
     return image?.url || '';
   };
+  const COLS = [60, 200, 170, 120, 130, 150];
+  const SORTABLE = [
+    ['sl', 'SL'],
+    ['restaurantName', 'Restaurant Info'],
+    ['ownerName', 'Owner Info'],
+    ['zone', 'Zone'],
+    ['status', 'Status'],
+  ];
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex items-center gap-3 mb-4">
-            <Div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <UiIcon as={UtensilsCrossed} className="w-5 h-5 text-white" />
-            </Div>
-            <H1 className="text-2xl font-bold text-slate-900">New Restaurant Join Request</H1>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={UtensilsCrossed}
+        title="New Restaurant Join Requests"
+        subtitle="Restaurants waiting to be approved onto the platform"
+        breadcrumb={[{ label: 'Food' }, { label: 'Restaurants' }, { label: 'Joining requests' }]}
+      />
+
+      <Card className="mb-4">
+        <Toolbar>
+          <Div className="flex-row items-center flex-1 min-w-[200px] gap-2">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Search by restaurant name"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`${INPUT} flex-1`}
+            />
           </Div>
+          <Button onClick={() => setShowFilterDialog(true)} className={`${BTN_SECONDARY} ${hasActiveFilters ? 'border-blue-600' : ''}`}>
+            <UiIcon as={Filter} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Filter</Span>
+            {hasActiveFilters ? <StatusBadge status="info" tone="info" label={String([filters.zone, filters.dateFrom, filters.dateTo].filter(Boolean).length)} /> : null}
+          </Button>
+        </Toolbar>
 
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-3">
-              <Div className="relative flex-1 sm:flex-initial min-w-[250px]">
-                <Input
-                  type="text"
-                  placeholder="Ex: Search by restaurant na"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </Div>
-            </Div>
-
-            <Div className="flex items-center gap-2">
-              <Button
-                onClick={() => setShowFilterDialog(true)}
-                className={`px-4 py-2.5 text-sm font-medium rounded-lg border transition-all flex items-center gap-2 ${hasActiveFilters ? 'border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'}`}
-              >
-                <UiIcon as={Filter} className="w-4 h-4" />
-                Filter
-                {hasActiveFilters && (
-                  <Span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded-full">
-                    {[filters.zone, filters.dateFrom, filters.dateTo].filter(Boolean).length}
-                  </Span>
-                )}
-              </Button>
-            </Div>
-          </Div>
-
-          {/* Table */}
-          <Table cols={[70, 240, 180, 140, 130, 132]} className="w-full">
-              <Thead className="bg-slate-50 border-b border-slate-200">
-                <Tr>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <Button type="button" onClick={() => handleSort('sl')} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
-                      <Span>SL</Span>
-                      <UiIcon as={ArrowUpDown} className={getSortIconClassName('sl')} />
-                    </Button>
-                  </Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <Button
-                      type="button"
-                      onClick={() => handleSort('restaurantName')}
-                      className="flex items-center gap-1 hover:text-slate-900 transition-colors"
-                    >
-                      <Span>Restaurant Info</Span>
-                      <UiIcon as={ArrowUpDown} className={getSortIconClassName('restaurantName')} />
-                    </Button>
-                  </Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <Button type="button" onClick={() => handleSort('ownerName')} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
-                      <Span>Owner Info</Span>
-                      <UiIcon as={ArrowUpDown} className={getSortIconClassName('ownerName')} />
-                    </Button>
-                  </Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <Button type="button" onClick={() => handleSort('zone')} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
-                      <Span>Zone</Span>
-                      <UiIcon as={ArrowUpDown} className={getSortIconClassName('zone')} />
-                    </Button>
-                  </Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <Button type="button" onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
-                      <Span>Status</Span>
-                      <UiIcon as={ArrowUpDown} className={getSortIconClassName('status')} />
-                    </Button>
-                  </Th>
-                  <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>
-                </Tr>
-              </Thead>
-              <Tbody className="bg-white divide-y divide-slate-100">
-                {loading ? (
-                  <Tr>
-                    <Td colSpan={7} className="px-6 py-20 text-center">
-                      <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-                      <P className="text-lg font-semibold text-slate-700">Loading restaurant requests...</P>
-                    </Td>
-                  </Tr>
-                ) : error ? (
-                  <Tr>
-                    <Td colSpan={7} className="px-6 py-20 text-center">
-                      <P className="text-lg font-semibold text-red-600 mb-1">Error: {error}</P>
-                      <P className="text-sm text-slate-500">Failed to load restaurant requests. Please try again.</P>
-                    </Td>
-                  </Tr>
-                ) : sortedRequests.length === 0 ? (
-                  <Tr>
-                    <Td colSpan={7} className="px-6 py-20 text-center">
-                      <Div className="flex flex-col items-center justify-center">
-                        <P className="text-lg font-semibold text-slate-700 mb-1">No Data Found</P>
-                        <P className="text-sm text-slate-500">No restaurant requests match your search</P>
-                      </Div>
-                    </Td>
-                  </Tr>
-                ) : (
-                  sortedRequests.map((request, index) => {
-                    const isRowProcessing = processingRequestId === request._id;
-                    return (
-                      <Tr key={request._id || index} className={`hover:bg-slate-50 transition-colors ${isRowProcessing ? 'bg-blue-50/50' : ''}`}>
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Span className="text-sm font-medium text-slate-700">{request.sl ?? index + 1}</Span>
-                        </Td>
-                        <Td className="px-6 py-4">
-                          <Div className="flex items-center gap-3">
-                            <Div
-                              className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-all"
-                              onClick={() => handleViewDetails(request)}
-                            >
-                              <Img
-                                src={
-                                  getNormalizedImageUrl(request?.coverImages?.[0]) ||
-                                  (typeof request.profileImage === 'string'
-                                    ? request.profileImage
-                                    : request.profileImage?.url || request.profileImageUrl?.url || request.restaurantImage) ||
-                                  'https://via.placeholder.com/40?text=' + (request.restaurantName?.slice(0, 2) || 'R').toUpperCase()
-                                }
-                                alt={request.restaurantName || 'Restaurant'}
-                                className="w-full h-full object-cover"
-                                fallback={'https://via.placeholder.com/40?text=' + (request.restaurantName?.slice(0, 2) || 'R').toUpperCase()}
-                              />
-                            </Div>
-                            <Span
-                              className="text-sm font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
-                              onClick={() => handleViewDetails(request)}
-                            >
-                              {request.restaurantName}
-                            </Span>
-                          </Div>
-                        </Td>
-                        <Td className="px-6 py-4">
-                          <Div className="flex flex-col">
-                            <Span className="text-sm font-medium text-slate-900">{request.ownerName}</Span>
-                            <Span className="text-xs text-slate-500">{formatPhone(request.ownerPhone)}</Span>
-                          </Div>
-                        </Td>
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Span className="text-sm text-slate-700">{request.zone || '—'}</Span>
-                        </Td>
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          {isRowProcessing ? (
-                            <Span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                              <UiIcon as={Loader2} className="w-3 h-3 animate-spin" />
-                              Processing...
-                            </Span>
-                          ) : (
-                            <Span
-                              className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${String(request.status || '').toLowerCase() === 'pending' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}
-                            >
-                              {request.status}
-                            </Span>
-                          )}
-                        </Td>
-                        <Td className="px-6 py-4 whitespace-nowrap text-center">
-                          <Div className="flex items-center justify-center gap-2">
-                            <Button
-                              onClick={() => handleViewDetails(request)}
-                              className="p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                            >
-                              <UiIcon as={Eye} className="w-4 h-4" />
-                            </Button>
-                            {String(request.status || '').toLowerCase() === 'pending' && (
-                              <>
-                                <Button
-                                  onClick={() => handleApprove(request)}
-                                  disabled={processing}
-                                  className="p-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {isRowProcessing ? <UiIcon as={Loader2} className="w-4 h-4 animate-spin" /> : <UiIcon as={Check} className="w-4 h-4" />}
-                                </Button>
-                                <Button
-                                  onClick={() => handleReject(request)}
-                                  disabled={processing}
-                                  className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <UiIcon as={X} className="w-4 h-4" />
-                                </Button>
-                              </>
-                            )}
-                          </Div>
-                        </Td>
-                      </Tr>
-                    );
-                  })
-                )}
-              </Tbody>
-          </Table>
-
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={filters.zone || filters.dateFrom || filters.dateTo ? sortedRequests.length : totalItems}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              try {
-                localStorage.setItem('admin_joining_requests_pageSize', String(size));
-              } catch {}
-              setCurrentPage(1);
-            }}
-            itemLabel="requests"
+        {loading ? (
+          <TableSkeleton rows={5} />
+        ) : error ? (
+          <ErrorState title="Could not load join requests" message={error} onRetry={() => fetchRequests()} />
+        ) : sortedRequests.length === 0 ? (
+          <EmptyState
+            icon={UtensilsCrossed}
+            title="No join requests"
+            message={
+              searchQuery || hasActiveFilters
+                ? 'No restaurant request matches your search or filters.'
+                : 'New restaurants that apply to join will appear here for approval.'
+            }
           />
-        </Div>
-      </Div>
+        ) : (
+          <>
+            <DataTable cols={COLS}>
+              {/* The kit's THead takes plain labels; these headers also sort, so they are Cells. */}
+              <Row className="bg-slate-50 border-b border-slate-200">
+                {SORTABLE.map(([key, label], idx) => (
+                  <Cell key={key} width={COLS[idx]} className="py-0">
+                    <Button type="button" onClick={() => handleSort(key)} accessibilityLabel={`Sort by ${label}`} className="flex-row items-center gap-1 h-11">
+                      <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</Span>
+                      <UiIcon as={ArrowUpDown} size={12} className={sortConfig.key === key ? 'text-blue-600' : 'text-slate-400'} />
+                    </Button>
+                  </Cell>
+                ))}
+                <Cell width={COLS[5]}>
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Action</Span>
+                </Cell>
+              </Row>
+              <TBody>
+                {sortedRequests.map((request, index, all) => {
+                const isRowProcessing = processingRequestId === request._id;
+                return (
+                  <Row key={request._id || index} last={index === all.length - 1} className={isRowProcessing ? 'bg-blue-50' : ''}>
+                    <Cell width={COLS[0]}>{String(request.sl ?? index + 1)}</Cell>
+                    <Cell width={COLS[1]}>
+                      <Div className="flex-row items-center gap-2">
+                        <Div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100 items-center justify-center shrink-0" onClick={() => handleViewDetails(request)}>
+                          <Img
+                            src={
+                              getNormalizedImageUrl(request?.coverImages?.[0]) ||
+                              (typeof request.profileImage === 'string'
+                                ? request.profileImage
+                                : request.profileImage?.url || request.profileImageUrl?.url || request.restaurantImage) ||
+                              'https://via.placeholder.com/40?text=' + (request.restaurantName?.slice(0, 2) || 'R').toUpperCase()
+                            }
+                            alt={request.restaurantName || 'Restaurant'}
+                            className="w-full h-full object-cover"
+                            fallback={'https://via.placeholder.com/40?text=' + (request.restaurantName?.slice(0, 2) || 'R').toUpperCase()}
+                          />
+                        </Div>
+                        <Text style={tw`text-sm font-medium text-slate-900 flex-1`} numberOfLines={2} onPress={() => handleViewDetails(request)}>
+                          {request.restaurantName}
+                        </Text>
+                      </Div>
+                    </Cell>
+                    <Cell width={COLS[2]}>
+                      <Text style={tw`text-sm font-medium text-slate-900`} numberOfLines={1}>
+                        {request.ownerName}
+                      </Text>
+                      <Text style={tw`text-xs text-slate-500`} numberOfLines={1}>
+                        {formatPhone(request.ownerPhone)}
+                      </Text>
+                    </Cell>
+                    <Cell width={COLS[3]}>{request.zone || '—'}</Cell>
+                    <Cell width={COLS[4]}>
+                      {isRowProcessing ? (
+                        <StatusBadge status="processing" label="Processing…" />
+                      ) : (
+                        <StatusBadge status={request.status} label={request.status} />
+                      )}
+                    </Cell>
+                    <Cell width={COLS[5]}>
+                      <Div className="flex-row items-center">
+                        <Button onClick={() => handleViewDetails(request)} accessibilityLabel="View details" className="w-11 h-11 items-center justify-center rounded-lg">
+                          <UiIcon as={Eye} size={18} className="text-blue-600" />
+                        </Button>
+                        {String(request.status || '').toLowerCase() === 'pending' && (
+                          <>
+                            <Button
+                              onClick={() => handleApprove(request)}
+                              disabled={processing}
+                              accessibilityLabel="Approve request"
+                              className={`w-11 h-11 items-center justify-center rounded-lg ${processing ? 'opacity-40' : ''}`}
+                            >
+                              <UiIcon as={isRowProcessing ? Loader2 : Check} size={18} className="text-green-700" />
+                            </Button>
+                            <Button
+                              onClick={() => handleReject(request)}
+                              disabled={processing}
+                              accessibilityLabel="Reject request"
+                              className={`w-11 h-11 items-center justify-center rounded-lg ${processing ? 'opacity-40' : ''}`}
+                            >
+                              <UiIcon as={X} size={18} className="text-red-600" />
+                            </Button>
+                          </>
+                        )}
+                      </Div>
+                    </Cell>
+                    </Row>
+                  );
+                })}
+              </TBody>
+            </DataTable>
+
+            <AdminListPagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={filters.zone || filters.dateFrom || filters.dateTo ? sortedRequests.length : totalItems}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                try {
+                  localStorage.setItem('admin_joining_requests_pageSize', String(size));
+                } catch {}
+                setCurrentPage(1);
+              }}
+              itemLabel="requests"
+            />
+          </>
+        )}
+      </Card>
 
       {/* Filter Dialog */}
       {showFilterDialog && (
         <Overlay
-          className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-slate-900/40 z-50 flex-row items-center justify-center p-4"
           onClick={() => setShowFilterDialog(false)}
           onClose={() => setShowFilterDialog(false)}
         >
-          <Div className="bg-white rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <Div className="bg-white rounded-xl border border-slate-200 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <Div className="p-6">
-              <Div className="flex items-center justify-between mb-6">
-                <Div className="flex items-center gap-3">
-                  <Div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Div className="flex-row items-center justify-between mb-6">
+                <Div className="flex-row items-center gap-3">
+                  <Div className="w-10 h-10 rounded-lg bg-blue-100 items-center justify-center shrink-0">
                     <UiIcon as={Filter} className="w-5 h-5 text-blue-600" />
                   </Div>
                   <Div>
@@ -615,16 +574,15 @@ export default function JoiningRequest() {
                     <P className="text-xs text-slate-500">Apply filters to refine your search</P>
                   </Div>
                 </Div>
-                <Button onClick={() => setShowFilterDialog(false)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
-                  <UiIcon as={X} className="w-5 h-5 text-slate-600" />
+                <Button onClick={() => setShowFilterDialog(false)} accessibilityLabel="Close filters" className="w-11 h-11 items-center justify-center rounded-lg">
+                  <UiIcon as={X} size={20} className="text-slate-600" />
                 </Button>
               </Div>
 
               <Div className="space-y-4">
                 {/* Zone Filter */}
                 {filterOptions.zones.length > 0 && (
-                  <Div>
-                    <Label className="block text-sm font-medium text-slate-700 mb-2">Zone</Label>
+                  <Field label="Zone">
                     <Select
                       value={filters.zone}
                       onChange={(e) =>
@@ -633,7 +591,7 @@ export default function JoiningRequest() {
                           zone: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className={INPUT}
                     >
                       <Option value="">All Zones</Option>
                       {filterOptions.zones.map((zone) => (
@@ -642,13 +600,12 @@ export default function JoiningRequest() {
                         </Option>
                       ))}
                     </Select>
-                  </Div>
+                  </Field>
                 )}
 
                 {/* Date Range Filters */}
                 <Div className="grid grid-cols-2 gap-3">
-                  <Div>
-                    <Label className="block text-sm font-medium text-slate-700 mb-2">From Date</Label>
+                  <Field label="From date">
                     <Input
                       type="date"
                       value={filters.dateFrom}
@@ -661,11 +618,10 @@ export default function JoiningRequest() {
                           dateTo: filters.dateTo && filters.dateTo < selected ? selected : filters.dateTo,
                         });
                       }}
-                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className={INPUT}
                     />
-                  </Div>
-                  <Div>
-                    <Label className="block text-sm font-medium text-slate-700 mb-2">To Date</Label>
+                  </Field>
+                  <Field label="To date">
                     <Input
                       type="date"
                       value={filters.dateTo}
@@ -678,25 +634,18 @@ export default function JoiningRequest() {
                         });
                       }}
                       min={filters.dateFrom}
-                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className={INPUT}
                     />
-                  </Div>
+                  </Field>
                 </Div>
               </Div>
 
-              <Div className="flex items-center gap-3 mt-6 pt-6 border-t border-slate-200">
-                <Button
-                  onClick={clearFilters}
-                  disabled={!hasActiveFilters}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Clear All
+              <Div className="flex-row items-center gap-2 mt-6 pt-6 border-t border-slate-200">
+                <Button onClick={clearFilters} disabled={!hasActiveFilters} className={`${BTN_SECONDARY} flex-1 ${hasActiveFilters ? '' : 'opacity-50'}`}>
+                  <Span className={BTN_TEXT_SECONDARY}>Clear All</Span>
                 </Button>
-                <Button
-                  onClick={() => setShowFilterDialog(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                >
-                  Apply Filters
+                <Button onClick={() => setShowFilterDialog(false)} className={`${BTN_PRIMARY} flex-1`}>
+                  <Span className={BTN_TEXT_PRIMARY}>Apply Filters</Span>
                 </Button>
               </Div>
             </Div>
@@ -719,20 +668,12 @@ export default function JoiningRequest() {
             <P className="text-sm text-slate-700">{`Are you sure you want to approve "${selectedRequest?.restaurantName ?? ''}"'s join request?`}</P>
           </Div>
           <DialogFooter className="px-6 pb-6">
-            <Button
-              onClick={() => setIsApproveOpen(false)}
-              disabled={processing}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-50"
-            >
-              Cancel
+            <Button onClick={() => setIsApproveOpen(false)} disabled={processing} className={`${BTN_SECONDARY} ${processing ? 'opacity-50' : ''}`}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button
-              onClick={confirmApprove}
-              disabled={processing}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all shadow-md disabled:opacity-50 flex items-center gap-2"
-            >
-              {processing && <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />}
-              Approve
+            <Button onClick={confirmApprove} disabled={processing} className={`${BTN_PRIMARY} ${processing ? 'opacity-50' : ''}`}>
+              {processing ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>Approve</Span>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -741,7 +682,7 @@ export default function JoiningRequest() {
       {/* Reject Confirmation Dialog */}
       {showRejectDialog && selectedRequest && (
         <Overlay
-          className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-slate-900/40 z-50 flex-row items-center justify-center p-4"
           onClick={() => {
             if (!processing) setShowRejectDialog(false);
           }}
@@ -749,10 +690,10 @@ export default function JoiningRequest() {
             if (!processing) setShowRejectDialog(false);
           }}
         >
-          <Div className="bg-white rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <Div className="bg-white rounded-xl border border-slate-200 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <Div className="p-6">
-              <Div className="flex items-center gap-4 mb-4">
-                <Div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+              <Div className="flex-row items-center gap-4 mb-4">
+                <Div className="w-12 h-12 rounded-full bg-red-100 flex-row items-center justify-center">
                   <UiIcon as={X} className="w-6 h-6 text-red-600" />
                 </Div>
                 <Div>
@@ -763,20 +704,17 @@ export default function JoiningRequest() {
 
               <P className="text-sm text-slate-700 mb-4">Are you sure you want to reject this restaurant request? Please provide a reason for rejection.</P>
 
-              <Div className="mb-4">
-                <Label className="block text-sm font-medium text-slate-700 mb-2">
-                  Rejection Reason <Span className="text-red-500">*</Span>
-                </Label>
+              <Field label="Rejection reason" required hint="The restaurant sees this message." className="mb-4">
                 <Textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Enter reason for rejection..."
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  placeholder="Enter reason for rejection"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900"
                   rows={4}
                 />
-              </Div>
+              </Field>
 
-              <Div className="flex items-center gap-3">
+              <Div className="flex-row items-center gap-3">
                 <Button
                   onClick={() => {
                     setShowRejectDialog(false);
@@ -784,23 +722,16 @@ export default function JoiningRequest() {
                     setRejectionReason('');
                   }}
                   disabled={processing}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`${BTN_SECONDARY} flex-1 ${processing ? 'opacity-50' : ''}`}
                 >
-                  Cancel
+                  <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
                 </Button>
                 <Button
                   onClick={confirmReject}
                   disabled={processing || !rejectionReason.trim()}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`${BTN_DANGER} flex-1 ${processing || !rejectionReason.trim() ? 'opacity-50' : ''}`}
                 >
-                  {processing ? (
-                    <Span className="flex items-center justify-center gap-2">
-                      <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                      Rejecting...
-                    </Span>
-                  ) : (
-                    'Reject Request'
-                  )}
+                  <Span className={BTN_TEXT_PRIMARY}>{processing ? 'Rejecting…' : 'Reject Request'}</Span>
                 </Button>
               </Div>
             </Div>
@@ -810,37 +741,33 @@ export default function JoiningRequest() {
 
       {/* Restaurant Details Side Panel */}
       {showDetailsModal && selectedRequest && (
-        <Overlay className="fixed inset-0 z-[60] flex justify-end" onClose={closeDetailsModal}>
+        <Overlay className="fixed inset-0 z-[60] flex-row justify-end" onClose={closeDetailsModal}>
           <Div className="absolute inset-0 bg-slate-900/10" onClick={closeDetailsModal} />
 
           <Div
-            className="relative w-full max-w-4xl bg-white h-full shadow-2xl flex flex-col"
+            className="relative w-full max-w-4xl bg-white h-full flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Panel Header */}
-            <Div className="bg-white border-b border-slate-100 px-6 py-5 flex items-center justify-between z-10">
-              <Div className="flex items-center gap-3">
-                <Div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <Div className="bg-white border-b border-slate-100 px-6 py-5 flex-row items-center justify-between z-10">
+              <Div className="flex-row items-center gap-3">
+                <Div className="w-10 h-10 rounded-xl bg-blue-50 flex-row items-center justify-center">
                   <UiIcon as={UtensilsCrossed} className="w-5 h-5 text-blue-600" />
                 </Div>
                 <H2 className="text-xl font-bold text-slate-900">Restaurant Details - {selectedRequest.restaurantName || 'N/A'}</H2>
               </Div>
               <Button
                 onClick={closeDetailsModal}
-                className="p-2 rounded-xl hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-600 border border-transparent hover:border-slate-200"
+                accessibilityLabel="Close details"
+                className="w-11 h-11 items-center justify-center rounded-lg"
               >
-                <UiIcon as={X} className="w-6 h-6" />
+                <UiIcon as={X} size={20} className="text-slate-600" />
               </Button>
             </Div>
 
             {/* Modal Content */}
             <ScrollDiv className="flex-1" contentClassName="p-6">
-              {loadingDetails && (
-                <Div className="flex items-center justify-center py-20">
-                  <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600" />
-                  <Span className="ml-3 text-slate-600">Loading details...</Span>
-                </Div>
-              )}
+              {loadingDetails && <LoadingState label="Loading restaurant details…" />}
               {!loadingDetails &&
                 (restaurantDetails || selectedRequest) &&
                 (() => {
@@ -857,7 +784,7 @@ export default function JoiningRequest() {
                   return (
                     <Div className="space-y-6">
                       {/* Restaurant Basic Info */}
-                      <Div className="flex items-start gap-6 pb-6 border-b border-slate-200">
+                      <Div className="flex-row items-start gap-6 pb-6 border-b border-slate-200">
                         <Div className="w-24 h-24 rounded-lg overflow-hidden bg-slate-100 shrink-0">
                           <Img
                             src={profileImgUrl || 'https://via.placeholder.com/96'}
@@ -868,41 +795,40 @@ export default function JoiningRequest() {
                         </Div>
                         <Div className="flex-1">
                           <H3 className="text-2xl font-bold text-slate-900 mb-2">{r?.restaurantName || r?.name || 'N/A'}</H3>
-                          <Div className="flex items-center gap-4 flex-wrap">
+                          <Div className="flex-row items-center gap-4 flex-wrap">
                             {r?.rating != null && (
-                              <Div className="flex items-center gap-1">
+                              <Div className="flex-row items-center gap-1">
                                 <UiIcon as={Star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                                 <Span className="text-sm font-medium text-slate-700">
                                   {Number(r.rating).toFixed(1)} ({r.totalRatings || 0} reviews)
                                 </Span>
                               </Div>
                             )}
-                            <Div className="flex items-center gap-1 text-slate-600">
+                            <Div className="flex-row items-center gap-1 text-slate-600">
                               <UiIcon as={Building2} className="w-4 h-4" />
                               <Span className="text-sm">{r?.restaurantId || r?._id || 'N/A'}</Span>
                             </Div>
-                            <Span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${approvalStatus === 'approved' ? 'bg-green-100 text-green-700' : approvalStatus === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}
-                            >
-                              {approvalStatus === 'approved' ? 'Approved' : approvalStatus === 'rejected' ? 'Rejected' : 'Pending Approval'}
-                            </Span>
+                            <StatusBadge
+                              status={approvalStatus}
+                              label={approvalStatus === 'approved' ? 'Approved' : approvalStatus === 'rejected' ? 'Rejected' : 'Pending Approval'}
+                            />
                           </Div>
                         </Div>
                       </Div>
 
                       {/* Owner Information */}
-                      <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-4`}>
                         <Div>
                           <H4 className="text-lg font-semibold text-slate-900 mb-4">Owner Information</H4>
                           <Div className="space-y-3">
-                            <Div className="flex items-center gap-3">
+                            <Div className="flex-row items-center gap-3">
                               <UiIcon as={User} className="w-5 h-5 text-slate-400" />
                               <Div>
                                 <P className="text-xs text-slate-500">Owner Name</P>
                                 <P className="text-sm font-medium text-slate-900">{r?.ownerName || 'N/A'}</P>
                               </Div>
                             </Div>
-                            <Div className="flex items-center gap-3">
+                            <Div className="flex-row items-center gap-3">
                               <UiIcon as={Phone} className="w-5 h-5 text-slate-400" />
                               <Div>
                                 <P className="text-xs text-slate-500">Phone</P>
@@ -910,7 +836,7 @@ export default function JoiningRequest() {
                               </Div>
                             </Div>
                             {(r?.ownerEmail || r?.email) && (
-                              <Div className="flex items-center gap-3">
+                              <Div className="flex-row items-center gap-3">
                                 <UiIcon as={Mail} className="w-5 h-5 text-slate-400" />
                                 <Div>
                                   <P className="text-xs text-slate-500">Email</P>
@@ -928,7 +854,7 @@ export default function JoiningRequest() {
                             {(() => {
                               const fullAddress = getRestaurantDisplayAddress(r) || r?.zone || null;
                               return fullAddress ? (
-                                <Div className="flex items-start gap-3">
+                                <Div className="flex-row items-start gap-3">
                                   <UiIcon as={MapPin} className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
                                   <Div>
                                     <P className="text-xs text-slate-500">Address</P>
@@ -938,7 +864,7 @@ export default function JoiningRequest() {
                               ) : null;
                             })()}
                             {r?.pureVegRestaurant != null && (
-                              <Div className="flex items-center gap-3">
+                              <Div className="flex-row items-center gap-3">
                                 <Span
                                   className={`px-3 py-1 rounded-full text-xs font-semibold ${r.pureVegRestaurant ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}
                                 >
@@ -947,7 +873,7 @@ export default function JoiningRequest() {
                               </Div>
                             )}
                             {(r?.primaryContactNumber || r?.phone) && (
-                              <Div className="flex items-center gap-3">
+                              <Div className="flex-row items-center gap-3">
                                 <UiIcon as={Phone} className="w-5 h-5 text-slate-400" />
                                 <Div>
                                   <P className="text-xs text-slate-500">Primary Contact</P>
@@ -964,7 +890,7 @@ export default function JoiningRequest() {
                         <H4 className="text-lg font-semibold text-slate-900 mb-4">Timings & Status</H4>
                         <Div className="space-y-3">
                           {(openingTime || closingTime) && (
-                            <Div className="flex items-center gap-3">
+                            <Div className="flex-row items-center gap-3">
                               <UiIcon as={Clock} className="w-5 h-5 text-slate-400" />
                               <Div>
                                 <P className="text-xs text-slate-500">Opening / Closing</P>
@@ -983,7 +909,7 @@ export default function JoiningRequest() {
                           {r?.openDays && Array.isArray(r.openDays) && r.openDays.length > 0 && (
                             <Div>
                               <P className="text-xs text-slate-500 mb-1">Open Days</P>
-                              <Div className="flex flex-wrap gap-2">
+                              <Div className="flex-row flex-wrap gap-2">
                                 {r.openDays.map((day, idx) => (
                                   <Span key={idx} className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-medium capitalize">
                                     {day}
@@ -995,7 +921,7 @@ export default function JoiningRequest() {
                           <Div>
                             <P className="text-xs text-slate-500 mb-1">Approval Status</P>
                             <Span
-                              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${approvalStatus === 'approved' ? 'bg-green-100 text-green-700' : approvalStatus === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}
+                              className={`inline-flex-row items-center px-3 py-1 rounded-full text-sm font-medium ${approvalStatus === 'approved' ? 'bg-green-100 text-green-700' : approvalStatus === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}
                             >
                               {approvalStatus === 'approved' ? 'Approved' : approvalStatus === 'rejected' ? 'Rejected' : 'Pending'}
                             </Span>
@@ -1036,11 +962,11 @@ export default function JoiningRequest() {
                             {/* PAN – flat: panNumber, nameOnPan, panImage */}
                             {(r.panNumber || r.panImage || r?.onboarding?.step3?.pan) && (
                               <Div className="bg-slate-50 rounded-lg p-4">
-                                <H5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                                <H5 className="font-semibold text-slate-900 mb-3 flex-row items-center gap-2">
                                   <UiIcon as={FileText} className="w-4 h-4" />
                                   PAN Details
                                 </H5>
-                                <Div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <Div className="grid grid-cols-1 gap-4 text-sm">
                                   {(r.panNumber || r?.onboarding?.step3?.pan?.panNumber) && (
                                     <Div>
                                       <P className="text-xs text-slate-500 mb-1">PAN Number</P>
@@ -1058,7 +984,7 @@ export default function JoiningRequest() {
                                       <P className="text-xs text-slate-500 mb-2">PAN Document</P>
                                       <A
                                         href={typeof r.panImage === 'string' ? r.panImage : r.panImage?.url || r.onboarding?.step3?.pan?.image?.url}
-                                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                        className="inline-flex-row items-center gap-2 text-blue-600 hover:text-blue-700"
                                       >
                                         <UiIcon as={ImageIcon} className="w-4 h-4" />
                                         <Span>View PAN Document</Span>
@@ -1073,11 +999,11 @@ export default function JoiningRequest() {
                             {/* GST – flat: gstRegistered, gstNumber, gstLegalName, gstAddress, gstImage */}
                             {(r.gstRegistered != null || r.gstNumber || r?.onboarding?.step3?.gst) && (
                               <Div className="bg-slate-50 rounded-lg p-4">
-                                <H5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                                <H5 className="font-semibold text-slate-900 mb-3 flex-row items-center gap-2">
                                   <UiIcon as={FileText} className="w-4 h-4" />
                                   GST Details
                                 </H5>
-                                <Div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <Div className="grid grid-cols-1 gap-4 text-sm">
                                   <Div>
                                     <P className="text-xs text-slate-500 mb-1">GST Registered</P>
                                     <P className="font-medium text-slate-900">
@@ -1107,7 +1033,7 @@ export default function JoiningRequest() {
                                       <P className="text-xs text-slate-500 mb-2">GST Document</P>
                                       <A
                                         href={typeof r.gstImage === 'string' ? r.gstImage : r.gstImage?.url || r.onboarding?.step3?.gst?.image?.url}
-                                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                        className="inline-flex-row items-center gap-2 text-blue-600 hover:text-blue-700"
                                       >
                                         <UiIcon as={ImageIcon} className="w-4 h-4" />
                                         <Span>View GST Document</Span>
@@ -1122,11 +1048,11 @@ export default function JoiningRequest() {
                             {/* FSSAI – flat: fssaiNumber, fssaiExpiry, fssaiImage */}
                             {(r.fssaiNumber || r.fssaiExpiry || r?.onboarding?.step3?.fssai) && (
                               <Div className="bg-slate-50 rounded-lg p-4">
-                                <H5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                                <H5 className="font-semibold text-slate-900 mb-3 flex-row items-center gap-2">
                                   <UiIcon as={FileText} className="w-4 h-4" />
                                   FSSAI Details
                                 </H5>
-                                <Div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <Div className="grid grid-cols-1 gap-4 text-sm">
                                   {(r.fssaiNumber || r?.onboarding?.step3?.fssai?.registrationNumber) && (
                                     <Div>
                                       <P className="text-xs text-slate-500 mb-1">FSSAI Registration Number</P>
@@ -1150,7 +1076,7 @@ export default function JoiningRequest() {
                                       <P className="text-xs text-slate-500 mb-2">FSSAI Document</P>
                                       <A
                                         href={typeof r.fssaiImage === 'string' ? r.fssaiImage : r.fssaiImage?.url || r.onboarding?.step3?.fssai?.image?.url}
-                                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                        className="inline-flex-row items-center gap-2 text-blue-600 hover:text-blue-700"
                                       >
                                         <UiIcon as={ImageIcon} className="w-4 h-4" />
                                         <Span>View FSSAI Document</Span>
@@ -1165,11 +1091,11 @@ export default function JoiningRequest() {
                             {/* Bank – flat: accountNumber, ifscCode, accountHolderName, accountType */}
                             {(r.accountNumber || r.ifscCode || r?.onboarding?.step3?.bank) && (
                               <Div className="bg-slate-50 rounded-lg p-4">
-                                <H5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                                <H5 className="font-semibold text-slate-900 mb-3 flex-row items-center gap-2">
                                   <UiIcon as={CreditCard} className="w-4 h-4" />
                                   Bank Details
                                 </H5>
-                                <Div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <Div className="grid grid-cols-1 gap-4 text-sm">
                                   {(r.accountNumber || r?.onboarding?.step3?.bank?.accountNumber) && (
                                     <Div>
                                       <P className="text-xs text-slate-500 mb-1">Account Number</P>
@@ -1231,9 +1157,9 @@ export default function JoiningRequest() {
                       {(r?.createdAt || r?.restaurantId || r?.businessModel || r?.approvedAt != null) && (
                         <Div className="pt-6 border-t border-slate-200">
                           <H4 className="text-lg font-semibold text-slate-900 mb-4">Registration & Approval</H4>
-                          <Div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <Div className="grid grid-cols-1 gap-4 text-sm">
                             {r.createdAt && (
-                              <Div className="flex items-center gap-3">
+                              <Div className="flex-row items-center gap-3">
                                 <UiIcon as={Calendar} className="w-5 h-5 text-slate-400" />
                                 <Div>
                                   <P className="text-xs text-slate-500 mb-1">Registration Date & Time</P>
@@ -1303,7 +1229,7 @@ export default function JoiningRequest() {
                   );
                 })()}
               {!loadingDetails && !restaurantDetails && !selectedRequest && (
-                <Div className="flex flex-col items-center justify-center py-20">
+                <Div className="flex-col items-center justify-center py-20">
                   <P className="text-lg font-semibold text-slate-700 mb-2">No Details Available</P>
                   <P className="text-sm text-slate-500">Unable to load restaurant details</P>
                 </Div>
@@ -1312,6 +1238,6 @@ export default function JoiningRequest() {
           </Div>
         </Overlay>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 }

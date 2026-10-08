@@ -3,11 +3,29 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from '../../../../lib/webRouter';
 import { RefreshCw } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, currency, shortDate } from '../components/ui';
+import { currency, shortDate } from '../components/ui';
+import {
+  AdminPage,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+  Cell,
+  DataTable,
+  EmptyState,
+  PageHeader,
+  Row,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  TBody,
+  THead,
+  TableSkeleton,
+  Toolbar,
+} from '../../../../admin/ui';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, P, Span, Icon as UiIcon } from '../../../../components/web';
 import usePrompt from '../components/usePrompt';
 const FILTERS = ['all', 'pending', 'confirmed', 'ongoing', 'completed', 'cancelled'];
+const COLS = [130, 170, 130, 110, 110, 120, 130, 200];
 
 /**
  * Where a booking may go next, mirroring the server's own table. Kept here so
@@ -81,32 +99,29 @@ const Bookings = () => {
   const pendingCount = bookings.filter((b) => b.bookingStatus === 'pending').length;
   const balanceDue = bookings.reduce((sum, b) => sum + (Number(b.balanceDue) || 0), 0);
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-4">
+    <AdminPage maxWidth={1200}>
       <PageHeader
         title="Bookings"
         subtitle="Every trip booked across the district."
-        action={
-          <Button
-            type="button"
-            onClick={load}
-            className="p-2.5 rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-            accessibilityLabel="Refresh"
-          >
-            <UiIcon as={RefreshCw} size={14} />
+        breadcrumb={[{ label: 'Tours' }, { label: 'Bookings' }]}
+        actions={
+          <Button type="button" onClick={load} className={BTN_SECONDARY} accessibilityLabel="Refresh">
+            <UiIcon as={RefreshCw} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Refresh</Span>
           </Button>
         }
       />
 
       {!loading && bookings.length > 0 && (
-        <Div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatGrid className="mb-4">
           <StatCard label={`${status === 'all' ? 'Total' : status} bookings`} value={bookings.length} />
-          <StatCard label="Pending" value={pendingCount} tone={pendingCount ? 'text-amber-600' : 'text-gray-900'} />
-          <StatCard label="Total value" value={currency(revenue)} tone="text-[#0a4d2b]" />
+          <StatCard label="Pending" value={pendingCount} tone={pendingCount ? 'warning' : 'info'} />
+          <StatCard label="Total value" value={currency(revenue)} tone="success" />
           <StatCard label="Balance still due" value={currency(balanceDue)} />
-        </Div>
+        </StatGrid>
       )}
 
-      <Div className="flex flex-wrap gap-2">
+      <Toolbar>
         {FILTERS.map((value) => (
           <Button
             key={value}
@@ -120,98 +135,91 @@ const Bookings = () => {
                     },
               )
             }
-            className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${status === value ? 'bg-[#0a4d2b] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+            className={`h-11 px-4 rounded-full items-center justify-center ${status === value ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
           >
-            {value}
+            <Span className={`text-sm font-semibold ${status === value ? 'text-white' : 'text-slate-700'}`}>{value}</Span>
           </Button>
         ))}
-      </Div>
+      </Toolbar>
 
-      <Div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        <Table cols={[130, 180, 130, 110, 110, 110, 130, 200]} className="w-full text-left text-sm">
-          <Thead className="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500">
-            <Tr>
-              <Th className="p-4 font-semibold">Booking</Th>
-              <Th className="p-4 font-semibold">Package</Th>
-              <Th className="p-4 font-semibold">Travel</Th>
-              <Th className="p-4 font-semibold text-right">Total</Th>
-              <Th className="p-4 font-semibold text-right">Advance</Th>
-              <Th className="p-4 font-semibold text-right">Balance</Th>
-              <Th className="p-4 font-semibold">Status</Th>
-              <Th className="p-4 font-semibold text-right">Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody className="divide-y divide-gray-100">
-            {loading ? (
-              <Tr>
-                <Td colSpan="8">
-                  <Spinner />
-                </Td>
-              </Tr>
-            ) : bookings.length === 0 ? (
-              <Tr>
-                <Td colSpan="8">
-                  <EmptyState message="No bookings yet." />
-                </Td>
-              </Tr>
-            ) : (
-              bookings.map((b) => (
-                <Tr key={b._id} className="hover:bg-gray-50/60">
-                  <Td className="p-4">
-                    <P className="font-mono text-[11px] font-bold text-gray-900">{b.bookingId}</P>
-                    <P className="text-[10px] text-gray-400">{b.travellerContact?.name || '—'}</P>
-                  </Td>
-                  <Td className="p-4 text-xs text-gray-700">{(b.packageId || {}).title || '—'}</Td>
-                  <Td className="p-4 text-xs text-gray-600">
-                    <P>{shortDate(b.travelDate)}</P>
-                    <P className="text-[10px] text-gray-400">{b.totalTravellers} traveller(s)</P>
-                  </Td>
-                  <Td className="p-4 text-right font-bold text-gray-900">{currency(b.totalAmount)}</Td>
-                  <Td className="p-4 text-right text-gray-700">{currency(b.advanceAmount)}</Td>
-                  <Td className="p-4 text-right text-gray-700">
-                    {b.balanceDue > 0 ? (
-                      <Div className="items-end">
-                        <P className={`text-right ${b.paymentStatus === 'paid' ? 'text-emerald-700' : 'text-amber-700'}`}>{currency(b.balanceDue)}</P>
-                        <P className={`text-[9px] uppercase font-bold ${b.paymentStatus === 'paid' ? 'text-emerald-700' : 'text-amber-700'}`}>
-                          {b.paymentStatus === 'paid' ? 'collected' : 'due'}
-                        </P>
-                      </Div>
-                    ) : (
-                      '—'
-                    )}
-                  </Td>
-                  <Td className="p-4">
-                    <Div className="flex-row">
-                      <StatusPill status={b.bookingStatus} />
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : bookings.length === 0 ? (
+        <EmptyState
+          title="No bookings yet"
+          message={status === 'all' ? 'Trips booked in the travellers’ app appear here.' : `No ${status} bookings in this period.`}
+          actionLabel="Reload"
+          onAction={load}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={['Booking', 'Package', 'Travel', 'Total', 'Advance', 'Balance', 'Status', 'Actions']} />
+          <TBody>
+            {bookings.map((b, i, a) => (
+              <Row key={b._id} last={i === a.length - 1}>
+                <Cell width={COLS[0]}>
+                  <P className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                    {b.bookingId}
+                  </P>
+                  <P className="text-xs text-slate-500 mt-0.5" numberOfLines={1}>
+                    {b.travellerContact?.name || '—'}
+                  </P>
+                </Cell>
+                <Cell width={COLS[1]}>{(b.packageId || {}).title || '—'}</Cell>
+                <Cell width={COLS[2]}>
+                  <P className="text-sm text-slate-700">{shortDate(b.travelDate)}</P>
+                  <P className="text-xs text-slate-500 mt-0.5">{b.totalTravellers} traveller(s)</P>
+                </Cell>
+                <Cell width={COLS[3]} align="right">
+                  <P className="text-sm font-semibold text-slate-900">{currency(b.totalAmount)}</P>
+                </Cell>
+                <Cell width={COLS[4]} align="right">
+                  <P className="text-sm text-slate-700">{currency(b.advanceAmount)}</P>
+                </Cell>
+                <Cell width={COLS[5]} align="right">
+                  {b.balanceDue > 0 ? (
+                    <Div className="items-end gap-1">
+                      <P className="text-sm font-semibold text-slate-900">{currency(b.balanceDue)}</P>
+                      <StatusBadge
+                        status={b.paymentStatus === 'paid' ? 'paid' : 'pending'}
+                        label={b.paymentStatus === 'paid' ? 'collected' : 'due'}
+                      />
                     </Div>
-                    <Div className="mt-1 flex-row">
-                      <StatusPill status={b.paymentStatus} />
-                    </Div>
-                  </Td>
-                  <Td className="p-4">
-                    <Div className="flex flex-wrap justify-end gap-1.5">
-                      {(NEXT_STATUS[b.bookingStatus] || []).map((next) => (
-                        <Button
-                          key={next}
-                          type="button"
-                          disabled={busyId === b._id}
-                          onClick={() => act(b, next)}
-                          className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:opacity-50 ${next === 'cancelled' ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-                        >
+                  ) : (
+                    <P className="text-sm text-slate-400">—</P>
+                  )}
+                </Cell>
+                <Cell width={COLS[6]}>
+                  <Div className="gap-1">
+                    <StatusBadge status={b.bookingStatus} label={String(b.bookingStatus || '').replace(/_/g, ' ')} />
+                    <StatusBadge status={b.paymentStatus} label={String(b.paymentStatus || '').replace(/_/g, ' ')} />
+                  </Div>
+                </Cell>
+                <Cell width={COLS[7]}>
+                  <Div className="flex-row flex-wrap gap-2">
+                    {(NEXT_STATUS[b.bookingStatus] || []).map((next) => (
+                      <Button
+                        key={next}
+                        type="button"
+                        disabled={busyId === b._id}
+                        onClick={() => act(b, next)}
+                        className={`h-11 px-3 rounded-lg items-center justify-center bg-white disabled:opacity-50 ${next === 'cancelled' ? 'border border-red-200' : 'border border-slate-300'}`}
+                      >
+                        <Span className={`text-sm font-semibold ${next === 'cancelled' ? 'text-red-600' : 'text-slate-700'}`}>
                           {STATUS_LABEL[next] || next}
-                        </Button>
-                      ))}
-                      {!(NEXT_STATUS[b.bookingStatus] || []).length && <Span className="text-[11px] text-gray-300">—</Span>}
-                    </Div>
-                  </Td>
-                </Tr>
-              ))
-            )}
-          </Tbody>
-        </Table>
-      </Div>
+                        </Span>
+                      </Button>
+                    ))}
+                    {!(NEXT_STATUS[b.bookingStatus] || []).length && <Span className="text-sm text-slate-400">—</Span>}
+                  </Div>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
       {promptDialog}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Bookings;

@@ -1,35 +1,31 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/Banners.jsx. */
-import { useState, useMemo, useEffect } from 'react';
-import { Search, Download, ChevronDown, Plus, Edit, Trash2, Upload, Image as ImageIcon, Info, Loader2 } from 'lucide-react-native';
-import api from '../../../api/food';
+import { useState, useMemo } from 'react';
+import { Search, Edit, Trash2, Upload, Image as ImageIcon } from 'lucide-react-native';
 import { emptyBanners } from '../../utils/adminFallbackData';
 import {
-  Button,
-  Div,
-  Form,
-  HScroll,
-  H1,
-  H2,
-  Img,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../admin/ui';
+import { Button, Div, Form, HScroll, Img, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../components/web';
 import { alert, window } from '../../../lib/webShim';
 const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
-const debugError = (...args) => {};
 
 // Using placeholders for banner images
 const bannerImage1 = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=400&fit=crop';
@@ -46,6 +42,10 @@ const bannerImages = {
   5: bannerImage5,
   6: bannerImage6,
 };
+
+const COLS = [56, 230, 130, 150, 120, 104];
+const LABELS = ['SI', 'Banner Info', 'Zone', 'Banner Type', 'Status', 'Action'];
+
 export default function Banners() {
   const [activeLanguage, setActiveLanguage] = useState('default');
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,6 +57,7 @@ export default function Banners() {
     bannerType: 'Restaurant wise',
     restaurant: '',
   });
+  const { tablet } = useLayoutWidth();
   const languageTabs = [
     {
       key: 'default',
@@ -76,9 +77,10 @@ export default function Banners() {
     },
     {
       key: 'es',
-      label: 'Spanish - espa�ol(ES)',
+      label: 'Spanish - español(ES)',
     },
   ];
+  const activeLanguageLabel = activeLanguage === 'default' ? 'Default' : languageTabs.find((t) => t.key === activeLanguage)?.label;
   const filteredBanners = useMemo(() => {
     let result = [...banners];
     if (bannerType !== 'all') {
@@ -131,215 +133,162 @@ export default function Banners() {
     }
   };
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Add New Banner Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex items-center gap-3 mb-4">
-            <UiIcon as={Plus} className="w-5 h-5 text-blue-600" />
-            <H1 className="text-2xl font-bold text-slate-900">Add New Banner</H1>
-          </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={ImageIcon}
+        title="Banners"
+        subtitle="Add a promotional banner and manage the ones already running"
+        breadcrumb={[{ label: 'Food' }, { label: 'Promotions' }, { label: 'Banners' }]}
+      />
 
-          {/* Language Tabs */}
-          <HScroll className="flex items-center gap-2 border-b border-slate-200 mb-6">
-            {languageTabs.map((tab) => (
-              <Button
-                key={tab.key}
-                onClick={() => setActiveLanguage(tab.key)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeLanguage === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
-              >
-                {tab.label}
-              </Button>
-            ))}
-          </HScroll>
+      {/* Add New Banner */}
+      <Card className="mb-4">
+        <SectionTitle>Add New Banner</SectionTitle>
 
-          <Form onSubmit={handleSubmit}>
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Banner Title ({activeLanguage === 'default' ? 'Default' : languageTabs.find((t) => t.key === activeLanguage)?.label}){' '}
-                  <Span className="text-red-500">*</Span>
-                </Label>
-                <Input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  placeholder="New banner"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-blue-500 text-sm"
-                />
-              </Div>
+        {/* Language Tabs */}
+        <HScroll className="mb-4 border-b border-slate-200" contentClassName="flex-row items-center">
+          {languageTabs.map((tab) => (
+            <Button
+              key={tab.key}
+              onClick={() => setActiveLanguage(tab.key)}
+              className={`px-4 h-11 justify-center border-b-2 ${activeLanguage === tab.key ? 'border-blue-600' : 'border-transparent'}`}
+            >
+              <Span className={`text-sm font-semibold ${activeLanguage === tab.key ? 'text-blue-600' : 'text-slate-600'}`}>{tab.label}</Span>
+            </Button>
+          ))}
+        </HScroll>
 
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Zone <Span className="text-red-500">*</Span>
-                </Label>
-                <Select
-                  value={formData.zone}
-                  onChange={(e) => handleInputChange('zone', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-blue-500 text-sm"
-                >
-                  <Option value="">---Select---</Option>
-                  <Option value="asia">Asia</Option>
-                  <Option value="europe">Europe</Option>
-                </Select>
-              </Div>
+        <Form onSubmit={handleSubmit}>
+          <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3 mb-4`}>
+            <Field label={`Banner Title (${activeLanguageLabel})`} required>
+              <Input
+                type="text"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                placeholder="New banner"
+                className={INPUT}
+              />
+            </Field>
 
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Banner Type <Span className="text-red-500">*</Span>
-                </Label>
-                <Select
-                  value={formData.bannerType}
-                  onChange={(e) => handleInputChange('bannerType', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-blue-500 text-sm"
-                >
-                  <Option value="Restaurant wise">Restaurant wise</Option>
-                  <Option value="Zone wise">Zone wise</Option>
-                </Select>
-              </Div>
+            <Field label="Zone" required>
+              <Select value={formData.zone} onChange={(e) => handleInputChange('zone', e.target.value)} className={INPUT}>
+                <Option value="">---Select---</Option>
+                <Option value="asia">Asia</Option>
+                <Option value="europe">Europe</Option>
+              </Select>
+            </Field>
 
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Restaurant <Span className="text-red-500">*</Span>
-                </Label>
-                <Select
-                  value={formData.restaurant}
-                  onChange={(e) => handleInputChange('restaurant', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-blue-500 text-sm"
-                >
-                  <Option value="">Select</Option>
-                  <Option value="cafe-monarch">Caf� Monarch</Option>
-                  <Option value="hungry-puppets">Hungry Puppets</Option>
-                </Select>
-              </Div>
-            </Div>
-
-            {/* Banner Image Upload */}
-            <Div className="mb-6">
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Banner Image <Span className="text-red-500">*</Span>
-              </Label>
-              <P className="text-sm text-slate-600 mb-3">Upload your image here</P>
-              <Div className="border-2 border-dashed border-slate-300 rounded-lg p-12 text-center hover:border-blue-500 transition-colors cursor-pointer">
-                <UiIcon as={Upload} className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                <P className="text-sm font-medium text-blue-600 mb-1">Click to upload</P>
-                <P className="text-xs text-slate-500 mb-2">Or drag and drop</P>
-                <P className="text-xs text-slate-500">Supported format : JPG, JPEG, PNG, Gif image size : Max 2 MB (2:1)</P>
-              </Div>
-            </Div>
-
-            <Div className="flex items-center justify-end gap-4">
-              <Button
-                type="button"
-                onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset
-              </Button>
-              <Button type="submit" className="px-6 py-2.5 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-blue-700 transition-all shadow-md">
-                Submit
-              </Button>
-            </Div>
-          </Form>
-        </Div>
-
-        {/* Banner List Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-2">
-              <H2 className="text-xl font-bold text-slate-900">Banner List</H2>
-              <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">{filteredBanners.length}</Span>
-            </Div>
-
-            <Div className="flex items-center gap-3">
-              <Select
-                value={bannerType}
-                onChange={(e) => setBannerType(e.target.value)}
-                className="px-4 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                <Option value="all">All Banner</Option>
+            <Field label="Banner Type" required>
+              <Select value={formData.bannerType} onChange={(e) => handleInputChange('bannerType', e.target.value)} className={INPUT}>
                 <Option value="Restaurant wise">Restaurant wise</Option>
                 <Option value="Zone wise">Zone wise</Option>
               </Select>
+            </Field>
 
-              <Div className="relative flex-1 sm:flex-initial min-w-[200px]">
-                <Input
-                  type="text"
-                  placeholder="Ex: Search by title ..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                />
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </Div>
-            </Div>
+            <Field label="Restaurant" required>
+              <Select value={formData.restaurant} onChange={(e) => handleInputChange('restaurant', e.target.value)} className={INPUT}>
+                <Option value="">Select</Option>
+                <Option value="cafe-monarch">Café Monarch</Option>
+                <Option value="hungry-puppets">Hungry Puppets</Option>
+              </Select>
+            </Field>
           </Div>
 
-          {/* Table */}
-          <Table cols={[60, 240, 120, 140, 100, 96]} className="w-full">
-              <Thead className="bg-slate-50 border-b border-slate-200">
-                <Tr>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Banner Info</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Zone</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Banner Type</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</Th>
-                  <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>
-                </Tr>
-              </Thead>
-              <Tbody className="bg-white divide-y divide-slate-100">
-                {filteredBanners.map((banner) => (
-                  <Tr key={banner.sl} className="hover:bg-slate-50 transition-colors">
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm font-medium text-slate-700">{banner.sl}</Span>
-                    </Td>
-                    <Td className="px-6 py-4">
-                      <Div className="flex items-center gap-3">
-                        <Div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                          <Img
-                            src={bannerImages[banner.sl] || bannerImage1}
-                            alt={banner.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.src = bannerImage1;
-                            }}
-                          />
-                        </Div>
-                        <Span className="text-sm font-medium text-slate-900">{banner.title}</Span>
-                      </Div>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm text-slate-700">{banner.zone}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm text-slate-700">{banner.bannerType}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Button
-                        onClick={() => handleToggleStatus(banner.sl)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${banner.status ? 'bg-green-600' : 'bg-slate-300'}`}
-                      >
-                        <Div
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${banner.status ? 'translate-x-6' : 'translate-x-1'}`}
-                        />
-                      </Button>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap text-center">
-                      <Div className="flex items-center justify-center gap-2">
-                        <Button className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors">
-                          <UiIcon as={Edit} className="w-4 h-4" />
-                        </Button>
-                        <Button onClick={() => handleDelete(banner.sl)} className="p-1.5 rounded text-red-600 hover:bg-red-50 transition-colors">
-                          <UiIcon as={Trash2} className="w-4 h-4" />
-                        </Button>
-                      </Div>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-        </Div>
-      </Div>
-    </ScrollDiv>
+          {/* Banner Image Upload */}
+          <Field
+            label="Banner Image"
+            required
+            hint="Supported format: JPG, JPEG, PNG, GIF — max 2 MB, ratio 2:1"
+            className="mb-4"
+          >
+            <Div className="border border-dashed border-slate-300 rounded-lg py-8 px-4 items-center gap-1 bg-slate-50">
+              <UiIcon as={Upload} size={28} className="text-slate-400 mb-1" />
+              <P className="text-sm font-semibold text-blue-600">Click to upload</P>
+              <P className="text-xs text-slate-500">Or drag and drop</P>
+            </Div>
+          </Field>
+
+          <Div className={`flex-row items-center gap-2 ${tablet ? 'justify-end' : ''}`}>
+            <Button type="button" onClick={handleReset} className={`${BTN_SECONDARY} ${tablet ? '' : 'flex-1'}`}>
+              <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+            </Button>
+            <Button type="submit" className={`${BTN_PRIMARY} ${tablet ? '' : 'flex-1'}`}>
+              <Span className={BTN_TEXT_PRIMARY}>Submit</Span>
+            </Button>
+          </Div>
+        </Form>
+      </Card>
+
+      {/* Banner List */}
+      <Card className="mb-4">
+        <SectionTitle>{`Banner List (${filteredBanners.length})`}</SectionTitle>
+        <Toolbar className="mb-0">
+          <Select value={bannerType} onChange={(e) => setBannerType(e.target.value)} className={`${INPUT} min-w-[160px]`}>
+            <Option value="all">All Banner</Option>
+            <Option value="Restaurant wise">Restaurant wise</Option>
+            <Option value="Zone wise">Zone wise</Option>
+          </Select>
+
+          <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white flex-1 min-w-[200px]">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Ex: Search by title ..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 text-sm text-slate-900"
+            />
+          </Div>
+        </Toolbar>
+      </Card>
+
+      {filteredBanners.length === 0 ? (
+        <EmptyState
+          icon={ImageIcon}
+          title="No banners yet"
+          message={searchQuery || bannerType !== 'all' ? 'No banners match your search or filter.' : 'Add a banner above and it will appear in this list.'}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={LABELS} />
+          <TBody>
+            {filteredBanners.map((banner, i, all) => (
+              <Row key={banner.sl} last={i === all.length - 1}>
+                <Cell width={COLS[0]}>{String(banner.sl)}</Cell>
+                <Cell width={COLS[1]}>
+                  <Div className="flex-row items-center gap-3">
+                    <Div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                      <Img src={bannerImages[banner.sl] || bannerImage1} alt={banner.title} className="w-full h-full object-cover" fallback={bannerImage1} />
+                    </Div>
+                    <Span className="text-sm font-semibold text-slate-900 flex-1">{banner.title}</Span>
+                  </Div>
+                </Cell>
+                <Cell width={COLS[2]}>{banner.zone}</Cell>
+                <Cell width={COLS[3]}>{banner.bannerType}</Cell>
+                <Cell width={COLS[4]}>
+                  <Button onClick={() => handleToggleStatus(banner.sl)} className="h-11 justify-center" accessibilityLabel={`Toggle status for ${banner.title}`}>
+                    <StatusBadge status={banner.status ? 'active' : 'inactive'} />
+                  </Button>
+                </Cell>
+                <Cell width={COLS[5]}>
+                  <Div className="flex-row items-center gap-1">
+                    <Button className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel={`Edit ${banner.title}`}>
+                      <UiIcon as={Edit} size={16} className="text-blue-600" />
+                    </Button>
+                    <Button
+                      onClick={() => handleDelete(banner.sl)}
+                      className="w-11 h-11 rounded-lg items-center justify-center"
+                      accessibilityLabel={`Delete ${banner.title}`}
+                    >
+                      <UiIcon as={Trash2} size={16} className="text-red-600" />
+                    </Button>
+                  </Div>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+    </AdminPage>
   );
 }

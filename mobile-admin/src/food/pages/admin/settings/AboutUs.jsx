@@ -3,15 +3,10 @@ import { useState, useEffect } from 'react';
 import { toast } from '../../../../lib/notify';
 import api, { adminAPI } from '../../../../api/food';
 import { API_ENDPOINTS } from '../../../../api/config';
-import { Heart, Users, Shield, Clock, Star, Award, Plus, X, GripVertical } from 'lucide-react-native';
-import { Button } from '../../../../components/shadcn';
-import { Input } from '../../../../components/shadcn';
-import { Textarea } from '../../../../components/shadcn';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/shadcn';
-import { Label } from '../../../../components/shadcn';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/shadcn';
+import { Heart, Users, Shield, Clock, Star, Award, Plus, X, Info } from 'lucide-react-native';
 import { useCompanyName } from '../../../hooks/useCompanyName';
-import { Div, H1, P, ScrollDiv, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Input, Select, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, LoadingState, EmptyState, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../admin/ui';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -215,34 +210,32 @@ export default function AboutUs() {
       };
     });
   };
+  const { tablet } = useLayoutWidth();
+  const TEXTAREA = 'px-3 py-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900';
   if (loading) {
     return (
-      <ScrollDiv className="h-full bg-slate-50 p-4 lg:p-6 flex items-center justify-center">
-        <Div className="text-center">
-          <Div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></Div>
-          <P className="mt-4 text-slate-600">Loading...</P>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        <PageHeader icon={Info} title="About us" subtitle="Manage your About page content" breadcrumb={[{ label: 'Food' }, { label: 'Settings' }, { label: 'About us' }]} />
+        <LoadingState label="Loading the About page…" />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="h-full bg-slate-50 p-4 lg:p-6">
-      <Div className="max-w-6xl mx-auto">
-        <Div className="mb-6">
-          <H1 className="text-2xl font-bold text-slate-900">About Us</H1>
-          <P className="text-sm text-slate-600 mt-1">Manage your About page content</P>
-        </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={Info}
+        title="About us"
+        subtitle="Manage your About page content"
+        breadcrumb={[{ label: 'Food' }, { label: 'Settings' }, { label: 'About us' }]}
+      />
 
-        {/* Basic Information */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Div>
-              <Label htmlFor="appName">App Name</Label>
+      <Card className="mb-4">
+        <SectionTitle>Basic information</SectionTitle>
+        <Div className="gap-3">
+          <Div className={tablet ? 'flex-row items-start gap-3' : 'gap-3'}>
+            <Field label="App name" className={tablet ? 'flex-1' : null}>
               <Input
-                id="appName"
+                nativeID="appName"
                 value={aboutData.appName}
                 onChange={(e) =>
                   setAboutData((prev) => ({
@@ -251,13 +244,12 @@ export default function AboutUs() {
                   }))
                 }
                 placeholder={companyName}
-                className="mt-1"
+                className={INPUT}
               />
-            </Div>
-            <Div>
-              <Label htmlFor="version">Version</Label>
+            </Field>
+            <Field label="Version" className={tablet ? 'flex-1' : null}>
               <Input
-                id="version"
+                nativeID="version"
                 value={aboutData.version}
                 onChange={(e) =>
                   setAboutData((prev) => ({
@@ -266,129 +258,113 @@ export default function AboutUs() {
                   }))
                 }
                 placeholder="1.0.0"
-                className="mt-1"
+                className={INPUT}
               />
-            </Div>
-            <Div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={aboutData.description}
-                onChange={(e) =>
-                  setAboutData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Your trusted food delivery partner..."
-                rows={4}
-                className="mt-1 w-full"
-              />
-            </Div>
-            <Div>
-              <Label htmlFor="logo">Logo URL</Label>
-              <Input
-                id="logo"
-                value={aboutData.logo}
-                onChange={(e) =>
-                  setAboutData((prev) => ({
-                    ...prev,
-                    logo: e.target.value,
-                  }))
-                }
-                placeholder="https://example.com/logo.png"
-                className="mt-1"
-              />
-            </Div>
-          </CardContent>
-        </Card>
+            </Field>
+          </Div>
+          <Field label="Description">
+            <Textarea
+              nativeID="description"
+              value={aboutData.description}
+              onChange={(e) =>
+                setAboutData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="Your trusted food delivery partner..."
+              rows={4}
+              className={TEXTAREA}
+            />
+          </Field>
+          <Field label="Logo URL" hint="A direct link to a PNG or JPG.">
+            <Input
+              nativeID="logo"
+              value={aboutData.logo}
+              onChange={(e) =>
+                setAboutData((prev) => ({
+                  ...prev,
+                  logo: e.target.value,
+                }))
+              }
+              placeholder="https://example.com/logo.png"
+              className={INPUT}
+            />
+          </Field>
+        </Div>
+      </Card>
 
-        {/* Features */}
-        <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Features</CardTitle>
-            <Button onClick={addFeature} size="sm" variant="outline">
-              <UiIcon as={Plus} className="h-4 w-4 mr-2" />
-              Add Feature
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            <Button onClick={addFeature} className={BTN_SECONDARY} accessibilityLabel="Add feature">
+              <UiIcon as={Plus} size={16} className="text-slate-700" />
+              <Span className={BTN_TEXT_SECONDARY}>Add</Span>
             </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          }
+        >
+          Features
+        </SectionTitle>
+        {aboutData.features.length === 0 ? (
+          <EmptyState
+            title="No features yet"
+            message="Features are the highlight cards on the About page."
+            actionLabel="Add a feature"
+            onAction={addFeature}
+            icon={Star}
+            className="border-0"
+          />
+        ) : (
+          <Div className="gap-3">
             {aboutData.features.map((feature, index) => {
               const IconComponent = iconMap[feature.icon] || Heart;
               return (
-                <Card key={index} className="border-2">
-                  <CardContent className="p-4">
-                    <Div className="flex items-start gap-4">
-                      <Div className={`${feature.bgColor} rounded-lg p-3 shrink-0`}>
-                        <UiIcon as={IconComponent} className={`h-6 w-6 ${feature.color}`} />
-                      </Div>
-                      <Div className="flex-1 space-y-3">
-                        <Div className="grid grid-cols-2 gap-3">
-                          <Div>
-                            <Label>Icon</Label>
-                            <Select value={feature.icon} onValueChange={(value) => updateFeature(index, 'icon', value)}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {iconOptions.map((opt) => (
-                                  <SelectItem key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </Div>
-                          <Div>
-                            <Label>Color</Label>
-                            <Select value={feature.color} onValueChange={(value) => updateFeature(index, 'color', value)}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {colorOptions.map((opt) => (
-                                  <SelectItem key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </Div>
-                        </Div>
-                        <Div>
-                          <Label>Title</Label>
-                          <Input value={feature.title} onChange={(e) => updateFeature(index, 'title', e.target.value)} placeholder="Feature title" />
-                        </Div>
-                        <Div>
-                          <Label>Description</Label>
-                          <Textarea
-                            value={feature.description}
-                            onChange={(e) => updateFeature(index, 'description', e.target.value)}
-                            placeholder="Feature description"
-                            rows={4}
-                            className="w-full"
-                          />
-                        </Div>
-                      </Div>
-                      <Button variant="ghost" size="icon" onClick={() => removeFeature(index)} className="text-red-600 hover:text-red-700">
-                        <UiIcon as={X} className="h-4 w-4" />
-                      </Button>
+                <Div key={index} className="rounded-xl border border-slate-200 p-3 gap-3">
+                  <Div className="flex-row items-center gap-3">
+                    <Div className={`${feature.bgColor} rounded-lg w-11 h-11 items-center justify-center shrink-0`}>
+                      <UiIcon as={IconComponent} size={20} className={feature.color} />
                     </Div>
-                  </CardContent>
-                </Card>
+                    <Span className="flex-1 text-sm font-semibold text-slate-900">{feature.title || `Feature ${index + 1}`}</Span>
+                    <Button
+                      onClick={() => removeFeature(index)}
+                      className="w-11 h-11 rounded-lg items-center justify-center border border-slate-200 bg-white"
+                      accessibilityLabel={`Remove feature ${index + 1}`}
+                    >
+                      <UiIcon as={X} size={16} className="text-red-600" />
+                    </Button>
+                  </Div>
+                  <Div className={tablet ? 'flex-row items-start gap-3' : 'gap-3'}>
+                    <Field label="Icon" className={tablet ? 'flex-1' : null}>
+                      <Select value={feature.icon} onValueChange={(value) => updateFeature(index, 'icon', value)} options={iconOptions} className={INPUT} />
+                    </Field>
+                    <Field label="Colour" className={tablet ? 'flex-1' : null}>
+                      <Select value={feature.color} onValueChange={(value) => updateFeature(index, 'color', value)} options={colorOptions} className={INPUT} />
+                    </Field>
+                  </Div>
+                  <Field label="Title">
+                    <Input value={feature.title} onChange={(e) => updateFeature(index, 'title', e.target.value)} placeholder="Feature title" className={INPUT} />
+                  </Field>
+                  <Field label="Description">
+                    <Textarea
+                      value={feature.description}
+                      onChange={(e) => updateFeature(index, 'description', e.target.value)}
+                      placeholder="Feature description"
+                      rows={3}
+                      className={TEXTAREA}
+                    />
+                  </Field>
+                </Div>
               );
             })}
-            {aboutData.features.length === 0 && <P className="text-center text-slate-500 py-8">No features added yet. Click &quot;Add Feature&quot; to get started.</P>}
-          </CardContent>
-        </Card>
+          </Div>
+        )}
+      </Card>
 
-        {/* Save Button */}
-        <Div className="flex justify-end">
-          <Button onClick={handleSave} disabled={saving} size="lg">
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </Div>
+      <Div className="flex-row justify-end">
+        <Button onClick={handleSave} disabled={saving} className={`${BTN_PRIMARY}${saving ? ' opacity-50' : ''}`} accessibilityLabel="Save changes">
+          <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : 'Save changes'}</Span>
+        </Button>
       </Div>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

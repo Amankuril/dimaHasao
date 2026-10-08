@@ -10,9 +10,8 @@ import SettingsDialog from '../../components/admin/orders/SettingsDialog';
 import FilterPanel from '../../components/admin/orders/FilterPanel';
 import { useGenericTableManagement } from '../../components/admin/orders/useGenericTableManagement';
 import AdminListPagination from '../../components/admin/AdminListPagination';
-import { TableSkeleton } from '../../components/admin/orders/TableSkeleton';
-import { Skeleton } from '../../../components/shadcn';
-import { Button, Div, H3, P, ScrollDiv, Icon as UiIcon } from '../../../components/web';
+
+import { AdminPage, Card, ErrorState, Skeleton, StatCard, StatGrid, TableSkeleton } from '../../../admin/ui';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -425,105 +424,24 @@ export default function OrderDetectDelivery() {
   // Error state
   if (error && orders.length === 0 && !isLoading) {
     return (
-      <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 max-w-md text-center">
-          <Div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <UiIcon as={XCircle} className="w-8 h-8 text-red-600" />
-          </Div>
-          <H3 className="text-lg font-semibold text-slate-900 mb-2">Error Loading Orders</H3>
-          <P className="text-sm text-slate-600 mb-4">{error}</P>
-          <Button onClick={() => fetchOrders()} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
-            Retry
-          </Button>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <ErrorState title="Could not load orders" message={error} onRetry={() => fetchOrders()} />
+      </AdminPage>
     );
   }
   const statCards = [
-    {
-      key: 'total',
-      label: 'Total Orders',
-      value: stats.total,
-      color: 'text-slate-900',
-      iconBg: 'bg-blue-50',
-      Icon: Package,
-      iconColor: 'text-blue-600',
-    },
-    {
-      key: 'ordered',
-      label: 'Ordered',
-      value: stats.ordered,
-      color: 'text-blue-600',
-      iconBg: 'bg-blue-50',
-      Icon: Clock,
-      iconColor: 'text-blue-600',
-    },
-    {
-      key: 'restaurantAccepted',
-      label: 'Restaurant Accepted',
-      value: stats.restaurantAccepted,
-      color: 'text-emerald-600',
-      iconBg: 'bg-emerald-50',
-      Icon: CheckCircle,
-      iconColor: 'text-emerald-600',
-    },
-    {
-      key: 'rejected',
-      label: 'Rejected',
-      value: stats.rejected,
-      color: 'text-red-600',
-      iconBg: 'bg-red-50',
-      Icon: XCircle,
-      iconColor: 'text-red-600',
-    },
-    {
-      key: 'deliveryBoyAssigned',
-      label: 'Delivery Boy Assigned',
-      value: stats.deliveryBoyAssigned,
-      color: 'text-purple-600',
-      iconBg: 'bg-purple-50',
-      Icon: Truck,
-      iconColor: 'text-purple-600',
-    },
-    {
-      key: 'reachedPickup',
-      label: 'Delivery Boy Reached Pickup',
-      value: stats.reachedPickup,
-      color: 'text-orange-600',
-      iconBg: 'bg-orange-50',
-      Icon: Package,
-      iconColor: 'text-orange-600',
-    },
-    {
-      key: 'orderIdAccepted',
-      label: 'Order ID Accepted',
-      value: stats.orderIdAccepted,
-      color: 'text-indigo-600',
-      iconBg: 'bg-indigo-50',
-      Icon: CheckCircle,
-      iconColor: 'text-indigo-600',
-    },
-    {
-      key: 'reachedDrop',
-      label: 'Reached Drop',
-      value: stats.reachedDrop,
-      color: 'text-amber-600',
-      iconBg: 'bg-amber-50',
-      Icon: Truck,
-      iconColor: 'text-amber-600',
-    },
-    {
-      key: 'delivered',
-      label: 'Delivered',
-      value: stats.delivered,
-      color: 'text-emerald-600',
-      iconBg: 'bg-emerald-50',
-      Icon: CheckCircle,
-      iconColor: 'text-emerald-600',
-    },
+    { key: 'total', label: 'Total Orders', value: stats.total, tone: 'info', Icon: Package },
+    { key: 'ordered', label: 'Ordered', value: stats.ordered, tone: 'info', Icon: Clock },
+    { key: 'restaurantAccepted', label: 'Restaurant Accepted', value: stats.restaurantAccepted, tone: 'success', Icon: CheckCircle },
+    { key: 'rejected', label: 'Rejected', value: stats.rejected, tone: 'danger', Icon: XCircle },
+    { key: 'deliveryBoyAssigned', label: 'Delivery Boy Assigned', value: stats.deliveryBoyAssigned, tone: 'info', Icon: Truck },
+    { key: 'reachedPickup', label: 'Delivery Boy Reached Pickup', value: stats.reachedPickup, tone: 'warning', Icon: Package },
+    { key: 'orderIdAccepted', label: 'Order ID Accepted', value: stats.orderIdAccepted, tone: 'success', Icon: CheckCircle },
+    { key: 'reachedDrop', label: 'Reached Drop', value: stats.reachedDrop, tone: 'warning', Icon: Truck },
+    { key: 'delivered', label: 'Delivered', value: stats.delivered, tone: 'success', Icon: CheckCircle },
   ];
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <AdminPage maxWidth={1200}>
       <OrdersTopbar
         title="Order Detect Delivery"
         count={totalOrders}
@@ -536,39 +454,16 @@ export default function OrderDetectDelivery() {
         isLoading={isLoading}
       />
 
-      {/* Statistics Cards */}
-      <Div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <StatGrid className="mb-4">
         {showStatsSkeleton
-          ? Array.from(
-              {
-                length: 9,
-              },
-              (_, index) => (
-                <Div key={`stat-skel-${index}`} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                  <Div className="flex items-center justify-between">
-                    <Div className="space-y-2">
-                      <Skeleton className="h-3 w-24 rounded-full" />
-                      <Skeleton className="h-7 w-16 rounded-full" />
-                    </Div>
-                    <Skeleton className="h-12 w-12 rounded-lg" />
-                  </Div>
-                </Div>
-              ),
-            )
-          : statCards.map(({ key, label, value, color, iconBg, Icon, iconColor }) => (
-              <Div key={key} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <Div className="flex items-center justify-between">
-                  <Div>
-                    <P className="text-sm text-slate-500 mb-1">{label}</P>
-                    <P className={`text-2xl font-bold ${color}`}>{value}</P>
-                  </Div>
-                  <Div className={`p-3 ${iconBg} rounded-lg`}>
-                    <UiIcon as={Icon} className={`w-6 h-6 ${iconColor}`} />
-                  </Div>
-                </Div>
-              </Div>
-            ))}
-      </Div>
+          ? Array.from({ length: 9 }, (_, index) => (
+              <Card key={`stat-skel-${index}`} className="gap-2">
+                <Skeleton width="60%" height={12} />
+                <Skeleton width="40%" height={24} />
+              </Card>
+            ))
+          : statCards.map(({ key, label, value, tone, Icon }) => <StatCard key={key} label={label} value={value} tone={tone} icon={Icon} />)}
+      </StatGrid>
 
       <SettingsDialog
         isOpen={isSettingsOpen}
@@ -588,7 +483,7 @@ export default function OrderDetectDelivery() {
       />
       <ViewOrderDetectDeliveryDialog isOpen={isViewOrderOpen} onOpenChange={setIsViewOrderOpen} order={selectedOrder} />
       {showTableSkeleton ? (
-        <TableSkeleton rows={8} columns={7} />
+        <TableSkeleton rows={8} />
       ) : (
         <>
           <OrderDetectDeliveryTable orders={filteredData} visibleColumns={visibleColumns} onViewOrder={handleViewOrder} onPrintOrder={handlePrintOrder} />
@@ -616,6 +511,6 @@ export default function OrderDetectDelivery() {
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
       />
-    </ScrollDiv>
+    </AdminPage>
   );
 }

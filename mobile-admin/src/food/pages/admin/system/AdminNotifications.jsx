@@ -1,112 +1,88 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/AdminNotifications.jsx (tools/port.js first pass). */
-import { Bell, CheckCheck, Clock, Loader2, Trash2, X } from 'lucide-react-native';
+import { Bell, CheckCheck, Clock, Trash2, X } from 'lucide-react-native';
+import { AdminPage, PageHeader, Card, LoadingState, EmptyState, StatusBadge, BTN_SECONDARY, BTN_TEXT_SECONDARY } from '../../../../admin/ui';
 import { useNavigate } from '../../../../lib/webRouter';
 import useAdminNotifications from '../../../hooks/useAdminNotifications';
-import { Button, Div, H1, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 export default function AdminNotifications() {
   const navigate = useNavigate();
-  const { items, loading, unreadCount, markAsRead, markAllAsRead, dismissOne, clearAll } = useAdminNotifications();
+  const { items, loading, unreadCount, refresh, markAsRead, markAllAsRead, dismissOne, clearAll } = useAdminNotifications();
   const handleOpen = (item) => {
     if (item?.id) markAsRead(item.id);
     if (item?.path) navigate(item.path);
   };
   return (
-    <ScrollDiv className="p-6">
-      <Div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-        <Div className="flex items-start justify-between gap-4 mb-6">
-          <Div className="flex items-center gap-3">
-            <Div className="relative w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center overflow-visible">
-              <UiIcon as={Bell} className="w-6 h-6 shrink-0" />
-              {unreadCount > 0 && (
-                <Span className="absolute -top-1 -right-1 z-10 min-w-[20px] h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold leading-none flex items-center justify-center px-1 border-2 border-white shadow-sm">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </Span>
-              )}
-            </Div>
-            <Div>
-              <H1 className="text-2xl font-bold text-slate-900">Notifications</H1>
-              <P className="text-sm text-slate-500">
-                Approval and support alerts that need admin attention.
-                {unreadCount > 0 ? ` ${unreadCount} unread.` : items.length > 0 ? ' All caught up.' : ''}
-              </P>
-            </Div>
-          </Div>
-          {items.length > 0 && (
-            <Div className="flex items-center gap-2 shrink-0">
-              {unreadCount > 0 && (
-                <Button
-                  type="button"
-                  onClick={markAllAsRead}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <UiIcon as={CheckCheck} className="w-4 h-4" />
-                  Read all
+    <AdminPage>
+      <PageHeader
+        icon={Bell}
+        title="Notifications"
+        subtitle={`Approval and support alerts that need admin attention.${unreadCount > 0 ? ` ${unreadCount} unread.` : items.length > 0 ? ' All caught up.' : ''}`}
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Notifications' }]}
+        actions={
+          items.length > 0 ? (
+            <>
+              {unreadCount > 0 ? (
+                <Button type="button" onClick={markAllAsRead} className={BTN_SECONDARY}>
+                  <UiIcon as={CheckCheck} size={16} className="text-slate-600" />
+                  <Span className={BTN_TEXT_SECONDARY}>Read all</Span>
                 </Button>
-              )}
+              ) : null}
+              <Button type="button" onClick={clearAll} className={`${BTN_SECONDARY} border-red-200`}>
+                <UiIcon as={Trash2} size={16} className="text-red-600" />
+                <Span className="text-sm font-semibold text-red-600">Clear all</Span>
+              </Button>
+            </>
+          ) : null
+        }
+      />
+
+      {loading ? (
+        <LoadingState label="Loading notifications…" />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon={Bell}
+          title="No notifications"
+          message="Approval requests and support alerts will appear here as they come in."
+          actionLabel="Refresh"
+          onAction={refresh}
+        />
+      ) : (
+        <Div className="gap-3">
+          {items.map((item) => (
+            <Card key={item?.id} className={`flex-row items-start gap-3 ${item.read ? '' : 'bg-amber-50 border-amber-200'}`}>
+              <Button type="button" onClick={() => handleOpen(item)} className="flex-1 min-w-0 gap-1">
+                <Div className="flex-row items-center gap-2">
+                  {!item.read ? <Span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" /> : null}
+                  <Text style={tw`text-base font-semibold ${item.read ? 'text-slate-700' : 'text-slate-900'} flex-1`} numberOfLines={2}>
+                    {item?.title || 'Notification'}
+                  </Text>
+                </Div>
+                <Text style={tw`text-sm text-slate-500`} numberOfLines={3}>
+                  {item?.message || '-'}
+                </Text>
+                <Div className="flex-row flex-wrap items-center gap-2 mt-1">
+                  <Div className="flex-row items-center gap-1">
+                    <UiIcon as={Clock} size={12} className="text-slate-400" />
+                    <Span className="text-xs text-slate-500">{item?.timeLabel || 'N/A'}</Span>
+                  </Div>
+                  {item?.metaLabel ? <Span className="text-xs text-slate-500">{item.metaLabel}</Span> : null}
+                  {item.read ? <StatusBadge status="read" label="Read" /> : null}
+                </Div>
+              </Button>
               <Button
                 type="button"
-                onClick={clearAll}
-                className="inline-flex items-center gap-2 rounded-2xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                onClick={() => dismissOne(item?.id)}
+                className="w-11 h-11 -mt-2 -mr-2 rounded-lg items-center justify-center shrink-0"
+                accessibilityLabel="Remove notification"
               >
-                <UiIcon as={Trash2} className="w-4 h-4" />
-                Clear all
+                <UiIcon as={X} size={16} className="text-slate-400" />
               </Button>
-            </Div>
-          )}
+            </Card>
+          ))}
         </Div>
-
-        {loading ? (
-          <Div className="py-12 text-sm text-slate-500 flex items-center gap-2">
-            <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-            Loading notifications...
-          </Div>
-        ) : items.length === 0 ? (
-          <Div className="py-12 text-sm text-slate-500">No notifications found.</Div>
-        ) : (
-          <Div className="space-y-3">
-            {items.map((item) => (
-              <Div
-                key={item?.id}
-                className={`rounded-2xl border px-4 py-4 transition-colors ${item.read ? 'border-slate-200 bg-white' : 'border-amber-200 bg-amber-50/70 shadow-sm'}`}
-              >
-                <Div className="flex items-start justify-between gap-4">
-                  <Button type="button" onClick={() => handleOpen(item)} className="min-w-0 flex-1 text-left">
-                    <Div className="flex items-center gap-2">
-                      {!item.read && <Span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />}
-                      <P className={`text-base font-semibold ${item.read ? 'text-slate-600' : 'text-slate-900'}`}>{item?.title || 'Notification'}</P>
-                    </Div>
-                    <P className={`text-sm mt-1 ${item.read ? 'text-slate-500' : 'text-slate-600'}`}>{item?.message || '-'}</P>
-                    <Div className="flex items-center gap-2 mt-3 text-xs text-slate-500">
-                      <UiIcon as={Clock} className="w-3.5 h-3.5" />
-                      <Span>{item?.timeLabel || 'N/A'}</Span>
-                      {item?.metaLabel ? (
-                        <>
-                          <Span>•</Span>
-                          <Span>{item.metaLabel}</Span>
-                        </>
-                      ) : null}
-                      {item.read ? (
-                        <>
-                          <Span>•</Span>
-                          <Span className="text-slate-400">Read</Span>
-                        </>
-                      ) : null}
-                    </Div>
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => dismissOne(item?.id)}
-                    className="shrink-0 rounded-full p-2 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                    accessibilityLabel="Remove notification"
-                  >
-                    <UiIcon as={X} className="w-4 h-4" />
-                  </Button>
-                </Div>
-              </Div>
-            ))}
-          </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+      )}
+    </AdminPage>
   );
 }

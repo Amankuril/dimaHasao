@@ -1,12 +1,34 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/drivers/GlobalDocuments.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronRight, PencilLine, Plus, Search, Trash2 } from 'lucide-react-native';
+import { FileText, PencilLine, Plus, Search, Trash2 } from 'lucide-react-native';
 import { useNavigate } from '../../../../../lib/webRouter';
 import { adminService } from '../../services/adminService';
-import { Button, Div, H1, H2, Input, Option, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../../admin/ui';
+import { Button, Div, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+import { Switch } from '../../../../../components/shadcn';
 import { alert, window } from '../../../../../lib/webShim';
-const inputClass =
-  'w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-800 outline-none transition-colors focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400';
+const DOC_COLS = [160, 130, 130, 120, 100];
+const FIELD_COLS = [160, 130, 120, 130, 70, 110, 120, 100];
 const typeLabel = (value) =>
   String(value || '')
     .split('_')
@@ -147,215 +169,161 @@ const GlobalDocuments = () => {
     const itemId = item.id || item._id;
     const isToggling = Boolean(togglingIds[itemId]);
     return (
-      <Button
-        type="button"
-        aria-checked={item.active ? 'true' : 'false'}
-        accessibilityLabel={`Set ${item.name || item.field_key || 'item'} ${item.active ? 'inactive' : 'active'}`}
-        disabled={isToggling}
-        onClick={() => handleToggleStatus(item)}
-        className={`inline-flex items-center gap-2 rounded-full px-2 py-1 text-xs font-semibold transition whitespace-nowrap ${isToggling ? 'cursor-wait opacity-60' : 'cursor-pointer'}`}
-      >
-        <Span className={`relative shrink-0 flex items-center h-6 w-11 rounded-full p-0.5 transition-colors ${item.active ? 'bg-yellow-400' : 'bg-gray-300'}`}>
-          <Span className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${item.active ? 'translate-x-5' : 'translate-x-0'}`} />
-        </Span>
-        <Span className={item.active ? 'text-gray-900' : 'text-gray-500'}>{isToggling ? 'Saving...' : item.active ? 'Active' : 'Inactive'}</Span>
-      </Button>
+      <Div className="flex-row items-center gap-2">
+        <Switch
+          checked={Boolean(item.active)}
+          disabled={isToggling}
+          onCheckedChange={() => handleToggleStatus(item)}
+        />
+        <Span className="text-xs text-slate-500">{isToggling ? 'Saving…' : item.active ? 'Active' : 'Inactive'}</Span>
+      </Div>
     );
   };
   const renderActions = (item, templateType) => (
-    <Div className="flex items-center justify-end gap-2">
+    <Div className="flex-row items-center gap-1">
       <Button
         type="button"
         onClick={() => navigate(`/taxi/admin/drivers/documents/edit/${item.id || item._id}?type=${templateType}`)}
-        className="rounded-lg border border-gray-200 p-2 text-yellow-600 transition-colors hover:bg-yellow-50"
+        accessibilityLabel={`Edit ${item.name || 'item'}`}
+        className="w-11 h-11 rounded-lg items-center justify-center"
       >
-        <UiIcon as={PencilLine} size={16} />
+        <UiIcon as={PencilLine} size={16} className="text-slate-600" />
       </Button>
       <Button
         type="button"
         onClick={() => handleDelete(item.id || item._id, templateType === 'vehicle_field' ? 'vehicle field' : 'document')}
-        className="rounded-lg border border-gray-200 p-2 text-rose-600 transition-colors hover:bg-rose-50"
+        accessibilityLabel={`Delete ${item.name || 'item'}`}
+        className="w-11 h-11 rounded-lg items-center justify-center"
       >
-        <UiIcon as={Trash2} size={16} />
+        <UiIcon as={Trash2} size={16} className="text-red-600" />
       </Button>
     </Div>
   );
   return (
-    <ScrollDiv className="min-h-screen bg-[#F8FAFC] p-3 lg:p-4 font-sans text-gray-900">
-      <Div className="mb-4">
-        <Div className="mb-1 flex items-center gap-1.5 text-[11px] text-gray-500">
-          <Span>Masters</Span>
-          <UiIcon as={ChevronRight} size={10} />
-          <Span className="text-gray-700">Driver Onboarding Config</Span>
-        </Div>
-        <Div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Div>
-            <H1 className="text-base text-gray-900 font-bold">Driver Onboarding Config</H1>
-            <P className="mt-0.5 text-xs text-gray-500">Manage both driver document templates and the dynamic fields shown on the vehicle onboarding step.</P>
-          </Div>
-          <Div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              onClick={() => navigate('/taxi/admin/drivers/documents/create?type=document')}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-400 px-3 py-1.5 text-xs font-bold text-black transition-colors hover:bg-yellow-500 shadow-sm"
-            >
-              <UiIcon as={Plus} size={14} />
-              Add Document
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={FileText}
+        title="Driver Onboarding Config"
+        subtitle="Document templates and the dynamic vehicle-step fields"
+        breadcrumb={[{ label: 'Masters' }, { label: 'Driver Onboarding Config' }]}
+        actions={
+          <>
+            <Button type="button" onClick={() => navigate('/taxi/admin/drivers/documents/create?type=document')} className={BTN_PRIMARY}>
+              <UiIcon as={Plus} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Add document</Span>
             </Button>
-            <Button
-              type="button"
-              onClick={() => navigate('/taxi/admin/drivers/documents/create?type=vehicle_field')}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-black transition-colors hover:bg-gray-50 shadow-sm"
-            >
-              <UiIcon as={Plus} size={14} />
-              Add Vehicle Field
+            <Button type="button" onClick={() => navigate('/taxi/admin/drivers/documents/create?type=vehicle_field')} className={BTN_SECONDARY}>
+              <UiIcon as={Plus} size={16} className="text-slate-700" />
+              <Span className={BTN_TEXT_SECONDARY}>Add vehicle field</Span>
             </Button>
-          </Div>
-        </Div>
-      </Div>
+          </>
+        }
+      />
 
-      <Div className="mb-4 rounded-lg border border-gray-200 bg-white p-4">
-        <Div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Div className="flex items-center gap-2 text-xs text-gray-500">
-            <Span>Show</Span>
-            <Select
-              value={pageSize}
-              onChange={(event) => setPageSize(Number(event.target.value))}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
-            >
-              <Option value={10}>10</Option>
-              <Option value={25}>25</Option>
-              <Option value={50}>50</Option>
-            </Select>
-            <Span>entries</Span>
-          </Div>
-
-          <Div className="relative w-full lg:max-w-sm">
-            <UiIcon as={Search} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center gap-2 flex-1 min-w-[180px]">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
             <Input
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Filter documents or fields..."
-              className={inputClass}
+              placeholder="Filter documents or fields"
+              className={`${INPUT} flex-1`}
             />
           </Div>
-        </Div>
-      </Div>
+          <Select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))} className={INPUT}>
+            <Option value={10}>Show 10</Option>
+            <Option value={25}>Show 25</Option>
+            <Option value={50}>Show 50</Option>
+          </Select>
+        </Toolbar>
+      </Card>
 
-      {error ? <Div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</Div> : null}
+      {error ? (
+        <ErrorState title="Could not load configuration" message={error} onRetry={loadItems} className="mb-4" />
+      ) : null}
 
-      <Div className="space-y-4">
-        <Div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <Div className="border-b border-gray-100 px-4 py-3">
-            <H2 className="text-sm text-gray-900 font-bold">Driver Needed Documents</H2>
-            <P className="mt-0.5 text-xs text-gray-500">
-              Templates used by the documents step of onboarding. Turn a document inactive here to hide it from `/taxi/driver/step-documents`.
-            </P>
-          </Div>
-          <Div>
-            <Table cols={[180, 150, 150, 120, 120]} className="min-w-full">
-              <Thead className="bg-gray-50">
-                <Tr>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Name</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Account Type</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Image Type</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Status</Th>
-                  <Th className="px-4 py-2.5 text-right text-xs font-bold text-gray-600">Action</Th>
-                </Tr>
-              </Thead>
-              <Tbody className="divide-y divide-gray-100 whitespace-nowrap">
-                {isLoading ? (
-                  <Tr>
-                    <Td colSpan="5" className="px-6 py-16 text-center text-sm text-gray-500">
-                      Loading document templates...
-                    </Td>
-                  </Tr>
-                ) : paginatedDocuments.length === 0 ? (
-                  <Tr>
-                    <Td colSpan="5" className="px-6 py-16 text-center text-sm text-gray-500">
-                      No document templates found.
-                    </Td>
-                  </Tr>
-                ) : (
-                  paginatedDocuments.map((item) => (
-                    <Tr key={item.id || item._id} className="hover:bg-gray-50/70 text-xs">
-                      <Td className="px-4 py-2 font-semibold text-gray-900">{item.name}</Td>
-                      <Td className="px-4 py-2 text-gray-700">{typeLabel(item.account_type)}</Td>
-                      <Td className="px-4 py-2 text-gray-700">{typeLabel(item.image_type)}</Td>
-                      <Td className="px-4 py-2">{renderStatusToggle(item)}</Td>
-                      <Td className="px-4 py-2">{renderActions(item, 'document')}</Td>
-                    </Tr>
-                  ))
-                )}
-              </Tbody>
-            </Table>
-          </Div>
-        </Div>
+      <Card className="mb-4">
+        <SectionTitle>Driver needed documents</SectionTitle>
+        <P className="text-sm text-slate-500 mb-3">
+          Templates used by the documents step of onboarding. Turn a document inactive here to hide it from the driver app.
+        </P>
+        {isLoading ? (
+          <TableSkeleton rows={4} />
+        ) : paginatedDocuments.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            title="No document templates"
+            message={searchTerm ? 'No template matches this filter.' : 'Add a document to require it during onboarding.'}
+            actionLabel="Add document"
+            onAction={() => navigate('/taxi/admin/drivers/documents/create?type=document')}
+            className="py-8"
+          />
+        ) : (
+          <DataTable cols={DOC_COLS}>
+            <THead cols={DOC_COLS} labels={['Name', 'Account type', 'Image type', 'Status', 'Actions']} />
+            <TBody>
+              {paginatedDocuments.map((item, i) => (
+                <Row key={item.id || item._id} last={i === paginatedDocuments.length - 1}>
+                  <Cell width={DOC_COLS[0]}>
+                    <Span className="text-sm font-semibold text-slate-900">{item.name}</Span>
+                  </Cell>
+                  <Cell width={DOC_COLS[1]}>{typeLabel(item.account_type)}</Cell>
+                  <Cell width={DOC_COLS[2]}>{typeLabel(item.image_type)}</Cell>
+                  <Cell width={DOC_COLS[3]}>{renderStatusToggle(item)}</Cell>
+                  <Cell width={DOC_COLS[4]}>{renderActions(item, 'document')}</Cell>
+                </Row>
+              ))}
+            </TBody>
+          </DataTable>
+        )}
+      </Card>
 
-        <Div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <Div className="border-b border-gray-100 px-4 py-3">
-            <H2 className="text-sm text-gray-900 font-bold">Vehicle Step Fields</H2>
-            <P className="mt-0.5 text-xs text-gray-500">
-              These control which fields appear on `/taxi/driver/step-vehicle`, their labels, placeholders, order, and required state.
-            </P>
-          </Div>
-          <Div>
-            <Table cols={[170, 150, 130, 150, 90, 110, 120, 120]} className="min-w-full">
-              <Thead className="bg-gray-50">
-                <Tr>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Label</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Field Key</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Field Type</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Account Type</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Order</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Required</Th>
-                  <Th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Status</Th>
-                  <Th className="px-4 py-2.5 text-right text-xs font-bold text-gray-600">Action</Th>
-                </Tr>
-              </Thead>
-              <Tbody className="divide-y divide-gray-100 whitespace-nowrap">
-                {isLoading ? (
-                  <Tr>
-                    <Td colSpan="8" className="px-6 py-16 text-center text-sm text-gray-500">
-                      Loading vehicle fields...
-                    </Td>
-                  </Tr>
-                ) : paginatedVehicleFields.length === 0 ? (
-                  <Tr>
-                    <Td colSpan="8" className="px-6 py-16 text-center text-sm text-gray-500">
-                      No vehicle fields found.
-                    </Td>
-                  </Tr>
-                ) : (
-                  paginatedVehicleFields.map((item, index) => (
-                    <Tr key={item.id || item._id} className="hover:bg-gray-50/70 text-xs">
-                      <Td className="px-4 py-2">
-                        <Div className="font-semibold text-gray-900">{item.name}</Div>
-                        {item.placeholder ? <Div className="mt-0.5 text-[10px] text-gray-500">{item.placeholder}</Div> : null}
-                      </Td>
-                      <Td className="px-4 py-2 text-gray-700">{item.field_key}</Td>
-                      <Td className="px-4 py-2 text-gray-700">{typeLabel(item.field_type)}</Td>
-                      <Td className="px-4 py-2 text-gray-700">{typeLabel(item.account_type)}</Td>
-                      <Td className="px-4 py-2 text-gray-700">{index + 1}</Td>
-                      <Td className="px-4 py-2">
-                        <Span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.is_required ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}
-                        >
-                          {item.is_required ? 'Required' : 'Optional'}
-                        </Span>
-                      </Td>
-                      <Td className="px-4 py-2">{renderStatusToggle(item)}</Td>
-                      <Td className="px-4 py-2">{renderActions(item, 'vehicle_field')}</Td>
-                    </Tr>
-                  ))
-                )}
-              </Tbody>
-            </Table>
-          </Div>
-        </Div>
-      </Div>
-    </ScrollDiv>
+      <Card>
+        <SectionTitle>Vehicle step fields</SectionTitle>
+        <P className="text-sm text-slate-500 mb-3">
+          These control which fields appear on the vehicle onboarding step, their labels, placeholders, order and required state.
+        </P>
+        {isLoading ? (
+          <TableSkeleton rows={4} />
+        ) : paginatedVehicleFields.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            title="No vehicle fields"
+            message={searchTerm ? 'No field matches this filter.' : 'Add a field to collect it on the vehicle step.'}
+            actionLabel="Add vehicle field"
+            onAction={() => navigate('/taxi/admin/drivers/documents/create?type=vehicle_field')}
+            className="py-8"
+          />
+        ) : (
+          <DataTable cols={FIELD_COLS}>
+            <THead cols={FIELD_COLS} labels={['Label', 'Field key', 'Field type', 'Account type', 'Order', 'Required', 'Status', 'Actions']} />
+            <TBody>
+              {paginatedVehicleFields.map((item, index) => (
+                <Row key={item.id || item._id} last={index === paginatedVehicleFields.length - 1}>
+                  <Cell width={FIELD_COLS[0]}>
+                    <Div className="gap-0.5">
+                      <P className="text-sm font-semibold text-slate-900">{item.name}</P>
+                      {item.placeholder ? <P className="text-xs text-slate-500">{item.placeholder}</P> : null}
+                    </Div>
+                  </Cell>
+                  <Cell width={FIELD_COLS[1]}>{item.field_key}</Cell>
+                  <Cell width={FIELD_COLS[2]}>{typeLabel(item.field_type)}</Cell>
+                  <Cell width={FIELD_COLS[3]}>{typeLabel(item.account_type)}</Cell>
+                  <Cell width={FIELD_COLS[4]} align="center">{index + 1}</Cell>
+                  <Cell width={FIELD_COLS[5]}>
+                    <StatusBadge tone={item.is_required ? 'warning' : 'neutral'} label={item.is_required ? 'Required' : 'Optional'} />
+                  </Cell>
+                  <Cell width={FIELD_COLS[6]}>{renderStatusToggle(item)}</Cell>
+                  <Cell width={FIELD_COLS[7]}>{renderActions(item, 'vehicle_field')}</Cell>
+                </Row>
+              ))}
+            </TBody>
+          </DataTable>
+        )}
+      </Card>
+    </AdminPage>
   );
 };
 export default GlobalDocuments;

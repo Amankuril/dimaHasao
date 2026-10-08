@@ -5,10 +5,35 @@ import { MapPin, ArrowLeft, Search } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import { getGoogleMapsApiKey } from '../../../utils/googleMapsApiKey';
 import { GMap, Polygon } from '../../../../components/maps';
-import { Button, Div, H1, H3, P, ScrollDiv, Span, Strong, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  INPUT,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
 import PlacesSearchInput from './PlacesSearchInput';
 import { DotMarker, INDIA_REGION, InfoCard, MapTypeToggle, ZONE_COLORS, regionAtZoom, useMapTouchLock, withAlpha, zonePath } from './zoneMapParts';
 const debugError = (...args) => {};
+
+/** A label/value line inside a map info card. */
+function InfoLine({ label, children }) {
+  return (
+    <Div className="flex-row items-center gap-1.5 flex-wrap">
+      <Text style={tw`text-xs font-semibold text-slate-500`}>{label}</Text>
+      {typeof children === 'string' || typeof children === 'number' ? <Text style={tw`text-xs text-slate-700`}>{children}</Text> : children}
+    </Div>
+  );
+}
 export default function AllZonesMap() {
   const navigate = useNavigate();
   const mapInstanceRef = useRef(null);
@@ -20,6 +45,7 @@ export default function AllZonesMap() {
   const [loading, setLoading] = useState(true);
   const [info, setInfo] = useState(null); // { kind: 'zone' | 'restaurant', item }
   const [scrollEnabled, touchLock] = useMapTouchLock();
+  const { tablet, width } = useLayoutWidth();
   useEffect(() => {
     fetchZones();
     fetchRestaurants();
@@ -109,170 +135,153 @@ export default function AllZonesMap() {
     const coords = zonePolygons.flatMap((z) => z.path);
     mapInstanceRef.current.fitToCoordinates(coords, { edgePadding: { top: 50, right: 50, bottom: 50, left: 50 }, animated: true });
   }, [zonePolygons, mapLoading]);
+  // A map tall enough to read on a phone, capped so a tablet keeps the legend in view.
+  const mapHeight = Math.max(360, Math.min(tablet ? 620 : 460, Math.round(width * 1.2)));
   return (
-    <ScrollDiv className="min-h-screen bg-slate-50" scrollEnabled={scrollEnabled}>
-      <Div className="p-4 lg:p-6">
-        {/* Header */}
-        <Div className="flex items-center gap-4 mb-6">
-          <Button onClick={() => navigate('/admin/food/zone-setup')} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
-            <UiIcon as={ArrowLeft} className="w-5 h-5 text-slate-600" />
+    <AdminPage maxWidth={1200} scrollEnabled={scrollEnabled}>
+      <PageHeader
+        icon={MapPin}
+        title="All Zones Map"
+        subtitle="Every restaurant delivery zone on one map"
+        breadcrumb={[{ label: 'Food' }, { label: 'Zone setup', onPress: () => navigate('/admin/food/zone-setup') }, { label: 'All zones map' }]}
+        actions={
+          <Button onClick={() => navigate('/admin/food/zone-setup')} className={BTN_SECONDARY}>
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Back to Zones</Span>
           </Button>
-          <Div className="flex-1 flex items-center gap-3">
-            <Div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-              <UiIcon as={MapPin} className="w-5 h-5 text-white" />
-            </Div>
-            <Div className="flex-1">
-              <H1 className="text-2xl font-bold text-slate-900">All Zones Map</H1>
-              <P className="text-sm text-slate-600">View all restaurant delivery zones on map</P>
-            </Div>
-          </Div>
+        }
+      />
+
+      {/* Search */}
+      <Card className="mb-4">
+        <Div className="flex-row items-center gap-2">
+          <UiIcon as={Search} size={16} className="text-slate-400" />
+          <PlacesSearchInput
+            placeholder="Search location on map"
+            className={`${INPUT} flex-1`}
+            onPlace={(place) => {
+              const lat = place?.geometry?.location?.lat?.();
+              const lng = place?.geometry?.location?.lng?.();
+              if (Number.isFinite(lat) && Number.isFinite(lng) && mapInstanceRef.current) {
+                mapInstanceRef.current.animateToRegion(regionAtZoom(lat, lng, 12), 300); // Zoom in when location is selected
+              }
+            }}
+          />
         </Div>
+      </Card>
 
-        {/* Search Bar */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
-          <Div className="relative">
-            <UiIcon as={Search} className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-            <PlacesSearchInput
-              placeholder="Search location on map..."
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg"
-              onPlace={(place) => {
-                const lat = place?.geometry?.location?.lat?.();
-                const lng = place?.geometry?.location?.lng?.();
-                if (Number.isFinite(lat) && Number.isFinite(lng) && mapInstanceRef.current) {
-                  mapInstanceRef.current.animateToRegion(regionAtZoom(lat, lng, 12), 300); // Zoom in when location is selected
-                }
-              }}
-            />
-          </Div>
-        </Div>
-
-        {/* Map Container */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-          <Div className="relative h-[600px]" {...touchLock}>
-            <GMap
-              ref={mapInstanceRef}
-              className="w-full h-full rounded-lg"
-              initialRegion={INDIA_REGION}
-              mapType={mapType}
-              zoomControlEnabled
-              onMapReady={() => setMapLoading(false)}
-            >
-              {zonePolygons.map(({ zone, path, color }, index) => (
-                <Polygon
-                  key={zone._id || zone.id || `z${index}`}
-                  coordinates={path}
-                  strokeColor={withAlpha(color, 0.8)}
-                  strokeWidth={2}
-                  fillColor={withAlpha(color, 0.25)}
-                  zIndex={1}
-                  tappable
-                  onPress={() => setInfo({ kind: 'zone', item: zone })}
-                />
-              ))}
-              {restaurantMarkers.map(({ key, restaurant, coordinate }) => (
-                <DotMarker
-                  key={key}
-                  coordinate={coordinate}
-                  color="#ef4444"
-                  title={restaurant.name || 'Restaurant'}
-                  onPress={() => setInfo({ kind: 'restaurant', item: restaurant })}
-                />
-              ))}
-            </GMap>
-            <MapTypeToggle value={mapType} onChange={setMapType} />
-            {info?.kind === 'zone' ? (
-              <InfoCard onClose={() => setInfo(null)}>
-                <H3 className="text-base font-semibold text-slate-800 mb-2">{info.item.name || info.item.zoneName || 'Unnamed Zone'}</H3>
-                <Div className="text-[13px] text-slate-500">
-                  <P className="mb-1">
-                    <Strong>Country:</Strong> {info.item.country || 'N/A'}
-                  </P>
-                  <P className="mb-1">
-                    <Strong>Unit:</Strong> {info.item.unit || 'km'}
-                  </P>
-                  <P className="mb-1">
-                    <Strong>Points:</Strong> {info.item.coordinates.length}
-                  </P>
-                  <P>
-                    <Strong>Status:</Strong>{' '}
-                    <Span className={`font-semibold ${info.item.isActive ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>{info.item.isActive ? 'Active' : 'Inactive'}</Span>
-                  </P>
-                </Div>
-              </InfoCard>
-            ) : null}
-            {info?.kind === 'restaurant' ? (
-              <InfoCard onClose={() => setInfo(null)}>
-                <H3 className="text-base font-semibold text-slate-800 mb-2">{info.item.name || 'Unnamed Restaurant'}</H3>
-                <P className="text-[13px] text-slate-500">
-                  {info.item.location?.formattedAddress || info.item.location?.address || info.item.location?.area || 'Location not specified'}
-                </P>
-                {info.item.ownerName ? (
-                  <P className="mt-2 text-xs text-slate-400">
-                    <Strong>Owner:</Strong> {info.item.ownerName}
-                  </P>
-                ) : null}
-              </InfoCard>
-            ) : null}
-
-            {mapLoading && (
-              <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg" pointerEvents="none">
-                <Div className="text-center">
-                  <Div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></Div>
-                  <P className="text-slate-600">Loading map...</P>
-                </Div>
+      {/* Map */}
+      <Card>
+        <Div className="relative rounded-lg overflow-hidden" style={{ height: mapHeight }} {...touchLock}>
+          <GMap
+            ref={mapInstanceRef}
+            className="w-full h-full bg-slate-100"
+            initialRegion={INDIA_REGION}
+            mapType={mapType}
+            zoomControlEnabled
+            onMapReady={() => setMapLoading(false)}
+          >
+            {zonePolygons.map(({ zone, path, color }, index) => (
+              <Polygon
+                key={zone._id || zone.id || `z${index}`}
+                coordinates={path}
+                strokeColor={withAlpha(color, 0.8)}
+                strokeWidth={2}
+                fillColor={withAlpha(color, 0.25)}
+                zIndex={1}
+                tappable
+                onPress={() => setInfo({ kind: 'zone', item: zone })}
+              />
+            ))}
+            {restaurantMarkers.map(({ key, restaurant, coordinate }) => (
+              <DotMarker
+                key={key}
+                coordinate={coordinate}
+                color="#ef4444"
+                title={restaurant.name || 'Restaurant'}
+                onPress={() => setInfo({ kind: 'restaurant', item: restaurant })}
+              />
+            ))}
+          </GMap>
+          <MapTypeToggle value={mapType} onChange={setMapType} />
+          {info?.kind === 'zone' ? (
+            <InfoCard onClose={() => setInfo(null)}>
+              <Text style={tw`text-base font-semibold text-slate-900 mb-2`} numberOfLines={2}>
+                {info.item.name || info.item.zoneName || 'Unnamed Zone'}
+              </Text>
+              <Div className="gap-1">
+                <InfoLine label="Country">{info.item.country || 'N/A'}</InfoLine>
+                <InfoLine label="Unit">{info.item.unit || 'km'}</InfoLine>
+                <InfoLine label="Points">{String(info.item.coordinates?.length ?? 0)}</InfoLine>
+                <InfoLine label="Status">
+                  <StatusBadge status={info.item.isActive ? 'active' : 'inactive'} label={info.item.isActive ? 'Active' : 'Inactive'} />
+                </InfoLine>
               </Div>
-            )}
+            </InfoCard>
+          ) : null}
+          {info?.kind === 'restaurant' ? (
+            <InfoCard onClose={() => setInfo(null)}>
+              <Text style={tw`text-base font-semibold text-slate-900 mb-2`} numberOfLines={2}>
+                {info.item.name || 'Unnamed Restaurant'}
+              </Text>
+              <Text style={tw`text-xs text-slate-500`} numberOfLines={3}>
+                {info.item.location?.formattedAddress || info.item.location?.address || info.item.location?.area || 'Location not specified'}
+              </Text>
+              {info.item.ownerName ? <InfoLine label="Owner">{info.item.ownerName}</InfoLine> : null}
+            </InfoCard>
+          ) : null}
 
-            {loading && !mapLoading && (
-              <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
-                <Div className="text-center">
-                  <Div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></Div>
-                  <P className="text-slate-600">Loading zones...</P>
-                </Div>
-              </Div>
-            )}
+          {mapLoading && (
+            <Div className="absolute inset-0 items-center justify-center bg-slate-100" pointerEvents="none">
+              <LoadingState label="Loading map…" className="border-0 bg-transparent" />
+            </Div>
+          )}
 
-            {!googleMapsApiKey && !mapLoading && (
-              <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
-                <Div className="text-center p-6">
-                  <UiIcon as={MapPin} className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <P className="text-sm text-slate-600">Google Maps API key not found</P>
-                </Div>
-              </Div>
-            )}
+          {loading && !mapLoading && (
+            <Div className="absolute inset-0 items-center justify-center bg-slate-100">
+              <LoadingState label="Loading zones…" className="border-0 bg-transparent" />
+            </Div>
+          )}
 
-            {!loading && !mapLoading && zones.length === 0 && (
-              <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
-                <Div className="text-center p-6">
-                  <UiIcon as={MapPin} className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <P className="text-sm text-slate-600">No zones found</P>
-                </Div>
-              </Div>
-            )}
-          </Div>
+          {!googleMapsApiKey && !mapLoading && (
+            <Div className="absolute inset-0 items-center justify-center bg-slate-100 px-6">
+              <UiIcon as={MapPin} size={28} className="text-slate-400 mb-2" />
+              <Text style={tw`text-sm text-slate-500 text-center`}>Google Maps API key not found</Text>
+            </Div>
+          )}
 
-          {/* Legend */}
-          {!mapLoading && (
-            <Div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <H3 className="text-sm font-semibold text-slate-900 mb-2">Map Information</H3>
-              <Div className="text-xs text-slate-600 space-y-1">
-                {zones.length > 0 && (
-                  <P>
-                    Click on any <Span className="font-semibold text-blue-600">zone</Span> on the map to view details. Total zones:{' '}
-                    <Strong>{zones.length}</Strong>
-                  </P>
-                )}
-                {restaurants.length > 0 && (
-                  <P>
-                    Click on any <Span className="font-semibold text-red-600">red marker</Span> to view restaurant name and details. Total restaurants:{' '}
-                    <Strong>{restaurants.length}</Strong>
-                  </P>
-                )}
-              </Div>
+          {!loading && !mapLoading && zones.length === 0 && (
+            <Div className="absolute inset-0 items-center justify-center bg-slate-100">
+              <EmptyState
+                icon={MapPin}
+                title="No zones yet"
+                message="Create a delivery zone and it will be drawn on this map."
+                actionLabel="Add Zone"
+                onAction={() => navigate('/admin/food/zone-setup/add')}
+                className="border-0 bg-transparent"
+              />
             </Div>
           )}
         </Div>
-      </Div>
-    </ScrollDiv>
+
+        {/* Legend */}
+        {!mapLoading && (
+          <Div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200 gap-1.5">
+            <SectionTitle className="mb-1">Map Information</SectionTitle>
+            {zones.length > 0 && (
+              <Text style={tw`text-xs text-slate-500`}>
+                Tap any zone to see its details. Total zones: {zones.length}
+              </Text>
+            )}
+            {restaurants.length > 0 && (
+              <Text style={tw`text-xs text-slate-500`}>
+                Tap a red marker to see the restaurant details. Total restaurants: {restaurants.length}
+              </Text>
+            )}
+            {zones.length === 0 && restaurants.length === 0 && <Text style={tw`text-xs text-slate-500`}>Nothing to show on the map yet.</Text>}
+          </Div>
+        )}
+      </Card>
+    </AdminPage>
   );
 }

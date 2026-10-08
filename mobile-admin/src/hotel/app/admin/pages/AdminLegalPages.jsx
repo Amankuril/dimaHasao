@@ -2,7 +2,22 @@
 import React, { useEffect, useState } from 'react';
 import { FileText, Shield, Info, PhoneCall, Save } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
-import { Button, Div, H2, Input, Label, P, ScrollDiv, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Input, P, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  Field,
+  LoadingState,
+  ErrorState,
+  StatusBadge,
+  useLayoutWidth,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 const SLUG_META = [
   {
     slug: 'terms',
@@ -32,6 +47,7 @@ const AdminLegalPages = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const { tablet } = useLayoutWidth();
   const loadPages = async (aud) => {
     setLoading(true);
     setError('');
@@ -94,84 +110,87 @@ const AdminLegalPages = () => {
       setSaving(false);
     }
   };
+  const loadFailed = !!error && Object.keys(pages).length === 0;
   return (
-    <ScrollDiv className="space-y-6 pb-24">
-      <Div className="flex flex-col gap-4">
-        <Div>
-          <H2 className="text-2xl font-bold text-gray-900">Legal & Info Pages</H2>
-          <P className="text-gray-500 text-sm">Manage Terms, Privacy, About and Contact content for users and partners.</P>
-        </Div>
-        <Div className="flex items-center self-start gap-2 bg-white border border-gray-200 rounded-xl p-1">
-          <Button
-            onClick={() => setAudience('user')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg ${audience === 'user' ? 'bg-black text-white' : 'text-gray-600'}`}
-          >
-            User
-          </Button>
-          <Button
-            onClick={() => setAudience('partner')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg ${audience === 'partner' ? 'bg-black text-white' : 'text-gray-600'}`}
-          >
-            Partner
-          </Button>
-        </Div>
-      </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={FileText}
+        title="Legal & Info Pages"
+        subtitle="Manage Terms, Privacy, About and Contact content for users and partners."
+        breadcrumb={[{ label: 'Hotel' }, { label: 'Legal & Content' }]}
+        actions={
+          <>
+            <Button onClick={() => setAudience('user')} className={audience === 'user' ? BTN_PRIMARY : BTN_SECONDARY}>
+              <Span className={audience === 'user' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>User</Span>
+            </Button>
+            <Button onClick={() => setAudience('partner')} className={audience === 'partner' ? BTN_PRIMARY : BTN_SECONDARY}>
+              <Span className={audience === 'partner' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Partner</Span>
+            </Button>
+          </>
+        }
+      />
 
-      {error && <Div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl px-4 py-2">{error}</Div>}
-      {message && <Div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl px-4 py-2">{message}</Div>}
+      {loadFailed ? (
+        <ErrorState title="Could not load the pages" message={error} onRetry={() => loadPages(audience)} />
+      ) : loading ? (
+        <LoadingState label="Loading legal pages…" />
+      ) : (
+        <>
+          {error ? (
+            <Card className="mb-4 bg-red-100 border-red-200">
+              <P className="text-sm text-red-700">{error}</P>
+            </Card>
+          ) : null}
+          {message ? (
+            <Card className="mb-4 bg-green-100 border-green-200">
+              <P className="text-sm text-green-700">{message}</P>
+            </Card>
+          ) : null}
 
-      <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {SLUG_META.map(({ slug, label, icon: Icon }) => {
-          const page = pages[slug] || {};
-          return (
-            <Div key={slug} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col">
-              <Div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
-                <Div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-700">
-                  <UiIcon as={Icon} size={18} />
-                </Div>
-                <Div>
-                  <P className="text-sm font-bold text-gray-900">{label}</P>
-                  <P className="text-[11px] text-gray-500 uppercase tracking-wide">{audience === 'user' ? 'User facing' : 'Partner facing'}</P>
-                </Div>
-              </Div>
+          <Div className={tablet ? 'flex-row flex-wrap gap-3 mb-4' : 'gap-3 mb-4'}>
+            {SLUG_META.map(({ slug, label, icon: Icon }) => {
+              const page = pages[slug] || {};
+              return (
+                <Card key={slug} className={`gap-3 ${tablet ? 'flex-1 min-w-[300px]' : ''}`}>
+                  <Div className="flex-row items-center gap-3 pb-3 border-b border-slate-200">
+                    <Div className="w-10 h-10 rounded-lg bg-slate-100 items-center justify-center shrink-0">
+                      <UiIcon as={Icon} size={18} className="text-slate-600" />
+                    </Div>
+                    <Div className="flex-1 min-w-0">
+                      <P numberOfLines={1} className="text-base font-semibold text-slate-900">
+                        {label}
+                      </P>
+                      <P className="text-xs text-slate-500">{audience === 'user' ? 'User facing' : 'Partner facing'}</P>
+                    </Div>
+                    <StatusBadge status={page.isActive === false ? 'inactive' : 'active'} label={page.isActive === false ? 'Hidden' : 'Live'} />
+                  </Div>
 
-              <Div className="space-y-3 flex-1 flex flex-col">
-                <Div>
-                  <Label className="block text-xs font-bold text-gray-600 mb-1">Title</Label>
-                  <Input
-                    type="text"
-                    value={page.title || label}
-                    onChange={(e) => handleFieldChange(slug, 'title', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-black/70"
-                  />
-                </Div>
-                <Div className="flex-1 flex flex-col">
-                  <Label className="block text-xs font-bold text-gray-600 mb-1">Content</Label>
-                  <Textarea
-                    rows={6}
-                    value={page.content || ''}
-                    onChange={(e) => handleFieldChange(slug, 'content', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-black/70 resize-none"
-                    placeholder="Write the copy that will appear on web and app."
-                  />
-                </Div>
-              </Div>
-            </Div>
-          );
-        })}
-      </Div>
+                  <Field label="Title">
+                    <Input type="text" value={page.title || label} onChange={(e) => handleFieldChange(slug, 'title', e.target.value)} className={INPUT} />
+                  </Field>
+                  <Field label="Content" hint="Shown on both web and the app.">
+                    <Textarea
+                      rows={6}
+                      value={page.content || ''}
+                      onChange={(e) => handleFieldChange(slug, 'content', e.target.value)}
+                      className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+                      placeholder="Write the copy that will appear on web and app."
+                    />
+                  </Field>
+                </Card>
+              );
+            })}
+          </Div>
 
-      <Div className="flex justify-end pt-2">
-        <Button
-          onClick={handleSaveAll}
-          disabled={saving || loading}
-          className="flex flex-row items-center gap-2 px-6 py-3 bg-black text-white text-sm font-bold rounded-xl shadow-lg hover:bg-gray-900 active:scale-95 disabled:opacity-60 disabled:active:scale-100 transition-transform"
-        >
-          <UiIcon as={Save} size={16} />
-          {saving ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </Div>
-    </ScrollDiv>
+          <Div className="flex-row justify-end">
+            <Button onClick={handleSaveAll} disabled={saving || loading} className={`${BTN_PRIMARY} ${saving || loading ? 'opacity-60' : ''}`}>
+              <UiIcon as={Save} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : 'Save Changes'}</Span>
+            </Button>
+          </Div>
+        </>
+      )}
+    </AdminPage>
   );
 };
 export default AdminLegalPages;

@@ -1,10 +1,34 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/PointOfSale.jsx (tools/port.js first pass). */
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from '../../../lib/webRouter';
-import { Search, TrendingUp, TrendingDown, DollarSign, ShoppingCart, XCircle, Star, Calendar, BarChart3, Users, Award, Package } from 'lucide-react-native';
-import { ActivityIndicator } from 'react-native';
+import { Search, ShoppingCart, XCircle, Star, BarChart3, Users, Award, Package } from 'lucide-react-native';
 import { adminAPI } from '../../../api/food';
-import { Button, Div, H1, H2, H3, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../components/web';
+import { Button, Div, Input, Option, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../components/web';
+import {
+  AdminPage,
+  Card,
+  EmptyState,
+  ErrorState,
+  Field,
+  LoadingState,
+  PageHeader,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  useLayoutWidth,
+  INPUT,
+} from '../../../admin/ui';
+
+/** One label / value line in a financial breakdown column. */
+function MoneyRow({ label, value, strong, last }) {
+  return (
+    <Div className={`flex-row items-center justify-between gap-3 py-2.5 ${last ? '' : 'border-b border-slate-100'}`}>
+      <Span className="text-sm text-slate-500 flex-1">{label}</Span>
+      <Span className={`text-sm ${strong ? 'font-bold text-slate-900' : 'font-semibold text-slate-700'}`}>{value}</Span>
+    </Div>
+  );
+}
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -55,6 +79,7 @@ export default function PointOfSale() {
   const [restaurantData, setRestaurantData] = useState(null);
   const [paymentSummary, setPaymentSummary] = useState(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const getRestaurantName = (restaurant) => {
     return String(restaurant?.name || restaurant?.restaurantName || restaurant?.restaurant?.name || '').trim();
   };
@@ -186,6 +211,7 @@ export default function PointOfSale() {
   const fetchRestaurants = async () => {
     try {
       setListLoading(true);
+      setLoadError(null);
       const response = await adminAPI.getRestaurants({
         limit: 1000,
         isActive: true,
@@ -197,6 +223,7 @@ export default function PointOfSale() {
       }
     } catch (error) {
       debugError('Error fetching restaurants:', error);
+      setLoadError(error?.response?.data?.message || error?.message || 'Failed to load restaurants');
     } finally {
       setListLoading(false);
     }
@@ -373,445 +400,279 @@ export default function PointOfSale() {
     const restaurant = restaurants.find((r) => r._id === selectedRestaurant);
     return restaurant?.name || searchQuery || 'Loading...';
   };
+  const { tablet } = useLayoutWidth();
+  const pairClass = tablet ? 'flex-row gap-3' : 'gap-3';
+  const restaurantIdLabel = restaurants.find((r) => r._id === selectedRestaurant)?.restaurantId || formatRestaurantDisplayId(selectedRestaurant);
   return (
-    <ScrollDiv className="flex-1 bg-neutral-200 w-full" keyboardShouldPersistTaps="handled">
-      <Div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full overflow-hidden">
-        {/* Header Section */}
-        <Div className="mb-6">
-          <H1 className="text-2xl font-bold text-[#334257] mb-2">Restaurant POS Analytics & Benefits</H1>
-          <P className="text-sm text-[#8a94aa]">Track restaurant performance, profits, and commission details</P>
-        </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={BarChart3}
+        title="Restaurant POS Analytics"
+        subtitle="Track restaurant performance, profits and commission details"
+        breadcrumb={[{ label: 'Food' }, { label: 'Restaurants' }, { label: 'POS analytics' }]}
+      />
 
-        {/* Restaurant Selection Card */}
-        <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6 mb-6">
-          <Div className="flex flex-col gap-4">
-            <Div>
-              <Label className="block text-sm font-medium text-[#334257] mb-2">
-                Search Restaurant by Name or ID <Span className="text-red-500">*</Span>
-              </Label>
-              <Div className="relative">
-                <UiIcon as={Search} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
-                <Input
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  onFocus={() => {
-                    if (searchQuery.trim()) {
-                      setShowSearchResults(true);
-                    }
-                  }}
-                  onBlur={() => {
-                    // Delay to allow click on results
-                    setTimeout(() => setShowSearchResults(false), 200);
-                  }}
-                  placeholder="Type restaurant name or ID to search..."
-                  className="w-full h-11 pl-10 pr-3 rounded-md border border-[#e3e6ef] bg-white text-sm text-[#4a5671] focus:outline-none focus:ring-1 focus:ring-[#006fbd]"
-                />
-
-                {/* Search Results Dropdown */}
-                {showSearchResults && filteredRestaurants.length > 0 && (
-                  <ScrollDiv nestedScrollEnabled keyboardShouldPersistTaps="handled" className="w-full mt-1 bg-white border border-[#e3e6ef] rounded-md shadow-lg max-h-60">
-                    {filteredRestaurants.map((restaurant) => (
-                      <Button
-                        key={restaurant._id}
-                        type="button"
-                        onClick={(e) => {
-                          e?.preventDefault?.();
-                          handleRestaurantSelect(restaurant._id);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-[#f9fafc] cursor-pointer border-b border-[#e3e6ef] last:border-b-0 transition-colors"
-                      >
-                        <Div className="flex items-center justify-between">
-                          <Div>
-                            <P className="text-sm font-medium text-[#334257]">{restaurant.name}</P>
-                            <P className="text-xs text-[#8a94aa]">ID: {restaurant.restaurantId}</P>
-                          </Div>
-                          {selectedRestaurant === restaurant._id && <Div className="w-2 h-2 bg-[#006fbd] rounded-full"></Div>}
-                        </Div>
-                      </Button>
-                    ))}
-                  </ScrollDiv>
-                )}
-
-                {/* No Results Message */}
-                {showSearchResults && searchQuery.trim() && filteredRestaurants.length === 0 && (
-                  <Div className="w-full mt-1 bg-white border border-[#e3e6ef] rounded-md shadow-lg p-4">
-                    <P className="text-sm text-[#8a94aa] text-center">No restaurants found matching {`"${searchQuery}"`}</P>
-                  </Div>
-                )}
-              </Div>
-              {selectedRestaurant && <P className="text-xs text-green-600 mt-2">Selected: {getSelectedRestaurantName()}</P>}
+      <Card className="mb-4 gap-4">
+        <Field label="Search restaurant by name or ID" required hint="Pick a restaurant to load its analytics">
+          <Div>
+            <Div className="flex-row items-center gap-2">
+              <UiIcon as={Search} size={16} className="text-slate-400" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => {
+                  if (searchQuery.trim()) {
+                    setShowSearchResults(true);
+                  }
+                }}
+                onBlur={() => {
+                  // Delay to allow click on results
+                  setTimeout(() => setShowSearchResults(false), 200);
+                }}
+                placeholder="Type restaurant name or ID to search..."
+                className={`${INPUT} flex-1`}
+              />
             </Div>
 
-            {/* Alternative: Dropdown Selector */}
-            <Div>
-              <Label className="block text-sm font-medium text-[#334257] mb-2">Or Select from Dropdown</Label>
-              <Div className="relative">
-                <Select
-                  value={selectedRestaurant}
-                  onChange={(e) => applyRestaurantSelection(e.target.value)}
-                  className="w-full h-11 rounded-md border border-[#e3e6ef] bg-white px-3 pr-10 text-sm text-[#4a5671] focus:outline-none focus:ring-1 focus:ring-[#006fbd]"
-                >
-                  <Option value="">Select Restaurant</Option>
-                  {restaurants.map((restaurant) => (
-                    <Option key={restaurant._id} value={restaurant._id}>
-                      {restaurant.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Div>
-            </Div>
-          </Div>
-        </Div>
-
-        {/* Analytics Dashboard */}
-        {selectedRestaurant ? (
-          analyticsLoading || listLoading ? (
-            <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-12 text-center">
-              <ActivityIndicator size="large" color="#006fbd" style={{ marginBottom: 16 }} />
-              <P className="text-sm text-[#8a94aa]">Loading restaurant analytics...</P>
-            </Div>
-          ) : (
-            <Div className="space-y-6">
-              {/* Restaurant Header Info */}
-              <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                <Div className="flex items-center justify-between gap-3">
-                  <Div className="flex-1">
-                    <H2 className="text-xl font-bold text-[#334257] mb-1">{getSelectedRestaurantName()}</H2>
-                    <P className="text-sm text-[#8a94aa]">
-                      Restaurant ID: {restaurants.find((r) => r._id === selectedRestaurant)?.restaurantId || formatRestaurantDisplayId(selectedRestaurant)}
-                    </P>
-                  </Div>
-                  <Div
-                    className={`px-4 py-2 rounded-full text-sm font-semibold ${analyticsData.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+            {showSearchResults && filteredRestaurants.length > 0 && (
+              <ScrollDiv
+                nestedScrollEnabled
+                keyboardShouldPersistTaps="handled"
+                className="mt-2 bg-white border border-slate-200 rounded-lg max-h-60"
+              >
+                {filteredRestaurants.map((restaurant) => (
+                  <Button
+                    key={restaurant._id}
+                    type="button"
+                    onClick={(e) => {
+                      e?.preventDefault?.();
+                      handleRestaurantSelect(restaurant._id);
+                    }}
+                    className="px-4 py-3 border-b border-slate-100"
                   >
-                    {analyticsData.status === 'active' ? 'Active' : 'Inactive'}
-                  </Div>
-                </Div>
+                    <Div className="flex-row items-center justify-between gap-3">
+                      <Div className="flex-1 min-w-0 gap-0.5">
+                        <Span className="text-sm font-medium text-slate-900">{restaurant.name}</Span>
+                        <Span className="text-xs text-slate-500">ID: {restaurant.restaurantId}</Span>
+                      </Div>
+                      {selectedRestaurant === restaurant._id ? <Span className="text-xs font-semibold text-blue-600">Selected</Span> : null}
+                    </Div>
+                  </Button>
+                ))}
+              </ScrollDiv>
+            )}
+
+            {showSearchResults && searchQuery.trim() && filteredRestaurants.length === 0 && (
+              <Div className="mt-2 bg-white border border-slate-200 rounded-lg p-4">
+                <Span className="text-sm text-slate-500">No restaurants found matching {`"${searchQuery}"`}</Span>
               </Div>
-
-              {/* Key Metrics Grid */}
-              <Div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Total Orders */}
-                <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                  <Div className="flex items-center justify-between mb-4">
-                    <Div className="p-3 bg-blue-100 rounded-lg">
-                      <UiIcon as={ShoppingCart} className="w-6 h-6 text-blue-600" />
-                    </Div>
-                    <UiIcon as={TrendingUp} className="w-5 h-5 text-green-500" />
-                  </Div>
-                  <H3 className="text-sm font-medium text-[#8a94aa] mb-1">Total Orders</H3>
-                  <P className="text-2xl font-bold text-[#334257]">{formatNumber(analyticsData.totalOrders)}</P>
-                  <P className="text-xs text-[#8a94aa] mt-2">Completed: {formatNumber(analyticsData.completedOrders)}</P>
-                </Div>
-
-                {/* Cancelled Orders */}
-                <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                  <Div className="flex items-center justify-between mb-4">
-                    <Div className="p-3 bg-red-100 rounded-lg">
-                      <UiIcon as={XCircle} className="w-6 h-6 text-red-600" />
-                    </Div>
-                    <Span className="text-sm font-semibold text-red-600">{analyticsData.cancellationRate.toFixed(1)}%</Span>
-                  </Div>
-                  <H3 className="text-sm font-medium text-[#8a94aa] mb-1">Cancelled Orders</H3>
-                  <P className="text-2xl font-bold text-[#334257]">{formatNumber(analyticsData.cancelledOrders)}</P>
-                  <P className="text-xs text-[#8a94aa] mt-2">Cancellation Rate</P>
-                </Div>
-
-                {/* Average Rating */}
-                <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                  <Div className="flex items-center justify-between mb-4">
-                    <Div className="p-3 bg-yellow-100 rounded-lg">
-                      <UiIcon as={Star} className="w-6 h-6 text-yellow-600 fill-yellow-600" />
-                    </Div>
-                    <Span className="text-sm font-semibold text-[#334257]">{analyticsData.averageRating.toFixed(1)}</Span>
-                  </Div>
-                  <H3 className="text-sm font-medium text-[#8a94aa] mb-1">Average Rating</H3>
-                  <P className="text-2xl font-bold text-[#334257]">{analyticsData.averageRating.toFixed(1)}</P>
-                  <P className="text-xs text-[#8a94aa] mt-2">From {formatNumber(analyticsData.totalRatings)} reviews</P>
-                </Div>
-
-                {/* Commission Rate */}
-                <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                  <Div className="flex items-center justify-between mb-4">
-                    <Div className="p-3 bg-purple-100 rounded-lg">
-                      <UiIcon as={Award} className="w-6 h-6 text-purple-600" />
-                    </Div>
-                    <Span className="text-sm font-semibold text-purple-600">{analyticsData.commissionPercentage}%</Span>
-                  </Div>
-                  <H3 className="text-sm font-medium text-[#8a94aa] mb-1">Commission Rate</H3>
-                  <P className="text-2xl font-bold text-[#334257]">{analyticsData.commissionPercentage}%</P>
-                  <P className="text-xs text-[#8a94aa] mt-2">Set Commission</P>
-                </Div>
-              </Div>
-
-              {/* Profit & Revenue Section */}
-              <Div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Monthly Profit */}
-                <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                  <Div className="flex items-center justify-between mb-4">
-                    <Div className="flex items-center gap-3">
-                      <Div className="p-3 bg-green-100 rounded-lg">
-                        <UiIcon as={Calendar} className="w-6 h-6 text-green-600" />
-                      </Div>
-                      <Div>
-                        <H3 className="text-base font-semibold text-[#334257]">Monthly Profit</H3>
-                        <P className="text-xs text-[#8a94aa]">Current Month</P>
-                      </Div>
-                    </Div>
-                    <UiIcon as={TrendingUp} className="w-5 h-5 text-green-500" />
-                  </Div>
-                  <Div className="mt-4">
-                    <P className="text-3xl font-bold text-[#334257] mb-2">{formatCurrency(analyticsData.monthlyProfit)}</P>
-                    <Div className="flex items-center gap-4 mt-4 text-sm">
-                      <Div>
-                        <Span className="text-[#8a94aa]">Orders: </Span>
-                        <Span className="font-semibold text-[#334257]">{formatNumber(analyticsData.monthlyOrders)}</Span>
-                      </Div>
-                      <Div>
-                        <Span className="text-[#8a94aa]">Avg/Month: </Span>
-                        <Span className="font-semibold text-[#334257]">{formatCurrency(analyticsData.averageMonthlyProfit)}</Span>
-                      </Div>
-                    </Div>
-                  </Div>
-                </Div>
-
-                {/* Yearly Profit */}
-                <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                  <Div className="flex items-center justify-between mb-4">
-                    <Div className="flex items-center gap-3">
-                      <Div className="p-3 bg-blue-100 rounded-lg">
-                        <UiIcon as={BarChart3} className="w-6 h-6 text-blue-600" />
-                      </Div>
-                      <Div>
-                        <H3 className="text-base font-semibold text-[#334257]">Yearly Profit</H3>
-                        <P className="text-xs text-[#8a94aa]">Current Year</P>
-                      </Div>
-                    </Div>
-                    <UiIcon as={TrendingUp} className="w-5 h-5 text-green-500" />
-                  </Div>
-                  <Div className="mt-4">
-                    <P className="text-3xl font-bold text-[#334257] mb-2">{formatCurrency(analyticsData.yearlyProfit)}</P>
-                    <Div className="flex items-center gap-4 mt-4 text-sm">
-                      <Div>
-                        <Span className="text-[#8a94aa]">Orders: </Span>
-                        <Span className="font-semibold text-[#334257]">{formatNumber(analyticsData.yearlyOrders)}</Span>
-                      </Div>
-                      <Div>
-                        <Span className="text-[#8a94aa]">Avg/Year: </Span>
-                        <Span className="font-semibold text-[#334257]">{formatCurrency(analyticsData.averageYearlyProfit)}</Span>
-                      </Div>
-                    </Div>
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Detailed Financial Breakdown */}
-              <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                <H3 className="text-lg font-semibold text-[#334257] mb-4">Financial Breakdown</H3>
-                <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Div className="space-y-4">
-                    <Div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Subtotal (Dish Price)</Span>
-                      <Span className="text-base font-semibold text-[#334257]">{formatCurrency(paymentSummary?.subtotal || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Total Revenue</Span>
-                      <Span className="text-base font-semibold text-[#334257]">{formatCurrency(analyticsData.totalRevenue)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Total Commission (Admin)</Span>
-                      <Span className="text-base font-semibold text-[#006fbd]">{formatCurrency(analyticsData.totalCommission)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Restaurant Share</Span>
-                      <Span className="text-base font-semibold text-green-600">{formatCurrency(analyticsData.restaurantEarning)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Restaurant Profit</Span>
-                      <Span className="text-base font-semibold text-emerald-700">{formatCurrency(analyticsData.restaurantProfit)}</Span>
-                    </Div>
-                  </Div>
-                  <Div className="space-y-4">
-                    <Div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Average Order Value</Span>
-                      <Span className="text-base font-semibold text-[#334257]">{formatCurrency(analyticsData.averageOrderValue)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Completion Rate</Span>
-                      <Span className="text-base font-semibold text-green-600">{analyticsData.completionRate.toFixed(1)}%</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Commission Percentage</Span>
-                      <Span className="text-base font-semibold text-[#334257]">
-                        {analyticsData.commissionPercentage !== undefined && analyticsData.commissionPercentage !== null
-                          ? `${analyticsData.commissionPercentage}%`
-                          : '0%'}
-                      </Span>
-                    </Div>
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Restaurant Payments (delivered orders) */}
-              <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                <H3 className="text-lg font-semibold text-[#334257] mb-4">Restaurant Payments (Completed Orders)</H3>
-                <P className="text-xs text-[#8a94aa] mb-4">
-                  Breakdown from delivered orders (same basis as Transaction Report). “Subtotal” reflects total dish value (food price).
-                </P>
-                <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Div className="space-y-3">
-                    <Div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Subtotal (Dish Price)</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.subtotal || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Tax</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.tax || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Delivery Fee</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.deliveryFee || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Platform Fee</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.platformFee || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Discount</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.discount || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-2">
-                      <Span className="text-sm font-semibold text-[#334257]">Total Order Value</Span>
-                      <Span className="text-sm font-bold text-[#006fbd]">{formatCurrency(paymentSummary?.total || 0)}</Span>
-                    </Div>
-                  </Div>
-
-                  <Div className="space-y-3">
-                    <Div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Restaurant Share</Span>
-                      <Span className="text-sm font-semibold text-green-700">{formatCurrency(paymentSummary?.restaurantShare || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Restaurant Commission (Admin)</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.restaurantCommission || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                      <Span className="text-sm text-[#8a94aa]">Rider Share</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.riderShare || 0)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center py-2">
-                      <Span className="text-sm text-[#8a94aa]">Platform Net Profit</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.platformNetProfit || 0)}</Span>
-                    </Div>
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Additional Details */}
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Customer Statistics */}
-                <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                  <Div className="flex items-center gap-3 mb-4">
-                    <Div className="p-2 bg-indigo-100 rounded-lg">
-                      <UiIcon as={Users} className="w-5 h-5 text-indigo-600" />
-                    </Div>
-                    <H3 className="text-base font-semibold text-[#334257]">Customer Statistics</H3>
-                  </Div>
-                  <Div className="space-y-3">
-                    <Div className="flex justify-between items-center">
-                      <Span className="text-sm text-[#8a94aa]">Total Customers</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatNumber(analyticsData.totalCustomers)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center">
-                      <Span className="text-sm text-[#8a94aa]">Repeat Customers</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatNumber(analyticsData.repeatCustomers)}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center">
-                      <Span className="text-sm text-[#8a94aa]">Customer Retention</Span>
-                      <Span className="text-sm font-semibold text-green-600">
-                        {analyticsData.totalCustomers > 0 ? ((analyticsData.repeatCustomers / analyticsData.totalCustomers) * 100).toFixed(1) : '0'}%
-                      </Span>
-                    </Div>
-                  </Div>
-                </Div>
-
-                {/* Restaurant Details */}
-                <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                  <Div className="flex items-center gap-3 mb-4">
-                    <Div className="p-2 bg-orange-100 rounded-lg">
-                      <UiIcon as={Package} className="w-5 h-5 text-orange-600" />
-                    </Div>
-                    <H3 className="text-base font-semibold text-[#334257]">Restaurant Details</H3>
-                  </Div>
-                  <Div className="space-y-3">
-                    <Div className="flex justify-between items-center">
-                      <Span className="text-sm text-[#8a94aa]">Join Date</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">
-                        {new Date(analyticsData.joinDate).toLocaleDateString('en-IN', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </Span>
-                    </Div>
-                    <Div className="flex justify-between items-center">
-                      <Span className="text-sm text-[#8a94aa]">Status</Span>
-                      <Span
-                        className={`text-sm font-semibold px-2 py-1 rounded ${analyticsData.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-                      >
-                        {analyticsData.status === 'active' ? 'Active' : 'Inactive'}
-                      </Span>
-                    </Div>
-                    <Div className="flex justify-between items-center">
-                      <Span className="text-sm text-[#8a94aa]">Total Reviews</Span>
-                      <Span className="text-sm font-semibold text-[#334257]">{formatNumber(analyticsData.totalRatings)}</Span>
-                    </Div>
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Order Statistics Summary */}
-              <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-                <H3 className="text-lg font-semibold text-[#334257] mb-4">Order Statistics Summary</H3>
-                <Div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <P className="text-2xl font-bold text-blue-600">{formatNumber(analyticsData.totalOrders)}</P>
-                    <P className="text-xs text-[#8a94aa] mt-1">Total Orders</P>
-                  </Div>
-                  <Div className="text-center p-4 bg-green-50 rounded-lg">
-                    <P className="text-2xl font-bold text-green-600">{formatNumber(analyticsData.completedOrders)}</P>
-                    <P className="text-xs text-[#8a94aa] mt-1">Completed</P>
-                  </Div>
-                  <Div className="text-center p-4 bg-red-50 rounded-lg">
-                    <P className="text-2xl font-bold text-red-600">{formatNumber(analyticsData.cancelledOrders)}</P>
-                    <P className="text-xs text-[#8a94aa] mt-1">Cancelled</P>
-                  </Div>
-                  <Div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <P className="text-2xl font-bold text-yellow-600">{analyticsData.completionRate.toFixed(1)}%</P>
-                    <P className="text-xs text-[#8a94aa] mt-1">Success Rate</P>
-                  </Div>
-                </Div>
-              </Div>
-            </Div>
-          )
-        ) : listLoading ? (
-          <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-12 text-center">
-            <ActivityIndicator size="large" color="#006fbd" style={{ marginBottom: 16 }} />
-            <P className="text-sm text-[#8a94aa]">Loading restaurants...</P>
+            )}
           </Div>
+        </Field>
+
+        <Field label="Or select from the list">
+          <Select value={selectedRestaurant} onChange={(e) => applyRestaurantSelection(e.target.value)} className={INPUT}>
+            <Option value="">Select Restaurant</Option>
+            {restaurants.map((restaurant) => (
+              <Option key={restaurant._id} value={restaurant._id}>
+                {restaurant.name}
+              </Option>
+            ))}
+          </Select>
+        </Field>
+      </Card>
+
+      {selectedRestaurant ? (
+        analyticsLoading || listLoading ? (
+          <LoadingState label="Loading restaurant analytics…" />
         ) : (
-          <Div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-12 text-center">
-            <Div className="w-16 h-16 rounded-full border-2 border-dashed border-[#d1d7e6] flex items-center justify-center mx-auto mb-4">
-              <UiIcon as={Search} className="w-8 h-8 text-[#8a94aa]" />
+          <Div className="gap-4">
+            <Card>
+              <Div className="flex-row items-start justify-between gap-3">
+                <Div className="flex-1 min-w-0 gap-1">
+                  <Span className="text-lg font-bold text-slate-900">{getSelectedRestaurantName()}</Span>
+                  <Span className="text-sm text-slate-500">Restaurant ID: {restaurantIdLabel}</Span>
+                </Div>
+                <StatusBadge status={analyticsData.status === 'active' ? 'active' : 'inactive'} label={analyticsData.status === 'active' ? 'Active' : 'Inactive'} />
+              </Div>
+            </Card>
+
+            <StatGrid>
+              <StatCard
+                label="Total Orders"
+                value={formatNumber(analyticsData.totalOrders)}
+                hint={`Completed: ${formatNumber(analyticsData.completedOrders)}`}
+                icon={ShoppingCart}
+                tone="info"
+              />
+              <StatCard
+                label="Cancelled Orders"
+                value={formatNumber(analyticsData.cancelledOrders)}
+                hint={`Cancellation rate ${analyticsData.cancellationRate.toFixed(1)}%`}
+                icon={XCircle}
+                tone="danger"
+              />
+              <StatCard
+                label="Average Rating"
+                value={analyticsData.averageRating.toFixed(1)}
+                hint={`From ${formatNumber(analyticsData.totalRatings)} reviews`}
+                icon={Star}
+                tone="warning"
+              />
+              <StatCard
+                label="Commission Rate"
+                value={`${analyticsData.commissionPercentage}%`}
+                hint="Set commission"
+                icon={Award}
+                tone="info"
+              />
+            </StatGrid>
+
+            <Div className={pairClass}>
+              <Card className="flex-1 gap-2">
+                <SectionTitle className="mb-0">Monthly Profit</SectionTitle>
+                <Span className="text-sm text-slate-500">Current month</Span>
+                <Span className="text-2xl font-bold text-slate-900">{formatCurrency(analyticsData.monthlyProfit)}</Span>
+                <MoneyRow label="Orders" value={formatNumber(analyticsData.monthlyOrders)} />
+                <MoneyRow label="Average / month" value={formatCurrency(analyticsData.averageMonthlyProfit)} last />
+              </Card>
+              <Card className="flex-1 gap-2">
+                <SectionTitle className="mb-0">Yearly Profit</SectionTitle>
+                <Span className="text-sm text-slate-500">Current year</Span>
+                <Span className="text-2xl font-bold text-slate-900">{formatCurrency(analyticsData.yearlyProfit)}</Span>
+                <MoneyRow label="Orders" value={formatNumber(analyticsData.yearlyOrders)} />
+                <MoneyRow label="Average / year" value={formatCurrency(analyticsData.averageYearlyProfit)} last />
+              </Card>
             </Div>
-            <P className="text-base font-medium text-[#334257] mb-2">Select a Restaurant</P>
-            <P className="text-sm text-[#8a94aa] max-w-md mx-auto">
-              Please select a restaurant from the dropdown above to view detailed analytics, profit information, and commission details.
-            </P>
+
+            <Card>
+              <SectionTitle>Financial Breakdown</SectionTitle>
+              <Div className={pairClass}>
+                <Div className="flex-1">
+                  <MoneyRow label="Subtotal (dish price)" value={formatCurrency(paymentSummary?.subtotal || 0)} />
+                  <MoneyRow label="Total revenue" value={formatCurrency(analyticsData.totalRevenue)} />
+                  <MoneyRow label="Total commission (admin)" value={formatCurrency(analyticsData.totalCommission)} />
+                  <MoneyRow label="Restaurant share" value={formatCurrency(analyticsData.restaurantEarning)} />
+                  <MoneyRow label="Restaurant profit" value={formatCurrency(analyticsData.restaurantProfit)} last={!tablet} />
+                </Div>
+                <Div className="flex-1">
+                  <MoneyRow label="Average order value" value={formatCurrency(analyticsData.averageOrderValue)} />
+                  <MoneyRow label="Completion rate" value={`${analyticsData.completionRate.toFixed(1)}%`} />
+                  <MoneyRow
+                    label="Commission percentage"
+                    value={
+                      analyticsData.commissionPercentage !== undefined && analyticsData.commissionPercentage !== null
+                        ? `${analyticsData.commissionPercentage}%`
+                        : '0%'
+                    }
+                    last
+                  />
+                </Div>
+              </Div>
+            </Card>
+
+            <Card>
+              <SectionTitle>Restaurant Payments (completed orders)</SectionTitle>
+              <Span className="text-xs text-slate-500 mb-3">
+                Breakdown from delivered orders (same basis as the Transaction Report). “Subtotal” reflects total dish value (food price).
+              </Span>
+              <Div className={pairClass}>
+                <Div className="flex-1">
+                  <MoneyRow label="Subtotal (dish price)" value={formatCurrency(paymentSummary?.subtotal || 0)} />
+                  <MoneyRow label="Tax" value={formatCurrency(paymentSummary?.tax || 0)} />
+                  <MoneyRow label="Delivery fee" value={formatCurrency(paymentSummary?.deliveryFee || 0)} />
+                  <MoneyRow label="Platform fee" value={formatCurrency(paymentSummary?.platformFee || 0)} />
+                  <MoneyRow label="Discount" value={formatCurrency(paymentSummary?.discount || 0)} />
+                  <MoneyRow label="Total order value" value={formatCurrency(paymentSummary?.total || 0)} strong last />
+                </Div>
+                <Div className="flex-1">
+                  <MoneyRow label="Restaurant share" value={formatCurrency(paymentSummary?.restaurantShare || 0)} />
+                  <MoneyRow label="Restaurant commission (admin)" value={formatCurrency(paymentSummary?.restaurantCommission || 0)} />
+                  <MoneyRow label="Rider share" value={formatCurrency(paymentSummary?.riderShare || 0)} />
+                  <MoneyRow label="Platform net profit" value={formatCurrency(paymentSummary?.platformNetProfit || 0)} last />
+                </Div>
+              </Div>
+            </Card>
+
+            <Div className={pairClass}>
+              <Card className="flex-1">
+                <SectionTitle>
+                  <Div className="flex-row items-center gap-2">
+                    <UiIcon as={Users} size={16} className="text-slate-500" />
+                    <Span className="text-base font-semibold text-slate-900">Customer Statistics</Span>
+                  </Div>
+                </SectionTitle>
+                <MoneyRow label="Total customers" value={formatNumber(analyticsData.totalCustomers)} />
+                <MoneyRow label="Repeat customers" value={formatNumber(analyticsData.repeatCustomers)} />
+                <MoneyRow
+                  label="Customer retention"
+                  value={`${analyticsData.totalCustomers > 0 ? ((analyticsData.repeatCustomers / analyticsData.totalCustomers) * 100).toFixed(1) : '0'}%`}
+                  last
+                />
+              </Card>
+              <Card className="flex-1">
+                <SectionTitle>
+                  <Div className="flex-row items-center gap-2">
+                    <UiIcon as={Package} size={16} className="text-slate-500" />
+                    <Span className="text-base font-semibold text-slate-900">Restaurant Details</Span>
+                  </Div>
+                </SectionTitle>
+                <MoneyRow
+                  label="Join date"
+                  value={new Date(analyticsData.joinDate).toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                />
+                <Div className="flex-row items-center justify-between gap-3 py-2.5 border-b border-slate-100">
+                  <Span className="text-sm text-slate-500 flex-1">Status</Span>
+                  <StatusBadge
+                    status={analyticsData.status === 'active' ? 'active' : 'inactive'}
+                    label={analyticsData.status === 'active' ? 'Active' : 'Inactive'}
+                  />
+                </Div>
+                <MoneyRow label="Total reviews" value={formatNumber(analyticsData.totalRatings)} last />
+              </Card>
+            </Div>
+
+            <Card>
+              <SectionTitle>Order Statistics Summary</SectionTitle>
+              <Div className={`grid grid-cols-${tablet ? 4 : 2} gap-3`}>
+                <Div className="p-3 rounded-lg bg-slate-50 items-center gap-1">
+                  <Span className="text-xl font-bold text-slate-900">{formatNumber(analyticsData.totalOrders)}</Span>
+                  <Span className="text-xs text-slate-500">Total orders</Span>
+                </Div>
+                <Div className="p-3 rounded-lg bg-slate-50 items-center gap-1">
+                  <Span className="text-xl font-bold text-slate-900">{formatNumber(analyticsData.completedOrders)}</Span>
+                  <Span className="text-xs text-slate-500">Completed</Span>
+                </Div>
+                <Div className="p-3 rounded-lg bg-slate-50 items-center gap-1">
+                  <Span className="text-xl font-bold text-slate-900">{formatNumber(analyticsData.cancelledOrders)}</Span>
+                  <Span className="text-xs text-slate-500">Cancelled</Span>
+                </Div>
+                <Div className="p-3 rounded-lg bg-slate-50 items-center gap-1">
+                  <Span className="text-xl font-bold text-slate-900">{analyticsData.completionRate.toFixed(1)}%</Span>
+                  <Span className="text-xs text-slate-500">Success rate</Span>
+                </Div>
+              </Div>
+            </Card>
           </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+        )
+      ) : listLoading ? (
+        <LoadingState label="Loading restaurants…" />
+      ) : loadError ? (
+        <ErrorState title="Could not load restaurants" message={loadError} onRetry={fetchRestaurants} />
+      ) : restaurants.length === 0 ? (
+        <EmptyState title="No restaurants yet" message="Once a restaurant is onboarded it will appear here with its POS analytics." />
+      ) : (
+        <EmptyState
+          icon={Search}
+          title="Select a restaurant"
+          message="Search above or pick a restaurant from the list to view its analytics, profit and commission details."
+        />
+      )}
+    </AdminPage>
   );
 }

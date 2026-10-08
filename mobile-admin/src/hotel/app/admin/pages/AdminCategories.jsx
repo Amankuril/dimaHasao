@@ -1,6 +1,6 @@
 /* Ported from Frontend/src/modules/Hotel/app/admin/pages/AdminCategories.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, GripVertical, X, Save, AlertCircle } from 'lucide-react-native';
+import { Edit2, X, Save, LayoutGrid } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import { pickImage } from '../../../../lib/files';
 import { window } from '../../../../lib/webShim';
@@ -11,55 +11,52 @@ import * as LucideIconSet from 'lucide-react-native';
 const LucideIcons = { ...LucideIconSet };
 
 // Icon Picker Component
+import { Button, CheckBox, Div, Form, H2, Img, Input, Overlay, P, ScrollDiv, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
 import {
-  Button,
-  Code,
-  Div,
-  Form,
-  H1,
-  H2,
-  Img,
-  Input,
-  Label,
-  Overlay,
-  P,
-  ScrollDiv,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Textarea,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Field,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  useLayoutWidth,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
+const COLS = [90, 200, 120, 150, 120, 90];
 const IconPicker = ({ value, onChange }) => {
-  const [search, setSearch] = useState('');
-
   // Common icons for property types
   const commonIcons = ['Building2', 'Home', 'Palmtree', 'Hotel', 'Building', 'BedDouble', 'Tent', 'Castle', 'Warehouse', 'Mountain', 'Trees', 'Waves'];
   return (
-    <Div className="space-y-2">
-      <Label className="block text-sm font-medium text-gray-700">Icon</Label>
-      <ScrollDiv className="p-3 border rounded-lg max-h-40" contentClassName="flex flex-row flex-wrap gap-2">
+    <Field label="Icon" hint={`Selected: ${value}`}>
+      <ScrollDiv className="p-2 border border-slate-300 rounded-lg max-h-40" contentClassName="flex-row flex-wrap gap-2">
         {commonIcons.map((iconName) => {
           const Icon = LucideIcons[iconName];
           if (!Icon) return null;
+          const selected = value === iconName;
           return (
             <Button
               key={iconName}
               type="button"
               onClick={() => onChange(iconName)}
-              className={`p-2 rounded-lg transition-colors ${value === iconName ? 'bg-amber-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+              className={`w-11 h-11 rounded-lg items-center justify-center ${selected ? 'bg-blue-600' : 'bg-slate-100'}`}
+              accessibilityLabel={iconName}
             >
-              <UiIcon as={Icon} size={20} />
+              <UiIcon as={Icon} size={20} className={selected ? 'text-white' : 'text-slate-700'} />
             </Button>
           );
         })}
       </ScrollDiv>
-      <Div className="text-xs text-gray-500">Selected: {value}</Div>
-    </Div>
+    </Field>
   );
 };
 const CategoryModal = ({ category, onClose, onSuccess }) => {
@@ -74,6 +71,7 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const { tablet } = useLayoutWidth();
   useEffect(() => {
     if (category) {
       setFormData({
@@ -138,19 +136,20 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
   };
   return (
     <Overlay onClose={onClose} className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <Div className="bg-white rounded-xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
-        <Div className="flex justify-between items-center p-6 border-b shrink-0">
-          <H2 className="text-xl font-bold text-gray-900">{category ? 'Edit Category' : 'Add New Category'}</H2>
-          <Button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <UiIcon as={X} size={24} />
+      <Div className="bg-white rounded-xl border border-slate-200 w-full max-w-lg flex flex-col max-h-[90vh]">
+        <Div className="flex-row justify-between items-center gap-3 p-4 border-b border-slate-200 shrink-0">
+          <H2 className="text-xl font-bold text-slate-900 flex-1" numberOfLines={1}>
+            {category ? 'Edit Category' : 'Add New Category'}
+          </H2>
+          <Button onClick={onClose} className="w-11 h-11 rounded-lg items-center justify-center shrink-0" accessibilityLabel="Close">
+            <UiIcon as={X} size={20} className="text-slate-500" />
           </Button>
         </Div>
 
         <Form onSubmit={handleSubmit} className="flex flex-col flex-shrink min-h-0">
-          <ScrollDiv className="p-6 space-y-4 flex-shrink">
-            <Div className="grid grid-cols-2 gap-4">
-              <Div>
-                <Label className="block text-sm font-medium text-gray-700 mb-1">Internal Name</Label>
+          <ScrollDiv className="p-4 flex-shrink" contentClassName="gap-3">
+            <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+              <Field label="Internal name" required className={tablet ? 'flex-1 min-w-[240px]' : null}>
                 <Input
                   type="text"
                   required
@@ -161,12 +160,11 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
                       name: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  className={INPUT}
                   placeholder="e.g. Luxury Villas"
                 />
-              </Div>
-              <Div>
-                <Label className="block text-sm font-medium text-gray-700 mb-1">Display Name</Label>
+              </Field>
+              <Field label="Display name" required className={tablet ? 'flex-1 min-w-[240px]' : null}>
                 <Input
                   type="text"
                   required
@@ -177,14 +175,13 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
                       displayName: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  className={INPUT}
                   placeholder="e.g. Luxury"
                 />
-              </Div>
+              </Field>
             </Div>
 
-            <Div>
-              <Label className="block text-sm font-medium text-gray-700 mb-1">Description</Label>
+            <Field label="Description">
               <Textarea
                 value={formData.description}
                 onChange={(e) =>
@@ -193,11 +190,11 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
                     description: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
-                rows="2"
-                placeholder="Short description..."
+                className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+                rows={2}
+                placeholder="Short description…"
               />
-            </Div>
+            </Field>
 
             <IconPicker
               value={formData.icon}
@@ -209,11 +206,10 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
               }
             />
 
-            <Div className="grid grid-cols-2 gap-4">
-              <Div>
-                <Label className="block text-sm font-medium text-gray-700 mb-1">Color</Label>
-                <Div className="flex items-center gap-2">
-                  <Div className="h-10 w-10 rounded border border-gray-200" style={{ backgroundColor: formData.color }} />
+            <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+              <Field label="Colour" className={tablet ? 'flex-1 min-w-[240px]' : null}>
+                <Div className="flex-row items-center gap-2">
+                  <Div className="h-11 w-11 rounded-lg border border-slate-200 shrink-0" style={{ backgroundColor: formData.color }} />
                   <Input
                     type="text"
                     value={formData.color}
@@ -223,12 +219,11 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
                         color: e.target.value,
                       })
                     }
-                    className="flex-1 px-3 py-2 border rounded-lg uppercase"
+                    className={`${INPUT} flex-1`}
                   />
                 </Div>
-              </Div>
-              <Div>
-                <Label className="block text-sm font-medium text-gray-700 mb-1">Badge Text</Label>
+              </Field>
+              <Field label="Badge text" hint="Optional ribbon on the category tab" className={tablet ? 'flex-1 min-w-[240px]' : null}>
                 <Input
                   type="text"
                   value={formData.badge}
@@ -238,18 +233,17 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
                       badge: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  className={INPUT}
                   placeholder="Optional"
                 />
-              </Div>
+              </Field>
             </Div>
 
-            <Div>
-              <Label className="block text-sm font-medium text-gray-700 mb-1">Background Image</Label>
-              <Div className="flex items-center gap-4">
-                {formData.bgImage && (
-                  <Div className="relative w-24 h-16 rounded-lg overflow-hidden border">
-                    <Img src={formData.bgImage} alt="Bg preview" className="w-full h-full object-cover" />
+            <Field label="Background image" hint={uploadLoading ? 'Uploading image…' : 'Recommended: 1920x1080 (for hero sections)'}>
+              <Div className="flex-row items-center gap-3">
+                {formData.bgImage ? (
+                  <Div className="relative w-24 h-16 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                    <Img src={formData.bgImage} alt="Background preview" className="w-full h-full object-cover" />
                     <Button
                       type="button"
                       onClick={() =>
@@ -258,37 +252,27 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
                           bgImage: '',
                         }))
                       }
-                      className="absolute top-1 right-1 bg-white rounded-full p-0.5 text-red-500 hover:text-red-700"
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white items-center justify-center"
+                      accessibilityLabel="Remove background image"
                     >
-                      <UiIcon as={X} size={14} />
+                      <UiIcon as={X} size={14} className="text-red-600" />
                     </Button>
                   </Div>
-                )}
-                <Div className="flex-1">
-                  <Button
-                    type="button"
-                    onClick={handleImageUpload}
-                    disabled={uploadLoading || loading}
-                    className="self-start py-2 px-4 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold"
-                  >
-                    Choose File
-                  </Button>
-                  {uploadLoading ? (
-                    <Div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <Div className="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                      <Span>Uploading image...</Span>
-                    </Div>
-                  ) : (
-                    <P className="text-xs text-gray-400 mt-1">Recommended: 1920x1080 (For Hero Sections)</P>
-                  )}
-                </Div>
+                ) : null}
+                <Button
+                  type="button"
+                  onClick={handleImageUpload}
+                  disabled={uploadLoading || loading}
+                  className={`${BTN_SECONDARY} flex-1 ${uploadLoading || loading ? 'opacity-60' : ''}`}
+                >
+                  <Span className={BTN_TEXT_SECONDARY}>{uploadLoading ? 'Uploading…' : 'Choose file'}</Span>
+                </Button>
               </Div>
-            </Div>
+            </Field>
 
-            <Div className="flex items-center gap-2 pt-2">
-              <Input
-                type="checkbox"
-                nativeID="isActive"
+            <Div className="flex-row items-center gap-2 py-1">
+              <CheckBox
+                className="w-5 h-5"
                 checked={formData.isActive}
                 onChange={(e) =>
                   setFormData({
@@ -296,33 +280,18 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
                     isActive: e.target.checked,
                   })
                 }
-                className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
               />
-              <Label className="text-sm font-medium text-gray-700">Active (Visible to users)</Label>
+              <P className="text-sm text-slate-700">Active (visible to users)</P>
             </Div>
           </ScrollDiv>
 
-          <Div className="flex gap-3 p-6 border-t bg-gray-50 shrink-0">
-            <Button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
+          <Div className="flex-row gap-2 p-4 border-t border-slate-200 bg-slate-50 shrink-0">
+            <Button type="button" onClick={onClose} className={`${BTN_SECONDARY} flex-1`}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button
-              type="submit"
-              disabled={loading || uploadLoading}
-              className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {loading ? (
-                <Div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <UiIcon as={Save} size={18} />
-                  <Span>Save Category</Span>
-                </>
-              )}
+            <Button type="submit" disabled={loading || uploadLoading} className={`${BTN_PRIMARY} flex-1 ${loading || uploadLoading ? 'opacity-60' : ''}`}>
+              <UiIcon as={Save} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>{loading ? 'Saving…' : 'Save category'}</Span>
             </Button>
           </Div>
         </Form>
@@ -333,6 +302,7 @@ const CategoryModal = ({ category, onClose, onSuccess }) => {
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   useEffect(() => {
@@ -340,10 +310,12 @@ const AdminCategories = () => {
   }, []);
   const fetchCategories = async () => {
     try {
+      setLoadError(null);
       const data = await adminService.getAllCategories();
       setCategories(data);
     } catch (error) {
       toast.error('Failed to fetch categories');
+      setLoadError(error?.response?.data?.message || error?.message || 'Failed to fetch categories.');
     } finally {
       setLoading(false);
     }
@@ -367,105 +339,73 @@ const AdminCategories = () => {
     }
   };
   return (
-    <ScrollDiv className="p-2 pb-10">
-      <Div className="flex justify-between items-center mb-6">
-        <Div className="flex-1">
-          <H1 className="text-2xl font-bold text-gray-900">Property Categories</H1>
-          <P className="text-gray-500 text-sm mt-1">Manage dynamic property types and tabs</P>
-        </Div>
-        {/* Add Category Button Removed */}
-      </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={LayoutGrid}
+        title="Property Categories"
+        subtitle="Manage the property types and tabs shown to guests."
+        breadcrumb={[{ label: 'Hotel' }, { label: 'Categories' }]}
+      />
 
-      {/* Categories List */}
-      <Div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? (
-          <Div className="p-12 flex justify-center">
-            <Div className="w-8 h-8 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin" />
-          </Div>
-        ) : categories.length === 0 ? (
-          <Div className="p-12 text-center text-gray-500 flex flex-col items-center">
-            <UiIcon as={AlertCircle} className="w-12 h-12 text-gray-300 mb-3" />
-            <P className="text-lg font-medium">No dynamic categories found</P>
-            <P className="text-sm">Create a new category to get started</P>
-          </Div>
-        ) : (
-          <Table cols={[90, 200, 110, 140, 110, 90]} className="w-full">
-            <Thead className="bg-gray-50 border-b border-gray-100">
-              <Tr>
-                <Th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order</Th>
-                <Th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category Info</Th>
-                <Th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Bg Image</Th>
-                <Th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Slug</Th>
-                <Th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</Th>
-                <Th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody className="divide-y divide-gray-100">
-              {categories.map((cat) => {
-                const Icon = LucideIcons[cat.icon] || LucideIcons.HelpCircle;
-                return (
-                  <Tr key={cat._id} className="hover:bg-gray-50 transition-colors">
-                    <Td className="px-6 py-4">
-                      <Div className="flex items-center gap-2 text-gray-400 ">
-                        <UiIcon as={GripVertical} size={16} />
-                        <Span className="text-xs font-mono">{cat.order || '-'}</Span>
-                      </Div>
-                    </Td>
-                    <Td className="px-6 py-4">
-                      <Div className="flex items-center gap-3">
-                        <Div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm"
-                          style={{
-                            backgroundColor: cat.color,
-                          }}
-                        >
-                          <UiIcon as={Icon} size={20} />
-                        </Div>
-                        <Div>
-                          <Div className="font-semibold text-gray-900">{cat.displayName}</Div>
-                          {cat.badge && (
-                            <Span className="self-start px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 mt-0.5">
-                              {cat.badge}
-                            </Span>
-                          )}
-                        </Div>
-                      </Div>
-                    </Td>
-                    <Td className="px-6 py-4">
-                      {cat.bgImage ? (
-                        <Img src={cat.bgImage} alt="bg" className="w-16 h-10 object-cover rounded shadow-sm border border-gray-200" />
-                      ) : (
-                        <Span className="text-xs text-gray-400">None</Span>
-                      )}
-                    </Td>
-                    <Td className="px-6 py-4">
-                      <Code className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{cat.slug}</Code>
-                    </Td>
-                    <Td className="px-6 py-4">
-                      <Span
-                        className={`self-start px-2.5 py-0.5 rounded-full text-xs font-medium ${cat.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
+      {loadError ? (
+        <ErrorState title="Could not load categories" message={loadError} onRetry={fetchCategories} />
+      ) : loading ? (
+        <LoadingState label="Loading categories…" />
+      ) : categories.length === 0 ? (
+        <EmptyState icon={LayoutGrid} title="No categories found" message="Property categories configured for the platform appear here." />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={['Order', 'Category', 'Bg image', 'Slug', 'Status', 'Actions']} />
+          <TBody>
+            {categories.map((cat, i) => {
+              const Icon = LucideIcons[cat.icon] || LucideIcons.HelpCircle;
+              return (
+                <Row key={cat._id} last={i === categories.length - 1}>
+                  <Cell width={COLS[0]}>{cat.order != null ? String(cat.order) : '—'}</Cell>
+                  <Cell width={COLS[1]}>
+                    <Div className="flex-row items-center gap-3">
+                      <Div
+                        className="w-10 h-10 rounded-lg items-center justify-center shrink-0"
+                        style={{
+                          backgroundColor: cat.color,
+                        }}
                       >
-                        {cat.isActive ? 'Active' : 'Inactive'}
-                      </Span>
-                    </Td>
-                    <Td className="px-6 py-4 text-right">
-                      <Div className="flex items-center justify-end gap-2">
-                        <Button
-                          onClick={() => handleEdit(cat)}
-                          className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                        >
-                          <UiIcon as={Edit2} size={18} />
-                        </Button>
-                        {/* Delete Button Removed */}
+                        <UiIcon as={Icon} size={20} className="text-white" />
                       </Div>
-                    </Td>
-                  </Tr>
-                );
-              })}
-            </Tbody>
-          </Table>
-        )}
-      </Div>
+                      <Div className="flex-1 min-w-0">
+                        <P numberOfLines={2} className="text-sm font-semibold text-slate-900">
+                          {cat.displayName}
+                        </P>
+                        {cat.badge ? <StatusBadge tone="info" label={cat.badge} className="mt-0.5" /> : null}
+                      </Div>
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[2]}>
+                    {cat.bgImage ? (
+                      <Img src={cat.bgImage} alt="Category background" className="w-16 h-10 object-cover rounded border border-slate-200" />
+                    ) : (
+                      <Span className="text-sm text-slate-400">None</Span>
+                    )}
+                  </Cell>
+                  <Cell width={COLS[3]}>{cat.slug}</Cell>
+                  <Cell width={COLS[4]}>
+                    <StatusBadge status={cat.isActive ? 'active' : 'inactive'} label={cat.isActive ? 'Active' : 'Inactive'} />
+                  </Cell>
+                  <Cell width={COLS[5]} align="center">
+                    <Button
+                      onClick={() => handleEdit(cat)}
+                      className="w-11 h-11 rounded-lg items-center justify-center"
+                      accessibilityLabel={`Edit ${cat.displayName}`}
+                    >
+                      <UiIcon as={Edit2} size={18} className="text-blue-600" />
+                    </Button>
+                  </Cell>
+                </Row>
+              );
+            })}
+          </TBody>
+        </DataTable>
+      )}
 
       {showModal && (
         <CategoryModal
@@ -477,7 +417,7 @@ const AdminCategories = () => {
           }}
         />
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default AdminCategories;

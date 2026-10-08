@@ -1,13 +1,28 @@
 /* Ported from Frontend/src/modules/Tours/app/admin/pages/Dashboard.jsx (tools/port.js first pass). */
 import React, { useEffect, useState } from 'react';
-import { useWindowDimensions } from 'react-native';
 import { LineChart, PieChart } from 'react-native-gifted-charts';
 import { Package, Calendar, Ticket, Star, MapPin, Tag } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, StatCard, StatusPill, currency } from '../components/ui';
+import { currency } from '../components/ui';
+import {
+  A,
+  AdminPage,
+  Card,
+  EmptyState,
+  LoadingState,
+  PageHeader,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  useLayoutWidth,
+  AXIS_TEXT,
+  useChartWidth,
+  chartSpacing,
+} from '../../../../admin/ui';
 import { toast } from '../../../../lib/notify';
-import { Div, H3, Link, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
-const PIE_COLORS = ['#0a4d2b', '#caa83e', '#2563eb', '#dc2626', '#7c3aed', '#6b7280'];
+import { Div, Link, P, Span, Icon as UiIcon } from '../../../../components/web';
+const PIE_COLORS = ['#155DFC', '#008236', '#BB4D00', '#C10007', '#7C3AED', '#62748E'];
 
 /** Month buckets come back as "2026-09" — render them the way a person reads a chart. */
 const monthLabel = (key) => {
@@ -17,36 +32,24 @@ const monthLabel = (key) => {
     month: 'short',
   });
 };
-const SectionCard = ({ title, subtitle, action, children }) => (
-  <Div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-    <Div className="flex items-center justify-between mb-4">
-      <Div>
-        <H3 className="text-base font-bold text-gray-900">{title}</H3>
-        {subtitle && <P className="text-xs text-gray-400 mt-0.5">{subtitle}</P>}
-      </Div>
-      {action}
-    </Div>
-    {children}
-  </Div>
-);
 const MiniStat = ({ icon: Icon, label, value, to }) => {
   const body = (
-    <Div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
-      <Div className="p-2 rounded-lg bg-[#0a4d2b]/10 text-[#0a4d2b]">
-        <UiIcon as={Icon} size={16} className="text-[#0a4d2b]" />
+    <Card className="flex-row items-center gap-3">
+      <Div className="w-10 h-10 rounded-lg bg-blue-100 items-center justify-center shrink-0">
+        <UiIcon as={Icon} size={18} className="text-blue-600" />
       </Div>
-      <Div>
-        <P className="text-lg font-black text-gray-900 leading-none">{value}</P>
-        <P className="text-[11px] text-gray-400 mt-1">{label}</P>
+      <Div className="flex-1 min-w-0">
+        <P className="text-xl font-bold text-slate-900">{value}</P>
+        <P className="text-xs text-slate-500 mt-0.5">{label}</P>
       </Div>
-    </Div>
+    </Card>
   );
   return to ? <Link to={to}>{body}</Link> : body;
 };
 const Dashboard = () => {
-  const { width: screenWidth } = useWindowDimensions();
-  // Page padding (16 × 2) + card padding (24 × 2) + the y-axis label column.
-  const chartWidth = Math.max(160, screenWidth - 32 - 48 - 50);
+  const { columns } = useLayoutWidth();
+  // Page gutter (16 × 2) + card padding (16 × 2).
+  const chartWidth = useChartWidth(50, 1200);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -56,7 +59,13 @@ const Dashboard = () => {
       .catch((e) => toast.error(e.message || 'Failed to load dashboard'))
       .finally(() => setLoading(false));
   }, []);
-  if (loading) return <Spinner />;
+  if (loading)
+    return (
+      <AdminPage maxWidth={1200}>
+        <PageHeader title="Tours Overview" subtitle="Packages, bookings, festivals, tourist places, offers and reviews — the whole module at a glance." />
+        <LoadingState label="Loading the overview…" />
+      </AdminPage>
+    );
   const s = stats || {};
   const revenueTrend = (s.revenueTrend || []).map((row) => ({
     name: monthLabel(row.name),
@@ -68,51 +77,47 @@ const Dashboard = () => {
   }));
   const festivalStatusEntries = Object.entries(s.festivalsByStatus || {});
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-6">
+    <AdminPage maxWidth={1200}>
       <PageHeader title="Tours Overview" subtitle="Packages, bookings, festivals, tourist places, offers and reviews — the whole module at a glance." />
 
-      {/* Top-line counts for every entity in the sidebar */}
-      <Div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-        <MiniStat icon={Package} label="Packages" value={s.packages ?? 0} to="/tours/admin/packages" />
-        <MiniStat icon={Calendar} label="Bookings" value={s.bookings ?? 0} to="/tours/admin/bookings" />
-        <MiniStat icon={Ticket} label="Festivals" value={s.festivals ?? 0} to="/tours/admin/festivals" />
-        <MiniStat icon={MapPin} label="Tourist Places" value={s.destinations ?? 0} to="/tours/admin/destinations" />
-        <MiniStat icon={Tag} label="Offers" value={s.offers ?? 0} to="/tours/admin/offers" />
-        <MiniStat icon={Star} label="Reviews" value={s.reviews ?? 0} to="/tours/admin/reviews" />
-      </Div>
-
-      {/* Queues needing attention */}
-      <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link to="/tours/admin/packages?status=pending" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-          <Div>
-            <P className="text-xs font-bold text-gray-400 uppercase tracking-wider">Awaiting review</P>
-            <P className="text-xl font-black text-gray-900 mt-1">{s.pendingPackages ?? 0} packages</P>
+      {!stats ? (
+        <EmptyState title="No overview yet" message="Nothing has been recorded for the tours module so far." />
+      ) : (
+        <>
+          {/* Top-line counts for every entity in the sidebar */}
+          <Div className={`grid grid-cols-${columns} gap-3 mb-4`}>
+            <MiniStat icon={Package} label="Packages" value={s.packages ?? 0} to="/tours/admin/packages" />
+            <MiniStat icon={Calendar} label="Bookings" value={s.bookings ?? 0} to="/tours/admin/bookings" />
+            <MiniStat icon={Ticket} label="Festivals" value={s.festivals ?? 0} to="/tours/admin/festivals" />
+            <MiniStat icon={MapPin} label="Tourist Places" value={s.destinations ?? 0} to="/tours/admin/destinations" />
+            <MiniStat icon={Tag} label="Offers" value={s.offers ?? 0} to="/tours/admin/offers" />
+            <MiniStat icon={Star} label="Reviews" value={s.reviews ?? 0} to="/tours/admin/reviews" />
           </Div>
-        </Link>
-        <Link to="/tours/admin/reviews" className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-          <Div>
-            <P className="text-xs font-bold text-gray-400 uppercase tracking-wider">Reviews to moderate</P>
-            <P className="text-xl font-black text-gray-900 mt-1">{s.pendingReviews ?? 0} pending</P>
-          </Div>
-        </Link>
-      </Div>
 
-      {/* Money */}
-      <Div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Gross booked (tours)" value={currency(s.gross)} tone="text-[#0a4d2b]" />
-        <StatCard label="Confirmed revenue" value={currency(s.confirmedRevenue)} tone="text-[#0a4d2b]" />
-        <StatCard label="Tax collected" value={currency(s.taxes)} />
-        <StatCard label="Festival revenue" value={currency(s.festivalRevenue)} tone="text-[#0a4d2b]" />
-      </Div>
+          {/* Queues needing attention */}
+          <StatGrid className="mb-4">
+            <Link to="/tours/admin/packages?status=pending">
+              <StatCard label="Awaiting review" value={`${s.pendingPackages ?? 0} packages`} tone="warning" hint="Tap to review them" />
+            </Link>
+            <Link to="/tours/admin/reviews">
+              <StatCard label="Reviews to moderate" value={`${s.pendingReviews ?? 0} pending`} tone="warning" hint="Tap to moderate" />
+            </Link>
+          </StatGrid>
 
-      {/* Charts */}
-      <Div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <H3 className="text-base font-bold text-gray-900">Revenue trend</H3>
-          <P className="text-xs text-gray-400 mb-4">Confirmed tour bookings, last 6 months</P>
-          <Div className="min-h-[260px] w-full">
+          {/* Money */}
+          <StatGrid className="mb-4">
+            <StatCard label="Gross booked (tours)" value={currency(s.gross)} tone="success" />
+            <StatCard label="Confirmed revenue" value={currency(s.confirmedRevenue)} tone="success" />
+            <StatCard label="Tax collected" value={currency(s.taxes)} />
+            <StatCard label="Festival revenue" value={currency(s.festivalRevenue)} tone="success" />
+          </StatGrid>
+
+          {/* Charts */}
+          <Card className="mb-4">
+            <SectionTitle>Revenue trend</SectionTitle>
+            <P className="text-xs text-slate-500 mb-3">Confirmed tour bookings, last 6 months</P>
             {revenueTrend.length === 0 ? (
-              <Div className="h-full flex items-center justify-center text-xs text-gray-400">No confirmed bookings yet</Div>
+              <P className="text-sm text-slate-500 py-10 text-center">No confirmed bookings yet</P>
             ) : (
               <LineChart
                 areaChart
@@ -120,51 +125,49 @@ const Dashboard = () => {
                 data={revenueTrend.map((row) => ({ value: row.value, label: row.name }))}
                 width={chartWidth}
                 height={220}
-                spacing={revenueTrend.length > 1 ? chartWidth / (revenueTrend.length - 1 + 0.6) : chartWidth / 2}
+                spacing={chartSpacing(chartWidth, revenueTrend.length, 12)}
                 initialSpacing={12}
                 endSpacing={12}
-                color="#0a4d2b"
+                color={A.primary}
                 thickness={3}
-                startFillColor="#0a4d2b"
-                endFillColor="#0a4d2b"
+                startFillColor={A.primary}
+                endFillColor={A.primary}
                 startOpacity={0.2}
                 endOpacity={0}
                 hideDataPoints
                 rulesType="dashed"
-                rulesColor="#E5E7EB"
+                rulesColor={A.border}
                 xAxisColor="transparent"
                 yAxisColor="transparent"
                 noOfSections={4}
-                xAxisLabelTextStyle={{ color: '#9CA3AF', fontSize: 12 }}
-                yAxisTextStyle={{ color: '#9CA3AF', fontSize: 12 }}
+                xAxisLabelTextStyle={AXIS_TEXT}
+                yAxisTextStyle={AXIS_TEXT}
                 formatYLabel={(v) => `₹${Number(v) / 1000}k`}
                 yAxisLabelWidth={50}
                 pointerConfig={{
-                  pointerStripColor: '#E5E7EB',
-                  pointerColor: '#0a4d2b',
+                  pointerStripColor: A.border,
+                  pointerColor: A.primary,
                   radius: 5,
                   activatePointersOnLongPress: false,
                   autoAdjustPointerLabelPosition: true,
                   pointerLabelWidth: 110,
                   pointerLabelHeight: 44,
                   pointerLabelComponent: (items) => (
-                    <Div className="bg-white rounded-xl px-3 py-2 shadow-md border border-gray-100">
-                      <P className="text-[11px] text-gray-500">{items?.[0]?.label}</P>
-                      <P className="text-xs font-bold text-gray-900">{currency(items?.[0]?.value)}</P>
+                    <Div className="bg-white rounded-lg px-3 py-2 border border-slate-200">
+                      <P className="text-xs text-slate-500">{items?.[0]?.label}</P>
+                      <P className="text-sm font-semibold text-slate-900">{currency(items?.[0]?.value)}</P>
                     </Div>
                   ),
                 }}
               />
             )}
-          </Div>
-        </Div>
+          </Card>
 
-        <Div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
-          <H3 className="text-base font-bold text-gray-900">Booking status</H3>
-          <P className="text-xs text-gray-400 mb-4">All-time distribution</P>
-          <Div className="flex-1 min-h-[220px]">
+          <Card className="mb-4">
+            <SectionTitle>Booking status</SectionTitle>
+            <P className="text-xs text-slate-500 mb-3">All-time distribution</P>
             {bookingStatusChart.length === 0 ? (
-              <Div className="h-full flex items-center justify-center text-xs text-gray-400">No bookings yet</Div>
+              <P className="text-sm text-slate-500 py-10 text-center">No bookings yet</P>
             ) : (
               <Div className="items-center">
                 <PieChart
@@ -178,11 +181,11 @@ const Dashboard = () => {
                   }))}
                 />
                 {/* Legend (bottom, circle icons) */}
-                <Div className="flex flex-wrap justify-center gap-3 mt-3">
+                <Div className="flex-row flex-wrap justify-center gap-3 mt-3">
                   {bookingStatusChart.map((entry, index) => (
-                    <Div key={entry.name} className="flex items-center gap-1.5">
+                    <Div key={entry.name} className="flex-row items-center gap-1.5">
                       <Div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
-                      <Span className="text-xs" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }}>
+                      <Span className="text-xs text-slate-700">
                         {entry.name} ({entry.value})
                       </Span>
                     </Div>
@@ -190,141 +193,133 @@ const Dashboard = () => {
                 </Div>
               </Div>
             )}
-          </Div>
-        </Div>
-      </Div>
+          </Card>
 
-      {/* Festivals */}
-      <SectionCard
-        title="Festivals"
-        subtitle="A separate module that shares this admin panel"
-        action={
-          <Link to="/tours/admin/festivals" className="text-xs font-bold text-[#0a4d2b]">
-            View all →
-          </Link>
-        }
-      >
-        <Div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <StatCard label="Total festivals" value={s.festivals ?? 0} />
-          <StatCard label="Active" value={s.activeFestivals ?? 0} tone="text-[#0a4d2b]" />
-          <StatCard label="Tickets sold" value={`${s.ticketsSold ?? 0} / ${s.ticketsTotal ?? 0}`} />
-          <StatCard label="Passes booked" value={s.festivalBookings ?? 0} />
-        </Div>
-        {festivalStatusEntries.length > 0 && (
-          <Div className="flex flex-wrap gap-2">
-            {festivalStatusEntries.map(([status, count]) => (
-              <Div key={status} className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-100">
-                <StatusPill status={status} />
-                <Span className="text-xs font-bold text-gray-600">{count}</Span>
-              </Div>
-            ))}
-          </Div>
-        )}
-      </SectionCard>
-
-      {/* Packages breakdown, tourist places, offers, reviews */}
-      <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SectionCard
-          title="Packages"
-          action={
-            <Link to="/tours/admin/packages" className="text-xs font-bold text-[#0a4d2b]">
-              View all →
-            </Link>
-          }
-        >
-          <Div className="grid grid-cols-2 gap-3 mb-4">
-            <StatCard label="Active" value={s.activePackages ?? 0} tone="text-[#0a4d2b]" />
-            <StatCard label="Featured" value={s.featuredPackages ?? 0} />
-          </Div>
-          <Div className="flex flex-wrap gap-2">
-            {Object.entries(s.packagesByStatus || {}).map(([status, count]) => (
-              <Div key={status} className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-100">
-                <StatusPill status={status} />
-                <Span className="text-xs font-bold text-gray-600">{count}</Span>
-              </Div>
-            ))}
-          </Div>
-        </SectionCard>
-
-        <SectionCard title="Tourist places, offers & reviews">
-          <Div className="grid grid-cols-3 gap-3">
-            <Div>
-              <P className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Places</P>
-              <P className="text-xl font-black text-gray-900 mt-1">
-                {s.activeDestinations ?? 0}
-                <Span className="text-xs text-gray-400 font-normal"> / {s.destinations ?? 0} active</Span>
-              </P>
-              <Link to="/tours/admin/destinations" className="text-[11px] font-bold text-[#0a4d2b]">
-                Manage →
-              </Link>
-            </Div>
-            <Div>
-              <P className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Offers</P>
-              <P className="text-xl font-black text-gray-900 mt-1">
-                {s.activeOffers ?? 0}
-                <Span className="text-xs text-gray-400 font-normal"> / {s.offers ?? 0} active</Span>
-              </P>
-              <Link to="/tours/admin/offers" className="text-[11px] font-bold text-[#0a4d2b]">
-                Manage →
-              </Link>
-            </Div>
-            <Div>
-              <P className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Reviews</P>
-              <P className="text-xl font-black text-gray-900 mt-1">
-                {s.avgRating ?? 0}
-                <Span className="text-xs text-gray-400 font-normal"> ★ avg</Span>
-              </P>
-              <Link to="/tours/admin/reviews" className="text-[11px] font-bold text-[#0a4d2b]">
-                Manage →
-              </Link>
-            </Div>
-          </Div>
-        </SectionCard>
-      </Div>
-
-      {/* Recent activity */}
-      <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SectionCard title="Recent tour bookings">
-          {(s.recentBookings || []).length === 0 ? (
-            <P className="text-xs text-gray-400">No bookings yet</P>
-          ) : (
-            <Div className="space-y-2">
-              {s.recentBookings.map((b) => (
-                <Div key={b._id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <Div className="min-w-0">
-                    <P className="text-sm font-bold text-gray-800 truncate">{b.packageTitle || b.bookingId}</P>
-                    <P className="text-[11px] text-gray-400">{currency(b.totalAmount)}</P>
+          {/* Festivals */}
+          <Card className="mb-4">
+            <SectionTitle
+              action={
+                <Link to="/tours/admin/festivals">
+                  <Span className="text-sm font-semibold text-blue-600">View all</Span>
+                </Link>
+              }
+            >
+              Festivals
+            </SectionTitle>
+            <P className="text-xs text-slate-500 mb-3">A separate module that shares this admin panel</P>
+            <StatGrid className="mb-3">
+              <StatCard label="Total festivals" value={s.festivals ?? 0} />
+              <StatCard label="Active" value={s.activeFestivals ?? 0} tone="success" />
+              <StatCard label="Tickets sold" value={`${s.ticketsSold ?? 0} / ${s.ticketsTotal ?? 0}`} />
+              <StatCard label="Passes booked" value={s.festivalBookings ?? 0} />
+            </StatGrid>
+            {festivalStatusEntries.length > 0 && (
+              <Div className="flex-row flex-wrap gap-2">
+                {festivalStatusEntries.map(([status, count]) => (
+                  <Div key={status} className="flex-row items-center gap-1.5 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200">
+                    <StatusBadge status={status} />
+                    <Span className="text-xs font-semibold text-slate-600">{count}</Span>
                   </Div>
-                  <StatusPill status={b.bookingStatus} />
+                ))}
+              </Div>
+            )}
+          </Card>
+
+          {/* Packages breakdown, tourist places, offers, reviews */}
+          <Card className="mb-4">
+            <SectionTitle
+              action={
+                <Link to="/tours/admin/packages">
+                  <Span className="text-sm font-semibold text-blue-600">View all</Span>
+                </Link>
+              }
+            >
+              Packages
+            </SectionTitle>
+            <StatGrid className="mb-3">
+              <StatCard label="Active" value={s.activePackages ?? 0} tone="success" />
+              <StatCard label="Featured" value={s.featuredPackages ?? 0} />
+            </StatGrid>
+            <Div className="flex-row flex-wrap gap-2">
+              {Object.entries(s.packagesByStatus || {}).map(([status, count]) => (
+                <Div key={status} className="flex-row items-center gap-1.5 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200">
+                  <StatusBadge status={status} />
+                  <Span className="text-xs font-semibold text-slate-600">{count}</Span>
                 </Div>
               ))}
             </Div>
-          )}
-        </SectionCard>
+          </Card>
 
-        <SectionCard title="Recent festival bookings">
-          {(s.recentFestivalBookings || []).length === 0 ? (
-            <P className="text-xs text-gray-400">No passes booked yet</P>
-          ) : (
-            <Div className="space-y-2">
-              {s.recentFestivalBookings.map((b) => (
-                <Div key={b._id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <Div className="min-w-0">
-                    <P className="text-sm font-bold text-gray-800 truncate">{b.festivalName || 'Festival pass'}</P>
-                    <P className="text-[11px] text-gray-400">{currency(b.totalAmount)}</P>
+          <Card className="mb-4">
+            <SectionTitle>Tourist places, offers &amp; reviews</SectionTitle>
+            <StatGrid>
+              <Link to="/tours/admin/destinations">
+                <StatCard label="Places" value={`${s.activeDestinations ?? 0} / ${s.destinations ?? 0}`} hint="Active · tap to manage" />
+              </Link>
+              <Link to="/tours/admin/offers">
+                <StatCard label="Offers" value={`${s.activeOffers ?? 0} / ${s.offers ?? 0}`} hint="Active · tap to manage" />
+              </Link>
+              <Link to="/tours/admin/reviews">
+                <StatCard label="Reviews" value={`${s.avgRating ?? 0} ★`} hint="Average · tap to manage" />
+              </Link>
+            </StatGrid>
+          </Card>
+
+          {/* Recent activity */}
+          <Card className="mb-4">
+            <SectionTitle>Recent tour bookings</SectionTitle>
+            {(s.recentBookings || []).length === 0 ? (
+              <P className="text-sm text-slate-500">No bookings yet</P>
+            ) : (
+              <Div>
+                {s.recentBookings.map((b, i, a) => (
+                  <Div
+                    key={b._id}
+                    className={`flex-row items-center justify-between gap-3 py-2.5 ${i === a.length - 1 ? '' : 'border-b border-slate-100'}`}
+                  >
+                    <Div className="flex-1 min-w-0">
+                      <P className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                        {b.packageTitle || b.bookingId}
+                      </P>
+                      <P className="text-xs text-slate-500 mt-0.5">{currency(b.totalAmount)}</P>
+                    </Div>
+                    <StatusBadge status={b.bookingStatus} />
                   </Div>
-                  <StatusPill status={b.bookingStatus} />
-                </Div>
-              ))}
-            </Div>
-          )}
-        </SectionCard>
-      </Div>
+                ))}
+              </Div>
+            )}
+          </Card>
 
-      <P className="text-[11px] text-gray-400">
-        Gross is the full trip value; the district collects all of it, so there is no commission to take and no payout to settle.
-      </P>
-    </ScrollDiv>
+          <Card className="mb-4">
+            <SectionTitle>Recent festival bookings</SectionTitle>
+            {(s.recentFestivalBookings || []).length === 0 ? (
+              <P className="text-sm text-slate-500">No passes booked yet</P>
+            ) : (
+              <Div>
+                {s.recentFestivalBookings.map((b, i, a) => (
+                  <Div
+                    key={b._id}
+                    className={`flex-row items-center justify-between gap-3 py-2.5 ${i === a.length - 1 ? '' : 'border-b border-slate-100'}`}
+                  >
+                    <Div className="flex-1 min-w-0">
+                      <P className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                        {b.festivalName || 'Festival pass'}
+                      </P>
+                      <P className="text-xs text-slate-500 mt-0.5">{currency(b.totalAmount)}</P>
+                    </Div>
+                    <StatusBadge status={b.bookingStatus} />
+                  </Div>
+                ))}
+              </Div>
+            )}
+          </Card>
+
+          <P className="text-xs text-slate-500">
+            Gross is the full trip value; the district collects all of it, so there is no commission to take and no payout to settle.
+          </P>
+        </>
+      )}
+    </AdminPage>
   );
 };
 export default Dashboard;

@@ -3,11 +3,31 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from '../../../../lib/webRouter';
 import { PlusCircle, RefreshCw } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, currency, shortDate } from '../components/ui';
+import { currency, shortDate } from '../components/ui';
+import {
+  AdminPage,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  Cell,
+  DataTable,
+  EmptyState,
+  PageHeader,
+  Row,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  TBody,
+  THead,
+  TableSkeleton,
+  Toolbar,
+} from '../../../../admin/ui';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, Link, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Link, P, Span, Icon as UiIcon } from '../../../../components/web';
 import usePrompt from '../components/usePrompt';
 const FILTERS = ['all', 'pending', 'approved', 'rejected', 'draft'];
+const COLS = [200, 110, 130, 300];
 const Packages = () => {
   const [params, setParams] = useSearchParams();
   const [packages, setPackages] = useState([]);
@@ -94,40 +114,35 @@ const Packages = () => {
   };
   const total = Object.values(summary).reduce((a, b) => a + (b || 0), 0);
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-4">
+    <AdminPage maxWidth={1200}>
       <PageHeader
         title="Packages"
         subtitle={`${summary.pending || 0} awaiting review`}
-        action={
-          <Div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/tours/admin/packages/new"
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#06381e]"
-            >
-              <UiIcon as={PlusCircle} size={14} /> Create a package
+        breadcrumb={[{ label: 'Tours' }, { label: 'Packages' }]}
+        actions={
+          <>
+            <Link to="/tours/admin/packages/new" className={BTN_PRIMARY}>
+              <UiIcon as={PlusCircle} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Create a package</Span>
             </Link>
-            <Button
-              type="button"
-              onClick={load}
-              className="p-2.5 rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-              accessibilityLabel="Refresh"
-            >
-              <UiIcon as={RefreshCw} size={14} />
+            <Button type="button" onClick={load} className={BTN_SECONDARY} accessibilityLabel="Refresh">
+              <UiIcon as={RefreshCw} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Refresh</Span>
             </Button>
-          </Div>
+          </>
         }
       />
 
       {total > 0 && (
-        <Div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatGrid className="mb-4">
           <StatCard label="Total packages" value={total} />
-          <StatCard label="Pending review" value={summary.pending || 0} tone={summary.pending ? 'text-amber-600' : 'text-gray-900'} />
-          <StatCard label="Approved" value={summary.approved || 0} tone="text-[#0a4d2b]" />
-          <StatCard label="Rejected" value={summary.rejected || 0} />
-        </Div>
+          <StatCard label="Pending review" value={summary.pending || 0} tone={summary.pending ? 'warning' : 'info'} />
+          <StatCard label="Approved" value={summary.approved || 0} tone="success" />
+          <StatCard label="Rejected" value={summary.rejected || 0} tone="danger" />
+        </StatGrid>
       )}
 
-      <Div className="flex flex-wrap gap-2">
+      <Toolbar>
         {FILTERS.map((value) => (
           <Button
             key={value}
@@ -141,101 +156,99 @@ const Packages = () => {
                     },
               )
             }
-            className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${status === value ? 'bg-[#0a4d2b] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+            className={`h-11 px-4 rounded-full items-center justify-center ${status === value ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
           >
-            {value}
-            {value !== 'all' && summary[value] ? ` (${summary[value]})` : ''}
+            <Span className={`text-sm font-semibold ${status === value ? 'text-white' : 'text-slate-700'}`}>
+              {value}
+              {value !== 'all' && summary[value] ? ` (${summary[value]})` : ''}
+            </Span>
           </Button>
         ))}
-      </Div>
+      </Toolbar>
 
-      <Div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        <Table cols={[240, 110, 150, 360]} className="w-full text-left text-sm">
-          <Thead className="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500">
-            <Tr>
-              <Th className="p-4 font-semibold">Package</Th>
-              <Th className="p-4 font-semibold text-right">Price</Th>
-              <Th className="p-4 font-semibold">Status</Th>
-              <Th className="p-4 font-semibold">Review</Th>
-            </Tr>
-          </Thead>
-          <Tbody className="divide-y divide-gray-100">
-            {loading ? (
-              <Tr>
-                <Td colSpan="4">
-                  <Spinner />
-                </Td>
-              </Tr>
-            ) : packages.length === 0 ? (
-              <Tr>
-                <Td colSpan="4">
-                  <EmptyState message="No packages here." />
-                </Td>
-              </Tr>
-            ) : (
-              packages.map((pkg) => (
-                <Tr key={pkg._id} className="hover:bg-gray-50/60">
-                  <Td className="p-4">
-                    <P className="font-bold text-gray-900">{pkg.title}</P>
-                    <P className="text-[10px] text-gray-400">
-                      {pkg.durationDays}D/{pkg.durationNights}N · {pkg.category}
-                      {pkg.createdBy === 'admin' && ' · created by admin'}
-                    </P>
-                  </Td>
-                  <Td className="p-4 text-right font-bold text-gray-900">{currency(pkg.pricePerPerson)}</Td>
-                  <Td className="p-4">
-                    <StatusPill status={pkg.status} />
-                    {!pkg.isActive && <Span className="ml-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-600">off</Span>}
-                    <P className="text-[10px] text-gray-400 mt-1">{shortDate(pkg.createdAt)}</P>
-                  </Td>
-                  <Td className="p-4">
-                    <Div className="flex flex-wrap gap-1.5">
-                      {pkg.status !== 'approved' && (
-                        <Button
-                          type="button"
-                          disabled={busyId === pkg._id}
-                          onClick={() => decide(pkg, 'approved')}
-                          className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
-                        >
-                          approve
-                        </Button>
-                      )}
-                      {pkg.status !== 'rejected' && (
-                        <Button
-                          type="button"
-                          disabled={busyId === pkg._id}
-                          onClick={() => decide(pkg, 'rejected')}
-                          className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                        >
-                          reject
-                        </Button>
-                      )}
+      {loading ? (
+        <TableSkeleton rows={5} />
+      ) : packages.length === 0 ? (
+        <EmptyState
+          title="No packages here"
+          message={status === 'all' ? 'Create the first tour package travellers can book.' : `Nothing is ${status} right now.`}
+          actionLabel="Reload"
+          onAction={load}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={['Package', 'Price', 'Status', 'Review']} />
+          <TBody>
+            {packages.map((pkg, i, a) => (
+              <Row key={pkg._id} last={i === a.length - 1}>
+                <Cell width={COLS[0]}>
+                  <P className="text-sm font-semibold text-slate-900" numberOfLines={2}>
+                    {pkg.title}
+                  </P>
+                  <P className="text-xs text-slate-500 mt-0.5" numberOfLines={2}>
+                    {pkg.durationDays}D/{pkg.durationNights}N · {pkg.category}
+                    {pkg.createdBy === 'admin' && ' · created by admin'}
+                  </P>
+                </Cell>
+                <Cell width={COLS[1]} align="right">
+                  <P className="text-sm font-semibold text-slate-900">{currency(pkg.pricePerPerson)}</P>
+                </Cell>
+                <Cell width={COLS[2]}>
+                  <Div className="gap-1">
+                    <StatusBadge status={pkg.status} />
+                    {!pkg.isActive && <StatusBadge status="off" tone="neutral" label="off" />}
+                    <P className="text-xs text-slate-500">{shortDate(pkg.createdAt)}</P>
+                  </Div>
+                </Cell>
+                <Cell width={COLS[3]}>
+                  <Div className="flex-row flex-wrap gap-2">
+                    {pkg.status !== 'approved' && (
                       <Button
                         type="button"
                         disabled={busyId === pkg._id}
-                        onClick={() => toggle(pkg)}
-                        className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                        onClick={() => decide(pkg, 'approved')}
+                        className="h-11 px-3 rounded-lg bg-blue-600 items-center justify-center disabled:opacity-50"
                       >
-                        {pkg.isActive ? 'switch off' : 'switch on'}
+                        <Span className="text-sm font-semibold text-white">Approve</Span>
                       </Button>
+                    )}
+                    {pkg.status !== 'rejected' && (
                       <Button
                         type="button"
                         disabled={busyId === pkg._id}
-                        onClick={() => remove(pkg)}
-                        className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-white border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        onClick={() => decide(pkg, 'rejected')}
+                        className="h-11 px-3 rounded-lg border border-slate-300 bg-white items-center justify-center disabled:opacity-50"
                       >
-                        delete
+                        <Span className="text-sm font-semibold text-slate-700">Reject</Span>
                       </Button>
-                    </Div>
-                  </Td>
-                </Tr>
-              ))
-            )}
-          </Tbody>
-        </Table>
-      </Div>
+                    )}
+                    <Button
+                      type="button"
+                      disabled={busyId === pkg._id}
+                      onClick={() => toggle(pkg)}
+                      className="h-11 px-3 rounded-lg border border-slate-300 bg-white items-center justify-center disabled:opacity-50"
+                    >
+                      <Span className="text-sm font-semibold text-slate-700">{pkg.isActive ? 'Switch off' : 'Switch on'}</Span>
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={busyId === pkg._id}
+                      onClick={() => remove(pkg)}
+                      className={`h-11 px-3 rounded-lg items-center justify-center disabled:opacity-50 ${confirmingId === pkg._id ? 'bg-red-600' : 'border border-red-200 bg-white'}`}
+                    >
+                      <Span className={`text-sm font-semibold ${confirmingId === pkg._id ? 'text-white' : 'text-red-600'}`}>
+                        {confirmingId === pkg._id ? 'Delete for good?' : 'Delete'}
+                      </Span>
+                    </Button>
+                  </Div>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
       {promptDialog}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Packages;

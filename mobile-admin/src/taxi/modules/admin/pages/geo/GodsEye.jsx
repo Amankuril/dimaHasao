@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { GMap, Heatmap, Marker } from '../../../../../components/maps';
 import {
   Search,
-  Filter,
   Activity,
   Users,
   Car,
@@ -35,7 +34,27 @@ import { adminService } from '../../services/adminService';
 import CarIcon from '../../../../assets/icons/car.png';
 import BikeIcon from '../../../../assets/icons/bike.png';
 import AutoIcon from '../../../../assets/icons/auto.png';
-import { Button, Div, H1, H2, H3, H4, Hr, HScroll, Img, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Toolbar,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, HScroll, Img, Input, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 
 const DISTRICT_CENTER = {
   lat: 22.7196,
@@ -205,12 +224,9 @@ const hasUsableCoordinates = (latitude, longitude) => {
   return Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0);
 };
 
-// Generic white/black/yellow/grey theme classes
-const btnClass = 'flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-colors border shadow-sm';
-const btnPrimary = `${btnClass} bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-500`;
-const btnSecondary = `${btnClass} bg-white text-slate-800 border-slate-200 hover:bg-slate-50`;
 const GodsEye = () => {
   const navigate = useNavigate();
+  const { tablet } = useLayoutWidth();
   const { isLoaded, loadError } = useBaseGoogleMapsLoader();
   const mapRef = useRef(null);
 
@@ -436,455 +452,387 @@ const GodsEye = () => {
             lng: Number(filteredDrivers[0].longitude),
           }
         : DISTRICT_CENTER;
+  const half = tablet ? 'flex-1' : '';
+  const toggleBtn = (active) => `w-11 h-11 rounded-lg items-center justify-center ${active ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`;
+  const toggleIcon = (active) => (active ? 'text-white' : 'text-slate-600');
   return (
-    <Div className={`flex flex-col h-screen bg-gray-50 font-sans ${controls.fullscreen ? 'fixed inset-0 z-50' : ''}`}>
-      {/* TOP NAVIGATION / KPI STRIP */}
-      <Div className="bg-white border-b border-gray-200 px-3 py-1.5 flex items-center justify-between shadow-sm z-10 flex-shrink-0">
-        <Div className="flex items-center gap-3">
-          {!controls.fullscreen && (
-            <Button onClick={() => navigate('/taxi/admin/dashboard')} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
-              <UiIcon as={ArrowLeft} size={18} />
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={MapIcon}
+        title="God's Eye dashboard"
+        subtitle={
+          lastSync
+            ? `Live fleet monitoring · synced ${lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+            : 'Live fleet monitoring'
+        }
+        breadcrumb={[{ label: 'Taxi' }, { label: 'Geo' }, { label: "God's Eye" }]}
+        actions={
+          <>
+            <Button onClick={fetchMapData} className={BTN_PRIMARY}>
+              <UiIcon as={RefreshCw} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Force refresh</Span>
             </Button>
-          )}
-          <Div>
-            <H1 className="text-base font-bold text-gray-900">God&apos;s Eye Dashboard</H1>
-            <P className="text-xs font-semibold text-gray-500">
-              Live Fleet Monitoring{' '}
-              {lastSync &&
-                ` • Synced ${lastSync.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                })}`}
-            </P>
-          </Div>
+            {!controls.fullscreen ? (
+              <Button onClick={() => navigate('/taxi/admin/dashboard')} className={BTN_SECONDARY}>
+                <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+              </Button>
+            ) : null}
+          </>
+        }
+      />
+
+      <StatGrid className="mb-4">
+        <StatCard label="Online drivers" value={String(metrics.online)} icon={Users} tone="success" />
+        <StatCard label="Busy / idle" value={`${metrics.busy} / ${metrics.idle}`} icon={Car} tone="info" />
+        <StatCard label="Live trips" value={String(metrics.liveTrips)} icon={Activity} tone="info" />
+        <StatCard label="SOS alerts" value={String(metrics.sos)} icon={ShieldAlert} tone={metrics.sos > 0 ? 'danger' : 'neutral'} />
+        <StatCard label="Revenue today" value={`₹${metrics.revenue.toLocaleString()}`} icon={IndianRupee} tone="success" />
+        <StatCard label="Trips today" value={String(metrics.tripsToday)} icon={Clock} tone="neutral" />
+      </StatGrid>
+
+      <Card className="mb-4 gap-3">
+        <SectionTitle className="mb-0">Filters</SectionTitle>
+        <Div className="flex-row items-center h-11 px-3 rounded-lg border border-slate-300 bg-white gap-2">
+          <UiIcon as={Search} size={16} className="text-slate-400" />
+          <Input
+            type="text"
+            placeholder="Search driver…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 text-sm text-slate-900"
+          />
         </Div>
 
-        {/* Dynamic Metrics Strip */}
-        <Div className="hidden lg:flex items-center gap-4">
-          <Div className="flex flex-col items-end">
-            <Span className="text-[9px] font-bold text-gray-500 uppercase">Online</Span>
-            <Span className="text-xs font-black text-black">{metrics.online}</Span>
-          </Div>
-          <Div className="flex flex-col items-end">
-            <Span className="text-[9px] font-bold text-gray-500 uppercase">Busy / Idle</Span>
-            <Span className="text-xs font-black text-black">
-              <Span className="text-yellow-600">{metrics.busy}</Span> / {metrics.idle}
-            </Span>
-          </Div>
-          <Div className="flex flex-col items-end">
-            <Span className="text-[9px] font-bold text-gray-500 uppercase">Live Trips</Span>
-            <Span className="text-xs font-black text-black">{metrics.liveTrips}</Span>
-          </Div>
-          <Div className="flex flex-col items-end">
-            <Span className="text-[9px] font-bold text-gray-500 uppercase">SOS Alerts</Span>
-            <Span className={`text-xs font-black ${metrics.sos > 0 ? 'text-red-500 animate-pulse' : 'text-black'}`}>{metrics.sos}</Span>
-          </Div>
-          <Div className="flex flex-col items-end">
-            <Span className="text-[9px] font-bold text-gray-500 uppercase">Revenue (Today)</Span>
-            <Span className="text-xs font-black text-black">₹{metrics.revenue.toLocaleString()}</Span>
-          </Div>
+        <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+          <Field label="Driver status" className={half}>
+            <Select
+              value={filters.status}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  status: e.target.value,
+                }))
+              }
+              className={INPUT}
+            >
+              <Option value="all">All Drivers</Option>
+              <Option value="online">Online Only</Option>
+              <Option value="offline">Offline Only</Option>
+              <Option value="busy">Busy (On Trip)</Option>
+              <Option value="idle">Idle (Waiting)</Option>
+            </Select>
+          </Field>
+
+          <Field label="Vehicle type" className={half}>
+            <Select
+              value={filters.vehicleType}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  vehicleType: e.target.value,
+                }))
+              }
+              className={INPUT}
+            >
+              <Option value="all">All Types</Option>
+              <Option value="car">Car (Taxi)</Option>
+              <Option value="bike">Bike</Option>
+              <Option value="auto">Auto</Option>
+            </Select>
+          </Field>
         </Div>
-      </Div>
 
-      {/* MAIN CONTENT SPLIT */}
-      <Div className="flex flex-col flex-1 relative">
-        {/* LEFT SIDEBAR - FILTERS */}
-        <ScrollDiv className="w-full max-h-[280px] bg-white border-b border-gray-200 p-3 flex flex-col gap-3 z-10 flex-shrink-0">
-          {/* Search */}
-          <Div className="relative">
-            <UiIcon as={Search} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search driver..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all placeholder:text-gray-400 text-black font-medium"
-            />
-          </Div>
+        <Field label="Refresh mode" hint="How often the live map re-reads driver positions.">
+          <Select
+            value={filters.refreshMode}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                refreshMode: e.target.value,
+              }))
+            }
+            className={INPUT}
+          >
+            <Option value="15">Every 15s</Option>
+            <Option value="30">Every 30s</Option>
+            <Option value="60">Every 1m</Option>
+            <Option value="300">Every 5m</Option>
+            <Option value="manual">Manual</Option>
+          </Select>
+        </Field>
 
-          <Hr className="border-gray-100" />
+        <Toolbar className="mb-0">
+          <Button
+            onClick={() =>
+              setFilters({
+                status: 'all',
+                vehicleType: 'all',
+                serviceType: 'all',
+                city: 'all',
+                zone: 'all',
+                refreshMode: '30',
+              })
+            }
+            className={BTN_SECONDARY}
+          >
+            <Span className={BTN_TEXT_SECONDARY}>Reset filters</Span>
+          </Button>
+        </Toolbar>
+      </Card>
 
-          {/* Filter Group */}
-          <Div className="space-y-3">
-            <Div>
-              <Label className="block text-xs font-semibold capitalize text-gray-500 mb-1">Driver Status</Label>
-              <Select
-                value={filters.status}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    status: e.target.value,
-                  }))
-                }
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-black outline-none focus:border-yellow-400"
-              >
-                <Option value="all">All Drivers</Option>
-                <Option value="online">Online Only</Option>
-                <Option value="offline">Offline Only</Option>
-                <Option value="busy">Busy (On Trip)</Option>
-                <Option value="idle">Idle (Waiting)</Option>
-              </Select>
-            </Div>
+      <Card className="mb-4 gap-3">
+        <SectionTitle className="mb-0">Live map · {filteredDrivers.length} drivers</SectionTitle>
 
-            <Div>
-              <Label className="block text-xs font-semibold capitalize text-gray-500 mb-1">Vehicle Type</Label>
-              <Select
-                value={filters.vehicleType}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    vehicleType: e.target.value,
-                  }))
-                }
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-black outline-none focus:border-yellow-400"
-              >
-                <Option value="all">All Types</Option>
-                <Option value="car">Car (Taxi)</Option>
-                <Option value="bike">Bike</Option>
-                <Option value="auto">Auto</Option>
-              </Select>
-            </Div>
+        <Toolbar className="mb-0">
+          <Button
+            onClick={() =>
+              setControls((c) => ({
+                ...c,
+                cluster: !c.cluster,
+              }))
+            }
+            accessibilityLabel="Toggle clustering"
+            className={toggleBtn(controls.cluster)}
+          >
+            <UiIcon as={Layers} size={18} className={toggleIcon(controls.cluster)} />
+          </Button>
+          <Button
+            onClick={() =>
+              setControls((c) => ({
+                ...c,
+                traffic: !c.traffic,
+              }))
+            }
+            accessibilityLabel="Toggle traffic layer"
+            className={toggleBtn(controls.traffic)}
+          >
+            <UiIcon as={Navigation} size={18} className={toggleIcon(controls.traffic)} />
+          </Button>
+          <Button
+            onClick={() =>
+              setControls((c) => ({
+                ...c,
+                heatmap: !c.heatmap,
+              }))
+            }
+            accessibilityLabel="Toggle heatmap"
+            className={toggleBtn(controls.heatmap)}
+          >
+            <UiIcon as={Flame} size={18} className={toggleIcon(controls.heatmap)} />
+          </Button>
+          <Button
+            onClick={() =>
+              setControls((c) => ({
+                ...c,
+                autoFollow: !c.autoFollow,
+              }))
+            }
+            accessibilityLabel="Toggle auto-follow"
+            className={toggleBtn(controls.autoFollow)}
+          >
+            <UiIcon as={Crosshair} size={18} className={toggleIcon(controls.autoFollow)} />
+          </Button>
+          <Button onClick={toggleFullscreen} accessibilityLabel="Toggle fullscreen" className={toggleBtn(controls.fullscreen)}>
+            <UiIcon as={controls.fullscreen ? Minimize : Maximize} size={18} className={toggleIcon(controls.fullscreen)} />
+          </Button>
+          <Button onClick={recenterMap} accessibilityLabel="Recenter map" className={toggleBtn(false)}>
+            <UiIcon as={MapPin} size={18} className="text-slate-600" />
+          </Button>
+        </Toolbar>
 
-            <Div>
-              <Label className="block text-xs font-semibold capitalize text-gray-500 mb-1">Refresh Mode</Label>
-              <Select
-                value={filters.refreshMode}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    refreshMode: e.target.value,
-                  }))
-                }
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-black outline-none focus:border-yellow-400"
-              >
-                <Option value="15">Every 15s</Option>
-                <Option value="30">Every 30s</Option>
-                <Option value="60">Every 1m</Option>
-                <Option value="300">Every 5m</Option>
-                <Option value="manual">Manual</Option>
-              </Select>
-            </Div>
-          </Div>
-
-          <Div className="mt-auto space-y-2 pt-4">
-            <Button onClick={fetchMapData} className={btnPrimary + ' w-full'}>
-              <UiIcon as={RefreshCw} size={14} className={loading ? 'animate-spin' : ''} />
-              Force Refresh
-            </Button>
-            <Button
-              onClick={() =>
-                setFilters({
-                  status: 'all',
-                  vehicleType: 'all',
-                  serviceType: 'all',
-                  city: 'all',
-                  zone: 'all',
-                  refreshMode: '30',
-                })
-              }
-              className={btnSecondary + ' w-full'}
-            >
-              Reset Filters
-            </Button>
-          </Div>
-        </ScrollDiv>
-
-        {/* MAP CANVAS */}
-        <Div className="flex-1 relative bg-gray-200 flex flex-col">
-          {/* FLOATING MAP CONTROLS */}
-          <Div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-            <Button
-              onClick={() =>
-                setControls((c) => ({
-                  ...c,
-                  cluster: !c.cluster,
-                }))
-              }
-              className={`p-2.5 rounded-lg shadow-md transition-colors ${controls.cluster ? 'bg-yellow-400 text-black' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-            >
-              <UiIcon as={Layers} size={18} />
-            </Button>
-            <Button
-              onClick={() =>
-                setControls((c) => ({
-                  ...c,
-                  traffic: !c.traffic,
-                }))
-              }
-              className={`p-2.5 rounded-lg shadow-md transition-colors ${controls.traffic ? 'bg-yellow-400 text-black' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-            >
-              <UiIcon as={Navigation} size={18} />
-            </Button>
-            <Button
-              onClick={() =>
-                setControls((c) => ({
-                  ...c,
-                  heatmap: !c.heatmap,
-                }))
-              }
-              className={`p-2.5 rounded-lg shadow-md transition-colors ${controls.heatmap ? 'bg-yellow-400 text-black' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-            >
-              <UiIcon as={Flame} size={18} />
-            </Button>
-            <Button
-              onClick={() =>
-                setControls((c) => ({
-                  ...c,
-                  autoFollow: !c.autoFollow,
-                }))
-              }
-              className={`p-2.5 rounded-lg shadow-md transition-colors ${controls.autoFollow ? 'bg-yellow-400 text-black' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-            >
-              <UiIcon as={Crosshair} size={18} />
-            </Button>
-          </Div>
-
-          <Div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-            <Button onClick={toggleFullscreen} className="p-2.5 bg-white text-gray-600 hover:bg-gray-50 rounded-lg shadow-md transition-colors">
-              {controls.fullscreen ? <UiIcon as={Minimize} size={18} /> : <UiIcon as={Maximize} size={18} />}
-            </Button>
-            <Button onClick={recenterMap} className="p-2.5 bg-white text-gray-600 hover:bg-gray-50 rounded-lg shadow-md transition-colors">
-              <UiIcon as={MapPin} size={18} />
-            </Button>
-          </Div>
-
-          {/* Google Map */}
-          <Div className="flex-1 w-full h-[420px] relative">
-            {loadError ? (
-              <Div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-red-500 font-bold uppercase tracking-widest text-sm">
-                Map Load Error
-              </Div>
-            ) : HAS_VALID_GOOGLE_MAPS_KEY && isLoaded ? (
-              <GMap
-                ref={mapRef}
-                className="w-full h-[420px]"
-                customMapStyle={mapOptions.styles}
-                initialRegion={{
-                  latitude: mapCenter.lat,
-                  longitude: mapCenter.lng,
-                  latitudeDelta: 0.08,
-                  longitudeDelta: 0.08,
-                }}
-                showsTraffic={controls.traffic}
-                showsPointsOfInterest={false}
-                onPress={() => setSelectedDriver(null)}
-              >
-                {controls.heatmap && (
-                  <Heatmap
-                    points={filteredDrivers.map((d) => ({
-                      latitude: Number(d.latitude),
-                      longitude: Number(d.longitude),
-                      weight: 1,
-                    }))}
-                    radius={40}
-                    opacity={0.6}
-                  />
-                )}
-
-                {!controls.heatmap &&
-                  filteredDrivers.map((driver) => (
-                    <Marker
-                      key={driver._id || driver.id}
-                      coordinate={{
-                        latitude: Number(driver.latitude),
-                        longitude: Number(driver.longitude),
-                      }}
-                      onPress={() => handleMarkerClick(driver)}
-                      anchor={{ x: 0.5, y: 0.5 }}
-                      image={getMapIconForVehicle(driver.vehicle_icon_type || driver.vehicle_type)}
-                    />
-                  ))}
-              </GMap>
-            ) : (
-              <Div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50">
-                <UiIcon as={MapIcon} size={48} className="text-gray-300 mb-4" />
-                <P className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Map Offline</P>
-              </Div>
+        {loadError ? (
+          <ErrorState
+            className="border-0"
+            title="Map failed to load"
+            message="Check the maps key and whether the Maps API is enabled."
+            onRetry={fetchMapData}
+          />
+        ) : HAS_VALID_GOOGLE_MAPS_KEY && isLoaded ? (
+          <GMap
+            ref={mapRef}
+            className="w-full h-[360px] rounded-lg overflow-hidden"
+            customMapStyle={mapOptions.styles}
+            initialRegion={{
+              latitude: mapCenter.lat,
+              longitude: mapCenter.lng,
+              latitudeDelta: 0.08,
+              longitudeDelta: 0.08,
+            }}
+            showsTraffic={controls.traffic}
+            showsPointsOfInterest={false}
+            onPress={() => setSelectedDriver(null)}
+          >
+            {controls.heatmap && (
+              <Heatmap
+                points={filteredDrivers.map((d) => ({
+                  latitude: Number(d.latitude),
+                  longitude: Number(d.longitude),
+                  weight: 1,
+                }))}
+                radius={40}
+                opacity={0.6}
+              />
             )}
 
-            {/* Empty State Overlay */}
-            {filteredDrivers.length === 0 && !loading && (
-              <Div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                <Div className="bg-white/90 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-xl border border-gray-200 flex flex-col items-center text-center max-w-sm">
-                  <Div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-3">
-                    <UiIcon as={Car} size={24} />
-                  </Div>
-                  <H3 className="text-base font-black text-black mb-1">No live fleet available</H3>
-                  <P className="text-xs text-gray-500 font-medium">Waiting for GPS updates or adjust your filters.</P>
-                </Div>
-              </Div>
-            )}
-          </Div>
-
-          {/* BOTTOM TIMELINE */}
-          <Div className="h-36 bg-white border-t border-gray-200 flex flex-col flex-shrink-0 z-10">
-            <Div className="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <H3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Real-Time Event Timeline</H3>
-              <Span className="text-[10px] font-bold text-gray-400">{timelineEvents.length} Recent Events</Span>
-            </Div>
-            <HScroll className="flex-1 p-3 flex items-start gap-3">
-              {timelineEvents.length === 0 ? (
-                <Div className="flex w-full h-full items-center justify-center text-[10px] text-gray-400 font-medium">No recent events logged.</Div>
-              ) : (
-                timelineEvents.map((evt) => (
-                  <Div key={evt.id} className="inline-flex flex-col min-w-[180px] bg-gray-50 border border-gray-100 rounded-lg p-2 shadow-sm">
-                    <Div className="flex items-center gap-2 mb-2">
-                      <Div className={`p-1.5 bg-white rounded-lg shadow-sm ${evt.color}`}>{evt.icon}</Div>
-                      <Div>
-                        <P className="text-xs font-black text-black">{evt.type}</P>
-                        <P className="text-[9px] text-gray-500 font-bold">{evt.time.toLocaleTimeString()}</P>
-                      </Div>
-                    </Div>
-                    <P className="text-[10px] text-gray-600 font-medium whitespace-normal leading-tight">{evt.desc}</P>
-                  </Div>
-                ))
-              )}
-            </HScroll>
-          </Div>
-        </Div>
-
-        {/* RIGHT DRAWER - SELECTED MARKER */}
-        {selectedDriver && (
-          <Div className="w-72 bg-white border-l border-gray-200 flex flex-col z-20 shadow-2xl flex-shrink-0 absolute right-0 top-0 bottom-0 lg:relative slide-in-from-right animate-in duration-300">
-            {/* Drawer Header */}
-            <Div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between bg-yellow-400 text-black">
-              <H2 className="text-xs font-black uppercase tracking-wider">Driver Telemetry</H2>
-              <Button onClick={() => setSelectedDriver(null)} className="p-1 hover:bg-yellow-500 rounded-md transition-colors">
-                <UiIcon as={X} size={16} />
-              </Button>
-            </Div>
-
-            <ScrollDiv className="flex-1 p-3 space-y-4">
-              {/* Driver Profile Summary */}
-              <Div className="flex items-center gap-3">
-                <Div className="w-14 h-14 bg-gray-100 rounded-full border-2 border-gray-200 overflow-hidden flex items-center justify-center text-gray-400 flex-shrink-0">
-                  {selectedDriver.profile_image ? (
-                    <Img src={selectedDriver.profile_image} alt={selectedDriver.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <UiIcon as={UserIcon} size={24} />
-                  )}
-                </Div>
-                <Div>
-                  <H3 className="text-base font-black text-black leading-tight">{selectedDriver.name || 'Unknown Driver'}</H3>
-                  <P className="text-xs text-gray-500 font-medium">{selectedDriver.phone || 'No Phone'}</P>
-                  <Div className="flex items-center gap-1 mt-1">
-                    {selectedDriver.isOnline ? (
-                      <>
-                        <UiIcon as={CheckCircle2} size={12} className="text-green-500" />
-                        <Span className="text-[10px] font-bold text-green-600">ONLINE</Span>
-                      </>
-                    ) : (
-                      <>
-                        <UiIcon as={XCircle} size={12} className="text-gray-400" />
-                        <Span className="text-[10px] font-bold text-gray-500">OFFLINE</Span>
-                      </>
-                    )}
-                    {selectedDriver.isOnRide && <Span className="text-[10px] font-bold text-yellow-600 ml-1">• ON TRIP</Span>}
-                  </Div>
-                </Div>
-              </Div>
-
-              <Hr className="border-gray-100" />
-
-              {/* Vehicle Info */}
-              <Div className="space-y-2">
-                <H4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Vehicle Information</H4>
-                <Div className="bg-gray-50 rounded-lg p-2.5 flex flex-col gap-1.5 border border-gray-100">
-                  <Div className="flex justify-between items-center">
-                    <Span className="text-xs text-gray-500 font-medium">Model</Span>
-                    <Span className="text-xs font-black text-black">{selectedDriver.vehicle_model || selectedDriver.vehicle_type || 'N/A'}</Span>
-                  </Div>
-                  <Div className="flex justify-between items-center">
-                    <Span className="text-xs text-gray-500 font-medium">Number Plate</Span>
-                    <Span className="text-xs font-black text-black bg-yellow-100 px-1.5 py-0.5 rounded">{selectedDriver.vehicle_number || 'N/A'}</Span>
-                  </Div>
-                  <Div className="flex justify-between items-center">
-                    <Span className="text-xs text-gray-500 font-medium">City / Zone</Span>
-                    <Span className="text-xs font-bold text-gray-700">{selectedDriver.city || selectedDriver.service_location_name || 'N/A'}</Span>
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Telemetry Stats */}
-              <Div className="space-y-2">
-                <H4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Live Telemetry</H4>
-                <Div className="grid grid-cols-2 gap-2">
-                  <Div className="bg-white border border-gray-200 rounded-lg p-2.5 flex items-center gap-2 shadow-sm">
-                    <Div className="text-gray-400">
-                      <UiIcon as={Gauge} size={16} />
-                    </Div>
-                    <Div>
-                      <P className="text-[9px] font-bold text-gray-400 uppercase">Speed</P>
-                      <P className="text-sm font-black text-black">
-                        {selectedDriver.speed || '0'} <Span className="text-[10px]">km/h</Span>
-                      </P>
-                    </Div>
-                  </Div>
-                  <Div className="bg-white border border-gray-200 rounded-lg p-2.5 flex items-center gap-2 shadow-sm">
-                    <Div className="text-gray-400">
-                      <UiIcon as={Navigation} size={16} />
-                    </Div>
-                    <Div>
-                      <P className="text-[9px] font-bold text-gray-400 uppercase">Heading</P>
-                      <P className="text-sm font-black text-black">{selectedDriver.heading || 'N/A'}°</P>
-                    </Div>
-                  </Div>
-                  <Div className="bg-white border border-gray-200 rounded-lg p-2.5 flex items-center gap-2 shadow-sm">
-                    <Div className="text-gray-400">
-                      <UiIcon as={MapPin} size={16} />
-                    </Div>
-                    <Div>
-                      <P className="text-[9px] font-bold text-gray-400 uppercase">Accuracy</P>
-                      <P className="text-sm font-black text-black">± {selectedDriver.accuracy || '5'}m</P>
-                    </Div>
-                  </Div>
-                  <Div className="bg-white border border-gray-200 rounded-lg p-2.5 flex items-center gap-2 shadow-sm">
-                    <Div className="text-gray-400">
-                      <UiIcon as={Battery} size={16} />
-                    </Div>
-                    <Div>
-                      <P className="text-[9px] font-bold text-gray-400 uppercase">Battery</P>
-                      <P className="text-sm font-black text-black">{selectedDriver.battery || 'N/A'}</P>
-                    </Div>
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Trip Info if on trip */}
-              {selectedDriver.isOnRide && (
-                <Div className="space-y-2">
-                  <H4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest text-yellow-600">Active Trip</H4>
-                  <Div className="bg-yellow-50 rounded-lg p-2.5 flex flex-col gap-1.5 border border-yellow-100">
-                    <Div className="flex justify-between items-center">
-                      <Span className="text-xs text-yellow-700 font-medium">Passenger</Span>
-                      <Span className="text-xs font-black text-black">{selectedDriver.passenger_name || 'N/A'}</Span>
-                    </Div>
-                    <Div className="flex justify-between items-center">
-                      <Span className="text-xs text-yellow-700 font-medium">Started</Span>
-                      <Span className="text-xs font-black text-black">Just now</Span>
-                    </Div>
-                  </Div>
-                </Div>
-              )}
-            </ScrollDiv>
-
-            {/* Drawer Footer Actions */}
-            <Div className="p-3 border-t border-gray-100 bg-gray-50 flex flex-col gap-2 mt-auto">
-              <Button className={btnPrimary + ' w-full'}>
-                <UiIcon as={Search} size={14} /> Locate Vehicle
-              </Button>
-              <Button
-                onClick={() => navigate(`/taxi/admin/owner-management/manage-owners/${selectedDriver._id || selectedDriver.id}`)}
-                className={btnSecondary + ' w-full'}
-              >
-                <UiIcon as={UserIcon} size={14} /> View Driver Profile
-              </Button>
-            </Div>
-          </Div>
+            {!controls.heatmap &&
+              filteredDrivers.map((driver) => (
+                <Marker
+                  key={driver._id || driver.id}
+                  coordinate={{
+                    latitude: Number(driver.latitude),
+                    longitude: Number(driver.longitude),
+                  }}
+                  onPress={() => handleMarkerClick(driver)}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                  image={getMapIconForVehicle(driver.vehicle_icon_type || driver.vehicle_type)}
+                />
+              ))}
+          </GMap>
+        ) : (
+          <EmptyState className="border-0" icon={MapIcon} title="Map offline" message="The live map needs a Google Maps key to render." />
         )}
-      </Div>
-    </Div>
+
+        {loading ? (
+          <LoadingState label="Syncing fleet positions…" className="border-0" />
+        ) : filteredDrivers.length === 0 ? (
+          <EmptyState
+            className="border-0"
+            icon={Car}
+            title="No live fleet available"
+            message="Waiting for GPS updates, or adjust your filters."
+            actionLabel="Force refresh"
+            onAction={fetchMapData}
+          />
+        ) : null}
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle className="mb-3">Real-time event timeline · {timelineEvents.length}</SectionTitle>
+        {timelineEvents.length === 0 ? (
+          <EmptyState className="border-0" icon={Activity} title="No recent events" message="Trip starts and SOS alerts show up here as they happen." />
+        ) : (
+          <HScroll contentClassName="flex-row items-stretch gap-3">
+            {timelineEvents.map((evt) => (
+              <Div key={evt.id} className="w-[200px] bg-slate-50 border border-slate-200 rounded-lg p-3 gap-2">
+                <Div className="flex-row items-center gap-2">
+                  <Div className={`w-9 h-9 bg-white rounded-lg border border-slate-200 items-center justify-center ${evt.color}`}>{evt.icon}</Div>
+                  <Div className="flex-1 min-w-0">
+                    <Span className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                      {evt.type}
+                    </Span>
+                    <Span className="text-xs text-slate-500" numberOfLines={1}>
+                      {evt.time.toLocaleTimeString()}
+                    </Span>
+                  </Div>
+                </Div>
+                <Span className="text-xs text-slate-500" numberOfLines={3}>
+                  {evt.desc}
+                </Span>
+              </Div>
+            ))}
+          </HScroll>
+        )}
+      </Card>
+
+      {selectedDriver && (
+        <Card className="mb-4 gap-4">
+          <Div className="flex-row items-center gap-3">
+            <Span className="text-base font-semibold text-slate-900 flex-1">Driver telemetry</Span>
+            <Button onClick={() => setSelectedDriver(null)} accessibilityLabel="Close driver telemetry" className="w-11 h-11 items-center justify-center">
+              <UiIcon as={X} size={18} className="text-slate-600" />
+            </Button>
+          </Div>
+
+          <Div className="flex-row items-center gap-3">
+            <Div className="w-14 h-14 bg-slate-100 rounded-full border border-slate-200 overflow-hidden items-center justify-center shrink-0">
+              {selectedDriver.profile_image ? (
+                <Img src={selectedDriver.profile_image} alt={selectedDriver.name} className="w-full h-full" contentFit="cover" />
+              ) : (
+                <UiIcon as={UserIcon} size={24} className="text-slate-400" />
+              )}
+            </Div>
+            <Div className="flex-1 min-w-0 gap-1">
+              <Span className="text-base font-semibold text-slate-900" numberOfLines={1}>
+                {selectedDriver.name || 'Unknown Driver'}
+              </Span>
+              <Div className="flex-row items-center gap-1.5">
+                <UiIcon as={Phone} size={12} className="text-slate-400" />
+                <Span className="text-sm text-slate-500" numberOfLines={1}>
+                  {selectedDriver.phone || 'No Phone'}
+                </Span>
+              </Div>
+              <Div className="flex-row flex-wrap items-center gap-2">
+                <StatusBadge
+                  status={selectedDriver.isOnline ? 'online' : 'offline'}
+                  icon={selectedDriver.isOnline ? CheckCircle2 : XCircle}
+                  label={selectedDriver.isOnline ? 'Online' : 'Offline'}
+                />
+                {selectedDriver.isOnRide ? <StatusBadge tone="warning" label="On trip" /> : null}
+              </Div>
+            </Div>
+          </Div>
+
+          <Div className="gap-2">
+            <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Vehicle information</Span>
+            <Div className="bg-slate-50 rounded-lg p-3 gap-2 border border-slate-200">
+              <Div className="flex-row items-center justify-between gap-3">
+                <Span className="text-sm text-slate-500">Model</Span>
+                <Span className="text-sm font-semibold text-slate-900">{selectedDriver.vehicle_model || selectedDriver.vehicle_type || 'N/A'}</Span>
+              </Div>
+              <Div className="flex-row items-center justify-between gap-3">
+                <Span className="text-sm text-slate-500">Number plate</Span>
+                <Span className="text-sm font-semibold text-slate-900">{selectedDriver.vehicle_number || 'N/A'}</Span>
+              </Div>
+              <Div className="flex-row items-center justify-between gap-3">
+                <Span className="text-sm text-slate-500">City / zone</Span>
+                <Span className="text-sm font-semibold text-slate-900">{selectedDriver.city || selectedDriver.service_location_name || 'N/A'}</Span>
+              </Div>
+            </Div>
+          </Div>
+
+          <Div className="gap-2">
+            <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Live telemetry</Span>
+            <StatGrid>
+              <StatCard label="Speed" value={`${selectedDriver.speed || '0'} km/h`} icon={Gauge} tone="neutral" />
+              <StatCard label="Heading" value={`${selectedDriver.heading || 'N/A'}°`} icon={Navigation} tone="neutral" />
+              <StatCard label="Accuracy" value={`± ${selectedDriver.accuracy || '5'} m`} icon={MapPin} tone="neutral" />
+              <StatCard label="Battery" value={String(selectedDriver.battery || 'N/A')} icon={Battery} tone="neutral" />
+            </StatGrid>
+          </Div>
+
+          {selectedDriver.isOnRide && (
+            <Div className="gap-2">
+              <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Active trip</Span>
+              <Div className="bg-amber-100 rounded-lg p-3 gap-2 border border-amber-200">
+                <Div className="flex-row items-center justify-between gap-3">
+                  <Span className="text-sm text-slate-700">Passenger</Span>
+                  <Span className="text-sm font-semibold text-slate-900">{selectedDriver.passenger_name || 'N/A'}</Span>
+                </Div>
+                <Div className="flex-row items-center justify-between gap-3">
+                  <Span className="text-sm text-slate-700">Started</Span>
+                  <Span className="text-sm font-semibold text-slate-900">Just now</Span>
+                </Div>
+              </Div>
+            </Div>
+          )}
+
+          <Div className="gap-2">
+            <Button className={BTN_PRIMARY}>
+              <UiIcon as={Search} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Locate vehicle</Span>
+            </Button>
+            <Button
+              onClick={() => navigate(`/taxi/admin/owner-management/manage-owners/${selectedDriver._id || selectedDriver.id}`)}
+              className={BTN_SECONDARY}
+            >
+              <UiIcon as={UserIcon} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>View driver profile</Span>
+            </Button>
+          </Div>
+        </Card>
+      )}
+    </AdminPage>
   );
 };
 export default GodsEye;

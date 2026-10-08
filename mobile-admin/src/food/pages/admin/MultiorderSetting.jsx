@@ -1,16 +1,17 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/MultiorderSetting.jsx (tools/port.js first pass). */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Package, Loader2, Bike } from 'lucide-react-native';
 import { adminAPI } from '../../../api/food';
 import { toast } from '../../../lib/notify';
-import { Button, Div, H1, H2, Input, Label, P, ScrollDiv, Strong, Icon as UiIcon } from '../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, INPUT, BTN_PRIMARY, BTN_TEXT_PRIMARY, LoadingState, useLayoutWidth } from '../../../admin/ui';
+import { Button, Div, Input, Span, Icon as UiIcon } from '../../../components/web';
 const debugError = (...args) => {};
 export default function MultiorderSetting() {
   const [loading, setLoading] = useState(true);
   const [savingConcurrent, setSavingConcurrent] = useState(false);
   const [maxConcurrentOrders, setMaxConcurrentOrders] = useState('1');
   const isMountedRef = useRef(true);
+  const { tablet } = useLayoutWidth();
   const fetchSetting = useCallback(async ({ silent = false } = {}) => {
     try {
       if (!silent) {
@@ -66,72 +67,47 @@ export default function MultiorderSetting() {
     };
   }, [fetchSetting]);
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-5xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex items-center gap-3 mb-2">
-            <UiIcon as={Package} className="w-5 h-5 text-slate-700" />
-            <H1 className="text-2xl font-bold text-slate-900">Multiorder Setting</H1>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={Package}
+        title="Multiorder setting"
+        subtitle="How many orders one delivery partner may work on at the same time. A global setting — it applies to every partner."
+        breadcrumb={[{ label: 'Food' }, { label: 'Delivery' }, { label: 'Multiorder setting' }]}
+      />
+      {loading ? (
+        <LoadingState label="Loading current setting…" />
+      ) : (
+        <Card>
+          <SectionTitle>Delivery boy order limit</SectionTitle>
+          <Div className="flex-row items-start gap-3 mb-4">
+            <Div className="w-11 h-11 rounded-lg bg-blue-100 items-center justify-center shrink-0">
+              <UiIcon as={Bike} size={20} className="text-blue-700" />
+            </Div>
+            <Span className="text-sm text-slate-700 flex-1">
+              Maximum number of orders a delivery partner can accept and work on at the same time. Allowed range is 1 to 5.
+            </Span>
           </Div>
-
-          <P className="text-sm text-slate-600 mb-6">
-            Configure how many orders a delivery partner can handle at the same time. This is a<Strong> global setting</Strong> and applies to all delivery
-            partners.
-          </P>
-
-          <LinearGradient
-            colors={['#EFF6FF', '#EEF2FF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ borderWidth: 1, borderColor: '#BFDBFE', borderRadius: 12, padding: 20 }}
-          >
-            <Div className="flex items-center gap-3 mb-4">
-              <Div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-600/10 text-blue-700">
-                <UiIcon as={Bike} className="h-6 w-6" />
-              </Div>
-              <Div>
-                <H2 className="text-base font-semibold text-blue-950">Delivery Boy Order Limit</H2>
-                <P className="text-xs text-blue-700/70">Global setting · applies to all delivery partners</P>
-              </Div>
-            </Div>
-
-            <P className="text-sm text-blue-900/70 mb-4">
-              Maximum number of orders a delivery partner can accept and work on at the same time. Allowed range is <Strong>1 to 5</Strong>.
-            </P>
-
-            <Div className="flex flex-col sm:flex-row gap-3 sm:items-stretch">
-              <Div className="flex-1">
-                <Label className="mb-1 block text-xs font-medium text-blue-900/80">Order limit per delivery boy</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="5"
-                  step="1"
-                  value={maxConcurrentOrders}
-                  onChange={(e) => setMaxConcurrentOrders(e.target.value)}
-                  className="w-full rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={loading ? 'Loading...' : 'e.g., 3'}
-                  disabled={loading || savingConcurrent}
-                />
-                {loading && (
-                  <P className="mt-1 flex items-center gap-2 text-xs text-blue-700/80">
-                    <UiIcon as={Loader2} className="h-3.5 w-3.5 animate-spin" />
-                    Loading current setting...
-                  </P>
-                )}
-              </Div>
-              <Button
-                onClick={saveConcurrentLimit}
+          <Div className={tablet ? 'flex-row items-end gap-3' : 'gap-3'}>
+            <Field label="Order limit per delivery boy" hint="Between 1 and 5" className={tablet ? 'flex-1' : null}>
+              <Input
+                type="number"
+                min="1"
+                max="5"
+                step="1"
+                value={maxConcurrentOrders}
+                onChange={(e) => setMaxConcurrentOrders(e.target.value)}
+                className={INPUT}
+                placeholder="e.g., 3"
                 disabled={loading || savingConcurrent}
-                className="flex items-center justify-center gap-2 self-end rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-md transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {savingConcurrent && <UiIcon as={Loader2} className="h-4 w-4 animate-spin" />}
-                Save
-              </Button>
-            </Div>
-          </LinearGradient>
-        </Div>
-      </Div>
-    </ScrollDiv>
+              />
+            </Field>
+            <Button onClick={saveConcurrentLimit} disabled={loading || savingConcurrent} className={BTN_PRIMARY}>
+              {savingConcurrent ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>Save</Span>
+            </Button>
+          </Div>
+        </Card>
+      )}
+    </AdminPage>
   );
 }

@@ -1,7 +1,8 @@
 /* Ported from Frontend/src/modules/Food/components/admin/orders/SettingsDialog.jsx (tools/port.js first pass). */
-import { Settings, Columns, Check } from 'lucide-react-native';
+import { Settings, Check } from 'lucide-react-native';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../../components/shadcn';
-import { Button, Div, H3, Input, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Input, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY } from '../../../../admin/ui';
 export default function SettingsDialog({ isOpen, onOpenChange, visibleColumns, toggleColumn, resetColumns, columnsConfig }) {
   const defaultColumnsConfig = {
     si: 'Serial Number',
@@ -23,37 +24,36 @@ export default function SettingsDialog({ isOpen, onOpenChange, visibleColumns, t
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md bg-white p-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
-          <Div className="flex flex-row items-center gap-2">
-            <UiIcon as={Settings} className="w-5 h-5" />
-            <DialogTitle>Table Settings</DialogTitle>
+        <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+          <Div className="flex-row items-center gap-2">
+            <UiIcon as={Settings} size={18} className="text-slate-700" />
+            <DialogTitle>Table settings</DialogTitle>
           </Div>
+          <Span className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Visible columns</Span>
         </DialogHeader>
-        <ScrollDiv className="max-h-[70vh]" contentClassName="px-6 pb-6 gap-4">
-          <Div>
-            <Div className="mb-3 flex flex-row items-center gap-2">
-              <UiIcon as={Columns} className="w-4 h-4 text-slate-700" />
-              <H3 className="text-sm font-semibold text-slate-700">Visible Columns</H3>
+        <ScrollDiv style={{ maxHeight: 360 }} contentClassName="px-4 py-3 gap-1">
+          {Object.entries(columnLabels).map(([key, label]) => (
+            <Div
+              key={key}
+              onClick={() => toggleColumn(key)}
+              accessibilityRole="button"
+              accessibilityLabel={`${visibleColumns[key] ? 'Hide' : 'Show'} the ${label} column`}
+              className="min-h-[44px] flex-row items-center gap-3 px-2 rounded-lg"
+            >
+              <Input type="checkbox" checked={!!visibleColumns[key]} onChange={() => toggleColumn(key)} className="w-5 h-5" />
+              <Span className="flex-1 text-sm text-slate-700">{label}</Span>
+              {visibleColumns[key] ? <UiIcon as={Check} size={16} className="text-blue-600" /> : null}
             </Div>
-            <Div className="space-y-2">
-              {Object.entries(columnLabels).map(([key, label]) => (
-                <Div key={key} onClick={() => toggleColumn(key)} className="flex flex-row items-center gap-3 p-2 rounded-lg">
-                  <Input type="checkbox" checked={!!visibleColumns[key]} onChange={() => toggleColumn(key)} className="w-4 h-4" />
-                  <Span className="text-sm text-slate-700">{label}</Span>
-                  {visibleColumns[key] && <UiIcon as={Check} className="w-4 h-4 text-emerald-600 ml-auto" />}
-                </Div>
-              ))}
-            </Div>
-          </Div>
-          <Div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-            <Button onClick={resetColumns} className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700">
-              Reset
-            </Button>
-            <Button onClick={() => onOpenChange(false)} className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white shadow-md">
-              Apply
-            </Button>
-          </Div>
+          ))}
         </ScrollDiv>
+        <Div className="flex-row items-center justify-end gap-2 px-4 py-3 border-t border-slate-200">
+          <Button onClick={resetColumns} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+          </Button>
+          <Button onClick={() => onOpenChange(false)} className={BTN_PRIMARY}>
+            <Span className={BTN_TEXT_PRIMARY}>Apply</Span>
+          </Button>
+        </Div>
       </DialogContent>
     </Dialog>
   );

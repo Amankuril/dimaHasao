@@ -15,9 +15,24 @@ import { Loader2, Plus, ShieldCheck, X } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import globalService from '../../../services/globalService';
 import FeaturePermissionMatrix from '../components/FeaturePermissionMatrix';
-import { Button, Div, Form, H2, H3, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
-const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
-const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
+import {
+  AdminPage,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  Card,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  PageHeader,
+  SectionTitle,
+  StatusBadge,
+  TableSkeleton,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
 const LEVEL_LABELS = {
   platform_superadmin: 'Platform superadmin',
   food_superadmin: 'Food superadmin',
@@ -37,6 +52,8 @@ const BLANK = {
   featurePermissions: {},
 };
 const Administrators = () => {
+  const { tablet } = useLayoutWidth();
+  const cols = tablet ? 2 : 1;
   const [administrators, setAdministrators] = useState([]);
   const [meta, setMeta] = useState({
     levels: [],
@@ -158,178 +175,174 @@ const Administrators = () => {
       setBusyId(null);
     }
   };
+  const header = <PageHeader title="Administrators" subtitle="An access level decides which module tabs an admin sees." icon={ShieldCheck} />;
   if (denied) {
     return (
-      <ScrollDiv className="p-4 pb-20">
-        <Div className="bg-white p-10 rounded-2xl border border-gray-200 items-center text-center">
-          <UiIcon as={ShieldCheck} size={28} className="text-amber-500 mx-auto mb-3" />
-          <H3 className="font-bold text-gray-900">Only a platform superadmin can manage administrators</H3>
-          <P className="text-sm text-gray-500 mt-1.5">Your account administers its own modules. Ask a platform superadmin for changes here.</P>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        {header}
+        <ErrorState
+          title="Only a platform superadmin can manage administrators"
+          message="Your account administers its own modules. Ask a platform superadmin for changes here."
+        />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-5">
-      <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Div>
-          <H2 className="text-2xl font-bold text-gray-900">Administrators</H2>
-          <P className="text-gray-500 text-sm mt-0.5">An access level decides which module tabs an admin sees.</P>
-        </Div>
-        <Button
-          type="button"
-          onClick={() => setShowForm((s) => !s)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]"
-        >
-          {showForm ? <UiIcon as={X} size={16} /> : <UiIcon as={Plus} size={16} />}
-          {showForm ? 'Cancel' : 'Add an administrator'}
-        </Button>
-      </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        title="Administrators"
+        subtitle="An access level decides which module tabs an admin sees."
+        icon={ShieldCheck}
+        actions={
+          <Button type="button" onClick={() => setShowForm((s) => !s)} className={showForm ? BTN_SECONDARY : BTN_PRIMARY}>
+            <UiIcon as={showForm ? X : Plus} size={16} className={showForm ? 'text-slate-600' : 'text-white'} />
+            <Span className={showForm ? BTN_TEXT_SECONDARY : BTN_TEXT_PRIMARY}>{showForm ? 'Cancel' : 'Add an administrator'}</Span>
+          </Button>
+        }
+      />
 
       {showForm && (
-        <Form onSubmit={submit} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-          <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Div>
-              <Label className={label}>Name</Label>
-              <Input className={field} value={form.name} onChange={set('name')} />
-            </Div>
-            <Div>
-              <Label className={label}>
-                Email <Span className="text-red-500">*</Span>
-              </Label>
-              <Input className={field} type="email" value={form.email} onChange={set('email')} />
-            </Div>
-            <Div>
-              <Label className={label}>Phone</Label>
-              <Input className={field} value={form.phone} onChange={set('phone')} />
-            </Div>
-            <Div>
-              <Label className={label}>
-                Password <Span className="text-red-500">*</Span>
-              </Label>
-              <Input className={field} type="password" value={form.password} onChange={set('password')} />
-              <P className="text-xs text-gray-400 mt-1.5">At least 8 characters.</P>
-            </Div>
-          </Div>
+        <Form onSubmit={submit}>
+          <Card className="mb-4 gap-4">
+            <SectionTitle>New administrator</SectionTitle>
 
-          <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Div>
-              <Label className={label}>Access level</Label>
-              <Select className={field} value={form.adminLevel} onChange={set('adminLevel')}>
-                {(meta.levels.length ? meta.levels : Object.keys(LEVEL_LABELS)).map((l) => (
-                  <Option key={l} value={l}>
-                    {LEVEL_LABELS[l] || l}
-                  </Option>
-                ))}
-              </Select>
+            <Div className={`grid grid-cols-${cols} gap-3`}>
+              <Field label="Name">
+                <Input className={INPUT} value={form.name} onChange={set('name')} />
+              </Field>
+              <Field label="Email" required>
+                <Input className={INPUT} type="email" value={form.email} onChange={set('email')} />
+              </Field>
+              <Field label="Phone">
+                <Input className={INPUT} value={form.phone} onChange={set('phone')} />
+              </Field>
+              <Field label="Password" required hint="At least 8 characters.">
+                <Input className={INPUT} type="password" value={form.password} onChange={set('password')} />
+              </Field>
             </Div>
-            <Div>
-              <Label className={label}>Module {form.adminLevel === 'subadmin' && <Span className="text-red-500">*</Span>}</Label>
-              <Select className={field} value={form.module} onChange={set('module')}>
-                <Option value="">Not scoped to one module</Option>
+
+            <Div className={`grid grid-cols-${cols} gap-3`}>
+              <Field label="Access level">
+                <Select className={INPUT} value={form.adminLevel} onChange={set('adminLevel')}>
+                  {(meta.levels.length ? meta.levels : Object.keys(LEVEL_LABELS)).map((l) => (
+                    <Option key={l} value={l}>
+                      {LEVEL_LABELS[l] || l}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Module" required={form.adminLevel === 'subadmin'}>
+                <Select className={INPUT} value={form.module} onChange={set('module')}>
+                  <Option value="">Not scoped to one module</Option>
+                  {meta.modules.map((m) => (
+                    <Option key={m} value={m}>
+                      {m}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+            </Div>
+
+            <Field label="Modules they may reach" hint="Leave every module unselected only for a platform superadmin.">
+              <Div className="flex-row flex-wrap gap-2">
                 {meta.modules.map((m) => (
-                  <Option key={m} value={m}>
-                    {m}
-                  </Option>
+                  <Button
+                    key={m}
+                    type="button"
+                    onClick={() => toggleService(m)}
+                    className={`h-11 px-4 rounded-full items-center justify-center ${form.servicesAccess.includes(m) ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
+                  >
+                    <Span className={`text-sm font-semibold ${form.servicesAccess.includes(m) ? 'text-white' : 'text-slate-700'}`}>{m}</Span>
+                  </Button>
                 ))}
-              </Select>
-            </Div>
-          </Div>
+              </Div>
+            </Field>
 
-          <Div>
-            <Label className={label}>Modules they may reach</Label>
-            <Div className="flex flex-wrap gap-2">
-              {meta.modules.map((m) => (
-                <Button
-                  key={m}
-                  type="button"
-                  onClick={() => toggleService(m)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${form.servicesAccess.includes(m) ? 'bg-[#0a4d2b] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                >
-                  {m}
-                </Button>
-              ))}
-            </Div>
-            <P className="text-xs text-gray-400 mt-1.5">Leave every module unselected only for a platform superadmin.</P>
-          </Div>
+            {form.adminLevel === 'subadmin' && (
+              <Field label="What they may do" hint="Ticking anything grants View too — a row they can change but never open is no use.">
+                <FeaturePermissionMatrix
+                  catalogue={meta.features}
+                  actions={meta.featureActions}
+                  modules={form.servicesAccess}
+                  value={form.featurePermissions}
+                  onChange={(featurePermissions) =>
+                    setForm((c) => ({
+                      ...c,
+                      featurePermissions,
+                    }))
+                  }
+                />
+              </Field>
+            )}
 
-          {form.adminLevel === 'subadmin' && (
-            <Div>
-              <Label className={label}>What they may do</Label>
-              <P className="text-xs text-gray-400 mb-3">Ticking anything grants View too — a row they can change but never open is no use.</P>
-              <FeaturePermissionMatrix
-                catalogue={meta.features}
-                actions={meta.featureActions}
-                modules={form.servicesAccess}
-                value={form.featurePermissions}
-                onChange={(featurePermissions) =>
-                  setForm((c) => ({
-                    ...c,
-                    featurePermissions,
-                  }))
-                }
-              />
-            </Div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
-          >
-            {saving && <UiIcon as={Loader2} size={16} className="animate-spin" />} Create administrator
-          </Button>
+            <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
+              {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>Create administrator</Span>
+            </Button>
+          </Card>
         </Form>
       )}
 
       {loading ? (
-        <Div className="p-12 text-center text-gray-400">
-          <UiIcon as={Loader2} size={22} className="animate-spin inline" />
-        </Div>
+        <TableSkeleton rows={4} />
+      ) : administrators.length === 0 ? (
+        <EmptyState
+          title="No administrators yet"
+          message="Add the first administrator; an access level decides what they can reach."
+          actionLabel="Add an administrator"
+          onAction={() => setShowForm(true)}
+        />
       ) : (
-        <Div className="space-y-3">
+        <Div className="gap-3">
           {administrators.map((admin) => (
-            <Div key={admin._id} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-center gap-4">
-              <Div className="flex-1 basis-56 min-w-0">
-                <Div className="flex flex-wrap items-center gap-2">
-                  <P className="font-bold text-gray-900">{admin.name || admin.email}</P>
-                  <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#0a4d2b]/10 text-[#0a4d2b]">
-                    {LEVEL_LABELS[admin.adminLevel] || admin.adminLevel}
-                  </Span>
-                  {admin.isActive === false && <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">deactivated</Span>}
+            <Card key={admin._id} className="gap-3">
+              <Div className="flex-row items-start gap-3">
+                <Div className="flex-1 min-w-0">
+                  <P className="text-base font-semibold text-slate-900" numberOfLines={2}>
+                    {admin.name || admin.email}
+                  </P>
+                  <P className="text-xs text-slate-500 mt-0.5" numberOfLines={1}>
+                    {admin.email}
+                  </P>
+                  <P className="text-xs text-slate-500 mt-0.5" numberOfLines={2}>
+                    {admin.servicesAccess?.length ? admin.servicesAccess.join(' · ') : 'every module'}
+                    {admin.module ? ` · scoped to ${admin.module}` : ''}
+                  </P>
                 </Div>
-                <P className="text-xs text-gray-500 mt-1">{admin.email}</P>
-                <P className="text-xs text-gray-400 mt-0.5">
-                  {admin.servicesAccess?.length ? admin.servicesAccess.join(' · ') : 'every module'}
-                  {admin.module ? ` · scoped to ${admin.module}` : ''}
-                </P>
+                <Div className="flex-row items-center gap-2 shrink-0">
+                  <Input
+                    type="checkbox"
+                    className="w-5 h-5"
+                    checked={admin.isActive !== false}
+                    disabled={busyId === admin._id}
+                    onChange={(e) => setActive(admin, e.target.checked)}
+                  />
+                  <Span className="text-sm text-slate-700">Active</Span>
+                </Div>
+              </Div>
+
+              <Div className="flex-row flex-wrap items-center gap-2">
+                <StatusBadge status="level" tone="info" label={LEVEL_LABELS[admin.adminLevel] || admin.adminLevel} />
+                {admin.isActive === false && <StatusBadge status="deactivated" label="deactivated" />}
               </Div>
 
               {admin.adminLevel === 'subadmin' && (
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setEditing(editing === admin._id ? null : admin._id);
-                    setEditGrants(admin.featurePermissions || {});
-                  }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 shrink-0"
-                >
-                  {editing === admin._id ? 'Close' : 'Permissions'}
-                </Button>
+                <Div className="flex-row flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setEditing(editing === admin._id ? null : admin._id);
+                      setEditGrants(admin.featurePermissions || {});
+                    }}
+                    className={BTN_SECONDARY}
+                  >
+                    <Span className={BTN_TEXT_SECONDARY}>{editing === admin._id ? 'Close' : 'Permissions'}</Span>
+                  </Button>
+                </Div>
               )}
 
-              <Div className="flex items-center gap-2 text-xs font-bold text-gray-600 shrink-0">
-                <Input
-                  type="checkbox"
-                  checked={admin.isActive !== false}
-                  disabled={busyId === admin._id}
-                  onChange={(e) => setActive(admin, e.target.checked)}
-                />
-                Active
-              </Div>
-
               {editing === admin._id && (
-                <Div className="w-full pt-4 mt-1 border-t border-gray-100 space-y-4">
+                <Div className="pt-3 border-t border-slate-100 gap-3">
                   <FeaturePermissionMatrix
                     catalogue={meta.features}
                     actions={meta.featureActions}
@@ -337,22 +350,17 @@ const Administrators = () => {
                     value={editGrants}
                     onChange={setEditGrants}
                   />
-                  <Button
-                    type="button"
-                    disabled={busyId === admin._id}
-                    onClick={() => saveGrants(admin)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm disabled:opacity-60"
-                  >
-                    {busyId === admin._id && <UiIcon as={Loader2} size={15} className="animate-spin" />}
-                    Save permissions
+                  <Button type="button" disabled={busyId === admin._id} onClick={() => saveGrants(admin)} className={BTN_PRIMARY}>
+                    {busyId === admin._id ? <UiIcon as={Loader2} size={15} className="text-white" /> : null}
+                    <Span className={BTN_TEXT_PRIMARY}>Save permissions</Span>
                   </Button>
                 </Div>
               )}
-            </Div>
+            </Card>
           ))}
         </Div>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Administrators;

@@ -11,42 +11,66 @@
  * never drift from what the customer was actually charged.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useWindowDimensions } from 'react-native';
-import { Download, Loader2 } from 'lucide-react-native';
+import { BarChart3, Download, Loader2 } from 'lucide-react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { toast } from '../../../../lib/notify';
 import globalService from '../../../services/globalService';
-import { Button, Div, H1, H3, Input, Option, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import {
+  A,
+  AdminPage,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  Card,
+  Cell,
+  DataTable,
+  EmptyState,
+  INPUT,
+  LoadingState,
+  PageHeader,
+  Row,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  TBody,
+  THead,
+  Toolbar,
+  AXIS_TEXT,
+  useChartWidth,
+  chartSpacing,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
 const MODULES = [
   {
     key: 'food',
     label: 'Food',
-    colour: '#f97316',
+    colour: '#BB4D00',
   },
   {
     key: 'taxi',
     label: 'Taxi',
-    colour: '#eab308',
+    colour: '#A16207',
   },
   {
     key: 'hotel',
     label: 'Hotels',
-    colour: '#0ea5e9',
+    colour: '#0284C7',
   },
   {
     key: 'tours',
     label: 'Tours',
-    colour: '#0a4d2b',
+    colour: '#008236',
   },
   {
     key: 'festivals',
     label: 'Festivals',
-    colour: '#8b5cf6',
+    colour: '#7C3AED',
   },
 ];
 const COLOUR = Object.fromEntries(MODULES.map((m) => [m.key, m.colour]));
 const rupees = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
-const field = 'px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
+const COLS = [140, 120, 90, 120, 120, 110, 120, 110];
 
 /** yyyy-mm-dd, `daysAgo` days back — the format a date input wants. */
 const isoDaysAgo = (daysAgo) => {
@@ -74,7 +98,6 @@ const axisRupees = (v) => {
   return n === 0 ? '₹0' : `₹${(n / 1000).toFixed(n >= 1000 ? 0 : 1)}k`;
 };
 const Reports = () => {
-  const { width: screenWidth } = useWindowDimensions();
   const [from, setFrom] = useState(isoDaysAgo(30));
   const [to, setTo] = useState(isoDaysAgo(0));
   const [interval, setInterval] = useState('day');
@@ -149,7 +172,7 @@ const Reports = () => {
    * area chart is. Every point carries the raw per-module values for the
    * tooltip.
    */
-  const chartWidth = Math.max(160, screenWidth - 32 - 32 - 64);
+  const chartWidth = useChartWidth(64, 1200);
   const labelEvery = Math.max(1, Math.ceil(points.length / 6));
   const stackedSets = useMemo(() => {
     const sets = activeModules.map((m, k) => ({
@@ -169,89 +192,51 @@ const Reports = () => {
     return sets.reverse();
   }, [activeModules, points, labelEvery]);
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-5">
-      <Div className="flex flex-wrap items-start justify-between gap-4">
-        <Div>
-          <H1 className="text-xl font-bold text-gray-900">Reports</H1>
-          <P className="text-sm text-gray-500 mt-0.5">Every service, one date range. Settled transactions only.</P>
-        </Div>
-
-        <Button
-          type="button"
-          onClick={() => download('overview')}
-          disabled={downloading === 'overview'}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
-        >
-          {downloading === 'overview' ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Download} size={16} />}
-          Export CSV
-        </Button>
-      </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        title="Reports"
+        subtitle="Every service, one date range. Settled transactions only."
+        icon={BarChart3}
+        actions={
+          <Button type="button" onClick={() => download('overview')} disabled={downloading === 'overview'} className={BTN_PRIMARY}>
+            {downloading === 'overview' ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Download} size={16} className="text-white" />}
+            <Span className={BTN_TEXT_PRIMARY}>Export CSV</Span>
+          </Button>
+        }
+      />
 
       {/* Range */}
-      <Div className="flex flex-wrap items-center gap-2">
-        <Input type="date" className={field} value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
-        <Span className="text-sm text-gray-400">to</Span>
-        <Input type="date" className={field} value={to} min={from} onChange={(e) => setTo(e.target.value)} />
+      <Card className="mb-4">
+        <SectionTitle>Date range</SectionTitle>
+        <Toolbar className="mb-0">
+          <Input type="date" className={`${INPUT} flex-1`} style={{ minWidth: 130 }} value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
+          <Span className="text-sm text-slate-500">to</Span>
+          <Input type="date" className={`${INPUT} flex-1`} style={{ minWidth: 130 }} value={to} min={from} onChange={(e) => setTo(e.target.value)} />
 
-        {PRESETS.map((preset) => (
-          <Button
-            key={preset.days}
-            type="button"
-            onClick={() => applyPreset(preset.days)}
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-600 hover:bg-gray-50"
-          >
-            {preset.label}
-          </Button>
-        ))}
-      </Div>
+          {PRESETS.map((preset) => (
+            <Button key={preset.days} type="button" onClick={() => applyPreset(preset.days)} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>{preset.label}</Span>
+            </Button>
+          ))}
+        </Toolbar>
+      </Card>
 
       {loading ? (
-        <Div className="py-20 items-center">
-          <UiIcon as={Loader2} className="animate-spin text-gray-400" />
-        </Div>
+        <LoadingState label="Building the report…" />
       ) : (
         <>
           {/* Platform totals */}
-          <Div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[
-              {
-                label: 'Gross value',
-                value: rupees(overview?.total?.gross),
-                tone: 'text-gray-900',
-              },
-              {
-                label: 'Platform commission',
-                value: rupees(overview?.total?.commission),
-                tone: 'text-[#0a4d2b]',
-              },
-              {
-                label: 'Taxes collected',
-                value: rupees(overview?.total?.taxes),
-                tone: 'text-gray-900',
-              },
-              {
-                label: 'Owed to vendors',
-                value: rupees(overview?.total?.vendorPayout),
-                tone: 'text-gray-900',
-              },
-            ].map((card) => (
-              <Div key={card.label} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                <P className="text-xs font-semibold text-gray-500">{card.label}</P>
-                <P className={`text-xl font-black mt-1 ${card.tone}`}>{card.value}</P>
-              </Div>
-            ))}
-          </Div>
+          <StatGrid className="mb-4">
+            <StatCard label="Gross value" value={rupees(overview?.total?.gross)} />
+            <StatCard label="Platform commission" value={rupees(overview?.total?.commission)} tone="success" />
+            <StatCard label="Taxes collected" value={rupees(overview?.total?.taxes)} />
+            <StatCard label="Owed to vendors" value={rupees(overview?.total?.vendorPayout)} tone="warning" />
+          </StatGrid>
 
           {/* Trend */}
-          <Div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-3">
-            <Div className="flex flex-wrap items-center justify-between gap-2">
-              <H3 className="font-bold text-gray-900 text-sm">Gross value over time</H3>
-              <Div className="flex items-center gap-2">
-                <Select className={`${field} text-xs`} value={interval} onChange={(e) => setInterval(e.target.value)}>
-                  <Option value="day">By day</Option>
-                  <Option value="week">By week</Option>
-                  <Option value="month">By month</Option>
-                </Select>
+          <Card className="mb-4">
+            <SectionTitle
+              action={
                 <Button
                   type="button"
                   onClick={() =>
@@ -260,39 +245,49 @@ const Reports = () => {
                     })
                   }
                   disabled={downloading === 'timeseries'}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className={BTN_SECONDARY}
                 >
-                  <UiIcon as={Download} size={14} /> CSV
+                  <UiIcon as={Download} size={14} className="text-slate-600" />
+                  <Span className={BTN_TEXT_SECONDARY}>CSV</Span>
                 </Button>
-              </Div>
-            </Div>
+              }
+            >
+              Gross value over time
+            </SectionTitle>
+            <Toolbar>
+              <Select className={`${INPUT} flex-1`} style={{ minWidth: 140 }} value={interval} onChange={(e) => setInterval(e.target.value)}>
+                <Option value="day">By day</Option>
+                <Option value="week">By week</Option>
+                <Option value="month">By month</Option>
+              </Select>
+            </Toolbar>
 
             {points.length === 0 ? (
-              <P className="py-12 text-center text-sm text-gray-400">Nothing settled in this period.</P>
+              <P className="py-10 text-center text-sm text-slate-500">Nothing settled in this period.</P>
             ) : (
-              <Div className="min-h-64">
+              <Div>
                 <LineChart
                   areaChart
                   curved
                   dataSet={stackedSets}
                   width={chartWidth}
                   height={220}
-                  spacing={points.length > 1 ? chartWidth / (points.length - 1 + 0.5) : chartWidth / 2}
+                  spacing={chartSpacing(chartWidth, points.length, 8)}
                   initialSpacing={8}
                   endSpacing={8}
                   hideDataPoints
                   rulesType="dashed"
-                  rulesColor="#f1f5f9"
-                  xAxisColor="#94a3b8"
-                  yAxisColor="#94a3b8"
+                  rulesColor={A.border}
+                  xAxisColor={A.borderStrong}
+                  yAxisColor={A.borderStrong}
                   noOfSections={4}
                   yAxisLabelWidth={64}
                   formatYLabel={axisRupees}
-                  xAxisLabelTextStyle={{ fontSize: 11, color: '#94a3b8', width: 70 }}
-                  yAxisTextStyle={{ fontSize: 11, color: '#94a3b8' }}
+                  xAxisLabelTextStyle={{ ...AXIS_TEXT, width: 70 }}
+                  yAxisTextStyle={AXIS_TEXT}
                   pointerConfig={{
-                    pointerStripColor: '#cbd5e1',
-                    pointerColor: '#334155',
+                    pointerStripColor: A.borderStrong,
+                    pointerColor: A.text,
                     radius: 4,
                     autoAdjustPointerLabelPosition: true,
                     pointerLabelWidth: 150,
@@ -300,10 +295,10 @@ const Reports = () => {
                     pointerLabelComponent: (items) => {
                       const point = items?.[0]?.point || {};
                       return (
-                        <Div className="bg-white rounded-lg px-3 py-2 border border-gray-200 shadow-md">
-                          <P className="text-[11px] text-gray-500 mb-0.5">{items?.[0]?.bucket}</P>
+                        <Div className="bg-white rounded-lg px-3 py-2 border border-slate-200">
+                          <P className="text-xs text-slate-500 mb-0.5">{items?.[0]?.bucket}</P>
                           {activeModules.map((m) => (
-                            <P key={m.key} className="text-[11px]" style={{ color: m.colour }}>
+                            <P key={m.key} className="text-xs" style={{ color: m.colour }}>
                               {m.label} : {rupees(point[m.key])}
                             </P>
                           ))}
@@ -314,74 +309,88 @@ const Reports = () => {
                 />
               </Div>
             )}
-          </Div>
+          </Card>
 
           {/* Per module */}
-          <Div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <H3 className="font-bold text-gray-900 text-sm p-4 pb-3 border-b border-gray-100">By service</H3>
-            <Table cols={[140, 120, 90, 120, 120, 110, 120, 110]} className="w-full text-sm">
-              <Thead className="bg-gray-50 text-gray-500">
-                <Tr>
-                  {['Service', 'Settled', 'Pending', 'Gross', 'Commission', 'Taxes', 'To vendors', 'Average'].map((h, i) => (
-                    <Th key={h} className={`px-4 py-2.5 text-xs font-bold ${i === 0 ? 'text-left' : 'text-right'}`}>
-                      {h}
-                    </Th>
+          <Card className="mb-4" padded={false}>
+            <Div className="p-4 pb-0">
+              <SectionTitle>By service</SectionTitle>
+            </Div>
+            {(overview?.rows || []).length === 0 ? (
+              <Div className="p-4 pt-0">
+                <EmptyState title="Nothing settled in this period" message="Pick a wider date range to see per-service totals." />
+              </Div>
+            ) : (
+              <DataTable cols={COLS} className="rounded-none border-0">
+                <THead cols={COLS} labels={['Service', 'Settled', 'Pending', 'Gross', 'Commission', 'Taxes', 'To vendors', 'Average']} />
+                <TBody>
+                  {(overview?.rows || []).map((row) => (
+                    <Row key={row.module}>
+                      <Cell width={COLS[0]}>
+                        <Div className="flex-row items-center gap-2">
+                          <Div
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{
+                              backgroundColor: COLOUR[row.module],
+                            }}
+                          />
+                          <Span className="text-sm font-semibold text-slate-800 flex-1" numberOfLines={1}>
+                            {row.label}
+                          </Span>
+                        </Div>
+                      </Cell>
+                      <Cell width={COLS[1]} align="right">{`${row.count} ${row.unit}`}</Cell>
+                      <Cell width={COLS[2]} align="right">
+                        <P className="text-sm text-slate-500">{row.pending}</P>
+                      </Cell>
+                      <Cell width={COLS[3]} align="right">
+                        <P className="text-sm font-semibold text-slate-900">{rupees(row.gross)}</P>
+                      </Cell>
+                      <Cell width={COLS[4]} align="right">
+                        <P className="text-sm font-semibold text-green-700">{rupees(row.commission)}</P>
+                      </Cell>
+                      <Cell width={COLS[5]} align="right">{rupees(row.taxes)}</Cell>
+                      <Cell width={COLS[6]} align="right">{rupees(row.vendorPayout)}</Cell>
+                      <Cell width={COLS[7]} align="right">{rupees(row.averageOrderValue)}</Cell>
+                    </Row>
                   ))}
-                </Tr>
-              </Thead>
-              <Tbody className="divide-y divide-gray-100">
-                {(overview?.rows || []).map((row) => (
-                  <Tr key={row.module} className="hover:bg-gray-50/60">
-                    <Td className="px-4 py-3">
-                      <Div className="flex-row items-center gap-2">
-                        <Div
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{
-                            backgroundColor: COLOUR[row.module],
-                          }}
-                        />
-                        <Span className="font-semibold text-gray-800">{row.label}</Span>
-                      </Div>
-                    </Td>
-                    <Td className="px-4 py-3 text-right text-gray-700">
-                      {row.count} {row.unit}
-                    </Td>
-                    <Td className="px-4 py-3 text-right text-gray-400">{row.pending}</Td>
-                    <Td className="px-4 py-3 text-right font-semibold text-gray-900">{rupees(row.gross)}</Td>
-                    <Td className="px-4 py-3 text-right font-semibold text-[#0a4d2b]">{rupees(row.commission)}</Td>
-                    <Td className="px-4 py-3 text-right text-gray-600">{rupees(row.taxes)}</Td>
-                    <Td className="px-4 py-3 text-right text-gray-600">{rupees(row.vendorPayout)}</Td>
-                    <Td className="px-4 py-3 text-right text-gray-600">{rupees(row.averageOrderValue)}</Td>
-                  </Tr>
-                ))}
-                {overview?.total && (
-                  <Tr className="bg-gray-50 font-bold text-gray-900">
-                    <Td className="px-4 py-3">Total</Td>
-                    <Td className="px-4 py-3 text-right">{overview.total.count}</Td>
-                    <Td className="px-4 py-3 text-right text-gray-500">{overview.total.pending}</Td>
-                    <Td className="px-4 py-3 text-right">{rupees(overview.total.gross)}</Td>
-                    <Td className="px-4 py-3 text-right text-[#0a4d2b]">{rupees(overview.total.commission)}</Td>
-                    <Td className="px-4 py-3 text-right">{rupees(overview.total.taxes)}</Td>
-                    <Td className="px-4 py-3 text-right">{rupees(overview.total.vendorPayout)}</Td>
-                    <Td className="px-4 py-3" />
-                  </Tr>
-                )}
-              </Tbody>
-            </Table>
-          </Div>
+                  {overview?.total && (
+                    <Row last className="bg-slate-50">
+                      <Cell width={COLS[0]}>
+                        <P className="text-sm font-semibold text-slate-900">Total</P>
+                      </Cell>
+                      <Cell width={COLS[1]} align="right">
+                        <P className="text-sm font-semibold text-slate-900">{overview.total.count}</P>
+                      </Cell>
+                      <Cell width={COLS[2]} align="right">
+                        <P className="text-sm text-slate-500">{overview.total.pending}</P>
+                      </Cell>
+                      <Cell width={COLS[3]} align="right">
+                        <P className="text-sm font-semibold text-slate-900">{rupees(overview.total.gross)}</P>
+                      </Cell>
+                      <Cell width={COLS[4]} align="right">
+                        <P className="text-sm font-semibold text-green-700">{rupees(overview.total.commission)}</P>
+                      </Cell>
+                      <Cell width={COLS[5]} align="right">
+                        <P className="text-sm font-semibold text-slate-900">{rupees(overview.total.taxes)}</P>
+                      </Cell>
+                      <Cell width={COLS[6]} align="right">
+                        <P className="text-sm font-semibold text-slate-900">{rupees(overview.total.vendorPayout)}</P>
+                      </Cell>
+                      <Cell width={COLS[7]} align="right">
+                        <P className="text-sm text-slate-400">—</P>
+                      </Cell>
+                    </Row>
+                  )}
+                </TBody>
+              </DataTable>
+            )}
+          </Card>
 
           {/* Top earners */}
-          <Div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <Div className="flex flex-wrap items-center justify-between gap-2 p-4 pb-3 border-b border-gray-100">
-              <H3 className="font-bold text-gray-900 text-sm">Top earners</H3>
-              <Div className="flex items-center gap-2">
-                <Select className={`${field} text-xs`} value={topModule} onChange={(e) => setTopModule(e.target.value)}>
-                  {MODULES.map((m) => (
-                    <Option key={m.key} value={m.key}>
-                      {m.label}
-                    </Option>
-                  ))}
-                </Select>
+          <Card className="mb-4">
+            <SectionTitle
+              action={
                 <Button
                   type="button"
                   onClick={() =>
@@ -390,32 +399,53 @@ const Reports = () => {
                     })
                   }
                   disabled={downloading === 'top'}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className={BTN_SECONDARY}
                 >
-                  <UiIcon as={Download} size={14} /> CSV
+                  <UiIcon as={Download} size={14} className="text-slate-600" />
+                  <Span className={BTN_TEXT_SECONDARY}>CSV</Span>
                 </Button>
-              </Div>
-            </Div>
+              }
+            >
+              Top earners
+            </SectionTitle>
+            <Toolbar>
+              <Select className={`${INPUT} flex-1`} style={{ minWidth: 140 }} value={topModule} onChange={(e) => setTopModule(e.target.value)}>
+                {MODULES.map((m) => (
+                  <Option key={m.key} value={m.key}>
+                    {m.label}
+                  </Option>
+                ))}
+              </Select>
+            </Toolbar>
 
             {vendors.length === 0 ? (
-              <P className="py-10 text-center text-sm text-gray-400">No settled transactions for this service in this period.</P>
+              <P className="py-8 text-center text-sm text-slate-500">No settled transactions for this service in this period.</P>
             ) : (
-              <Div className="divide-y divide-gray-100">
-                {vendors.map((vendor, index) => (
-                  <Div key={vendor.id} className="px-4 py-3 flex items-center gap-3">
-                    <Span className="w-6 text-xs font-bold text-gray-400">{index + 1}</Span>
-                    <Span className="flex-1 font-semibold text-gray-800 truncate">{vendor.name}</Span>
-                    <Span className="text-xs text-gray-500">{vendor.count}</Span>
-                    <Span className="w-28 text-right font-semibold text-gray-900">{rupees(vendor.gross)}</Span>
-                    <Span className="w-24 text-right text-xs font-semibold text-[#0a4d2b]">{rupees(vendor.commission)}</Span>
+              <Div>
+                {vendors.map((vendor, index, all) => (
+                  <Div
+                    key={vendor.id}
+                    className={`flex-row items-center gap-3 py-3 ${index === all.length - 1 ? '' : 'border-b border-slate-100'}`}
+                  >
+                    <Span className="w-6 text-xs font-semibold text-slate-400">{index + 1}</Span>
+                    <Span className="flex-1 text-sm font-semibold text-slate-800" numberOfLines={1}>
+                      {vendor.name}
+                    </Span>
+                    <Span className="text-xs text-slate-500">{vendor.count}</Span>
+                    <Span className="w-24 text-right text-sm font-semibold text-slate-900" numberOfLines={1}>
+                      {rupees(vendor.gross)}
+                    </Span>
+                    <Span className="w-20 text-right text-xs font-semibold text-green-700" numberOfLines={1}>
+                      {rupees(vendor.commission)}
+                    </Span>
                   </Div>
                 ))}
               </Div>
             )}
-          </Div>
+          </Card>
         </>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Reports;

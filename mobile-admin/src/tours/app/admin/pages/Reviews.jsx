@@ -6,20 +6,30 @@
  * the average from approved reviews only, so a rejected one stops counting.
  */
 import React, { useCallback, useEffect, useState } from 'react';
+import { Star } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, shortDate } from '../components/ui';
+import { shortDate } from '../components/ui';
+import {
+  AdminPage,
+  Card,
+  EmptyState,
+  PageHeader,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  TableSkeleton,
+  Toolbar,
+} from '../../../../admin/ui';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, P, ScrollDiv, Span } from '../../../../components/web';
+import { Button, Div, P, Span, Icon as UiIcon } from '../../../../components/web';
 import usePrompt from '../components/usePrompt';
 const FILTERS = ['all', 'approved', 'pending', 'rejected'];
 const Stars = ({ rating }) => (
-  <Span className="inline-flex items-center gap-0.5" accessibilityLabel={`${rating} out of 5`}>
+  <Div className="flex-row items-center gap-0.5" accessibilityLabel={`${rating} out of 5`}>
     {[1, 2, 3, 4, 5].map((star) => (
-      <Span key={star} className={star <= rating ? 'text-amber-400' : 'text-gray-300'}>
-        ★
-      </Span>
+      <UiIcon key={star} as={Star} size={14} className={star <= rating ? 'text-amber-500 fill-amber-500' : 'text-slate-300'} />
     ))}
-  </Span>
+  </Div>
 );
 const Reviews = () => {
   const [reviews, setReviews] = useState([]);
@@ -80,89 +90,94 @@ const Reviews = () => {
     }
   };
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-5">
-      <PageHeader title="Reviews" subtitle="Rejecting a review also removes it from the package's rating." />
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        title="Reviews"
+        subtitle="Rejecting a review also removes it from the package's rating."
+        breadcrumb={[{ label: 'Tours' }, { label: 'Reviews' }]}
+      />
 
       {!loading && reviews.length > 0 && (
-        <Div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatGrid className="mb-4">
           <StatCard label="Showing" value={reviews.length} />
           <StatCard
             label="Pending moderation"
             value={reviews.filter((r) => r.status === 'pending').length}
-            tone={reviews.some((r) => r.status === 'pending') ? 'text-amber-600' : 'text-gray-900'}
+            tone={reviews.some((r) => r.status === 'pending') ? 'warning' : 'info'}
           />
-          <StatCard
-            label="Average rating"
-            value={`${(reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)} ★`}
-            tone="text-[#0a4d2b]"
-          />
-        </Div>
+          <StatCard label="Average rating" value={`${(reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)} ★`} tone="success" />
+        </StatGrid>
       )}
 
-      <Div className="flex flex-wrap gap-2">
+      <Toolbar>
         {FILTERS.map((value) => (
           <Button
             key={value}
             type="button"
             onClick={() => setStatus(value)}
-            className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${status === value ? 'bg-[#0a4d2b] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+            className={`h-11 px-4 rounded-full items-center justify-center ${status === value ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
           >
-            {value}
+            <Span className={`text-sm font-semibold ${status === value ? 'text-white' : 'text-slate-700'}`}>{value}</Span>
           </Button>
         ))}
-      </Div>
+      </Toolbar>
 
       {loading ? (
-        <Spinner />
+        <TableSkeleton rows={4} />
       ) : reviews.length === 0 ? (
-        <EmptyState message="No reviews here yet — travellers can review a trip once it is completed." />
+        <EmptyState
+          title="No reviews here yet"
+          message="Travellers can review a trip once it is completed."
+          actionLabel="Reload"
+          onAction={load}
+        />
       ) : (
-        <Div className="space-y-3">
+        <Div className="gap-3">
           {reviews.map((review) => (
-            <Div key={review._id} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-2">
-              <Div className="flex flex-wrap items-start justify-between gap-3">
-                <Div className="min-w-0">
-                  <P className="font-bold text-gray-900 text-sm">{review.packageId?.title || 'Package'}</P>
-                  <P className="text-xs text-gray-500">
+            <Card key={review._id} className="gap-2">
+              <Div className="flex-row flex-wrap items-start justify-between gap-3">
+                <Div className="flex-1 min-w-0" style={{ minWidth: 180 }}>
+                  <P className="text-base font-semibold text-slate-900" numberOfLines={2}>
                     {review.packageId?.title || 'Package'}
-                    {' · '}
+                  </P>
+                  <P className="text-xs text-slate-500 mt-0.5" numberOfLines={2}>
                     {review.userId?.name || 'Traveller'}
                     {' · '}
                     {shortDate(review.createdAt)}
                   </P>
                 </Div>
-                <Div className="flex items-center gap-2 shrink-0">
+                <Div className="flex-row items-center gap-2 shrink-0">
                   <Stars rating={review.rating} />
-                  <StatusPill status={review.status} />
+                  <StatusBadge status={review.status} />
                 </Div>
               </Div>
 
-              {review.comment && <P className="text-sm text-gray-700 leading-relaxed">{review.comment}</P>}
+              {review.comment ? <P className="text-sm text-slate-700">{review.comment}</P> : null}
 
-              {review.reply && (
-                <P className="text-xs text-emerald-900 bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
-                  <Span className="font-bold">Replied: </Span>
-                  {review.reply}
-                </P>
-              )}
+              {review.reply ? (
+                <Div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                  <P className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Replied</P>
+                  <P className="text-sm text-slate-700">{review.reply}</P>
+                </Div>
+              ) : null}
 
-              <Div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              <Div className="flex-row flex-wrap gap-2 pt-2 border-t border-slate-100">
                 <Button
                   type="button"
                   disabled={busyId === review._id}
                   onClick={() => reply(review)}
-                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="h-11 px-4 rounded-lg border border-slate-300 bg-white items-center justify-center disabled:opacity-50"
                 >
-                  {review.reply ? 'Edit reply' : 'Reply'}
+                  <Span className="text-sm font-semibold text-slate-700">{review.reply ? 'Edit reply' : 'Reply'}</Span>
                 </Button>
                 {review.status !== 'approved' && (
                   <Button
                     type="button"
                     disabled={busyId === review._id}
                     onClick={() => moderate(review, 'approved')}
-                    className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                    className="h-11 px-4 rounded-lg bg-blue-600 items-center justify-center disabled:opacity-50"
                   >
-                    Approve
+                    <Span className="text-sm font-semibold text-white">Approve</Span>
                   </Button>
                 )}
                 {review.status !== 'rejected' && (
@@ -170,18 +185,18 @@ const Reviews = () => {
                     type="button"
                     disabled={busyId === review._id}
                     onClick={() => moderate(review, 'rejected')}
-                    className="px-3 py-1.5 rounded-lg text-[11px] font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="h-11 px-4 rounded-lg border border-slate-300 bg-white items-center justify-center disabled:opacity-50"
                   >
-                    Hide
+                    <Span className="text-sm font-semibold text-slate-700">Hide</Span>
                   </Button>
                 )}
               </Div>
-            </Div>
+            </Card>
           ))}
         </Div>
       )}
       {promptDialog}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Reviews;

@@ -1,42 +1,39 @@
 /* Ported from Frontend/src/modules/Food/components/admin/campaigns/DeleteCampaignDialog.jsx. */
-import { AlertTriangle, X } from 'lucide-react-native';
+import { AlertTriangle } from 'lucide-react-native';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../../components/shadcn';
+import { BTN_DANGER, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY } from '../../../../admin/ui';
 import { Button, Div, P, Span, Icon as UiIcon } from '../../../../components/web';
 export default function DeleteCampaignDialog({ isOpen, onOpenChange, campaign, onConfirm }) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md bg-white p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-          <DialogTitle className="flex items-center gap-2">
-            <UiIcon as={AlertTriangle} className="w-5 h-5 text-red-600" />
-            Delete Campaign
-          </DialogTitle>
+        <DialogHeader className="px-4 pt-4 pb-2">
+          <DialogTitle>Delete Campaign</DialogTitle>
           <DialogDescription>This action cannot be undone. This will permanently delete the campaign.</DialogDescription>
         </DialogHeader>
 
         {campaign && (
-          <Div className="px-6 py-6 space-y-4">
-            <Div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <P className="text-sm text-red-800">
-                Are you sure you want to delete <Span className="font-semibold">{`"${campaign.title}"`}</Span>?
+          <Div className="px-4 pb-4 gap-3">
+            <Div className="flex-row items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3">
+              <UiIcon as={AlertTriangle} size={16} className="text-red-700 mt-0.5" />
+              <P className="text-sm text-red-700 flex-1">
+                {'Are you sure you want to delete '}
+                <Span className="font-semibold">{`"${campaign.title}"`}</Span>?
               </P>
             </Div>
 
-            <Div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button
-                onClick={() => onOpenChange(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Cancel
+            <Div className="flex-row items-center gap-2">
+              <Button onClick={() => onOpenChange(false)} className={`${BTN_SECONDARY} flex-1`}>
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
               <Button
                 onClick={() => {
                   onConfirm(campaign.sl);
                   onOpenChange(false);
                 }}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all shadow-md"
+                className={`${BTN_DANGER} flex-1`}
               >
-                Delete
+                <Span className={BTN_TEXT_PRIMARY}>Delete</Span>
               </Button>
             </Div>
           </Div>

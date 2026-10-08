@@ -1,6 +1,6 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/NotificationChannels.jsx (tools/port.js first pass). */
 import { useState, useMemo } from 'react';
-import { Bell, Info, Search, Download, ChevronDown, Settings, FileText, FileSpreadsheet, Code, Check, Columns, ArrowUpDown } from 'lucide-react-native';
+import { Bell, Search, Download, ChevronDown, FileText, FileSpreadsheet, Code, Check, Columns } from 'lucide-react-native';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,27 @@ import {
   exportNotificationsToPDF,
   exportNotificationsToJSON,
 } from '../../../components/admin/notifications/notificationsExportUtils';
-import { Button, Div, H1, H3, Input, Label, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  EmptyState,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Label, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { alert } from '../../../../lib/webShim';
 const adminNotifications = [
   {
@@ -300,14 +320,12 @@ const tabs = [
     label: 'Deliveryman',
   },
 ];
-function ToggleSwitch({ enabled, onToggle }) {
+function ToggleSwitch({ enabled, onToggle, label }) {
   return (
-    <Button
-      type="button"
-      onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}
-    >
-      <Span className="h-5 w-5 rounded-full bg-white shadow-sm" />
+    <Button type="button" onClick={onToggle} accessibilityLabel={label} className="w-11 h-11 flex-row items-center shrink-0">
+      <Div className={`flex-row items-center w-11 h-6 rounded-full border px-0.5 ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}>
+        <Span className="h-5 w-5 rounded-full bg-white" />
+      </Div>
     </Button>
   );
 }
@@ -419,253 +437,180 @@ export default function NotificationChannels() {
     mail: 'Mail',
     sms: 'SMS',
   };
-  const tableCols = [
-    visibleColumns.si && 70,
-    visibleColumns.topics && 240,
-    visibleColumns.pushNotification && 150,
-    visibleColumns.mail && 90,
-    visibleColumns.sms && 90,
-  ].filter(Boolean);
+  const COLUMN_SPEC = [
+    { key: 'si', label: 'SI', width: 70 },
+    { key: 'topics', label: 'Topics', width: 250 },
+    { key: 'pushNotification', label: 'Push notification', width: 150 },
+    { key: 'mail', label: 'Mail', width: 90 },
+    { key: 'sms', label: 'SMS', width: 90 },
+  ];
+  const shown = COLUMN_SPEC.filter((c) => visibleColumns[c.key]);
+  const tableCols = shown.map((c) => c.width);
+  const tableLabels = shown.map((c) => c.label);
+  const widthOf = (key) => shown.find((c) => c.key === key)?.width || 0;
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto max-w-6xl">
-        {/* Page Title */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
-          <Div className="flex items-center gap-2 mb-2">
-            <Div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
-              <UiIcon as={Bell} className="w-3.5 h-3.5 text-white" />
-            </Div>
-            <H1 className="text-lg font-bold text-slate-900">Notification Channels Setup</H1>
-          </Div>
-          <P className="text-xs text-slate-600 ml-9">From here you setup who can see what types of notification from StackFood</P>
-        </Div>
-
-        {/* Tabs */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3">
-          <Div className="flex gap-2">
-            {tabs.map((tab) => (
-              <Button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-              >
-                {tab.label}
-              </Button>
-            ))}
-          </Div>
-        </Div>
-
-        {/* Search and Actions Section */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
-          <Div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <Div className="relative flex-1 min-w-[250px]">
-              <Input
-                type="text"
-                placeholder="Search by topic or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 pr-2 py-1.5 w-full text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <UiIcon as={Search} className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-            </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Bell}
+        title="Notification Channels Setup"
+        subtitle="Choose who is notified by push, mail and SMS for each topic"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Notification channels' }]}
+        actions={
+          <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="px-4 py-1.5 text-xs font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-1 transition-all">
-                  <UiIcon as={Download} className="w-3.5 h-3.5" />
-                  <Span className="font-bold">Export</Span>
-                  <UiIcon as={ChevronDown} className="w-3 h-3" />
+                <Button className={BTN_SECONDARY}>
+                  <UiIcon as={Download} size={16} className="text-slate-600" />
+                  <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                  <UiIcon as={ChevronDown} size={14} className="text-slate-500" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+              <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-xl">
                 <DropdownMenuLabel>Export Format</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleExport('csv')} className="cursor-pointer">
-                  <UiIcon as={FileText} className="w-4 h-4 mr-2" />
+                <DropdownMenuItem onClick={() => handleExport('csv')}>
+                  <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
                   Export as CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('excel')} className="cursor-pointer">
-                  <UiIcon as={FileSpreadsheet} className="w-4 h-4 mr-2" />
+                <DropdownMenuItem onClick={() => handleExport('excel')}>
+                  <UiIcon as={FileSpreadsheet} size={16} className="mr-2 text-slate-500" />
                   Export as Excel
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer">
-                  <UiIcon as={FileText} className="w-4 h-4 mr-2" />
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                  <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
                   Export as PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('json')} className="cursor-pointer">
-                  <UiIcon as={Code} className="w-4 h-4 mr-2" />
+                <DropdownMenuItem onClick={() => handleExport('json')}>
+                  <UiIcon as={Code} size={16} className="mr-2 text-slate-500" />
                   Export as JSON
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
-            >
-              <UiIcon as={Settings} className="w-4 h-4" />
+            <Button onClick={() => setIsSettingsOpen(true)} accessibilityLabel="Table settings" className={BTN_SECONDARY}>
+              <UiIcon as={Columns} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Columns</Span>
             </Button>
-          </Div>
-        </Div>
+          </>
+        }
+      />
 
-        {/* Table */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-          <Div className="mb-4">
-            <Div className="flex items-center gap-2">
-              <Span className="text-xs font-semibold text-slate-700">Notifications</Span>
-              <Span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">{filteredNotifications.length}</Span>
-            </Div>
-          </Div>
-            <Table cols={tableCols} className="w-full">
-              <Thead className="bg-slate-50 border-b border-slate-200">
-                <Tr>
-                  {visibleColumns.si && (
-                    <Th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                      <Div className="flex items-center gap-2">
-                        <Span>SI</Span>
-                        <UiIcon as={ArrowUpDown} className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
-                      </Div>
-                    </Th>
-                  )}
-                  {visibleColumns.topics && (
-                    <Th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                      <Div className="flex items-center gap-2">
-                        <Span>Topics</Span>
-                        <UiIcon as={ArrowUpDown} className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
-                      </Div>
-                    </Th>
-                  )}
-                  {visibleColumns.pushNotification && (
-                    <Th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                      <Div className="flex items-center gap-2">
-                        <Span>Push Notification</Span>
-                        <UiIcon as={ArrowUpDown} className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
-                      </Div>
-                    </Th>
-                  )}
-                  {visibleColumns.mail && (
-                    <Th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                      <Div className="flex items-center gap-2">
-                        <Span>Mail</Span>
-                        <UiIcon as={ArrowUpDown} className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
-                      </Div>
-                    </Th>
-                  )}
-                  {visibleColumns.sms && (
-                    <Th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                      <Div className="flex items-center gap-2">
-                        <Span>SMS</Span>
-                        <UiIcon as={ArrowUpDown} className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
-                      </Div>
-                    </Th>
-                  )}
-                </Tr>
-              </Thead>
-              <Tbody className="bg-white divide-y divide-slate-100">
-                {filteredNotifications.length === 0 ? (
-                  <Tr>
-                    <Td colSpan={Object.values(visibleColumns).filter((v) => v).length} className="px-6 py-8 text-center">
-                      <P className="text-xs text-slate-500">No notifications found</P>
-                    </Td>
-                  </Tr>
-                ) : (
-                  filteredNotifications.map((notification, index) => (
-                    <Tr key={notification.id} className="hover:bg-slate-50 transition-colors">
-                      {visibleColumns.si && (
-                        <Td className="px-3 py-3">
-                          <Span className="text-xs text-slate-700">{index + 1}</Span>
-                        </Td>
-                      )}
-                      {visibleColumns.topics && (
-                        <Td className="px-3 py-3">
-                          <Div>
-                            <P className="text-xs font-medium text-slate-900 mb-1">{notification.topic}</P>
-                            <P className="text-[10px] text-slate-600">{notification.description}</P>
-                          </Div>
-                        </Td>
-                      )}
-                      {visibleColumns.pushNotification && (
-                        <Td className="px-3 py-3">
-                          <Button
-                            type="button"
-                            className="px-2 py-1 text-[10px] font-medium bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
-                          >
-                            {notification.pushNotification}
-                          </Button>
-                        </Td>
-                      )}
-                      {visibleColumns.mail && (
-                        <Td className="px-3 py-3">
-                          <ToggleSwitch enabled={notification.mail} onToggle={() => handleMailToggle(notification.id)} />
-                        </Td>
-                      )}
-                      {visibleColumns.sms && (
-                        <Td className="px-3 py-3">
-                          {notification.sms !== false ? (
-                            <ToggleSwitch enabled={notification.sms} onToggle={() => handleSMSToggle(notification.id)} />
-                          ) : (
-                            <Button
-                              type="button"
-                              className="px-2 py-1 text-[10px] font-medium bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
-                            >
-                              N/A
-                            </Button>
-                          )}
-                        </Td>
-                      )}
-                    </Tr>
-                  ))
-                )}
-              </Tbody>
-            </Table>
+      <Card className="mb-4">
+        <SectionTitle>Audience</SectionTitle>
+        <Div className="flex-row flex-wrap gap-2 mb-3">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex-row items-center justify-center h-11 px-4 rounded-lg border ${activeTab === tab.id ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
+            >
+              <Span className={activeTab === tab.id ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-700'}>{tab.label}</Span>
+            </Button>
+          ))}
         </Div>
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center gap-2 flex-1 min-w-[200px] h-11 px-3 rounded-lg border border-slate-300 bg-white">
+            <UiIcon as={Search} size={16} className="text-slate-400 shrink-0" />
+            <Input
+              type="text"
+              placeholder="Search by topic or description…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 text-sm text-slate-900"
+            />
+          </Div>
+        </Toolbar>
+      </Card>
+
+      <Div className="flex-row items-center gap-2 mb-2">
+        <Text style={tw`text-base font-semibold text-slate-900`}>Notifications</Text>
+        <Span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">{filteredNotifications.length}</Span>
       </Div>
+
+      {filteredNotifications.length === 0 ? (
+        <EmptyState
+          icon={Bell}
+          title="No notifications found"
+          message="No topic matches your search in this audience."
+          actionLabel={searchQuery ? 'Clear search' : undefined}
+          onAction={searchQuery ? () => setSearchQuery('') : undefined}
+        />
+      ) : tableCols.length === 0 ? (
+        <EmptyState icon={Columns} title="No columns shown" message="Every column is hidden. Turn one back on in table settings." actionLabel="Reset columns" onAction={resetColumns} />
+      ) : (
+        <DataTable cols={tableCols}>
+          <THead cols={tableCols} labels={tableLabels} />
+          <TBody>
+            {filteredNotifications.map((notification, index) => (
+              <Row key={notification.id} last={index === filteredNotifications.length - 1}>
+                {visibleColumns.si ? <Cell width={widthOf('si')}>{String(index + 1)}</Cell> : null}
+                {visibleColumns.topics ? (
+                  <Cell width={widthOf('topics')}>
+                    <Div className="gap-1">
+                      <Text style={tw`text-sm font-semibold text-slate-900`} numberOfLines={2}>
+                        {notification.topic}
+                      </Text>
+                      <Text style={tw`text-xs text-slate-500`} numberOfLines={3}>
+                        {notification.description}
+                      </Text>
+                    </Div>
+                  </Cell>
+                ) : null}
+                {visibleColumns.pushNotification ? (
+                  <Cell width={widthOf('pushNotification')}>
+                    <StatusBadge tone="info" label={notification.pushNotification} />
+                  </Cell>
+                ) : null}
+                {visibleColumns.mail ? (
+                  <Cell width={widthOf('mail')}>
+                    <ToggleSwitch enabled={notification.mail} onToggle={() => handleMailToggle(notification.id)} label={`Toggle mail for ${notification.topic}`} />
+                  </Cell>
+                ) : null}
+                {visibleColumns.sms ? (
+                  <Cell width={widthOf('sms')}>
+                    {notification.sms !== false ? (
+                      <ToggleSwitch enabled={notification.sms} onToggle={() => handleSMSToggle(notification.id)} label={`Toggle SMS for ${notification.topic}`} />
+                    ) : (
+                      <StatusBadge tone="neutral" label="N/A" />
+                    )}
+                  </Cell>
+                ) : null}
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
 
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent className="max-w-md bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <UiIcon as={Settings} className="w-4 h-4" />
-              Table Settings
-            </DialogTitle>
+          <DialogHeader className="px-5 pt-5 pb-3">
+            <DialogTitle>Table Settings</DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6 space-y-4">
-            <Div>
-              <H3 className="text-xs font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                <UiIcon as={Columns} className="w-4 h-4" />
-                Visible Columns
-              </H3>
-              <Div className="space-y-2">
-                {Object.entries(columnsConfig).map(([key, label]) => (
-                  <Label key={key} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
-                    <Input
-                      type="checkbox"
-                      checked={visibleColumns[key]}
-                      onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
-                    />
-                    <Span className="text-xs text-slate-700">{label}</Span>
-                    {visibleColumns[key] && <UiIcon as={Check} className="w-4 h-4 text-emerald-600 ml-auto" />}
-                  </Label>
-                ))}
-              </Div>
+          <Div className="px-5 pb-5 gap-3">
+            <Div className="flex-row items-center gap-2">
+              <UiIcon as={Columns} size={16} className="text-slate-500" />
+              <Text style={tw`text-sm font-semibold text-slate-700`}>Visible columns</Text>
             </Div>
-            <Div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button
-                onClick={resetColumns}
-                className="px-4 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset
+            <Div className="gap-1">
+              {Object.entries(columnsConfig).map(([key, label]) => (
+                <Label key={key} className="flex-row items-center gap-3 min-h-11 px-2 rounded-lg">
+                  <Input type="checkbox" checked={visibleColumns[key]} onChange={() => toggleColumn(key)} className="w-5 h-5 border-slate-300 rounded" />
+                  <Span className="text-sm text-slate-700 flex-1">{label}</Span>
+                  {visibleColumns[key] ? <UiIcon as={Check} size={16} className="text-blue-600" /> : null}
+                </Label>
+              ))}
+            </Div>
+            <Div className="flex-row flex-wrap items-center justify-end gap-2 pt-3 border-t border-slate-200">
+              <Button onClick={resetColumns} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
               </Button>
-              <Button
-                onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-xs font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
-              >
-                Apply
+              <Button onClick={() => setIsSettingsOpen(false)} className={BTN_PRIMARY}>
+                <Span className={BTN_TEXT_PRIMARY}>Apply</Span>
               </Button>
             </Div>
           </Div>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

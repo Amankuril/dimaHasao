@@ -9,16 +9,14 @@ import {
   FileDown,
   FileSpreadsheet,
   FileText,
-  X,
   Mail,
   Phone,
   MapPin,
   Package,
   IndianRupee,
   Calendar as CalendarIcon,
-  User,
+  Users,
   CheckCircle,
-  XCircle,
 } from 'lucide-react-native';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../../../components/shadcn';
 import { exportCustomersToCSV, exportCustomersToExcel, exportCustomersToPDF } from '../../components/admin/customers/customersExportUtils';
@@ -26,34 +24,53 @@ import { adminAPI } from '../../../api/food';
 import { toast } from '../../../lib/notify';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/shadcn';
 import {
-  Button,
-  Div,
-  H2,
-  H3,
-  H4,
-  Img,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../admin/ui';
+import { Button, Div, Img, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../components/web';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
+const COLS_WITH_COD = [56, 190, 200, 100, 130, 170, 120, 110, 56];
+const COLS_NO_COD = [56, 190, 200, 100, 130, 170, 120, 56];
+function Toggle({ on, onPress, label, tone = 'success' }) {
+  const bg = on ? (tone === 'danger' ? 'bg-red-600' : 'bg-green-600') : 'bg-slate-300';
+  return (
+    <Button onClick={onPress} accessibilityLabel={label} className="w-11 h-11 justify-center">
+      <Div className={`w-11 h-6 rounded-full justify-center ${bg}`}>
+        <Div className={`w-4 h-4 rounded-full bg-white ${on ? 'ml-6' : 'ml-1'}`} />
+      </Div>
+    </Button>
+  );
+}
 export default function Customers() {
+  const { tablet } = useLayoutWidth();
   const [searchQuery, setSearchQuery] = useState('');
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => Number(localStorage.getItem('admin_customers_pageSize')) || 20);
@@ -196,10 +213,12 @@ export default function Customers() {
         if (!cancelled && Array.isArray(list)) {
           setCustomers(list);
           setTotalCustomers(data?.total || list.length);
+          setLoadError(null);
         } else {
           if (!cancelled) {
             setCustomers([]);
             setTotalCustomers(0);
+            setLoadError(null);
           }
         }
       } catch (error) {
@@ -208,6 +227,7 @@ export default function Customers() {
         if (!cancelled) {
           setCustomers([]);
           setTotalCustomers(0);
+          setLoadError(error?.response?.data?.message || error?.message || 'Failed to load customers');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -362,281 +382,209 @@ export default function Customers() {
         .join('') || 'NA'
     );
   };
+  const cols = globalCodBlockedFeatureEnabled ? COLS_WITH_COD : COLS_NO_COD;
+  const labels = globalCodBlockedFeatureEnabled
+    ? ['Sl', 'Name', 'Contact info', 'Orders', 'Total amount', 'Joining date', 'Active', 'COD blocked', '']
+    : ['Sl', 'Name', 'Contact info', 'Orders', 'Total amount', 'Joining date', 'Active', ''];
+  const totalPages = Math.max(1, Math.ceil(totalCustomers / pageSize));
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Filters Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Order Date</Label>
-              <Div className="relative">
-                <Input
-                  type="date"
-                  value={filters.orderDate}
-                  onChange={(e) => handleFilterChange('orderDate', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </Div>
-            </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Users}
+        title="Customers"
+        subtitle="Everyone who has ordered food in the district"
+        breadcrumb={[{ label: 'Food' }, { label: 'Customers' }, { label: 'Customer list' }]}
+      />
 
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Customer Joining Date</Label>
-              <Div className="relative">
-                <Input
-                  type="date"
-                  value={filters.joiningDate}
-                  onChange={(e) => handleFilterChange('joiningDate', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </Div>
-            </Div>
-
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Customer status</Label>
-              <Select
-                value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              >
-                <Option value="">Select Status</Option>
-                <Option value="active">Active</Option>
-                <Option value="inactive">Inactive</Option>
-              </Select>
-            </Div>
-
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Sort By</Label>
-              <Select
-                value={filters.sortBy}
-                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              >
-                <Option value="">Select Customer Sorting Order</Option>
-                <Option value="name-asc">Name (A-Z)</Option>
-                <Option value="name-desc">Name (Z-A)</Option>
-                <Option value="orders-asc">Orders (Low to High)</Option>
-                <Option value="orders-desc">Orders (High to Low)</Option>
-              </Select>
-            </Div>
-
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Choose First</Label>
-              <Input
-                type="number"
-                value={filters.chooseFirst}
-                onChange={(e) => handleFilterChange('chooseFirst', e.target.value)}
-                placeholder="Ex: 100"
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-            </Div>
-          </Div>
-
-          <Div className="mt-4 flex items-center justify-between">
-            <Div className="flex items-center gap-3">
-              <Button
-                onClick={() => {
-                  // Filters are applied automatically via useMemo
-                }}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all"
-              >
-                Apply Filters
-              </Button>
-              <Button
-                onClick={() => {
-                  setFilters({
-                    orderDate: '',
-                    joiningDate: '',
-                    status: '',
-                    sortBy: '',
-                    chooseFirst: '',
-                  });
-                }}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset Filters
-              </Button>
-            </Div>
-            <Div className="text-sm text-slate-600">{loading ? 'Loading...' : `Showing ${filteredCustomers.length} of ${totalCustomers} customers`}</Div>
-          </Div>
+      <Card className="mb-4">
+        <SectionTitle>Filters</SectionTitle>
+        <Div className={tablet ? 'grid grid-cols-2 gap-3' : 'gap-3'}>
+          <Field label="Order date">
+            <Input type="date" value={filters.orderDate} onChange={(e) => handleFilterChange('orderDate', e.target.value)} className={INPUT} />
+          </Field>
+          <Field label="Customer joining date">
+            <Input type="date" value={filters.joiningDate} onChange={(e) => handleFilterChange('joiningDate', e.target.value)} className={INPUT} />
+          </Field>
+          <Field label="Customer status">
+            <Select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} className={INPUT} placeholder="Select status">
+              <Option value="">Select Status</Option>
+              <Option value="active">Active</Option>
+              <Option value="inactive">Inactive</Option>
+            </Select>
+          </Field>
+          <Field label="Sort by">
+            <Select value={filters.sortBy} onChange={(e) => handleFilterChange('sortBy', e.target.value)} className={INPUT} placeholder="Select sorting order">
+              <Option value="">Select Customer Sorting Order</Option>
+              <Option value="name-asc">Name (A-Z)</Option>
+              <Option value="name-desc">Name (Z-A)</Option>
+              <Option value="orders-asc">Orders (Low to High)</Option>
+              <Option value="orders-desc">Orders (High to Low)</Option>
+            </Select>
+          </Field>
+          <Field label="Choose first" hint="Limit how many rows are shown">
+            <Input type="number" value={filters.chooseFirst} onChange={(e) => handleFilterChange('chooseFirst', e.target.value)} placeholder="Ex: 100" className={INPUT} />
+          </Field>
         </Div>
-
-        {/* Customer List Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-2">
-              <H2 className="text-xl font-bold text-slate-900">Customer list</H2>
-              <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
-                {loading ? <Span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" /> : totalCustomers}
-              </Span>
-            </Div>
-
-            <Div className="flex items-center gap-3">
-              <Div className="relative flex-1 sm:flex-initial min-w-[200px]">
-                <Input
-                  type="text"
-                  placeholder="Ex: Search by name"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                />
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </Div>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
-                    <UiIcon as={Download} className="w-4 h-4" />
-                    <Span className="text-black font-bold">Export</Span>
-                    <UiIcon as={ChevronDown} className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleExport('csv')} className="cursor-pointer">
-                    <UiIcon as={FileDown} className="w-4 h-4 mr-2" />
-                    Export as CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('excel')} className="cursor-pointer">
-                    <UiIcon as={FileSpreadsheet} className="w-4 h-4 mr-2" />
-                    Export as Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer">
-                    <UiIcon as={FileText} className="w-4 h-4 mr-2" />
-                    Export as PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </Div>
-          </Div>
-
-          {/* Table */}
-          <Table
-            className="w-full min-w-full"
-            cols={globalCodBlockedFeatureEnabled ? [60, 200, 200, 100, 130, 170, 120, 110, 80] : [60, 200, 200, 100, 130, 170, 120, 80]}
+        <Toolbar className="mt-3 mb-0">
+          <Button
+            onClick={() => {
+              // Filters are applied automatically via useMemo
+            }}
+            className={BTN_PRIMARY}
           >
-              <Thead className="bg-slate-50 border-b border-slate-200">
-                <Tr>
-                  <Th className="px-3 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Sl</Th>
-                  <Th className="px-3 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</Th>
-                  <Th className="px-3 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Contact Info</Th>
-                  <Th className="px-3 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Order</Th>
-                  <Th className="px-3 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Amount</Th>
-                  <Th className="px-3 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Joining Date</Th>
-                  <Th className="px-3 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Active/Inactive</Th>
-                  {globalCodBlockedFeatureEnabled && (
-                    <Th className="px-3 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">COD Blocked</Th>
-                  )}
-                  <Th className="px-3 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody className="bg-white divide-y divide-slate-100">
-                {loading ? (
-                  <Tr>
-                    <Td colSpan={globalCodBlockedFeatureEnabled ? 9 : 8} className="px-6 py-8 text-center">
-                      <Div className="text-sm text-slate-500">Loading customers...</Div>
-                    </Td>
-                  </Tr>
-                ) : filteredCustomers.length === 0 ? (
-                  <Tr>
-                    <Td colSpan={globalCodBlockedFeatureEnabled ? 9 : 8} className="px-6 py-8 text-center">
-                      <Div className="text-sm text-slate-500">No customers found</Div>
-                    </Td>
-                  </Tr>
-                ) : (
-                  filteredCustomers.map((customer, index) => (
-                    <Tr key={customer.id || customer.sl} className="hover:bg-slate-50 transition-colors">
-                      <Td className="px-3 py-4 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</Span>
-                      </Td>
-                      <Td className="px-3 py-4">
-                        <Div className="flex items-center gap-3">
-                          <Div
-                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-slate-200"
-                            style={{ backgroundColor: '#E8EEF7' }}
-                            onClick={() => handleViewDetails(customer._id || customer.id || customer.sl)}
-                          >
-                            <Img
-                              src={customer.profileImage || '/assets/images/profile_avatar.webp'}
-                              alt={customer.name}
-                              className="w-full h-full object-cover"
-                              fallback="/assets/images/profile_avatar.webp"
-                            />
-                          </Div>
-                          <Span
-                            className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors"
-                            onClick={() => handleViewDetails(customer._id || customer.id || customer.sl)}
-                          >
-                            {customer.name}
-                          </Span>
-                        </Div>
-                      </Td>
-                      <Td className="px-3 py-4">
-                        <Div className="flex flex-col">
-                          <Span className="text-sm text-slate-700">{customer.email || 'NA'}</Span>
-                          <Span className="text-xs text-slate-500">{customer.phone}</Span>
-                        </Div>
-                      </Td>
-                      <Td className="px-3 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">{customer.totalOrder || 0}</Span>
-                      </Td>
-                      <Td className="px-3 py-4 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-900">
-                          {'\u20B9'}{' '}
-                          {(customer.totalOrderAmount || 0).toLocaleString('en-IN', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </Span>
-                      </Td>
-                      <Td className="px-3 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">{formatDateTime(customer.joiningDate)}</Span>
-                      </Td>
-                      <Td className="px-3 py-4 whitespace-nowrap">
-                        <Button
-                          onClick={() => handleToggleStatus(customer.id || customer.sl)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${customer.status ? 'bg-green-600' : 'bg-slate-300'}`}
-                        >
-                          <Span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${customer.status ? 'translate-x-6' : 'translate-x-1'}`}
-                          />
-                        </Button>
-                      </Td>
-                      {globalCodBlockedFeatureEnabled && (
-                        <Td className="px-3 py-4 whitespace-nowrap">
-                          <Button
-                            onClick={() => handleToggleCodStatus(customer.id || customer.sl || customer._id)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${customer.isCodBlocked ? 'bg-red-600' : 'bg-slate-300'}`}
-                          >
-                            <Span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${customer.isCodBlocked ? 'translate-x-6' : 'translate-x-1'}`}
-                            />
-                          </Button>
-                        </Td>
-                      )}
-                      <Td className="px-3 py-4 whitespace-nowrap text-center">
-                        <Button
-                          onClick={() => handleViewDetails(customer._id || customer.id || customer.sl)}
-                          className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
-                        >
-                          <UiIcon as={Eye} className="w-4 h-4" />
-                        </Button>
-                      </Td>
-                    </Tr>
-                  ))
-                )}
-              </Tbody>
-          </Table>
+            <Span className={BTN_TEXT_PRIMARY}>Apply filters</Span>
+          </Button>
+          <Button
+            onClick={() => {
+              setFilters({
+                orderDate: '',
+                joiningDate: '',
+                status: '',
+                sortBy: '',
+                chooseFirst: '',
+              });
+            }}
+            className={BTN_SECONDARY}
+          >
+            <Span className={BTN_TEXT_SECONDARY}>Reset filters</Span>
+          </Button>
+        </Toolbar>
+      </Card>
 
-          {/* Pagination Controls */}
+      <StatGrid className="mb-4">
+        <StatCard label="Customers" value={loading ? '—' : String(totalCustomers)} hint="Matching the current filters" icon={Users} tone="info" />
+        <StatCard label="Shown on this page" value={loading ? '—' : String(filteredCustomers.length)} hint={`Page ${currentPage} of ${totalPages}`} icon={Package} tone="neutral" />
+      </StatGrid>
+
+      <Card className="mb-3">
+        <SectionTitle>Customer list</SectionTitle>
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center gap-2 flex-1 min-w-[180px]">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Ex: search by name"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`${INPUT} flex-1`}
+            />
+          </Div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className={BTN_SECONDARY}>
+                <UiIcon as={Download} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-600" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg">
+              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <UiIcon as={FileDown} size={16} className="mr-2" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <UiIcon as={FileSpreadsheet} size={16} className="mr-2" />
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <UiIcon as={FileText} size={16} className="mr-2" />
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </Toolbar>
+      </Card>
+
+      {loading ? (
+        <TableSkeleton rows={8} />
+      ) : loadError ? (
+        <ErrorState title="Could not load customers" message={loadError} />
+      ) : filteredCustomers.length === 0 ? (
+        <EmptyState icon={Users} title="No customers found" message="Nothing matches these filters. Customers appear here as they sign up and order." />
+      ) : (
+        <>
+          <DataTable cols={cols}>
+            <THead cols={cols} labels={labels} />
+            <TBody>
+              {filteredCustomers.map((customer, index, arr) => (
+                <Row key={customer.id || customer.sl} last={index === arr.length - 1}>
+                  <Cell width={cols[0]}>{String((currentPage - 1) * pageSize + index + 1)}</Cell>
+                  <Cell width={cols[1]}>
+                    <Div className="flex-row items-center gap-2">
+                      <Div className="w-9 h-9 rounded-full items-center justify-center shrink-0 overflow-hidden border border-slate-200" style={{ backgroundColor: '#E8EEF7' }}>
+                        <Img
+                          src={customer.profileImage || '/assets/images/profile_avatar.webp'}
+                          alt={customer.name}
+                          className="w-full h-full object-cover"
+                          fallback="/assets/images/profile_avatar.webp"
+                        />
+                      </Div>
+                      <Span
+                        className="text-sm font-medium text-slate-900 flex-1"
+                        numberOfLines={2}
+                        onClick={() => handleViewDetails(customer._id || customer.id || customer.sl)}
+                      >
+                        {customer.name}
+                      </Span>
+                    </Div>
+                  </Cell>
+                  <Cell width={cols[2]}>
+                    <Div className="gap-0.5">
+                      <Span className="text-sm text-slate-700" numberOfLines={1}>
+                        {customer.email || 'NA'}
+                      </Span>
+                      <Span className="text-xs text-slate-500" numberOfLines={1}>
+                        {customer.phone}
+                      </Span>
+                    </Div>
+                  </Cell>
+                  <Cell width={cols[3]}>{String(customer.totalOrder || 0)}</Cell>
+                  <Cell width={cols[4]} align="right">
+                    <Span className="text-sm font-medium text-slate-900" numberOfLines={1}>
+                      {'₹'}
+                      {(customer.totalOrderAmount || 0).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </Span>
+                  </Cell>
+                  <Cell width={cols[5]}>{formatDateTime(customer.joiningDate)}</Cell>
+                  <Cell width={cols[6]}>
+                    <Toggle on={Boolean(customer.status)} onPress={() => handleToggleStatus(customer.id || customer.sl)} label={`Toggle active for ${customer.name}`} />
+                  </Cell>
+                  {globalCodBlockedFeatureEnabled && (
+                    <Cell width={cols[7]}>
+                      <Toggle
+                        on={Boolean(customer.isCodBlocked)}
+                        tone="danger"
+                        onPress={() => handleToggleCodStatus(customer.id || customer.sl || customer._id)}
+                        label={`Toggle COD block for ${customer.name}`}
+                      />
+                    </Cell>
+                  )}
+                  <Cell width={cols[cols.length - 1]} align="center">
+                    <Button
+                      onClick={() => handleViewDetails(customer._id || customer.id || customer.sl)}
+                      className="w-11 h-11 rounded-lg items-center justify-center"
+                      accessibilityLabel={`View ${customer.name}`}
+                    >
+                      <UiIcon as={Eye} size={16} className="text-blue-600" />
+                    </Button>
+                  </Cell>
+                </Row>
+              ))}
+            </TBody>
+          </DataTable>
+
           {totalCustomers > 0 && (
-            <Div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 mt-4">
-              <Div className="flex items-center gap-3">
-                <Span className="text-sm text-slate-500 font-medium">Rows per page:</Span>
+            <Div className="flex-row flex-wrap items-center justify-between gap-3 mt-3">
+              <Div className="flex-row items-center gap-2">
+                <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rows</Span>
                 <Select
                   value={pageSize}
                   onChange={(e) => {
@@ -645,7 +593,7 @@ export default function Customers() {
                     localStorage.setItem('admin_customers_pageSize', size);
                     setCurrentPage(1);
                   }}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 cursor-pointer shadow-sm"
+                  className="h-11 min-w-[80px] px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
                 >
                   <Option value={10}>10</Option>
                   <Option value={20}>20</Option>
@@ -653,133 +601,104 @@ export default function Customers() {
                   <Option value={100}>100</Option>
                 </Select>
               </Div>
-
-              <Div className="flex flex-1 justify-between sm:hidden w-full">
-                <Button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
-                >
-                  Previous
+              <Div className="flex-row items-center gap-2">
+                <Button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} className={BTN_SECONDARY}>
+                  <Span className={BTN_TEXT_SECONDARY}>Previous</Span>
                 </Button>
                 <Button
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(totalCustomers / pageSize)))}
                   disabled={currentPage >= Math.ceil(totalCustomers / pageSize)}
-                  className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  className={BTN_SECONDARY}
                 >
-                  Next
+                  <Span className={BTN_TEXT_SECONDARY}>Next</Span>
                 </Button>
               </Div>
             </Div>
           )}
-        </Div>
-      </Div>
+        </>
+      )}
 
       {/* User Details Modal */}
       <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto mx-auto p-0 gap-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-            <DialogTitle className="pr-12 text-xl font-bold text-slate-900">User Details</DialogTitle>
+        <DialogContent className="max-w-2xl p-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="text-lg font-bold text-slate-900">User Details</DialogTitle>
           </DialogHeader>
 
           {loadingDetails ? (
-            <Div className="px-6 py-8 text-center">
-              <Div className="text-sm text-slate-500">Loading user details...</Div>
+            <Div className="p-4">
+              <LoadingState label="Loading user details…" />
             </Div>
           ) : userDetails ? (
-            <Div className="space-y-4 px-6 py-5">
-              {/* Profile Section */}
-              <Div className="bg-slate-50 rounded-xl p-4 sm:p-5">
-                <Div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                  <Div
-                    className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-200"
-                    style={{ backgroundColor: '#E8EEF7' }}
-                  >
+            <Div className="gap-3 px-4 py-4">
+              {/* Profile */}
+              <Card className="bg-slate-50 gap-3">
+                <Div className="flex-row items-start gap-3">
+                  <Div className="w-16 h-16 rounded-full items-center justify-center shrink-0 overflow-hidden border border-slate-200" style={{ backgroundColor: '#E8EEF7' }}>
                     <Img
                       src={userDetails.profileImage || '/assets/images/profile_avatar.webp'}
                       alt={userDetails.name}
-                      className="w-full h-full rounded-full object-cover"
+                      className="w-full h-full object-cover"
                       fallback="/assets/images/profile_avatar.webp"
                     />
                   </Div>
-                  <Div className="flex-1 min-w-0">
-                    <Div className="flex flex-wrap items-center gap-2 mb-2">
-                      <H3 className="text-lg font-bold text-slate-900">{userDetails.name}</H3>
-                      {userDetails.isActive ? (
-                        <Span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 flex items-center gap-1">
-                          <UiIcon as={CheckCircle} className="w-3 h-3" />
-                          Active
-                        </Span>
-                      ) : (
-                        <Span className="px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 flex items-center gap-1">
-                          <UiIcon as={XCircle} className="w-3 h-3" />
-                          Inactive
-                        </Span>
-                      )}
+                  <Div className="flex-1 min-w-0 gap-2">
+                    <Div className="flex-row flex-wrap items-center gap-2">
+                      <Span className="text-base font-semibold text-slate-900" numberOfLines={2}>
+                        {userDetails.name || getInitials(userDetails.name)}
+                      </Span>
+                      <StatusBadge status={userDetails.isActive ? 'active' : 'inactive'} label={userDetails.isActive ? 'Active' : 'Inactive'} />
                     </Div>
-                    <Div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                      <Div className="flex items-center gap-2 text-sm text-slate-600 min-w-0">
-                        <UiIcon as={Mail} className="w-4 h-4" />
-                        <Span className="truncate">{userDetails.email || 'NA'}</Span>
+                    <Div className={tablet ? 'grid grid-cols-2 gap-2' : 'gap-2'}>
+                      <Div className="flex-row items-center gap-2">
+                        <UiIcon as={Mail} size={14} className="text-slate-500" />
+                        <Span className="text-sm text-slate-600 flex-1" numberOfLines={1}>
+                          {userDetails.email || 'NA'}
+                        </Span>
                       </Div>
-                      <Div className="flex items-center gap-2 text-sm text-slate-600 min-w-0">
-                        <UiIcon as={Phone} className="w-4 h-4" />
-                        <Span>{userDetails.phone}</Span>
-                        {userDetails.phoneVerified && <UiIcon as={CheckCircle} className="w-3 h-3 text-green-600" />}
+                      <Div className="flex-row items-center gap-2">
+                        <UiIcon as={Phone} size={14} className="text-slate-500" />
+                        <Span className="text-sm text-slate-600">{userDetails.phone}</Span>
+                        {userDetails.phoneVerified && <UiIcon as={CheckCircle} size={12} className="text-green-700" />}
                       </Div>
-                      <Div className="flex items-center gap-2 text-sm text-slate-600">
-                        <UiIcon as={CalendarIcon} className="w-4 h-4" />
-                        <Span>Joined: {formatDateTime(userDetails.joiningDate)}</Span>
+                      <Div className="flex-row items-center gap-2">
+                        <UiIcon as={CalendarIcon} size={14} className="text-slate-500" />
+                        <Span className="text-sm text-slate-600 flex-1" numberOfLines={1}>
+                          Joined: {formatDateTime(userDetails.joiningDate)}
+                        </Span>
                       </Div>
                     </Div>
                   </Div>
                 </Div>
-              </Div>
+              </Card>
 
-              {/* Statistics Section */}
-              <Div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Div className="bg-blue-50 rounded-lg p-3">
-                  <Div className="flex items-center gap-2 mb-1">
-                    <UiIcon as={Package} className="w-4 h-4 text-blue-600" />
-                    <Span className="text-xs font-semibold text-slate-700">Total Orders</Span>
-                  </Div>
-                  <P className="text-xl font-bold text-blue-600">{userDetails.totalOrders || 0}</P>
-                </Div>
-                <Div className="bg-green-50 rounded-lg p-3">
-                  <Div className="flex items-center gap-2 mb-1">
-                    <UiIcon as={IndianRupee} className="w-4 h-4 text-green-600" />
-                    <Span className="text-xs font-semibold text-slate-700">Total Spent</Span>
-                  </Div>
-                  <P className="text-xl font-bold text-green-600">
-                    {'\u20B9'}
-                    {(userDetails.totalOrderAmount || 0).toLocaleString('en-IN', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </P>
-                </Div>
-                <Div className="bg-purple-50 rounded-lg p-3">
-                  <Div className="flex items-center gap-2 mb-1">
-                    <UiIcon as={CalendarIcon} className="w-4 h-4 text-purple-600" />
-                    <Span className="text-xs font-semibold text-slate-700">Member Since</Span>
-                  </Div>
-                  <P className="text-base font-bold text-purple-600">{formatDateTime(userDetails.joiningDate)}</P>
-                </Div>
-              </Div>
+              {/* Statistics */}
+              <StatGrid>
+                <StatCard label="Total orders" value={String(userDetails.totalOrders || 0)} icon={Package} tone="info" />
+                <StatCard
+                  label="Total spent"
+                  value={`₹${(userDetails.totalOrderAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  icon={IndianRupee}
+                  tone="success"
+                />
+                <StatCard label="Member since" value={formatDateTime(userDetails.joiningDate)} icon={CalendarIcon} tone="neutral" />
+              </StatGrid>
 
-              {/* Addresses Section */}
+              {/* Addresses */}
               {userDetails.addresses && userDetails.addresses.length > 0 && (
-                <Div>
-                  <H4 className="text-base font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <UiIcon as={MapPin} className="w-4 h-4" />
-                    Addresses
-                  </H4>
-                  <Div className="space-y-2">
+                <Card className="gap-2">
+                  <SectionTitle className="mb-0">Addresses</SectionTitle>
+                  <Div className="gap-2">
                     {userDetails.addresses.map((address, index) => (
-                      <Div key={index} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                        <Div className="flex items-center justify-between mb-2">
-                          <Span className="text-sm font-semibold text-slate-700">{address.label || 'Address'}</Span>
-                          {address.isDefault && <Span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Default</Span>}
+                      <Div key={index} className="bg-slate-50 rounded-lg p-3 border border-slate-200 gap-1.5">
+                        <Div className="flex-row items-center justify-between gap-2">
+                          <Div className="flex-row items-center gap-1.5 flex-1 min-w-0">
+                            <UiIcon as={MapPin} size={14} className="text-slate-500" />
+                            <Span className="text-sm font-semibold text-slate-700 flex-1" numberOfLines={1}>
+                              {address.label || 'Address'}
+                            </Span>
+                          </Div>
+                          {address.isDefault && <StatusBadge tone="info" label="Default" />}
                         </Div>
                         <P className="text-sm text-slate-600">
                           {address.street}
@@ -791,68 +710,71 @@ export default function Customers() {
                       </Div>
                     ))}
                   </Div>
-                </Div>
+                </Card>
               )}
 
-              {/* Recent Orders Section */}
+              {/* Recent Orders */}
               {userDetails.orders && userDetails.orders.length > 0 && (
-                <Div>
-                  <H4 className="text-base font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <UiIcon as={Package} className="w-4 h-4" />
-                    Recent Orders
-                  </H4>
-                  <Div className="space-y-2">
+                <Card className="gap-2">
+                  <SectionTitle className="mb-0">Recent orders</SectionTitle>
+                  <Div className="gap-2">
                     {userDetails.orders.slice(0, 5).map((order, index) => (
-                      <Div key={index} className="bg-slate-50 rounded-lg p-3 border border-slate-200 flex items-center justify-between">
-                        <Div>
-                          <P className="text-sm font-semibold text-slate-900">{order.orderId}</P>
-                          <P className="text-xs text-slate-600">{order.restaurantName}</P>
+                      <Div key={index} className="bg-slate-50 rounded-lg p-3 border border-slate-200 flex-row items-center justify-between gap-3">
+                        <Div className="flex-1 min-w-0">
+                          <Span className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                            {order.orderId}
+                          </Span>
+                          <Span className="text-xs text-slate-500" numberOfLines={1}>
+                            {order.restaurantName}
+                          </Span>
                         </Div>
-                        <Div className="text-right">
-                          <P className="text-sm font-semibold text-slate-900">
-                            {'\u20B9'}
+                        <Div className="items-end gap-1 shrink-0">
+                          <Span className="text-sm font-semibold text-slate-900">
+                            {'₹'}
                             {(order.total || 0).toLocaleString('en-IN', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}
-                          </P>
-                          <P className="text-xs text-slate-600 capitalize">{order.status}</P>
+                          </Span>
+                          <StatusBadge status={order.status} />
                         </Div>
                       </Div>
                     ))}
                   </Div>
-                </Div>
+                </Card>
               )}
 
               {/* Additional Info */}
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {userDetails.gender && (
-                  <Div className="bg-slate-50 rounded-lg p-3">
-                    <P className="text-xs font-semibold text-slate-700 mb-1">Gender</P>
-                    <P className="text-sm text-slate-600 capitalize">{userDetails.gender}</P>
-                  </Div>
-                )}
-                {userDetails.dateOfBirth && (
-                  <Div className="bg-slate-50 rounded-lg p-3">
-                    <P className="text-xs font-semibold text-slate-700 mb-1">Date of Birth</P>
-                    <P className="text-sm text-slate-600">
-                      {new Date(userDetails.dateOfBirth).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </P>
-                  </Div>
-                )}
-              </Div>
+              {(userDetails.gender || userDetails.dateOfBirth) && (
+                <Div className={tablet ? 'grid grid-cols-2 gap-3' : 'gap-3'}>
+                  {userDetails.gender && (
+                    <Card className="gap-1">
+                      <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Gender</Span>
+                      <P className="text-sm text-slate-700">{userDetails.gender}</P>
+                    </Card>
+                  )}
+                  {userDetails.dateOfBirth && (
+                    <Card className="gap-1">
+                      <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Date of birth</Span>
+                      <P className="text-sm text-slate-700">
+                        {new Date(userDetails.dateOfBirth).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </P>
+                    </Card>
+                  )}
+                </Div>
+              )}
             </Div>
           ) : (
-            <Div className="py-8 text-center">
-              <Div className="text-sm text-slate-500">No user details available</Div>
+            <Div className="p-4">
+              <EmptyState title="No user details available" message="This customer's profile could not be loaded." />
             </Div>
           )}
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

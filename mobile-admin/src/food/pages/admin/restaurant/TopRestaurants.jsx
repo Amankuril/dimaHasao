@@ -1,32 +1,29 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/restaurant/TopRestaurants.jsx (tools/port.js first pass). */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Trophy, Search, Star, Loader2, Save, Bike, ShoppingBag, RotateCcw, ArrowLeftRight } from 'lucide-react-native';
+import { Trophy, Star, Loader2, Save, Bike, ShoppingBag, RotateCcw, ArrowLeftRight } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/shadcn';
-import { TableSkeleton } from '../../../../components/shadcn';
+import { Button, Div, Img, Input, Option, Overlay, Select as HSelect, Span, Strong, Icon as UiIcon } from '../../../../components/web';
 import {
-  Button,
-  Div,
-  H1,
-  H3,
-  Img,
-  Input,
-  Option,
-  Overlay,
-  P,
-  ScrollDiv,
-  Select as HSelect,
-  Span,
-  Strong,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 import { window } from '../../../../lib/webShim';
 const MAX_TOP = 10;
 // Remembers the admin's selected zone across refreshes (cleared on logout).
@@ -348,246 +345,190 @@ export default function TopRestaurants() {
   const tabs = [
     {
       key: 'delivery',
-      label: 'Delivery Top Restaurants',
+      label: 'Delivery',
       icon: Bike,
     },
     {
       key: 'takeaway',
-      label: 'Takeaway Top Restaurants',
+      label: 'Takeaway',
       icon: ShoppingBag,
     },
   ];
+  const COLS = [60, 200, 170, 130, 100, 120, 160];
   return (
-    <ScrollDiv
+    <AdminPage
+      maxWidth={1200}
       ref={pageScrollRef}
-      className="p-4 lg:p-6 bg-slate-50 min-h-screen"
       scrollEventThrottle={16}
       onScroll={(e) => {
         pageScrollYRef.current = e.nativeEvent.contentOffset.y;
       }}
     >
-      <Div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6 mb-5">
-          <Div className="flex items-center gap-3 mb-1">
-            <Div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-              <UiIcon as={Trophy} className="h-5 w-5" />
-            </Div>
-            <Div>
-              <H1 className="text-2xl font-bold text-slate-900">Top Restaurants</H1>
-              <P className="text-sm text-slate-600">Choose which restaurants appear at the top for users in each zone. Max {MAX_TOP} per zone.</P>
-            </Div>
-          </Div>
+      <PageHeader
+        icon={Trophy}
+        title="Top Restaurants"
+        subtitle={`Choose which restaurants appear at the top for users in each zone. Max ${MAX_TOP} per zone.`}
+        breadcrumb={[{ label: 'Food' }, { label: 'Restaurants' }, { label: 'Top restaurants' }]}
+      />
 
-          {/* Tabs */}
-          <Div className="mt-4 inline-flex gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
-            {tabs.map((t) => {
-              const Icon = t.icon;
-              const active = activeTab === t.key;
+      <Card className="mb-4">
+        <Div className="flex-row flex-wrap gap-2 mb-3 rounded-lg border border-slate-200 bg-slate-100 p-1">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const active = activeTab === t.key;
+            return (
+              <Button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`flex-1 min-w-[120px] flex-row items-center justify-center gap-2 rounded-lg h-11 px-3 ${active ? 'bg-blue-600' : 'bg-transparent'}`}
+              >
+                <UiIcon as={Icon} size={16} className={active ? 'text-white' : 'text-slate-500'} />
+                <Span className={`text-sm font-semibold ${active ? 'text-white' : 'text-slate-500'}`}>{t.label}</Span>
+              </Button>
+            );
+          })}
+        </Div>
+
+        <Toolbar className="mb-2">
+          <Input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by restaurant, owner or phone…"
+            className={`${INPUT} flex-1 min-w-[200px]`}
+          />
+          <Div className="min-w-[160px] flex-1">
+            <Select value={selectedZone} onValueChange={setSelectedZone}>
+              <SelectTrigger className={INPUT}>
+                <SelectValue placeholder="Select zone" />
+              </SelectTrigger>
+              <SelectContent className="border-slate-200 bg-white">
+                {zones.map((zone) => (
+                  <SelectItem key={zone._id || zone.id} value={String(zone._id || zone.id)}>
+                    {zone.zoneName || zone.name || 'Unnamed Zone'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Div>
+          <Button onClick={handleReset} disabled={assignedCount === 0 || saving || loading} className={BTN_SECONDARY}>
+            <UiIcon as={RotateCcw} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+          </Button>
+          <Button onClick={handleSave} disabled={!isDirty || saving || loading} className={BTN_PRIMARY}>
+            <UiIcon as={saving ? Loader2 : Save} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving\u2026' : 'Save'}</Span>
+          </Button>
+        </Toolbar>
+        <Span className="text-xs text-slate-500">
+          {assignedCount}/{MAX_TOP} selected · Pick a number in the <Strong>Top No.</Strong> column to promote a restaurant. Choosing a number that&apos;s already
+          taken lets you replace it.
+        </Span>
+      </Card>
+
+      {showSkeleton ? (
+        <TableSkeleton rows={8} />
+      ) : filteredRestaurants.length === 0 ? (
+        <EmptyState
+          icon={Trophy}
+          title="No restaurants found"
+          message={activeTab === 'takeaway' ? 'No takeaway-enabled restaurants in this zone.' : 'No restaurants in this zone.'}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={['S.No', 'Restaurant', 'Owner', 'Zone', 'Rating', 'Status', 'Top No.']} />
+          <TBody>
+            {filteredRestaurants.map((r, index) => {
+              const id = String(r._id);
+              const rank = ranks[id] || '';
+              const hasRank = Boolean(rank);
               return (
-                <Button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all ${active ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-500 hover:bg-white hover:text-slate-800'}`}
-                >
-                  <UiIcon as={Icon} className="h-4 w-4" />
-                  {t.label}
-                </Button>
+                <Row key={id} last={index === filteredRestaurants.length - 1} className={hasRank ? 'bg-blue-50' : ''}>
+                  <Cell width={COLS[0]} numberOfLines={1}>{String(index + 1)}</Cell>
+                  <Cell width={COLS[1]}>
+                    <Div className="flex-row items-center gap-2">
+                      <Div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100 items-center justify-center shrink-0">
+                        <Img src={getLogo(r)} alt={r.restaurantName} className="w-full h-full" contentFit="cover" fallback={PLACEHOLDER_40} />
+                      </Div>
+                      <Div className="flex-1 min-w-0">
+                        <Span className="text-sm font-medium text-slate-900">{r.restaurantName}</Span>
+                        <Span className="text-xs text-slate-500">{r.area || r.location?.area || r.city || r.location?.city || ''}</Span>
+                      </Div>
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[2]}>
+                    <Div className="gap-0.5">
+                      <Span className="text-sm font-medium text-slate-900">{r.ownerName || '\u2014'}</Span>
+                      <Span className="text-xs text-slate-500">{r.ownerPhone || ''}</Span>
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[3]}>{getZoneName(r)}</Cell>
+                  <Cell width={COLS[4]}>
+                    <Div className="flex-row items-center gap-1.5">
+                      <UiIcon as={Star} size={14} className="text-amber-600" fill="#BB4D00" />
+                      <Span className="text-sm font-semibold text-slate-900">{(Number(r.rating) || 0).toFixed(1)}</Span>
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[5]}>
+                    <StatusBadge status="approved" label="Approved" />
+                  </Cell>
+                  <Cell width={COLS[6]}>
+                    <Div className="gap-1.5">
+                      {hasRank ? <StatusBadge tone="info" label={`#Top${rank}`} /> : null}
+                      <HSelect
+                        value={rank === '' ? '' : String(rank)}
+                        onChange={(e) => handleSelectSlot(id, e.target.value)}
+                        className={INPUT}
+                      >
+                        <Option value="">Select</Option>
+                        {Array.from(
+                          {
+                            length: MAX_TOP,
+                          },
+                          (_, i) => i + 1,
+                        ).map((n) => (
+                          <Option key={n} value={n}>
+                            #Top{n}
+                          </Option>
+                        ))}
+                      </HSelect>
+                    </Div>
+                  </Cell>
+                </Row>
               );
             })}
-          </Div>
-        </Div>
-
-        {/* Controls: search + zone + save */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-5">
-          <Div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <Div className="relative flex-1 max-w-md">
-              <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by restaurant, owner or phone..."
-                className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </Div>
-
-            <Div className="flex items-center gap-3">
-              <Button
-                onClick={handleReset}
-                disabled={assignedCount === 0 || saving || loading}
-                className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <UiIcon as={RotateCcw} className="h-4 w-4" />
-                Reset
-              </Button>
-              <Select value={selectedZone} onValueChange={setSelectedZone}>
-                <SelectTrigger className="min-w-[180px] border-slate-300 bg-white text-slate-900">
-                  <SelectValue placeholder="Select zone" />
-                </SelectTrigger>
-                <SelectContent className="border-slate-200 bg-white text-slate-900">
-                  {zones.map((zone) => (
-                    <SelectItem key={zone._id || zone.id} value={String(zone._id || zone.id)}>
-                      {zone.zoneName || zone.name || 'Unnamed Zone'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Button
-                onClick={handleSave}
-                disabled={!isDirty || saving || loading}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saving ? <UiIcon as={Loader2} className="h-4 w-4 animate-spin" /> : <UiIcon as={Save} className="h-4 w-4" />}
-                Save Top Restaurants
-              </Button>
-            </Div>
-          </Div>
-          <P className="mt-2 text-xs text-slate-500">
-            {assignedCount}/{MAX_TOP} selected · Pick a number in the <Strong>Top No.</Strong> dropdown to promote a restaurant. Choosing a number that&apos;s
-            already taken lets you replace it.
-          </P>
-        </Div>
-
-        {/* Table */}
-        {showSkeleton ? (
-          <TableSkeleton rows={8} columns={7} />
-        ) : (
-          <Div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <Div>
-              <Table className="w-full" cols={[70, 220, 180, 140, 110, 120, 140]}>
-                <Thead className="bg-slate-50 border-b border-slate-200">
-                  <Tr>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">S.No</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant Info</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Owner Info</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Zone</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Rating</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</Th>
-                    <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Top No.</Th>
-                  </Tr>
-                </Thead>
-                <Tbody className="bg-white divide-y divide-slate-100">
-                  {filteredRestaurants.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={7} className="px-6 py-20 text-center">
-                        <P className="text-lg font-semibold text-slate-700 mb-1">No Data Found</P>
-                        <P className="text-sm text-slate-500">
-                          {activeTab === 'takeaway' ? 'No takeaway-enabled restaurants in this zone' : 'No restaurants in this zone'}
-                        </P>
-                      </Td>
-                    </Tr>
-                  ) : (
-                    filteredRestaurants.map((r, index) => {
-                      const id = String(r._id);
-                      const rank = ranks[id] || '';
-                      const hasRank = Boolean(rank);
-                      return (
-                        <Tr key={id} className={`hover:bg-slate-50 transition-colors ${hasRank ? 'bg-blue-50/50' : ''}`}>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm font-medium text-slate-700">{index + 1}</Span>
-                          </Td>
-                          <Td className="px-6 py-4">
-                            <Div className="flex items-center gap-3">
-                              <Div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 border border-slate-100">
-                                <Img src={getLogo(r)} alt={r.restaurantName} className="w-full h-full object-cover" fallback={PLACEHOLDER_40} />
-                              </Div>
-                              <Div className="flex flex-col">
-                                <Span className="text-sm font-medium text-slate-900">{r.restaurantName}</Span>
-                                <Span className="text-xs text-slate-500">{r.area || r.location?.area || r.city || r.location?.city || ''}</Span>
-                              </Div>
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4">
-                            <Div className="flex flex-col">
-                              <Span className="text-sm font-medium text-slate-900">{r.ownerName || '—'}</Span>
-                              <Span className="text-xs text-slate-500">{r.ownerPhone || ''}</Span>
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-slate-700">{getZoneName(r)}</Span>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Div className="flex items-center gap-1.5">
-                              <UiIcon as={Star} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                              <Span className="text-sm font-semibold text-slate-900">{(Number(r.rating) || 0).toFixed(1)}</Span>
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700">
-                              Approved
-                            </Span>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap text-center">
-                            <Div className="flex items-center justify-center gap-2">
-                              {hasRank && (
-                                <Span className="inline-flex items-center rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold text-white">#Top{rank}</Span>
-                              )}
-                              <HSelect
-                                value={rank === '' ? '' : String(rank)}
-                                onChange={(e) => handleSelectSlot(id, e.target.value)}
-                                className="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-center text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <Option value="">Select</Option>
-                                {Array.from(
-                                  {
-                                    length: MAX_TOP,
-                                  },
-                                  (_, i) => i + 1,
-                                ).map((n) => (
-                                  <Option key={n} value={n}>
-                                    #Top{n}
-                                  </Option>
-                                ))}
-                              </HSelect>
-                            </Div>
-                          </Td>
-                        </Tr>
-                      );
-                    })
-                  )}
-                </Tbody>
-              </Table>
-            </Div>
-          </Div>
-        )}
-      </Div>
+          </TBody>
+        </DataTable>
+      )}
 
       {/* Replace confirmation modal */}
       {replaceModal && (
         <Overlay onClose={cancelReplace} className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <Div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <Div className="mb-4 flex items-center gap-3">
-              <Div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-                <UiIcon as={ArrowLeftRight} className="h-5 w-5" />
+          <Div className="w-full max-w-md rounded-xl bg-white border border-slate-200 p-4">
+            <Div className="mb-3 flex-row items-center gap-3">
+              <Div className="h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                <UiIcon as={ArrowLeftRight} size={18} className="text-blue-700" />
               </Div>
-              <H3 className="text-lg font-bold text-slate-900">Replace with #Top{replaceModal.targetSlot}</H3>
+              <Span className="text-base font-semibold text-slate-900 flex-1">Replace with #Top{replaceModal.targetSlot}</Span>
             </Div>
-            <P className="mb-1 text-sm text-slate-600">
+            <Span className="mb-1 text-sm text-slate-700">
               <Strong className="text-slate-900">{nameById(replaceModal.occupantId)}</Strong> is currently at <Strong>#Top{replaceModal.targetSlot}</Strong>.
-            </P>
-            <P className="mb-6 text-sm text-slate-600">
+            </Span>
+            <Span className="mb-4 text-sm text-slate-700">
               Replace it with <Strong className="text-slate-900">{nameById(replaceModal.editingId)}</Strong>?
               {ranks[replaceModal.editingId] ? ` The two restaurants will swap their top positions.` : ` The current one will be removed from the top list.`}
-            </P>
-            <Div className="flex justify-end gap-3">
-              <Button
-                onClick={cancelReplace}
-                className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50"
-              >
-                Cancel
+            </Span>
+            <Div className="flex-row flex-wrap justify-end gap-2">
+              <Button onClick={cancelReplace} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
-              <Button
-                onClick={confirmReplace}
-                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md transition-all hover:bg-blue-700"
-              >
-                Replace
+              <Button onClick={confirmReplace} className={BTN_PRIMARY}>
+                <Span className={BTN_TEXT_PRIMARY}>Replace</Span>
               </Button>
             </Div>
           </Div>
         </Overlay>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 }

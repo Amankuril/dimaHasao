@@ -1,17 +1,28 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/price-management/CreatePackagePrice.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronRight, Loader2, Plus, Trash2, MapPin, X, Car } from 'lucide-react-native';
-import { motion, AnimatePresence } from '../../../../../lib/motion';
+import { ArrowLeft, Plus, Trash2, MapPin, X, Package } from 'lucide-react-native';
 import { useNavigate, useParams } from '../../../../../lib/webRouter';
 import { toast } from '../../../../../lib/notify';
 import { adminService } from '../../services/adminService';
 import PlaceSearchField from './PlaceSearchField';
 import { useAppGoogleMapsLoader, HAS_VALID_GOOGLE_MAPS_KEY } from '../../utils/googleMaps';
-import { Button, Div, Form, H1, H2, H3, Input, Label, Link, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
-const inputClass =
-  'w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-xs text-slate-800 outline-none transition-all shadow-sm hover:border-amber-300 focus:border-amber-400 focus:ring-1 focus:ring-amber-400';
-const labelClass = 'mb-0.5 block text-xs font-semibold text-slate-800';
-const selectWrapClass = 'relative';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, Form, Input, Link, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 const createVehiclePriceRow = () => ({
   id: `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   vehicle_type: '',
@@ -43,6 +54,8 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
   const isEdit = mode === 'edit';
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const { columns, tablet } = useLayoutWidth();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [serviceLocations, setServiceLocations] = useState([]);
   const [packageTypes, setPackageTypes] = useState([]);
@@ -118,6 +131,7 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
           });
         }
       } catch (error) {
+        setLoadError(error?.response?.data?.message || 'Failed to load package pricing form');
         toast.error('Failed to load package pricing form');
       } finally {
         setLoading(false);
@@ -198,94 +212,101 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
       setSaving(false);
     }
   };
+  const header = (
+    <PageHeader
+      icon={Package}
+      title={isEdit ? 'Edit package pricing' : 'Create package pricing'}
+      subtitle="One package form, with a separate price block per vehicle"
+      breadcrumb={[
+        { label: 'Taxi' },
+        { label: 'Package pricing', onPress: () => navigate('/taxi/admin/pricing/package-pricing') },
+        { label: isEdit ? 'Edit' : 'Create' },
+      ]}
+      actions={
+        <>
+          <Button type="button" onClick={() => navigate('/taxi/admin/pricing/package-pricing')} className={BTN_SECONDARY}>
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+          </Button>
+          <Button type="button" onClick={() => setShowHowItWorks((current) => !current)} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>{showHowItWorks ? 'Hide help' : 'How it works'}</Span>
+          </Button>
+        </>
+      }
+    />
+  );
+  if (loading) {
+    return (
+      <AdminPage maxWidth={900}>
+        {header}
+        <LoadingState label="Loading package pricing…" />
+      </AdminPage>
+    );
+  }
+  if (loadError) {
+    return (
+      <AdminPage maxWidth={900}>
+        {header}
+        <ErrorState title="Could not load this form" message={loadError} />
+      </AdminPage>
+    );
+  }
   return (
-    <ScrollDiv className="min-h-screen bg-[#F8F9FD] p-3 lg:p-4 font-sans">
-      <Div className="flex flex-col gap-3 border-b border-gray-100 pb-2 mb-4 lg:flex-row lg:items-center lg:justify-between">
-        <Div>
-          <H1
-            className="text-2xl font-bold text-[#1E293B]"
-            style={{
-            }}
+    <AdminPage maxWidth={900}>
+      {header}
+
+      {showHowItWorks ? (
+        <Card className="mb-4">
+          <SectionTitle
+            action={
+              <Button type="button" accessibilityLabel="Close help" onClick={() => setShowHowItWorks(false)} className="w-11 h-11 items-center justify-center">
+                <UiIcon as={X} size={16} className="text-slate-600" />
+              </Button>
+            }
           >
-            {isEdit ? 'Edit Package Pricing' : 'Create Package Pricing'}
-          </H1>
-          <P className="mt-1 text-xs text-slate-500">Use a simple package form and set a different price block for each vehicle.</P>
-        </Div>
-        <Div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium tracking-tight">
-          <Span className="hover:text-slate-600 transition-colors cursor-pointer" onClick={() => navigate('/taxi/admin/pricing/package-pricing')}>
-            Package Pricing
-          </Span>
-          <UiIcon as={ChevronRight} size={10} className="text-slate-300" />
-          <Span className="text-slate-800 font-bold">{isEdit ? 'Edit' : 'Create'}</Span>
-        </Div>
-      </Div>
-
-      <Div className="relative rounded-[28px] border border-gray-100 bg-white shadow-sm">
-        {loading && (
-          <Div className="absolute inset-0 z-10 flex items-center justify-center rounded-[28px] bg-white/80">
-            <UiIcon as={Loader2} className="h-8 w-8 animate-spin text-amber-500" />
-          </Div>
-        )}
-
-        <Form onSubmit={handleSubmit} className="p-4">
-          <Div className="mb-4 flex items-center justify-between">
-            <Button
-              type="button"
-              onClick={() => navigate('/taxi/admin/pricing/package-pricing')}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
-            >
-              <UiIcon as={ArrowLeft} size={16} />
-              Back to Package Pricing
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setShowHowItWorks(true)}
-              className="text-[11px] font-bold text-amber-500 underline decoration-dotted underline-offset-4"
-            >
-              How It Works
-            </Button>
-          </Div>
-
-          <Div className="grid grid-cols-1 gap-x-4 gap-y-3 border-b border-dashed border-gray-200 pb-4 md:grid-cols-3">
+            How it works
+          </SectionTitle>
+          <Div className="gap-3">
             <Div>
-              <Label className={labelClass}>
-                Package Type <Span className="text-rose-500">*</Span>
-              </Label>
-              <Div className={selectWrapClass}>
-                <Select
-                  value={formData.package_type_id}
-                  onChange={(event) => updateTopLevel('package_type_id', event.target.value)}
-                  className={`${inputClass} appearance-none`}
-                  required
-                >
-                  {/* The list is empty until someone creates a package type, and
-                      an empty dropdown with no explanation gives an admin
-                      nothing to act on — the prerequisite lives on a different
-                      screen entirely. Name it, and link to it. */}
-                  <Option value="">{packageTypes.length ? 'Select package type' : 'No package types yet'}</Option>
-                  {packageTypes.map((item) => (
-                    <Option key={item._id || item.id} value={item._id || item.id}>
-                      {item.name}
-                    </Option>
-                  ))}
-                </Select>
-                <UiIcon as={ChevronDown} size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              </Div>
-              {!packageTypes.length && (
-                <P className="mt-1 text-xs text-amber-700">
-                  Create one first under{' '}
-                  <Link to="/taxi/admin/pricing/rental-packages/create" className="font-semibold underline underline-offset-2">
-                    Rental Package Types
-                  </Link>
-                  , then come back here.
-                </P>
-              )}
+              <Span className="text-sm font-semibold text-slate-900">Destination</Span>
+              <Span className="text-sm text-slate-500">Search and select the target city for this package pricing.</Span>
             </Div>
-
             <Div>
-              <Label className={labelClass}>
-                Destination <Span className="text-rose-500">*</Span>
-              </Label>
+              <Span className="text-sm font-semibold text-slate-900">Vehicle-wise pricing</Span>
+              <Span className="text-sm text-slate-500">Each vehicle added to this package gets its own base price, distance limits and commission rules.</Span>
+            </Div>
+            <Div className="p-3 rounded-lg bg-blue-50">
+              <Span className="text-xs font-semibold text-slate-900">Pro tip</Span>
+              <Span className="text-xs text-slate-700">You can add several vehicle pricing blocks within a single package form to save time.</Span>
+            </Div>
+          </Div>
+        </Card>
+      ) : null}
+
+      <Form onSubmit={handleSubmit}>
+        <Card className="mb-4">
+          <SectionTitle>Package</SectionTitle>
+          <Div className={`grid grid-cols-${columns} gap-3`}>
+            {/* The list is empty until someone creates a package type, and an
+                empty dropdown with no explanation gives an admin nothing to act
+                on — the prerequisite lives on a different screen entirely. */}
+            <Field label="Package type" required>
+              <Select value={formData.package_type_id} onChange={(event) => updateTopLevel('package_type_id', event.target.value)} className={INPUT} required>
+                <Option value="">{packageTypes.length ? 'Select package type' : 'No package types yet'}</Option>
+                {packageTypes.map((item) => (
+                  <Option key={item._id || item.id} value={item._id || item.id}>
+                    {item.name}
+                  </Option>
+                ))}
+              </Select>
+              {!packageTypes.length ? (
+                <Link to="/taxi/admin/pricing/rental-packages/create" className="text-xs font-semibold text-blue-700">
+                  Create a rental package type first
+                </Link>
+              ) : null}
+            </Field>
+
+            <Field label="Destination" required>
               {isLoaded && HAS_VALID_GOOGLE_MAPS_KEY ? (
                 <PlaceSearchField
                   value={formData.package_destination}
@@ -293,387 +314,244 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                   onPlace={handlePlaceChanged}
                   icon={MapPin}
                   placeholder="Search destination city (India)"
-                  className={`${inputClass} pl-10`}
+                  className={INPUT}
                 />
               ) : (
                 <Input
                   value={formData.package_destination}
                   onChange={(event) => updateTopLevel('package_destination', event.target.value)}
-                  className={inputClass}
+                  className={INPUT}
                   placeholder="Enter destination"
                   required
                 />
               )}
-            </Div>
+            </Field>
 
-            <Div>
-              <Label className={labelClass}>Available In</Label>
-              <Div className={selectWrapClass}>
-                <Select
-                  value={formData.service_location_id}
-                  onChange={(event) => updateTopLevel('service_location_id', event.target.value)}
-                  className={`${inputClass} appearance-none`}
-                >
-                  <Option value="">All service locations</Option>
-                  {serviceLocations.map((item) => (
-                    <Option key={item._id || item.id} value={item._id || item.id}>
-                      {item.name || item.service_location_name}
-                    </Option>
-                  ))}
-                </Select>
-                <UiIcon as={ChevronDown} size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              </Div>
-            </Div>
+            <Field label="Available in" hint="Leave on all locations to offer it district-wide">
+              <Select value={formData.service_location_id} onChange={(event) => updateTopLevel('service_location_id', event.target.value)} className={INPUT}>
+                <Option value="">All service locations</Option>
+                {serviceLocations.map((item) => (
+                  <Option key={item._id || item.id} value={item._id || item.id}>
+                    {item.name || item.service_location_name}
+                  </Option>
+                ))}
+              </Select>
+            </Field>
 
-            <Div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 md:col-span-3 lg:col-span-1">
-              <Div>
-                <Label className={labelClass}>Availability</Label>
-                <Div className={selectWrapClass}>
-                  <Select
-                    value={formData.package_availability}
-                    onChange={(event) => updateTopLevel('package_availability', event.target.value)}
-                    className={`${inputClass} appearance-none`}
-                  >
-                    <Option value="available">Available</Option>
-                    <Option value="unavailable">Unavailable</Option>
-                  </Select>
-                  <UiIcon as={ChevronDown} size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                </Div>
-              </Div>
-              <Div>
-                <Label className={labelClass}>Status</Label>
-                <Div className={selectWrapClass}>
-                  <Select
-                    value={formData.active}
-                    onChange={(event) => {
-                      const next = Number(event.target.value);
-                      updateTopLevel('active', next);
-                      updateTopLevel('status', next === 1 ? 'active' : 'inactive');
-                    }}
-                    className={`${inputClass} appearance-none`}
-                  >
-                    <Option value={1}>Active</Option>
-                    <Option value={0}>Inactive</Option>
-                  </Select>
-                  <UiIcon as={ChevronDown} size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                </Div>
-              </Div>
-            </Div>
-          </Div>
+            <Field label="Availability">
+              <Select value={formData.package_availability} onChange={(event) => updateTopLevel('package_availability', event.target.value)} className={INPUT}>
+                <Option value="available">Available</Option>
+                <Option value="unavailable">Unavailable</Option>
+              </Select>
+            </Field>
 
-          <Div className="mt-4 space-y-4">
-            <Div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <Div>
-                <H2 className="text-base font-bold text-slate-900">Vehicle-wise Pricing</H2>
-                <P className="mt-1 text-sm text-slate-500">Each vehicle can have its own package amount and commission setup.</P>
-              </Div>
-              <Button
-                type="button"
-                onClick={addRow}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600 transition hover:bg-amber-100"
+            <Field label="Status">
+              <Select
+                value={formData.active}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  updateTopLevel('active', next);
+                  updateTopLevel('status', next === 1 ? 'active' : 'inactive');
+                }}
+                className={INPUT}
               >
-                <UiIcon as={Plus} size={14} />
-                Add Vehicle Price
-              </Button>
-            </Div>
+                <Option value={1}>Active</Option>
+                <Option value={0}>Inactive</Option>
+              </Select>
+            </Field>
+          </Div>
+        </Card>
 
-            {formData.package_vehicle_prices.length === 0 ? (
-              <Div className="rounded-3xl border border-dashed border-gray-300 bg-gray-50/50 p-6 text-center">
-                <P className="text-sm font-bold text-slate-500">No vehicle pricing added yet.</P>
-                <Button
-                  type="button"
-                  onClick={addRow}
-                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-sm font-bold text-slate-900 transition hover:bg-amber-500"
-                >
-                  <UiIcon as={Plus} size={16} /> Add Vehicle Price
-                </Button>
-              </Div>
-            ) : (
-              formData.package_vehicle_prices.map((row, index) => (
-                <Div key={row.id} className="rounded-xl border border-gray-200 bg-[#FCFCFD] p-3 lg:p-4">
-                  <Div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <Div>
-                      <P className="text-sm font-semibold text-amber-500">Vehicle Pricing {index + 1}</P>
-                      <P className="mt-0.5 text-xs text-slate-500">{vehicleLabelMap[row.vehicle_type] || 'Choose vehicle and fill its package pricing'}</P>
+        <Card className="mb-4">
+          <SectionTitle
+            action={
+              <Button type="button" onClick={addRow} className={BTN_SECONDARY}>
+                <UiIcon as={Plus} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Add vehicle</Span>
+              </Button>
+            }
+          >
+            Vehicle-wise pricing
+          </SectionTitle>
+
+          {formData.package_vehicle_prices.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="No vehicle pricing yet"
+              message="Each vehicle can have its own package amount and commission setup."
+              actionLabel="Add vehicle price"
+              onAction={addRow}
+            />
+          ) : (
+            <Div className="gap-3">
+              {formData.package_vehicle_prices.map((row, index) => (
+                <Div key={row.id} className="p-3 rounded-lg border border-slate-200 bg-slate-50 gap-3">
+                  <Div className="flex-row items-start justify-between gap-3">
+                    <Div className="flex-1 min-w-0">
+                      <Span className="text-sm font-semibold text-slate-900">{`Vehicle pricing ${index + 1}`}</Span>
+                      <Span className="text-xs text-slate-500">{vehicleLabelMap[row.vehicle_type] || 'Choose a vehicle and fill its package pricing'}</Span>
                     </Div>
-                    <Button
-                      type="button"
-                      onClick={() => removeRow(row.id)}
-                      className="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
-                    >
-                      <UiIcon as={Trash2} size={14} />
-                      Remove
+                    <Button type="button" accessibilityLabel={`Remove vehicle pricing ${index + 1}`} onClick={() => removeRow(row.id)} className={BTN_SECONDARY}>
+                      <UiIcon as={Trash2} size={16} className="text-red-600" />
+                      <Span className="text-sm font-semibold text-red-600">Remove</Span>
                     </Button>
                   </Div>
 
-                  <Div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-3 lg:grid-cols-4">
-                    <Div>
-                      <Label className={labelClass}>
-                        Vehicle Type <Span className="text-rose-500">*</Span>
-                      </Label>
-                      <Div className={selectWrapClass}>
-                        <Select
-                          value={row.vehicle_type}
-                          onChange={(event) => updateRow(row.id, 'vehicle_type', event.target.value)}
-                          className={`${inputClass} appearance-none`}
-                          required
-                        >
-                          <Option value="">{vehicleTypes.length ? 'Select vehicle type' : 'No vehicle types yet'}</Option>
-                          {vehicleTypes.map((item) => (
-                            <Option key={item._id || item.id} value={item._id || item.id}>
-                              {item.name}
-                            </Option>
-                          ))}
-                        </Select>
-                        <UiIcon as={ChevronDown} size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      </Div>
-                      {!vehicleTypes.length && (
-                        <P className="mt-1 text-xs text-amber-700">
-                          Add one under{' '}
-                          <Link to="/taxi/admin/pricing/vehicle-type/create" className="font-semibold underline underline-offset-2">
-                            Vehicle Type
-                          </Link>
-                          .
-                        </P>
-                      )}
-                    </Div>
+                  <Div className={`grid grid-cols-${columns} gap-3`}>
+                    <Field label="Vehicle type" required>
+                      <Select value={row.vehicle_type} onChange={(event) => updateRow(row.id, 'vehicle_type', event.target.value)} className={INPUT} required>
+                        <Option value="">{vehicleTypes.length ? 'Select vehicle type' : 'No vehicle types yet'}</Option>
+                        {vehicleTypes.map((item) => (
+                          <Option key={item._id || item.id} value={item._id || item.id}>
+                            {item.name}
+                          </Option>
+                        ))}
+                      </Select>
+                      {!vehicleTypes.length ? (
+                        <Link to="/taxi/admin/pricing/vehicle-type/create" className="text-xs font-semibold text-blue-700">
+                          Add a vehicle type first
+                        </Link>
+                      ) : null}
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Base Price Inclusive of tax <Span className="text-rose-500">*</Span>
-                      </Label>
+                    <Field label="Base price (incl. tax)" required>
                       <Input
                         type="number"
                         value={row.base_price}
                         onChange={(event) => updateRow(row.id, 'base_price', event.target.value)}
-                        className={inputClass}
-                        placeholder="Enter Base Price Inclusive of tax"
+                        className={INPUT}
+                        placeholder="0"
                         required
                       />
-                    </Div>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Free Distance (Kilometers) <Span className="text-rose-500">*</Span>
-                      </Label>
+                    <Field label="Free distance (km)" required>
                       <Input
                         type="number"
                         value={row.free_distance}
                         onChange={(event) => updateRow(row.id, 'free_distance', event.target.value)}
-                        className={inputClass}
-                        placeholder="Enter Free Distance"
+                        className={INPUT}
+                        placeholder="0"
                         required
                       />
-                    </Div>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Distance Price <Span className="text-rose-500">*</Span>
-                      </Label>
+                    <Field label="Price per extra km" required>
                       <Input
                         type="number"
                         value={row.distance_price}
                         onChange={(event) => updateRow(row.id, 'distance_price', event.target.value)}
-                        className={inputClass}
-                        placeholder="Enter Price Per Distance"
+                        className={INPUT}
+                        placeholder="0"
                         required
                       />
-                    </Div>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>Free Time in Minute</Label>
+                    <Field label="Free time (minutes)">
                       <Input
                         type="number"
                         value={row.free_time}
                         onChange={(event) => updateRow(row.id, 'free_time', event.target.value)}
-                        className={inputClass}
-                        placeholder="Enter Free minute"
+                        className={INPUT}
+                        placeholder="0"
                       />
-                    </Div>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Time Price in Minute <Span className="text-rose-500">*</Span>
-                      </Label>
+                    <Field label="Price per extra minute" required>
                       <Input
                         type="number"
                         value={row.time_price}
                         onChange={(event) => updateRow(row.id, 'time_price', event.target.value)}
-                        className={inputClass}
-                        placeholder="Enter Time Price"
+                        className={INPUT}
+                        placeholder="0"
                         required
                       />
-                    </Div>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Admin Commission Type From Customer <Span className="text-rose-500">*</Span>
-                      </Label>
-                      <Div className={selectWrapClass}>
-                        <Select
-                          value={row.admin_commision_type}
-                          onChange={(event) => updateRow(row.id, 'admin_commision_type', event.target.value)}
-                          className={`${inputClass} appearance-none`}
-                          required
-                        >
-                          <Option value="1">Percentage</Option>
-                          <Option value="2">Fixed</Option>
-                        </Select>
-                        <UiIcon as={ChevronDown} size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      </Div>
-                    </Div>
+                    <Field label="Commission type from customer" required>
+                      <Select
+                        value={row.admin_commision_type}
+                        onChange={(event) => updateRow(row.id, 'admin_commision_type', event.target.value)}
+                        className={INPUT}
+                        required
+                      >
+                        <Option value="1">Percentage</Option>
+                        <Option value="2">Fixed</Option>
+                      </Select>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Admin Commission From Customer <Span className="text-rose-500">*</Span>
-                      </Label>
+                    <Field label="Commission from customer" required>
                       <Input
                         type="number"
                         value={row.admin_commision}
                         onChange={(event) => updateRow(row.id, 'admin_commision', event.target.value)}
-                        className={inputClass}
+                        className={INPUT}
                         placeholder="0"
                         required
                       />
-                    </Div>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Admin Commission Type From Driver <Span className="text-rose-500">*</Span>
-                      </Label>
-                      <Div className={selectWrapClass}>
-                        <Select
-                          value={row.admin_commission_type_from_driver}
-                          onChange={(event) => updateRow(row.id, 'admin_commission_type_from_driver', event.target.value)}
-                          className={`${inputClass} appearance-none`}
-                          required
-                        >
-                          <Option value="1">Percentage</Option>
-                          <Option value="2">Fixed</Option>
-                        </Select>
-                        <UiIcon as={ChevronDown} size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      </Div>
-                    </Div>
+                    <Field label="Commission type from driver" required>
+                      <Select
+                        value={row.admin_commission_type_from_driver}
+                        onChange={(event) => updateRow(row.id, 'admin_commission_type_from_driver', event.target.value)}
+                        className={INPUT}
+                        required
+                      >
+                        <Option value="1">Percentage</Option>
+                        <Option value="2">Fixed</Option>
+                      </Select>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Admin Commission From Driver <Span className="text-rose-500">*</Span>
-                      </Label>
+                    <Field label="Commission from driver" required>
                       <Input
                         type="number"
                         value={row.admin_commission_from_driver}
                         onChange={(event) => updateRow(row.id, 'admin_commission_from_driver', event.target.value)}
-                        className={inputClass}
+                        className={INPUT}
                         placeholder="0"
                         required
                       />
-                    </Div>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Service Tax (%) <Span className="text-rose-500">*</Span>
-                      </Label>
+                    <Field label="Service tax (%)" required>
                       <Input
                         type="number"
                         value={row.service_tax}
                         onChange={(event) => updateRow(row.id, 'service_tax', event.target.value)}
-                        className={inputClass}
+                        className={INPUT}
                         placeholder="0"
                         required
                       />
-                    </Div>
+                    </Field>
 
-                    <Div>
-                      <Label className={labelClass}>
-                        Cancellation Fee <Span className="text-rose-500">*</Span>
-                      </Label>
+                    <Field label="Cancellation fee" required>
                       <Input
                         type="number"
                         value={row.cancellation_fee}
                         onChange={(event) => updateRow(row.id, 'cancellation_fee', event.target.value)}
-                        className={inputClass}
-                        placeholder="Cancellation Fee"
+                        className={INPUT}
+                        placeholder="0"
                         required
                       />
-                    </Div>
+                    </Field>
                   </Div>
                 </Div>
-              ))
-            )}
-          </Div>
-
-          <Div className="mt-8 flex justify-end">
-            <Button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-8 py-3 text-sm font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : null}
-              {isEdit ? 'Update Package Pricing' : 'Save Package Pricing'}
-            </Button>
-          </Div>
-        </Form>
-
-        <AnimatePresence>
-          {showHowItWorks && (
-            <motion.div
-              initial={{
-                x: '100%',
-                opacity: 0,
-              }}
-              animate={{
-                x: 0,
-                opacity: 1,
-              }}
-              exit={{
-                x: '100%',
-                opacity: 0,
-              }}
-              transition={{
-                type: 'spring',
-                damping: 25,
-                stiffness: 200,
-              }}
-              className="absolute top-10 right-4 h-auto max-h-[85%] w-72 bg-white border border-gray-100 shadow-2xl z-50 rounded-xl"
-            >
-              <ScrollDiv className="p-4">
-              <Div className="flex items-center justify-between mb-4">
-                <H3 className="text-sm font-semibold text-[#1E293B]">How It Works</H3>
-                <Button
-                  onClick={() => setShowHowItWorks(false)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <UiIcon as={X} size={14} />
-                </Button>
-              </Div>
-              <Div className="space-y-3 text-xs text-gray-600">
-                <Div>
-                  <P className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5">
-                    <UiIcon as={MapPin} size={12} className="text-[#00BFA5]" /> Destination
-                  </P>
-                  <P className="leading-snug text-gray-500 pl-4.5">Search and select the target city for this package pricing.</P>
-                </Div>
-                <Div>
-                  <P className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5">
-                    <UiIcon as={Car} size={12} className="text-[#00BFA5]" /> Vehicle-wise Pricing
-                  </P>
-                  <P className="leading-snug text-gray-500 pl-4.5">
-                    Each vehicle added to this package gets its own base price, distance limits, and commission rules.
-                  </P>
-                </Div>
-                <Div className="bg-emerald-50 rounded p-2 border border-emerald-100">
-                  <P className="text-xs font-bold text-emerald-800 mb-1">PRO TIP</P>
-                  <P className="text-[11px] leading-tight text-emerald-600">
-                    You can add multiple vehicle pricing blocks within a single package form to save time.
-                  </P>
-                </Div>
-              </Div>
-              </ScrollDiv>
-            </motion.div>
+              ))}
+            </Div>
           )}
-        </AnimatePresence>
-      </Div>
-    </ScrollDiv>
+        </Card>
+
+        <Card className={`${tablet ? 'flex-row justify-end' : ''} gap-3`}>
+          <Button type="button" onClick={() => navigate('/taxi/admin/pricing/package-pricing')} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+          </Button>
+          <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
+            <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : isEdit ? 'Update package pricing' : 'Save package pricing'}</Span>
+          </Button>
+        </Card>
+      </Form>
+    </AdminPage>
   );
 };
 export default CreatePackagePrice;

@@ -1,13 +1,33 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/drivers/PaymentMethods.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronRight, Plus, Search, Trash2, Edit2, ChevronDown, Loader2, ArrowLeft } from 'lucide-react-native';
-import { Button, Div, H1, Input, Label, Option, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../../components/web';
+import { Plus, Search, Trash2, Edit2, ArrowLeft, CreditCard, Save } from 'lucide-react-native';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  Field,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 import { Switch } from '../../../../../components/shadcn';
 import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 const BASE = () => `${API_BASE_URL}/admin/payment-methods`;
-const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
+const LIST_COLS = [160, 220, 110, 100];
 const buildField = () => ({
   id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
   type: 'text',
@@ -22,13 +42,16 @@ const PaymentMethods = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
+  const { tablet } = useLayoutWidth();
   const [formData, setFormData] = useState({
     methodName: '',
     fields: [buildField()],
   });
   const fetchMethods = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const token = localStorage.getItem('adminToken');
       const res = await fetch(BASE(), {
@@ -41,9 +64,12 @@ const PaymentMethods = () => {
       const data = await res.json();
       if (res.ok && data.success) {
         setMethods(data.data?.results || []);
+      } else {
+        setLoadError(data?.message || 'Could not load payment methods');
       }
     } catch (err) {
       console.error('Payment methods fetch error:', err);
+      setLoadError(err?.message || 'Could not load payment methods');
     } finally {
       setLoading(false);
     }
@@ -190,39 +216,26 @@ const PaymentMethods = () => {
   };
   if (view === 'form') {
     return (
-      <ScrollDiv className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans text-gray-900">
-        <Div className="mb-6">
-          <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-            <Span>Driver Management</Span>
-            <UiIcon as={ChevronRight} size={12} />
-            <Span className="text-gray-700">Payment Methods</Span>
-          </Div>
-          <Div className="flex flex-wrap items-center justify-between gap-4">
-            <H1 className="text-xl text-gray-900 font-bold">{editingId ? 'Edit Payment Method' : 'Add Payment Method'}</H1>
-            <Div className="flex items-center gap-3">
-              <Button
-                onClick={() => setView('list')}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <UiIcon as={ArrowLeft} size={16} /> Back
-              </Button>
-              <Button
-                onClick={handleAddField}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-black font-bold bg-yellow-400 border border-yellow-400 rounded-lg hover:bg-yellow-500 shadow-sm transition-colors"
-              >
-                <UiIcon as={Plus} size={16} /> Add New Field
-              </Button>
-            </Div>
-          </Div>
-        </Div>
+      <AdminPage maxWidth={720}>
+        <PageHeader
+          icon={CreditCard}
+          title={editingId ? 'Edit Payment Method' : 'Add Payment Method'}
+          subtitle="Name the method and the fields drivers must fill"
+          breadcrumb={[{ label: 'Driver Management' }, { label: 'Payment Methods', onPress: () => setView('list') }, { label: editingId ? 'Edit' : 'Add' }]}
+          actions={
+            <Button onClick={() => setView('list')} className={BTN_SECONDARY}>
+              <UiIcon as={ArrowLeft} size={16} className="text-slate-700" />
+              <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+            </Button>
+          }
+        />
 
-        <Div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
-          <Div className="max-w-lg">
-            <Label className={labelClass}>Method Name *</Label>
+        <Card className="gap-4">
+          <Field label="Method name" required>
             <Input
               type="text"
-              className={inputClass}
-              placeholder="Method Name"
+              className={INPUT}
+              placeholder="Method name"
               value={formData.methodName}
               onChange={(e) =>
                 setFormData((prev) => ({
@@ -231,181 +244,164 @@ const PaymentMethods = () => {
                 }))
               }
             />
-          </Div>
+          </Field>
 
-          <Div className="space-y-4">
-            {formData.fields.map((field) => (
-              <Div key={field.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <Div className="flex flex-wrap items-end gap-4">
-                  <Div className="w-full md:w-48">
-                    <Label className={labelClass}>Input Field Type</Label>
-                    <Div className="relative">
-                      <Select value={field.type} onChange={(e) => handleFieldChange(field.id, 'type', e.target.value)} className={`${inputClass} pr-8`}>
-                        <Option value="text">Text</Option>
-                        <Option value="number">Number</Option>
-                        <Option value="email">Email</Option>
-                        <Option value="file">File</Option>
-                      </Select>
-                      <UiIcon as={ChevronDown} size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    </Div>
-                  </Div>
-                  <Div className="w-full md:w-56">
-                    <Label className={labelClass}>Input Field Name</Label>
+          <SectionTitle
+            action={
+              <Button onClick={handleAddField} className={BTN_SECONDARY}>
+                <UiIcon as={Plus} size={14} className="text-slate-700" />
+                <Span className={BTN_TEXT_SECONDARY}>Add field</Span>
+              </Button>
+            }
+          >
+            Fields
+          </SectionTitle>
+
+          {formData.fields.length === 0 ? (
+            <EmptyState title="No fields yet" message="Add at least one field drivers must fill in." actionLabel="Add field" onAction={handleAddField} className="py-8" />
+          ) : (
+            formData.fields.map((field) => (
+              <Div key={field.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3 gap-3">
+                <Div className={tablet ? 'flex-row items-start gap-3' : 'gap-3'}>
+                  <Field label="Field type" className="flex-1">
+                    <Select value={field.type} onChange={(e) => handleFieldChange(field.id, 'type', e.target.value)} className={INPUT}>
+                      <Option value="text">Text</Option>
+                      <Option value="number">Number</Option>
+                      <Option value="email">Email</Option>
+                      <Option value="file">File</Option>
+                    </Select>
+                  </Field>
+                  <Field label="Field name" className="flex-1">
                     <Input
                       type="text"
-                      className={inputClass}
-                      placeholder="Input Field Name"
+                      className={INPUT}
+                      placeholder="Field name"
                       value={field.name}
                       onChange={(e) => handleFieldChange(field.id, 'name', e.target.value)}
                     />
+                  </Field>
+                </Div>
+                <Field label="Placeholder">
+                  <Input
+                    type="text"
+                    className={INPUT}
+                    placeholder="Enter your placeholder"
+                    value={field.placeholder}
+                    onChange={(e) => handleFieldChange(field.id, 'placeholder', e.target.value)}
+                  />
+                </Field>
+                <Div className="flex-row items-center justify-between gap-3">
+                  <Div className="flex-row items-center gap-2 flex-1 min-w-0">
+                    <Switch checked={field.isRequired} onCheckedChange={() => handleFieldChange(field.id, 'isRequired', !field.isRequired)} />
+                    <Span className="text-sm text-slate-700">Required</Span>
                   </Div>
-                  <Div className="flex-1 min-w-[200px]">
-                    <Label className={labelClass}>Placeholder</Label>
-                    <Input
-                      type="text"
-                      className={inputClass}
-                      placeholder="Enter Your Placeholder"
-                      value={field.placeholder}
-                      onChange={(e) => handleFieldChange(field.id, 'placeholder', e.target.value)}
-                    />
-                  </Div>
-                  <Label className="flex items-center gap-2 text-sm text-gray-600">
-                    <Input
-                      type="checkbox"
-                      checked={field.isRequired}
-                      onChange={() => handleFieldChange(field.id, 'isRequired', !field.isRequired)}
-                      className="h-4 w-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400"
-                    />
-                    Is Required?
-                  </Label>
-                  <Button onClick={() => handleRemoveField(field.id)} className="ml-auto text-rose-500 hover:text-rose-600 p-2">
-                    <UiIcon as={Trash2} size={16} />
+                  <Button
+                    onClick={() => handleRemoveField(field.id)}
+                    accessibilityLabel="Remove field"
+                    className="w-11 h-11 rounded-lg items-center justify-center border border-slate-300 bg-white"
+                  >
+                    <UiIcon as={Trash2} size={16} className="text-red-600" />
                   </Button>
                 </Div>
               </Div>
-            ))}
-          </Div>
+            ))
+          )}
 
-          <Div className="flex justify-end gap-3">
-            <Button
-              onClick={() => setView('list')}
-              className="px-5 py-2.5 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
+          <Div className="flex-row flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+            <Button onClick={handleSubmit} disabled={saving} className={`${BTN_PRIMARY} ${saving ? 'opacity-60' : ''}`}>
+              <UiIcon as={Save} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : 'Submit'}</Span>
             </Button>
-            <Button
-              onClick={handleSubmit}
-              className="px-6 py-2.5 text-sm font-bold text-black bg-yellow-400 rounded-lg shadow-sm hover:bg-yellow-500 transition-colors disabled:opacity-70"
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Submit'}
+            <Button onClick={() => setView('list')} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
           </Div>
-        </Div>
-      </ScrollDiv>
+        </Card>
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans text-gray-900">
-      <Div className="mb-6">
-        <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-          <Span>Driver Management</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700">Payment Methods</Span>
-        </Div>
-        <Div className="flex items-center justify-between">
-          <H1 className="text-xl text-gray-900 font-bold">Payment Methods</H1>
-          <Button
-            onClick={startAdd}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-black bg-yellow-400 shadow-sm rounded-lg hover:bg-yellow-500 transition-colors"
-          >
-            <UiIcon as={Plus} size={16} /> Add
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={CreditCard}
+        title="Payment Methods"
+        subtitle="How drivers receive their payouts"
+        breadcrumb={[{ label: 'Driver Management' }, { label: 'Payment Methods' }]}
+        actions={
+          <Button onClick={startAdd} className={BTN_PRIMARY}>
+            <UiIcon as={Plus} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>Add method</Span>
           </Button>
-        </Div>
-      </Div>
+        }
+      />
 
-      <Div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <Div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <Div className="flex items-center gap-2 text-xs text-gray-500">
-            <Span>Show</Span>
-            <Select
-              className="border border-gray-200 rounded px-2 py-1 text-xs bg-white"
-              value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(e.target.value)}
-            >
-              <Option value={10}>10</Option>
-              <Option value={25}>25</Option>
-            </Select>
-            <Span>entries</Span>
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center gap-2 flex-1 min-w-[180px]">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Search methods or fields"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`${INPUT} flex-1`}
+            />
           </Div>
-          <Div className="flex items-center gap-3">
-            <Div className="relative">
-              <UiIcon as={Search} size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg w-56 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors"
-              />
-            </Div>
-          </Div>
-        </Div>
+          <Select className={INPUT} value={itemsPerPage} onChange={(e) => setItemsPerPage(e.target.value)}>
+            <Option value={10}>Show 10</Option>
+            <Option value={25}>Show 25</Option>
+          </Select>
+        </Toolbar>
+      </Card>
 
-        <Div>
-          <Table cols={[180, 220, 120, 132]} className="w-full">
-            <Thead>
-              <Tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
-                <Th className="px-6 py-3 text-left">Method</Th>
-                <Th className="px-4 py-3 text-left">Fields</Th>
-                <Th className="px-4 py-3 text-center">Status</Th>
-                <Th className="px-4 py-3 text-center">Action</Th>
-              </Tr>
-            </Thead>
-            <Tbody className="divide-y divide-gray-100 text-sm text-gray-700">
-              {loading ? (
-                <Tr>
-                  <Td colSpan="4" className="py-10 text-center">
-                    <UiIcon as={Loader2} className="w-6 h-6 animate-spin text-yellow-500 mx-auto" />
-                  </Td>
-                </Tr>
-              ) : filteredMethods.length === 0 ? (
-                <Tr>
-                  <Td colSpan="4" className="py-10 text-center text-gray-400">
-                    No payment methods found.
-                  </Td>
-                </Tr>
-              ) : (
-                filteredMethods.map((method) => (
-                  <Tr key={method._id} className="hover:bg-gray-50/50">
-                    <Td className="px-6 py-3 font-medium">{method.name}</Td>
-                    <Td className="px-4 py-3 text-gray-500">
-                      {(method.fields || [])
-                        .map((field) => field.name)
-                        .filter(Boolean)
-                        .join(', ') || '-'}
-                    </Td>
-                    <Td className="px-4 py-3 text-center">
-                      <Switch checked={method.active !== false} onCheckedChange={() => handleToggleStatus(method)} className={method.active !== false ? 'bg-emerald-500' : 'bg-gray-200'} />
-                    </Td>
-                    <Td className="px-4 py-3 text-center">
-                      <Div className="inline-flex items-center gap-2">
-                        <Button onClick={() => startEdit(method)} className="p-2 rounded-lg border border-gray-200 text-amber-500 hover:bg-amber-50">
-                          <UiIcon as={Edit2} size={14} />
-                        </Button>
-                        <Button onClick={() => handleDelete(method._id)} className="p-2 rounded-lg border border-gray-200 text-rose-500 hover:bg-rose-50">
-                          <UiIcon as={Trash2} size={14} />
-                        </Button>
-                      </Div>
-                    </Td>
-                  </Tr>
-                ))
-              )}
-            </Tbody>
-          </Table>
-        </Div>
-      </Div>
-    </ScrollDiv>
+      {loading ? (
+        <TableSkeleton rows={4} />
+      ) : loadError ? (
+        <ErrorState title="Could not load payment methods" message={loadError} onRetry={fetchMethods} />
+      ) : filteredMethods.length === 0 ? (
+        <EmptyState
+          icon={CreditCard}
+          title="No payment methods"
+          message={searchTerm ? 'No method matches this search.' : 'Add a method so drivers can be paid out.'}
+          actionLabel="Add method"
+          onAction={startAdd}
+        />
+      ) : (
+        <DataTable cols={LIST_COLS}>
+          <THead cols={LIST_COLS} labels={['Method', 'Fields', 'Status', 'Actions']} />
+          <TBody>
+            {filteredMethods.map((method, i) => (
+              <Row key={method._id} last={i === filteredMethods.length - 1}>
+                <Cell width={LIST_COLS[0]}>
+                  <Span className="text-sm font-semibold text-slate-900">{method.name}</Span>
+                </Cell>
+                <Cell width={LIST_COLS[1]}>
+                  <P className="text-sm text-slate-500">
+                    {(method.fields || [])
+                      .map((field) => field.name)
+                      .filter(Boolean)
+                      .join(', ') || '—'}
+                  </P>
+                </Cell>
+                <Cell width={LIST_COLS[2]}>
+                  <Switch checked={method.active !== false} onCheckedChange={() => handleToggleStatus(method)} />
+                </Cell>
+                <Cell width={LIST_COLS[3]}>
+                  <Div className="flex-row items-center gap-1">
+                    <Button onClick={() => startEdit(method)} accessibilityLabel={`Edit ${method.name}`} className="w-11 h-11 rounded-lg items-center justify-center">
+                      <UiIcon as={Edit2} size={16} className="text-slate-600" />
+                    </Button>
+                    <Button onClick={() => handleDelete(method._id)} accessibilityLabel={`Delete ${method.name}`} className="w-11 h-11 rounded-lg items-center justify-center">
+                      <UiIcon as={Trash2} size={16} className="text-red-600" />
+                    </Button>
+                  </Div>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+    </AdminPage>
   );
 };
 export default PaymentMethods;

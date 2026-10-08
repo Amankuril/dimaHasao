@@ -1,13 +1,26 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/advertisement/NewAdvertisement.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { Upload, Heart, Star, Calendar, CheckCircle2, X } from 'lucide-react-native';
+import { Upload, Heart, Star, CheckCircle2, X, Megaphone } from 'lucide-react-native';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../../components/shadcn';
-import { Button, Div, Form, H1, H2, H3, Img, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  INPUT,
+  INPUT_ERROR,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, H3, HScroll, Img, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { ActivityIndicator } from 'react-native';
 import { pickImage, objectUrl } from '../../../../lib/files';
 import { LinearGradient } from 'expo-linear-gradient';
 const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 
 // Using placeholders for advertisement images
@@ -32,6 +45,7 @@ export default function NewAdvertisement() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const { tablet, wide } = useLayoutWidth();
   const languageTabs = [
     {
       key: 'default',
@@ -51,9 +65,10 @@ export default function NewAdvertisement() {
     },
     {
       key: 'es',
-      label: 'Spanish - espa�ol(ES)',
+      label: 'Spanish - español(ES)',
     },
   ];
+  const activeLanguageLabel = activeLanguage === 'default' ? 'Default' : languageTabs.find((t) => t.key === activeLanguage)?.label;
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -186,304 +201,235 @@ export default function NewAdvertisement() {
     setCoverPreview(null);
     setFormErrors({});
   };
+  const uploadBox = (type, label, hint) => {
+    const preview = type === 'profileImage' ? profilePreview : coverPreview;
+    return (
+      <Field label={label} hint={preview ? undefined : hint} error={formErrors[type]}>
+        {preview ? (
+          <Div className="border border-slate-200 rounded-lg overflow-hidden">
+            <Img src={preview} alt={`${label} preview`} className="w-full h-40 object-cover" />
+            <Button
+              type="button"
+              onClick={() => handleRemoveImage(type)}
+              className="absolute top-2 right-2 w-11 h-11 rounded-full bg-red-600 items-center justify-center"
+              accessibilityLabel={`Remove ${label}`}
+            >
+              <UiIcon as={X} size={16} className="text-white" />
+            </Button>
+          </Div>
+        ) : (
+          <Button
+            type="button"
+            onClick={() => handlePickImage(type)}
+            className={`border border-dashed rounded-lg py-8 px-4 items-center gap-1 bg-slate-50 ${formErrors[type] ? 'border-red-500' : 'border-slate-300'}`}
+            accessibilityLabel={`Upload ${label}`}
+          >
+            <UiIcon as={Upload} size={24} className="text-slate-400 mb-1" />
+            <P className="text-sm font-semibold text-blue-600">Click to upload</P>
+          </Button>
+        )}
+      </Field>
+    );
+  };
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        <Div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Form Section */}
-          <Div className="lg:col-span-2">
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <H1 className="text-2xl font-bold text-slate-900 mb-6">Create Advertisement</H1>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Megaphone}
+        title="Create Advertisement"
+        subtitle="Promote a restaurant in the customer app for a set validity window"
+        breadcrumb={[{ label: 'Food' }, { label: 'Advertisements' }, { label: 'New advertisement' }]}
+      />
 
-              {/* Language Tabs */}
-              <Div className="flex items-center gap-2 border-b border-slate-200 mb-6">
-                {languageTabs.map((tab) => (
-                  <Button
-                    key={tab.key}
-                    onClick={() => setActiveLanguage(tab.key)}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeLanguage === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
-                  >
-                    {tab.label}
-                  </Button>
-                ))}
-              </Div>
+      <Div className={wide ? 'flex-row items-start gap-4' : 'gap-4'}>
+        {/* Main Form Section */}
+        <Div className={wide ? 'flex-1' : null}>
+          <Card>
+            {/* Language Tabs */}
+            <HScroll className="mb-4 border-b border-slate-200" contentClassName="flex-row items-center">
+              {languageTabs.map((tab) => (
+                <Button
+                  key={tab.key}
+                  onClick={() => setActiveLanguage(tab.key)}
+                  className={`px-4 h-11 justify-center border-b-2 ${activeLanguage === tab.key ? 'border-blue-600' : 'border-transparent'}`}
+                >
+                  <Span className={`text-sm font-semibold ${activeLanguage === tab.key ? 'text-blue-600' : 'text-slate-600'}`}>{tab.label}</Span>
+                </Button>
+              ))}
+            </HScroll>
 
-              <Form onSubmit={handleSubmit}>
-                <Div className="space-y-6">
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Advertisement Title ({activeLanguage === 'default' ? 'Default' : languageTabs.find((t) => t.key === activeLanguage)?.label}){' '}
-                      <Span className="text-red-500">*</Span>
-                    </Label>
-                    <Input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
-                      placeholder="Exclusive Offer"
-                      className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${formErrors.title ? 'border-red-500' : 'border-slate-300'}`}
-                    />
-                    {formErrors.title && <P className="text-xs text-red-500 mt-1">{formErrors.title}</P>}
-                  </Div>
+            <Form onSubmit={handleSubmit}>
+              <Div className="gap-3">
+                <Field label={`Advertisement Title (${activeLanguageLabel})`} required error={formErrors.title}>
+                  <Input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    placeholder="Exclusive Offer"
+                    className={formErrors.title ? INPUT_ERROR : INPUT}
+                  />
+                </Field>
 
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Short Description ({activeLanguage === 'default' ? 'Default' : languageTabs.find((t) => t.key === activeLanguage)?.label})
-                    </Label>
-                    <Input
-                      type="text"
-                      value={formData.shortDescription}
-                      onChange={(e) => handleInputChange('shortDescription', e.target.value)}
-                      placeholder="Get Discount"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  </Div>
+                <Field label={`Short Description (${activeLanguageLabel})`}>
+                  <Input
+                    type="text"
+                    value={formData.shortDescription}
+                    onChange={(e) => handleInputChange('shortDescription', e.target.value)}
+                    placeholder="Get Discount"
+                    className={INPUT}
+                  />
+                </Field>
 
-                  <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Div>
-                      <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Select Restaurant <Span className="text-red-500">*</Span>
-                      </Label>
-                      <Select
-                        value={formData.restaurant}
-                        onChange={(e) => handleInputChange('restaurant', e.target.value)}
-                        className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${formErrors.restaurant ? 'border-red-500' : 'border-slate-300'}`}
-                      >
-                        <Option value="">Select Restaurant</Option>
-                        <Option value="cafe-monarch">Caf� Monarch</Option>
-                        <Option value="hungry-puppets">Hungry Puppets</Option>
-                      </Select>
-                      {formErrors.restaurant && <P className="text-xs text-red-500 mt-1">{formErrors.restaurant}</P>}
-                    </Div>
+                <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+                  <Field label="Select Restaurant" required error={formErrors.restaurant}>
+                    <Select
+                      value={formData.restaurant}
+                      onChange={(e) => handleInputChange('restaurant', e.target.value)}
+                      className={formErrors.restaurant ? INPUT_ERROR : INPUT}
+                    >
+                      <Option value="">Select Restaurant</Option>
+                      <Option value="cafe-monarch">Café Monarch</Option>
+                      <Option value="hungry-puppets">Hungry Puppets</Option>
+                    </Select>
+                  </Field>
 
-                    <Div>
-                      <Label className="block text-sm font-semibold text-slate-700 mb-2">Select Priority</Label>
-                      <Select
-                        value={formData.priority}
-                        onChange={(e) => handleInputChange('priority', e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      >
-                        <Option value="Priority">Priority</Option>
-                        <Option value="High">High</Option>
-                        <Option value="Normal">Normal</Option>
-                        <Option value="Low">Low</Option>
-                      </Select>
-                    </Div>
-                  </Div>
+                  <Field label="Select Priority">
+                    <Select value={formData.priority} onChange={(e) => handleInputChange('priority', e.target.value)} className={INPUT}>
+                      <Option value="Priority">Priority</Option>
+                      <Option value="High">High</Option>
+                      <Option value="Normal">Normal</Option>
+                      <Option value="Low">Low</Option>
+                    </Select>
+                  </Field>
 
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">Advertisement Type</Label>
+                  <Field label="Advertisement Type">
                     <Select
                       value={formData.advertisementType}
                       onChange={(e) => handleInputChange('advertisementType', e.target.value)}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className={INPUT}
                     >
                       <Option value="Restaurant Promotion">Restaurant Promotion</Option>
                       <Option value="Video promotion">Video promotion</Option>
                     </Select>
-                  </Div>
+                  </Field>
 
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Validity <Span className="text-red-500">*</Span>
-                    </Label>
-                    <Div className="relative">
-                      <Input
-                        type="date"
-                        value={formData.validity}
-                        onChange={(e) => handleInputChange('validity', e.target.value)}
-                        className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${formErrors.validity ? 'border-red-500' : 'border-slate-300'}`}
-                      />
-                      <UiIcon as={Calendar} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                    </Div>
-                    {formErrors.validity && <P className="text-xs text-red-500 mt-1">{formErrors.validity}</P>}
-                  </Div>
-
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-3">Show Review & Ratings</Label>
-                    <Div className="flex items-center gap-6">
-                      <Label className="flex items-center gap-2 cursor-pointer">
-                        <Input
-                          type="checkbox"
-                          checked={formData.showReview}
-                          onChange={(e) => handleInputChange('showReview', e.target.checked)}
-                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                        />
-                        <Span className="text-sm text-slate-700">Review</Span>
-                      </Label>
-                      <Label className="flex items-center gap-2 cursor-pointer">
-                        <Input
-                          type="checkbox"
-                          checked={formData.showRatings}
-                          onChange={(e) => handleInputChange('showRatings', e.target.checked)}
-                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                        />
-                        <Span className="text-sm text-slate-700">Rating</Span>
-                      </Label>
-                    </Div>
-                  </Div>
-
-                  {/* Upload Related Files */}
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-4">Upload Related Files</Label>
-                    <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Div>
-                        <Label className="block text-sm font-medium text-slate-600 mb-2">Profile Image (Ratio - 1:1)</Label>
-                        {profilePreview ? (
-                          <Div className="relative border-2 border-slate-300 rounded-lg overflow-hidden">
-                            <Img src={profilePreview} alt="Profile preview" className="w-full h-48 object-cover" />
-                            <Button
-                              type="button"
-                              onClick={() => handleRemoveImage('profileImage')}
-                              className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                            >
-                              <UiIcon as={X} className="w-4 h-4" />
-                            </Button>
-                          </Div>
-                        ) : (
-                          <Div
-                            onClick={() => handlePickImage('profileImage')}
-                            className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer ${formErrors.profileImage ? 'border-red-500' : 'border-slate-300'}`}
-                          >
-                            <UiIcon as={Upload} className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                            <P className="text-sm font-medium text-blue-600 mb-1">Click to Upload Profile Image</P>
-                            <P className="text-xs text-slate-500">Supports: PNG, JPG, JPEG, WEBP Maximum 2 MB</P>
-                          </Div>
-                        )}
-                        {formErrors.profileImage && <P className="text-xs text-red-500 mt-1">{formErrors.profileImage}</P>}
-                      </Div>
-
-                      <Div>
-                        <Label className="block text-sm font-medium text-slate-600 mb-2">Upload Cover (Ratio - 2:1)</Label>
-                        {coverPreview ? (
-                          <Div className="relative border-2 border-slate-300 rounded-lg overflow-hidden">
-                            <Img src={coverPreview} alt="Cover preview" className="w-full h-48 object-cover" />
-                            <Button
-                              type="button"
-                              onClick={() => handleRemoveImage('coverImage')}
-                              className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                            >
-                              <UiIcon as={X} className="w-4 h-4" />
-                            </Button>
-                          </Div>
-                        ) : (
-                          <Div
-                            onClick={() => handlePickImage('coverImage')}
-                            className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer ${formErrors.coverImage ? 'border-red-500' : 'border-slate-300'}`}
-                          >
-                            <UiIcon as={Upload} className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                            <P className="text-sm font-medium text-blue-600 mb-1">Click to Upload Cover Image</P>
-                            <P className="text-xs text-slate-500">Supports: PNG, JPG, JPEG, WEBP Maximum 2 MB</P>
-                          </Div>
-                        )}
-                        {formErrors.coverImage && <P className="text-xs text-red-500 mt-1">{formErrors.coverImage}</P>}
-                      </Div>
-                    </Div>
-                  </Div>
-
-                  <Div className="flex items-center justify-end gap-4">
-                    {formErrors.submit && <P className="text-sm text-red-500 mr-auto">{formErrors.submit}</P>}
-                    <Button
-                      type="button"
-                      onClick={handleReset}
-                      disabled={isSubmitting}
-                      className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <ActivityIndicator size="small" color="#ffffff" />
-                          Submitting...
-                        </>
-                      ) : (
-                        'Submit'
-                      )}
-                    </Button>
-                  </Div>
+                  <Field label="Validity" required error={formErrors.validity}>
+                    <Input
+                      type="date"
+                      value={formData.validity}
+                      onChange={(e) => handleInputChange('validity', e.target.value)}
+                      className={formErrors.validity ? INPUT_ERROR : INPUT}
+                    />
+                  </Field>
                 </Div>
-              </Form>
-            </Div>
-          </Div>
 
-          {/* Advertisement Preview */}
-          <Div className="lg:col-span-1">
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <H2 className="text-lg font-semibold text-slate-900 mb-4">Advertisement Preview</H2>
-              <Div className="border-2 border-slate-200 rounded-lg overflow-hidden">
-                <LinearGradient
-                  colors={['#f8fafc', '#f1f5f9']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ position: 'relative', width: '100%', aspectRatio: 2 }}
-                >
-                  {/* Cover Image Area */}
-                  <Div className="absolute inset-0">
-                    {coverPreview ? (
-                      <Img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
-                    ) : (
-                      <Img src={coverPlaceholder} alt="Cover" className="w-full h-full object-cover" fallback={null} />
+                <Field label="Show Review & Ratings">
+                  <Div className="flex-row items-center gap-5">
+                    <Div className="flex-row items-center gap-2 h-11">
+                      <Input
+                        type="checkbox"
+                        checked={formData.showReview}
+                        onChange={(e) => handleInputChange('showReview', e.target.checked)}
+                        className="w-5 h-5"
+                      />
+                      <Span className="text-sm text-slate-700">Review</Span>
+                    </Div>
+                    <Div className="flex-row items-center gap-2 h-11">
+                      <Input
+                        type="checkbox"
+                        checked={formData.showRatings}
+                        onChange={(e) => handleInputChange('showRatings', e.target.checked)}
+                        className="w-5 h-5"
+                      />
+                      <Span className="text-sm text-slate-700">Rating</Span>
+                    </Div>
+                  </Div>
+                </Field>
+
+                <SectionTitle>Upload Related Files</SectionTitle>
+                <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+                  {uploadBox('profileImage', 'Profile Image (1:1)', 'PNG, JPG, JPEG or WEBP — max 2 MB')}
+                  {uploadBox('coverImage', 'Cover Image (2:1)', 'PNG, JPG, JPEG or WEBP — max 2 MB')}
+                </Div>
+
+                {formErrors.submit ? <P className="text-sm text-red-600">{formErrors.submit}</P> : null}
+
+                <Div className={`flex-row items-center gap-2 ${tablet ? 'justify-end' : ''}`}>
+                  <Button type="button" onClick={handleReset} disabled={isSubmitting} className={`${BTN_SECONDARY} ${tablet ? '' : 'flex-1'}`}>
+                    <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting} className={`${BTN_PRIMARY} ${tablet ? '' : 'flex-1'}`}>
+                    {isSubmitting ? <ActivityIndicator size="small" color="#ffffff" /> : null}
+                    <Span className={BTN_TEXT_PRIMARY}>{isSubmitting ? 'Submitting…' : 'Submit'}</Span>
+                  </Button>
+                </Div>
+              </Div>
+            </Form>
+          </Card>
+        </Div>
+
+        {/* Advertisement Preview */}
+        <Div style={wide ? { width: 360 } : null}>
+          <Card>
+            <SectionTitle>Advertisement Preview</SectionTitle>
+            <Div className="border border-slate-200 rounded-lg overflow-hidden">
+              <LinearGradient colors={['#f8fafc', '#f1f5f9']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'relative', width: '100%', aspectRatio: 2 }}>
+                {/* Cover Image Area */}
+                <Div className="absolute inset-0">
+                  {coverPreview ? (
+                    <Img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
+                  ) : (
+                    <Img src={coverPlaceholder} alt="Cover" className="w-full h-full object-cover" fallback={null} />
+                  )}
+                </Div>
+
+                {/* Content Overlay */}
+                <Div className="absolute inset-0 p-3 justify-between">
+                  <Div className="flex-row items-start justify-between">
+                    <Div className="w-14 h-14 rounded-full bg-white border-2 border-white overflow-hidden">
+                      {profilePreview ? (
+                        <Img src={profilePreview} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <Img src={profilePlaceholder} alt="Profile" className="w-full h-full object-cover" fallback={null} />
+                      )}
+                    </Div>
+                    <Div className="w-9 h-9 rounded-full bg-white/80 items-center justify-center">
+                      <UiIcon as={Heart} size={16} className="text-red-600" />
+                    </Div>
+                  </Div>
+
+                  <Div className="bg-white/90 rounded-lg p-3 gap-1">
+                    <H3 className="text-sm font-semibold text-slate-900">{formData.title || 'Title'}</H3>
+                    <P className="text-xs text-slate-600">{formData.shortDescription || 'Description'}</P>
+                    {formData.showRatings && (
+                      <Div className="flex-row items-center gap-1">
+                        <UiIcon as={Star} size={12} className="fill-yellow-400 text-yellow-400" />
+                        <Span className="text-xs font-semibold text-slate-900">4.7 (25+)</Span>
+                      </Div>
                     )}
                   </Div>
-
-                  {/* Content Overlay */}
-                  <Div className="absolute inset-0 p-4 flex flex-col justify-between">
-                    <Div className="flex items-start justify-between">
-                      <Div className="w-16 h-16 rounded-full bg-white border-2 border-white shadow-md overflow-hidden">
-                        {profilePreview ? (
-                          <Img src={profilePreview} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                          <Img src={profilePlaceholder} alt="Profile" className="w-full h-full object-cover" fallback={null} />
-                        )}
-                      </Div>
-                      <Button className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors">
-                        <UiIcon as={Heart} className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </Div>
-
-                    <Div className="bg-white/90 backdrop-blur-sm rounded-lg p-3">
-                      <H3 className="text-sm font-semibold text-slate-900 mb-1">{formData.title || 'Title'}</H3>
-                      <P className="text-xs text-slate-600 mb-2">{formData.shortDescription || 'Description'}</P>
-                      {formData.showRatings && (
-                        <Div className="flex items-center gap-1">
-                          <UiIcon as={Star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          <Span className="text-xs font-medium text-slate-900">4.7 (25+)</Span>
-                        </Div>
-                      )}
-                    </Div>
-                  </Div>
-                </LinearGradient>
-              </Div>
+                </Div>
+              </LinearGradient>
             </Div>
-          </Div>
+          </Card>
         </Div>
       </Div>
 
       {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <Div className="p-8 text-center">
-            <Div className="flex justify-center mb-4">
-              <Div className="relative">
-                <Div className="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-75"></Div>
-                <Div className="relative bg-emerald-500 rounded-full p-4">
-                  <UiIcon as={CheckCircle2} className="w-12 h-12 text-white" />
-                </Div>
-              </Div>
+        <DialogContent className="max-w-md bg-white p-0">
+          <Div className="p-6 items-center gap-3">
+            <Div className="w-14 h-14 rounded-full bg-green-100 items-center justify-center">
+              <UiIcon as={CheckCircle2} size={28} className="text-green-700" />
             </Div>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-slate-900 mb-2">Advertisement Created Successfully!</DialogTitle>
-              <DialogDescription className="text-sm text-slate-600">
-                The advertisement has been successfully created and is now active in the system.
+              <DialogTitle className="text-lg font-bold text-slate-900 text-center">Advertisement created</DialogTitle>
+              <DialogDescription className="text-sm text-slate-500 text-center">
+                The advertisement has been created and is now active in the system.
               </DialogDescription>
             </DialogHeader>
           </Div>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

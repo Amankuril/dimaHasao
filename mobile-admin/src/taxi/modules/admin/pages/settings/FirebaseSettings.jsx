@@ -1,23 +1,28 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/settings/FirebaseSettings.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Loader2, ArrowLeft, Flame, FileJson, UploadCloud, CheckCircle2, ShieldCheck } from 'lucide-react-native';
+import { Loader2, ArrowLeft, Flame, FileJson, UploadCloud, CheckCircle2, Save } from 'lucide-react-native';
 import { adminService } from '../../services/adminService';
 import { toast } from '../../../../../lib/notify';
 import { pickDocument } from '../../../../../lib/files';
-import { Button, Div, Form, H1, H3, Input, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, LoadingState, ErrorState, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../../admin/ui';
+import { Button, Div, Form, Input, P, Span, Icon as UiIcon } from '../../../../../components/web';
 import { window } from '../../../../../lib/webShim';
 const FirebaseSettings = () => {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [settings, setSettings] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const { tablet } = useLayoutWidth();
   const fetchData = async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const res = await adminService.getFirebaseSettings();
       setSettings(res.data?.settings || {});
     } catch (err) {
       console.error('Fetch error:', err);
+      setLoadError(err?.message || 'Failed to load Firebase settings');
       toast.error('Failed to load Firebase settings');
     } finally {
       setLoading(false);
@@ -50,196 +55,117 @@ const FirebaseSettings = () => {
       [key]: value,
     }));
   };
-  const inputClass =
-    'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors';
-  const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
   const pickServiceAccountJson = async () => {
     const file = await pickDocument({ type: 'application/json' });
     if (file) setSelectedFile(file);
   };
+  const header = (
+    <PageHeader
+      icon={Flame}
+      title="Firebase Settings"
+      subtitle="Realtime database and service account credentials"
+      breadcrumb={[{ label: 'Settings' }, { label: 'Third-party' }, { label: 'Firebase Configuration' }]}
+      actions={
+        <Button onClick={() => window.history.back()} className={BTN_SECONDARY}>
+          <UiIcon as={ArrowLeft} size={16} className="text-slate-700" />
+          <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+        </Button>
+      }
+    />
+  );
   if (loading) {
     return (
-      <ScrollDiv className="flex items-center justify-center min-h-screen bg-gray-50">
-        <UiIcon as={Loader2} className="animate-spin text-indigo-600" size={32} />
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        {header}
+        <LoadingState label="Loading Firebase settings…" />
+      </AdminPage>
     );
   }
+  if (loadError) {
+    return (
+      <AdminPage maxWidth={720}>
+        {header}
+        <ErrorState title="Could not load Firebase settings" message={loadError} onRetry={fetchData} />
+      </AdminPage>
+    );
+  }
+  const text = (label, key, placeholder, type) => (
+    <Field label={label} required className={tablet ? 'flex-1' : ''}>
+      <Input
+        type={type}
+        className={INPUT}
+        value={settings[key] || ''}
+        onChange={(e) => updateField(key, e.target.value)}
+        placeholder={placeholder}
+        required
+      />
+    </Field>
+  );
+  const pair = (a, b) => <Div className={tablet ? 'flex-row items-start gap-4' : 'gap-4'}>{a}{b}</Div>;
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8 font-sans">
-      {/* Header Block */}
-      <Div className="mb-8">
-        <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-          <Span>Settings</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span>Third-party</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700">Firebase Configuration</Span>
-        </Div>
-        <Div className="flex items-center justify-between">
-          <H1 className="text-xl text-gray-900 font-bold">Firebase Settings</H1>
-          <Button
-            onClick={() => window.history.back()}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            <UiIcon as={ArrowLeft} size={16} /> Back
-          </Button>
-        </Div>
-      </Div>
+    <AdminPage maxWidth={720}>
+      {header}
 
-      <Div className="max-w-5xl mx-auto">
-        {/* Main Card */}
-        <Form onSubmit={handleSave} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Card Header */}
-          <Div className="p-6 border-b border-gray-100 flex items-center gap-3">
-            <Div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
-              <UiIcon as={Flame} size={20} />
-            </Div>
-            <Div>
-              <H3 className="text-sm font-bold text-gray-900">Cloud Infrastructure</H3>
-              <P className="text-xs text-gray-400">Manage your Firebase real-time database and service accounts</P>
-            </Div>
-          </Div>
+      <Form onSubmit={handleSave}>
+        <Card className="gap-4">
+          <SectionTitle>Cloud infrastructure</SectionTitle>
 
-          <Div className="p-8 space-y-8">
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Div className="md:col-span-2">
-                <Label className={labelClass}>Firebase Database URL</Label>
-                <Input
-                  className={inputClass}
-                  value={settings.firebase_database_url || ''}
-                  onChange={(e) => updateField('firebase_database_url', e.target.value)}
-                  placeholder="https://your-project.firebaseio.com"
-                  required
-                />
-              </Div>
+          {text('Firebase database URL', 'firebase_database_url', 'https://your-project.firebaseio.com')}
+          {pair(
+            text('API key', 'firebase_api_key', '•••••••••••••••', 'password'),
+            text('Auth domain', 'firebase_auth_domain', 'your-project.firebaseapp.com'),
+          )}
+          {pair(
+            text('Project ID', 'firebase_project_id', 'your-project-id'),
+            text('Storage bucket', 'firebase_storage_bucket', 'your-project.appspot.com'),
+          )}
+          {pair(
+            text('Messaging sender ID', 'firebase_messaging_sender_id', 'xxxxxxxxxxxx'),
+            text('App ID', 'firebase_app_id', '1:xxxxxxxxx:web:xxxxxxxxxxxx'),
+          )}
 
-              <Div>
-                <Label className={labelClass}>API Key</Label>
-                <Input
-                  type="password"
-                  className={inputClass}
-                  value={settings.firebase_api_key || ''}
-                  onChange={(e) => updateField('firebase_api_key', e.target.value)}
-                  placeholder="***********************************"
-                  required
-                />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>Auth Domain</Label>
-                <Input
-                  className={inputClass}
-                  value={settings.firebase_auth_domain || ''}
-                  onChange={(e) => updateField('firebase_auth_domain', e.target.value)}
-                  placeholder="your-project.firebaseapp.com"
-                  required
-                />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>Project ID</Label>
-                <Input
-                  className={inputClass}
-                  value={settings.firebase_project_id || ''}
-                  onChange={(e) => updateField('firebase_project_id', e.target.value)}
-                  placeholder="your-project-id"
-                  required
-                />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>Storage Bucket</Label>
-                <Input
-                  className={inputClass}
-                  value={settings.firebase_storage_bucket || ''}
-                  onChange={(e) => updateField('firebase_storage_bucket', e.target.value)}
-                  placeholder="your-project.appspot.com"
-                  required
-                />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>Messaging Sender ID</Label>
-                <Input
-                  className={inputClass}
-                  value={settings.firebase_messaging_sender_id || ''}
-                  onChange={(e) => updateField('firebase_messaging_sender_id', e.target.value)}
-                  placeholder="xxxxxxxxxxxx"
-                  required
-                />
-              </Div>
-
-              <Div>
-                <Label className={labelClass}>App ID</Label>
-                <Input
-                  className={inputClass}
-                  value={settings.firebase_app_id || ''}
-                  onChange={(e) => updateField('firebase_app_id', e.target.value)}
-                  placeholder="1:xxxxxxxxx:web:xxxxxxxxxxxx"
-                  required
-                />
-              </Div>
-
-              <Div className="md:col-span-2">
-                <Label className={labelClass}>Service Account JSON</Label>
-                <Div className="mt-2 group relative">
-                  <Div
-                    onClick={pickServiceAccountJson}
-                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer bg-gray-50/50 hover:bg-gray-50 hover:border-indigo-300 transition-all"
-                  >
-                    <Div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                      {selectedFile ? (
-                        <>
-                          <UiIcon as={CheckCircle2} className="text-green-500 mb-2" size={24} />
-                          <P className="text-sm font-semibold text-gray-700">{selectedFile.name}</P>
-                          <P className="text-xs text-gray-400">File selected successfully</P>
-                        </>
-                      ) : (
-                        <>
-                          <UiIcon as={UploadCloud} className="text-gray-400 mb-2 group-hover:text-indigo-500 transition-colors" size={24} />
-                          <P className="text-sm font-semibold text-gray-600">Tap to upload</P>
-                          <P className="text-xs text-gray-500">Service account credentials (.json)</P>
-                        </>
-                      )}
-                    </Div>
-                  </Div>
-                </Div>
-                {settings.firebase_json_name && !selectedFile && (
-                  <Div className="mt-4 p-3 bg-indigo-50/50 rounded-lg flex items-center justify-between border border-indigo-100">
-                    <Div className="flex items-center gap-2">
-                      <UiIcon as={FileJson} size={14} className="text-indigo-600" />
-                      <Span className="text-xs font-semibold text-indigo-900">{settings.firebase_json_name}</Span>
-                    </Div>
-                    <Span className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter italic">Currently Active</Span>
-                  </Div>
-                )}
-              </Div>
-            </Div>
-          </Div>
-
-          {/* Card Footer */}
-          <Div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-            <Div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold uppercase tracking-widest px-2">
-              <UiIcon as={ShieldCheck} size={12} className="text-gray-300" />
-              Encrypted Storage
-            </Div>
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+          <Field label="Service account JSON" hint="Credentials are stored encrypted">
+            <Div
+              onClick={pickServiceAccountJson}
+              accessibilityRole="button"
+              accessibilityLabel="Upload service account JSON"
+              className="items-center justify-center py-6 px-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 gap-1"
             >
-              {submitting ? (
+              {selectedFile ? (
                 <>
-                  <UiIcon as={Loader2} size={16} className="animate-spin" /> Saving Changes...
+                  <UiIcon as={CheckCircle2} size={22} className="text-green-700" />
+                  <P className="text-sm font-semibold text-slate-900">{selectedFile.name}</P>
+                  <P className="text-xs text-slate-500">File selected</P>
                 </>
               ) : (
-                'Save Connection'
+                <>
+                  <UiIcon as={UploadCloud} size={22} className="text-slate-400" />
+                  <P className="text-sm font-semibold text-slate-700">Tap to upload</P>
+                  <P className="text-xs text-slate-500">Service account credentials (.json)</P>
+                </>
               )}
+            </Div>
+          </Field>
+
+          {settings.firebase_json_name && !selectedFile ? (
+            <Div className="flex-row items-center justify-between gap-2 p-3 rounded-lg border border-slate-200 bg-slate-50">
+              <Div className="flex-row items-center gap-2 flex-1 min-w-0">
+                <UiIcon as={FileJson} size={14} className="text-blue-600" />
+                <Span className="text-xs font-semibold text-slate-900">{settings.firebase_json_name}</Span>
+              </Div>
+              <Span className="text-xs text-slate-500">Currently active</Span>
+            </Div>
+          ) : null}
+
+          <Div className="border-t border-slate-100 pt-4">
+            <Button type="submit" disabled={submitting} className={`${BTN_PRIMARY} ${submitting ? 'opacity-60' : ''}`}>
+              <UiIcon as={submitting ? Loader2 : Save} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>{submitting ? 'Saving changes…' : 'Save connection'}</Span>
             </Button>
           </Div>
-        </Form>
-      </Div>
-    </ScrollDiv>
+        </Card>
+      </Form>
+    </AdminPage>
   );
 };
 export default FirebaseSettings;

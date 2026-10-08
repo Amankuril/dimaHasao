@@ -1,7 +1,21 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/FirebaseNotification.jsx (tools/port.js first pass). */
 import { useState } from 'react';
 import { Cloud, Settings, Info } from 'lucide-react-native';
-import { A, Button, Div, Form, H1, HScroll, Input, Label, ScrollDiv, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { A, Button, Div, Form, HScroll, Input, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { alert } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -121,18 +135,19 @@ const notificationMessages = [
     enabled: false,
   },
 ];
-function ToggleSwitch({ enabled, onToggle }) {
+function ToggleSwitch({ enabled, onToggle, label }) {
   return (
-    <Button
-      type="button"
-      onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}
-    >
-      <Span className="h-5 w-5 rounded-full bg-white shadow-sm" />
+    <Button type="button" onClick={onToggle} accessibilityLabel={label} className="w-11 h-11 flex-row items-center justify-end shrink-0">
+      <Div className={`flex-row items-center w-11 h-6 rounded-full border px-0.5 ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}>
+        <Span className="h-5 w-5 rounded-full bg-white" />
+      </Div>
     </Button>
   );
 }
+const TEXTAREA = 'px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900';
 export default function FirebaseNotification() {
+  const { tablet } = useLayoutWidth();
+  const col = tablet ? { width: '48.5%' } : { width: '100%' };
   const [activeTab, setActiveTab] = useState('push-notification');
   const [activeLanguage, setActiveLanguage] = useState('bn');
   const [messages, setMessages] = useState(notificationMessages);
@@ -198,219 +213,141 @@ export default function FirebaseNotification() {
       measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
     });
   };
+  const CONFIG_FIELDS = [
+    { key: 'fcmProjectId', label: 'FCM Project ID' },
+    { key: 'authDomain', label: 'Auth Domain' },
+    { key: 'messagingSenderId', label: 'Messaging Sender Id' },
+    { key: 'appId', label: 'App Id' },
+    { key: 'storageBucket', label: 'Storage Bucket' },
+    { key: 'measurementId', label: 'Measurement Id', placeholder: 'Ex: F-12345678' },
+  ];
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto max-w-6xl">
-        {/* Page Title */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
-          <Div className="flex items-center justify-between">
-            <Div className="flex items-center gap-2">
-              <Div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
-                <UiIcon as={Cloud} className="w-3.5 h-3.5 text-white" />
-              </Div>
-              <H1 className="text-lg font-bold text-slate-900">Firebase Push Notification Setup</H1>
-            </Div>
-            {activeTab === 'push-notification' && (
-              <A href="#" className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
-                Read Documentation
-                <UiIcon as={Info} className="w-3 h-3" />
-              </A>
-            )}
-            {activeTab === 'firebase-configuration' && (
-              <A href="#" className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
-                Where to get this information
-                <UiIcon as={Info} className="w-3 h-3" />
-              </A>
-            )}
-          </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Cloud}
+        title="Firebase Push Notification Setup"
+        subtitle="Message templates and Firebase credentials"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Firebase notifications' }]}
+        actions={
+          <A href="#" className="flex-row items-center gap-1 h-11">
+            <Span className="text-sm font-semibold text-blue-600">
+              {activeTab === 'push-notification' ? 'Read documentation' : 'Where to get this information'}
+            </Span>
+            <UiIcon as={Info} size={14} className="text-blue-600" />
+          </A>
+        }
+      />
+
+      <Card className="mb-4" padded={false}>
+        <Div className="flex-row flex-wrap gap-2 p-2">
+          <Button
+            onClick={() => setActiveTab('push-notification')}
+            className={`flex-row items-center justify-center gap-1.5 h-11 px-4 rounded-lg ${activeTab === 'push-notification' ? 'bg-blue-600' : 'bg-white'}`}
+          >
+            <UiIcon as={Settings} size={14} className={activeTab === 'push-notification' ? 'text-white' : 'text-slate-600'} />
+            <Span className={activeTab === 'push-notification' ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>Push Notification</Span>
+          </Button>
+          <Button
+            onClick={() => setActiveTab('firebase-configuration')}
+            className={`flex-row items-center justify-center gap-1.5 h-11 px-4 rounded-lg ${activeTab === 'firebase-configuration' ? 'bg-blue-600' : 'bg-white'}`}
+          >
+            <UiIcon as={Cloud} size={14} className={activeTab === 'firebase-configuration' ? 'text-white' : 'text-slate-600'} />
+            <Span className={activeTab === 'firebase-configuration' ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>Firebase Configuration</Span>
+          </Button>
         </Div>
+      </Card>
 
-        {/* Primary Tabs */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3">
-          <Div className="flex gap-2">
-            <Button
-              onClick={() => setActiveTab('push-notification')}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 ${activeTab === 'push-notification' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-            >
-              <UiIcon as={Settings} className="w-3.5 h-3.5" />
-              <Span>Push Notification</Span>
-            </Button>
-            <Button
-              onClick={() => setActiveTab('firebase-configuration')}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 ${activeTab === 'firebase-configuration' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-            >
-              <UiIcon as={Cloud} className="w-3.5 h-3.5" />
-              <UiIcon as={Settings} className="w-3.5 h-3.5" />
-              <Span>Firebase Configuration</Span>
-            </Button>
-          </Div>
-        </Div>
+      {activeTab === 'push-notification' ? (
+        <Div className="gap-3">
+          <Card padded={false}>
+            <HScroll contentClassName="flex-row items-center gap-2 p-2">
+              {languageTabs.map((tab) => (
+                <Button
+                  key={tab.key}
+                  onClick={() => setActiveLanguage(tab.key)}
+                  className={`flex-row items-center justify-center h-11 px-3 rounded-lg ${activeLanguage === tab.key ? 'bg-blue-100' : 'bg-white'}`}
+                >
+                  <Span className={activeLanguage === tab.key ? 'text-sm font-semibold text-blue-700' : 'text-sm font-semibold text-slate-600'}>{tab.label}</Span>
+                </Button>
+              ))}
+            </HScroll>
+          </Card>
 
-        {/* Push Notification Tab Content */}
-        {activeTab === 'push-notification' && (
-          <Div className="space-y-3">
-            {/* Language Tabs */}
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3">
-              <HScroll className="flex items-center gap-2">
-                {languageTabs.map((tab) => (
-                  <Button
-                    key={tab.key}
-                    onClick={() => setActiveLanguage(tab.key)}
-                    className={`px-3 py-1.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${activeLanguage === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
-                  >
-                    {tab.label}
-                  </Button>
-                ))}
-              </HScroll>
-            </Div>
-
-            {/* Notification Messages */}
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-              <Div className="space-y-4">
-                {messages.map((message) => (
-                  <Div key={message.id} className="border-b border-slate-200 pb-4 last:border-b-0 last:pb-0">
-                    <Div className="flex items-start justify-between gap-4 mb-2">
-                      <Label className="text-xs font-semibold text-slate-700 flex-1">{message.label}</Label>
-                      <ToggleSwitch enabled={message.enabled} onToggle={() => handleMessageToggle(message.id)} />
-                    </Div>
-                    <Textarea
-                      value={message.defaultText}
-                      onChange={(e) => handleMessageChange(message.id, e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                      placeholder="Enter notification message"
-                    />
+          <Card>
+            <Div className="gap-4">
+              {messages.map((message, i) => (
+                <Div key={message.id} className={`gap-2 ${i === messages.length - 1 ? '' : 'pb-4 border-b border-slate-100'}`}>
+                  <Div className="flex-row items-start gap-3">
+                    <Text style={tw`text-sm font-medium text-slate-700 flex-1`} numberOfLines={2}>
+                      {message.label}
+                    </Text>
+                    <ToggleSwitch enabled={message.enabled} onToggle={() => handleMessageToggle(message.id)} label={`Toggle ${message.label}`} />
                   </Div>
-                ))}
-              </Div>
+                  <Textarea
+                    value={message.defaultText}
+                    onChange={(e) => handleMessageChange(message.id, e.target.value)}
+                    rows={2}
+                    className={TEXTAREA}
+                    placeholder="Enter notification message"
+                  />
+                </Div>
+              ))}
             </Div>
-          </Div>
-        )}
+          </Card>
 
-        {/* Firebase Configuration Tab Content */}
-        {activeTab === 'firebase-configuration' && (
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-            <Form onSubmit={handleSubmit}>
-              {/* Service File Content */}
-              <Div className="mb-4">
-                <Label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
-                  Service File Content
-                  <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                </Label>
+          <Div className="flex-row flex-wrap justify-end gap-2">
+            <Button type="button" onClick={handleReset} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+            </Button>
+            <Button type="button" onClick={handleSubmit} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Submit</Span>
+            </Button>
+          </Div>
+        </Div>
+      ) : null}
+
+      {activeTab === 'firebase-configuration' ? (
+        <Card>
+          <Form onSubmit={handleSubmit}>
+            <Div className="gap-3 mb-4">
+              <Field label="Service File Content" hint="Paste the JSON from your Firebase service account file">
                 <Textarea
                   value={firebaseConfig.serviceFileContent}
                   onChange={(e) => handleFirebaseConfigChange('serviceFileContent', e.target.value)}
                   rows={6}
                   placeholder="Paste your Firebase service file content here"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none font-mono"
+                  className={TEXTAREA}
                 />
-              </Div>
+              </Field>
+              <Field label="Api Key">
+                <Input type="text" value={firebaseConfig.apiKey} onChange={(e) => handleFirebaseConfigChange('apiKey', e.target.value)} className={INPUT} />
+              </Field>
+            </Div>
 
-              {/* API Key */}
-              <Div className="mb-4">
-                <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Api Key</Label>
-                <Input
-                  type="text"
-                  value={firebaseConfig.apiKey}
-                  onChange={(e) => handleFirebaseConfigChange('apiKey', e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </Div>
-
-              {/* Firebase Configuration Fields */}
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-700 mb-1.5">FCM Project ID</Label>
-                  <Input
-                    type="text"
-                    value={firebaseConfig.fcmProjectId}
-                    onChange={(e) => handleFirebaseConfigChange('fcmProjectId', e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+            <Div className="flex-row flex-wrap gap-3 mb-4">
+              {CONFIG_FIELDS.map((f) => (
+                <Div key={f.key} style={col}>
+                  <Field label={f.label}>
+                    <Input
+                      type="text"
+                      value={firebaseConfig[f.key]}
+                      onChange={(e) => handleFirebaseConfigChange(f.key, e.target.value)}
+                      placeholder={f.placeholder}
+                      className={INPUT}
+                    />
+                  </Field>
                 </Div>
+              ))}
+            </Div>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Auth Domain</Label>
-                  <Input
-                    type="text"
-                    value={firebaseConfig.authDomain}
-                    onChange={(e) => handleFirebaseConfigChange('authDomain', e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Messaging Sender Id</Label>
-                  <Input
-                    type="text"
-                    value={firebaseConfig.messagingSenderId}
-                    onChange={(e) => handleFirebaseConfigChange('messagingSenderId', e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-700 mb-1.5">App Id</Label>
-                  <Input
-                    type="text"
-                    value={firebaseConfig.appId}
-                    onChange={(e) => handleFirebaseConfigChange('appId', e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Storage Bucket</Label>
-                  <Input
-                    type="text"
-                    value={firebaseConfig.storageBucket}
-                    onChange={(e) => handleFirebaseConfigChange('storageBucket', e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Measurement Id</Label>
-                  <Input
-                    type="text"
-                    value={firebaseConfig.measurementId}
-                    onChange={(e) => handleFirebaseConfigChange('measurementId', e.target.value)}
-                    placeholder="Ex: F-12345678"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-              </Div>
-
-              {/* Submit Button */}
-              <Div className="flex justify-end">
-                <Button type="submit" className="px-6 py-2.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Submit
-                </Button>
-              </Div>
-            </Form>
-          </Div>
-        )}
-
-        {/* Action Buttons (for Push Notification tab) */}
-        {activeTab === 'push-notification' && (
-          <Div className="flex justify-end gap-2 mt-3">
-            <Button
-              type="button"
-              onClick={handleReset}
-              className="px-4 py-2 text-xs font-medium bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              Reset
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              className="px-4 py-2 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Submit
-            </Button>
-          </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+            <Div className="flex-row justify-end">
+              <Button type="submit" className={BTN_PRIMARY}>
+                <Span className={BTN_TEXT_PRIMARY}>Submit</Span>
+              </Button>
+            </Div>
+          </Form>
+        </Card>
+      ) : null}
+    </AdminPage>
   );
 }

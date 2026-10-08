@@ -2,12 +2,25 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../../../api/food';
 import { ActivityIndicator } from 'react-native';
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '../../../components/shadcn';
 import { toast } from '../../../lib/notify';
-import { Lock, Eye, EyeOff, Save, Shield, User, Mail, Truck } from 'lucide-react-native';
-import { Button as HtmlButton, Div, Form, H1, P, ScrollDiv, Span, Icon as UiIcon } from '../../../components/web';
+import { Eye, EyeOff, Save, Shield, User, Mail } from 'lucide-react-native';
+import { Button as HtmlButton, Div, Form, Input, P, Span, Icon as UiIcon } from '../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  LoadingState,
+  INPUT,
+  INPUT_ERROR,
+  BTN_PRIMARY,
+  BTN_TEXT_PRIMARY,
+  useLayoutWidth,
+} from '../../../admin/ui';
 const debugError = () => {};
 export default function AdminSettings() {
+  const { tablet } = useLayoutWidth();
   const [adminInfo, setAdminInfo] = useState(null);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -124,159 +137,93 @@ export default function AdminSettings() {
       setSaving(false);
     }
   };
-  return (
-    <ScrollDiv className="flex-1 p-6 space-y-6">
-      <Div>
-        <H1 className="text-3xl font-bold text-neutral-900">Settings</H1>
-        <P className="text-neutral-600 mt-1">Manage your account settings and preferences</P>
+  const passwordField = (key, label, visible, setVisible, placeholder, hint) => (
+    <Field label={label} required error={errors[key]} hint={hint} className={tablet ? 'flex-1 min-w-[260px]' : null}>
+      <Div className="relative">
+        <Input
+          nativeID={key}
+          type={visible ? 'text' : 'password'}
+          value={passwordForm[key]}
+          onChange={(e) => handlePasswordChange(key, e.target.value)}
+          placeholder={placeholder}
+          className={`${errors[key] ? INPUT_ERROR : INPUT} pr-12`}
+          disabled={saving}
+          required
+        />
+        <HtmlButton
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          className="absolute right-0 top-0 bottom-0 w-11 items-center justify-center"
+          disabled={saving}
+          accessibilityLabel={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+        >
+          <UiIcon as={visible ? EyeOff : Eye} size={18} className="text-slate-500" />
+        </HtmlButton>
       </Div>
+    </Field>
+  );
+  return (
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={Shield}
+        title="Settings"
+        subtitle="Manage your account settings and preferences"
+        breadcrumb={[{ label: 'Food' }, { label: 'Settings' }]}
+      />
 
       {/* Current account (real data) */}
-      {adminInfo && (
-        <Card>
-          <CardHeader>
-            <Div className="flex items-center gap-2">
-              <UiIcon as={User} className="w-5 h-5 text-neutral-700" />
-              <CardTitle>Current account</CardTitle>
+      {adminInfo ? (
+        <Card className="mb-4">
+          <SectionTitle>Current account</SectionTitle>
+          <P className="text-sm text-slate-500 -mt-2 mb-3">Signed in with the account below. Use the form to change its password.</P>
+          <Div className="gap-2.5">
+            <Div className="flex-row items-center gap-2">
+              <UiIcon as={User} size={16} className="text-slate-400" />
+              <Span className="text-sm text-slate-500">Name</Span>
+              <Span className="flex-1 text-sm font-medium text-slate-900 text-right">{adminInfo.name || '\u2014'}</Span>
             </Div>
-            <CardDescription>Logged in with the following account. Use the form below to change password.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Div className="flex items-center gap-2 text-sm">
-              <UiIcon as={User} className="w-4 h-4 text-neutral-500" />
-              <Span className="text-neutral-600">Name:</Span>
-              <Span className="font-medium text-neutral-900">{adminInfo.name || '—'}</Span>
+            <Div className="flex-row items-center gap-2">
+              <UiIcon as={Mail} size={16} className="text-slate-400" />
+              <Span className="text-sm text-slate-500">Email</Span>
+              <Span className="flex-1 text-sm font-medium text-slate-900 text-right">{adminInfo.email || '\u2014'}</Span>
             </Div>
-            <Div className="flex items-center gap-2 text-sm">
-              <UiIcon as={Mail} className="w-4 h-4 text-neutral-500" />
-              <Span className="text-neutral-600">Email:</Span>
-              <Span className="font-medium text-neutral-900">{adminInfo.email || '—'}</Span>
-            </Div>
-            {adminInfo.role && (
-              <Div className="flex items-center gap-2 text-sm">
-                <UiIcon as={Shield} className="w-4 h-4 text-neutral-500" />
-                <Span className="text-neutral-600">Role:</Span>
-                <Span className="font-medium capitalize text-neutral-900">{adminInfo.role}</Span>
+            {adminInfo.role ? (
+              <Div className="flex-row items-center gap-2">
+                <UiIcon as={Shield} size={16} className="text-slate-400" />
+                <Span className="text-sm text-slate-500">Role</Span>
+                <Span className="flex-1 text-sm font-medium capitalize text-slate-900 text-right">{adminInfo.role}</Span>
               </Div>
-            )}
-          </CardContent>
+            ) : null}
+          </Div>
         </Card>
+      ) : (
+        <LoadingState className="mb-4" label={'Loading your account\u2026'} />
       )}
 
       {/* Password Change Card */}
       <Card>
-        <CardHeader>
-          <Div className="flex items-center gap-2">
-            <UiIcon as={Shield} className="w-5 h-5 text-neutral-700" />
-            <CardTitle>Change Password</CardTitle>
+        <SectionTitle>Change password</SectionTitle>
+        <P className="text-sm text-slate-500 -mt-2 mb-3">Update your password to keep your account secure</P>
+        <Form onSubmit={handlePasswordSubmit}>
+          <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+            {passwordField('currentPassword', 'Current Password', showCurrentPassword, setShowCurrentPassword, 'Enter your current password')}
+            {passwordField('newPassword', 'New Password', showNewPassword, setShowNewPassword, 'Enter your new password', 'At least 6 characters long')}
+            {passwordField('confirmPassword', 'Confirm New Password', showConfirmPassword, setShowConfirmPassword, 'Confirm your new password')}
           </Div>
-          <CardDescription>Update your password to keep your account secure</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form onSubmit={handlePasswordSubmit} className="space-y-6">
-            <Div className="space-y-2">
-              <Label htmlFor="currentPassword" className="flex items-center gap-2">
-                <UiIcon as={Lock} className="w-4 h-4" />
-                Current Password
-              </Label>
-              <Div className="relative">
-                <Input
-                  id="currentPassword"
-                  type={showCurrentPassword ? 'text' : 'password'}
-                  value={passwordForm.currentPassword}
-                  onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                  placeholder="Enter your current password"
-                  className={`h-11 pr-12 ${errors.currentPassword ? 'border-red-500' : ''}`}
-                  disabled={saving}
-                  required
-                />
-                <HtmlButton
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-0 bottom-0 justify-center"
-                  disabled={saving}
-                >
-                  <UiIcon as={showCurrentPassword ? EyeOff : Eye} className="w-5 h-5 text-neutral-500" />
-                </HtmlButton>
-              </Div>
-              {errors.currentPassword && <P className="text-sm text-red-600">{errors.currentPassword}</P>}
-            </Div>
-
-            <Div className="space-y-2">
-              <Label htmlFor="newPassword" className="flex items-center gap-2">
-                <UiIcon as={Lock} className="w-4 h-4" />
-                New Password
-              </Label>
-              <Div className="relative">
-                <Input
-                  id="newPassword"
-                  type={showNewPassword ? 'text' : 'password'}
-                  value={passwordForm.newPassword}
-                  onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                  placeholder="Enter your new password"
-                  className={`h-11 pr-12 ${errors.newPassword ? 'border-red-500' : ''}`}
-                  disabled={saving}
-                  required
-                />
-                <HtmlButton
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-0 bottom-0 justify-center"
-                  disabled={saving}
-                >
-                  <UiIcon as={showNewPassword ? EyeOff : Eye} className="w-5 h-5 text-neutral-500" />
-                </HtmlButton>
-              </Div>
-              {errors.newPassword && <P className="text-sm text-red-600">{errors.newPassword}</P>}
-              <P className="text-xs text-neutral-500">Password must be at least 6 characters long</P>
-            </Div>
-
-            <Div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="flex items-center gap-2">
-                <UiIcon as={Lock} className="w-4 h-4" />
-                Confirm New Password
-              </Label>
-              <Div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                  placeholder="Confirm your new password"
-                  className={`h-11 pr-12 ${errors.confirmPassword ? 'border-red-500' : ''}`}
-                  disabled={saving}
-                  required
-                />
-                <HtmlButton
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-0 bottom-0 justify-center"
-                  disabled={saving}
-                >
-                  <UiIcon as={showConfirmPassword ? EyeOff : Eye} className="w-5 h-5 text-neutral-500" />
-                </HtmlButton>
-              </Div>
-              {errors.confirmPassword && <P className="text-sm text-red-600">{errors.confirmPassword}</P>}
-            </Div>
-
-            <Div className="flex justify-end pt-4 border-t border-neutral-200">
-              <Button onClick={() => handlePasswordSubmit({ preventDefault() {} })} disabled={saving} className="bg-black text-white h-11 px-8">
-                {saving ? (
-                  <>
-                    <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
-                    Changing Password...
-                  </>
-                ) : (
-                  <>
-                    <UiIcon as={Save} className="w-4 h-4 mr-2" />
-                    Change Password
-                  </>
-                )}
-              </Button>
-            </Div>
-          </Form>
-        </CardContent>
+          <Div className="flex-row justify-end mt-4 pt-4 border-t border-slate-200">
+            <HtmlButton
+              type="button"
+              onClick={() => handlePasswordSubmit({ preventDefault() {} })}
+              disabled={saving}
+              className={BTN_PRIMARY}
+              style={saving ? { opacity: 0.7 } : null}
+            >
+              {saving ? <ActivityIndicator size="small" color="#fff" /> : <UiIcon as={Save} size={16} className="text-white" />}
+              <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Changing password\u2026' : 'Change password'}</Span>
+            </HtmlButton>
+          </Div>
+        </Form>
       </Card>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

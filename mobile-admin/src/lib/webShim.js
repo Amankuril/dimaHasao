@@ -78,6 +78,12 @@ export const window = {
   matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }),
   requestAnimationFrame: (fn) => requestAnimationFrame(fn),
   cancelAnimationFrame: (id) => cancelAnimationFrame(id),
+  // Debounced search in four taxi screens calls these off `window`; without them
+  // the screen threw "setTimeout is not a function" straight into the boundary.
+  setTimeout: (fn, ms, ...args) => setTimeout(fn, ms, ...args),
+  clearTimeout: (id) => clearTimeout(id),
+  setInterval: (fn, ms, ...args) => setInterval(fn, ms, ...args),
+  clearInterval: (id) => clearInterval(id),
   getComputedStyle: () => ({ getPropertyValue: () => '' }),
 };
 

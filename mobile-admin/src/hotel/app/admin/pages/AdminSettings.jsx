@@ -1,28 +1,32 @@
 /* Ported from Frontend/src/modules/Hotel/app/admin/pages/AdminSettings.jsx (tools/port.js first pass). */
 import React, { useEffect, useState } from 'react';
-import { Settings, Shield, Bell, CreditCard, ToggleLeft, ToggleRight, Save, Globe, Lock } from 'lucide-react-native';
+import { Settings, Save, Globe, Wallet } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import useAdminStore from '../store/adminStore';
 import adminService from '../../../services/adminService';
-import { Button, Div, H2, H3, Input, Label, P, ScrollDiv, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
-const ToggleSwitch = ({ enabled, onChange }) => (
+import { Button, Div, Input, P, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  LoadingState,
+  ErrorState,
+  useLayoutWidth,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_TEXT_PRIMARY,
+} from '../../../../admin/ui';
+const ToggleSwitch = ({ enabled, onChange, label }) => (
   <Button
     onClick={() => onChange(!enabled)}
-    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${enabled ? 'bg-black' : 'bg-gray-300'}`}
+    className={`w-14 h-8 flex-row items-center rounded-full p-1 shrink-0 ${enabled ? 'bg-blue-600' : 'bg-slate-300'}`}
+    accessibilityLabel={label}
+    accessibilityRole="switch"
   >
-    <Div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0'}`}></Div>
+    <Div className={`bg-white w-6 h-6 rounded-full ${enabled ? 'ml-auto' : ''}`} />
   </Button>
-);
-const Section = ({ title, icon: Icon, children }) => (
-  <Div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-    <Div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
-      <Div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-700">
-        <UiIcon as={Icon} size={18} />
-      </Div>
-      <H3 className="text-lg font-bold text-gray-900">{title}</H3>
-    </Div>
-    <Div className="space-y-6">{children}</Div>
-  </Div>
 );
 const AdminSettings = () => {
   const admin = useAdminStore((state) => state.admin);
@@ -40,9 +44,10 @@ const AdminSettings = () => {
   const [commission, setCommission] = useState(10);
   const [taxRate, setTaxRate] = useState(12);
   const [loadingSettings, setLoadingSettings] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
-  const [autoPayout, setAutoPayout] = useState(false);
+  const { tablet } = useLayoutWidth();
   useEffect(() => {
     if (admin) {
       setProfile({
@@ -52,26 +57,28 @@ const AdminSettings = () => {
       });
     }
   }, [admin]);
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        setLoadingSettings(true);
-        const res = await adminService.getPlatformSettings();
-        if (res.settings) {
-          setPlatformOpen(res.settings.platformOpen);
-          setMaintenance(res.settings.maintenanceMode);
-          setBookingMessage(res.settings.bookingDisabledMessage || '');
-          setMaintenanceTitle(res.settings.maintenanceTitle || '');
-          setMaintenanceMessage(res.settings.maintenanceMessage || '');
-          setCommission(res.settings.defaultCommission || 10);
-          setTaxRate(res.settings.taxRate || 12);
-        }
-      } catch (error) {
-        toast.error('Failed to load platform settings');
-      } finally {
-        setLoadingSettings(false);
+  const loadSettings = async () => {
+    try {
+      setLoadingSettings(true);
+      setLoadError(null);
+      const res = await adminService.getPlatformSettings();
+      if (res.settings) {
+        setPlatformOpen(res.settings.platformOpen);
+        setMaintenance(res.settings.maintenanceMode);
+        setBookingMessage(res.settings.bookingDisabledMessage || '');
+        setMaintenanceTitle(res.settings.maintenanceTitle || '');
+        setMaintenanceMessage(res.settings.maintenanceMessage || '');
+        setCommission(res.settings.defaultCommission || 10);
+        setTaxRate(res.settings.taxRate || 12);
       }
-    };
+    } catch (error) {
+      toast.error('Failed to load platform settings');
+      setLoadError(error?.response?.data?.message || error?.message || 'Failed to load platform settings.');
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+  useEffect(() => {
     loadSettings();
   }, []);
   const handleProfileChange = (field, value) => {
@@ -116,170 +123,139 @@ const AdminSettings = () => {
     }
   };
   return (
-    <ScrollDiv className="space-y-8 pb-20">
-      <Div>
-        <H2 className="text-2xl font-bold text-gray-900">Platform Settings</H2>
-        <P className="text-gray-500 text-sm">Configure global rules, commission rates, and system preferences.</P>
-      </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={Settings}
+        title="Platform Settings"
+        subtitle="Configure global rules, commission rates and system preferences."
+        breadcrumb={[{ label: 'Hotel' }, { label: 'Settings' }]}
+      />
 
-      <Section title="Admin Profile" icon={Settings}>
-        <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Div>
-            <Label className="block text-xs font-medium text-gray-600 mb-1">Full Name</Label>
-            <Input
-              type="text"
-              value={profile.name}
-              onChange={(e) => handleProfileChange('name', e.target.value)}
-              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
-              placeholder="Admin Name"
-            />
-          </Div>
-          <Div>
-            <Label className="block text-xs font-medium text-gray-600 mb-1">Email</Label>
+      {/* Admin profile */}
+      <Card className="mb-4">
+        <SectionTitle>Admin Profile</SectionTitle>
+        <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+          <Field label="Full name" className={tablet ? 'flex-1 min-w-[260px]' : null}>
+            <Input type="text" value={profile.name} onChange={(e) => handleProfileChange('name', e.target.value)} className={INPUT} placeholder="Admin name" />
+          </Field>
+          <Field label="Email" className={tablet ? 'flex-1 min-w-[260px]' : null}>
             <Input
               type="email"
               value={profile.email}
               onChange={(e) => handleProfileChange('email', e.target.value)}
-              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
+              className={INPUT}
               placeholder="admin@example.com"
             />
-          </Div>
-          <Div>
-            <Label className="block text-xs font-medium text-gray-600 mb-1">Phone</Label>
+          </Field>
+          <Field label="Phone" className={tablet ? 'flex-1 min-w-[260px]' : null}>
             <Input
               type="tel"
               value={profile.phone}
               onChange={(e) => handleProfileChange('phone', e.target.value)}
-              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
+              className={INPUT}
               placeholder="10 digit number"
             />
-          </Div>
+          </Field>
         </Div>
-        <Div className="flex justify-end pt-2">
+        <Div className="flex-row justify-end mt-3">
           <Button
             type="button"
             onClick={handleSaveProfile}
             disabled={savingProfile}
-            className="flex flex-row items-center gap-2 px-5 py-2.5 bg-black text-white text-sm font-bold rounded-xl shadow-md hover:bg-gray-900 active:scale-95 disabled:opacity-60"
+            className={`${BTN_PRIMARY} ${savingProfile ? 'opacity-60' : ''}`}
           >
-            <UiIcon as={Save} size={16} />
-            <Span>{savingProfile ? 'Saving...' : 'Save Profile'}</Span>
+            <UiIcon as={Save} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>{savingProfile ? 'Saving…' : 'Save profile'}</Span>
           </Button>
         </Div>
-      </Section>
+      </Card>
 
-      <Section title="General Configuration" icon={Globe}>
-        <Div className="flex items-center justify-between gap-3">
-          <Div className="flex-1">
-            <P className="font-medium text-gray-900">Platform Status</P>
-            <P className="text-sm text-gray-500">Enable or disable booking capability globally.</P>
-          </Div>
-          <ToggleSwitch enabled={platformOpen} onChange={setPlatformOpen} />
-        </Div>
-        <Div className="flex items-center justify-between gap-3">
-          <Div className="flex-1">
-            <P className="font-medium text-gray-900">Maintenance Mode</P>
-            <P className="text-sm text-gray-500">Show maintenance screen to all users.</P>
-          </Div>
-          <ToggleSwitch enabled={maintenance} onChange={setMaintenance} />
-        </Div>
-        <Div className="grid grid-cols-1 gap-4 pt-2">
-          <Div>
-            <Label className="block text-xs font-medium text-gray-600 mb-1">User message when booking is disabled</Label>
-            <Input
-              type="text"
-              value={bookingMessage}
-              onChange={(e) => setBookingMessage(e.target.value)}
-              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
-              placeholder="Bookings are temporarily disabled. Please try again later."
-            />
-          </Div>
-          <Div>
-            <Label className="block text-xs font-medium text-gray-600 mb-1">Maintenance title</Label>
-            <Input
-              type="text"
-              value={maintenanceTitle}
-              onChange={(e) => setMaintenanceTitle(e.target.value)}
-              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
-              placeholder="We will be back soon."
-            />
-          </Div>
-          <Div>
-            <Label className="block text-xs font-medium text-gray-600 mb-1">Maintenance description</Label>
-            <Textarea
-              rows={3}
-              value={maintenanceMessage}
-              onChange={(e) => setMaintenanceMessage(e.target.value)}
-              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm resize-none"
-              placeholder="The platform is under scheduled maintenance. Please check back in some time."
-            />
-          </Div>
-        </Div>
-        <Div className="mt-4">
-          <Div className="pb-4 font-bold text-lg flex items-center gap-4">
-            <UiIcon as={Globe} size={18} />
-            Financial Rule
-          </Div>
-          <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">Default Commission (%)</Label>
-              <Input
-                type="number"
-                value={commission}
-                onChange={(e) => setCommission(e.target.value)}
-                className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black"
-              />
+      {/* General configuration */}
+      {loadError ? (
+        <ErrorState title="Could not load platform settings" message={loadError} onRetry={loadSettings} />
+      ) : loadingSettings ? (
+        <LoadingState label="Loading platform settings…" />
+      ) : (
+        <>
+          <Card className="mb-4">
+            <SectionTitle>General Configuration</SectionTitle>
+            <Div className="gap-4">
+              <Div className="flex-row items-center justify-between gap-3">
+                <Div className="flex-1 min-w-0">
+                  <P className="text-sm font-medium text-slate-900">Platform status</P>
+                  <P className="text-xs text-slate-500">Enable or disable booking capability globally.</P>
+                </Div>
+                <ToggleSwitch enabled={platformOpen} onChange={setPlatformOpen} label="Platform status" />
+              </Div>
+              <Div className="flex-row items-center justify-between gap-3">
+                <Div className="flex-1 min-w-0">
+                  <P className="text-sm font-medium text-slate-900">Maintenance mode</P>
+                  <P className="text-xs text-slate-500">Show the maintenance screen to all users.</P>
+                </Div>
+                <ToggleSwitch enabled={maintenance} onChange={setMaintenance} label="Maintenance mode" />
+              </Div>
+
+              <Field label="User message when booking is disabled">
+                <Input
+                  type="text"
+                  value={bookingMessage}
+                  onChange={(e) => setBookingMessage(e.target.value)}
+                  className={INPUT}
+                  placeholder="Bookings are temporarily disabled. Please try again later."
+                />
+              </Field>
+              <Field label="Maintenance title">
+                <Input
+                  type="text"
+                  value={maintenanceTitle}
+                  onChange={(e) => setMaintenanceTitle(e.target.value)}
+                  className={INPUT}
+                  placeholder="We will be back soon."
+                />
+              </Field>
+              <Field label="Maintenance description">
+                <Textarea
+                  rows={3}
+                  value={maintenanceMessage}
+                  onChange={(e) => setMaintenanceMessage(e.target.value)}
+                  className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+                  placeholder="The platform is under scheduled maintenance. Please check back in some time."
+                />
+              </Field>
             </Div>
-            <Div>
-              <Label className="block text-sm font-medium text-gray-700 mb-2">GST / Tax Rate (%)</Label>
-              <Input
-                type="number"
-                value={taxRate}
-                onChange={(e) => setTaxRate(e.target.value)}
-                className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black"
-              />
+          </Card>
+
+          <Card className="mb-4">
+            <SectionTitle>
+              <Div className="flex-row items-center gap-2">
+                <UiIcon as={Wallet} size={18} className="text-slate-500" />
+                <Span className="text-base font-semibold text-slate-900">Financial Rules</Span>
+              </Div>
+            </SectionTitle>
+            <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+              <Field label="Default commission (%)" className={tablet ? 'flex-1 min-w-[220px]' : null}>
+                <Input type="number" value={commission} onChange={(e) => setCommission(e.target.value)} className={INPUT} />
+              </Field>
+              <Field label="GST / tax rate (%)" className={tablet ? 'flex-1 min-w-[220px]' : null}>
+                <Input type="number" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} className={INPUT} />
+              </Field>
             </Div>
+          </Card>
+
+          <Div className="flex-row justify-end">
+            <Button
+              type="button"
+              onClick={handleSavePlatformSettings}
+              disabled={savingSettings || loadingSettings}
+              className={`${BTN_PRIMARY} ${savingSettings || loadingSettings ? 'opacity-60' : ''}`}
+            >
+              <UiIcon as={Globe} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>{savingSettings || loadingSettings ? 'Saving…' : 'Save configuration'}</Span>
+            </Button>
           </Div>
-          {/* <div className="flex items-center justify-between pt-2">
-                     <div>
-                        <p className="font-medium text-gray-900">Automatic Payouts</p>
-                        <p className="text-sm text-gray-500">Automatically release payments to hotels every Monday.</p>
-                     </div>
-                     <ToggleSwitch enabled={autoPayout} onChange={setAutoPayout} />
-                     </div> */}
-        </Div>
-
-        <Div className="flex justify-end pt-2">
-          <Button
-            type="button"
-            onClick={handleSavePlatformSettings}
-            disabled={savingSettings || loadingSettings}
-            className="flex flex-row items-center gap-2 px-5 py-2.5 bg-black text-white text-sm font-bold rounded-xl shadow-md hover:bg-gray-900 active:scale-95 disabled:opacity-60"
-          >
-            <UiIcon as={Save} size={16} />
-            <Span>{savingSettings || loadingSettings ? 'Saving...' : 'Save Configuration'}</Span>
-          </Button>
-        </Div>
-      </Section>
-
-      {/* <Section title="Security & Access" icon={Shield}>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className="font-medium text-gray-900">Two-Factor Auth (Admin)</p>
-                        <p className="text-sm text-gray-500">Force 2FA for all admin accounts.</p>
-                    </div>
-                    <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">ENABLED</span>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Admin Session Timeout (Minutes)</label>
-                    <select className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white">
-                        <option>15 Minutes</option>
-                        <option>30 Minutes</option>
-                        <option>1 Hour</option>
-                    </select>
-                </div>
-             </Section> */}
-    </ScrollDiv>
+        </>
+      )}
+    </AdminPage>
   );
 };
 export default AdminSettings;

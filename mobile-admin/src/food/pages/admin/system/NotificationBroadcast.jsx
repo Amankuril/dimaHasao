@@ -1,33 +1,37 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/NotificationBroadcast.jsx (tools/port.js first pass). */
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BellRing, ChevronLeft, ChevronRight, History, Loader2, Search, Send, Trash2, X } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import {
-  Button,
-  Div,
-  Form,
-  H1,
-  H2,
-  Input,
-  Label,
-  Option,
-  Overlay,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Strong,
-  Table,
-  Tbody,
-  Td,
-  Textarea,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Input, Label, Option, Overlay, ScrollDiv, Select, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { window } from '../../../../lib/webShim';
+const HISTORY_COLS = [160, 240, 140, 110, 170, 110];
+const HISTORY_LABELS = ['Title', 'Message', 'Target type', 'Recipients', 'Sent at', 'Action'];
+const TEXTAREA = 'px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900';
 const TARGET_OPTIONS = [
   {
     value: 'ALL',
@@ -288,70 +292,56 @@ export default function NotificationBroadcast() {
       });
     }
   };
+  const { tablet } = useLayoutWidth();
+  const col = tablet ? { width: '48.5%' } : { width: '100%' };
   return (
-    <ScrollDiv className="space-y-6">
-      <Div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-        <Div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <Div className="flex items-start gap-4">
-            <Div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-              <UiIcon as={BellRing} className="w-6 h-6" />
-            </Div>
-            <Div>
-              <Div className="flex items-center gap-3">
-                <H1 className="text-2xl font-bold text-slate-900">Broadcast Notification</H1>
-              </Div>
-              <P className="text-sm text-slate-500 mt-1">Send one notification to all, role-based, or selected recipients.</P>
-            </Div>
-          </Div>
-
-          <Button type="button" onClick={() => setShowHistoryModal(true)} className="rounded-2xl shadow-md self-start overflow-hidden">
-            <LinearGradient colors={['#2563EB', '#4F46E5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-              <Div className="flex items-center gap-2.5 px-5 py-3">
-                <UiIcon as={History} className="w-5 h-5 text-white" />
-                <Span className="text-sm font-bold text-white">View History</Span>
-                <Span className="bg-white/25 text-white text-xs px-2.5 py-0.5 rounded-full font-extrabold ml-0.5 flex items-center justify-center min-w-[28px] min-h-[24px]">
-                  {historyLoading ? <Span className="block w-2.5 h-3 bg-white/40 rounded" /> : history.length}
-                </Span>
-              </Div>
-            </LinearGradient>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={BellRing}
+        title="Broadcast Notification"
+        subtitle="Send one notification to all, role-based or selected recipients"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Broadcast' }]}
+        actions={
+          <Button type="button" onClick={() => setShowHistoryModal(true)} className={BTN_SECONDARY}>
+            <UiIcon as={History} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>View history</Span>
+            <Span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">{historyLoading ? '…' : history.length}</Span>
           </Button>
-        </Div>
+        }
+      />
 
-        <Form onSubmit={handleSubmit} className="space-y-5">
-          <Div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <Label className="block">
-              <Span className="text-sm font-semibold text-slate-700">Title</Span>
-              <Input
-                value={form.title}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    title: event.target.value,
-                  }))
-                }
-                placeholder="Enter notification title"
-                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
-            </Label>
-
-            <Label className="block">
-              <Span className="text-sm font-semibold text-slate-700">Target Type</Span>
-              <Select
-                value={form.targetType}
-                onChange={(event) => handleTargetTypeChange(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 font-semibold"
-              >
-                {TARGET_OPTIONS.map((option) => (
-                  <Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Option>
-                ))}
-              </Select>
-            </Label>
+      <Card>
+        <Form onSubmit={handleSubmit}>
+          <Div className="flex-row flex-wrap gap-3 mb-3">
+            <Div style={col}>
+              <Field label="Title" required>
+                <Input
+                  value={form.title}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      title: event.target.value,
+                    }))
+                  }
+                  placeholder="Enter notification title"
+                  className={INPUT}
+                />
+              </Field>
+            </Div>
+            <Div style={col}>
+              <Field label="Target Type" required>
+                <Select value={form.targetType} onChange={(event) => handleTargetTypeChange(event.target.value)} className={INPUT}>
+                  {TARGET_OPTIONS.map((option) => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+            </Div>
           </Div>
 
-          <Label className="block">
-            <Span className="text-sm font-semibold text-slate-700">Message</Span>
+          <Field label="Message" required className="mb-3">
             <Textarea
               value={form.message}
               onChange={(event) =>
@@ -362,24 +352,14 @@ export default function NotificationBroadcast() {
               }
               placeholder="Enter notification message"
               rows={4}
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-y"
+              className={TEXTAREA}
             />
-          </Label>
+          </Field>
 
-          <Div className="flex justify-end pt-1">
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60 shadow-md shadow-blue-500/20 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
-            >
-              {submitting ? <UiIcon as={Loader2} className="w-4 h-4 animate-spin" /> : <UiIcon as={Send} className="w-4 h-4" />}
-              Send Broadcast
-            </Button>
-          </Div>
-
-          {form.targetType === 'CUSTOM' && (
-            <Div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 space-y-4">
-              <Div className="flex flex-wrap gap-2 pb-1 border-b border-slate-200">
+          {form.targetType === 'CUSTOM' ? (
+            <Div className="rounded-xl border border-slate-200 bg-slate-50 p-3 gap-3 mb-3">
+              <SectionTitle className="mb-0">Pick recipients</SectionTitle>
+              <Div className="flex-row flex-wrap gap-2 pb-3 border-b border-slate-200">
                 {CATEGORY_TABS.map((tab) => {
                   const active = categoryFilter === tab.id;
                   const countMap = {
@@ -396,102 +376,78 @@ export default function NotificationBroadcast() {
                       key={tab.id}
                       type="button"
                       onClick={() => setCategoryFilter(tab.id)}
-                      className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-semibold transition-all ${active ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
+                      className={`flex-row items-center gap-2 h-11 px-4 rounded-lg border ${active ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
                     >
-                      {tab.label}
-                      <Span
-                        className={`inline-flex items-center justify-center min-w-[20px] rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}
-                      >
-                        {isLoadingCount ? <Span className="inline-block w-5 h-2.5 bg-slate-300/80 animate-pulse rounded-full" /> : count}
+                      <Span className={active ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-700'}>{tab.label}</Span>
+                      <Span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${active ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        {isLoadingCount ? '…' : String(count)}
                       </Span>
                     </Button>
                   );
                 })}
               </Div>
 
-              <Div className="flex flex-col sm:flex-row items-center gap-3">
-                <Div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 flex-1 w-full">
-                  <UiIcon as={Search} className="w-4 h-4 text-slate-400" />
+              <Toolbar className="mb-0">
+                <Div className="flex-row items-center gap-2 flex-1 min-w-[200px] h-11 px-3 rounded-lg border border-slate-300 bg-white">
+                  <UiIcon as={Search} size={16} className="text-slate-400 shrink-0" />
                   <Input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search by name, phone, or email across all DB records..."
-                    className="w-full text-sm bg-transparent outline-none"
+                    placeholder="Search by name, phone or email…"
+                    className="flex-1 text-sm text-slate-900"
                   />
                 </Div>
-                <Div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    onClick={handleSelectAllFiltered}
-                    className="px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-xl border border-blue-200 bg-white"
-                  >
-                    Select All Shown
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleDeselectAllFiltered}
-                    className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200 bg-white"
-                  >
-                    Deselect Shown
-                  </Button>
-                </Div>
-              </Div>
+                <Button type="button" onClick={handleSelectAllFiltered} className={BTN_SECONDARY}>
+                  <Span className={BTN_TEXT_SECONDARY}>Select all shown</Span>
+                </Button>
+                <Button type="button" onClick={handleDeselectAllFiltered} className={BTN_SECONDARY}>
+                  <Span className={BTN_TEXT_SECONDARY}>Deselect shown</Span>
+                </Button>
+              </Toolbar>
 
-              <Div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
-                <Span>
-                  {recipientLoading ? (
-                    <Span className="inline-flex items-center gap-1.5 text-blue-600 font-semibold">
-                      <UiIcon as={Loader2} className="w-3.5 h-3.5 animate-spin" /> {SEARCHING_LABEL_MAP[categoryFilter] || 'Searching...'}
-                    </Span>
-                  ) : (
-                    `Showing ${filteredRecipients.length} of ${pagination.matchedTotal} matches (Page ${pagination.page} of ${pagination.totalPages})`
-                  )}
-                </Span>
-                <Span className="font-semibold text-blue-600">Selected: {selectedRecipients.length}</Span>
-              </Div>
-
-              <ScrollDiv className="max-h-72 rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
-                {recipientLoading && allRecipients.length === 0 ? (
-                  <Div className="p-4 space-y-3">
-                    {[1, 2, 3, 4].map((n) => (
-                      <Div key={n} className="flex items-center gap-3 animate-pulse">
-                        <Div className="w-4 h-4 rounded bg-slate-200" />
-                        <Div className="space-y-1 flex-1">
-                          <Div className="h-3.5 bg-slate-200 rounded w-1/3" />
-                          <Div className="h-2.5 bg-slate-100 rounded w-1/2" />
-                        </Div>
-                      </Div>
-                    ))}
+              <Div className="flex-row flex-wrap items-center justify-between gap-2">
+                {recipientLoading ? (
+                  <Div className="flex-row items-center gap-1.5">
+                    <UiIcon as={Loader2} size={12} className="text-blue-600" />
+                    <Text style={tw`text-xs font-semibold text-blue-600`}>{SEARCHING_LABEL_MAP[categoryFilter] || 'Searching…'}</Text>
                   </Div>
-                ) : filteredRecipients.length === 0 ? (
-                  <Div className="p-6 text-sm text-slate-500">No recipients found matching your filter.</Div>
                 ) : (
-                  filteredRecipients.map((recipient) => {
+                  <Text style={tw`text-xs text-slate-500`}>
+                    {`Showing ${filteredRecipients.length} of ${pagination.matchedTotal} matches (page ${pagination.page} of ${pagination.totalPages})`}
+                  </Text>
+                )}
+                <Text style={tw`text-xs font-semibold text-blue-600`}>{`Selected: ${selectedRecipients.length}`}</Text>
+              </Div>
+
+              <ScrollDiv className="max-h-72 rounded-xl border border-slate-200 bg-white">
+                {recipientLoading && allRecipients.length === 0 ? (
+                  <TableSkeleton rows={4} className="border-0" />
+                ) : filteredRecipients.length === 0 ? (
+                  <EmptyState title="No recipients found" message="No record matches your search in this category." className="border-0" />
+                ) : (
+                  filteredRecipients.map((recipient, i) => {
                     const key = `${recipient.ownerType}:${recipient.ownerId}`;
                     const checked = selectedKeys.has(key);
                     return (
                       <Label
                         key={key}
-                        className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors ${checked ? 'bg-blue-50/70 hover:bg-blue-50' : 'hover:bg-slate-50'}`}
+                        className={`flex-row items-start gap-3 px-3 py-3 ${i === filteredRecipients.length - 1 ? '' : 'border-b border-slate-100'} ${checked ? 'bg-blue-50' : ''}`}
                       >
-                        <Input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleRecipient(recipient)}
-                          className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <Div className="min-w-0 flex-1">
-                          <Div className="flex items-center justify-between">
-                            <Div className="text-sm font-semibold text-slate-900">{recipient.label}</Div>
-                            {checked && <Span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-600 text-white">Selected</Span>}
+                        <Input type="checkbox" checked={checked} onChange={() => toggleRecipient(recipient)} className="mt-1 w-5 h-5 rounded border-slate-300" />
+                        <Div className="min-w-0 flex-1 gap-1">
+                          <Div className="flex-row items-center gap-2">
+                            <Text style={tw`text-sm font-semibold text-slate-900 flex-1`} numberOfLines={2}>
+                              {recipient.label}
+                            </Text>
+                            {checked ? <StatusBadge tone="info" label="Selected" /> : null}
                           </Div>
-                          <Div className="text-xs text-slate-500 mt-0.5">
-                            <Span
-                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold mr-1.5 ${recipient.ownerType === 'USER' ? 'bg-blue-100 text-blue-700' : recipient.ownerType === 'RESTAURANT' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
-                            >
-                              {recipient.ownerType.replaceAll('_', ' ')}
-                            </Span>
-                            {recipient.subLabel ? recipient.subLabel : ''}
+                          <Div className="flex-row items-center gap-2">
+                            <StatusBadge tone="neutral" label={String(recipient.ownerType || '').replaceAll('_', ' ')} />
+                            {recipient.subLabel ? (
+                              <Text style={tw`text-xs text-slate-500 flex-1`} numberOfLines={1}>
+                                {recipient.subLabel}
+                              </Text>
+                            ) : null}
                           </Div>
                         </Div>
                       </Label>
@@ -500,52 +456,51 @@ export default function NotificationBroadcast() {
                 )}
               </ScrollDiv>
 
-              <Div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-200 px-1">
-                <Div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
-                  <Div className="flex items-center gap-2">
-                    <Span>Rows per page:</Span>
+              <Div className="flex-row flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                <Div className="flex-row flex-wrap items-center gap-3">
+                  <Div className="flex-row items-center gap-2">
+                    <Text style={tw`text-xs text-slate-500`}>Rows per page</Text>
                     <Select
                       value={limit}
                       onChange={(e) => {
                         setLimit(Number(e.target.value));
                         setPage(1);
                       }}
-                      className="rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 shadow-sm"
+                      className="h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
                     >
                       <Option value={20}>20</Option>
                       <Option value={50}>50</Option>
                       <Option value={100}>100</Option>
                     </Select>
                   </Div>
-                  <Span>
-                    Showing <Strong className="text-slate-900">{pagination.matchedTotal === 0 ? 0 : (page - 1) * limit + 1}</Strong> to{' '}
-                    <Strong className="text-slate-900">{Math.min(page * limit, pagination.matchedTotal)}</Strong> of{' '}
-                    <Strong className="text-slate-900">{pagination.matchedTotal}</Strong> recipients
-                  </Span>
+                  <Text style={tw`text-xs text-slate-500`}>
+                    {`Showing ${pagination.matchedTotal === 0 ? 0 : (page - 1) * limit + 1}–${Math.min(page * limit, pagination.matchedTotal)} of ${pagination.matchedTotal} recipients`}
+                  </Text>
                 </Div>
 
-                <Div className="flex items-center gap-1">
+                <Div className="flex-row flex-wrap items-center gap-1">
                   <Button
                     type="button"
                     disabled={page <= 1 || recipientLoading}
                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-all"
+                    accessibilityLabel="Previous page"
+                    className="w-11 h-11 items-center justify-center rounded-lg border border-slate-300 bg-white"
                   >
-                    <UiIcon as={ChevronLeft} className="w-4 h-4" />
+                    <UiIcon as={ChevronLeft} size={16} className="text-slate-600" />
                   </Button>
-                  {pageNumbers.map((p, idx) =>
-                    p === '...' ? (
-                      <Span key={`dots-${idx}`} className="px-2 text-xs text-slate-400 font-semibold">
-                        ...
+                  {pageNumbers.map((pg, idx) =>
+                    pg === '...' ? (
+                      <Span key={`dots-${idx}`} className="px-2 text-sm text-slate-400">
+                        …
                       </Span>
                     ) : (
                       <Button
-                        key={p}
+                        key={pg}
                         type="button"
-                        onClick={() => setPage(p)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all ${page === p ? 'bg-slate-900 text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}
+                        onClick={() => setPage(pg)}
+                        className={`w-11 h-11 items-center justify-center rounded-lg border ${page === pg ? 'bg-blue-600 border-blue-600' : 'border-slate-300 bg-white'}`}
                       >
-                        {p}
+                        <Span className={page === pg ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-700'}>{String(pg)}</Span>
                       </Button>
                     ),
                   )}
@@ -553,101 +508,94 @@ export default function NotificationBroadcast() {
                     type="button"
                     disabled={page >= pagination.totalPages || recipientLoading}
                     onClick={() => setPage((prev) => Math.min(pagination.totalPages, prev + 1))}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-all"
+                    accessibilityLabel="Next page"
+                    className="w-11 h-11 items-center justify-center rounded-lg border border-slate-300 bg-white"
                   >
-                    <UiIcon as={ChevronRight} className="w-4 h-4" />
+                    <UiIcon as={ChevronRight} size={16} className="text-slate-600" />
                   </Button>
                 </Div>
               </Div>
             </Div>
-          )}
-        </Form>
-      </Div>
+          ) : null}
 
-      {showHistoryModal && (
-        <Overlay onClose={() => setShowHistoryModal(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-          <Div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-6xl max-h-[85vh] flex-col overflow-hidden">
-            <Div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-900 text-white">
-              <Div className="flex items-center gap-3">
-                <Div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-blue-400">
-                  <UiIcon as={History} className="w-5 h-5" />
-                </Div>
-                <Div>
-                  <H2 className="text-xl font-bold text-white">Broadcast History</H2>
-                  <P className="text-xs text-slate-400 mt-0.5">View and manage sent broadcast notifications.</P>
-                </Div>
+          <Div className="flex-row justify-end">
+            <Button type="submit" disabled={submitting} className={BTN_PRIMARY}>
+              <UiIcon as={submitting ? Loader2 : Send} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Send Broadcast</Span>
+            </Button>
+          </Div>
+        </Form>
+      </Card>
+
+      {showHistoryModal ? (
+        <Overlay onClose={() => setShowHistoryModal(false)} className="absolute inset-0 items-center justify-center bg-black/50 p-4">
+          <Div className="bg-white rounded-xl border border-slate-200 w-full max-w-[1100px] max-h-[85vh] overflow-hidden">
+            <Div className="flex-row items-center justify-between gap-2 p-4 border-b border-slate-200">
+              <Div className="flex-1 min-w-0">
+                <Text style={tw`text-base font-semibold text-slate-900`}>Broadcast History</Text>
+                <Text style={tw`text-xs text-slate-500`}>View and manage sent broadcast notifications.</Text>
               </Div>
               <Button
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
-                className="p-2 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                accessibilityLabel="Close history"
+                className="w-11 h-11 rounded-lg items-center justify-center shrink-0"
               >
-                <UiIcon as={X} className="w-5 h-5" />
+                <UiIcon as={X} size={18} className="text-slate-500" />
               </Button>
             </Div>
 
-            <ScrollDiv className="p-6 flex-1 bg-slate-50/50">
+            <ScrollDiv className="p-4 bg-slate-50">
               {historyLoading ? (
-                <Div className="py-16 text-sm text-slate-500 flex flex-col items-center justify-center gap-3">
-                  <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600" />
-                  <Span>Loading history...</Span>
-                </Div>
+                <LoadingState label="Loading history…" />
               ) : history.length === 0 ? (
-                <Div className="py-16 text-center text-sm text-slate-500 flex flex-col items-center justify-center gap-2">
-                  <UiIcon as={BellRing} className="w-10 h-10 text-slate-300" />
-                  <Span className="font-semibold text-slate-700">No broadcast notifications found</Span>
-                  <Span className="text-xs text-slate-400">Broadcasts you send will show up here.</Span>
-                </Div>
+                <EmptyState
+                  icon={BellRing}
+                  title="No broadcast notifications found"
+                  message="Broadcasts you send will show up here."
+                  actionLabel="Refresh"
+                  onAction={() => loadHistory()}
+                />
               ) : (
-                <Div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <Table cols={[180, 240, 160, 110, 180, 130]} className="w-full text-sm">
-                      <Thead>
-                        <Tr className="text-left text-xs uppercase font-bold tracking-wider text-slate-500 bg-slate-100/80 border-b border-slate-200">
-                          <Th className="py-3.5 px-4 w-44">Title</Th>
-                          <Th className="py-3.5 px-4">Message</Th>
-                          <Th className="py-3.5 px-4 w-40">Target Type</Th>
-                          <Th className="py-3.5 px-4 w-28 text-center">Recipients</Th>
-                          <Th className="py-3.5 px-4 w-44">Sent At</Th>
-                          <Th className="py-3.5 px-4 w-32 text-right pr-5">Action</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody className="divide-y divide-slate-100">
-                        {history.map((item) => (
-                          <Tr
-                            key={item?._id}
-                            className={`align-middle hover:bg-slate-50/80 transition-all ${deletingIds.has(item?._id) ? 'opacity-30' : 'opacity-100'}`}
+                <DataTable cols={HISTORY_COLS}>
+                  <THead cols={HISTORY_COLS} labels={HISTORY_LABELS} />
+                  <TBody>
+                    {history.map((item, i) => (
+                      <Row key={item?._id} last={i === history.length - 1} className={deletingIds.has(item?._id) ? 'opacity-40' : ''}>
+                        <Cell width={HISTORY_COLS[0]}>
+                          <Text style={tw`text-sm font-semibold text-slate-900`} numberOfLines={2}>
+                            {item?.title || 'Notification'}
+                          </Text>
+                        </Cell>
+                        <Cell width={HISTORY_COLS[1]} numberOfLines={3}>
+                          {item?.message || '-'}
+                        </Cell>
+                        <Cell width={HISTORY_COLS[2]}>
+                          <StatusBadge tone="info" label={item?.targetLabel || item?.targetType || '—'} />
+                        </Cell>
+                        <Cell width={HISTORY_COLS[3]} align="center">
+                          {String(item?.targetCount || item?.targets?.length || 0)}
+                        </Cell>
+                        <Cell width={HISTORY_COLS[4]}>{toDateLabel(item?.createdAt)}</Cell>
+                        <Cell width={HISTORY_COLS[5]} align="center">
+                          <Button
+                            type="button"
+                            onClick={() => handleDelete(item?._id)}
+                            accessibilityLabel={`Delete ${item?.title || 'broadcast'}`}
+                            className="w-11 h-11 rounded-lg items-center justify-center"
                           >
-                            <Td className="py-4 px-4 font-bold text-slate-900 w-44 truncate">{item?.title || 'Notification'}</Td>
-                            <Td className="py-4 px-4 text-slate-600 max-w-[280px]">
-                              <P className="truncate text-xs font-medium text-slate-700">{item?.message || '-'}</P>
-                            </Td>
-                            <Td className="py-4 px-4 w-40">
-                              <Span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100/80 whitespace-nowrap">
-                                {item?.targetLabel || item?.targetType}
-                              </Span>
-                            </Td>
-                            <Td className="py-4 px-4 w-28 text-center font-bold text-slate-800">{item?.targetCount || item?.targets?.length || 0}</Td>
-                            <Td className="py-4 px-4 w-44 text-slate-500 whitespace-nowrap text-xs">{toDateLabel(item?.createdAt)}</Td>
-                            <Td className="py-4 px-4 w-32 text-right pr-5 whitespace-nowrap">
-                              <Button
-                                type="button"
-                                onClick={() => handleDelete(item?._id)}
-                                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/60 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-xs"
-                              >
-                                <UiIcon as={Trash2} className="w-3.5 h-3.5" />
-                                Delete
-                              </Button>
-                            </Td>
-                          </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
-                </Div>
+                            <UiIcon as={Trash2} size={16} className="text-red-600" />
+                          </Button>
+                        </Cell>
+                      </Row>
+                    ))}
+                  </TBody>
+                </DataTable>
               )}
             </ScrollDiv>
           </Div>
         </Overlay>
-      )}
-    </ScrollDiv>
+      ) : null}
+    </AdminPage>
   );
 }

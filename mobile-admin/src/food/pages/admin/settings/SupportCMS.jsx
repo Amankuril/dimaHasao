@@ -4,7 +4,9 @@ import { toast } from '../../../../lib/notify';
 import api from '../../../../api/food';
 import { Textarea } from '../../../../components/shadcn';
 import { legalHtmlToPlainText, plainTextToLegalHtml } from '../../../utils/legalContentFormat';
-import { Br, Button, Div, H1, H4, Input, Label, P, ScrollDiv, Span, Strong } from '../../../../components/web';
+import { Button, Div, H4, Input, P, Span, Strong } from '../../../../components/web';
+import { LifeBuoy } from 'lucide-react-native';
+import { AdminPage, PageHeader, Card, SectionTitle, Toolbar, Field, LoadingState, EmptyState, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../admin/ui';
 import HtmlContent from '../../../../components/HtmlContent';
 const debugError = (...args) => {};
 export default function SupportCMS() {
@@ -121,40 +123,53 @@ export default function SupportCMS() {
     }
   };
   const getRoleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
+  const { tablet } = useLayoutWidth();
   return (
-    <ScrollDiv className="h-full bg-slate-50 p-4 lg:p-6">
-      <Div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <Div>
-            <H1 className="text-2xl font-bold text-slate-900">Help &amp; Support</H1>
-            <P className="text-sm text-slate-600 mt-1">Manage module-specific Help &amp; Support content</P>
-          </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={LifeBuoy}
+        title="Help & support"
+        subtitle="Contact details, support copy and FAQs for each portal."
+        breadcrumb={[{ label: 'Food' }, { label: 'Settings' }, { label: 'Help & support' }]}
+      />
 
-          {/* Module Selector - same style as LegalTerms */}
-          <Div className="inline-flex p-1 bg-white border border-slate-200 rounded-xl shadow-sm">
-            {['user', 'restaurant', 'delivery'].map((role) => (
-              <Button
-                key={role}
-                onClick={() => setActiveRole(role)}
-                className={`px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${activeRole === role ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-              >
-                {getRoleLabel(role)}
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            <Div className="flex-row items-center gap-2">
+              <Button onClick={() => setViewMode('edit')} className={viewMode === 'edit' ? BTN_PRIMARY : BTN_SECONDARY} accessibilityLabel="Edit content">
+                <Span className={viewMode === 'edit' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Editor</Span>
               </Button>
-            ))}
-          </Div>
-        </Div>
-
-        {/* Contact Info */}
-        {viewMode === 'edit' && (
-          <Div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-            <Div className="border-b border-slate-100 bg-slate-50/50 p-4 flex items-center gap-2">
-              <Span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></Span>
-              <Span className="flex-1 text-sm font-medium text-slate-700">Contact Information — {getRoleLabel(activeRole)} Portal</Span>
+              <Button onClick={() => setViewMode('preview')} className={viewMode === 'preview' ? BTN_PRIMARY : BTN_SECONDARY} accessibilityLabel="Preview content">
+                <Span className={viewMode === 'preview' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Preview</Span>
+              </Button>
             </Div>
-            <Div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Div className="space-y-2">
-                <Label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Support Email</Label>
+          }
+        >
+          Portal
+        </SectionTitle>
+        <Toolbar className="mb-0">
+          {['user', 'restaurant', 'delivery'].map((role) => (
+            <Button
+              key={role}
+              onClick={() => setActiveRole(role)}
+              className={activeRole === role ? BTN_PRIMARY : BTN_SECONDARY}
+              accessibilityLabel={`Edit ${getRoleLabel(role)} support content`}
+            >
+              <Span className={activeRole === role ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{getRoleLabel(role)}</Span>
+            </Button>
+          ))}
+        </Toolbar>
+      </Card>
+
+      {viewMode === 'edit' && (
+        <Card className="mb-4">
+          <SectionTitle>Contact information — {getRoleLabel(activeRole)}</SectionTitle>
+          {loading ? (
+            <LoadingState label="Loading contact details…" />
+          ) : (
+            <Div className={tablet ? 'flex-row items-start gap-3' : 'gap-3'}>
+              <Field label="Support email" className={tablet ? 'flex-1' : null}>
                 <Input
                   nativeID="support-email"
                   type="email"
@@ -166,11 +181,10 @@ export default function SupportCMS() {
                     }))
                   }
                   placeholder="support@example.com"
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-medium"
+                  className={INPUT}
                 />
-              </Div>
-              <Div className="space-y-2">
-                <Label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Support Mobile</Label>
+              </Field>
+              <Field label="Support mobile" className={tablet ? 'flex-1' : null}>
                 <Input
                   nativeID="support-mobile"
                   type="text"
@@ -182,196 +196,152 @@ export default function SupportCMS() {
                     }))
                   }
                   placeholder="+91 00000 00000"
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-medium"
+                  className={INPUT}
                 />
-              </Div>
+              </Field>
             </Div>
+          )}
+        </Card>
+      )}
+
+      <Card className="mb-4">
+        <SectionTitle>
+          {viewMode === 'preview' ? 'Previewing' : 'Editing'} {getRoleLabel(activeRole)} support content
+        </SectionTitle>
+        {loading ? (
+          <LoadingState label="Loading support content…" />
+        ) : viewMode === 'edit' ? (
+          <Div className="gap-3">
+            <Field label="Page title">
+              <Input
+                type="text"
+                value={supportData.title}
+                onChange={(e) =>
+                  setSupportData((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }))
+                }
+                className={INPUT}
+              />
+            </Field>
+            <Field label="Content" hint="Use # and ## for headings and **text** for bold.">
+              <Textarea
+                value={supportData.content}
+                onChange={(e) =>
+                  setSupportData((prev) => ({
+                    ...prev,
+                    content: e.target.value,
+                  }))
+                }
+                placeholder={`Enter help & support content for ${activeRole} portal here...`}
+                rows={10}
+                className="px-3 py-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700"
+                style={{ width: '100%' }}
+              />
+            </Field>
           </Div>
+        ) : supportData.content ? (
+          <HtmlContent html={plainTextToLegalHtml(supportData.content)} soraHeadings={false} color="#475569" />
+        ) : (
+          <EmptyState
+            title="No support content yet"
+            message={`The ${getRoleLabel(activeRole)} portal has no help text saved.`}
+            actionLabel="Write it now"
+            onAction={() => setViewMode('edit')}
+            icon={LifeBuoy}
+          />
         )}
+      </Card>
 
-        {/* Content Editor */}
-        <Div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-          <Div className="border-b border-slate-100 bg-slate-50/50 p-4 flex items-center justify-between">
-            <Div className="flex-1 flex items-center gap-2">
-              <Span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></Span>
-              <Span className="flex-1 text-sm font-medium text-slate-700">
-                {viewMode === 'preview' ? 'Previewing' : 'Editing'} {getRoleLabel(activeRole)} Portal Support Content
-              </Span>
-            </Div>
-
-            <Div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
-              <Button
-                type="button"
-                onClick={() => setViewMode('edit')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'edit' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                Editor
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setViewMode('preview')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'preview' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                Preview
-              </Button>
-            </Div>
-          </Div>
-
-          <Div className="p-6">
-            {loading ? (
-              <Div className="min-h-[300px] flex flex-col items-center justify-center space-y-4">
-                <Div className="w-10 h-10 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin"></Div>
-                <P className="text-sm text-slate-500 font-medium italic">Synchronizing content...</P>
-              </Div>
-            ) : (
-              <>
-                {viewMode === 'edit' && (
-                  <Div className="mb-4">
-                    <Label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Page Title</Label>
-                    <Input
-                      type="text"
-                      value={supportData.title}
-                      onChange={(e) =>
-                        setSupportData((prev) => ({
-                          ...prev,
-                          title: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-medium"
-                    />
+      <Card className="mb-4">
+        <SectionTitle>FAQ — {getRoleLabel(activeRole)}</SectionTitle>
+        {loading ? (
+          <LoadingState label="Loading FAQs…" />
+        ) : viewMode === 'edit' ? (
+          <Field
+            label="Questions and answers"
+            hint="Write a question after Q: and its answer after A:. Use HOURS: for operational hours and PRIVACY: for the data-privacy card."
+          >
+            <Textarea
+              value={supportData.faq}
+              onChange={(e) =>
+                setSupportData((prev) => ({
+                  ...prev,
+                  faq: e.target.value,
+                }))
+              }
+              placeholder="Q: Question here?&#10;A: Answer here...&#10;&#10;HOURS: 9 AM - 11 PM&#10;PRIVACY: Safe and secure"
+              rows={10}
+              className="px-3 py-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700"
+              style={{ width: '100%' }}
+            />
+          </Field>
+        ) : (
+          (() => {
+            const lines = (supportData.faq || '')
+              .split('\n')
+              .map((l) => l.trim())
+              .filter(Boolean);
+            const parsed = [];
+            let currentQ = null;
+            let hoursText = 'Available 24/7 for emergency support. General inquiries: 9 AM - 11 PM.';
+            let privacyText = 'Your conversations with our support team are encrypted and secure.';
+            for (const line of lines) {
+              if (line.startsWith('Q:')) currentQ = line.substring(2).trim();
+              else if (line.startsWith('A:') && currentQ) {
+                parsed.push({
+                  q: currentQ,
+                  a: line.substring(2).trim(),
+                });
+                currentQ = null;
+              } else if (line.startsWith('HOURS:')) hoursText = line.substring(6).trim();
+              else if (line.startsWith('PRIVACY:')) privacyText = line.substring(8).trim();
+            }
+            return (
+              <Div className="gap-4">
+                {parsed.map((faq, idx) => (
+                  <Div key={idx} className="gap-1.5">
+                    <H4 className="text-sm font-semibold text-slate-900">Q. {faq.q}</H4>
+                    <P className="text-sm text-slate-500">{faq.a}</P>
                   </Div>
-                )}
-
-                {viewMode === 'edit' ? (
-                  <Div className="relative group">
-                    <Textarea
-                      value={supportData.content}
-                      onChange={(e) =>
-                        setSupportData((prev) => ({
-                          ...prev,
-                          content: e.target.value,
-                        }))
-                      }
-                      placeholder={`Enter help & support content for ${activeRole} portal here...`}
-                      className="min-h-[150px] w-full text-sm text-slate-700 leading-relaxed resize-y border-slate-200 group-focus-within:border-orange-500 transition-colors bg-slate-50/30"
-                    />
+                ))}
+                {parsed.length === 0 &&
+                  (supportData.faq ? (
+                    <P className="text-sm text-slate-700">{supportData.faq}</P>
+                  ) : (
+                    <EmptyState title="No FAQs yet" message="Add questions in the editor so customers can self-serve." actionLabel="Add FAQs" onAction={() => setViewMode('edit')} />
+                  ))}
+                <Div className={tablet ? 'flex-row items-stretch gap-3 pt-3 border-t border-slate-200' : 'gap-3 pt-3 border-t border-slate-200'}>
+                  <Div className="flex-1 p-4 rounded-lg border border-slate-200 bg-slate-50">
+                    <Strong className="text-xs font-semibold uppercase tracking-wide text-slate-500">Operational hours</Strong>
+                    <P className="text-sm text-slate-700 mt-1">{hoursText}</P>
                   </Div>
-                ) : (
-                  <Div className="min-h-[150px] w-full bg-white">
-                    <Div className="bg-slate-50 rounded-xl border border-slate-100 p-8">
-                      <HtmlContent html={plainTextToLegalHtml(supportData.content)} soraHeadings={false} color="#475569" />
-                    </Div>
+                  <Div className="flex-1 p-4 rounded-lg border border-slate-200 bg-slate-50">
+                    <Strong className="text-xs font-semibold uppercase tracking-wide text-slate-500">Data privacy</Strong>
+                    <P className="text-sm text-slate-700 mt-1">{privacyText}</P>
                   </Div>
-                )}
-              </>
-            )}
-          </Div>
-        </Div>
-
-        {/* FAQ Editor Box */}
-        <Div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <Div className="border-b border-slate-100 bg-slate-50/50 p-4 flex items-center gap-2">
-            <Span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></Span>
-            <Span className="flex-1 text-sm font-medium text-slate-700">FAQ (Frequently Asked Questions) — {getRoleLabel(activeRole)} Portal</Span>
-          </Div>
-          <Div className="p-6">
-            {loading ? (
-              <Div className="min-h-[150px] flex flex-col items-center justify-center space-y-4">
-                <Div className="w-8 h-8 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin"></Div>
+                </Div>
               </Div>
-            ) : viewMode === 'edit' ? (
-              <Div>
-                <Label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 leading-relaxed">
-                  Format: Write question starting with <Span className="text-slate-600">Q:</Span> and answer starting with{' '}
-                  <Span className="text-slate-600">A:</Span>
-                  <Br />
-                  For Info Cards: Use <Span className="text-slate-600">HOURS:</Span> for Operational Hours and <Span className="text-slate-600">PRIVACY:</Span>{' '}
-                  for Data Privacy.
-                </Label>
-                <Textarea
-                  value={supportData.faq}
-                  onChange={(e) =>
-                    setSupportData((prev) => ({
-                      ...prev,
-                      faq: e.target.value,
-                    }))
-                  }
-                  placeholder="Q: Question here?\nA: Answer here...\n\nHOURS: 9 AM - 11 PM\nPRIVACY: Safe and secure"
-                  className="min-h-[150px] w-full text-sm text-slate-700 leading-relaxed resize-y border-slate-200 focus-within:border-orange-500 transition-colors bg-slate-50/30 font-medium"
-                />
-              </Div>
-            ) : (
-              <Div className="min-h-[150px] w-full bg-slate-50/30 rounded-xl border border-slate-100 p-6">
-                {(() => {
-                  const lines = (supportData.faq || '')
-                    .split('\n')
-                    .map((l) => l.trim())
-                    .filter(Boolean);
-                  const parsed = [];
-                  let currentQ = null;
-                  let hoursText = 'Available 24/7 for emergency support. General inquiries: 9 AM - 11 PM.';
-                  let privacyText = 'Your conversations with our support team are encrypted and secure.';
-                  for (const line of lines) {
-                    if (line.startsWith('Q:')) currentQ = line.substring(2).trim();
-                    else if (line.startsWith('A:') && currentQ) {
-                      parsed.push({
-                        q: currentQ,
-                        a: line.substring(2).trim(),
-                      });
-                      currentQ = null;
-                    } else if (line.startsWith('HOURS:')) hoursText = line.substring(6).trim();
-                    else if (line.startsWith('PRIVACY:')) privacyText = line.substring(8).trim();
-                  }
-                  return (
-                    <Div className="space-y-6">
-                      {parsed.map((faq, idx) => (
-                        <Div key={idx} className="space-y-1.5">
-                          <H4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <Span className="text-orange-500">Q.</Span> {faq.q}
-                          </H4>
-                          <P className="text-sm text-slate-600 pl-6 border-l-2 border-slate-200 ml-1.5 py-0.5">{faq.a}</P>
-                        </Div>
-                      ))}
-                      {parsed.length === 0 && (
-                        <Div className="text-sm text-slate-700 whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-200">
-                          {supportData.faq ? supportData.faq : <Span className="text-slate-400 italic">No FAQs configured yet.</Span>}
-                        </Div>
-                      )}
-                      <Div className="mt-8 pt-6 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Div className="text-sm text-slate-600 bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                          <Strong className="block text-xs text-slate-900 uppercase tracking-wider mb-1">Operational Hours</Strong>
-                          {hoursText}
-                        </Div>
-                        <Div className="text-sm text-slate-600 bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                          <Strong className="block text-xs text-slate-900 uppercase tracking-wider mb-1">Data Privacy</Strong>
-                          {privacyText}
-                        </Div>
-                      </Div>
-                    </Div>
-                  );
-                })()}
-              </Div>
-            )}
-          </Div>
-        </Div>
-
-        {/* Save Button */}
-        {viewMode === 'edit' && (
-          <Div className="flex items-center justify-between mt-8 p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
-            <Div className="flex-1 text-sm text-slate-500">
-              <Span className="font-semibold text-slate-700">Tip:</Span> Your changes are only published once you hit save.
-            </Div>
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={saving || loading || !hasChanges}
-              className="flex items-center gap-2 px-8 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all duration-200 font-bold shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none group"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </Div>
+            );
+          })()
         )}
-      </Div>
-    </ScrollDiv>
+      </Card>
+
+      {viewMode === 'edit' && (
+        <Card className="flex-row flex-wrap items-center justify-between gap-3">
+          <Span className="text-sm text-slate-500 flex-1">Changes are published only once you save.</Span>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={saving || loading || !hasChanges}
+            className={`${BTN_PRIMARY}${saving || loading || !hasChanges ? ' opacity-50' : ''}`}
+            accessibilityLabel="Save changes"
+          >
+            <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : 'Save changes'}</Span>
+          </Button>
+        </Card>
+      )}
+    </AdminPage>
   );
 }

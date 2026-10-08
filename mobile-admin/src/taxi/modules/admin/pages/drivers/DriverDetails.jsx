@@ -1,7 +1,8 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/drivers/DriverDetails.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
 import { GMap, Marker, toLatLng } from '../../../../../components/maps';
-import { ArrowLeft, Calendar, CircleUserRound, ChevronRight, Download, Eye, PencilLine, Mail, MapPin, Phone, CheckCircle2 } from 'lucide-react-native';
+import { useWindowDimensions } from 'react-native';
+import { ArrowLeft, CircleUserRound, Eye, PencilLine, Mail, MapPin, Phone, CheckCircle2 } from 'lucide-react-native';
 import { useLocation, useNavigate, useParams } from '../../../../../lib/webRouter';
 import { adminService } from '../../services/adminService';
 import { DISTRICT_CENTER, HAS_VALID_GOOGLE_MAPS_KEY, useBaseGoogleMapsLoader } from '../../utils/googleMaps';
@@ -16,35 +17,39 @@ import McvIcon from '../../../../assets/icons/mcv.png';
 import LuxuryIcon from '../../../../assets/icons/Luxury.png';
 import PremiumIcon from '../../../../assets/icons/Premium.png';
 import SuvIcon from '../../../../assets/icons/SUV.png';
+import { Button, Div, HScroll, Img, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 import {
-  Button,
-  Div,
-  H1,
-  H2,
-  H3,
-  H4,
-  H5,
-  Img,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  Field,
+  useLayoutWidth,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../../admin/ui';
 import { Line, Polyline as SvgPolyline, Svg } from 'react-native-svg';
 import { window } from '../../../../../lib/webShim';
 import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 /* The web's `absolute inset-0 w-full h-full` on the chart <svg>. */
 const CHART_OVERLAY_STYLE = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 };
+const REQUEST_COLS = [110, 160, 160, 160, 130, 80, 150];
+const WALLET_COLS = [160, 140, 110, 220];
+const WITHDRAWAL_COLS = [160, 170, 140, 150, 130, 90];
 const getMapIconForVehicle = (iconType = '') => {
   const raw = String(iconType || '').trim();
   if (/^(https?:|data:image\/|blob:|\/uploads\/|\/images\/|\/[^/])/.test(raw)) {
@@ -424,6 +429,8 @@ const normalizeDocumentEntry = (doc = {}, fallbackKey = '') => {
   };
 };
 const DriverDetails = () => {
+  const { tablet } = useLayoutWidth();
+  const { width: windowWidth } = useWindowDimensions();
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
@@ -599,229 +606,175 @@ const DriverDetails = () => {
   const onlineSelfieImage = String(profile?.online_selfie?.imageUrl || '').trim();
   const acceptanceRate = requests.length ? Math.round((stats.completed_trips / requests.length) * 100) : 0;
   const cancellationRate = requests.length ? Math.round((stats.cancelled_trips / requests.length) * 100) : 0;
+  const chartWidth = Math.max(260, windowWidth - 64);
+  const breadcrumb = [{ label: 'Drivers' }, { label: 'Driver profile' }];
+  const backButton = (
+    <Button onClick={() => navigate(backRoute)} className={BTN_SECONDARY}>
+      <UiIcon as={ArrowLeft} size={16} className="text-slate-700" />
+      <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+    </Button>
+  );
   if (isLoading) {
     return (
-      <ScrollDiv className="min-h-[60vh] flex items-center justify-center">
-        <Div className="flex flex-col items-center gap-3">
-          <Div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></Div>
-          <P className="text-sm text-gray-500">Loading driver profile...</P>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader icon={CircleUserRound} title="Driver profile" breadcrumb={breadcrumb} />
+        <LoadingState label="Loading driver profile…" />
+      </AdminPage>
     );
   }
   if (error || !profile) {
     return (
-      <ScrollDiv className="min-h-[60vh] flex items-center justify-center">
-        <Div className="text-center space-y-3">
-          <P className="text-sm font-semibold text-rose-600">{error || 'Driver not found'}</P>
-          <Button onClick={() => navigate(-1)} className="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg">
-            Go Back
-          </Button>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader icon={CircleUserRound} title="Driver profile" breadcrumb={breadcrumb} actions={backButton} />
+        {error ? (
+          <ErrorState message={error} onRetry={fetchProfile} />
+        ) : (
+          <EmptyState icon={CircleUserRound} title="Driver not found" message="This driver record no longer exists." actionLabel="Go back" onAction={() => navigate(-1)} />
+        )}
+      </AdminPage>
     );
   }
+  const driverCode =
+    profile.driver_code ||
+    profile.referralCode ||
+    (profile.phone
+      ? `DRV${String(profile.phone).slice(-4)}${String(profile._id || profile.id || '')
+          .slice(-6)
+          .toUpperCase()}`.replace(/\W/g, '')
+      : 'N/A');
   return (
-    <ScrollDiv className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans text-gray-900">
-      <Div className="mb-6">
-        <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-          <Span>Drivers</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700">Driver Profile</Span>
-        </Div>
-        <Div className="flex items-center justify-between gap-4">
-          <H1 className="text-xl text-gray-900 font-bold">Driver Profile</H1>
-          <Button
-            onClick={() => navigate(backRoute)}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <UiIcon as={ArrowLeft} size={16} /> Back
-          </Button>
-        </Div>
-      </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader icon={CircleUserRound} title="Driver profile" subtitle={`${profile.name || 'Driver'} · ${driverCode}`} breadcrumb={breadcrumb} actions={backButton} />
 
-      <Div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
-        <Div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-          <Div className="flex items-center gap-4">
-            <Div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+      <Card className="mb-4">
+        <Div className={`gap-4 ${tablet ? 'flex-row items-center' : 'flex-col'}`}>
+          <Div className="flex-1 flex-row items-center gap-3">
+            <Div className="w-16 h-16 rounded-full overflow-hidden bg-slate-100 border border-slate-200 items-center justify-center">
               {profileImage && !avatarFailed ? (
-                <Img src={profileImage} alt={profile.name} className="w-full h-full object-cover" onError={() => setAvatarFailed(true)} />
+                <Img src={profileImage} alt={profile.name} className="w-full h-full" contentFit="cover" onError={() => setAvatarFailed(true)} />
               ) : (
-                <Div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
-                  <UiIcon as={CircleUserRound} size={32} strokeWidth={1.75} />
-                </Div>
+                <UiIcon as={CircleUserRound} size={32} strokeWidth={1.75} className="text-slate-400" />
               )}
             </Div>
-            <Div>
-              <Div className="flex items-center gap-2">
-                <H2 className="text-lg text-gray-900 font-bold">{profile.name}</H2>
-                <Span className="font-mono font-bold text-[10px] uppercase tracking-wider text-black bg-yellow-400 px-2 py-0.5 rounded shadow-sm">
-                  {profile.driver_code ||
-                    profile.referralCode ||
-                    (profile.phone
-                      ? `DRV${String(profile.phone).slice(-4)}${String(profile._id || profile.id || '')
-                          .slice(-6)
-                          .toUpperCase()}`.replace(/\W/g, '')
-                      : 'N/A')}
-                </Span>
-              </Div>
-              <Div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-500 font-medium">
-                <Div className="flex items-center gap-1">
-                  <UiIcon as={Phone} size={12} /> {profile.phone || profile.mobile || 'N/A'}
+            <Div className="flex-1 min-w-0">
+              <P className="text-base font-semibold text-slate-900" numberOfLines={1}>
+                {profile.name}
+              </P>
+              <P className="text-xs text-slate-500 mt-0.5" numberOfLines={1}>
+                {driverCode}
+              </P>
+              <Div className="flex-row flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                <Div className="flex-row items-center gap-1">
+                  <UiIcon as={Phone} size={12} className="text-slate-400" />
+                  <Span className="text-xs text-slate-500">{profile.phone || profile.mobile || 'N/A'}</Span>
                 </Div>
-                <Div className="flex items-center gap-1">
-                  <UiIcon as={Mail} size={12} /> {profile.email || 'N/A'}
+                <Div className="flex-row items-center gap-1">
+                  <UiIcon as={Mail} size={12} className="text-slate-400" />
+                  <Span className="text-xs text-slate-500">{profile.email || 'N/A'}</Span>
                 </Div>
-                <Div className="flex items-center gap-1">
-                  <UiIcon as={MapPin} size={12} /> {profile.city || 'India'}
+                <Div className="flex-row items-center gap-1">
+                  <UiIcon as={MapPin} size={12} className="text-slate-400" />
+                  <Span className="text-xs text-slate-500">{profile.city || 'India'}</Span>
                 </Div>
               </Div>
             </Div>
           </Div>
-          <Div className="flex items-center gap-3 sm:ml-auto">
-            <Div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-              <Img src={profile.vehicle_image || ''} alt="Vehicle" className="w-full h-full object-cover" />
+          <Div className="flex-row items-center gap-3">
+            <Div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+              <Img src={profile.vehicle_image || ''} alt="Vehicle" className="w-full h-full" contentFit="cover" />
             </Div>
-            <Div className="text-xs text-gray-600">
-              <P className="text-gray-900 font-bold">{profile.vehicle?.type || 'Vehicle'}</P>
-              <P>
+            <Div className="flex-1 min-w-0">
+              <P className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                {profile.vehicle?.type || 'Vehicle'}
+              </P>
+              <P className="text-xs text-slate-500" numberOfLines={1}>
                 {profile.vehicle?.make} {profile.vehicle?.model}
               </P>
             </Div>
           </Div>
         </Div>
 
-        <Div className="mt-4 flex flex-wrap items-start gap-3 border-t border-gray-100 pt-4">
-          <Span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${profile.isOnline ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}
-          >
-            <Span className={`h-1.5 w-1.5 rounded-full ${profile.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-            {profile.isOnline ? 'Driver Online' : 'Driver Offline'}
-          </Span>
-
+        <Div className="mt-4 flex-row flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+          <StatusBadge status={profile.isOnline ? 'online' : 'offline'} label={profile.isOnline ? 'Driver online' : 'Driver offline'} />
           {onlineSelfieImage ? (
-            <Div className="flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 px-3 py-2">
-              <Img
-                src={onlineSelfieImage}
-                alt={`${profile.name} online selfie`}
-                className="h-14 w-14 rounded-xl object-cover border border-indigo-100 bg-white"
-              />
-              <Div className="min-w-0">
-                <P className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Daily online selfie</P>
-                <P className="break-words text-xs font-semibold leading-relaxed text-slate-700">{profile?.online_selfie?.forDate || 'Latest check-in'}</P>
+            <Div className="flex-row items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <Img src={onlineSelfieImage} alt={`${profile.name} online selfie`} className="h-12 w-12 rounded-lg border border-slate-200 bg-white" contentFit="cover" />
+              <Div className="flex-1 min-w-0">
+                <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">Daily online selfie</P>
+                <P className="text-sm text-slate-700" numberOfLines={2}>
+                  {profile?.online_selfie?.forDate || 'Latest check-in'}
+                </P>
               </Div>
             </Div>
           ) : null}
         </Div>
-      </Div>
+      </Card>
 
-      <Div className="flex flex-wrap gap-2 mb-4">
+      <HScroll className="mb-4" contentClassName="flex-row gap-2">
         {tabs.map((tab) => (
           <Button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-xs font-bold rounded-full transition-colors ${activeTab === tab ? 'bg-yellow-400 text-black shadow-sm' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'}`}
+            className={`h-11 justify-center px-4 rounded-full ${activeTab === tab ? 'bg-blue-600' : 'bg-white border border-slate-200'}`}
           >
-            {tab}
+            <Span className={`text-sm font-semibold ${activeTab === tab ? 'text-white' : 'text-slate-600'}`}>{tab}</Span>
           </Button>
         ))}
-      </Div>
+      </HScroll>
 
       {activeTab !== 'Driver Profile' ? (
         <>
           {activeTab === 'Request List' && (
-            <Div className="space-y-6">
-              <Div className="bg-white rounded-xl border border-gray-200 p-6">
-                <Div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Div className="border border-gray-100 rounded-lg p-4">
-                    <P className="text-sm text-gray-500">Completed Rides</P>
-                    <P className="text-2xl font-semibold text-gray-900">{stats.completed_trips || 0}</P>
-                  </Div>
-                  <Div className="border border-gray-100 rounded-lg p-4">
-                    <P className="text-sm text-gray-500">Acceptance Rate</P>
-                    <P className="text-2xl font-semibold text-gray-900">{acceptanceRate}%</P>
-                  </Div>
-                  <Div className="border border-gray-100 rounded-lg p-4">
-                    <P className="text-sm text-gray-500">Cancellation Rate</P>
-                    <P className="text-2xl font-semibold text-gray-900">{cancellationRate}%</P>
-                  </Div>
-                  <Div className="border border-gray-100 rounded-lg p-4">
-                    <P className="text-sm text-gray-500">Cancelled Rides</P>
-                    <P className="text-2xl font-semibold text-gray-900">{stats.cancelled_trips || 0}</P>
-                  </Div>
-                </Div>
-              </Div>
+            <Div>
+              <StatGrid className="mb-4">
+                <StatCard label="Completed rides" value={stats.completed_trips || 0} tone="success" />
+                <StatCard label="Acceptance rate" value={`${acceptanceRate}%`} tone="info" />
+                <StatCard label="Cancellation rate" value={`${cancellationRate}%`} tone="warning" />
+                <StatCard label="Cancelled rides" value={stats.cancelled_trips || 0} tone="danger" />
+              </StatGrid>
 
-              <Div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <Div>
-                  <Table cols={[120, 170, 170, 170, 130, 90, 150]} className="w-full text-left">
-                    <Thead>
-                      <Tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
-                        <Th className="px-6 py-3">Request Id</Th>
-                        <Th className="px-4 py-3">Date</Th>
-                        <Th className="px-4 py-3">User Name</Th>
-                        <Th className="px-4 py-3">Driver Name</Th>
-                        <Th className="px-4 py-3">Trip Status</Th>
-                        <Th className="px-4 py-3">Paid</Th>
-                        <Th className="px-4 py-3">Payment Option</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody className="divide-y divide-gray-100 text-sm text-gray-700">
-                      {requests.length === 0 ? (
-                        <Tr>
-                          <Td colSpan="7" className="px-6 py-12 text-center text-gray-400">
-                            No data found.
-                          </Td>
-                        </Tr>
-                      ) : (
-                        requests.map((item) => (
-                          <Tr key={item.request_id}>
-                            <Td className="px-6 py-3">{item.request_id.slice(-8).toUpperCase()}</Td>
-                            <Td className="px-4 py-3">{item.date ? new Date(item.date).toLocaleString('en-IN') : 'N/A'}</Td>
-                            <Td className="px-4 py-3">{item.user_name}</Td>
-                            <Td className="px-4 py-3">{item.driver_name}</Td>
-                            <Td className="px-4 py-3 capitalize">{item.trip_status}</Td>
-                            <Td className="px-4 py-3">{item.paid ? 'Yes' : 'No'}</Td>
-                            <Td className="px-4 py-3 capitalize">{item.payment_option}</Td>
-                          </Tr>
-                        ))
-                      )}
-                    </Tbody>
-                  </Table>
-                </Div>
-              </Div>
+              {requests.length === 0 ? (
+                <EmptyState title="No ride requests" message="This driver has not been offered any rides yet." />
+              ) : (
+                <DataTable cols={REQUEST_COLS}>
+                  <THead cols={REQUEST_COLS} labels={['Request id', 'Date', 'User', 'Driver', 'Trip status', 'Paid', 'Payment option']} />
+                  <TBody>
+                    {requests.map((item, index) => (
+                      <Row key={item.request_id} last={index === requests.length - 1}>
+                        <Cell width={REQUEST_COLS[0]}>{item.request_id.slice(-8).toUpperCase()}</Cell>
+                        <Cell width={REQUEST_COLS[1]}>{item.date ? new Date(item.date).toLocaleString('en-IN') : 'N/A'}</Cell>
+                        <Cell width={REQUEST_COLS[2]}>{item.user_name}</Cell>
+                        <Cell width={REQUEST_COLS[3]}>{item.driver_name}</Cell>
+                        <Cell width={REQUEST_COLS[4]}>
+                          <StatusBadge status={item.trip_status} label={toTitleCase(item.trip_status)} />
+                        </Cell>
+                        <Cell width={REQUEST_COLS[5]}>{item.paid ? 'Yes' : 'No'}</Cell>
+                        <Cell width={REQUEST_COLS[6]}>{toTitleCase(item.payment_option)}</Cell>
+                      </Row>
+                    ))}
+                  </TBody>
+                </DataTable>
+              )}
             </Div>
           )}
 
           {activeTab === 'Payment History' && (
-            <Div className="space-y-6">
-              <Div className="bg-white rounded-xl border border-gray-200 p-6">
-                <Div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Div className="border border-gray-100 rounded-lg p-4">
-                    <P className="text-sm text-gray-500">Total Credited</P>
-                    <P className="text-2xl font-semibold text-gray-900">₹ {wallet.total_credits || 0}</P>
-                  </Div>
-                  <Div className="border border-gray-100 rounded-lg p-4">
-                    <P className="text-sm text-gray-500">Total Debited</P>
-                    <P className="text-2xl font-semibold text-gray-900">₹ {wallet.total_debits || 0}</P>
-                  </Div>
-                  <Div className="border border-gray-100 rounded-lg p-4">
-                    <P className="text-sm text-gray-500">Available Balance</P>
-                    <P className="text-2xl font-semibold text-gray-900">₹ {wallet.balance || 0}</P>
-                  </Div>
-                </Div>
-              </Div>
+            <Div>
+              <StatGrid className="mb-4">
+                <StatCard label="Total credited" value={`₹ ${wallet.total_credits || 0}`} tone="success" />
+                <StatCard label="Total debited" value={`₹ ${wallet.total_debits || 0}`} tone="danger" />
+                <StatCard label="Available balance" value={`₹ ${wallet.balance || 0}`} tone="info" />
+              </StatGrid>
 
-              <Div className="bg-white rounded-xl border border-gray-200 p-6">
-                <H3 className="text-sm text-gray-900 mb-4 font-bold">Credit or Debit wallet</H3>
-                <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Div>
-                    <Label className="block text-xs font-semibold text-gray-500 mb-1.5">Amount *</Label>
+              <Card className="mb-4">
+                <SectionTitle>Credit or debit wallet</SectionTitle>
+                <Div className={tablet ? 'flex-row flex-wrap -mx-1.5' : 'gap-4'}>
+                  <Field label="Amount" required className={tablet ? 'w-1/2 px-1.5 mb-4' : 'w-full'}>
                     <Input
                       type="number"
                       min="0"
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
-                      placeholder="Enter Amount"
+                      className={INPUT}
+                      placeholder="Enter amount"
                       value={walletForm.amount}
                       onChange={(e) =>
                         setWalletForm((prev) => ({
@@ -830,11 +783,10 @@ const DriverDetails = () => {
                         }))
                       }
                     />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs font-semibold text-gray-500 mb-1.5">Operation *</Label>
+                  </Field>
+                  <Field label="Operation" required className={tablet ? 'w-1/2 px-1.5 mb-4' : 'w-full'}>
                     <Select
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
+                      className={INPUT}
                       value={walletForm.operation}
                       onChange={(e) =>
                         setWalletForm((prev) => ({
@@ -846,9 +798,9 @@ const DriverDetails = () => {
                       <Option value="credit">Credit</Option>
                       <Option value="debit">Debit</Option>
                     </Select>
-                  </Div>
+                  </Field>
                 </Div>
-                <Div className="mt-4">
+                <Div className="mt-1">
                   <Button
                     type="button"
                     disabled={walletForm.isSubmitting || !walletForm.amount}
@@ -887,276 +839,210 @@ const DriverDetails = () => {
                         }));
                       }
                     }}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                    className={`${BTN_PRIMARY} self-start ${walletForm.isSubmitting || !walletForm.amount ? 'opacity-50' : ''}`}
                   >
-                    {walletForm.isSubmitting ? 'Saving...' : 'Submit'}
+                    <Span className={BTN_TEXT_PRIMARY}>{walletForm.isSubmitting ? 'Saving…' : 'Submit'}</Span>
                   </Button>
                 </Div>
-              </Div>
+              </Card>
 
-              <Div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <Div className="px-6 py-4 border-b border-gray-100">
-                  <H3 className="text-sm text-gray-900 font-bold">Wallet Transactions</H3>
-                </Div>
-                <Div>
-                  <Table cols={[170, 140, 120, 220]} className="w-full text-left">
-                    <Thead>
-                      <Tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
-                        <Th className="px-6 py-3">Date</Th>
-                        <Th className="px-4 py-3">Type</Th>
-                        <Th className="px-4 py-3">Amount</Th>
-                        <Th className="px-4 py-3">Description</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody className="divide-y divide-gray-100 text-sm text-gray-700">
-                      {walletHistory.length === 0 ? (
-                        <Tr>
-                          <Td colSpan="4" className="px-6 py-12 text-center text-gray-400">
-                            No wallet transactions found.
-                          </Td>
-                        </Tr>
-                      ) : (
-                        walletHistory.map((item) => (
-                          <Tr key={item._id}>
-                            <Td className="px-6 py-3">{item.createdAt ? new Date(item.createdAt).toLocaleString('en-IN') : 'N/A'}</Td>
-                            <Td className="px-4 py-3 capitalize">{String(item.type || '').replace(/_/g, ' ') || 'N/A'}</Td>
-                            <Td className={`px-4 py-3 font-semibold ${Number(item.amount || 0) < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                              ₹ {Math.abs(Number(item.amount || 0))}
-                            </Td>
-                            <Td className="px-4 py-3">{item.description || '-'}</Td>
-                          </Tr>
-                        ))
-                      )}
-                    </Tbody>
-                  </Table>
-                </Div>
-              </Div>
+              <SectionTitle>Wallet transactions</SectionTitle>
+              {walletHistory.length === 0 ? (
+                <EmptyState title="No wallet transactions" message="Credits and debits on this driver's wallet will be listed here." />
+              ) : (
+                <DataTable cols={WALLET_COLS}>
+                  <THead cols={WALLET_COLS} labels={['Date', 'Type', 'Amount', 'Description']} />
+                  <TBody>
+                    {walletHistory.map((item, index) => (
+                      <Row key={item._id} last={index === walletHistory.length - 1}>
+                        <Cell width={WALLET_COLS[0]}>{item.createdAt ? new Date(item.createdAt).toLocaleString('en-IN') : 'N/A'}</Cell>
+                        <Cell width={WALLET_COLS[1]}>{toTitleCase(String(item.type || '').replace(/_/g, ' ')) || 'N/A'}</Cell>
+                        <Cell width={WALLET_COLS[2]} align="right">
+                          <Span className={`text-sm font-semibold ${Number(item.amount || 0) < 0 ? 'text-red-600' : 'text-green-700'}`}>
+                            ₹ {Math.abs(Number(item.amount || 0))}
+                          </Span>
+                        </Cell>
+                        <Cell width={WALLET_COLS[3]}>{item.description || '-'}</Cell>
+                      </Row>
+                    ))}
+                  </TBody>
+                </DataTable>
+              )}
             </Div>
           )}
 
-          {activeTab === 'Withdrawal History' && (
-            <Div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <Div>
-                <Table cols={[170, 170, 140, 150, 120, 90]} className="w-full text-left">
-                  <Thead>
-                    <Tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
-                      <Th className="px-6 py-3">Date</Th>
-                      <Th className="px-4 py-3">Name</Th>
-                      <Th className="px-4 py-3">Mobile Number</Th>
-                      <Th className="px-4 py-3">Requested Amount</Th>
-                      <Th className="px-4 py-3">Status</Th>
-                      <Th className="px-4 py-3">Action</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody className="divide-y divide-gray-100 text-sm text-gray-700">
-                    {withdrawals.length === 0 ? (
-                      <Tr>
-                        <Td colSpan="6" className="px-6 py-12 text-center text-gray-400">
-                          No data found.
-                        </Td>
-                      </Tr>
-                    ) : (
-                      withdrawals.map((item) => (
-                        <Tr key={item._id}>
-                          <Td className="px-6 py-3">{item.date ? new Date(item.date).toLocaleString('en-IN') : 'N/A'}</Td>
-                          <Td className="px-4 py-3">{item.name}</Td>
-                          <Td className="px-4 py-3">{item.mobile}</Td>
-                          <Td className="px-4 py-3">₹ {item.requested_amount}</Td>
-                          <Td className="px-4 py-3 capitalize">{item.status}</Td>
-                          <Td className="px-4 py-3">-</Td>
-                        </Tr>
-                      ))
-                    )}
-                  </Tbody>
-                </Table>
-              </Div>
-            </Div>
-          )}
+          {activeTab === 'Withdrawal History' &&
+            (withdrawals.length === 0 ? (
+              <EmptyState title="No withdrawal requests" message="Withdrawal requests raised by this driver will appear here." />
+            ) : (
+              <DataTable cols={WITHDRAWAL_COLS}>
+                <THead cols={WITHDRAWAL_COLS} labels={['Date', 'Name', 'Mobile', 'Requested amount', 'Status', 'Action']} />
+                <TBody>
+                  {withdrawals.map((item, index) => (
+                    <Row key={item._id} last={index === withdrawals.length - 1}>
+                      <Cell width={WITHDRAWAL_COLS[0]}>{item.date ? new Date(item.date).toLocaleString('en-IN') : 'N/A'}</Cell>
+                      <Cell width={WITHDRAWAL_COLS[1]}>{item.name}</Cell>
+                      <Cell width={WITHDRAWAL_COLS[2]}>{item.mobile}</Cell>
+                      <Cell width={WITHDRAWAL_COLS[3]} align="right">{`₹ ${item.requested_amount}`}</Cell>
+                      <Cell width={WITHDRAWAL_COLS[4]}>
+                        <StatusBadge status={item.status} label={toTitleCase(item.status)} />
+                      </Cell>
+                      <Cell width={WITHDRAWAL_COLS[5]}>-</Cell>
+                    </Row>
+                  ))}
+                </TBody>
+              </DataTable>
+            ))}
 
-          {activeTab === 'Review History' && (
-            <Div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-500">No reviews found.</Div>
-          )}
+          {activeTab === 'Review History' && <EmptyState title="No reviews yet" message="Rider reviews for this driver will be listed here." />}
 
           {activeTab === 'Documents' && (
-            <Div className="space-y-6">
-              <Div className="bg-white rounded-xl border border-gray-200 p-6">
-                <Div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <Div>
-                    <H3 className="text-base text-gray-900 font-bold">Vehicle Onboarding Details</H3>
-                    <P className="mt-1 text-sm text-gray-500">These values mirror the fields collected from the driver on the vehicle setup step.</P>
-                  </Div>
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      navigate(`/taxi/admin/drivers/edit/${id}`, {
-                        state: {
-                          from: location.pathname + location.search,
-                        },
-                      })
-                    }
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                  >
-                    <UiIcon as={PencilLine} size={15} />
-                    Edit Driver Fields
-                  </Button>
-                </Div>
-
-                <Div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Div>
+              <Card className="mb-4">
+                <SectionTitle
+                  action={
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/taxi/admin/drivers/edit/${id}`, {
+                          state: {
+                            from: location.pathname + location.search,
+                          },
+                        })
+                      }
+                      className={BTN_SECONDARY}
+                    >
+                      <UiIcon as={PencilLine} size={15} className="text-slate-700" />
+                      <Span className={BTN_TEXT_SECONDARY}>Edit fields</Span>
+                    </Button>
+                  }
+                >
+                  Vehicle onboarding details
+                </SectionTitle>
+                <P className="text-sm text-slate-500 mb-3">These values mirror the fields collected from the driver on the vehicle setup step.</P>
+                <Div className={tablet ? 'flex-row flex-wrap -mx-1.5' : 'gap-3'}>
                   {vehicleFieldSummary.map((item) => (
-                    <Div key={item.label} className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
-                      <P className="text-xs font-semibold uppercase tracking-wide text-gray-500">{item.label}</P>
-                      <P className="mt-2 text-sm font-semibold text-gray-900">{item.value || 'Not set'}</P>
+                    <Div key={item.label} className={tablet ? 'w-1/2 px-1.5 mb-3' : 'w-full'}>
+                      <Div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">{item.label}</P>
+                        <P className="mt-1.5 text-sm font-medium text-slate-900">{item.value || 'Not set'}</P>
+                      </Div>
                     </Div>
                   ))}
                 </Div>
-              </Div>
+              </Card>
 
-              <Div className="space-y-4">
-                {documents.length === 0 ? (
-                  <Div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">No documents found.</Div>
-                ) : (
-                  documents.map((doc, idx) => (
-                    <Div key={`${doc.name}-${idx}`} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                      {/* Header */}
-                      <Div className="px-5 py-3 border-b border-gray-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-3">
-                        <Div className="flex items-center gap-3">
-                          <H4 className="text-sm font-semibold text-gray-900">{toTitleCase(doc.verificationLabel || doc.name)}</H4>
-                          <Span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${String(doc.status || '').toLowerCase() === 'approved' ? 'bg-emerald-50 text-emerald-700' : String(doc.status || '').toLowerCase() === 'rejected' || String(doc.status || '').toLowerCase() === 'declined' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}`}
-                          >
-                            {String(doc.status || '').toLowerCase() === 'approved' && <UiIcon as={CheckCircle2} size={12} />}
-                            {toTitleCase(doc.status || 'Pending')}
-                          </Span>
-                        </Div>
+              {documents.length === 0 ? (
+                <EmptyState title="No documents uploaded" message="This driver has not uploaded any KYC documents yet." />
+              ) : (
+                <Div className="gap-4">
+                  {documents.map((doc, idx) => (
+                    <Card key={`${doc.name}-${idx}`} className="gap-3">
+                      <Div className="flex-row flex-wrap items-center gap-2">
+                        <Span className="text-base font-semibold text-slate-900 flex-1">{toTitleCase(doc.verificationLabel || doc.name)}</Span>
+                        <StatusBadge
+                          status={doc.status || 'pending'}
+                          label={toTitleCase(doc.status || 'Pending')}
+                          icon={String(doc.status || '').toLowerCase() === 'approved' ? CheckCircle2 : undefined}
+                        />
                       </Div>
 
-                      {/* Content Grid */}
-                      <Div className="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {/* Column 1: Document Details */}
-                        <Div>
-                          <H5 className="text-sm font-semibold text-gray-900 mb-4">Document details</H5>
-                          <Div className="space-y-3">
-                            <Div className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                              <Span className="text-gray-500 font-medium">Identify number</Span>
-                              <Span className="font-semibold text-gray-900">{doc.identify_number || '-'}</Span>
+                      <Div className={tablet ? 'flex-row flex-wrap -mx-1.5' : 'gap-4'}>
+                        <Div className={tablet ? 'w-1/2 px-1.5 mb-4' : 'w-full'}>
+                          <P className="text-sm font-semibold text-slate-900 mb-2">Document details</P>
+                          <Div className="gap-2">
+                            <Div className="flex-row justify-between gap-3 border-b border-slate-100 pb-2">
+                              <Span className="text-sm text-slate-500">Identify number</Span>
+                              <Span className="text-sm font-medium text-slate-900">{doc.identify_number || '-'}</Span>
                             </Div>
-                            <Div className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                              <Span className="text-gray-500 font-medium">Expiry date</Span>
-                              <Span className="font-semibold text-gray-900">{doc.expiry_date || '-'}</Span>
+                            <Div className="flex-row justify-between gap-3 border-b border-slate-100 pb-2">
+                              <Span className="text-sm text-slate-500">Expiry date</Span>
+                              <Span className="text-sm font-medium text-slate-900">{doc.expiry_date || '-'}</Span>
                             </Div>
-                            {doc.isReuploaded && (
-                              <Div className="mt-2 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">Re-uploaded for review</Div>
-                            )}
+                            {doc.isReuploaded && <StatusBadge tone="info" label="Re-uploaded for review" />}
 
-                            {/* API Verification Message Compact */}
                             {doc.providerMessage && (
-                              <Div className="mt-4 flex items-start gap-2">
-                                <UiIcon as={CheckCircle2} size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-                                <Div>
-                                  <P className="text-sm font-semibold text-gray-900">{doc.providerMessage}</P>
-                                  {doc.verifiedAt && <P className="text-xs text-gray-500">Checked: {formatDateTime(doc.verifiedAt)}</P>}
+                              <Div className="mt-2 flex-row items-start gap-2">
+                                <UiIcon as={CheckCircle2} size={16} className="text-green-700 mt-0.5" />
+                                <Div className="flex-1">
+                                  <P className="text-sm font-medium text-slate-900">{doc.providerMessage}</P>
+                                  {doc.verifiedAt && <P className="text-xs text-slate-500 mt-0.5">Checked: {formatDateTime(doc.verifiedAt)}</P>}
                                 </Div>
                               </Div>
                             )}
 
-                            {/* Compact Rejection/Comment */}
                             {['rejected', 'declined'].includes(String(doc.status || '').toLowerCase()) && doc.comment && (
-                              <Div className="mt-4 flex items-start gap-2">
-                                <Div className="text-xs text-rose-600 font-medium">
-                                  <Span className="font-semibold">Rejection reason:</Span> {doc.comment}
-                                </Div>
-                              </Div>
+                              <P className="mt-2 text-sm text-red-600">Rejection reason: {doc.comment}</P>
                             )}
                             {!['rejected', 'declined'].includes(String(doc.status || '').toLowerCase()) && doc.comment && (
-                              <Div className="mt-4 flex items-start gap-2">
-                                <Div className="text-xs text-gray-600 font-medium">
-                                  <Span className="font-semibold">Comment:</Span> {doc.comment}
-                                </Div>
-                              </Div>
+                              <P className="mt-2 text-sm text-slate-700">Comment: {doc.comment}</P>
                             )}
                           </Div>
                         </Div>
 
-                        {/* Column 2: Verification Data */}
-                        <Div>
-                          <H5 className="text-sm font-semibold text-gray-900 mb-4">Verification details</H5>
-                          <Div className="space-y-3">
+                        <Div className={tablet ? 'w-1/2 px-1.5 mb-4' : 'w-full'}>
+                          <P className="text-sm font-semibold text-slate-900 mb-2">Verification details</P>
+                          <Div className="gap-2">
                             {doc.verificationFacts?.map((fact) => (
-                              <Div key={`${doc.sourceKey}-${fact.label}`} className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                                <Span className="text-gray-500 font-medium pr-4">{toSentenceCase(fact.label)}</Span>
-                                <Span className="font-semibold text-gray-900 text-right">{toTitleCase(toDisplayValue(fact.value)) || '-'}</Span>
+                              <Div key={`${doc.sourceKey}-${fact.label}`} className="flex-row justify-between gap-3 border-b border-slate-100 pb-2">
+                                <Span className="text-sm text-slate-500 flex-1">{toSentenceCase(fact.label)}</Span>
+                                <Span className="text-sm font-medium text-slate-900 text-right flex-1">{toTitleCase(toDisplayValue(fact.value)) || '-'}</Span>
                               </Div>
                             ))}
                             {doc.rcChecks?.map((check) => (
-                              <Div key={`${doc.sourceKey}-${check.label}`} className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                                <Span className="text-gray-500 font-medium pr-4">{toSentenceCase(check.label)}</Span>
-                                <Span className="font-semibold text-gray-900 text-right">{toTitleCase(toDisplayValue(check.value)) || '-'}</Span>
+                              <Div key={`${doc.sourceKey}-${check.label}`} className="flex-row justify-between gap-3 border-b border-slate-100 pb-2">
+                                <Span className="text-sm text-slate-500 flex-1">{toSentenceCase(check.label)}</Span>
+                                <Span className="text-sm font-medium text-slate-900 text-right flex-1">{toTitleCase(toDisplayValue(check.value)) || '-'}</Span>
                               </Div>
                             ))}
                             {doc.verificationReferenceId && (
-                              <Div className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                                <Span className="text-gray-500 font-medium pr-4">Verification reference</Span>
-                                <Span className="font-semibold text-gray-900 text-right">{doc.verificationReferenceId}</Span>
+                              <Div className="flex-row justify-between gap-3 border-b border-slate-100 pb-2">
+                                <Span className="text-sm text-slate-500 flex-1">Verification reference</Span>
+                                <Span className="text-sm font-medium text-slate-900 text-right flex-1">{doc.verificationReferenceId}</Span>
                               </Div>
                             )}
                             {!doc.verificationFacts?.length && !doc.rcChecks?.length && !doc.verificationReferenceId && (
-                              <Div className="text-sm text-gray-400 py-2">No verification data available</Div>
+                              <P className="text-sm text-slate-400">No verification data available</P>
                             )}
                           </Div>
                         </Div>
 
-                        {/* Column 3: Activity & Actions */}
-                        <Div className="flex flex-col justify-between">
-                          <Div>
-                            <H5 className="text-sm font-semibold text-gray-900 mb-4">Activity</H5>
-                            <Div className="space-y-4">
-                              {doc.uploadedAt && (
-                                <Div className="flex gap-3 text-sm">
-                                  <Div className="flex flex-col items-center">
-                                    <Div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5"></Div>
-                                    <Div className="w-px h-full bg-gray-200 mt-1"></Div>
-                                  </Div>
-                                  <Div className="pb-1">
-                                    <P className="font-semibold text-gray-900">Uploaded</P>
-                                    <P className="text-xs text-gray-500">{formatDateTime(doc.uploadedAt)}</P>
-                                  </Div>
-                                </Div>
-                              )}
-                              {doc.verifiedAt && (
-                                <Div className="flex gap-3 text-sm">
-                                  <Div className="flex flex-col items-center">
-                                    <Div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5"></Div>
-                                    <Div className="w-px h-full bg-gray-200 mt-1"></Div>
-                                  </Div>
-                                  <Div className="pb-1">
-                                    <P className="font-semibold text-gray-900">API Verified</P>
-                                    <P className="text-xs text-gray-500">{formatDateTime(doc.verifiedAt)}</P>
-                                  </Div>
-                                </Div>
-                              )}
-                              {doc.reviewedAt && (
-                                <Div className="flex gap-3 text-sm">
-                                  <Div className="flex flex-col items-center">
-                                    <Div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5"></Div>
-                                  </Div>
-                                  <Div>
-                                    <P className="font-semibold text-gray-900">Reviewed</P>
-                                    <P className="text-xs text-gray-500">{formatDateTime(doc.reviewedAt)}</P>
-                                  </Div>
-                                </Div>
-                              )}
-                              {!doc.uploadedAt && !doc.verifiedAt && !doc.reviewedAt && <P className="text-xs text-gray-400">No activity logged.</P>}
-                            </Div>
+                        <Div className={tablet ? 'w-full px-1.5' : 'w-full'}>
+                          <P className="text-sm font-semibold text-slate-900 mb-2">Activity</P>
+                          <Div className="gap-2">
+                            {doc.uploadedAt && (
+                              <Div className="flex-row items-center gap-2">
+                                <Div className="w-2 h-2 rounded-full bg-green-700" />
+                                <Span className="text-sm font-medium text-slate-900">Uploaded</Span>
+                                <Span className="text-xs text-slate-500">{formatDateTime(doc.uploadedAt)}</Span>
+                              </Div>
+                            )}
+                            {doc.verifiedAt && (
+                              <Div className="flex-row items-center gap-2">
+                                <Div className="w-2 h-2 rounded-full bg-green-700" />
+                                <Span className="text-sm font-medium text-slate-900">API verified</Span>
+                                <Span className="text-xs text-slate-500">{formatDateTime(doc.verifiedAt)}</Span>
+                              </Div>
+                            )}
+                            {doc.reviewedAt && (
+                              <Div className="flex-row items-center gap-2">
+                                <Div className="w-2 h-2 rounded-full bg-green-700" />
+                                <Span className="text-sm font-medium text-slate-900">Reviewed</Span>
+                                <Span className="text-xs text-slate-500">{formatDateTime(doc.reviewedAt)}</Span>
+                              </Div>
+                            )}
+                            {!doc.uploadedAt && !doc.verifiedAt && !doc.reviewedAt && <P className="text-sm text-slate-400">No activity logged.</P>}
                           </Div>
 
-                          <Div className="mt-6 pt-4 border-t border-gray-100 flex gap-2 w-full">
+                          <Div className="mt-4 pt-3 border-t border-slate-100 flex-row flex-wrap gap-2">
                             <Button
                               type="button"
                               onClick={() => doc.images?.length && window.open(doc.images[0], '_blank', 'noopener,noreferrer')}
                               disabled={!doc.images?.length}
-                              className="flex-1 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                              className={`${BTN_SECONDARY} flex-1 ${!doc.images?.length ? 'opacity-50' : ''}`}
                             >
-                              View doc
+                              <UiIcon as={Eye} size={15} className="text-slate-700" />
+                              <Span className={BTN_TEXT_SECONDARY}>View doc</Span>
                             </Button>
                             <Button
                               type="button"
@@ -1214,9 +1100,11 @@ const DriverDetails = () => {
                                 }
                               }}
                               disabled={documentActionKey.length > 0 || !doc.images?.length || String(doc.status || '').toLowerCase() === 'approved'}
-                              className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors text-center ${documentActionKey === `${doc.sourceKey}:approve` ? 'bg-emerald-100 text-emerald-500' : !doc.images?.length || String(doc.status || '').toLowerCase() === 'approved' || documentActionKey.length > 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'}`}
+                              className={`${BTN_SECONDARY} flex-1 ${documentActionKey.length > 0 || !doc.images?.length || String(doc.status || '').toLowerCase() === 'approved' ? 'opacity-50' : ''}`}
                             >
-                              Approve
+                              <Span className="text-sm font-semibold text-green-700">
+                                {documentActionKey === `${doc.sourceKey}:approve` ? 'Approving…' : 'Approve'}
+                              </Span>
                             </Button>
                             <Button
                               type="button"
@@ -1278,168 +1166,148 @@ const DriverDetails = () => {
                               disabled={
                                 documentActionKey.length > 0 || !doc.images?.length || ['rejected', 'declined'].includes(String(doc.status || '').toLowerCase())
                               }
-                              className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors text-center ${documentActionKey === `${doc.sourceKey}:reject` ? 'bg-rose-100 text-rose-500' : !doc.images?.length || ['rejected', 'declined'].includes(String(doc.status || '').toLowerCase()) || documentActionKey.length > 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'text-rose-700 bg-rose-50 hover:bg-rose-100'}`}
+                              className={`${BTN_SECONDARY} flex-1 ${documentActionKey.length > 0 || !doc.images?.length || ['rejected', 'declined'].includes(String(doc.status || '').toLowerCase()) ? 'opacity-50' : ''}`}
                             >
-                              Decline
+                              <Span className="text-sm font-semibold text-red-600">{documentActionKey === `${doc.sourceKey}:reject` ? 'Declining…' : 'Decline'}</Span>
                             </Button>
                           </Div>
                         </Div>
                       </Div>
-                    </Div>
-                  ))
-                )}
-              </Div>
+                    </Card>
+                  ))}
+                </Div>
+              )}
             </Div>
           )}
         </>
       ) : (
         <>
-          <Div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
-            <H3 className="text-sm text-gray-900 mb-3 font-bold">Wallet Overview</H3>
-            <Div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Wallet Balance</P>
-                <P className="text-xl font-bold text-gray-900 mt-1">₹ {wallet.balance || 0}</P>
-              </Div>
-              <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Cash Limit</P>
-                <P className="text-xl font-bold text-gray-900 mt-1">₹ {wallet.cash_limit || 0}</P>
-              </Div>
-              <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Total Credited</P>
-                <P className="text-xl font-bold text-gray-900 mt-1">₹ {wallet.total_credits || 0}</P>
-              </Div>
-              <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Total Debited</P>
-                <P className="text-xl font-bold text-gray-900 mt-1">₹ {wallet.total_debits || 0}</P>
-              </Div>
-              <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Wallet Status</P>
-                <P className={`text-xl font-bold mt-1 ${wallet.is_blocked ? 'text-red-600' : 'text-green-600'}`}>{wallet.is_blocked ? 'Blocked' : 'Active'}</P>
-              </Div>
-            </Div>
-          </Div>
+          <SectionTitle>Wallet overview</SectionTitle>
+          <StatGrid className="mb-4">
+            <StatCard label="Wallet balance" value={`₹ ${wallet.balance || 0}`} tone="info" />
+            <StatCard label="Cash limit" value={`₹ ${wallet.cash_limit || 0}`} tone="neutral" />
+            <StatCard label="Total credited" value={`₹ ${wallet.total_credits || 0}`} tone="success" />
+            <StatCard label="Total debited" value={`₹ ${wallet.total_debits || 0}`} tone="danger" />
+            <StatCard label="Wallet status" value={wallet.is_blocked ? 'Blocked' : 'Active'} tone={wallet.is_blocked ? 'danger' : 'success'} />
+          </StatGrid>
 
-          <Div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <Div className="bg-white rounded-xl border border-gray-200 p-6">
-              <H3 className="text-base text-gray-900 mb-4 font-bold">Driver Location</H3>
-              <Div className="h-80 rounded-xl overflow-hidden border border-gray-100">
+          <Div className={`gap-4 mb-4 ${tablet ? 'flex-row items-start' : 'flex-col'}`}>
+            <Card className={tablet ? 'flex-1' : ''}>
+              <SectionTitle>Driver location</SectionTitle>
+              <Div className="h-72 rounded-lg overflow-hidden border border-slate-200">
                 {loadError ? (
-                  <Div className="h-full flex items-center justify-center text-sm text-gray-500 bg-gray-50">Map unavailable.</Div>
+                  <Div className="h-full items-center justify-center bg-slate-50">
+                    <P className="text-sm text-slate-500">Map unavailable.</P>
+                  </Div>
                 ) : !profile?.location ? (
-                  <Div className="h-full flex items-center justify-center text-sm text-gray-500 bg-gray-50">Live driver location is not available yet.</Div>
+                  <Div className="h-full items-center justify-center bg-slate-50 px-4">
+                    <P className="text-sm text-slate-500 text-center">Live driver location is not available yet.</P>
+                  </Div>
                 ) : shouldLoadMap && HAS_VALID_GOOGLE_MAPS_KEY && isLoaded ? (
-                  <GMap
-                    className="w-full h-full"
-                    initialRegion={{ ...toLatLng(mapCenter), latitudeDelta: 0.05, longitudeDelta: 0.05 }}
-                    zoomControlEnabled
-                  >
+                  <GMap className="w-full h-full" initialRegion={{ ...toLatLng(mapCenter), latitudeDelta: 0.05, longitudeDelta: 0.05 }} zoomControlEnabled>
                     <Marker coordinate={toLatLng(mapCenter)} image={vehicleMarkerIcon} anchor={{ x: 0.5, y: 0.5 }} />
                   </GMap>
                 ) : (
-                  <Div className="h-full flex items-center justify-center text-sm text-gray-500 bg-gray-50">
-                    {HAS_VALID_GOOGLE_MAPS_KEY ? 'Loading map...' : 'Configure `VITE_GOOGLE_MAPS_API_KEY` to show map.'}
+                  <Div className="h-full items-center justify-center bg-slate-50 px-4">
+                    <P className="text-sm text-slate-500 text-center">
+                      {HAS_VALID_GOOGLE_MAPS_KEY ? 'Loading map…' : 'Configure `VITE_GOOGLE_MAPS_API_KEY` to show map.'}
+                    </P>
                   </Div>
                 )}
               </Div>
-              <Div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
-                <Span>{profile?.vehicle?.type || 'Vehicle'} marker</Span>
+              <Div className="mt-3 flex-row flex-wrap items-center justify-between gap-2">
+                <Span className="text-xs text-slate-500">{profile?.vehicle?.type || 'Vehicle'} marker</Span>
                 {profile?.location ? (
-                  <Span>
+                  <Span className="text-xs text-slate-500">
                     {Number(profile.location.lat).toFixed(4)}, {Number(profile.location.lng).toFixed(4)}
                   </Span>
                 ) : null}
               </Div>
-            </Div>
+            </Card>
 
-            <Div className="bg-white rounded-xl border border-gray-200 p-6">
-              <H3 className="text-base text-gray-900 mb-4 font-bold">Earnings</H3>
-              <Div className="h-52 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4">
-                <Div className="relative h-full">
-                  <ChartGrid height={170} />
-                  <Svg viewBox="0 0 400 170" width="100%" height="100%" style={CHART_OVERLAY_STYLE}>
-                    <SvgPolyline fill="none" stroke="#10b981" strokeWidth="2.5" points={buildLinePoints(chart.earnings || [], 400, 170)} />
+            <Card className={tablet ? 'flex-1' : ''}>
+              <SectionTitle>Earnings</SectionTitle>
+              <Div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <Div className="h-44">
+                  <ChartGrid height={170} width={chartWidth} />
+                  <Svg viewBox="0 0 400 170" width={chartWidth} height="100%" style={CHART_OVERLAY_STYLE}>
+                    <SvgPolyline fill="none" stroke="#008236" strokeWidth="2.5" points={buildLinePoints(chart.earnings || [], 400, 170)} />
                   </Svg>
                 </Div>
-                <Div className="mt-3 grid grid-cols-4 text-xs text-gray-400">
+                <Div className="mt-3 flex-row justify-between">
                   {(chart.months || []).map((m) => (
-                    <Span key={m} className="text-center">
+                    <Span key={m} className="text-xs text-slate-500">
                       {m}
                     </Span>
                   ))}
                 </Div>
               </Div>
-              <Div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-                <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Today Earnings</P>
-                  <P className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.today_earnings || 0}</P>
-                </Div>
-                <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Admin Commission</P>
-                  <P className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.admin_commission || 0}</P>
-                </Div>
-                <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Drivers Earnings</P>
-                  <P className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.driver_earnings || 0}</P>
-                </Div>
-                <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">By Cash</P>
-                  <P className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.by_cash || 0}</P>
-                </Div>
-                <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">By Wallet</P>
-                  <P className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.by_wallet || 0}</P>
-                </Div>
-                <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">By Card/Online</P>
-                  <P className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.by_card || 0}</P>
+              <Div className="gap-3 mt-4">
+                <Div className="flex-row flex-wrap -mx-1.5">
+                  {[
+                    { label: 'Today earnings', value: earnings.today_earnings || 0 },
+                    { label: 'Admin commission', value: earnings.admin_commission || 0 },
+                    { label: 'Drivers earnings', value: earnings.driver_earnings || 0 },
+                    { label: 'By cash', value: earnings.by_cash || 0 },
+                    { label: 'By wallet', value: earnings.by_wallet || 0 },
+                    { label: 'By card / online', value: earnings.by_card || 0 },
+                  ].map((item) => (
+                    <Div key={item.label} className="w-1/2 px-1.5 mb-3">
+                      <Div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <P className="text-xs font-semibold uppercase tracking-wide text-slate-500" numberOfLines={2}>
+                          {item.label}
+                        </P>
+                        <P className="text-base font-semibold text-slate-900 mt-1">₹ {item.value}</P>
+                      </Div>
+                    </Div>
+                  ))}
                 </Div>
               </Div>
-            </Div>
+            </Card>
           </Div>
 
-          <Div className="bg-white rounded-xl border border-gray-200 p-6">
-            <H3 className="text-base text-gray-900 mb-4 font-bold">Trips</H3>
-            <Div className="h-52 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4">
-              <Div className="relative h-full">
-                <ChartGrid height={170} />
-                <Svg viewBox="0 0 400 170" width="100%" height="100%" style={CHART_OVERLAY_STYLE}>
-                  <SvgPolyline fill="none" stroke="#10b981" strokeWidth="2.5" points={buildLinePoints(chart.trips?.completed || [], 400, 170)} />
-                  <SvgPolyline fill="none" stroke="#f97316" strokeWidth="2.5" points={buildLinePoints(chart.trips?.cancelled || [], 400, 170)} />
+          <Card>
+            <SectionTitle>Trips</SectionTitle>
+            <Div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <Div className="h-44">
+                <ChartGrid height={170} width={chartWidth} />
+                <Svg viewBox="0 0 400 170" width={chartWidth} height="100%" style={CHART_OVERLAY_STYLE}>
+                  <SvgPolyline fill="none" stroke="#008236" strokeWidth="2.5" points={buildLinePoints(chart.trips?.completed || [], 400, 170)} />
+                  <SvgPolyline fill="none" stroke="#BB4D00" strokeWidth="2.5" points={buildLinePoints(chart.trips?.cancelled || [], 400, 170)} />
                 </Svg>
               </Div>
-              <Div className="mt-3 grid grid-cols-4 text-xs text-gray-400">
+              <Div className="mt-3 flex-row justify-between">
                 {(chart.months || []).map((m) => (
-                  <Span key={m} className="text-center">
+                  <Span key={m} className="text-xs text-slate-500">
                     {m}
                   </Span>
                 ))}
               </Div>
-              <Div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                <Span className="flex items-center gap-1">
-                  <Span className="w-2 h-2 rounded-full bg-emerald-500"></Span>
-                  Completed
-                </Span>
-                <Span className="flex items-center gap-1">
-                  <Span className="w-2 h-2 rounded-full bg-orange-500"></Span>
-                  Cancelled
-                </Span>
+              <Div className="mt-3 flex-row items-center gap-4">
+                <Div className="flex-row items-center gap-1.5">
+                  <Div className="w-2 h-2 rounded-full bg-green-700" />
+                  <Span className="text-xs text-slate-500">Completed</Span>
+                </Div>
+                <Div className="flex-row items-center gap-1.5">
+                  <Div className="w-2 h-2 rounded-full bg-amber-700" />
+                  <Span className="text-xs text-slate-500">Cancelled</Span>
+                </Div>
               </Div>
             </Div>
-            <Div className="grid grid-cols-2 gap-3 mt-4">
-              <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Completed Trips</P>
-                <P className="text-lg font-bold text-gray-900 mt-1">{stats.completed_trips || 0}</P>
+            <Div className="flex-row gap-3 mt-4">
+              <Div className="flex-1 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">Completed trips</P>
+                <P className="text-base font-semibold text-slate-900 mt-1">{stats.completed_trips || 0}</P>
               </Div>
-              <Div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <P className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Cancelled Trips</P>
-                <P className="text-lg font-bold text-gray-900 mt-1">{stats.cancelled_trips || 0}</P>
+              <Div className="flex-1 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">Cancelled trips</P>
+                <P className="text-base font-semibold text-slate-900 mt-1">{stats.cancelled_trips || 0}</P>
               </Div>
             </Div>
-          </Div>
+          </Card>
         </>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default DriverDetails;
@@ -1455,10 +1323,10 @@ const buildLinePoints = (values, width, height, padding = 16) => {
     })
     .join(' ');
 };
-const ChartGrid = ({ height = 180 }) => (
-  <Svg viewBox={`0 0 400 ${height}`} width="100%" height="100%">
+const ChartGrid = ({ height = 180, width = '100%' }) => (
+  <Svg viewBox={`0 0 400 ${height}`} width={width} height="100%">
     {[0, 1, 2, 3].map((i) => (
-      <Line key={i} x1="24" x2="376" y1={24 + i * ((height - 48) / 3)} y2={24 + i * ((height - 48) / 3)} stroke="#e5e7eb" strokeDasharray="4 4" />
+      <Line key={i} x1="24" x2="376" y1={24 + i * ((height - 48) / 3)} y2={24 + i * ((height - 48) / 3)} stroke="#E2E8F0" strokeDasharray="4 4" />
     ))}
   </Svg>
 );

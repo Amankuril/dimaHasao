@@ -28,7 +28,6 @@ import {
   Search,
   LogOut,
   X,
-  DollarSign,
   Star,
   Tag,
   FileText,
@@ -44,6 +43,7 @@ import adminService from '../../../services/adminService';
 import AdminModuleSwitcher from '../../../../admin/AdminModuleSwitcher';
 import { clearModuleAuth } from '../../../../admin/session';
 import { HOTEL_BRAND_LOGO, logoFallback } from '../../../../admin/brandLogo';
+import { StatusBadge } from '../../../../admin/ui';
 import { Aside, Button, Div, H1, H2, H3, Header, Img, Input, Main, NavLink, Overlay, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
 const HOTEL_ADMIN_BASE = '/hotel/admin';
 const MENU_ITEMS = [
@@ -178,30 +178,42 @@ const AdminLayout = () => {
     return MENU_ITEMS.filter((item) => item.label.toLowerCase().includes(query));
   }, [menuQuery]);
   return (
-    <Div className="flex-1 flex-col bg-neutral-200 font-sans text-gray-900">
+    <Div className="flex-1 flex-col bg-slate-50">
       {/* Main Content Area */}
       <Div className="flex-1 flex flex-col min-w-0">
-        <Header className="bg-white border-b border-gray-200 shadow-sm z-10" style={{ paddingTop: insets.top }}>
+        <Header className="bg-white border-b border-slate-200 z-10" style={{ paddingTop: insets.top }}>
           <Div className="h-16 flex flex-row items-center justify-between px-4">
             <Div className="flex flex-row items-center gap-3 flex-1">
-              <Button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 rounded-lg text-gray-700" accessibilityLabel="Open menu">
-                <UiIcon as={Menu} size={22} />
+              <Button
+                onClick={() => setIsSidebarOpen(true)}
+                className="w-11 h-11 -ml-2 rounded-lg items-center justify-center"
+                accessibilityLabel="Open menu"
+              >
+                <UiIcon as={Menu} size={22} className="text-slate-700" />
               </Button>
-              <H1 className="text-xl font-bold text-gray-800">Hotel Admin</H1>
+              <H1 className="text-xl font-bold text-slate-900 flex-1" numberOfLines={1}>
+                Hotel Admin
+              </H1>
             </Div>
 
             <Div className="flex flex-row items-center gap-4">
-              <Button onClick={() => setIsNotifOpen(!isNotifOpen)} className="relative p-2 rounded-full text-gray-600">
-                <UiIcon as={Bell} size={20} />
-                {unreadCount > 0 && <Span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></Span>}
+              <Button
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className="relative w-11 h-11 rounded-full items-center justify-center"
+                accessibilityLabel={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+              >
+                <UiIcon as={Bell} size={20} className="text-slate-600" />
+                {unreadCount > 0 ? <Span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-white" /> : null}
               </Button>
 
-              <Div className="h-8 w-8 rounded-full bg-neutral-950 text-white flex items-center justify-center font-bold text-sm">A</Div>
+              <Div className="h-9 w-9 rounded-full bg-neutral-950 items-center justify-center">
+                <Span className="text-sm font-bold text-white">A</Span>
+              </Div>
             </Div>
           </Div>
         </Header>
 
-        <Main className="flex-1 px-4 pt-4 bg-gray-50/50">
+        <Main className="flex-1 bg-slate-50">
           <Outlet />
         </Main>
       </Div>
@@ -223,32 +235,32 @@ const AdminLayout = () => {
                 opacity: 0,
                 y: 10,
               }}
-              className="absolute right-4 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+              className="absolute right-4 w-80 max-w-[92%] bg-white rounded-xl border border-slate-200 overflow-hidden z-50"
               style={{ top: insets.top + 60 }}
             >
               <Div onClick={() => {}} className="bg-white">
-                <Div className="p-3 border-b flex flex-row justify-between items-center bg-gray-50/50">
-                  <H3 className="font-bold text-sm text-gray-800">Notifications</H3>
-                  {unreadCount > 0 && <Span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">{unreadCount} New</Span>}
+                <Div className="p-3 border-b border-slate-200 flex flex-row justify-between items-center gap-2 bg-slate-50">
+                  <H3 className="text-base font-semibold text-slate-900 flex-1">Notifications</H3>
+                  {unreadCount > 0 ? <StatusBadge tone="danger" label={`${unreadCount} New`} /> : null}
                 </Div>
                 <ScrollDiv className="max-h-64">
                   {notifications.length > 0 ? (
                     notifications.slice(0, 3).map((n) => (
-                      <Div key={n._id} className={`p-3 border-b ${!n.isRead ? 'bg-blue-50/30' : ''}`}>
-                        <P className="text-sm font-semibold text-gray-800 line-clamp-1">{n.title}</P>
-                        <P className="text-xs text-gray-500 line-clamp-2 mt-0.5">{n.body}</P>
-                        <Span className="text-[10px] text-gray-400 mt-1">{new Date(n.createdAt).toLocaleDateString()}</Span>
+                      <Div key={n._id} className={`p-3 border-b border-slate-100 ${!n.isRead ? 'bg-blue-50' : ''}`}>
+                        <P numberOfLines={1} className="text-sm font-semibold text-slate-900">{n.title}</P>
+                        <P numberOfLines={2} className="text-xs text-slate-500 mt-0.5">{n.body}</P>
+                        <Span className="text-xs text-slate-400 mt-1">{new Date(n.createdAt).toLocaleDateString()}</Span>
                       </Div>
                     ))
                   ) : (
                     <Div className="p-8 items-center">
-                      <P className="text-center text-gray-400 text-sm">No notifications</P>
+                      <P className="text-center text-sm text-slate-500">No notifications yet</P>
                     </Div>
                   )}
                 </ScrollDiv>
-                <Div className="p-2 border-t bg-gray-50">
-                  <Button onClick={handleViewAll} className="w-full items-center py-1">
-                    <Span className="text-center text-xs font-bold text-black">View All Notifications</Span>
+                <Div className="p-2 border-t border-slate-200 bg-slate-50">
+                  <Button onClick={handleViewAll} className="w-full h-11 items-center justify-center rounded-lg">
+                    <Span className="text-sm font-semibold text-blue-600">View all notifications</Span>
                   </Button>
                 </Div>
               </Div>

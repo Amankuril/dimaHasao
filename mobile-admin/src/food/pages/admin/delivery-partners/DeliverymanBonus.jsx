@@ -1,31 +1,33 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/delivery-partners/DeliverymanBonus.jsx (tools/port.js first pass). */
 import { useState, useEffect } from 'react';
-import { Search, Gift, Plus, Loader2 } from 'lucide-react-native';
+import { Gift, Plus, Loader2 } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../../components/shadcn';
 import {
-  Button,
-  Div,
-  Form,
-  H1,
-  Input,
-  Label,
-  Option,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Input, Option, Select, Span, Icon as UiIcon } from '../../../../components/web';
 const formatCurrency = (amount) =>
-  `\u20B9${Number(amount || 0).toLocaleString('en-IN', {
+  `₹${Number(amount || 0).toLocaleString('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -43,6 +45,8 @@ const formatDate = (dateString) => {
     return dateString;
   }
 };
+const COLS = [60, 150, 180, 120, 200, 150];
+const LABELS = ['SI', 'Transaction ID', 'Deliveryman', 'Amount', 'Reference', 'Date'];
 export default function DeliverymanBonus() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -65,6 +69,7 @@ export default function DeliverymanBonus() {
     amount: '',
     reference: '',
   });
+  const { tablet } = useLayoutWidth();
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
     return () => clearTimeout(t);
@@ -141,156 +146,130 @@ export default function DeliverymanBonus() {
     }
   };
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-3">
-              <UiIcon as={Gift} className="w-5 h-5 text-violet-600" />
-              <Div className="flex items-center gap-2">
-                <H1 className="text-2xl font-bold text-slate-900">Deliveryman Bonus</H1>
-                <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">{loading ? '...' : totalItems}</Span>
-              </Div>
-            </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Gift}
+        title="Deliveryman Bonus"
+        subtitle={loading ? 'Loading bonus transactions…' : `${totalItems} bonus transaction${totalItems === 1 ? '' : 's'} paid to delivery partners`}
+        breadcrumb={[{ label: 'Food' }, { label: 'Delivery partners' }, { label: 'Bonus' }]}
+        actions={
+          <Button type="button" onClick={() => setIsAddOpen(true)} className={BTN_PRIMARY}>
+            <UiIcon as={Plus} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>Add Bonus</Span>
+          </Button>
+        }
+      />
 
-            <Div className="flex items-center gap-3">
-              <Div className="relative flex-1 sm:flex-initial min-w-[250px]">
-                <Input
-                  type="text"
-                  placeholder="Search by name, phone, transaction ID"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                />
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </Div>
-              <Button
-                type="button"
-                onClick={() => setIsAddOpen(true)}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-violet-600 text-white hover:bg-violet-700 flex items-center gap-2 transition-all"
-              >
-                <UiIcon as={Plus} className="w-4 h-4" />
-                Add Bonus
-              </Button>
-            </Div>
-          </Div>
-
-          <Div>
-            {loading ? (
-              <Div className="flex items-center justify-center py-20">
-                <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-violet-600" />
-              </Div>
-            ) : (
-              <Table className="w-full" cols={[60, 160, 180, 110, 200, 150]}>
-                <Thead className="bg-slate-50 border-b border-slate-200">
-                  <Tr>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Transaction ID</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Deliveryman</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Reference</Th>
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</Th>
-                  </Tr>
-                </Thead>
-                <Tbody className="bg-white divide-y divide-slate-100">
-                  {transactions.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                        No bonus transactions found
-                      </Td>
-                    </Tr>
-                  ) : (
-                    transactions.map((tx, index) => (
-                      <Tr key={tx.transactionId || tx._id || index} className="hover:bg-slate-50 transition-colors">
-                        <Td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{(currentPage - 1) * pageSize + index + 1}</Td>
-                        <Td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-700">{tx.transactionId || 'N/A'}</Td>
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Div className="flex flex-col">
-                            <Span className="text-sm font-medium text-blue-600">{tx.deliveryman || 'Unknown'}</Span>
-                            {tx.deliveryId && <Span className="text-xs text-slate-500">{tx.deliveryId}</Span>}
-                          </Div>
-                        </Td>
-                        <Td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-violet-600">{formatCurrency(tx.amount ?? tx.bonus)}</Td>
-                        <Td className="px-6 py-4 text-sm text-slate-700 max-w-xs">
-                          <Span className="text-sm text-slate-700 truncate">{tx.reference || '—'}</Span>
-                        </Td>
-                        <Td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{formatDate(tx.createdAt)}</Td>
-                      </Tr>
-                    ))
-                  )}
-                </Tbody>
-              </Table>
-            )}
-          </Div>
-
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              try {
-                localStorage.setItem('admin_deliveryman_bonus_pageSize', String(size));
-              } catch {
-                /* ignore */
-              }
-            }}
-            itemLabel="transactions"
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Input
+            type="text"
+            placeholder="Search by name, phone, transaction ID"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`${INPUT} flex-1 min-w-[200px]`}
           />
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
+
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : transactions.length === 0 ? (
+        <EmptyState
+          icon={Gift}
+          title="No bonus transactions yet"
+          message={debouncedSearch ? 'No bonus matches this search. Try a different name, phone or transaction ID.' : 'Bonuses you pay out to delivery partners are listed here.'}
+          actionLabel="Add Bonus"
+          onAction={() => setIsAddOpen(true)}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={LABELS} />
+          <TBody>
+            {transactions.map((tx, index) => (
+              <Row key={tx.transactionId || tx._id || index} last={index === transactions.length - 1}>
+                <Cell width={COLS[0]}>{String((currentPage - 1) * pageSize + index + 1)}</Cell>
+                <Cell width={COLS[1]}>{tx.transactionId || 'N/A'}</Cell>
+                <Cell width={COLS[2]}>
+                  <Div className="gap-0.5">
+                    <Span className="text-sm font-medium text-slate-900">{tx.deliveryman || 'Unknown'}</Span>
+                    {tx.deliveryId ? <Span className="text-xs text-slate-500">{tx.deliveryId}</Span> : null}
+                  </Div>
+                </Cell>
+                <Cell width={COLS[3]} align="right">
+                  <Span className="text-sm font-semibold text-slate-900">{formatCurrency(tx.amount ?? tx.bonus)}</Span>
+                </Cell>
+                <Cell width={COLS[4]}>{tx.reference || '—'}</Cell>
+                <Cell width={COLS[5]}>{formatDate(tx.createdAt)}</Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          try {
+            localStorage.setItem('admin_deliveryman_bonus_pageSize', String(size));
+          } catch {
+            /* ignore */
+          }
+        }}
+        itemLabel="transactions"
+        className="mt-3 rounded-xl border border-slate-200"
+      />
 
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-md bg-white">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UiIcon as={Gift} className="w-5 h-5 text-violet-600" />
-              Add Delivery Bonus
-            </DialogTitle>
+        <DialogContent className="max-w-md bg-white p-5 gap-4">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base font-semibold text-slate-900">Add Delivery Bonus</DialogTitle>
           </DialogHeader>
-          <Form onSubmit={handleAddBonus} className="space-y-4">
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Delivery Partner</Label>
-              <Select
-                required
-                value={form.deliveryPartnerId}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    deliveryPartnerId: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
-              >
-                <Option value="">Select delivery partner</Option>
-                {deliveryPartners.map((dp) => (
-                  <Option key={dp._id} value={dp._id}>
-                    {dp.name} {dp.phone ? `(${dp.phone})` : ''}
-                  </Option>
-                ))}
-              </Select>
+          <Form onSubmit={handleAddBonus} className="gap-4">
+            <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-4'}>
+              <Field label="Delivery Partner" required className={tablet ? 'flex-1 min-w-[220px]' : undefined}>
+                <Select
+                  required
+                  value={form.deliveryPartnerId}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      deliveryPartnerId: e.target.value,
+                    })
+                  }
+                  className={INPUT}
+                >
+                  <Option value="">Select delivery partner</Option>
+                  {deliveryPartners.map((dp) => (
+                    <Option key={dp._id} value={dp._id}>
+                      {dp.name} {dp.phone ? `(${dp.phone})` : ''}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Amount (₹)" required className={tablet ? 'flex-1 min-w-[180px]' : undefined}>
+                <Input
+                  type="number"
+                  required
+                  min="0.01"
+                  step="0.01"
+                  value={form.amount}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      amount: e.target.value,
+                    })
+                  }
+                  className={INPUT}
+                  placeholder="e.g. 500"
+                />
+              </Field>
             </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Amount (?)</Label>
-              <Input
-                type="number"
-                required
-                min="0.01"
-                step="0.01"
-                value={form.amount}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    amount: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
-                placeholder="e.g. 500"
-              />
-            </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Reference (optional)</Label>
+            <Field label="Reference" hint="Optional — shown with the transaction">
               <Input
                 type="text"
                 value={form.reference}
@@ -300,31 +279,22 @@ export default function DeliverymanBonus() {
                     reference: e.target.value,
                   })
                 }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
+                className={INPUT}
                 placeholder="e.g. Performance bonus"
               />
-            </Div>
-            <DialogFooter>
-              <Button
-                type="button"
-                onClick={() => setIsAddOpen(false)}
-                disabled={submitting}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-              >
-                Cancel
+            </Field>
+            <DialogFooter className="flex-row justify-end gap-2 mt-1">
+              <Button type="button" onClick={() => setIsAddOpen(false)} disabled={submitting} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white hover:bg-violet-700 flex items-center gap-2"
-              >
-                {submitting && <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />}
-                Add Bonus
+              <Button type="submit" disabled={submitting} className={BTN_PRIMARY}>
+                {submitting ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+                <Span className={BTN_TEXT_PRIMARY}>Add Bonus</Span>
               </Button>
             </DialogFooter>
           </Form>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

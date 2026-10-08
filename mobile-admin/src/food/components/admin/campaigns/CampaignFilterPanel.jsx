@@ -1,88 +1,81 @@
 /* Ported from Frontend/src/modules/Food/components/admin/campaigns/CampaignFilterPanel.jsx. */
 import { X } from 'lucide-react-native';
-import { Button, Div, H2, Input, Label, Overlay, ScrollDiv, Icon as UiIcon } from '../../../../components/web';
+import { Card, Field, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY } from '../../../../admin/ui';
+import { Button, Div, H2, Input, Overlay, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
 export default function CampaignFilterPanel({ isOpen, onClose, filters, setFilters, onApply, onReset }) {
   if (!isOpen) return null;
   return (
-    <Overlay className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose} onClose={onClose}>
-      <Div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <Div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <H2 className="text-xl font-bold text-slate-900">Filter Campaigns</H2>
-          <Button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <UiIcon as={X} className="w-5 h-5 text-slate-600" />
+    <Overlay className="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" onClick={onClose} onClose={onClose}>
+      <Card padded={false} className="w-full max-w-2xl max-h-[90%] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <Div className="border-b border-slate-200 px-4 py-3 flex-row items-center justify-between gap-2">
+          <H2 className="text-base font-semibold text-slate-900 flex-1">Filter Campaigns</H2>
+          <Button onClick={onClose} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Close filters">
+            <UiIcon as={X} size={18} className="text-slate-600" />
           </Button>
         </Div>
 
-        <ScrollDiv className="flex-shrink p-6 space-y-6">
+        <ScrollDiv className="flex-shrink" contentStyle={{ padding: 16, gap: 12 }}>
           {/* Status Filter */}
-          <Div>
-            <Label className="block text-sm font-semibold text-slate-700 mb-2">Status</Label>
-            <Div className="flex flex-wrap gap-2">
-              {['All', 'Active', 'Inactive'].map((status) => (
-                <Button
-                  key={status}
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      status: status === 'All' ? '' : status,
-                    }))
-                  }
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filters.status === status || (status === 'All' && !filters.status) ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                >
-                  {status}
-                </Button>
-              ))}
+          <Field label="Status">
+            <Div className="flex-row flex-wrap items-center gap-2">
+              {['All', 'Active', 'Inactive'].map((status) => {
+                const selected = filters.status === status || (status === 'All' && !filters.status);
+                return (
+                  <Button
+                    key={status}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        status: status === 'All' ? '' : status,
+                      }))
+                    }
+                    className={`px-4 h-11 rounded-lg items-center justify-center ${selected ? 'bg-blue-600' : 'bg-slate-100'}`}
+                  >
+                    <Span className={`text-sm font-semibold ${selected ? 'text-white' : 'text-slate-700'}`}>{status}</Span>
+                  </Button>
+                );
+              })}
             </Div>
-          </Div>
+          </Field>
 
           {/* Date Range */}
-          <Div className="grid grid-cols-2 gap-4">
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">From Date</Label>
-              <Input
-                type="date"
-                value={filters.fromDate || ''}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    fromDate: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">To Date</Label>
-              <Input
-                type="date"
-                value={filters.toDate || ''}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    toDate: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </Div>
-          </Div>
+          <Field label="From Date">
+            <Input
+              type="date"
+              value={filters.fromDate || ''}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  fromDate: e.target.value,
+                }))
+              }
+              className={INPUT}
+            />
+          </Field>
+          <Field label="To Date">
+            <Input
+              type="date"
+              value={filters.toDate || ''}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  toDate: e.target.value,
+                }))
+              }
+              className={INPUT}
+            />
+          </Field>
         </ScrollDiv>
 
-        <Div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3">
-          <Button
-            onClick={onReset}
-            className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-          >
-            Reset
+        <Div className="border-t border-slate-200 px-4 py-3 flex-row items-center gap-2">
+          <Button onClick={onReset} className={`${BTN_SECONDARY} flex-1`}>
+            <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
           </Button>
-          <Button
-            onClick={onApply}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
-          >
-            Apply Filters
+          <Button onClick={onApply} className={`${BTN_PRIMARY} flex-1`}>
+            <Span className={BTN_TEXT_PRIMARY}>Apply Filters</Span>
           </Button>
         </Div>
-      </Div>
+      </Card>
     </Overlay>
   );
 }

@@ -2,12 +2,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from '../../../../lib/webRouter';
 import { adminAPI } from '../../../../api/food';
-import { Input } from '../../../../components/shadcn';
-import { Button } from '../../../../components/shadcn';
 import PlacesSearchInput from './PlacesSearchInput';
-import { Label } from '../../../../components/shadcn';
 import { ArrowLeft, Loader2 } from 'lucide-react-native';
-import { Button as HButton, Div, H1, H2, Option, P, ScrollDiv, Section, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Button as HButton, Div, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { alert } from '../../../../lib/webShim';
 const debugError = (..._args) => {};
 const toNumberOrEmpty = (value) => {
@@ -259,52 +272,40 @@ export default function EditRestaurant() {
       setSavingLocation(false);
     }
   };
+  const { columns } = useLayoutWidth();
+  const subtitle = restaurant?.name || restaurant?.restaurantName || restaurantId || '';
+  const detailsCols = `grid grid-cols-${columns} gap-3`;
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-5xl mx-auto">
-        <Div className="flex items-center justify-between gap-4 mb-6">
-          <Div className="flex items-center gap-3">
-            <HButton onClick={() => navigate('/admin/food/restaurants')} className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50">
-              <UiIcon as={ArrowLeft} className="w-4 h-4 text-slate-700" />
-            </HButton>
-            <Div>
-              <H1 className="text-2xl font-bold text-slate-900">Edit Restaurant</H1>
-              <P className="text-sm text-slate-500">{restaurant?.name || restaurant?.restaurantName || restaurantId}</P>
-            </Div>
-          </Div>
-        </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        title="Edit Restaurant"
+        subtitle={subtitle}
+        breadcrumb={[{ label: 'Food' }, { label: 'Restaurants', onPress: () => navigate('/admin/food/restaurants') }, { label: 'Edit' }]}
+        actions={
+          <Button onClick={() => navigate('/admin/food/restaurants')} className={BTN_SECONDARY} accessibilityLabel="Back to restaurants list">
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-700" />
+            <Span className={BTN_TEXT_SECONDARY}>Back to list</Span>
+          </Button>
+        }
+      />
 
-        {loading ? (
-          <Div className="bg-white rounded-xl border border-slate-200 p-10 flex items-center justify-center gap-2 text-slate-600">
-            <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-            Loading...
-          </Div>
-        ) : error ? (
-          <Div className="bg-white rounded-xl border border-slate-200 p-6">
-            <P className="text-red-600 text-sm">{error}</P>
-          </Div>
-        ) : (
-          <Div className="space-y-6">
-            <Section className="bg-white rounded-xl border border-slate-200 p-6">
-              <Div className="flex items-center justify-between gap-3 mb-4">
-                <H2 className="text-lg font-semibold text-slate-900">Basic Details</H2>
-                <Button onClick={handleSaveDetails} disabled={savingDetails}>
-                  {savingDetails ? (
-                    <Span className="inline-flex items-center gap-2">
-                      <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </Span>
-                  ) : (
-                    'Save Details'
-                  )}
-                </Button>
-              </Div>
+      {loading ? (
+        <LoadingState label="Loading restaurant…" />
+      ) : error ? (
+        <ErrorState title="Could not load this restaurant" message={error} />
+      ) : !restaurant ? (
+        <EmptyState title="Restaurant not found" message="This restaurant is no longer available." actionLabel="Back to list" onAction={() => navigate('/admin/food/restaurants')} />
+      ) : (
+        <Div className="gap-3">
+          <Card>
+            <SectionTitle>Basic details</SectionTitle>
 
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Div>
-                  <Label>Restaurant Name</Label>
+            <Div className={detailsCols}>
+              <Div className="col-span-full">
+                <Field label="Restaurant name">
                   <Input
                     value={detailsForm.name}
+                    className={INPUT}
                     onChange={(e) =>
                       setDetailsForm((p) => ({
                         ...p,
@@ -312,100 +313,88 @@ export default function EditRestaurant() {
                       }))
                     }
                   />
-                </Div>
-                <Div>
-                  <Label>Pure Veg</Label>
-                  <Div className="mt-2 flex items-center gap-2">
-                    <HButton
-                      type="button"
-                      onClick={() =>
-                        setDetailsForm((p) => ({
-                          ...p,
-                          pureVegRestaurant: true,
-                        }))
-                      }
-                      className={`px-3 py-1.5 text-xs rounded-full border ${detailsForm.pureVegRestaurant === true ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-700 border-slate-300'}`}
-                    >
-                      Yes
-                    </HButton>
-                    <HButton
-                      type="button"
-                      onClick={() =>
-                        setDetailsForm((p) => ({
-                          ...p,
-                          pureVegRestaurant: false,
-                        }))
-                      }
-                      className={`px-3 py-1.5 text-xs rounded-full border ${detailsForm.pureVegRestaurant === false ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-300'}`}
-                    >
-                      No
-                    </HButton>
-                  </Div>
-                </Div>
-                <Div>
-                  <Label>Primary Email</Label>
-                  <Input
-                    value={detailsForm.email}
-                    onChange={(e) =>
-                      setDetailsForm((p) => ({
-                        ...p,
-                        email: e.target.value,
-                      }))
-                    }
-                  />
-                </Div>
-                <Div>
-                  <Label>Owner Name</Label>
-                  <Input
-                    value={detailsForm.ownerName}
-                    onChange={(e) =>
-                      setDetailsForm((p) => ({
-                        ...p,
-                        ownerName: e.target.value,
-                      }))
-                    }
-                  />
-                </Div>
-                <Div>
-                  <Label>Owner Email</Label>
-                  <Input
-                    value={detailsForm.ownerEmail}
-                    onChange={(e) =>
-                      setDetailsForm((p) => ({
-                        ...p,
-                        ownerEmail: e.target.value,
-                      }))
-                    }
-                  />
-                </Div>
-                <Div>
-                  <Label>Owner Phone</Label>
-                  <Input
-                    value={detailsForm.ownerPhone}
-                    onChange={(e) =>
-                      setDetailsForm((p) => ({
-                        ...p,
-                        ownerPhone: e.target.value,
-                      }))
-                    }
-                  />
-                </Div>
-                <Div>
-                  <Label>Primary Contact Number</Label>
-                  <Input
-                    value={detailsForm.primaryContactNumber}
-                    onChange={(e) =>
-                      setDetailsForm((p) => ({
-                        ...p,
-                        primaryContactNumber: e.target.value,
-                      }))
-                    }
-                  />
-                </Div>
-                <Div className="md:col-span-2">
-                  <Label>Cuisines (comma separated)</Label>
+                </Field>
+              </Div>
+              <Field label="Primary email">
+                <Input
+                  type="email"
+                  value={detailsForm.email}
+                  className={INPUT}
+                  onChange={(e) =>
+                    setDetailsForm((p) => ({
+                      ...p,
+                      email: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Owner name">
+                <Input
+                  value={detailsForm.ownerName}
+                  className={INPUT}
+                  onChange={(e) =>
+                    setDetailsForm((p) => ({
+                      ...p,
+                      ownerName: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Owner email">
+                <Input
+                  type="email"
+                  value={detailsForm.ownerEmail}
+                  className={INPUT}
+                  onChange={(e) =>
+                    setDetailsForm((p) => ({
+                      ...p,
+                      ownerEmail: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Owner phone">
+                <Input
+                  value={detailsForm.ownerPhone}
+                  className={INPUT}
+                  onChange={(e) =>
+                    setDetailsForm((p) => ({
+                      ...p,
+                      ownerPhone: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Primary contact number">
+                <Input
+                  value={detailsForm.primaryContactNumber}
+                  className={INPUT}
+                  onChange={(e) =>
+                    setDetailsForm((p) => ({
+                      ...p,
+                      primaryContactNumber: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Estimated delivery time" hint="In minutes">
+                <Input
+                  type="number"
+                  value={detailsForm.estimatedDeliveryTimeMinutes}
+                  className={INPUT}
+                  onChange={(e) =>
+                    setDetailsForm((p) => ({
+                      ...p,
+                      estimatedDeliveryTimeMinutes: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Div className="col-span-full">
+                <Field label="Cuisines" hint="Comma separated">
                   <Input
                     value={detailsForm.cuisinesText}
+                    className={INPUT}
                     onChange={(e) =>
                       setDetailsForm((p) => ({
                         ...p,
@@ -413,24 +402,13 @@ export default function EditRestaurant() {
                       }))
                     }
                   />
-                </Div>
-                <Div>
-                  <Label>Estimated Delivery Time (minutes)</Label>
-                  <Input
-                    type="number"
-                    value={detailsForm.estimatedDeliveryTimeMinutes}
-                    onChange={(e) =>
-                      setDetailsForm((p) => ({
-                        ...p,
-                        estimatedDeliveryTimeMinutes: e.target.value,
-                      }))
-                    }
-                  />
-                </Div>
-                <Div>
-                  <Label>Offer</Label>
+                </Field>
+              </Div>
+              <Div className="col-span-full">
+                <Field label="Offer">
                   <Input
                     value={detailsForm.offer}
+                    className={INPUT}
                     onChange={(e) =>
                       setDetailsForm((p) => ({
                         ...p,
@@ -438,64 +416,85 @@ export default function EditRestaurant() {
                       }))
                     }
                   />
-                </Div>
-                <Div>
-                  <Label>Takeaway (Pickup) Enabled</Label>
-                  <Div className="mt-2 flex items-center gap-2">
-                    <HButton
-                      type="button"
-                      onClick={() =>
-                        setDetailsForm((p) => ({
-                          ...p,
-                          takeawayEnabled: true,
-                        }))
-                      }
-                      className={`px-3 py-1.5 text-xs rounded-full border ${detailsForm.takeawayEnabled === true ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-700 border-slate-300'}`}
-                    >
-                      Enabled
-                    </HButton>
-                    <HButton
-                      type="button"
-                      onClick={() =>
-                        setDetailsForm((p) => ({
-                          ...p,
-                          takeawayEnabled: false,
-                        }))
-                      }
-                      className={`px-3 py-1.5 text-xs rounded-full border ${detailsForm.takeawayEnabled === false ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-300'}`}
-                    >
-                      Disabled
-                    </HButton>
-                  </Div>
-                </Div>
+                </Field>
               </Div>
-            </Section>
-
-            <Section className="bg-white rounded-xl border border-slate-200 p-6">
-              <Div className="flex items-center justify-between gap-3 mb-4">
-                <Div>
-                  <H2 className="text-lg font-semibold text-slate-900">Location</H2>
-                  {currentZoneLabel ? <P className="text-xs text-slate-500 mt-1">Current Zone: {currentZoneLabel}</P> : null}
+              <Field label="Pure veg">
+                <Div className="flex-row flex-wrap items-center gap-2">
+                  <HButton
+                    type="button"
+                    onClick={() =>
+                      setDetailsForm((p) => ({
+                        ...p,
+                        pureVegRestaurant: true,
+                      }))
+                    }
+                    className={`h-11 px-4 items-center justify-center rounded-full border ${detailsForm.pureVegRestaurant === true ? 'bg-green-600 border-green-600' : 'bg-white border-slate-300'}`}
+                  >
+                    <Span className={`text-sm font-semibold ${detailsForm.pureVegRestaurant === true ? 'text-white' : 'text-slate-700'}`}>Yes</Span>
+                  </HButton>
+                  <HButton
+                    type="button"
+                    onClick={() =>
+                      setDetailsForm((p) => ({
+                        ...p,
+                        pureVegRestaurant: false,
+                      }))
+                    }
+                    className={`h-11 px-4 items-center justify-center rounded-full border ${detailsForm.pureVegRestaurant === false ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
+                  >
+                    <Span className={`text-sm font-semibold ${detailsForm.pureVegRestaurant === false ? 'text-white' : 'text-slate-700'}`}>No</Span>
+                  </HButton>
                 </Div>
-                <Button onClick={handleSaveLocation} disabled={savingLocation}>
-                  {savingLocation ? (
-                    <Span className="inline-flex items-center gap-2">
-                      <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </Span>
-                  ) : (
-                    'Save Location'
-                  )}
-                </Button>
+              </Field>
+              <Field label="Takeaway (pickup)">
+                <Div className="flex-row flex-wrap items-center gap-2">
+                  <HButton
+                    type="button"
+                    onClick={() =>
+                      setDetailsForm((p) => ({
+                        ...p,
+                        takeawayEnabled: true,
+                      }))
+                    }
+                    className={`h-11 px-4 items-center justify-center rounded-full border ${detailsForm.takeawayEnabled === true ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
+                  >
+                    <Span className={`text-sm font-semibold ${detailsForm.takeawayEnabled === true ? 'text-white' : 'text-slate-700'}`}>Enabled</Span>
+                  </HButton>
+                  <HButton
+                    type="button"
+                    onClick={() =>
+                      setDetailsForm((p) => ({
+                        ...p,
+                        takeawayEnabled: false,
+                      }))
+                    }
+                    className={`h-11 px-4 items-center justify-center rounded-full border ${detailsForm.takeawayEnabled === false ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
+                  >
+                    <Span className={`text-sm font-semibold ${detailsForm.takeawayEnabled === false ? 'text-white' : 'text-slate-700'}`}>Disabled</Span>
+                  </HButton>
+                </Div>
+              </Field>
+            </Div>
+
+            <HButton onClick={handleSaveDetails} disabled={savingDetails} className={`${BTN_PRIMARY} mt-4`}>
+              {savingDetails ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>{savingDetails ? 'Saving…' : 'Save details'}</Span>
+            </HButton>
+          </Card>
+
+          <Card>
+            <SectionTitle>Location</SectionTitle>
+            {currentZoneLabel ? <P className="text-xs text-slate-500 -mt-2 mb-3">Current zone: {currentZoneLabel}</P> : null}
+
+            {locationError ? (
+              <Div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                <P className="text-sm text-amber-800">{locationError}</P>
               </Div>
+            ) : null}
 
-              {locationError ? (
-                <Div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">{locationError}</Div>
-              ) : null}
-
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Div className="md:col-span-2">
-                  <Label>Service Zone</Label>
+            <Div className={detailsCols}>
+              <Div className="col-span-full">
+                <Field label="Service zone" required>
                   <Select
                     value={locationForm.zoneId || ''}
                     onChange={(e) =>
@@ -504,10 +503,10 @@ export default function EditRestaurant() {
                         zoneId: e.target.value,
                       }))
                     }
-                    className="mt-1 h-10 w-full rounded-md border border-input bg-white px-3 text-sm"
+                    className={INPUT}
                     disabled={zonesLoading}
                   >
-                    <Option value="">{zonesLoading ? 'Loading zones...' : 'Select a zone'}</Option>
+                    <Option value="">{zonesLoading ? 'Loading zones…' : 'Select a zone'}</Option>
                     {zones.map((z) => {
                       const zid = normalizeZoneId(z?._id || z?.id);
                       const label = z?.name || z?.zoneName || zid;
@@ -518,57 +517,55 @@ export default function EditRestaurant() {
                       );
                     })}
                   </Select>
-                </Div>
+                </Field>
+              </Div>
 
-                <Div className="md:col-span-2">
-                  <Label>Search location</Label>
-                  <PlacesSearchInput
-                    placeholder="Start typing your restaurant address..."
-                    className="mt-1 bg-white text-sm text-black placeholder:text-gray-500"
-                    onPlace={handlePlaceSelected}
-                    onError={setLocationError}
-                  />
-                  <P className="text-[11px] text-slate-500 mt-1">Select a suggestion from the dropdown to fill address + coordinates.</P>
-                </Div>
+              <Div className="col-span-full">
+                <Field label="Search location" required hint="Select a suggestion from the list to fill the address and coordinates.">
+                  <PlacesSearchInput placeholder="Start typing the restaurant address…" className={INPUT} onPlace={handlePlaceSelected} onError={setLocationError} />
+                </Field>
+              </Div>
 
-                <Div className="md:col-span-2">
-                  <Label>Formatted Address</Label>
-                  <Input value={locationForm.formattedAddress} readOnly className="mt-1 bg-slate-50" />
-                </Div>
-                <Div>
-                  <Label>Area</Label>
-                  <Input value={locationForm.area} readOnly className="mt-1 bg-slate-50" />
-                </Div>
-                <Div>
-                  <Label>City</Label>
-                  <Input value={locationForm.city} readOnly className="mt-1 bg-slate-50" />
-                </Div>
-                <Div>
-                  <Label>State</Label>
-                  <Input value={locationForm.state} readOnly className="mt-1 bg-slate-50" />
-                </Div>
-                <Div>
-                  <Label>Pincode</Label>
-                  <Input value={locationForm.pincode} readOnly className="mt-1 bg-slate-50" />
-                </Div>
-                <Div className="md:col-span-2">
-                  <Label>Landmark</Label>
+              <Div className="col-span-full">
+                <Field label="Formatted address">
+                  <Input value={locationForm.formattedAddress} readOnly className={`${INPUT} bg-slate-50 text-slate-600`} />
+                </Field>
+              </Div>
+              <Field label="Area">
+                <Input value={locationForm.area} readOnly className={`${INPUT} bg-slate-50 text-slate-600`} />
+              </Field>
+              <Field label="City">
+                <Input value={locationForm.city} readOnly className={`${INPUT} bg-slate-50 text-slate-600`} />
+              </Field>
+              <Field label="State">
+                <Input value={locationForm.state} readOnly className={`${INPUT} bg-slate-50 text-slate-600`} />
+              </Field>
+              <Field label="Pincode">
+                <Input value={locationForm.pincode} readOnly className={`${INPUT} bg-slate-50 text-slate-600`} />
+              </Field>
+              <Div className="col-span-full">
+                <Field label="Landmark">
                   <Input
                     value={locationForm.landmark}
+                    className={INPUT}
                     onChange={(e) =>
                       setLocationForm((p) => ({
                         ...p,
                         landmark: e.target.value,
                       }))
                     }
-                    className="mt-1"
                   />
-                </Div>
+                </Field>
               </Div>
-            </Section>
-          </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+            </Div>
+
+            <HButton onClick={handleSaveLocation} disabled={savingLocation} className={`${BTN_PRIMARY} mt-4`}>
+              {savingLocation ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>{savingLocation ? 'Saving…' : 'Save location'}</Span>
+            </HButton>
+          </Card>
+        </Div>
+      )}
+    </AdminPage>
   );
 }

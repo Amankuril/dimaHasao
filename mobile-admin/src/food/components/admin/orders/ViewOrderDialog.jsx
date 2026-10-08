@@ -24,7 +24,27 @@ import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
 import { removePlusCode } from '../../../utils/common';
 import { resolveRestaurantItemUnitPrice, resolveItemMarkupUnit } from '../../../utils/restaurantOrderPricing';
-import { A, Button, Div, H3, H4, Img, Label, P, Span, Icon as UiIcon } from '../../../../components/web';
+import { A, Button, Div, H3, H4, Img, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { StatusBadge, useLayoutWidth, BTN_PRIMARY, BTN_TEXT_PRIMARY } from '../../../../admin/ui';
+
+/* These order statuses are product words, not the kit's status vocabulary, so
+   each maps to one kit tone and keeps a single colour across the panels. */
+const STATUS_TONE = {
+  Delivered: 'success',
+  Pending: 'warning',
+  Scheduled: 'warning',
+  Accepted: 'success',
+  Processing: 'warning',
+  'Food On The Way': 'warning',
+  Canceled: 'danger',
+  Cancelled: 'danger',
+  'Cancelled by Restaurant': 'danger',
+  'Cancelled by User': 'danger',
+  'Payment Failed': 'danger',
+  Refunded: 'info',
+  'Dine In': 'info',
+  'Offline Payments': 'neutral',
+};
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -40,31 +60,13 @@ const ADMIN_ORDER_STATUS_OPTIONS = [
   'Canceled',
 ];
 const ADMIN_PAYMENT_STATUS_OPTIONS = ['Pending', 'Paid', 'COD Pending', 'Failed', 'Refunded'];
-const getStatusColor = (orderStatus) => {
-  const colors = {
-    Delivered: 'bg-emerald-100 text-emerald-700',
-    Pending: 'bg-blue-100 text-blue-700',
-    Scheduled: 'bg-blue-100 text-blue-700',
-    Accepted: 'bg-green-100 text-green-700',
-    Processing: 'bg-orange-100 text-orange-700',
-    'Food On The Way': 'bg-yellow-100 text-yellow-700',
-    Canceled: 'bg-rose-100 text-rose-700',
-    'Cancelled by Restaurant': 'bg-red-100 text-red-700',
-    'Cancelled by User': 'bg-orange-100 text-orange-700',
-    'Payment Failed': 'bg-red-100 text-red-700',
-    Refunded: 'bg-sky-100 text-sky-700',
-    'Dine In': 'bg-indigo-100 text-indigo-700',
-    'Offline Payments': 'bg-slate-100 text-slate-700',
-  };
-  return colors[orderStatus] || 'bg-slate-100 text-slate-700';
-};
 const resolveCustomerId = (order) => {
   if (!order) return null;
   return order.customerId || order.userId?._id || order.userId?.id || (typeof order.userId === 'string' ? order.userId : null);
 };
 const getPaymentStatusColor = (paymentStatus) => {
-  if (paymentStatus === 'Paid' || paymentStatus === 'Collected') return 'text-emerald-600';
-  if (paymentStatus === 'COD Pending' || paymentStatus === 'Not Collected') return 'text-amber-600';
+  if (paymentStatus === 'Paid' || paymentStatus === 'Collected') return 'text-green-700';
+  if (paymentStatus === 'COD Pending' || paymentStatus === 'Not Collected') return 'text-amber-700';
   if (paymentStatus === 'Unpaid' || paymentStatus === 'Failed') return 'text-red-600';
   return 'text-slate-600';
 };
@@ -106,6 +108,7 @@ const resolveDisplayPaymentStatus = (order) => {
   return 'Pending';
 };
 export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUpdated }) {
+  const { tablet } = useLayoutWidth();
   const [customerTotalOrders, setCustomerTotalOrders] = useState(undefined);
   const [customerDeliveredOrders, setCustomerDeliveredOrders] = useState(undefined);
   const [customerCancelledOrders, setCustomerCancelledOrders] = useState(undefined);
@@ -298,14 +301,14 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
       >
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200 bg-white">
           <DialogTitle className="flex items-center gap-2">
-            <UiIcon as={Eye} className="w-5 h-5 text-orange-600" />
+            <UiIcon as={Eye} size={18} className="text-blue-600" />
             Order Details
           </DialogTitle>
           <DialogDescription>View complete information about this order</DialogDescription>
         </DialogHeader>
-        <Div className="px-6 py-6 space-y-6">
+        <ScrollDiv className="px-4 py-4" contentClassName="gap-4">
           {/* Basic Order Information */}
-          <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Div className={tablet ? 'flex-row gap-4' : 'gap-4'}>
             <Div className="space-y-4">
               <Div className="space-y-1">
                 <P className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
@@ -387,7 +390,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
               </Div>
               {order.orderOtp && (
                 <Div className="space-y-1">
-                  <P className="text-xs font-semibold text-orange-600 uppercase tracking-wider flex items-center gap-2 font-bold">
+                  <P className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex-row items-center gap-2">
                     <UiIcon as={CheckCircle2} className="w-4 h-4" />
                     Handover Code (OTP)
                   </P>
@@ -428,9 +431,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
               {order.orderStatus && (
                 <Div className="space-y-1">
                   <P className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Order Status</P>
-                  <Span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(displayOrderStatus)}`}>
-                    {displayOrderStatus}
-                  </Span>
+                  <StatusBadge status={displayOrderStatus} tone={STATUS_TONE[displayOrderStatus]} label={displayOrderStatus} />
                   {order.cancellationReason && (
                     <P className="text-xs text-red-600 mt-1">
                       <Span className="font-medium">
@@ -471,13 +472,13 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
               )}
 
               {/* Admin Controls — optional independent status updates */}
-              <Div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+              <Div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <H4 className="text-sm font-bold text-slate-900 mb-4">Admin Controls</H4>
-                <Div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Div className={tablet ? 'flex-row gap-3' : 'gap-3'}>
                   <Div className="space-y-1.5">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Change Order Status</Label>
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Change Order Status</Label>
                     <Select value={draftOrderStatus} onValueChange={setDraftOrderStatus} disabled={updatingStatuses}>
-                      <SelectTrigger className="h-10 w-full rounded-lg border-slate-200 bg-white text-slate-900 shadow-none hover:border-slate-300 focus:border-[#FF6B4A] focus:ring-[#FF6B4A]/30">
+                      <SelectTrigger className="h-11 w-full rounded-lg border-slate-300 bg-white text-slate-900 shadow-none hover:border-slate-300 focus:border-blue-600">
                         <SelectValue placeholder="Select order status" />
                       </SelectTrigger>
                       <SelectContent
@@ -492,7 +493,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                           <SelectItem
                             key={status}
                             value={status}
-                            className="cursor-pointer rounded-md border-0 py-2.5 focus:bg-orange-50 focus:text-slate-900 data-[state=checked]:bg-orange-50 data-[state=checked]:font-semibold"
+                            className="cursor-pointer rounded-md border-0 py-2.5 focus:bg-blue-50 focus:text-slate-900 data-[state=checked]:bg-blue-50 data-[state=checked]:font-semibold"
                           >
                             {status}
                           </SelectItem>
@@ -501,9 +502,9 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                     </Select>
                   </Div>
                   <Div className="space-y-1.5">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Change Payment Status</Label>
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Change Payment Status</Label>
                     <Select value={draftPaymentStatus} onValueChange={setDraftPaymentStatus} disabled={updatingStatuses}>
-                      <SelectTrigger className="h-10 w-full rounded-lg border-slate-200 bg-white text-slate-900 shadow-none hover:border-slate-300 focus:border-[#FF6B4A] focus:ring-[#FF6B4A]/30">
+                      <SelectTrigger className="h-11 w-full rounded-lg border-slate-300 bg-white text-slate-900 shadow-none hover:border-slate-300 focus:border-blue-600">
                         <SelectValue placeholder="Select payment status" />
                       </SelectTrigger>
                       <SelectContent
@@ -518,7 +519,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                           <SelectItem
                             key={status}
                             value={status}
-                            className="cursor-pointer rounded-md border-0 py-2.5 focus:bg-orange-50 focus:text-slate-900 data-[state=checked]:bg-orange-50 data-[state=checked]:font-semibold"
+                            className="cursor-pointer rounded-md border-0 py-2.5 focus:bg-blue-50 focus:text-slate-900 data-[state=checked]:bg-blue-50 data-[state=checked]:font-semibold"
                           >
                             {status}
                           </SelectItem>
@@ -532,16 +533,10 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                     type="button"
                     onClick={handleAdminStatusUpdate}
                     disabled={!hasAdminStatusChanges || updatingStatuses}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#FF6B4A] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#f25a38] disabled:cursor-not-allowed disabled:opacity-50"
+                    className={BTN_PRIMARY}
                   >
-                    {updatingStatuses ? (
-                      <>
-                        <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                        Updating…
-                      </>
-                    ) : (
-                      'Update'
-                    )}
+                    {updatingStatuses ? <UiIcon as={Loader2} size={14} className="text-white" /> : null}
+                    <Span className={BTN_TEXT_PRIMARY}>{updatingStatuses ? 'Updating…' : 'Update'}</Span>
                   </Button>
                 </Div>
               </Div>
@@ -564,7 +559,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
               <UiIcon as={User} className="w-4 h-4" />
               Customer Information
             </H3>
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Div className={tablet ? 'flex-row gap-4' : 'gap-4'}>
               <Div className="space-y-1">
                 <P className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer Name</P>
                 <P className="text-sm font-medium text-slate-900">{order.customerName || 'N/A'}</P>
@@ -629,7 +624,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                             <P className="text-sm font-medium text-slate-900">{item.name || item.foodName || item.title || 'Unknown Item'}</P>
                             {variantLabel ? <P className="text-xs text-slate-500 mt-0.5 font-medium">{variantLabel}</P> : null}
                             {Array.isArray(item.addons) && item.addons.length > 0 ? (
-                              <P className="text-[11px] text-slate-400 mt-0.5">
+                              <P className="text-xs text-slate-400 mt-0.5">
                                 {item.addons
                                   .map((a) => a.name || a.title || a)
                                   .filter(Boolean)
@@ -678,8 +673,8 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                             return (
                               <Div className="leading-tight">
                                 <P className="text-sm font-semibold text-slate-900">₹{baseLine.toFixed(2)}</P>
-                                <P className="text-[11px] font-semibold text-rose-600 mt-0.5">+ ₹{markupLine.toFixed(2)} admin</P>
-                                <P className="text-[11px] font-bold text-slate-900 mt-0.5">Total ₹{totalLine.toFixed(2)}</P>
+                                <P className="text-xs font-semibold text-red-600 mt-0.5">+ ₹{markupLine.toFixed(2)} admin</P>
+                                <P className="text-xs font-bold text-slate-900 mt-0.5">Total ₹{totalLine.toFixed(2)}</P>
                               </Div>
                             );
                           }
@@ -697,11 +692,11 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
           {(order.billImageUrl || order.billImage || order.deliveryState?.billImageUrl) && (
             <Div className="border-t border-slate-200 pt-4">
               <H3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                <UiIcon as={Receipt} className="w-4 h-4 text-orange-600" />
+                <UiIcon as={Receipt} size={16} className="text-slate-500" />
                 Bill Image (Captured by Delivery Boy)
               </H3>
               <Div className="space-y-3">
-                <Div className="relative w-full max-w-2xl border-2 border-slate-300 rounded-xl overflow-hidden bg-white shadow-sm">
+                <Div className="w-full border border-slate-200 rounded-xl overflow-hidden bg-white">
                   {!billImageFailed ? (
                     <Img
                       src={order.billImageUrl || order.billImage || order.deliveryState?.billImageUrl}
@@ -725,7 +720,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                 <Div className="flex items-center gap-3">
                   <A
                     href={order.billImageUrl || order.billImage || order.deliveryState?.billImageUrl}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+                    className={BTN_PRIMARY}
                   >
                     <UiIcon as={Eye} className="w-4 h-4" />
                     View Full Size
@@ -767,7 +762,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                 <UiIcon as={Truck} className="w-4 h-4" />
                 Delivery Partner
               </H3>
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Div className={tablet ? 'flex-row gap-4' : 'gap-4'}>
                 {order.deliveryPartnerName && (
                   <Div className="space-y-1">
                     <P className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</P>
@@ -811,7 +806,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                     {markupTotal > 0 ? (
                       <Div className="flex justify-between text-sm">
                         <Span className="text-slate-600">Admin Pricing</Span>
-                        <Span className="font-medium text-rose-600">+ ₹{Number(markupTotal).toFixed(2)}</Span>
+                        <Span className="font-medium text-red-600">+ ₹{Number(markupTotal).toFixed(2)}</Span>
                       </Div>
                     ) : null}
                   </>
@@ -820,20 +815,20 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
               {order.itemDiscount !== undefined && order.itemDiscount > 0 && (
                 <Div className="flex justify-between text-sm">
                   <Span className="text-slate-600">Discount</Span>
-                  <Span className="font-medium text-emerald-600">-₹{order.itemDiscount.toFixed(2)}</Span>
+                  <Span className="font-medium text-green-700">-₹{order.itemDiscount.toFixed(2)}</Span>
                 </Div>
               )}
               {order.couponDiscount !== undefined && order.couponDiscount > 0 && (
                 <Div className="flex justify-between text-sm">
                   <Span className="text-slate-600">Coupon Discount</Span>
-                  <Span className="font-medium text-emerald-600">-₹{order.couponDiscount.toFixed(2)}</Span>
+                  <Span className="font-medium text-green-700">-₹{order.couponDiscount.toFixed(2)}</Span>
                 </Div>
               )}
               {order.deliveryCharge !== undefined && (
                 <Div className="flex justify-between text-sm">
                   <Span className="text-slate-600">Delivery Charge</Span>
                   <Span className="font-medium text-slate-900">
-                    {order.deliveryCharge > 0 ? `₹${order.deliveryCharge.toFixed(2)}` : <Span className="text-emerald-600">Free delivery</Span>}
+                    {order.deliveryCharge > 0 ? `₹${order.deliveryCharge.toFixed(2)}` : <Span className="text-green-700">Free delivery</Span>}
                   </Span>
                 </Div>
               )}
@@ -856,7 +851,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
               <Div className="pt-2 border-t border-slate-200">
                 <Div className="flex justify-between items-center">
                   <Span className="text-base font-semibold text-slate-700">Total Amount</Span>
-                  <Span className="text-xl font-bold text-emerald-600">
+                  <Span className="text-xl font-bold text-green-700">
                     ₹
                     {(order.totalAmount || order.total || 0).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -867,7 +862,7 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
               </Div>
             </Div>
           </Div>
-        </Div>
+        </ScrollDiv>
       </DialogContent>
     </Dialog>
   );

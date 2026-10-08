@@ -1,16 +1,35 @@
 /* Ported from Frontend/src/modules/Hotel/app/admin/pages/AdminNotifications.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from '../../../../lib/motion';
-import { Bell, Send, Trash2, CheckCircle, Circle, Users, Building2, Globe, Search } from 'lucide-react-native';
+import { Bell, Send, Trash2, CheckCircle, Circle, Users, Building2, Globe } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
 import { toast } from '../../../../lib/notify';
 import { window } from '../../../../lib/webShim';
-import { Button, Div, Form, H1, H2, H3, Input, Label, P, ScrollDiv, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Form, Input, P, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  Field,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  useLayoutWidth,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 const AdminNotifications = () => {
   const [activeTab, setActiveTab] = useState('received'); // 'received' | 'sent'
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+  const { tablet } = useLayoutWidth();
 
   // Broadcast Form State
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -22,6 +41,7 @@ const AdminNotifications = () => {
   }, [activeTab]);
   const fetchNotifications = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       // Mark all as read if viewing Received tab
       if (activeTab === 'received') {
@@ -51,6 +71,7 @@ const AdminNotifications = () => {
       }
     } catch (error) {
       toast.error('Failed to load notifications');
+      setLoadError(error?.response?.data?.message || error?.message || 'Failed to load notifications.');
     } finally {
       setLoading(false);
     }
@@ -101,29 +122,29 @@ const AdminNotifications = () => {
       toast.error('Failed to delete');
     }
   };
+  const AUDIENCES = [
+    { key: 'users', label: 'Users', icon: Users },
+    { key: 'partners', label: 'Partners', icon: Building2 },
+    { key: 'all', label: 'Everyone', icon: Globe },
+  ];
   return (
-    <ScrollDiv className="space-y-6">
-      <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Div>
-          <H1 className="text-2xl font-bold text-gray-900">Notifications</H1>
-          <P className="text-gray-500 text-sm">Manage system alerts and broadcasts</P>
-        </Div>
-
-        <Div className="flex bg-white rounded-lg p-1 border shadow-sm self-start">
-          <Button
-            onClick={() => setActiveTab('received')}
-            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${activeTab === 'received' ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:text-black'}`}
-          >
-            Received
-          </Button>
-          <Button
-            onClick={() => setActiveTab('sent')}
-            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${activeTab === 'sent' ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:text-black'}`}
-          >
-            Sent (Broadcasts)
-          </Button>
-        </Div>
-      </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Bell}
+        title="Notifications"
+        subtitle="Manage system alerts and broadcasts."
+        breadcrumb={[{ label: 'Hotel' }, { label: 'Notifications' }]}
+        actions={
+          <>
+            <Button onClick={() => setActiveTab('received')} className={activeTab === 'received' ? BTN_PRIMARY : BTN_SECONDARY}>
+              <Span className={activeTab === 'received' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Received</Span>
+            </Button>
+            <Button onClick={() => setActiveTab('sent')} className={activeTab === 'sent' ? BTN_PRIMARY : BTN_SECONDARY}>
+              <Span className={activeTab === 'sent' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Sent (broadcasts)</Span>
+            </Button>
+          </>
+        }
+      />
 
       {/* Broadcast Creation Form (Only visible in Sent tab) */}
       <AnimatePresence>
@@ -141,136 +162,121 @@ const AdminNotifications = () => {
               opacity: 0,
               height: 0,
             }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 overflow-hidden"
+            className="mb-4 overflow-hidden"
           >
-            <Div className="mb-4 flex items-center gap-2">
-              <UiIcon as={Send} size={20} className="text-blue-500" />
-              <H2 className="text-lg font-bold">Send New Broadcast</H2>
-            </Div>
-            <Form onSubmit={handleSendBroadcast} className="flex flex-col gap-4">
-              <Div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-gray-500">Target Audience</Label>
-                  <Div className="grid grid-cols-3 gap-2">
-                    <Button
-                      type="button"
-                      onClick={() => setTargetAudience('users')}
-                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${targetAudience === 'users' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300'}`}
-                    >
-                      <UiIcon as={Users} size={20} />
-                      <Span className="text-xs font-bold">Users</Span>
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setTargetAudience('partners')}
-                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${targetAudience === 'partners' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 hover:border-gray-300'}`}
-                    >
-                      <UiIcon as={Building2} size={20} />
-                      <Span className="text-xs font-bold">Partners</Span>
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setTargetAudience('all')}
-                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${targetAudience === 'all' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 hover:border-gray-300'}`}
-                    >
-                      <UiIcon as={Globe} size={20} />
-                      <Span className="text-xs font-bold">Everyone</Span>
-                    </Button>
+            <Card>
+              <SectionTitle>Send a new broadcast</SectionTitle>
+              <Form onSubmit={handleSendBroadcast} className="gap-3">
+                <Field label="Target audience" required>
+                  <Div className="flex-row gap-2">
+                    {AUDIENCES.map(({ key, label, icon: Icon }) => (
+                      <Button
+                        key={key}
+                        type="button"
+                        onClick={() => setTargetAudience(key)}
+                        className={`flex-1 h-11 flex-row items-center justify-center gap-2 rounded-lg border ${targetAudience === key ? 'border-blue-600 bg-blue-100' : 'border-slate-300 bg-white'}`}
+                      >
+                        <UiIcon as={Icon} size={16} className={targetAudience === key ? 'text-blue-700' : 'text-slate-500'} />
+                        <Span className={`text-sm font-semibold ${targetAudience === key ? 'text-blue-700' : 'text-slate-700'}`}>{label}</Span>
+                      </Button>
+                    ))}
                   </Div>
-                </Div>
-                <Div className="md:col-span-2 space-y-4">
-                  <Div>
-                    <Label className="text-xs font-bold uppercase text-gray-500 mb-1 block">Title</Label>
+                </Field>
+                <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+                  <Field label="Title" required className={tablet ? 'flex-1 min-w-[260px]' : null}>
                     <Input
                       type="text"
                       value={broadcastTitle}
                       onChange={(e) => setBroadcastTitle(e.target.value)}
-                      placeholder="Notification Title"
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-black outline-none transition-all"
+                      placeholder="Notification title"
+                      className={INPUT}
                       required
                     />
-                  </Div>
-                  <Div>
-                    <Label className="text-xs font-bold uppercase text-gray-500 mb-1 block">Message Body</Label>
+                  </Field>
+                  <Field label="Message body" required className={tablet ? 'flex-1 min-w-[260px]' : null}>
                     <Textarea
                       value={broadcastBody}
                       onChange={(e) => setBroadcastBody(e.target.value)}
-                      placeholder="Type your message here..."
+                      placeholder="Type your message here…"
                       rows={3}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-black outline-none transition-all resize-none"
+                      className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
                       required
                     />
-                  </Div>
-                  <Div className="flex justify-end">
-                    <Button
-                      type="submit"
-                      disabled={sending}
-                      className="px-6 py-2.5 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
-                    >
-                      <UiIcon as={Send} size={18} />
-                      <Span>{sending ? 'Sending...' : 'Send Broadcast'}</Span>
-                    </Button>
-                  </Div>
+                  </Field>
                 </Div>
-              </Div>
-            </Form>
+                <Div className="flex-row justify-end">
+                  <Button type="submit" disabled={sending} className={`${BTN_PRIMARY} ${sending ? 'opacity-60' : ''}`}>
+                    <UiIcon as={Send} size={16} className="text-white" />
+                    <Span className={BTN_TEXT_PRIMARY}>{sending ? 'Sending…' : 'Send broadcast'}</Span>
+                  </Button>
+                </Div>
+              </Form>
+            </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Notifications List */}
-      <Div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <Div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
-          <Div className="flex items-center gap-3">
-            <Button onClick={selectAll} className="text-gray-400 hover:text-black transition-colors">
-              {selectedIds.length > 0 && selectedIds.length === notifications.length ? (
-                <UiIcon as={CheckCircle} size={20} className="text-black" />
-              ) : (
-                <UiIcon as={Circle} size={20} />
-              )}
-            </Button>
-            <Span className="text-sm font-bold text-gray-600">
-              {selectedIds.length > 0 ? `${selectedIds.length} Selected` : `${notifications.length} Messages`}
-            </Span>
-          </Div>
-          {selectedIds.length > 0 && (
-            <Button onClick={handleDelete} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
-              <UiIcon as={Trash2} size={20} />
-            </Button>
-          )}
-        </Div>
+      {loadError ? (
+        <ErrorState title="Could not load notifications" message={loadError} onRetry={fetchNotifications} />
+      ) : loading ? (
+        <LoadingState label="Loading notifications…" />
+      ) : notifications.length === 0 ? (
+        <EmptyState
+          icon={Bell}
+          title={activeTab === 'sent' ? 'No broadcasts sent yet' : 'No notifications'}
+          message={activeTab === 'sent' ? 'Broadcasts you send appear here with their reach.' : 'System alerts will show up here.'}
+        />
+      ) : (
+        <Card padded={false}>
+          <Toolbar className="mb-0 px-4 py-3 border-b border-slate-200 justify-between">
+            <Div className="flex-row items-center gap-2">
+              <Button
+                onClick={selectAll}
+                className="w-11 h-11 rounded-lg items-center justify-center"
+                accessibilityLabel={selectedIds.length === notifications.length ? 'Clear selection' : 'Select all'}
+              >
+                <UiIcon
+                  as={selectedIds.length > 0 && selectedIds.length === notifications.length ? CheckCircle : Circle}
+                  size={20}
+                  className={selectedIds.length > 0 && selectedIds.length === notifications.length ? 'text-blue-600' : 'text-slate-400'}
+                />
+              </Button>
+              <Span className="text-sm text-slate-700">
+                {selectedIds.length > 0 ? `${selectedIds.length} selected` : `${notifications.length} messages`}
+              </Span>
+            </Div>
+            {selectedIds.length > 0 ? (
+              <Button onClick={handleDelete} className={BTN_SECONDARY} accessibilityLabel="Delete selected notifications">
+                <UiIcon as={Trash2} size={16} className="text-red-600" />
+                <Span className="text-sm font-semibold text-red-600">Delete</Span>
+              </Button>
+            ) : null}
+          </Toolbar>
 
-        {loading ? (
-          <Div className="p-12 text-center text-gray-400">Loading...</Div>
-        ) : notifications.length === 0 ? (
-          <Div className="p-12 text-center text-gray-400 italic">No notifications found</Div>
-        ) : (
-          <Div className="divide-y divide-gray-100">
-            {notifications.map((notif) => (
+          <Div>
+            {notifications.map((notif, i) => (
               <Div
                 key={notif._id}
-                className={`p-4 flex gap-4 hover:bg-gray-50 transition-colors group ${selectedIds.includes(notif._id) ? 'bg-blue-50/30' : ''}`}
+                className={`flex-row gap-3 p-4 ${i < notifications.length - 1 ? 'border-b border-slate-100' : ''} ${selectedIds.includes(notif._id) ? 'bg-blue-50' : ''}`}
                 onClick={() => toggleSelect(notif._id)}
               >
-                <Div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleSelect(notif._id);
-                  }}
-                >
-                  {selectedIds.includes(notif._id) ? (
-                    <UiIcon as={CheckCircle} size={20} className="text-black mt-1" />
-                  ) : (
-                    <UiIcon as={Circle} size={20} className="text-gray-300 mt-1" />
-                  )}
+                <Div className="pt-0.5">
+                  <UiIcon
+                    as={selectedIds.includes(notif._id) ? CheckCircle : Circle}
+                    size={20}
+                    className={selectedIds.includes(notif._id) ? 'text-blue-600' : 'text-slate-300'}
+                  />
                 </Div>
                 <Div className="flex-1 min-w-0">
-                  <Div className="flex justify-between items-start mb-1">
-                    <Div className="flex-1 flex-row items-center">
-                      <H3 className={`font-bold flex-shrink truncate ${!notif.isRead && activeTab === 'received' ? 'text-black' : 'text-gray-700'}`}>{notif.title}</H3>
-                      {!notif.isRead && activeTab === 'received' && <Div className="ml-2 w-2 h-2 bg-red-500 rounded-full" />}
+                  <Div className="flex-row items-start justify-between gap-2 mb-1">
+                    <Div className="flex-1 min-w-0 flex-row items-center gap-2">
+                      <P numberOfLines={2} className="text-base font-semibold text-slate-900 flex-1 min-w-0">
+                        {notif.title}
+                      </P>
+                      {!notif.isRead && activeTab === 'received' ? <Div className="w-2 h-2 rounded-full bg-red-600 shrink-0" /> : null}
                     </Div>
-                    <Span className="text-xs text-gray-400 ml-4">
+                    <Span className="text-xs text-slate-500 shrink-0">
                       {new Date(notif.createdAt).toLocaleDateString()}{' '}
                       {new Date(notif.createdAt).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -278,22 +284,23 @@ const AdminNotifications = () => {
                       })}
                     </Span>
                   </Div>
-                  <P className="text-gray-600 text-sm leading-relaxed">{notif.body}</P>
+                  <P className="text-sm text-slate-700">{notif.body}</P>
 
                   {/* Additional Data Display for Broadcast Logs */}
-                  {activeTab === 'sent' && notif.data && (
-                    <Div className="mt-2 text-xs text-gray-400 bg-gray-50 p-2 rounded self-start">
-                      Target: <Span className="font-bold uppercase text-gray-600">{notif.data.targetAudience}</Span> • Recipients:{' '}
-                      <Span className="font-bold text-gray-600">{notif.data.recipientCount}</Span>
+                  {activeTab === 'sent' && notif.data ? (
+                    <Div className="mt-2 self-start rounded-lg bg-slate-100 px-2 py-1">
+                      <Span className="text-xs text-slate-600">
+                        Target: {notif.data.targetAudience} · Recipients: {notif.data.recipientCount}
+                      </Span>
                     </Div>
-                  )}
+                  ) : null}
                 </Div>
               </Div>
             ))}
           </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+        </Card>
+      )}
+    </AdminPage>
   );
 };
 export default AdminNotifications;

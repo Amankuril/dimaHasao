@@ -1,7 +1,23 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/ThirdParty.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { Settings, Info, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react-native';
-import { Button, Div, H1, H2, H3, Input, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { Settings, Eye, EyeOff } from 'lucide-react-native';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatusBadge,
+  Field,
+  EmptyState,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { alert } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -174,14 +190,12 @@ const thirdPartyServices = [
     ],
   },
 ];
-function ToggleSwitch({ enabled, onToggle }) {
+function ToggleSwitch({ enabled, onToggle, label }) {
   return (
-    <Button
-      type="button"
-      onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}
-    >
-      <Span className="h-5 w-5 rounded-full bg-white shadow-sm" />
+    <Button type="button" onClick={onToggle} accessibilityLabel={label} className="w-11 h-11 flex-row items-center justify-center shrink-0">
+      <Div className={`flex-row items-center w-11 h-6 rounded-full border px-0.5 ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}>
+        <Span className="h-5 w-5 rounded-full bg-white" />
+      </Div>
     </Button>
   );
 }
@@ -272,119 +286,108 @@ export default function ThirdParty() {
     });
   };
   const categories = [...new Set(services.map((s) => s.category))];
+  const { tablet } = useLayoutWidth();
+  const col = tablet ? { width: '48.5%' } : { width: '100%' };
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto max-w-6xl">
-        {/* Page Title */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
-          <Div className="flex items-center gap-2">
-            <Div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
-              <UiIcon as={Settings} className="w-3.5 h-3.5 text-white" />
-            </Div>
-            <H1 className="text-lg font-bold text-slate-900">3rd Party Configuration</H1>
-          </Div>
-        </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Settings}
+        title="3rd Party Configuration"
+        subtitle="Payment, SMS, email, map and storage credentials"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: '3rd party' }]}
+      />
 
-        {/* Services by Category */}
-        <Div className="space-y-4">
+      {categories.length === 0 ? (
+        <EmptyState title="No integrations" message="Third-party services will appear here once they are registered." />
+      ) : (
+        <Div className="gap-4">
           {categories.map((category) => {
             const categoryServices = services.filter((s) => s.category === category);
             return (
-              <Div key={category} className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-                <H2 className="text-sm font-semibold text-slate-900 mb-3">{category}</H2>
-                <Div className="space-y-3">
+              <Card key={category}>
+                <SectionTitle>{category}</SectionTitle>
+                <Div className="gap-3">
                   {categoryServices.map((service) => (
-                    <Div key={service.id} className="border border-slate-200 rounded-lg p-3 hover:border-slate-300 transition-colors">
-                      <Div className="flex items-start justify-between mb-2">
-                        <Div className="flex-1">
-                          <Div className="flex items-center gap-2 mb-1">
-                            <H3 className="text-xs font-semibold text-slate-900">{service.name}</H3>
-                            <Div className="flex items-center gap-1">
-                              {service.configured ? (
-                                <>
-                                  <UiIcon as={CheckCircle} className="w-3.5 h-3.5 text-green-600" />
-                                  <Span className="text-[10px] text-green-600">Configured</Span>
-                                </>
-                              ) : (
-                                <>
-                                  <UiIcon as={XCircle} className="w-3.5 h-3.5 text-red-600" />
-                                  <Span className="text-[10px] text-red-600">Not Configured</Span>
-                                </>
-                              )}
-                            </Div>
-                          </Div>
-                          <P className="text-[10px] text-slate-600">{service.description}</P>
+                    <Div key={service.id} className="border border-slate-200 rounded-lg p-3 gap-2">
+                      <Div className="flex-row items-start gap-2">
+                        <Div className="flex-1 min-w-0 gap-1">
+                          <Text style={tw`text-sm font-semibold text-slate-900`} numberOfLines={2}>
+                            {service.name}
+                          </Text>
+                          <Text style={tw`text-xs text-slate-500`} numberOfLines={2}>
+                            {service.description}
+                          </Text>
+                          <StatusBadge
+                            tone={service.configured ? 'success' : 'danger'}
+                            label={service.configured ? 'Configured' : 'Not configured'}
+                          />
                         </Div>
-                        <Div className="flex items-center gap-3">
-                          <ToggleSwitch enabled={service.enabled} onToggle={() => handleToggle(service.id)} />
-                          <Button
-                            type="button"
-                            onClick={() => setExpandedService(expandedService === service.id ? null : service.id)}
-                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            {expandedService === service.id ? 'Hide' : 'Configure'}
-                          </Button>
-                        </Div>
+                        <ToggleSwitch enabled={service.enabled} onToggle={() => handleToggle(service.id)} label={`Toggle ${service.name}`} />
                       </Div>
 
-                      {/* Configuration Fields */}
-                      {expandedService === service.id && (
-                        <Div className="mt-3 pt-3 border-t border-slate-200 space-y-3">
-                          {service.fields.map((field) => {
-                            const fieldKey = `${service.id}-${field.key}`;
-                            const isPassword = field.type === 'password';
-                            const isVisible = visibleFields[fieldKey];
-                            const value = fieldValues[fieldKey] || field.value || '';
-                            return (
-                              <Div key={field.key}>
-                                <Label className="block text-xs font-semibold text-slate-700 mb-1.5">{field.label}</Label>
-                                <Div className="relative">
-                                  <Input
-                                    type={isPassword && !isVisible ? 'password' : 'text'}
-                                    value={value}
-                                    onChange={(e) => handleFieldChange(service.id, field.key, e.target.value)}
-                                    placeholder={`Enter ${field.label.toLowerCase()}`}
-                                    className="w-full px-3 py-2 pr-10 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  />
-                                  {isPassword && (
-                                    <Button
-                                      type="button"
-                                      onClick={() => toggleFieldVisibility(service.id, field.key)}
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
-                                    >
-                                      {isVisible ? <UiIcon as={EyeOff} className="w-3.5 h-3.5" /> : <UiIcon as={Eye} className="w-3.5 h-3.5" />}
-                                    </Button>
-                                  )}
+                      <Div className="flex-row justify-end">
+                        <Button
+                          type="button"
+                          onClick={() => setExpandedService(expandedService === service.id ? null : service.id)}
+                          className="h-11 px-2 flex-row items-center justify-center"
+                        >
+                          <Span className="text-sm font-semibold text-blue-600">{expandedService === service.id ? 'Hide' : 'Configure'}</Span>
+                        </Button>
+                      </Div>
+
+                      {expandedService === service.id ? (
+                        <Div className="pt-3 border-t border-slate-200 gap-3">
+                          <Div className="flex-row flex-wrap gap-3">
+                            {service.fields.map((field) => {
+                              const fieldKey = `${service.id}-${field.key}`;
+                              const isPassword = field.type === 'password';
+                              const isVisible = visibleFields[fieldKey];
+                              const value = fieldValues[fieldKey] || field.value || '';
+                              return (
+                                <Div key={field.key} style={col}>
+                                  <Field label={field.label}>
+                                    <Div className="flex-row items-center gap-1 h-11 px-3 rounded-lg border border-slate-300 bg-white">
+                                      <Input
+                                        type={isPassword && !isVisible ? 'password' : 'text'}
+                                        value={value}
+                                        onChange={(e) => handleFieldChange(service.id, field.key, e.target.value)}
+                                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                                        className="flex-1 text-sm text-slate-900"
+                                      />
+                                      {isPassword ? (
+                                        <Button
+                                          type="button"
+                                          onClick={() => toggleFieldVisibility(service.id, field.key)}
+                                          accessibilityLabel={isVisible ? `Hide ${field.label}` : `Show ${field.label}`}
+                                          className="w-9 h-11 items-center justify-center shrink-0"
+                                        >
+                                          <UiIcon as={isVisible ? EyeOff : Eye} size={16} className="text-slate-400" />
+                                        </Button>
+                                      ) : null}
+                                    </Div>
+                                  </Field>
                                 </Div>
-                              </Div>
-                            );
-                          })}
-                          <Div className="flex justify-end gap-2 pt-2">
-                            <Button
-                              type="button"
-                              onClick={() => handleReset(service.id)}
-                              className="px-3 py-1.5 text-xs font-medium bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                            >
-                              Reset
+                              );
+                            })}
+                          </Div>
+                          <Div className="flex-row flex-wrap justify-end gap-2">
+                            <Button type="button" onClick={() => handleReset(service.id)} className={BTN_SECONDARY}>
+                              <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
                             </Button>
-                            <Button
-                              type="button"
-                              onClick={() => handleSave(service.id)}
-                              className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                              Save
+                            <Button type="button" onClick={() => handleSave(service.id)} className={BTN_PRIMARY}>
+                              <Span className={BTN_TEXT_PRIMARY}>Save</Span>
                             </Button>
                           </Div>
                         </Div>
-                      )}
+                      ) : null}
                     </Div>
                   ))}
                 </Div>
-              </Div>
+              </Card>
             );
           })}
         </Div>
-      </Div>
-    </ScrollDiv>
+      )}
+    </AdminPage>
   );
 }

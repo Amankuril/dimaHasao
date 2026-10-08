@@ -2,11 +2,21 @@
 import React, { useEffect, useState } from 'react';
 import { CircleAlert, CircleCheck, Loader2, Percent, Save } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner } from '../components/ui';
+import {
+  AdminPage,
+  BTN_PRIMARY,
+  BTN_TEXT_PRIMARY,
+  Card,
+  ErrorState,
+  Field,
+  INPUT,
+  LoadingState,
+  PageHeader,
+  SectionTitle,
+  StatusBadge,
+} from '../../../../admin/ui';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, Form, H3, Input, Label, P, Section, Strong, Textarea, Icon as UiIcon, ScrollDiv } from '../../../../components/web';
-const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
-const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
+import { Button, Div, Form, Input, P, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
 const Settings = () => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,68 +45,82 @@ const Settings = () => {
       setSaving(false);
     }
   };
-  if (loading) return <Spinner />;
-  if (!settings) return null;
+  const header = (
+    <PageHeader
+      title="Tours Settings"
+      subtitle="Rates and the booking kill switch for this module only."
+      breadcrumb={[{ label: 'Tours' }, { label: 'Settings' }]}
+    />
+  );
+  if (loading)
+    return (
+      <AdminPage maxWidth={720}>
+        {header}
+        <LoadingState label="Loading settings…" />
+      </AdminPage>
+    );
+  if (!settings)
+    return (
+      <AdminPage maxWidth={720}>
+        {header}
+        <ErrorState title="Settings could not be loaded" message="The tours settings did not come back. Reopen this screen to try again." />
+      </AdminPage>
+    );
   const set = (key) => (e) =>
     setSettings((c) => ({
       ...c,
       [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value,
     }));
   return (
-    <ScrollDiv className="p-4 pb-20">
-      <Form onSubmit={save} className="space-y-6">
-        <PageHeader title="Tours Settings" subtitle="Rates and the booking kill switch for this module only." />
+    <AdminPage maxWidth={720}>
+      <Form onSubmit={save}>
+        {header}
 
-        <Div
-          className={`flex items-center gap-3 p-4 rounded-2xl border ${settings.platformOpen ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-700'}`}
-        >
-          {settings.platformOpen ? <UiIcon as={CircleCheck} size={20} className="shrink-0" /> : <UiIcon as={CircleAlert} size={20} className="shrink-0" />}
-          <Div>
-            <P className="text-sm font-bold">{settings.platformOpen ? 'Accepting bookings' : 'Bookings paused'}</P>
-            <P className="text-xs opacity-80">
+        <Card className="mb-4 flex-row items-start gap-3">
+          <UiIcon
+            as={settings.platformOpen ? CircleCheck : CircleAlert}
+            size={20}
+            className={settings.platformOpen ? 'text-green-700 shrink-0' : 'text-red-700 shrink-0'}
+          />
+          <Div className="flex-1 min-w-0 gap-1">
+            <Div className="flex-row items-center gap-2 flex-wrap">
+              <P className="text-base font-semibold text-slate-900">{settings.platformOpen ? 'Accepting bookings' : 'Bookings paused'}</P>
+              <StatusBadge status={settings.platformOpen ? 'active' : 'paused'} label={settings.platformOpen ? 'live' : 'paused'} />
+            </Div>
+            <P className="text-sm text-slate-500">
               {settings.platformOpen ? 'Travellers can book any published tour right now.' : 'No new tour bookings can be made anywhere in the app.'}
             </P>
           </Div>
-        </Div>
+        </Card>
 
-        <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-          <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
-            <UiIcon as={Percent} size={15} className="text-[#0a4d2b]" /> Tax rate
-          </H3>
+        <Card className="mb-4 gap-4">
+          <SectionTitle action={<UiIcon as={Percent} size={16} className="text-blue-600" />}>Tax rate</SectionTitle>
 
-          <Div className="max-w-xs">
-            <Label className={label}>Tax (GST) %</Label>
-            <Input type="number" min="0" max="100" value={settings.taxRate} onChange={set('taxRate')} className={field} />
-            <P className="text-xs text-gray-400 mt-1.5">
-              Charged on the full trip value, not on the advance. Defaults to 5% to match the approved booking screen.
-            </P>
-          </Div>
+          <Field label="Tax (GST) %" hint="Charged on the full trip value, not on the advance. Defaults to 5% to match the approved booking screen.">
+            <Input type="number" min="0" max="100" value={settings.taxRate} onChange={set('taxRate')} className={INPUT} />
+          </Field>
 
-          <Div className="flex items-start gap-2.5 text-sm text-gray-700 pt-2 border-t border-gray-100">
-            <Input type="checkbox" checked={settings.platformOpen} onChange={set('platformOpen')} className="mt-0.5" />
-            <Div className="flex-1">
-              <Strong>Accepting bookings</Strong>
-              <P className="text-xs text-gray-400">Turn this off to stop new tour bookings platform-wide.</P>
+          <Div className="flex-row items-start gap-3 pt-3 border-t border-slate-100">
+            <Input type="checkbox" className="w-5 h-5" checked={settings.platformOpen} onChange={set('platformOpen')} />
+            <Div className="flex-1 min-w-0">
+              <P className="text-sm font-medium text-slate-700">Accepting bookings</P>
+              <P className="text-xs text-slate-500 mt-0.5">Turn this off to stop new tour bookings platform-wide.</P>
             </Div>
           </Div>
 
           {!settings.platformOpen && (
-            <Div>
-              <Label className={label}>Message shown to travellers</Label>
-              <Textarea value={settings.bookingDisabledMessage} onChange={set('bookingDisabledMessage')} rows={2} className={field} />
-            </Div>
+            <Field label="Message shown to travellers">
+              <Textarea value={settings.bookingDisabledMessage} onChange={set('bookingDisabledMessage')} rows={2} className={`${INPUT} h-auto py-2.5`} />
+            </Field>
           )}
-        </Section>
+        </Card>
 
-        <Button
-          type="submit"
-          disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
-        >
-          {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />} Save settings
+        <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
+          {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Save} size={16} className="text-white" />}
+          <Span className={BTN_TEXT_PRIMARY}>Save settings</Span>
         </Button>
       </Form>
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Settings;

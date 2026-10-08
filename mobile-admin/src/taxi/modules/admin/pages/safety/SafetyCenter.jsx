@@ -1,5 +1,6 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/safety/SafetyCenter.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { ActivityIndicator } from 'react-native';
 import { GMap, Marker, toLatLng } from '../../../../../components/maps';
 import {
   AlertCircle,
@@ -19,15 +20,31 @@ import {
   Shield,
   Car,
   RefreshCw,
-  Loader2,
 } from 'lucide-react-native';
 import { toast } from '../../../../../lib/notify';
 import { socketService } from '../../../../shared/api/socket';
 import { adminService } from '../../services/adminService';
 import { HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER, useBaseGoogleMapsLoader } from '../../utils/googleMaps';
 import { getChatSession } from '../../../shared/chat/chatIdentity';
-import { Button, Div, Input, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
+import { Button, Div, Input, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
 import { window } from '../../../../../lib/webShim';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Toolbar,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  BTN_DANGER,
+  BTN_PRIMARY,
+  BTN_TEXT_PRIMARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+
 const formatRelativeTime = (value) => {
   const date = value ? new Date(value) : null;
   if (!date || Number.isNaN(date.getTime())) return 'Just now';
@@ -62,60 +79,64 @@ const getMapCenter = (alert) =>
 
 // -------------- SUB-COMPONENTS -------------- //
 
-const StatCard = ({ title, value, icon, alertMode }) => (
-  <Div className={`bg-white p-3 rounded-xl border ${alertMode ? 'border-red-200' : 'border-gray-200'} shadow-sm flex items-center justify-between`}>
-    <Div>
-      <P className="text-[11px] font-semibold text-gray-500 mb-0.5">{title}</P>
-      <Div className={`text-lg font-bold ${alertMode && value > 0 ? 'text-red-600 animate-pulse' : 'text-gray-900'}`}>{value}</Div>
-    </Div>
-    <Div className={`w-8 h-8 rounded-full flex items-center justify-center ${alertMode && value > 0 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-      {icon}
-    </Div>
+const FactCell = ({ label, value }) => (
+  <Div className="gap-0.5">
+    <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</Span>
+    <Span className="text-sm text-slate-900" numberOfLines={1}>
+      {value}
+    </Span>
   </Div>
 );
+
 const IncidentCard = ({ alert, isActive, onClick }) => (
-  <Div
+  <Button
     onClick={onClick}
-    className={`p-2.5 rounded-xl border transition-colors cursor-pointer relative ${isActive ? 'bg-yellow-50 border-yellow-300 shadow-sm' : 'bg-white border-gray-200 hover:border-yellow-200'}`}
+    accessibilityLabel={`Open incident for ${getParticipantTitle(alert)}`}
+    className={`p-3 rounded-lg border gap-2 ${isActive ? 'border-blue-600 bg-blue-100' : 'border-slate-200 bg-white'}`}
   >
-    <Div className="flex justify-between items-start mb-2">
-      <Div className="flex items-center gap-2">
-        <Div
-          className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-500'}`}
-        >
-          <UiIcon as={UserIcon} size={16} />
+    <Div className="flex-row items-start justify-between gap-2">
+      <Div className="flex-row items-center gap-2 flex-1 min-w-0">
+        <Div className={`w-9 h-9 rounded-full items-center justify-center shrink-0 ${isActive ? 'bg-white' : 'bg-slate-100'}`}>
+          <UiIcon as={UserIcon} size={16} className="text-slate-600" />
         </Div>
-        <Div>
-          <Div className="text-[13px] font-bold text-gray-900 leading-none mb-1">{getParticipantTitle(alert)}</Div>
-          <P className="text-[10px] font-medium text-gray-500 leading-none">ID: {alert?.driverId?.slice(-6) || alert?.userId?.slice(-6) || 'Unknown'}</P>
+        <Div className="flex-1 min-w-0">
+          <Span className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+            {getParticipantTitle(alert)}
+          </Span>
+          <Span className="text-xs text-slate-500" numberOfLines={1}>
+            ID: {alert?.driverId?.slice(-6) || alert?.userId?.slice(-6) || 'Unknown'}
+          </Span>
         </Div>
       </Div>
-      <Span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-red-100 text-red-700">Prio-1</Span>
+      <StatusBadge tone="danger" label="Prio-1" />
     </Div>
 
-    <Div className="grid grid-cols-2 gap-2 mb-2 text-[11px]">
-      <Div className="bg-gray-50/80 p-1.5 rounded-lg border border-gray-100">
-        <Span className="block text-[9px] text-gray-500 font-semibold mb-0.5">Vehicle</Span>
-        <Span className="font-bold text-gray-800">{alert?.vehicleLabel || 'N/A'}</Span>
+    <Div className="flex-row gap-2">
+      <Div className="flex-1 min-w-0 rounded-lg bg-slate-50 border border-slate-100 p-2">
+        <FactCell label="Vehicle" value={alert?.vehicleLabel || 'N/A'} />
       </Div>
-      <Div className="bg-gray-50/80 p-1.5 rounded-lg border border-gray-100 overflow-hidden">
-        <Span className="block text-[9px] text-gray-500 font-semibold mb-0.5">Passenger</Span>
-        <Span className="font-bold text-gray-800 truncate block">{alert?.riderName || 'None'}</Span>
+      <Div className="flex-1 min-w-0 rounded-lg bg-slate-50 border border-slate-100 p-2">
+        <FactCell label="Passenger" value={alert?.riderName || 'None'} />
       </Div>
     </Div>
 
-    <Div className="flex flex-col gap-1 pt-2 border-t border-gray-100">
-      <Div className="flex items-center gap-1.5 text-[10px] text-gray-600 font-medium">
-        <UiIcon as={Clock} size={12} className="text-gray-400 shrink-0" />
-        <Span>{formatRelativeTime(alert?.createdAt)}</Span>
+    <Div className="gap-1 pt-2 border-t border-slate-100">
+      <Div className="flex-row items-center gap-1.5">
+        <UiIcon as={Clock} size={12} className="text-slate-400" />
+        <Span className="text-xs text-slate-600 flex-1" numberOfLines={1}>
+          {formatRelativeTime(alert?.createdAt)}
+        </Span>
       </Div>
-      <Div className="flex items-center gap-1.5 text-[10px] text-gray-600 font-medium">
-        <UiIcon as={MapPin} size={12} className="text-red-500 shrink-0" />
-        <Span className="truncate">{alert?.locationLabel || alert?.pickupAddress || 'Locating...'}</Span>
+      <Div className="flex-row items-center gap-1.5">
+        <UiIcon as={MapPin} size={12} className="text-red-600" />
+        <Span className="text-xs text-slate-600 flex-1" numberOfLines={2}>
+          {alert?.locationLabel || alert?.pickupAddress || 'Locating…'}
+        </Span>
       </Div>
     </Div>
-  </Div>
+  </Button>
 );
+
 const AdminSosChat = ({ alert }) => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -140,35 +161,33 @@ const AdminSosChat = ({ alert }) => {
     // Disabled as per no API requirement. Handled by button disabled state.
   };
   return (
-    <Div className="bg-white rounded-xl border border-gray-200 flex flex-col h-[320px] shadow-sm">
-      {/* Header */}
-      <Div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between bg-gray-50 rounded-t-xl">
-        <Div>
-          <Div className="text-xs font-bold text-gray-900">Live Support Chat</Div>
-          <Div className="flex items-center gap-1.5 mt-0.5">
-            <Span className="w-1.5 h-1.5 rounded-full bg-green-500"></Span>
-            <Span className="text-[10px] font-semibold text-gray-500">{getParticipantTitle(alert)} Online</Span>
-          </Div>
+    <Card padded={false}>
+      <Div className="px-4 py-3 border-b border-slate-200">
+        <Span className="text-base font-semibold text-slate-900">Live Support Chat</Span>
+        <Div className="flex-row items-center gap-1.5 mt-0.5">
+          <Div className="w-2 h-2 rounded-full bg-green-600" />
+          <Span className="text-xs text-slate-500">{getParticipantTitle(alert)} online</Span>
         </Div>
       </Div>
 
-      {/* Messages */}
-      <ScrollDiv ref={messagesRef} className="flex-1 p-3 space-y-3 bg-gray-50/30">
+      <ScrollDiv ref={messagesRef} className="max-h-60" contentClassName="p-3 gap-2">
         {messages.map((msg) => (
-          <Div key={msg.id} className={`flex flex-col ${msg.sender === 'admin' ? 'items-end' : msg.sender === 'system' ? 'items-center' : 'items-start'}`}>
+          <Div key={msg.id} className={msg.sender === 'admin' ? 'items-end' : msg.sender === 'system' ? 'items-center' : 'items-start'}>
             {msg.sender === 'system' ? (
-              <Span className="text-[9px] font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">{msg.text}</Span>
+              <Div className="bg-slate-100 px-3 py-1.5 rounded-full">
+                <Span className="text-xs text-slate-600 text-center">{msg.text}</Span>
+              </Div>
             ) : (
-              <Div
-                className={`max-w-[85%] rounded-xl p-2.5 text-[11px] ${msg.sender === 'admin' ? 'bg-yellow-400 text-black rounded-tr-none' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'}`}
-              >
-                <P className="font-medium leading-relaxed">{msg.text}</P>
-                <Div className={`flex items-center gap-1 mt-1 text-[9px] font-bold ${msg.sender === 'admin' ? 'text-black/60 justify-end' : 'text-gray-400'}`}>
-                  {msg.time.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                  {msg.sender === 'admin' && <UiIcon as={CheckCheck} size={10} className="text-black" />}
+              <Div className={`max-w-[85%] rounded-lg p-2.5 ${msg.sender === 'admin' ? 'bg-blue-600' : 'bg-slate-50 border border-slate-200'}`}>
+                <Span className={`text-sm ${msg.sender === 'admin' ? 'text-white' : 'text-slate-800'}`}>{msg.text}</Span>
+                <Div className="flex-row items-center gap-1 mt-1">
+                  <Span className={`text-xs ${msg.sender === 'admin' ? 'text-white' : 'text-slate-500'}`}>
+                    {msg.time.toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Span>
+                  {msg.sender === 'admin' ? <UiIcon as={CheckCheck} size={12} className="text-white" /> : null}
                 </Div>
               </Div>
             )}
@@ -176,27 +195,26 @@ const AdminSosChat = ({ alert }) => {
         ))}
       </ScrollDiv>
 
-      {/* Input */}
-      <Div className="p-2 border-t border-gray-100 bg-white flex items-center gap-2 rounded-b-xl">
-        <Button disabled className="p-1.5 text-gray-300 rounded-lg cursor-not-allowed">
-          <UiIcon as={Paperclip} size={16} />
+      <Div className="p-2 border-t border-slate-200 flex-row items-center gap-2">
+        <Button disabled accessibilityLabel="Attach a file" className="w-11 h-11 items-center justify-center rounded-lg opacity-40">
+          <UiIcon as={Paperclip} size={18} className="text-slate-400" />
         </Button>
         <Input
           type="text"
-          placeholder="Chat API unavailable..."
+          placeholder="Chat API unavailable"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           disabled
-          className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] outline-none text-gray-500 cursor-not-allowed"
+          className="flex-1 h-11 px-3 rounded-lg border border-slate-300 bg-slate-50 text-sm text-slate-500"
         />
-        <Button disabled className="p-1.5 text-gray-300 rounded-lg cursor-not-allowed">
-          <UiIcon as={Mic} size={16} />
+        <Button disabled accessibilityLabel="Record a voice note" className="w-11 h-11 items-center justify-center rounded-lg opacity-40">
+          <UiIcon as={Mic} size={18} className="text-slate-400" />
         </Button>
-        <Button disabled onClick={handleSend} className="p-1.5 bg-gray-100 text-gray-400 rounded-lg shadow-sm cursor-not-allowed">
-          <UiIcon as={Send} size={16} />
+        <Button disabled onClick={handleSend} accessibilityLabel="Send" className="w-11 h-11 items-center justify-center rounded-lg bg-slate-100 opacity-40">
+          <UiIcon as={Send} size={18} className="text-slate-400" />
         </Button>
       </Div>
-    </Div>
+    </Card>
   );
 };
 
@@ -204,6 +222,7 @@ const AdminSosChat = ({ alert }) => {
 
 const SafetyCenter = () => {
   const { isLoaded, loadError } = useBaseGoogleMapsLoader();
+  const { tablet } = useLayoutWidth();
   const [alerts, setAlerts] = useState([]);
   const [selectedAlertId, setSelectedAlertId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -315,175 +334,151 @@ const SafetyCenter = () => {
       },
     ];
   }, [selectedAlert]);
+  const contextCols = tablet ? 3 : 2;
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* Top Dashboard Row */}
-      <Div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 shadow-sm z-10 shrink-0">
-        <StatCard title="Active SOS" value={alerts.length} icon={<UiIcon as={AlertCircle} size={16} />} alertMode={true} />
-        <StatCard title="Resolved Today" value={dashboardStats.resolved} icon={<UiIcon as={CheckCircle2} size={16} />} />
-        <StatCard title="High Priority" value={alerts.length} icon={<UiIcon as={ShieldAlert} size={16} />} alertMode={true} />
-        <StatCard title="Escalated" value={dashboardStats.escalated} icon={<UiIcon as={History} size={16} />} />
-        <StatCard title="Avg Response" value="< 30s" icon={<UiIcon as={Activity} size={16} />} />
-        <StatCard title="Agents" value={dashboardStats.connectedAgents} icon={<UiIcon as={UserIcon} size={16} />} />
-      </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={ShieldAlert}
+        title="Safety Center"
+        subtitle="Live SOS signals from riders and drivers"
+        breadcrumb={[{ label: 'Safety' }, { label: 'Safety Center' }]}
+      />
 
-      {/* Main Content Area */}
-      <Div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
-        {/* Left Sidebar: Incident List */}
-        <Div className="w-full lg:w-72 h-[450px] lg:h-auto flex-shrink-0 flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <Div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-            <Div className="text-sm font-bold text-gray-900">Active Incidents</Div>
-            <Div className="flex items-center gap-2">
-              <Button onClick={loadAlerts} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors">
-                <UiIcon as={RefreshCw} size={14} className={isLoading ? 'animate-spin' : ''} />
+      <StatGrid className="mb-4">
+        <StatCard label="Active SOS" value={alerts.length} icon={AlertCircle} tone={alerts.length > 0 ? 'danger' : 'neutral'} />
+        <StatCard label="Resolved Today" value={dashboardStats.resolved} icon={CheckCircle2} tone="success" />
+        <StatCard label="High Priority" value={alerts.length} icon={ShieldAlert} tone={alerts.length > 0 ? 'danger' : 'neutral'} />
+        <StatCard label="Escalated" value={dashboardStats.escalated} icon={History} tone="warning" />
+        <StatCard label="Avg Response" value="< 30s" icon={Activity} tone="info" />
+        <StatCard label="Agents" value={dashboardStats.connectedAgents} icon={UserIcon} tone="info" />
+      </StatGrid>
+
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            <Div className="flex-row items-center gap-2">
+              <StatusBadge tone={alerts.length > 0 ? 'danger' : 'neutral'} label={`${alerts.length}`} />
+              <Button onClick={loadAlerts} accessibilityLabel="Refresh incidents" className="w-11 h-11 items-center justify-center rounded-lg">
+                {isLoading ? <ActivityIndicator size="small" color="#155DFC" /> : <UiIcon as={RefreshCw} size={18} className="text-slate-500" />}
               </Button>
-              <Span className="bg-red-100 text-red-700 font-bold text-[10px] px-2 py-0.5 rounded-md">{alerts.length}</Span>
             </Div>
-          </Div>
+          }
+        >
+          Active Incidents
+        </SectionTitle>
 
-          <Div className="flex-1 p-3 space-y-2">
-            {isLoading ? (
-              <Div className="flex justify-center p-8">
-                <UiIcon as={Loader2} className="w-6 h-6 animate-spin text-gray-400" />
-              </Div>
-            ) : alerts.length === 0 ? (
-              <Div className="text-center p-8">
-                <UiIcon as={Shield} className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-                <P className="text-xs font-bold text-gray-900">All Clear</P>
-                <P className="text-[10px] font-medium text-gray-500 mt-1">No active distress signals.</P>
-              </Div>
-            ) : (
-              alerts.map((alert) => (
-                <IncidentCard key={alert.id} alert={alert} isActive={selectedAlert?.id === alert.id} onClick={() => setSelectedAlertId(alert.id)} />
-              ))
-            )}
-          </Div>
-        </Div>
-
-        {/* Right Area: Incident Details */}
-        {selectedAlert ? (
-          <Div className="flex-1 flex flex-col gap-4 lg:pr-2 no-scrollbar">
-            {/* Header Actions */}
-            <Div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <Div>
-                <Div className="text-lg font-bold text-gray-900 mb-1.5">SOS Details</Div>
-                <Div className="flex flex-wrap items-center gap-2">
-                  <Div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100">
-                    <UiIcon as={Clock} size={12} className="text-gray-400" />
-                    {formatDateTime(selectedAlert.createdAt)}
-                  </Div>
-                  <Div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100">
-                    <UiIcon as={MapPin} size={12} className="text-red-500" />
-                    {selectedAlert.locationLabel || selectedAlert.pickupAddress || 'GPS Active'}
-                  </Div>
-                </Div>
-              </Div>
-
-              <Div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                <Button
-                  onClick={() => window.open('tel:100', '_self')}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-700 transition-colors shadow-sm"
-                >
-                  <UiIcon as={PhoneCall} size={14} /> Emergency
-                </Button>
-                <Button
-                  onClick={handleResolve}
-                  disabled={isResolving}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-yellow-400 text-black px-4 py-2 rounded-lg text-xs font-bold hover:bg-yellow-500 transition-colors shadow-sm disabled:opacity-50"
-                >
-                  <UiIcon as={CheckCircle2} size={14} /> {isResolving ? 'Closing...' : 'Close Incident'}
-                </Button>
-              </Div>
-            </Div>
-
-            {/* Grid Layout for Panels */}
-            <Div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-[400px]">
-              {/* Map Panel */}
-              <Div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm h-64 lg:h-auto relative">
-                {loadError ? (
-                  <Div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-gray-50 p-6">
-                    <UiIcon as={Globe} size={24} className="text-gray-300 mb-2" />
-                    <P className="text-xs font-bold text-gray-900">Map Unavailable</P>
-                  </Div>
-                ) : HAS_VALID_GOOGLE_MAPS_KEY && isLoaded ? (
-                  <GMap
-                    className="w-full h-full"
-                    region={{
-                      ...toLatLng(getMapCenter(selectedAlert)),
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    }}
-                    zoomControlEnabled
-                  >
-                    {mapMarkers.map((m) => (
-                      <Marker key={m.id} coordinate={toLatLng(m.pos)} pinColor={m.color} />
-                    ))}
-                  </GMap>
-                ) : (
-                  <Div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-xs font-bold text-gray-500">Loading Map...</Div>
-                )}
-              </Div>
-
-              {/* Context & Timeline Panel */}
-              <Div className="flex flex-col gap-4">
-                {/* Distress Context */}
-                <Div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                  <Div className="text-xs font-bold text-gray-900 mb-3 border-b border-gray-100 pb-2">Distress Context</Div>
-                  <Div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <Div>
-                      <P className="text-[9px] font-semibold text-gray-500 mb-0.5">Driver ID</P>
-                      <P className="text-[11px] font-bold text-gray-900">{selectedAlert?.driverId?.slice(-8) || 'N/A'}</P>
-                    </Div>
-                    <Div>
-                      <P className="text-[9px] font-semibold text-gray-500 mb-0.5">User ID</P>
-                      <P className="text-[11px] font-bold text-gray-900">{selectedAlert?.userId?.slice(-8) || 'N/A'}</P>
-                    </Div>
-                    <Div>
-                      <P className="text-[9px] font-semibold text-gray-500 mb-0.5">Ride ID</P>
-                      <P className="text-[11px] font-bold text-gray-900">{selectedAlert?.rideId?.slice(-8) || selectedAlert?.tripCode || 'N/A'}</P>
-                    </Div>
-                    <Div>
-                      <P className="text-[9px] font-semibold text-gray-500 mb-0.5">Contact</P>
-                      <P className="text-[11px] font-bold text-gray-900">{selectedAlert?.emergencyContact || 'Unavailable'}</P>
-                    </Div>
-                  </Div>
-                </Div>
-
-                {/* Live Chat */}
-                <AdminSosChat alert={selectedAlert} />
-              </Div>
-            </Div>
-
-            {/* Live Activity Timeline */}
-            <Div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-4 lg:mb-0">
-              <Div className="text-xs font-bold text-gray-900 mb-3 border-b border-gray-100 pb-2">Activity Log</Div>
-              <Div className="space-y-3">
-                {timeline.map((event, idx) => (
-                  <Div key={idx} className="flex gap-3">
-                    <Div className="flex flex-col items-center">
-                      <Div className={`w-2.5 h-2.5 rounded-full border-2 ${idx === 0 ? 'bg-red-500 border-red-200' : 'bg-gray-400 border-gray-200'}`}></Div>
-                      {idx !== timeline.length - 1 && <Div className="w-px flex-1 bg-gray-100 my-1"></Div>}
-                    </Div>
-                    <Div className="pb-2">
-                      <P className="text-[11px] font-bold text-gray-900">{event.label}</P>
-                      <P className="text-[9px] font-medium text-gray-500">{formatDateTime(event.time)}</P>
-                    </Div>
-                  </Div>
-                ))}
-              </Div>
-            </Div>
-          </Div>
+        {isLoading ? (
+          <LoadingState label="Syncing SOS signals…" className="border-0" />
+        ) : alerts.length === 0 ? (
+          <EmptyState icon={Shield} title="All clear" message="No active distress signals." className="border-0" />
         ) : (
-          <Div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white rounded-xl border border-gray-200">
-            <UiIcon as={ShieldAlert} size={40} className="text-gray-300 mb-3" />
-            <Div className="text-base font-bold text-gray-900">System Standby</Div>
-            <P className="text-[11px] font-medium text-gray-500 max-w-xs mt-1.5">
-              Waiting for emergency distress signals. Select an incident from the sidebar to view details.
-            </P>
+          <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+            {alerts.map((alert) => (
+              <IncidentCard key={alert.id} alert={alert} isActive={selectedAlert?.id === alert.id} onClick={() => setSelectedAlertId(alert.id)} />
+            ))}
           </Div>
         )}
-      </Div>
-    </ScrollDiv>
+      </Card>
+
+      {selectedAlert ? (
+        <>
+          <Card className="mb-4">
+            <SectionTitle>SOS Details</SectionTitle>
+            <Div className="flex-row flex-wrap items-center gap-2 mb-3">
+              <Div className="flex-row items-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200 px-2 py-1.5">
+                <UiIcon as={Clock} size={12} className="text-slate-400" />
+                <Span className="text-xs text-slate-600">{formatDateTime(selectedAlert.createdAt)}</Span>
+              </Div>
+              <Div className="flex-row items-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200 px-2 py-1.5 flex-1 min-w-[160px]">
+                <UiIcon as={MapPin} size={12} className="text-red-600" />
+                <Span className="text-xs text-slate-600 flex-1" numberOfLines={1}>
+                  {selectedAlert.locationLabel || selectedAlert.pickupAddress || 'GPS Active'}
+                </Span>
+              </Div>
+            </Div>
+
+            <Toolbar className="mb-0">
+              <Button onClick={() => window.open('tel:100', '_self')} className={`${BTN_DANGER} flex-1 min-w-[150px]`}>
+                <UiIcon as={PhoneCall} size={16} className="text-white" />
+                <Span className={BTN_TEXT_PRIMARY}>Emergency</Span>
+              </Button>
+              <Button onClick={handleResolve} disabled={isResolving} className={`${BTN_PRIMARY} flex-1 min-w-[150px] ${isResolving ? 'opacity-50' : ''}`}>
+                {isResolving ? <ActivityIndicator size="small" color="#FFFFFF" /> : <UiIcon as={CheckCircle2} size={16} className="text-white" />}
+                <Span className={BTN_TEXT_PRIMARY}>{isResolving ? 'Closing…' : 'Close Incident'}</Span>
+              </Button>
+            </Toolbar>
+          </Card>
+
+          <Card padded={false} className="mb-4 overflow-hidden">
+            <Div className="h-64">
+              {loadError ? (
+                <Div className="flex-1 items-center justify-center bg-slate-50 p-6 gap-2">
+                  <UiIcon as={Globe} size={24} className="text-slate-400" />
+                  <Span className="text-sm font-semibold text-slate-900">Map unavailable</Span>
+                </Div>
+              ) : HAS_VALID_GOOGLE_MAPS_KEY && isLoaded ? (
+                <GMap
+                  className="w-full h-full"
+                  region={{
+                    ...toLatLng(getMapCenter(selectedAlert)),
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                  zoomControlEnabled
+                >
+                  {mapMarkers.map((m) => (
+                    <Marker key={m.id} coordinate={toLatLng(m.pos)} pinColor={m.color} />
+                  ))}
+                </GMap>
+              ) : (
+                <Div className="flex-1 items-center justify-center bg-slate-50 gap-2">
+                  <ActivityIndicator size="small" color="#155DFC" />
+                  <Span className="text-sm text-slate-500">Loading map…</Span>
+                </Div>
+              )}
+            </Div>
+          </Card>
+
+          <Card className="mb-4">
+            <SectionTitle>Distress Context</SectionTitle>
+            <Div className={`grid grid-cols-${contextCols} gap-3`}>
+              <FactCell label="Driver ID" value={selectedAlert?.driverId?.slice(-8) || 'N/A'} />
+              <FactCell label="User ID" value={selectedAlert?.userId?.slice(-8) || 'N/A'} />
+              <FactCell label="Ride ID" value={selectedAlert?.rideId?.slice(-8) || selectedAlert?.tripCode || 'N/A'} />
+              <FactCell label="Contact" value={selectedAlert?.emergencyContact || 'Unavailable'} />
+            </Div>
+          </Card>
+
+          <Div className="mb-4">
+            <AdminSosChat alert={selectedAlert} />
+          </Div>
+
+          <Card>
+            <SectionTitle>Activity Log</SectionTitle>
+            <Div className="gap-3">
+              {timeline.map((event, idx) => (
+                <Div key={idx} className="flex-row gap-3">
+                  <Div className="items-center">
+                    <Div className={`w-2.5 h-2.5 rounded-full ${idx === 0 ? 'bg-red-600' : 'bg-slate-400'}`} />
+                    {idx !== timeline.length - 1 ? <Div className="w-px flex-1 bg-slate-200 my-1" /> : null}
+                  </Div>
+                  <Div className="flex-1 min-w-0">
+                    <Span className="text-sm font-medium text-slate-900">{event.label}</Span>
+                    <Span className="text-xs text-slate-500">{formatDateTime(event.time)}</Span>
+                  </Div>
+                </Div>
+              ))}
+            </Div>
+          </Card>
+        </>
+      ) : (
+        <EmptyState
+          icon={ShieldAlert}
+          title="System standby"
+          message="Waiting for emergency distress signals. Select an incident above to view its details."
+        />
+      )}
+    </AdminPage>
   );
 };
 export default SafetyCenter;

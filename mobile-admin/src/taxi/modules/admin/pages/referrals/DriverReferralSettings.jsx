@@ -1,14 +1,35 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/referrals/DriverReferralSettings.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ChevronRight, Clock3, Gift, Info, Loader2, Plus, Save, Share2, Sparkles, Trash2, Trophy } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigate } from '../../../../../lib/webRouter';
+import { Check, Clock3, Gift, Loader2, Plus, Save, Share2, Sparkles, Trash2, Trophy, X } from 'lucide-react-native';
 import { toast } from '../../../../../lib/notify';
 import { adminService } from '../../services/adminService';
-import { Button, Div, H3, H4, Input, Label, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
-const labelClass = 'block text-sm font-semibold text-gray-700 mb-1.5';
-const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition-colors';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  LoadingState,
+  ErrorState,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, Input, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+
+/** A 44 px-tall switch: the kit has no toggle, so the screens build it locally. */
+const Toggle = ({ value, onToggle, label }) => (
+  <Button onClick={onToggle} accessibilityLabel={label} className="h-11 w-11 items-center justify-center">
+    <Div className={`w-11 h-6 rounded-full justify-center ${value ? 'bg-blue-600' : 'bg-slate-300'}`}>
+      <Div className={`w-4 h-4 rounded-full bg-white ${value ? 'self-end mr-1' : 'ml-1'}`} />
+    </Div>
+  </Button>
+);
 const defaultMilestone = (index = 1) => ({
   id: `milestone_${Date.now()}_${index}`,
   name: '',
@@ -137,25 +158,29 @@ const referralTypes = [
   },
 ];
 const DriverReferralSettings = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [settings, setSettings] = useState(() => normalizeDriverReferralSettings());
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await adminService.getReferralSettings('driver');
-        setSettings(normalizeDriverReferralSettings(res.data || {}));
-      } catch (err) {
-        console.error('Fetch error:', err);
-        toast.error('Failed to load settings');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSettings();
+  const { tablet } = useLayoutWidth();
+  const fetchSettings = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const res = await adminService.getReferralSettings('driver');
+      setSettings(normalizeDriverReferralSettings(res.data || {}));
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setLoadError(err?.message || 'Failed to load settings');
+      toast.error('Failed to load settings');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
   const handleUpdate = async () => {
     setSaving(true);
     try {
@@ -249,365 +274,308 @@ const DriverReferralSettings = () => {
   };
   const isConditional = settings.type?.includes('conditional');
   const enabledFeatureCount = useMemo(() => settings.reward_features.filter((item) => item.enabled).length, [settings.reward_features]);
+  const header = (
+    <PageHeader
+      icon={Gift}
+      title="Driver referral settings"
+      subtitle="Referral payouts plus long-term milestone programs for drivers"
+      breadcrumb={[{ label: 'Taxi' }, { label: 'Referrals' }, { label: 'Drivers' }]}
+    />
+  );
+
   if (loading) {
     return (
-      <ScrollDiv className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Div className="flex flex-col items-center gap-3">
-          <UiIcon as={Loader2} className="animate-spin text-yellow-600" size={32} />
-          <Span className="text-sm text-gray-500 font-medium">Loading settings...</Span>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={900}>
+        {header}
+        <LoadingState label="Loading settings…" />
+      </AdminPage>
     );
   }
+  if (loadError) {
+    return (
+      <AdminPage maxWidth={900}>
+        {header}
+        <ErrorState title="Could not load the settings" message={loadError} onRetry={fetchSettings} />
+      </AdminPage>
+    );
+  }
+  const half = tablet ? 'flex-1' : '';
   return (
-    <ScrollDiv className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans">
-      <Div className="max-w-6xl space-y-6">
-        <Div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <Div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <Div className="flex items-center gap-4">
-              <Div className="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600">
-                <UiIcon as={Gift} size={20} />
-              </Div>
-              <Div>
-                <H3 className="text-sm font-bold text-gray-900 ">Driver Referral Earnings Setup</H3>
-                <P className="text-xs text-gray-400 mt-0.5 font-medium">Configure referral rewards plus long-term milestone programs for drivers.</P>
-              </Div>
-            </Div>
-            <Button
-              onClick={() => handleToggle(!settings.enabled)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${settings.enabled ? 'bg-yellow-400' : 'bg-gray-200'}`}
-            >
-              <Span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.enabled ? 'translate-x-6' : 'translate-x-1'}`}
+    <AdminPage maxWidth={900}>
+      {header}
+
+      <Card className="mb-4">
+        <Div className="flex-row items-center gap-3">
+          <Div className="flex-1 min-w-0">
+            <Span className="text-base font-semibold text-slate-900">Driver referral earnings</Span>
+            <Span className="text-sm text-slate-500">Configure referral rewards plus long-term milestone programs for drivers.</Span>
+          </Div>
+          <Toggle
+            value={settings.enabled}
+            onToggle={() => handleToggle(!settings.enabled)}
+            label={settings.enabled ? 'Disable driver referrals' : 'Enable driver referrals'}
+          />
+        </Div>
+      </Card>
+
+      <StatGrid className="mb-4">
+        <StatCard label="Milestones" value={String(settings.milestone_programs.length)} icon={Trophy} tone="info" />
+        <StatCard label="Active features" value={String(enabledFeatureCount)} icon={Sparkles} tone="success" />
+      </StatGrid>
+
+      <Card className="mb-4 gap-4">
+        <SectionTitle className="mb-0">Referral payout</SectionTitle>
+        <Field label="Driver referral type" hint="Instant pays on signup; conditional waits for a number of rides.">
+          <Select
+            value={settings.type}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                type: e.target.value,
+              })
+            }
+            className={INPUT}
+          >
+            <Option value="">Select</Option>
+            {referralTypes.map((type) => (
+              <Option key={type.value} value={type.value}>
+                {type.label}
+              </Option>
+            ))}
+          </Select>
+        </Field>
+
+        <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+          {isConditional ? (
+            <Field label="Required ride count" hint="Number of rides required before referral rewards unlock." className={half}>
+              <Input
+                type="number"
+                value={settings.ride_count}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    ride_count: e.target.value,
+                  })
+                }
+                className={INPUT}
+                placeholder="5"
               />
-            </Button>
+            </Field>
+          ) : null}
+
+          <Field label="Earnings to each referral" hint="Wallet amount credited for each successful driver referral." className={half}>
+            <Input
+              type="number"
+              value={settings.amount}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  amount: e.target.value,
+                })
+              }
+              className={INPUT}
+              placeholder="100"
+            />
+          </Field>
+        </Div>
+      </Card>
+
+      <Card className="mb-4">
+        <Div className="flex-row items-start gap-3">
+          <Div className="w-10 h-10 rounded-lg bg-blue-100 items-center justify-center shrink-0">
+            <UiIcon as={Share2} size={20} className="text-blue-700" />
           </Div>
-
-          <Div className="p-8 space-y-8">
-            <Div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <Div className="space-y-5">
-                <Div className="max-w-xl space-y-2">
-                  <Label className={labelClass}>
-                    Driver Referral Type <UiIcon as={Info} size={14} className="inline ml-1 text-gray-400" />
-                  </Label>
-                  <Div className="relative">
-                    <Select
-                      value={settings.type}
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          type: e.target.value,
-                        })
-                      }
-                      className={`${inputClass} appearance-none pr-10`}
-                    >
-                      <Option value="">Select</Option>
-                      {referralTypes.map((type) => (
-                        <Option key={type.value} value={type.value}>
-                          {type.label}
-                        </Option>
-                      ))}
-                    </Select>
-                    <Div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                      <UiIcon as={ChevronRight} size={16} className="rotate-90" />
-                    </Div>
-                  </Div>
-                </Div>
-
-                {isConditional && (
-                  <Div className="bg-gray-50/50 rounded-xl border border-gray-200 p-6 space-y-3">
-                    <Label className={labelClass}>Required Ride Count</Label>
-                    <Input
-                      type="number"
-                      value={settings.ride_count}
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          ride_count: e.target.value,
-                        })
-                      }
-                      className={inputClass}
-                      placeholder="5"
-                    />
-                    <P className="text-[11px] text-gray-400 font-medium">Number of rides required before referral rewards unlock.</P>
-                  </Div>
-                )}
-
-                <Div className="bg-gray-50/50 rounded-xl border border-gray-200 p-6 space-y-3">
-                  <Label className={labelClass}>Earnings to Each Referral</Label>
-                  <Input
-                    type="number"
-                    value={settings.amount}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        amount: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                    placeholder="100"
-                  />
-                  <P className="text-[11px] text-gray-400 font-medium">Wallet amount credited for each successful driver referral.</P>
-                </Div>
-              </Div>
-
-              <LinearGradient
-                colors={['#FEFCE8', '#FFFFFF']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{ borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#FEF08A', padding: 24 }}
-              >
-                <Div className="flex items-start gap-4">
-                  <Div className="w-12 h-12 rounded-2xl bg-white text-yellow-600 border border-yellow-100 flex items-center justify-center shadow-sm">
-                    <UiIcon as={Share2} size={22} />
-                  </Div>
-                  <Div>
-                    <H4 className="text-sm font-bold text-gray-900">Driver growth stack</H4>
-                    <P className="text-xs text-gray-500 mt-1 leading-relaxed">
-                      Mix normal referral payout with Ola/Uber style milestone rewards like active-hour streaks, weekly quests, peak bonuses, rating protection,
-                      and cancellation discipline.
-                    </P>
-                  </Div>
-                </Div>
-
-                <Div className="mt-5 grid grid-cols-2 gap-3">
-                  <Div className="rounded-xl bg-white border border-yellow-100 p-4">
-                    <P className="text-[10px] font-black  text-slate-400">Milestones</P>
-                    <P className="mt-2 text-2xl font-black text-slate-900">{settings.milestone_programs.length}</P>
-                  </Div>
-                  <Div className="rounded-xl bg-white border border-yellow-100 p-4">
-                    <P className="text-[10px] font-black  text-slate-400">Active features</P>
-                    <P className="mt-2 text-2xl font-black text-slate-900">{enabledFeatureCount}</P>
-                  </Div>
-                </Div>
-              </LinearGradient>
-            </Div>
-
-            <Div className="rounded-2xl border border-gray-200 overflow-hidden">
-              <Div className="px-6 py-5 bg-slate-50 border-b border-gray-200 flex items-center justify-between">
-                <Div className="flex items-center gap-3">
-                  <Div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center">
-                    <UiIcon as={Trophy} size={18} />
-                  </Div>
-                  <Div>
-                    <H3 className="text-sm font-bold text-gray-900 ">Driver Milestone Program</H3>
-                    <P className="text-xs text-gray-500">Create milestone payout slabs based on daily active time and sustained weekly performance.</P>
-                  </Div>
-                </Div>
-                <Button
-                  onClick={() =>
-                    setSettings((current) => ({
-                      ...current,
-                      milestone_program_enabled: !current.milestone_program_enabled,
-                    }))
-                  }
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${settings.milestone_program_enabled ? 'bg-yellow-400' : 'bg-gray-200'}`}
-                >
-                  <Span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.milestone_program_enabled ? 'translate-x-6' : 'translate-x-1'}`}
-                  />
-                </Button>
-              </Div>
-
-              <Div className="p-6 space-y-5">
-                {settings.milestone_programs.map((item, index) => (
-                  <Div key={item.id} className="rounded-2xl border border-gray-200 p-5 bg-white space-y-4">
-                    <Div className="flex items-center justify-between gap-3">
-                      <Div className="flex items-center gap-3">
-                        <Div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center">
-                          <UiIcon as={Clock3} size={18} />
-                        </Div>
-                        <Div>
-                          <P className="text-[11px] font-black  text-slate-400">Milestone {index + 1}</P>
-                          <P className="text-sm font-bold text-slate-900">{item.name || 'Untitled milestone'}</P>
-                        </Div>
-                      </Div>
-                      <Div className="flex items-center gap-3">
-                        <Button
-                          type="button"
-                          onClick={() => updateMilestone(index, 'enabled', !item.enabled)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.enabled ? 'bg-yellow-400' : 'bg-gray-200'}`}
-                        >
-                          <Span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.enabled ? 'translate-x-6' : 'translate-x-1'}`}
-                          />
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => removeMilestone(index)}
-                          className="h-10 w-10 rounded-xl border border-rose-100 bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-100 transition-colors"
-                        >
-                          <UiIcon as={Trash2} size={16} />
-                        </Button>
-                      </Div>
-                    </Div>
-
-                    <Div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-                      <Div className="xl:col-span-2">
-                        <Label className={labelClass}>Milestone Name</Label>
-                        <Input
-                          type="text"
-                          value={item.name}
-                          onChange={(e) => updateMilestone(index, 'name', e.target.value)}
-                          className={inputClass}
-                          placeholder="30-day active streak"
-                        />
-                      </Div>
-                      <Div>
-                        <Label className={labelClass}>Active Hours / Day</Label>
-                        <Input
-                          type="number"
-                          value={item.active_hours_per_day}
-                          onChange={(e) => updateMilestone(index, 'active_hours_per_day', e.target.value)}
-                          className={inputClass}
-                        />
-                      </Div>
-                      <Div>
-                        <Label className={labelClass}>Required Weeks</Label>
-                        <Input
-                          type="number"
-                          value={item.required_weeks}
-                          onChange={(e) => updateMilestone(index, 'required_weeks', e.target.value)}
-                          className={inputClass}
-                        />
-                      </Div>
-                      <Div>
-                        <Label className={labelClass}>Payout Amount</Label>
-                        <Input
-                          type="number"
-                          value={item.payout_amount}
-                          onChange={(e) => updateMilestone(index, 'payout_amount', e.target.value)}
-                          className={inputClass}
-                        />
-                      </Div>
-                    </Div>
-
-                    <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Div>
-                        <Label className={labelClass}>Minimum Trips / Week</Label>
-                        <Input
-                          type="number"
-                          value={item.min_trips_per_week}
-                          onChange={(e) => updateMilestone(index, 'min_trips_per_week', e.target.value)}
-                          className={inputClass}
-                        />
-                      </Div>
-                      <Div>
-                        <Label className={labelClass}>Admin Note</Label>
-                        <Input
-                          type="text"
-                          value={item.notes}
-                          onChange={(e) => updateMilestone(index, 'notes', e.target.value)}
-                          className={inputClass}
-                          placeholder="Credit after compliance review"
-                        />
-                      </Div>
-                    </Div>
-                  </Div>
-                ))}
-
-                <Button
-                  type="button"
-                  onClick={addMilestone}
-                  className="inline-flex items-center gap-2 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-2.5 text-xs font-black  text-yellow-700 hover:bg-yellow-100 transition-colors"
-                >
-                  <UiIcon as={Plus} size={14} />
-                  Add Milestone
-                </Button>
-              </Div>
-            </Div>
-
-            <Div className="rounded-2xl border border-gray-200 overflow-hidden">
-              <Div className="px-6 py-5 bg-slate-50 border-b border-gray-200 flex items-center gap-3">
-                <Div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center">
-                  <UiIcon as={Sparkles} size={18} />
-                </Div>
-                <Div>
-                  <H3 className="text-sm font-bold text-gray-900 ">Extra Driver Reward Features</H3>
-                  <P className="text-xs text-gray-500">Popular incentive mechanics inspired by Ola, Uber, and large fleet growth programs.</P>
-                </Div>
-              </Div>
-
-              <Div className="p-6 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                {settings.reward_features.map((feature) => (
-                  <Div key={feature.key} className="rounded-2xl border border-gray-200 p-5 bg-white space-y-4">
-                    <Div className="flex items-start justify-between gap-4">
-                      <Div>
-                        <H4 className="text-sm font-bold text-slate-900">{feature.label}</H4>
-                        <P className="mt-1 text-xs text-slate-500 leading-relaxed">{feature.description}</P>
-                      </Div>
-                      <Button
-                        type="button"
-                        onClick={() => updateRewardFeature(feature.key, 'enabled', !feature.enabled)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${feature.enabled ? 'bg-yellow-400' : 'bg-gray-200'}`}
-                      >
-                        <Span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${feature.enabled ? 'translate-x-6' : 'translate-x-1'}`}
-                        />
-                      </Button>
-                    </Div>
-
-                    <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Div>
-                        <Label className={labelClass}>Reward Amount</Label>
-                        <Input
-                          type="number"
-                          value={feature.reward_amount}
-                          onChange={(e) => updateRewardFeature(feature.key, 'reward_amount', e.target.value)}
-                          className={inputClass}
-                        />
-                      </Div>
-                      <Div>
-                        <Label className={labelClass}>Target Value</Label>
-                        <Input
-                          type="number"
-                          value={feature.target_value}
-                          onChange={(e) => updateRewardFeature(feature.key, 'target_value', e.target.value)}
-                          className={inputClass}
-                        />
-                      </Div>
-                    </Div>
-
-                    <Div>
-                      <Label className={labelClass}>Unit / Metric</Label>
-                      <Input
-                        type="text"
-                        value={feature.unit}
-                        onChange={(e) => updateRewardFeature(feature.key, 'unit', e.target.value)}
-                        className={inputClass}
-                      />
-                    </Div>
-                  </Div>
-                ))}
-              </Div>
-            </Div>
-          </Div>
-
-          <Div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col gap-4">
-            <Button
-              onClick={handleUpdate}
-              disabled={saving}
-              className="w-fit flex items-center gap-2 px-6 py-2.5 bg-yellow-400 text-black text-xs font-bold  rounded-lg hover:bg-yellow-500 transition-colors shadow-sm disabled:opacity-50"
-            >
-              {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />}
-              Update Driver Incentive Settings
-            </Button>
-
-            {showSuccess && (
-              <Div className="flex items-center gap-2 text-yellow-600 bg-yellow-50 px-4 py-3 rounded-lg border border-yellow-200 animate-in fade-in slide-in-from-bottom-2">
-                <Div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <UiIcon as={ChevronRight} size={12} className="rotate-45" />
-                </Div>
-                <Span className="text-xs font-bold ">Driver incentive settings updated successfully</Span>
-                <Button onClick={() => setShowSuccess(false)} className="ml-auto text-yellow-600 hover:text-yellow-600">
-                  <Span className="text-lg">x</Span>
-                </Button>
-              </Div>
-            )}
+          <Div className="flex-1 min-w-0">
+            <Span className="text-sm font-semibold text-slate-900">Driver growth stack</Span>
+            <Span className="text-sm text-slate-500">
+              Mix the normal referral payout with milestone rewards like active-hour streaks, weekly quests, peak bonuses, rating protection and
+              cancellation discipline.
+            </Span>
           </Div>
         </Div>
-      </Div>
-    </ScrollDiv>
+      </Card>
+
+      <Card className="mb-4">
+        <Div className="flex-row items-center gap-3 mb-3">
+          <Div className="flex-1 min-w-0">
+            <Span className="text-base font-semibold text-slate-900">Driver milestone program</Span>
+            <Span className="text-sm text-slate-500">Milestone payout slabs based on daily active time and sustained weekly performance.</Span>
+          </Div>
+          <Toggle
+            value={settings.milestone_program_enabled}
+            onToggle={() =>
+              setSettings((current) => ({
+                ...current,
+                milestone_program_enabled: !current.milestone_program_enabled,
+              }))
+            }
+            label={settings.milestone_program_enabled ? 'Disable milestone program' : 'Enable milestone program'}
+          />
+        </Div>
+
+        <Div className="gap-3">
+          {settings.milestone_programs.map((item, index) => (
+            <Div key={item.id} className="rounded-xl border border-slate-200 p-4 bg-white gap-3">
+              <Div className="flex-row items-center gap-2">
+                <Div className="w-10 h-10 rounded-lg bg-slate-100 items-center justify-center shrink-0">
+                  <UiIcon as={Clock3} size={18} className="text-slate-600" />
+                </Div>
+                <Div className="flex-1 min-w-0">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Milestone {index + 1}</Span>
+                  <Span className="text-sm font-semibold text-slate-900" numberOfLines={2}>
+                    {item.name || 'Untitled milestone'}
+                  </Span>
+                </Div>
+                <Toggle
+                  value={item.enabled}
+                  onToggle={() => updateMilestone(index, 'enabled', !item.enabled)}
+                  label={`${item.enabled ? 'Disable' : 'Enable'} milestone ${index + 1}`}
+                />
+                <Button
+                  type="button"
+                  onClick={() => removeMilestone(index)}
+                  accessibilityLabel={`Remove milestone ${index + 1}`}
+                  className="w-11 h-11 rounded-lg border border-slate-200 bg-white items-center justify-center"
+                >
+                  <UiIcon as={Trash2} size={16} className="text-red-600" />
+                </Button>
+              </Div>
+
+              <Field label="Milestone name">
+                <Input
+                  type="text"
+                  value={item.name}
+                  onChange={(e) => updateMilestone(index, 'name', e.target.value)}
+                  className={INPUT}
+                  placeholder="30-day active streak"
+                />
+              </Field>
+
+              <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+                <Field label="Active hours / day" className={half}>
+                  <Input
+                    type="number"
+                    value={item.active_hours_per_day}
+                    onChange={(e) => updateMilestone(index, 'active_hours_per_day', e.target.value)}
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Required weeks" className={half}>
+                  <Input
+                    type="number"
+                    value={item.required_weeks}
+                    onChange={(e) => updateMilestone(index, 'required_weeks', e.target.value)}
+                    className={INPUT}
+                  />
+                </Field>
+              </Div>
+
+              <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+                <Field label="Payout amount" className={half}>
+                  <Input
+                    type="number"
+                    value={item.payout_amount}
+                    onChange={(e) => updateMilestone(index, 'payout_amount', e.target.value)}
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Minimum trips / week" className={half}>
+                  <Input
+                    type="number"
+                    value={item.min_trips_per_week}
+                    onChange={(e) => updateMilestone(index, 'min_trips_per_week', e.target.value)}
+                    className={INPUT}
+                  />
+                </Field>
+              </Div>
+
+              <Field label="Admin note">
+                <Input
+                  type="text"
+                  value={item.notes}
+                  onChange={(e) => updateMilestone(index, 'notes', e.target.value)}
+                  className={INPUT}
+                  placeholder="Credit after compliance review"
+                />
+              </Field>
+            </Div>
+          ))}
+
+          <Button type="button" onClick={addMilestone} className={`${BTN_SECONDARY} self-start`}>
+            <UiIcon as={Plus} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Add milestone</Span>
+          </Button>
+        </Div>
+      </Card>
+
+      <Card className="mb-4">
+        <Div className="flex-row items-start gap-3 mb-3">
+          <Div className="w-10 h-10 rounded-lg bg-blue-100 items-center justify-center shrink-0">
+            <UiIcon as={Sparkles} size={18} className="text-blue-700" />
+          </Div>
+          <Div className="flex-1 min-w-0">
+            <Span className="text-base font-semibold text-slate-900">Extra driver reward features</Span>
+            <Span className="text-sm text-slate-500">Popular incentive mechanics from large fleet growth programs.</Span>
+          </Div>
+        </Div>
+
+        <Div className="gap-3">
+          {settings.reward_features.map((feature) => (
+            <Div key={feature.key} className="rounded-xl border border-slate-200 p-4 bg-white gap-3">
+              <Div className="flex-row items-start gap-2">
+                <Div className="flex-1 min-w-0">
+                  <Span className="text-sm font-semibold text-slate-900">{feature.label}</Span>
+                  <Span className="text-xs text-slate-500">{feature.description}</Span>
+                </Div>
+                <Toggle
+                  value={feature.enabled}
+                  onToggle={() => updateRewardFeature(feature.key, 'enabled', !feature.enabled)}
+                  label={`${feature.enabled ? 'Disable' : 'Enable'} ${feature.label}`}
+                />
+              </Div>
+
+              <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+                <Field label="Reward amount" className={half}>
+                  <Input
+                    type="number"
+                    value={feature.reward_amount}
+                    onChange={(e) => updateRewardFeature(feature.key, 'reward_amount', e.target.value)}
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Target value" className={half}>
+                  <Input
+                    type="number"
+                    value={feature.target_value}
+                    onChange={(e) => updateRewardFeature(feature.key, 'target_value', e.target.value)}
+                    className={INPUT}
+                  />
+                </Field>
+              </Div>
+
+              <Field label="Unit / metric">
+                <Input type="text" value={feature.unit} onChange={(e) => updateRewardFeature(feature.key, 'unit', e.target.value)} className={INPUT} />
+              </Field>
+            </Div>
+          ))}
+        </Div>
+      </Card>
+
+      <Button onClick={handleUpdate} disabled={saving} className={`${BTN_PRIMARY} ${saving ? 'opacity-50' : ''}`}>
+        {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Save} size={16} className="text-white" />}
+        <Span className={BTN_TEXT_PRIMARY}>Update driver incentive settings</Span>
+      </Button>
+
+      {showSuccess ? (
+        <Div className="flex-row items-center gap-2 mt-3 px-3 py-2.5 rounded-lg bg-green-100 border border-green-200">
+          <UiIcon as={Check} size={14} className="text-green-700" />
+          <Span className="text-xs font-semibold text-green-700 flex-1">Driver incentive settings updated successfully</Span>
+          <Button onClick={() => setShowSuccess(false)} accessibilityLabel="Dismiss" className="w-11 h-11 items-center justify-center">
+            <UiIcon as={X} size={14} className="text-green-700" />
+          </Button>
+        </Div>
+      ) : null}
+    </AdminPage>
   );
 };
 export default DriverReferralSettings;

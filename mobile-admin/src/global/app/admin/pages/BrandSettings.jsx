@@ -14,11 +14,23 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Loader2, Save } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import globalService from '../../../services/globalService';
-import { Button, Div, Form, H1, H2, Input, Label, P, ScrollDiv, Section, Icon as UiIcon } from '../../../../components/web';
-const field = 'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors focus:border-[#0a4d2b]';
-const label = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500';
-const hint = 'mt-1 text-[11px] text-gray-400';
+import {
+  AdminPage,
+  BTN_PRIMARY,
+  BTN_TEXT_PRIMARY,
+  Card,
+  ErrorState,
+  Field,
+  INPUT,
+  LoadingState,
+  PageHeader,
+  SectionTitle,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Input, P, Span, Icon as UiIcon } from '../../../../components/web';
 const BrandSettings = () => {
+  const { tablet } = useLayoutWidth();
+  const cols = tablet ? 2 : 1;
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,99 +67,90 @@ const BrandSettings = () => {
       setSaving(false);
     }
   };
+  const header = (
+    <PageHeader title="Brand & Contact" subtitle="Used by every app — the customer app, food, taxi, hotels, tours and festivals." />
+  );
   if (loading) {
     return (
-      <ScrollDiv className="p-4 pb-20">
-        <Div className="flex justify-center py-16">
-          <UiIcon as={Loader2} className="h-6 w-6 animate-spin text-gray-400" />
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        {header}
+        <LoadingState label="Loading settings…" />
+      </AdminPage>
+    );
+  }
+  if (!settings) {
+    return (
+      <AdminPage maxWidth={720}>
+        {header}
+        <ErrorState title="Settings could not be loaded" message="The platform settings did not come back." onRetry={load} />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-5">
-      <Div>
-        <H1 className="text-xl font-bold text-gray-900">Brand &amp; Contact</H1>
-        <P className="mt-1 text-sm text-gray-500">Used by every app — the customer app, food, taxi, hotels, tours and festivals.</P>
-      </Div>
+    <AdminPage maxWidth={720}>
+      <Form onSubmit={save}>
+        {header}
 
-      <Form onSubmit={save} className="max-w-2xl space-y-5 rounded-2xl border border-gray-200 bg-white p-5">
-        <Section className="space-y-4">
-          <H2 className="text-sm font-bold text-gray-900">Identity</H2>
+        <Card className="mb-4 gap-4">
+          <SectionTitle>Identity</SectionTitle>
 
-          <Div>
-            <Label className={label}>Brand name</Label>
-            <Input value={settings?.brandName || ''} onChange={set('brandName')} className={field} />
-          </Div>
+          <Field label="Brand name" required>
+            <Input value={settings?.brandName || ''} onChange={set('brandName')} className={INPUT} />
+          </Field>
 
-          <Div>
-            <Label className={label}>Tagline</Label>
-            <Input value={settings?.tagline || ''} onChange={set('tagline')} className={field} placeholder="Explore · Experience · Discover" />
-          </Div>
+          <Field label="Tagline">
+            <Input value={settings?.tagline || ''} onChange={set('tagline')} className={INPUT} placeholder="Explore · Experience · Discover" />
+          </Field>
 
-          <Div>
-            <Label className={label}>Logo URL</Label>
-            <Input value={settings?.logoUrl || ''} onChange={set('logoUrl')} className={field} placeholder="/assets/logos/user-384.png" />
-            <P className={hint}>Leave blank to use the crest that ships with the apps.</P>
-          </Div>
-        </Section>
+          <Field label="Logo URL" hint="Leave blank to use the crest that ships with the apps.">
+            <Input value={settings?.logoUrl || ''} onChange={set('logoUrl')} className={INPUT} placeholder="/assets/logos/user-384.png" />
+          </Field>
+        </Card>
 
-        <Section className="space-y-4 border-t border-gray-100 pt-5">
-          <H2 className="text-sm font-bold text-gray-900">Support</H2>
-          <P className="-mt-2 text-[11px] text-gray-400">
-            The “Support” link on every sign-in screen uses these, in this order: link, then phone, then email. With none of them set, the link is hidden rather
-            than broken.
+        <Card className="mb-4 gap-4">
+          <SectionTitle>Support</SectionTitle>
+          <P className="text-xs text-slate-500">
+            The “Support” link on every sign-in screen uses these, in this order: link, then phone, then email. With none of them set, the link is hidden
+            rather than broken.
           </P>
 
-          <Div className="grid gap-4 sm:grid-cols-2">
-            <Div>
-              <Label className={label}>Support link</Label>
-              <Input value={settings?.supportUrl || ''} onChange={set('supportUrl')} className={field} placeholder="https://…" />
-            </Div>
-            <Div>
-              <Label className={label}>Support phone</Label>
-              <Input value={settings?.supportPhone || ''} onChange={set('supportPhone')} className={field} placeholder="+91 98765 43210" />
-            </Div>
+          <Div className={`grid grid-cols-${cols} gap-3`}>
+            <Field label="Support link">
+              <Input value={settings?.supportUrl || ''} onChange={set('supportUrl')} className={INPUT} placeholder="https://…" />
+            </Field>
+            <Field label="Support phone">
+              <Input value={settings?.supportPhone || ''} onChange={set('supportPhone')} className={INPUT} placeholder="+91 98765 43210" />
+            </Field>
           </Div>
 
-          <Div>
-            <Label className={label}>Support email</Label>
-            <Input value={settings?.supportEmail || ''} onChange={set('supportEmail')} className={field} placeholder="support@…" />
+          <Field label="Support email">
+            <Input value={settings?.supportEmail || ''} onChange={set('supportEmail')} className={INPUT} placeholder="support@…" />
+          </Field>
+        </Card>
+
+        <Card className="mb-4 gap-4">
+          <SectionTitle>Address</SectionTitle>
+
+          <Field label="Address">
+            <Input value={settings?.address || ''} onChange={set('address')} className={INPUT} />
+          </Field>
+
+          <Div className={`grid grid-cols-${cols} gap-3`}>
+            <Field label="State">
+              <Input value={settings?.state || ''} onChange={set('state')} className={INPUT} />
+            </Field>
+            <Field label="Pincode">
+              <Input value={settings?.pincode || ''} onChange={set('pincode')} className={INPUT} />
+            </Field>
           </Div>
-        </Section>
+        </Card>
 
-        <Section className="space-y-4 border-t border-gray-100 pt-5">
-          <H2 className="text-sm font-bold text-gray-900">Address</H2>
-
-          <Div>
-            <Label className={label}>Address</Label>
-            <Input value={settings?.address || ''} onChange={set('address')} className={field} />
-          </Div>
-
-          <Div className="grid gap-4 sm:grid-cols-2">
-            <Div>
-              <Label className={label}>State</Label>
-              <Input value={settings?.state || ''} onChange={set('state')} className={field} />
-            </Div>
-            <Div>
-              <Label className={label}>Pincode</Label>
-              <Input value={settings?.pincode || ''} onChange={set('pincode')} className={field} />
-            </Div>
-          </Div>
-        </Section>
-
-        <Div className="border-t border-gray-100 pt-4">
-          <Button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#06381e] disabled:opacity-60"
-          >
-            {saving ? <UiIcon as={Loader2} className="h-4 w-4 animate-spin" /> : <UiIcon as={Save} className="h-4 w-4" />}
-            Save
-          </Button>
-        </Div>
+        <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
+          {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Save} size={16} className="text-white" />}
+          <Span className={BTN_TEXT_PRIMARY}>Save</Span>
+        </Button>
       </Form>
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default BrandSettings;

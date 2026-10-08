@@ -1,63 +1,38 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/DiningList.jsx (tools/port.js first pass). */
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from '../../../../lib/webRouter';
-import {
-  Search,
-  Download,
-  ChevronDown,
-  Eye,
-  Settings,
-  ArrowUpDown,
-  Loader2,
-  Star,
-  Building2,
-  User,
-  FileText,
-  Phone,
-  Mail,
-  MapPin,
-  ShieldX,
-  Trash2,
-  ArrowRight,
-  Plus,
-} from 'lucide-react-native';
+import { Search, Settings, Star, Building2, UtensilsCrossed, X } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../../../../components/shadcn';
-import { exportRestaurantsToPDF } from '../../../components/admin/restaurants/restaurantsExportUtils';
-import {
-  Button,
-  Div,
-  H1,
-  H2,
-  H3,
-  HScroll,
-  Img,
-  Input,
-  Label,
-  Option,
-  Overlay,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
+import { Button, Div, HScroll, Img, Input, Option, Overlay, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
+const COLS = [200, 160, 120, 90, 90, 120, 110, 70];
+const LABELS = ['Restaurant', 'Owner', 'Zone', 'Dining', 'Guests', 'Rating', 'Status', 'Edit'];
 const normalizeImageUrl = (image) => {
   if (!image) return '';
   if (typeof image === 'string') return image;
@@ -193,11 +168,11 @@ export default function DiningList() {
   const renderStars = (rating) => {
     const fullStars = Math.floor(rating || 0);
     return (
-      <Div className="flex items-center gap-0.5">
+      <Div className="flex-row items-center gap-0.5">
         {[...Array(5)].map((_, i) => (
-          <UiIcon as={Star} key={i} className={`w-3.5 h-3.5 ${i < fullStars ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`} />
+          <UiIcon as={Star} key={i} size={12} className={i < fullStars ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'} />
         ))}
-        <Span className="ml-1 text-slate-600">({rating || 0})</Span>
+        <Span className="ml-1 text-xs text-slate-500">({rating || 0})</Span>
       </Div>
     );
   };
@@ -276,205 +251,187 @@ export default function DiningList() {
     }
   };
   return (
-    <ScrollDiv className="h-full bg-slate-50 p-4 lg:p-6">
-      <Div className="max-w-7xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-3">
-              <H1 className="text-2xl font-bold text-slate-900">Dining List</H1>
-            </Div>
-          </Div>
-          <P className="text-slate-500">Manage restaurants available for dining.</P>
-        </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={UtensilsCrossed}
+        title="Dining List"
+        subtitle="Manage the restaurants available for dining"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Dining list' }]}
+      />
 
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          {loading ? (
-            <Div className="flex items-center justify-center py-20">
-              <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600" />
-              <Span className="ml-3 text-slate-600">Loading dining list...</Span>
-            </Div>
-          ) : restaurants.length === 0 ? (
-            <Div className="flex flex-col items-center justify-center py-20 text-center">
-              <Div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                <UiIcon as={Building2} className="w-10 h-10 text-slate-300" />
+      {error ? <ErrorState message={error} className="mb-4" /> : null}
+
+      {loading ? (
+        <TableSkeleton rows={5} />
+      ) : restaurants.length === 0 ? (
+        <EmptyState
+          icon={Building2}
+          title="No dining restaurants added yet"
+          message="Restaurants appear here once dining is enabled for them in restaurant management."
+        />
+      ) : (
+        <>
+          <Card className="mb-4">
+            <Toolbar className="mb-3">
+              <Div className="flex-row items-center gap-2 flex-1 min-w-[200px] h-11 px-3 rounded-lg border border-slate-300 bg-white">
+                <UiIcon as={Search} size={16} className="text-slate-400 shrink-0" />
+                <Input
+                  type="text"
+                  placeholder="Search dining restaurants…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 text-sm text-slate-900"
+                />
               </Div>
-              <H2 className="text-xl font-bold text-slate-900 mb-2">No dining restaurants added yet</H2>
-              <P className="text-slate-500 max-w-sm mb-8">Get started by adding your first restaurant to the dining management system.</P>
-            </Div>
-          ) : (
-            <>
-              <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <H2 className="text-xl font-bold text-slate-900">Registered Dining Restaurants</H2>
+            </Toolbar>
 
-                <Div className="flex flex-wrap items-center gap-3">
-                  <Div className="relative flex-1 sm:flex-initial min-w-[250px]">
-                    <Input
-                      type="text"
-                      placeholder="Search dining restaurants..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Category Filter Chips */}
-              <HScroll className="flex items-center gap-2 no-scrollbar pb-4 mb-2">
+            {categoryLoading ? (
+              <LoadingState label="Loading categories…" />
+            ) : (
+              <HScroll contentClassName="flex-row items-center gap-2">
                 <Button
                   onClick={() => setSelectedCategory('All')}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === 'All' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  className={`flex-row items-center justify-center h-11 px-4 rounded-full ${selectedCategory === 'All' ? 'bg-blue-600' : 'bg-slate-100'}`}
                 >
-                  All ({restaurants.length})
+                  <Span className={selectedCategory === 'All' ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>
+                    {`All (${restaurants.length})`}
+                  </Span>
                 </Button>
                 {categories.map((cat) => {
                   const count = restaurants.filter((r) => r.categories?.some((category) => category.slug === cat.slug)).length;
+                  const on = selectedCategory === cat.slug;
                   return (
                     <Button
                       key={cat._id}
                       onClick={() => setSelectedCategory(cat.slug)}
-                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === cat.slug ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                      className={`flex-row items-center justify-center h-11 px-4 rounded-full ${on ? 'bg-blue-600' : 'bg-slate-100'}`}
                     >
-                      {cat.name} ({count})
+                      <Span className={on ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>{`${cat.name} (${count})`}</Span>
                     </Button>
                   );
                 })}
               </HScroll>
+            )}
+          </Card>
 
-                <Table cols={[210, 170, 130, 110, 100, 100, 120, 100]} className="w-full">
-                  <Thead className="bg-slate-50 border-b border-slate-200">
-                    <Tr>
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant</Th>
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Owner</Th>
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Zone</Th>
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Dining</Th>
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Guests</Th>
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Rating</Th>
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</Th>
-                      <Th className="px-6 py-4 text-right text-[10px] font-bold text-slate-700 uppercase tracking-wider">Actions</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody className="bg-white divide-y divide-slate-100">
-                    {filteredRestaurants.length === 0 ? (
-                      <Tr>
-                        <Td colSpan={8} className="px-6 py-20 text-center">
-                          <Div className="flex flex-col items-center justify-center">
-                            <Div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                              <UiIcon as={Search} className="w-8 h-8 text-slate-300" />
-                            </Div>
-                            <P className="text-lg font-semibold text-slate-700 mb-1">No dining restaurants found</P>
-                            <P className="text-sm text-slate-500">Try adjusting your search query or filters.</P>
-                          </Div>
-                        </Td>
-                      </Tr>
-                    ) : (
-                      filteredRestaurants.map((restaurant, index) => (
-                        <Tr key={restaurant.id} className="hover:bg-slate-50 transition-colors">
-                          <Td className="px-6 py-4">
-                            <Div className="flex items-center gap-3">
-                              <Div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
-                                <Img
-                                  src={restaurant.logo}
-                                  alt={restaurant.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.src = 'https://via.placeholder.com/40';
-                                  }}
-                                />
-                              </Div>
-                              <Div className="flex flex-col">
-                                <Span className="text-sm font-medium text-slate-900">{restaurant.name}</Span>
-                                <Span className="text-xs text-slate-500">#{formatRestaurantId(restaurant.originalData?.restaurantId || restaurant._id)}</Span>
-                              </Div>
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4">
-                            <Div className="flex flex-col">
-                              <Span className="text-sm font-medium text-slate-900">{restaurant.ownerName}</Span>
-                              <Span className="text-xs text-slate-500">{restaurant.ownerPhone}</Span>
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-slate-700">{restaurant.zone}</Span>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Button
-                              onClick={() => handleDiningToggle(restaurant)}
-                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${restaurant.diningSettings?.isEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}
-                            >
-                              <Span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${restaurant.diningSettings?.isEnabled ? 'translate-x-6' : 'translate-x-1'}`}
-                              />
-                            </Button>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min="1"
-                                max="100"
-                                defaultValue={restaurant.diningSettings?.maxGuests || 6}
-                                onBlur={(e) => handleMaxGuestsUpdate(restaurant, e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.currentTarget.blur();
-                                  }
-                                }}
-                                className="w-16 px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:border-blue-500 text-center"
-                              />
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-yellow-500 font-medium">{renderStars(restaurant.rating)}</Span>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${restaurant.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-                            >
-                              {restaurant.status ? 'Active' : 'Inactive'}
-                            </Span>
-                          </Td>
-                          <Td className="px-6 py-4 text-right">
-                            <Button
-                              onClick={() => {
-                                setEditingRestaurant({
-                                  ...restaurant,
-                                });
-                                setIsEditModalOpen(true);
-                              }}
-                              className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
-                            >
-                              <UiIcon as={Settings} className="w-4 h-4" />
-                            </Button>
-                          </Td>
-                        </Tr>
-                      ))
-                    )}
-                  </Tbody>
-                </Table>
-            </>
+          {filteredRestaurants.length === 0 ? (
+            <EmptyState
+              icon={Search}
+              title="No dining restaurants found"
+              message="Try adjusting your search query or category filter."
+              actionLabel="Clear filters"
+              onAction={() => {
+                setSearchQuery('');
+                setSelectedCategory('All');
+              }}
+            />
+          ) : (
+            <DataTable cols={COLS}>
+              <THead cols={COLS} labels={LABELS} />
+              <TBody>
+                {filteredRestaurants.map((restaurant, index) => (
+                  <Row key={restaurant.id} last={index === filteredRestaurants.length - 1}>
+                    <Cell width={COLS[0]}>
+                      <Div className="flex-row items-center gap-2.5">
+                        <Div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 shrink-0">
+                          <Img
+                            src={restaurant.logo}
+                            alt={restaurant.name}
+                            className="w-10 h-10 object-cover"
+                            onError={(e) => {
+                              e.target.src = 'https://via.placeholder.com/40';
+                            }}
+                          />
+                        </Div>
+                        <Div className="flex-1 min-w-0">
+                          <Text style={tw`text-sm font-semibold text-slate-900`} numberOfLines={2}>
+                            {restaurant.name}
+                          </Text>
+                          <Text style={tw`text-xs text-slate-500`} numberOfLines={1}>
+                            {`#${formatRestaurantId(restaurant.originalData?.restaurantId || restaurant._id)}`}
+                          </Text>
+                        </Div>
+                      </Div>
+                    </Cell>
+                    <Cell width={COLS[1]}>
+                      <Div className="min-w-0">
+                        <Text style={tw`text-sm font-semibold text-slate-900`} numberOfLines={2}>
+                          {restaurant.ownerName}
+                        </Text>
+                        <Text style={tw`text-xs text-slate-500`} numberOfLines={1}>
+                          {restaurant.ownerPhone}
+                        </Text>
+                      </Div>
+                    </Cell>
+                    <Cell width={COLS[2]}>{restaurant.zone}</Cell>
+                    <Cell width={COLS[3]}>
+                      <Button
+                        onClick={() => handleDiningToggle(restaurant)}
+                        accessibilityLabel={`Toggle dining for ${restaurant.name}`}
+                        className="w-11 h-11 flex-row items-center shrink-0"
+                      >
+                        <Div className={`flex-row items-center h-6 w-11 rounded-full px-0.5 ${restaurant.diningSettings?.isEnabled ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'}`}>
+                          <Span className="h-5 w-5 rounded-full bg-white" />
+                        </Div>
+                      </Button>
+                    </Cell>
+                    <Cell width={COLS[4]}>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="100"
+                        defaultValue={restaurant.diningSettings?.maxGuests || 6}
+                        onBlur={(e) => handleMaxGuestsUpdate(restaurant, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.currentTarget.blur();
+                          }
+                        }}
+                        className="w-16 h-11 px-2 text-sm text-slate-900 border border-slate-300 rounded-lg text-center"
+                      />
+                    </Cell>
+                    <Cell width={COLS[5]}>{renderStars(restaurant.rating)}</Cell>
+                    <Cell width={COLS[6]}>
+                      <StatusBadge status={restaurant.status ? 'active' : 'inactive'} label={restaurant.status ? 'Active' : 'Inactive'} />
+                    </Cell>
+                    <Cell width={COLS[7]} align="center">
+                      <Button
+                        onClick={() => {
+                          setEditingRestaurant({
+                            ...restaurant,
+                          });
+                          setIsEditModalOpen(true);
+                        }}
+                        accessibilityLabel={`Dining settings for ${restaurant.name}`}
+                        className="w-11 h-11 rounded-lg items-center justify-center"
+                      >
+                        <UiIcon as={Settings} size={16} className="text-slate-500" />
+                      </Button>
+                    </Cell>
+                  </Row>
+                ))}
+              </TBody>
+            </DataTable>
           )}
-        </Div>
-      </Div>
+        </>
+      )}
 
       {/* Edit Modal */}
-      {isEditModalOpen && editingRestaurant && (
-        <Overlay onClose={() => setIsEditModalOpen(false)} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
-          <ScrollDiv className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh]">
-            <Div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-              <H3 className="text-lg font-bold text-slate-900">Edit Dining Settings</H3>
-              <Button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                <UiIcon as={Plus} className="w-5 h-5 rotate-45 text-slate-500" />
+      {isEditModalOpen && editingRestaurant ? (
+        <Overlay onClose={() => setIsEditModalOpen(false)} className="absolute inset-0 items-center justify-center p-4 bg-black/50">
+          <ScrollDiv className="bg-white rounded-xl border border-slate-200 w-full max-w-md max-h-[90vh]">
+            <Div className="px-4 py-3 border-b border-slate-100 flex-row items-center justify-between gap-2">
+              <Text style={tw`text-base font-semibold text-slate-900 flex-1`}>Edit Dining Settings</Text>
+              <Button onClick={() => setIsEditModalOpen(false)} accessibilityLabel="Close" className="w-11 h-11 rounded-lg items-center justify-center">
+                <UiIcon as={X} size={18} className="text-slate-500" />
               </Button>
             </Div>
 
-            <Div className="p-6 space-y-6">
-              {/* Status */}
-              <Div className="flex items-center justify-between">
-                <Div>
-                  <P className="text-sm font-semibold text-slate-900">Dining Status</P>
-                  <P className="text-xs text-slate-500">Enable or disable dining for this restaurant</P>
+            <Div className="p-4 gap-4">
+              <Div className="flex-row items-center justify-between gap-3">
+                <Div className="flex-1 min-w-0">
+                  <Text style={tw`text-sm font-semibold text-slate-900`}>Dining Status</Text>
+                  <Text style={tw`text-xs text-slate-500`}>Enable or disable dining for this restaurant</Text>
                 </Div>
                 <Button
                   onClick={() =>
@@ -486,17 +443,16 @@ export default function DiningList() {
                       },
                     }))
                   }
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editingRestaurant.diningSettings?.isEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}
+                  accessibilityLabel="Toggle dining status"
+                  className="w-11 h-11 flex-row items-center justify-end shrink-0"
                 >
-                  <Span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${editingRestaurant.diningSettings?.isEnabled ? 'translate-x-6' : 'translate-x-1'}`}
-                  />
+                  <Div className={`flex-row items-center h-6 w-11 rounded-full px-0.5 ${editingRestaurant.diningSettings?.isEnabled ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'}`}>
+                    <Span className="h-5 w-5 rounded-full bg-white" />
+                  </Div>
                 </Button>
               </Div>
 
-              {/* Max Guests */}
-              <Div className="space-y-2">
-                <Label className="text-sm font-semibold text-slate-900">Maximum Guests</Label>
+              <Field label="Maximum Guests">
                 <Input
                   type="number"
                   min="1"
@@ -511,13 +467,11 @@ export default function DiningList() {
                       },
                     }))
                   }
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={INPUT}
                 />
-              </Div>
+              </Field>
 
-              {/* Category */}
-              <Div className="space-y-2">
-                <Label className="text-sm font-semibold text-slate-900">Dining Category</Label>
+              <Field label="Dining Category">
                 <Select
                   value={editingRestaurant.primaryCategoryId || editingRestaurant.categoryIds?.[0] || ''}
                   onChange={(e) =>
@@ -532,7 +486,7 @@ export default function DiningList() {
                       },
                     }))
                   }
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className={INPUT}
                 >
                   <Option value="">Select a category</Option>
                   {categories.map((cat) => (
@@ -541,15 +495,12 @@ export default function DiningList() {
                     </Option>
                   ))}
                 </Select>
-              </Div>
+              </Field>
             </Div>
 
-            <Div className="px-6 py-4 bg-slate-50 flex items-center justify-end gap-3">
-              <Button
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
-              >
-                Cancel
+            <Div className="px-4 py-3 bg-slate-50 flex-row flex-wrap items-center justify-end gap-2">
+              <Button onClick={() => setIsEditModalOpen(false)} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
               <Button
                 onClick={async () => {
@@ -572,14 +523,14 @@ export default function DiningList() {
                     setLoading(false);
                   }
                 }}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+                className={BTN_PRIMARY}
               >
-                Save Changes
+                <Span className={BTN_TEXT_PRIMARY}>Save Changes</Span>
               </Button>
             </Div>
           </ScrollDiv>
         </Overlay>
-      )}
-    </ScrollDiv>
+      ) : null}
+    </AdminPage>
   );
 }

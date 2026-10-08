@@ -1,13 +1,10 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/restaurant/RestaurantSettings.jsx (tools/port.js first pass). */
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Save, Loader2, Settings, Clock, Truck, ShoppingBag } from 'lucide-react-native';
-import { Button } from '../../../../components/shadcn';
-import { Input } from '../../../../components/shadcn';
-import { Label } from '../../../../components/shadcn';
 import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
-import { Div, H1, H2, H3, P, ScrollDiv, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Icon as UiIcon, Input, Span } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, LoadingState, INPUT, BTN_PRIMARY, BTN_TEXT_PRIMARY, useLayoutWidth } from '../../../../admin/ui';
 const MIN_MINUTES = 1;
 const MAX_MINUTES = 60;
 const clampMinutesString = (value) => {
@@ -134,128 +131,91 @@ export default function RestaurantSettings() {
       setSavingTakeaway(false);
     }
   };
+  const { tablet } = useLayoutWidth();
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-        <Div className="flex items-center gap-3 mb-2">
-          <LinearGradient
-            colors={['#F43F5E', '#BE123C']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ width: 40, height: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <UiIcon as={Settings} className="w-6 h-6 text-white" />
-          </LinearGradient>
-          <H1 className="text-2xl font-bold text-slate-900">Restaurant Settings</H1>
-        </Div>
-        <P className="text-sm text-slate-600">Configure platform-wide restaurant behaviour. More options will be added here over time.</P>
-      </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Settings}
+        title="Restaurant Settings"
+        subtitle="Configure platform-wide restaurant behaviour. More options will be added here over time."
+        breadcrumb={[{ label: 'Food' }, { label: 'Restaurants' }, { label: 'Settings' }]}
+      />
 
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <Div className="p-6">
-          <Div className="flex items-start gap-3 mb-6">
-            <Div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center shrink-0">
-              <UiIcon as={Clock} className="w-5 h-5 text-rose-600" />
-            </Div>
-            <Div>
-              <H2 className="text-lg font-semibold text-slate-900">Accept Order Time</H2>
-              <P className="text-sm text-slate-500 mt-1">Set separate accept windows for delivery and takeaway orders before auto-rejection.</P>
-            </Div>
+      {loading ? (
+        <LoadingState label="Loading restaurant settings…" />
+      ) : (
+        <Card>
+          <SectionTitle>Accept Order Time</SectionTitle>
+          <Div className="flex-row items-start gap-2 mb-4">
+            <UiIcon as={Clock} size={16} className="text-slate-400 mt-0.5" />
+            <Span className="text-sm text-slate-500 flex-1">Set separate accept windows for delivery and takeaway orders before auto-rejection.</Span>
           </Div>
 
-          <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Div className="rounded-xl border border-slate-200 p-5 space-y-4">
-              <Div className="flex items-center gap-2">
-                <Div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <UiIcon as={Truck} className="w-4 h-4 text-blue-600" />
-                </Div>
-                <H3 className="text-base font-semibold text-slate-900">Delivery Accept Order Time</H3>
+          <Div className={tablet ? 'flex-row gap-3' : 'gap-3'}>
+            <Div className="flex-1 rounded-xl border border-slate-200 p-4 gap-3">
+              <Div className="flex-row items-center gap-2">
+                <UiIcon as={Truck} size={16} className="text-blue-600" />
+                <Span className="text-base font-semibold text-slate-900 flex-1">Delivery</Span>
               </Div>
-              <Div className="space-y-2">
-                <Label htmlFor="deliveryAcceptOrderTimeMinutes">Time limit (minutes)</Label>
+              <Field
+                label="Time limit (minutes)"
+                required
+                hint={`${savedDeliveryMinutes ? `Currently set: ${savedDeliveryMinutes} min.` : 'No time set yet.'} Allowed range: ${MIN_MINUTES}\u2013${MAX_MINUTES} (0 not allowed). Delivery orders only.`}
+              >
                 <Input
-                  id="deliveryAcceptOrderTimeMinutes"
                   type="text"
                   inputMode="numeric"
-                  pattern="[1-9][0-9]*"
                   value={deliveryAcceptOrderTimeMinutes}
                   onChange={handleMinutesChange(setDeliveryAcceptOrderTimeMinutes)}
                   disabled={loading || savingDelivery}
                   placeholder={savedDeliveryMinutes ? undefined : 'e.g. 4'}
+                  className={INPUT}
                 />
-                <P className="text-xs text-slate-500">
-                  {savedDeliveryMinutes
-                    ? `Currently set: ${savedDeliveryMinutes} min. Click the field, clear it, then enter a new value.`
-                    : 'No time set yet. Enter a value between 1–60 minutes.'}{' '}
-                  Allowed range: {MIN_MINUTES}–{MAX_MINUTES} (0 not allowed). Delivery orders only.
-                </P>
-              </Div>
+              </Field>
               <Button
                 onClick={handleSaveDelivery}
                 disabled={!canSaveDelivery || savingDelivery || loading}
-                className="bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-2"
+                className={BTN_PRIMARY}
+                accessibilityLabel="Save delivery accept order time"
               >
-                {savingDelivery ? (
-                  <>
-                    <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <UiIcon as={Save} className="w-4 h-4" />
-                    Save Settings
-                  </>
-                )}
+                <UiIcon as={savingDelivery ? Loader2 : Save} size={16} className="text-white" />
+                <Span className={BTN_TEXT_PRIMARY}>{savingDelivery ? 'Saving\u2026' : 'Save settings'}</Span>
               </Button>
             </Div>
 
-            <Div className="rounded-xl border border-slate-200 p-5 space-y-4">
-              <Div className="flex items-center gap-2">
-                <Div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <UiIcon as={ShoppingBag} className="w-4 h-4 text-amber-600" />
-                </Div>
-                <H3 className="text-base font-semibold text-slate-900">Takeaway Accept Order Time</H3>
+            <Div className="flex-1 rounded-xl border border-slate-200 p-4 gap-3">
+              <Div className="flex-row items-center gap-2">
+                <UiIcon as={ShoppingBag} size={16} className="text-blue-600" />
+                <Span className="text-base font-semibold text-slate-900 flex-1">Takeaway</Span>
               </Div>
-              <Div className="space-y-2">
-                <Label htmlFor="takeawayAcceptOrderTimeMinutes">Time limit (minutes)</Label>
+              <Field
+                label="Time limit (minutes)"
+                required
+                hint={`${savedTakeawayMinutes ? `Currently set: ${savedTakeawayMinutes} min.` : 'No time set yet.'} Allowed range: ${MIN_MINUTES}\u2013${MAX_MINUTES} (0 not allowed). Takeaway orders only.`}
+              >
                 <Input
-                  id="takeawayAcceptOrderTimeMinutes"
                   type="text"
                   inputMode="numeric"
-                  pattern="[1-9][0-9]*"
                   value={takeawayAcceptOrderTimeMinutes}
                   onChange={handleMinutesChange(setTakeawayAcceptOrderTimeMinutes)}
                   disabled={loading || savingTakeaway}
                   placeholder={savedTakeawayMinutes ? undefined : 'e.g. 6'}
+                  className={INPUT}
                 />
-                <P className="text-xs text-slate-500">
-                  {savedTakeawayMinutes
-                    ? `Currently set: ${savedTakeawayMinutes} min. Click the field, clear it, then enter a new value.`
-                    : 'No time set yet. Enter a value between 1–60 minutes.'}{' '}
-                  Allowed range: {MIN_MINUTES}–{MAX_MINUTES} (0 not allowed). Takeaway orders only.
-                </P>
-              </Div>
+              </Field>
               <Button
                 onClick={handleSaveTakeaway}
                 disabled={!canSaveTakeaway || savingTakeaway || loading}
-                className="bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-2"
+                className={BTN_PRIMARY}
+                accessibilityLabel="Save takeaway accept order time"
               >
-                {savingTakeaway ? (
-                  <>
-                    <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <UiIcon as={Save} className="w-4 h-4" />
-                    Save Settings
-                  </>
-                )}
+                <UiIcon as={savingTakeaway ? Loader2 : Save} size={16} className="text-white" />
+                <Span className={BTN_TEXT_PRIMARY}>{savingTakeaway ? 'Saving\u2026' : 'Save settings'}</Span>
               </Button>
             </Div>
           </Div>
-        </Div>
-      </Div>
-    </ScrollDiv>
+        </Card>
+      )}
+    </AdminPage>
   );
 }

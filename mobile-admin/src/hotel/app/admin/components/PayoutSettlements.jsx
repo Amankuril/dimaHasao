@@ -11,20 +11,32 @@
  * server does that, and refuses transitions out of a terminal state.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Banknote, Loader2, RefreshCw, Search } from 'lucide-react-native';
+import { Banknote, RefreshCw, Search } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, H3, Input, Option, P, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 import usePrompt from './usePrompt';
 const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const STATUS_FILTERS = ['all', 'pending', 'processing', 'completed', 'failed', 'cancelled'];
-const STATUS_STYLE = {
-  pending: 'bg-amber-100 text-amber-700',
-  processing: 'bg-blue-100 text-blue-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  failed: 'bg-red-100 text-red-700',
-  cancelled: 'bg-gray-100 text-gray-600',
-};
+const COLS = [150, 160, 200, 110, 150, 240];
 
 /** Mirrors the server's state machine so the UI never offers a move it will reject. */
 const NEXT_STATUSES = {
@@ -88,133 +100,121 @@ const PayoutSettlements = () => {
     }
   };
   return (
-    <Div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-      <Div className="px-4 py-4 border-b border-gray-100 flex flex-col justify-between gap-4">
-        <Div>
-          <Div className="flex flex-row items-center gap-2">
-            <UiIcon as={Banknote} size={18} className="text-emerald-600" />
-            <H3 className="font-bold text-gray-900 text-lg">Partner Payouts</H3>
-          </Div>
-          <P className="text-[11px] text-gray-500 mt-0.5">
-            {currency(pendingTotal)} awaiting settlement
-            {summary.completed ? ` · ${currency(summary.completed.amount)} paid out` : ''}
-          </P>
+    <Card className="gap-3">
+      <SectionTitle className="mb-0">
+        <Div className="flex-row items-center gap-2">
+          <UiIcon as={Banknote} size={18} className="text-slate-500" />
+          <Span className="text-base font-semibold text-slate-900">Partner Payouts</Span>
         </Div>
+      </SectionTitle>
+      <P className="text-sm text-slate-500">
+        {currency(pendingTotal)} awaiting settlement
+        {summary.completed ? ` · ${currency(summary.completed.amount)} paid out` : ''}
+      </P>
 
-        <Div className="flex flex-wrap items-center gap-2">
-          <Div className="relative justify-center">
-            <UiIcon as={Search} size={14} className="absolute left-3 z-10 text-gray-400" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Partner or payout ID"
-              className="pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-black w-56"
-            />
-          </Div>
-          <Select
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold uppercase outline-none focus:border-black"
-          >
-            {STATUS_FILTERS.map((value) => (
-              <Option key={value} value={value}>
-                {value === 'all' ? 'All statuses' : value}
-              </Option>
-            ))}
-          </Select>
-          <Button
-            type="button"
-            onClick={load}
-            className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
-            accessibilityLabel="Refresh payouts"
-          >
-            <UiIcon as={RefreshCw} size={14} />
-          </Button>
+      <Toolbar className="mb-0">
+        <Div className="flex-1 min-w-[180px] justify-center">
+          <UiIcon as={Search} size={16} className="absolute left-3 z-10 text-slate-400" />
+          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Partner or payout ID" className={`${INPUT} pl-9`} />
         </Div>
-      </Div>
+        <Select value={status} onChange={(event) => setStatus(event.target.value)} className={INPUT}>
+          {STATUS_FILTERS.map((value) => (
+            <Option key={value} value={value}>
+              {value === 'all' ? 'All statuses' : value}
+            </Option>
+          ))}
+        </Select>
+        <Button type="button" onClick={load} className={BTN_SECONDARY} accessibilityLabel="Refresh payouts">
+          <UiIcon as={RefreshCw} size={16} className="text-slate-600" />
+          <Span className={BTN_TEXT_SECONDARY}>Refresh</Span>
+        </Button>
+      </Toolbar>
 
-      <Table cols={[130, 160, 190, 110, 150, 230]} className="w-full text-left text-sm">
-          <Thead className="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500">
-            <Tr>
-              <Th className="p-4 font-semibold">Payout</Th>
-              <Th className="p-4 font-semibold">Partner</Th>
-              <Th className="p-4 font-semibold">Bank</Th>
-              <Th className="p-4 font-semibold text-right">Amount</Th>
-              <Th className="p-4 font-semibold">Status</Th>
-              <Th className="p-4 font-semibold">Settle</Th>
-            </Tr>
-          </Thead>
-          <Tbody className="divide-y divide-gray-100">
-            {loading ? (
-              <Tr>
-                <Td colSpan="6" className="p-10 text-center text-gray-400">
-                  <UiIcon as={Loader2} size={20} className="text-gray-400" />
-                </Td>
-              </Tr>
-            ) : withdrawals.length === 0 ? (
-              <Tr>
-                <Td colSpan="6" className="p-10 text-center text-gray-400 text-xs">
-                  No payout requests{status === 'all' ? '' : ` with status "${status}"`}.
-                </Td>
-              </Tr>
-            ) : (
-              withdrawals.map((withdrawal) => {
-                const moves = NEXT_STATUSES[withdrawal.status] || [];
-                return (
-                  <Tr key={withdrawal._id} className="hover:bg-gray-50/60">
-                    <Td className="p-4">
-                      <P className="font-mono text-xs font-bold text-gray-900">{withdrawal.withdrawalId}</P>
-                      <P className="text-[10px] text-gray-400">{new Date(withdrawal.createdAt).toLocaleDateString('en-GB')}</P>
-                      {withdrawal.processingDetails?.utrNumber && (
-                        <P className="text-[10px] text-emerald-700 font-semibold">UTR {withdrawal.processingDetails.utrNumber}</P>
-                      )}
-                    </Td>
-                    <Td className="p-4">
-                      <P className="font-semibold text-gray-900 text-xs">{withdrawal.partner?.name || 'Unknown partner'}</P>
-                      <P className="text-[10px] text-gray-400">{withdrawal.partner?.phone || '—'}</P>
-                    </Td>
-                    <Td className="p-4 text-xs text-gray-600">
-                      <P>{withdrawal.bankDetails?.accountHolderName || '—'}</P>
-                      <P className="text-[10px] text-gray-400 font-mono">
-                        {withdrawal.bankDetails?.accountNumber || '—'} · {withdrawal.bankDetails?.ifscCode || '—'}
-                      </P>
-                    </Td>
-                    <Td className="p-4 text-right font-bold text-gray-900">{currency(withdrawal.amount)}</Td>
-                    <Td className="p-4">
-                      <Span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${STATUS_STYLE[withdrawal.status] || 'bg-gray-100 text-gray-600'}`}>
-                        {withdrawal.status}
+      {loading ? (
+        <TableSkeleton rows={3} className="border-0 p-0" />
+      ) : withdrawals.length === 0 ? (
+        <EmptyState
+          icon={Banknote}
+          title="No payout requests"
+          message={status === 'all' ? 'Partner withdrawal requests appear here once they are raised.' : `No payouts with status "${status}".`}
+          actionLabel={status === 'all' ? undefined : 'Show all statuses'}
+          onAction={status === 'all' ? undefined : () => setStatus('all')}
+          className="border-0"
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={['Payout', 'Partner', 'Bank', 'Amount', 'Status', 'Settle']} />
+          <TBody>
+            {withdrawals.map((withdrawal, index) => {
+              const moves = NEXT_STATUSES[withdrawal.status] || [];
+              return (
+                <Row key={withdrawal._id} last={index === withdrawals.length - 1}>
+                  <Cell width={COLS[0]}>
+                    <Span numberOfLines={1} className="text-sm font-semibold text-slate-900">
+                      {withdrawal.withdrawalId}
+                    </Span>
+                    <Span className="text-xs text-slate-500">{new Date(withdrawal.createdAt).toLocaleDateString('en-GB')}</Span>
+                    {withdrawal.processingDetails?.utrNumber ? (
+                      <Span numberOfLines={1} className="text-xs text-slate-500">
+                        UTR {withdrawal.processingDetails.utrNumber}
                       </Span>
-                      {withdrawal.processingDetails?.remarks && (
-                        <P className="text-[10px] text-gray-400 mt-1 max-w-[14rem]">{withdrawal.processingDetails.remarks}</P>
-                      )}
-                    </Td>
-                    <Td className="p-4">
-                      {moves.length === 0 ? (
-                        <Span className="text-[10px] text-gray-400 uppercase font-bold">Closed</Span>
-                      ) : (
-                        <Div className="flex flex-wrap gap-1.5">
-                          {moves.map((next) => (
+                    ) : null}
+                  </Cell>
+                  <Cell width={COLS[1]}>
+                    <Span numberOfLines={1} className="text-sm font-semibold text-slate-900">
+                      {withdrawal.partner?.name || 'Unknown partner'}
+                    </Span>
+                    <Span className="text-xs text-slate-500">{withdrawal.partner?.phone || '—'}</Span>
+                  </Cell>
+                  <Cell width={COLS[2]}>
+                    <Span numberOfLines={1} className="text-sm text-slate-700">
+                      {withdrawal.bankDetails?.accountHolderName || '—'}
+                    </Span>
+                    <Span numberOfLines={2} className="text-xs text-slate-500">
+                      {withdrawal.bankDetails?.accountNumber || '—'} · {withdrawal.bankDetails?.ifscCode || '—'}
+                    </Span>
+                  </Cell>
+                  <Cell width={COLS[3]} align="right">
+                    <Span className="text-sm font-semibold text-slate-900">{currency(withdrawal.amount)}</Span>
+                  </Cell>
+                  <Cell width={COLS[4]}>
+                    <StatusBadge status={withdrawal.status} />
+                    {withdrawal.processingDetails?.remarks ? (
+                      <Span numberOfLines={2} className="text-xs text-slate-500 mt-1">
+                        {withdrawal.processingDetails.remarks}
+                      </Span>
+                    ) : null}
+                  </Cell>
+                  <Cell width={COLS[5]}>
+                    {moves.length === 0 ? (
+                      <Span className="text-sm text-slate-400">Closed</Span>
+                    ) : (
+                      <Div className="flex-row flex-wrap gap-2">
+                        {moves.map((next) => {
+                          const strong = next === 'completed' || next === 'processing';
+                          return (
                             <Button
                               key={next}
                               type="button"
                               disabled={busyId === withdrawal._id}
                               onClick={() => applyStatus(withdrawal, next)}
-                              className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-colors disabled:opacity-50 ${next === 'completed' ? 'bg-emerald-600 text-white hover:bg-emerald-700' : next === 'processing' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                              className={strong ? BTN_PRIMARY : BTN_SECONDARY}
                             >
-                              {next}
+                              <Span className={strong ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{next}</Span>
                             </Button>
-                          ))}
-                        </Div>
-                      )}
-                    </Td>
-                  </Tr>
-                );
-              })
-            )}
-          </Tbody>
-      </Table>
+                          );
+                        })}
+                      </Div>
+                    )}
+                  </Cell>
+                </Row>
+              );
+            })}
+          </TBody>
+        </DataTable>
+      )}
       {promptElement}
-    </Div>
+    </Card>
   );
 };
 export default PayoutSettlements;

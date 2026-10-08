@@ -1,7 +1,6 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/price-management/VehicleType.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, Car, ChevronRight, ChevronDown, Trash2, Edit2, ArrowLeft, Upload, Info, Save, Activity, X, CheckCircle2, Package } from 'lucide-react-native';
-import { motion, AnimatePresence } from '../../../../../lib/motion';
+import { Plus, Car, Trash2, Edit2, ArrowLeft, Upload, Info, Save, X, CheckCircle2, Package } from 'lucide-react-native';
 import { useNavigate, useParams } from '../../../../../lib/webRouter';
 import { File } from 'expo-file-system';
 import api from '../../../../shared/api/axiosInstance';
@@ -27,30 +26,33 @@ import trucksImg from '../../../../assets/images/delivery/trucks.png';
 import bikeImg from '../../../../assets/images/delivery/bike.png';
 import moversImg from '../../../../assets/images/delivery/movers.png';
 import {
-  Button,
-  Div,
-  H1,
-  Img,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Textarea,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  EmptyState,
+  ErrorState,
+  TableSkeleton,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, Img, Input, Label, Option, Select, Span, Textarea, Icon as UiIcon } from '../../../../../components/web';
 import { window } from '../../../../../lib/webShim';
-const inputClass =
-  'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100';
-const labelClass = 'mb-2 block text-[12px] font-bold text-slate-700';
+const VEHICLE_COLS = [210, 140, 130, 120, 100];
+const VEHICLE_LABELS = ['Vehicle', 'Transport', 'Dispatch', 'Active', 'Actions'];
 const iconMap = {
   car: CarIcon,
   bike: BikeIcon,
@@ -321,16 +323,20 @@ const fileToDataUrl = async (file) => {
   const base64 = await new File(file.uri).base64();
   return `data:${file.type || 'image/jpeg'};base64,${base64}`;
 };
-const StatusToggle = ({ active, onToggle }) => (
+/** A 44 px-tall switch, so the row target is tappable on a phone. */
+const StatusToggle = ({ active, onToggle, label }) => (
   <Button
     type="button"
+    accessibilityLabel={label}
     onClick={(e) => {
       e.stopPropagation();
       onToggle();
     }}
-    className={`relative h-6 w-12 rounded-full transition-all ${active ? 'bg-yellow-400' : 'bg-slate-300'}`}
+    className="h-11 justify-center"
   >
-    <Span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${active ? 'left-7' : 'left-1'}`} />
+    <Div className={`w-12 h-7 rounded-full justify-center px-1 ${active ? 'bg-green-600' : 'bg-slate-300'}`}>
+      <Div className={`w-5 h-5 rounded-full bg-white ${active ? 'self-end' : 'self-start'}`} />
+    </Div>
   </Button>
 );
 const VehicleMultiSelect = ({ label, options, value, onChange, placeholder = 'Select options' }) => {
@@ -344,44 +350,44 @@ const VehicleMultiSelect = ({ label, options, value, onChange, placeholder = 'Se
   };
   const removeItem = (id) => onChange(value.filter((item) => item !== id));
   return (
-    <Div>
-      <Label className={labelClass}>{label}</Label>
-      <Div className="rounded-xl border border-slate-200 bg-white p-3">
-        <Div className="mb-3 flex flex-wrap gap-2">
-          {selectedItems.length ? (
-            selectedItems.map((item) => (
-              <Span
-                key={String(item.id || item._id)}
-                className="inline-flex items-center gap-2 rounded-full bg-slate-700 px-3 py-1.5 text-[12px] font-semibold text-black"
+    <Field label={label}>
+      <Div className="flex-row flex-wrap gap-2">
+        {selectedItems.length ? (
+          selectedItems.map((item) => (
+            <Div key={String(item.id || item._id)} className="flex-row items-center gap-1 pl-3 pr-1 h-11 rounded-full bg-slate-100">
+              <Span className="text-sm font-semibold text-slate-700">{item.name}</Span>
+              <Button
+                type="button"
+                accessibilityLabel={`Remove ${item.name}`}
+                onClick={() => removeItem(String(item.id || item._id))}
+                className="w-9 h-9 items-center justify-center"
               >
-                {item.name}
-                <Button type="button" onClick={() => removeItem(String(item.id || item._id))} className="opacity-80 transition hover:opacity-100">
-                  <UiIcon as={X} size={12} />
-                </Button>
-              </Span>
-            ))
-          ) : (
-            <P className="text-[12px] text-slate-400">{placeholder}</P>
-          )}
-        </Div>
-        <Select value="" onChange={handleSelect} className={inputClass}>
-          <Option value="">Add option</Option>
-          {options
-            .filter((item) => !value.includes(String(item.id || item._id)))
-            .map((item) => (
-              <Option key={String(item.id || item._id)} value={String(item.id || item._id)}>
-                {item.name}
-              </Option>
-            ))}
-        </Select>
+                <UiIcon as={X} size={14} className="text-slate-600" />
+              </Button>
+            </Div>
+          ))
+        ) : (
+          <Span className="text-sm text-slate-500">{placeholder}</Span>
+        )}
       </Div>
-    </Div>
+      <Select value="" onChange={handleSelect} className={INPUT}>
+        <Option value="">Add option</Option>
+        {options
+          .filter((item) => !value.includes(String(item.id || item._id)))
+          .map((item) => (
+            <Option key={String(item.id || item._id)} value={String(item.id || item._id)}>
+              {item.name}
+            </Option>
+          ))}
+      </Select>
+    </Field>
   );
 };
 const VehicleType = ({ mode: propMode }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditor = propMode === 'create' || propMode === 'edit';
+  const { columns, tablet } = useLayoutWidth();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -614,647 +620,465 @@ const VehicleType = ({ mode: propMode }) => {
     }
   };
   if (!isEditor) {
+    const deliveryTypes = vehicles.filter((item) => ['delivery', 'both'].includes(String(item.transport_type || '').toLowerCase())).length;
     return (
-      <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8">
-        <Div className="mb-6">
-          <Div className="mb-2 flex items-center gap-1.5 text-xs text-slate-400">
-            <Span>Pricing</Span>
-            <UiIcon as={ChevronRight} size={12} />
-            <Span className="text-slate-700">Vehicle Type</Span>
-          </Div>
-          <Div className="flex items-center justify-between">
-            <Div>
-              <H1 className="text-2xl font-bold text-slate-900">Vehicle Type</H1>
-              <P className="mt-1 text-sm text-slate-500">Manage the ride and delivery vehicle catalog.</P>
-            </Div>
-            <Button
-              onClick={() => navigate('/taxi/admin/pricing/vehicle-type/create')}
-              className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-orange-200 transition hover:bg-yellow-500"
-            >
-              <UiIcon as={Plus} size={18} />
-              Add Vehicle
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={Car}
+          title="Vehicle types"
+          subtitle="The ride and delivery vehicle catalogue"
+          breadcrumb={[{ label: 'Taxi' }, { label: 'Pricing' }, { label: 'Vehicle types' }]}
+          actions={
+            <Button type="button" onClick={() => navigate('/taxi/admin/pricing/vehicle-type/create')} className={BTN_PRIMARY}>
+              <UiIcon as={Plus} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Add vehicle</Span>
             </Button>
-          </Div>
-        </Div>
+          }
+        />
 
-        <Div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-3">
-          <Div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <Div className="flex items-center gap-3">
-              <Div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
-                <UiIcon as={Car} size={20} />
-              </Div>
-              <Div>
-                <P className="text-sm font-medium text-slate-500">Total Types</P>
-                <P className="text-2xl font-bold text-slate-900">{vehicles.length}</P>
-              </Div>
-            </Div>
-          </Div>
-          <Div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <Div className="flex items-center gap-3">
-              <Div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500">
-                <UiIcon as={Activity} size={20} />
-              </Div>
-              <Div>
-                <P className="text-sm font-medium text-slate-500">Active</P>
-                <P className="text-2xl font-bold text-slate-900">{vehicles.filter((item) => item.active !== false).length}</P>
-              </Div>
-            </Div>
-          </Div>
-          <Div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <Div className="flex items-center gap-3">
-              <Div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
-                <UiIcon as={Package} size={20} />
-              </Div>
-              <Div>
-                <P className="text-sm font-medium text-slate-500">Delivery Types</P>
-                <P className="text-2xl font-bold text-slate-900">
-                  {vehicles.filter((item) => ['delivery', 'both'].includes(String(item.transport_type || '').toLowerCase())).length}
-                </P>
-              </Div>
-            </Div>
-          </Div>
-        </Div>
+        <StatGrid className="mb-4">
+          <StatCard label="Total types" value={String(vehicles.length)} icon={Car} tone="info" />
+          <StatCard label="Active" value={String(vehicles.filter((item) => item.active !== false).length)} icon={CheckCircle2} tone="success" />
+          <StatCard label="Delivery types" value={String(deliveryTypes)} icon={Package} tone="warning" />
+        </StatGrid>
 
-        {errorMessage ? <Div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">{errorMessage}</Div> : null}
-
-        <Div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <Table cols={[210, 140, 140, 110, 110]} className="w-full text-left">
-              <Thead className="bg-slate-50">
-                <Tr>
-                  <Th className="px-6 py-4 text-sm font-semibold text-slate-600">Vehicle</Th>
-                  <Th className="px-6 py-4 text-sm font-semibold text-slate-600">Transport</Th>
-                  <Th className="px-6 py-4 text-sm font-semibold text-slate-600">Dispatch</Th>
-                  <Th className="px-6 py-4 text-sm font-semibold text-slate-600">Active</Th>
-                  <Th className="px-6 py-4 text-right text-sm font-semibold text-slate-600">Action</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {loading ? (
-                  <Tr>
-                    <Td colSpan="5" className="px-6 py-20 text-center text-sm text-slate-400">
-                      Loading vehicle types...
-                    </Td>
-                  </Tr>
-                ) : !vehicles.length ? (
-                  <Tr>
-                    <Td colSpan="5" className="px-6 py-20 text-center text-sm text-slate-400">
-                      No vehicle types found.
-                    </Td>
-                  </Tr>
-                ) : (
-                  vehicles.map((vehicle) => (
-                    <Tr key={vehicle.id} className="border-t border-slate-100">
-                      <Td className="px-6 py-5">
-                        <Div className="flex items-center gap-4">
-                          <Div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50">
-                            <Img
-                              src={vehicle.image || vehicle.map_icon || vehicle.icon || iconMap[normalizeIconType(vehicle.icon_types)] || CarIcon}
-                              alt={vehicle.name}
-                              className="h-10 w-10 object-contain"
-                            />
-                          </Div>
-                          <Div>
-                            <P className="text-sm font-semibold text-slate-900">{vehicle.name}</P>
-                            <P className="text-xs text-slate-500">{vehicle.short_description || vehicle.description || 'No description added'}</P>
-                          </Div>
-                        </Div>
-                      </Td>
-                      <Td className="px-6 py-5">
-                        <Span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${String(vehicle.transport_type || '').toLowerCase() === 'delivery' ? 'bg-orange-50 text-orange-600' : String(vehicle.transport_type || '').toLowerCase() === 'both' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}
-                        >
-                          {vehicle.transport_type}
-                        </Span>
-                      </Td>
-                      <Td className="px-6 py-5 text-sm font-medium text-slate-700">{vehicle.trip_dispatch_type || vehicle.dispatch_type || 'normal'}</Td>
-                      <Td className="px-6 py-5">
-                        <StatusToggle active={vehicle.active !== false} onToggle={() => {}} />
-                      </Td>
-                      <Td className="px-6 py-5">
-                        <Div className="flex items-center justify-end gap-2">
-                          <Button
-                            onClick={() => navigate(`/taxi/admin/pricing/vehicle-type/edit/${vehicle.id}`)}
-                            className="rounded-xl p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
-                          >
-                            <UiIcon as={Edit2} size={15} />
-                          </Button>
-                          <Button
-                            onClick={() => handleDelete(vehicle.id)}
-                            className="rounded-xl p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                          >
-                            <UiIcon as={Trash2} size={15} />
-                          </Button>
-                        </Div>
-                      </Td>
-                    </Tr>
-                  ))
-                )}
-              </Tbody>
-            </Table>
-        </Div>
-      </ScrollDiv>
+        {loading ? (
+          <TableSkeleton rows={6} />
+        ) : errorMessage ? (
+          <ErrorState title="Could not load vehicle types" message={errorMessage} />
+        ) : !vehicles.length ? (
+          <EmptyState
+            icon={Car}
+            title="No vehicle types yet"
+            message="Add a vehicle type so riders and senders have something to choose."
+            actionLabel="Add vehicle"
+            onAction={() => navigate('/taxi/admin/pricing/vehicle-type/create')}
+          />
+        ) : (
+          <DataTable cols={VEHICLE_COLS}>
+            <THead cols={VEHICLE_COLS} labels={VEHICLE_LABELS} />
+            <TBody>
+              {vehicles.map((vehicle, i, all) => (
+                <Row key={vehicle.id} last={i === all.length - 1}>
+                  <Cell width={VEHICLE_COLS[0]}>
+                    <Div className="flex-row items-center gap-2">
+                      <Div className="w-10 h-10 rounded-lg bg-slate-100 items-center justify-center shrink-0">
+                        <Img
+                          src={vehicle.image || vehicle.map_icon || vehicle.icon || iconMap[normalizeIconType(vehicle.icon_types)] || CarIcon}
+                          alt={vehicle.name}
+                          className="w-7 h-7"
+                          contentFit="contain"
+                        />
+                      </Div>
+                      <Div className="flex-1 min-w-0">
+                        <Span className="text-sm font-semibold text-slate-900">{vehicle.name || 'Unnamed'}</Span>
+                        <Span className="text-xs text-slate-500">{vehicle.short_description || vehicle.description || 'No description added'}</Span>
+                      </Div>
+                    </Div>
+                  </Cell>
+                  <Cell width={VEHICLE_COLS[1]}>
+                    <StatusBadge status={vehicle.transport_type || 'taxi'} tone="info" />
+                  </Cell>
+                  <Cell width={VEHICLE_COLS[2]}>{vehicle.trip_dispatch_type || vehicle.dispatch_type || 'normal'}</Cell>
+                  <Cell width={VEHICLE_COLS[3]}>
+                    <StatusToggle active={vehicle.active !== false} onToggle={() => {}} label={`Toggle ${vehicle.name || 'vehicle'}`} />
+                  </Cell>
+                  <Cell width={VEHICLE_COLS[4]}>
+                    <Div className="flex-row items-center gap-1">
+                      <Button
+                        type="button"
+                        accessibilityLabel={`Edit ${vehicle.name || 'vehicle'}`}
+                        onClick={() => navigate(`/taxi/admin/pricing/vehicle-type/edit/${vehicle.id}`)}
+                        className="w-11 h-11 rounded-lg items-center justify-center"
+                      >
+                        <UiIcon as={Edit2} size={16} className="text-slate-600" />
+                      </Button>
+                      <Button
+                        type="button"
+                        accessibilityLabel={`Delete ${vehicle.name || 'vehicle'}`}
+                        onClick={() => handleDelete(vehicle.id)}
+                        className="w-11 h-11 rounded-lg items-center justify-center"
+                      >
+                        <UiIcon as={Trash2} size={16} className="text-red-600" />
+                      </Button>
+                    </Div>
+                  </Cell>
+                </Row>
+              ))}
+            </TBody>
+          </DataTable>
+        )}
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8">
-      <Div className="mb-6 flex items-center justify-between">
-        <Div>
-          <Div className="mb-2 flex items-center gap-1.5 text-xs text-slate-400">
-            <Span>Pricing</Span>
-            <UiIcon as={ChevronRight} size={12} />
-            <Span className="text-slate-700">Vehicle Type</Span>
-            <UiIcon as={ChevronRight} size={12} />
-            <Span className="text-slate-700">{id ? 'Edit' : 'Create'}</Span>
-          </Div>
-          <H1 className="text-2xl font-bold text-slate-900">{id ? 'Edit Vehicle Type' : 'Create Vehicle Type'}</H1>
-          <P className="mt-1 text-sm text-slate-500">Update the live vehicle catalog with real transport, icon, dispatch, and compatibility data.</P>
-        </Div>
-        <Button
-          onClick={() => navigate('/taxi/admin/pricing/vehicle-type')}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
-          <UiIcon as={ArrowLeft} size={16} />
-          Back
-        </Button>
-      </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Car}
+        title={id ? 'Edit vehicle type' : 'Create vehicle type'}
+        subtitle="Transport, icon, dispatch and compatibility for one vehicle type"
+        breadcrumb={[
+          { label: 'Taxi' },
+          { label: 'Vehicle types', onPress: () => navigate('/taxi/admin/pricing/vehicle-type') },
+          { label: id ? 'Edit' : 'Create' },
+        ]}
+        actions={
+          <Button type="button" onClick={() => navigate('/taxi/admin/pricing/vehicle-type')} className={BTN_SECONDARY}>
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+          </Button>
+        }
+      />
 
-      {errorMessage ? <Div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">{errorMessage}</Div> : null}
+      {errorMessage ? <ErrorState title="Something went wrong" message={errorMessage} className="mb-4" /> : null}
 
-      <Div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-        <Div className="grid grid-cols-1 gap-8 p-6 lg:grid-cols-2 lg:p-8">
-          <Div>
-            <Label className={labelClass}>Transport Type *</Label>
-            <Input type="hidden" required value={formData.transport_type} onChange={() => {}} />
-            <Div className="relative">
-              <Button
-                type="button"
-                onClick={() => setIsTransportTypeMenuOpen((previous) => !previous)}
-                onBlur={(event) => {
-                  const nextFocusTarget = event.relatedTarget;
-                  if (!event.currentTarget.parentElement?.contains(nextFocusTarget)) {
-                    setIsTransportTypeMenuOpen(false);
-                  }
-                }}
-                className={`${inputClass} flex min-h-[76px] items-center justify-between text-left`}
-              >
-                <Div>
-                  <P className="text-sm font-bold text-slate-900">{selectedTransportTypeOption?.display_name || 'Select Transport Type'}</P>
-                  <P className="mt-1 text-xs text-slate-500">
-                    {selectedTransportTypeOption
-                      ? getTransportTypeOptionDescription(selectedTransportTypeOption.name, formData.name)
-                      : 'Choose where this vehicle name should appear.'}
-                  </P>
-                </Div>
-                <UiIcon as={ChevronDown} size={18} className={`shrink-0 text-slate-400 transition-transform ${isTransportTypeMenuOpen ? 'rotate-180' : ''}`} />
-              </Button>
-              {isTransportTypeMenuOpen ? (
-                <Div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                  {transportTypeOptions.map((t) => {
-                    const selected = t.name === formData.transport_type;
-                    return (
-                      <Button
-                        key={t.id || t._id || t.name}
-                        type="button"
-                        onClick={() => {
-                          const nextTransportType = t.name;
-                          updateForm('transport_type', nextTransportType);
-                          if (!['delivery', 'both'].includes(normalizeTransportType(nextTransportType))) {
-                            updateForm('delivery_category', '');
-                            updateForm('delivery_distance_pricing', normalizeDeliveryDistancePricing());
-                          }
-                          setIsTransportTypeMenuOpen(false);
-                        }}
-                        className={`flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition ${selected ? 'bg-orange-50' : 'bg-white hover:bg-slate-50'}`}
-                      >
-                        <Div>
-                          <P className={`text-sm font-bold ${selected ? 'text-orange-600' : 'text-slate-900'}`}>{t.display_name}</P>
-                          <P className="mt-1 text-xs text-slate-500">{getTransportTypeOptionDescription(t.name, formData.name)}</P>
-                        </Div>
-                        {selected ? (
-                          <Span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white">
-                            <UiIcon as={CheckCircle2} size={12} />
-                          </Span>
-                        ) : null}
-                      </Button>
-                    );
-                  })}
-                </Div>
-              ) : null}
-            </Div>
-            <P className="mt-2 text-xs text-slate-500">Choose `Both` for vehicle types like bikes that can handle ride and parcel flows.</P>
-          </Div>
+      <Card className="mb-4">
+        <SectionTitle>Identity</SectionTitle>
+        <Div className={`grid grid-cols-${columns} gap-3`}>
+          <Field label="Transport type" required hint="Choose Both for vehicles that handle rides and parcels">
+            <Select
+              value={formData.transport_type}
+              onChange={(e) => {
+                const nextTransportType = e.target.value;
+                updateForm('transport_type', nextTransportType);
+                if (!['delivery', 'both'].includes(normalizeTransportType(nextTransportType))) {
+                  updateForm('delivery_category', '');
+                  updateForm('delivery_distance_pricing', normalizeDeliveryDistancePricing());
+                }
+              }}
+              className={INPUT}
+            >
+              <Option value="">Select transport type</Option>
+              {transportTypeOptions.map((t) => (
+                <Option key={t.id || t._id || t.name} value={t.name}>
+                  {t.display_name}
+                </Option>
+              ))}
+            </Select>
+          </Field>
 
-          <Div>
-            <Label className={labelClass}>Icon Type *</Label>
-            <Select value={formData.icon_types} onChange={(e) => updateForm('icon_types', e.target.value)} className={inputClass}>
+          <Field
+            label="Name"
+            required
+            hint={selectedTransportTypeOption ? getTransportTypeOptionDescription(selectedTransportTypeOption.name, formData.name) : undefined}
+          >
+            <Input type="text" value={formData.name} onChange={(e) => updateForm('name', e.target.value)} className={INPUT} placeholder="Parcel" />
+          </Field>
+
+          <Field label="Icon type" required>
+            <Select value={formData.icon_types} onChange={(e) => updateForm('icon_types', e.target.value)} className={INPUT}>
               {Object.keys(iconMap).map((key) => (
                 <Option key={key} value={key}>
                   {ICON_TYPE_LABELS[key] || key}
                 </Option>
               ))}
             </Select>
-          </Div>
+          </Field>
 
-          <Div>
-            <Label className={labelClass}>Category</Label>
-            <Select value={formData.category} onChange={(e) => updateForm('category', e.target.value)} className={inputClass}>
+          <Field label="Category">
+            <Select value={formData.category} onChange={(e) => updateForm('category', e.target.value)} className={INPUT}>
               {VEHICLE_CATEGORY_OPTIONS.map((option) => (
                 <Option key={option.id || 'empty'} value={option.id}>
                   {option.label}
                 </Option>
               ))}
             </Select>
-          </Div>
+          </Field>
 
-          {showsDeliveryCategorySelector ? (
-            <Div className="lg:col-span-2">
-              <Label className={labelClass}>Delivery Category *</Label>
-              <Div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {DELIVERY_CATEGORY_OPTIONS.map((option) => {
-                  const selected = formData.delivery_category === option.id;
-                  return (
-                    <Button
-                      key={option.id}
-                      type="button"
-                      onClick={() => updateForm('delivery_category', option.id)}
-                      className={`rounded-[24px] border p-4 text-left transition-all ${selected ? 'border-[#0047AB] bg-[#EEF4FF] shadow-md' : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'}`}
-                    >
-                      <Div className="rounded-[20px] bg-slate-50 p-3">
-                        <Img src={option.image} alt={option.title} className="mx-auto h-24 w-full object-contain" />
-                      </Div>
-                      <Div className="mt-4 flex items-start justify-between gap-3">
-                        <Div>
-                          <P className="text-sm font-black text-slate-900">{option.title}</P>
-                          <P className="mt-1 text-xs font-medium leading-5 text-slate-500">{option.description}</P>
-                        </Div>
-                        <Span
-                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${selected ? 'border-[#0047AB] bg-[#0047AB] text-white' : 'border-slate-300 bg-white'}`}
-                        >
-                          {selected ? <UiIcon as={CheckCircle2} size={12} /> : null}
-                        </Span>
-                      </Div>
-                    </Button>
-                  );
-                })}
-              </Div>
-              <P className="mt-2 text-xs text-slate-500">This decides which delivery card this vehicle type appears under in the user parcel flow.</P>
-            </Div>
-          ) : null}
-
-          {showsDeliveryCategorySelector ? (
-            <Div className="lg:col-span-2 rounded-[28px] border border-slate-200 bg-slate-50/70 p-5">
-              <Div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <Div>
-                  <Label className={labelClass}>Delivery Distance Based Charges</Label>
-                  <P className="text-xs text-slate-500">Enable quick parcel pricing defaults for this delivery-enabled vehicle type.</P>
-                </Div>
-                <Label className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                  <Input
-                    type="checkbox"
-                    checked={Boolean(formData.delivery_distance_pricing?.enabled)}
-                    onChange={(e) =>
-                      updateForm('delivery_distance_pricing', {
-                        ...formData.delivery_distance_pricing,
-                        enabled: e.target.checked,
-                      })
-                    }
-                    className="h-4 w-4 rounded border-slate-300"
-                  />
-                  Enable distance based charges
-                </Label>
-              </Div>
-
-              <Div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                <Div>
-                  <Label className={labelClass}>Base Price</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.delivery_distance_pricing?.base_price ?? ''}
-                    onChange={(e) =>
-                      updateForm('delivery_distance_pricing', {
-                        ...formData.delivery_distance_pricing,
-                        base_price: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                    placeholder="45"
-                    disabled={!formData.delivery_distance_pricing?.enabled}
-                  />
-                </Div>
-
-                <Div>
-                  <Label className={labelClass}>Base Distance (KM)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.delivery_distance_pricing?.free_distance ?? ''}
-                    onChange={(e) =>
-                      updateForm('delivery_distance_pricing', {
-                        ...formData.delivery_distance_pricing,
-                        free_distance: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                    placeholder="2"
-                    disabled={!formData.delivery_distance_pricing?.enabled}
-                  />
-                  <P className="mt-2 text-[11px] font-medium text-slate-400">Distance covered by the base price before per-km charges begin.</P>
-                </Div>
-
-                <Div>
-                  <Label className={labelClass}>Distance Price</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.delivery_distance_pricing?.distance_price ?? ''}
-                    onChange={(e) =>
-                      updateForm('delivery_distance_pricing', {
-                        ...formData.delivery_distance_pricing,
-                        distance_price: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                    placeholder="12"
-                    disabled={!formData.delivery_distance_pricing?.enabled}
-                  />
-                </Div>
-
-                <Div>
-                  <Label className={labelClass}>Service Tax (%)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.service_tax}
-                    onChange={(e) => updateForm('service_tax', clampNonNegativeInput(e.target.value))}
-                    className={inputClass}
-                    placeholder="5"
-                  />
-                  <P className="mt-2 text-[11px] font-medium text-slate-400">Added on top of the delivery fare shown to the user.</P>
-                </Div>
-              </Div>
-
-              <Div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-                <Div>
-                  <Label className={labelClass}>Admin Commission Type From Driver</Label>
-                  <Select
-                    value={formData.admin_commission_type_from_driver}
-                    onChange={(e) => updateForm('admin_commission_type_from_driver', e.target.value)}
-                    className={inputClass}
-                  >
-                    <Option value="1">Percentage</Option>
-                    <Option value="2">Fixed</Option>
-                  </Select>
-                </Div>
-
-                <Div>
-                  <Label className={labelClass}>Admin Commission From Driver</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.admin_commission_from_driver}
-                    onChange={(e) => updateForm('admin_commission_from_driver', clampNonNegativeInput(e.target.value))}
-                    className={inputClass}
-                    placeholder="0"
-                  />
-                </Div>
-              </Div>
-
-              <P className="mt-3 text-xs text-slate-500">This section only appears when the vehicle supports `Delivery` or `Both`.</P>
-            </Div>
-          ) : null}
-
-          <Div>
-            <Label className={labelClass}>Preview Image</Label>
-            <Div className="rounded-2xl border border-dashed border-slate-300 p-4">
-              <Div className="group relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-2xl bg-slate-50">
-                {previewImage ? (
-                  <>
-                    <Img src={previewImage} alt="Vehicle preview" className="max-h-[280px] w-full object-contain p-4" />
-                    <Button
-                      type="button"
-                      onClick={() => updateForm('image', '')}
-                      className="absolute right-3 top-3 rounded-xl bg-white p-2 text-red-500 shadow-sm transition hover:bg-red-500 hover:text-white"
-                    >
-                      <UiIcon as={Trash2} size={16} />
-                    </Button>
-                  </>
-                ) : (
-                  <Div onClick={() => handleImageChange('image')} className="flex flex-col items-center gap-3">
-                    <Span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-orange-500 shadow-sm">
-                      <UiIcon as={Upload} size={20} />
-                    </Span>
-                    <Span className="text-sm font-semibold text-slate-700">Upload preview image</Span>
-                    <Span className="text-xs text-slate-400">This shows in the user vehicle selection card</Span>
-                  </Div>
-                )}
-              </Div>
-            </Div>
-            <Div className="mt-4 rounded-[24px] border border-orange-100 bg-white p-3 shadow-sm">
-              <P className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">User Card Preview</P>
-              <Div className="flex items-center gap-3 rounded-[20px] border border-orange-400 bg-white px-3 py-3">
-                <Div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100">
-                  <Img src={previewImage || mapIconPreview} alt="User card vehicle preview" className="h-10 w-10 object-contain" />
-                </Div>
-                <Div className="min-w-0 flex-1">
-                  <Div className="flex items-center gap-2">
-                    <P className="truncate text-sm font-black text-slate-900">{formData.name || 'Taxi'}</P>
-                    <Span className="rounded bg-orange-500 px-1.5 py-0.5 text-[7px] font-black text-black">FASTEST</Span>
-                  </Div>
-                  <P className="truncate text-[11px] font-bold text-slate-500">
-                    {formData.short_description || formData.description || 'Closest driver 940 m away'}
-                  </P>
-                  {showsDeliveryCategorySelector ? (
-                    <P className="mt-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
-                      Includes {Number(formData.service_tax || 0).toFixed(2)}% service tax
-                    </P>
-                  ) : null}
-                </Div>
-                <P className="text-sm font-black text-slate-900">₹31</P>
-              </Div>
-            </Div>
-          </Div>
-
-          <Div className="space-y-6">
-            <Div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
-              <Div className="mb-3 flex items-center justify-between gap-3">
-                <Div>
-                  <P className="text-sm font-semibold text-slate-800">Live Map Icon Preview</P>
-                  <P className="text-[11px] font-medium text-slate-500">This uploaded icon is saved to the DB and used on app maps.</P>
-                </Div>
-                <Div
-                  onClick={() => handleImageChange('map_icon')}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:text-orange-500"
-                >
-                  <UiIcon as={Upload} size={14} />
-                  <Span>Change</Span>
-                </Div>
-              </Div>
-              <Div className="relative h-[228px] overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                <Img src={MapBackground} alt="Map preview" className="absolute inset-0 h-full w-full object-cover opacity-25" />
-                <Div className="absolute inset-0 flex items-center justify-center">
-                  <Img src={mapIconPreview} alt="Icon preview" className="h-16 w-16 object-contain drop-shadow-xl" />
-                </Div>
-              </Div>
-              {formData.map_icon ? (
-                <Button
-                  type="button"
-                  onClick={() => updateForm('map_icon', '')}
-                  className="mt-3 text-[11px] font-bold text-red-500 transition hover:text-red-600"
-                >
-                  Remove uploaded map icon and use the selected icon type fallback
-                </Button>
-              ) : null}
-            </Div>
-
-            <Div>
-              <Label className={labelClass}>Maximum Weight / Capacity *</Label>
-              <Input type="number" value={formData.capacity} onChange={(e) => updateForm('capacity', e.target.value)} className={inputClass} placeholder="12" />
-            </Div>
-
-            <Div>
-              <Label className={labelClass}>Short Description *</Label>
-              <Input
-                type="text"
-                value={formData.short_description}
-                onChange={(e) => updateForm('short_description', e.target.value)}
-                className={inputClass}
-                placeholder="Normal Delivery"
-              />
-            </Div>
-          </Div>
-
-          <Div>
-            <Label className={labelClass}>Name *</Label>
-            <Input type="text" value={formData.name} onChange={(e) => updateForm('name', e.target.value)} className={inputClass} placeholder="Parcel" />
-          </Div>
-
-          <Div>
-            <Label className={labelClass}>Trip Dispatch Type *</Label>
-            <Select value={formData.dispatch_type} onChange={(e) => updateForm('dispatch_type', e.target.value)} className={inputClass}>
+          <Field label="Trip dispatch type" required>
+            <Select value={formData.dispatch_type} onChange={(e) => updateForm('dispatch_type', e.target.value)} className={INPUT}>
               <Option value="normal">Normal</Option>
               <Option value="both">Both</Option>
             </Select>
-          </Div>
+          </Field>
 
-          <Div>
-            <Label className={labelClass}>Size *</Label>
-            <Input type="text" value={formData.size} onChange={(e) => updateForm('size', e.target.value)} className={inputClass} placeholder="2" />
-          </Div>
-
-          <Div>
-            <Label className={labelClass}>Operational Scope *</Label>
-            <Select value={formData.is_taxi} onChange={(e) => updateForm('is_taxi', e.target.value)} className={inputClass}>
-              <Option value="">Select Scope</Option>
+          <Field label="Operational scope" required>
+            <Select value={formData.is_taxi} onChange={(e) => updateForm('is_taxi', e.target.value)} className={INPUT}>
+              <Option value="">Select scope</Option>
               {transportTypes.map((t) => (
                 <Option key={t.id || t._id} value={t.name}>
                   {t.display_name}
                 </Option>
               ))}
             </Select>
-          </Div>
+          </Field>
 
-          <Div className="lg:col-span-2">
-            <Label className={labelClass}>Description *</Label>
+          <Field label="Maximum weight / capacity" required>
+            <Input type="number" value={formData.capacity} onChange={(e) => updateForm('capacity', e.target.value)} className={INPUT} placeholder="12" />
+          </Field>
+
+          <Field label="Size" required>
+            <Input type="text" value={formData.size} onChange={(e) => updateForm('size', e.target.value)} className={INPUT} placeholder="2" />
+          </Field>
+
+          <Field label="Short description" required>
+            <Input
+              type="text"
+              value={formData.short_description}
+              onChange={(e) => updateForm('short_description', e.target.value)}
+              className={INPUT}
+              placeholder="Normal delivery"
+            />
+          </Field>
+
+          <Field label="Description" required>
             <Textarea
-              rows="4"
+              rows={4}
               value={formData.description}
               onChange={(e) => updateForm('description', e.target.value)}
-              className={inputClass}
-              placeholder="Parcel Delivery"
+              className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+              placeholder="Parcel delivery"
             />
-          </Div>
-
-          <Div className="lg:col-span-2">
-            <VehicleMultiSelect
-              label="Supported Other Vehicle Types"
-              options={availableSupportVehicles}
-              value={formData.supported_other_vehicle_types}
-              onChange={(next) => updateForm('supported_other_vehicle_types', next)}
-              placeholder="No supporting vehicle types selected"
-            />
-          </Div>
-
-          <Div className="lg:col-span-2">
-            <VehicleMultiSelect
-              label="Vehicle Preferences"
-              options={preferenceOptions}
-              value={formData.vehicle_preference}
-              onChange={(next) => updateForm('vehicle_preference', next)}
-              placeholder="No preferences selected"
-            />
-          </Div>
+          </Field>
         </Div>
+      </Card>
 
-        <Div className="grid grid-cols-1 gap-4 border-t border-slate-100 bg-slate-50/50 p-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <Div className="space-y-3">
-            <Div className="flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3">
-              <UiIcon as={Info} size={16} className="mt-0.5 shrink-0 text-amber-600" />
-              <P className="text-sm text-amber-800">
-                This form is fully dynamic from your DB. Transport type, icon type, supported vehicles, and preferences all save to the real vehicle catalog.
-              </P>
+      {showsDeliveryCategorySelector ? (
+        <Card className="mb-4">
+          <SectionTitle>Delivery category</SectionTitle>
+          <Span className="text-sm text-slate-500 mb-3">This decides which delivery card the vehicle appears under in the parcel flow.</Span>
+          <Div className={`grid grid-cols-${columns} gap-3`}>
+            {DELIVERY_CATEGORY_OPTIONS.map((option) => {
+              const selected = formData.delivery_category === option.id;
+              return (
+                <Button
+                  key={option.id}
+                  type="button"
+                  onClick={() => updateForm('delivery_category', option.id)}
+                  className={`p-3 rounded-xl border ${selected ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white'}`}
+                >
+                  <Img src={option.image} alt={option.title} className="w-full h-24" contentFit="contain" />
+                  <Div className="flex-row items-start justify-between gap-2 mt-3">
+                    <Div className="flex-1 min-w-0">
+                      <Span className="text-sm font-semibold text-slate-900">{option.title}</Span>
+                      <Span className="text-xs text-slate-500">{option.description}</Span>
+                    </Div>
+                    {selected ? <UiIcon as={CheckCircle2} size={18} className="text-blue-600 shrink-0" /> : null}
+                  </Div>
+                </Button>
+              );
+            })}
+          </Div>
+        </Card>
+      ) : null}
+
+      {showsDeliveryCategorySelector ? (
+        <Card className="mb-4">
+          <SectionTitle>Delivery distance charges</SectionTitle>
+          <Label className="flex-row items-center gap-2 h-11">
+            <Input
+              type="checkbox"
+              checked={Boolean(formData.delivery_distance_pricing?.enabled)}
+              onChange={(e) =>
+                updateForm('delivery_distance_pricing', {
+                  ...formData.delivery_distance_pricing,
+                  enabled: e.target.checked,
+                })
+              }
+            />
+            <Span className="text-sm text-slate-700">Enable distance based charges</Span>
+          </Label>
+
+          <Div className={`grid grid-cols-${columns} gap-3 mt-3`}>
+            <Field label="Base price">
+              <Input
+                type="number"
+                min="0"
+                value={formData.delivery_distance_pricing?.base_price ?? ''}
+                onChange={(e) =>
+                  updateForm('delivery_distance_pricing', {
+                    ...formData.delivery_distance_pricing,
+                    base_price: e.target.value,
+                  })
+                }
+                className={INPUT}
+                placeholder="45"
+                disabled={!formData.delivery_distance_pricing?.enabled}
+              />
+            </Field>
+
+            <Field label="Base distance (km)" hint="Distance covered by the base price before per-km charges begin">
+              <Input
+                type="number"
+                min="0"
+                value={formData.delivery_distance_pricing?.free_distance ?? ''}
+                onChange={(e) =>
+                  updateForm('delivery_distance_pricing', {
+                    ...formData.delivery_distance_pricing,
+                    free_distance: e.target.value,
+                  })
+                }
+                className={INPUT}
+                placeholder="2"
+                disabled={!formData.delivery_distance_pricing?.enabled}
+              />
+            </Field>
+
+            <Field label="Distance price">
+              <Input
+                type="number"
+                min="0"
+                value={formData.delivery_distance_pricing?.distance_price ?? ''}
+                onChange={(e) =>
+                  updateForm('delivery_distance_pricing', {
+                    ...formData.delivery_distance_pricing,
+                    distance_price: e.target.value,
+                  })
+                }
+                className={INPUT}
+                placeholder="12"
+                disabled={!formData.delivery_distance_pricing?.enabled}
+              />
+            </Field>
+
+            <Field label="Service tax (%)" hint="Added on top of the delivery fare shown to the user">
+              <Input
+                type="number"
+                min="0"
+                value={formData.service_tax}
+                onChange={(e) => updateForm('service_tax', clampNonNegativeInput(e.target.value))}
+                className={INPUT}
+                placeholder="5"
+              />
+            </Field>
+
+            <Field label="Commission type from driver">
+              <Select
+                value={formData.admin_commission_type_from_driver}
+                onChange={(e) => updateForm('admin_commission_type_from_driver', e.target.value)}
+                className={INPUT}
+              >
+                <Option value="1">Percentage</Option>
+                <Option value="2">Fixed</Option>
+              </Select>
+            </Field>
+
+            <Field label="Commission from driver">
+              <Input
+                type="number"
+                min="0"
+                value={formData.admin_commission_from_driver}
+                onChange={(e) => updateForm('admin_commission_from_driver', clampNonNegativeInput(e.target.value))}
+                className={INPUT}
+                placeholder="0"
+              />
+            </Field>
+          </Div>
+        </Card>
+      ) : null}
+
+      <Card className="mb-4">
+        <SectionTitle>Images</SectionTitle>
+        <Div className={`grid grid-cols-${columns} gap-3`}>
+          <Field label="Preview image" hint="Shown in the rider's vehicle selection card">
+            <Div className="h-[220px] rounded-lg border border-slate-200 bg-slate-50 items-center justify-center">
+              {previewImage ? (
+                <>
+                  <Img src={previewImage} alt="Vehicle preview" className="w-full h-[180px]" contentFit="contain" />
+                  <Button type="button" accessibilityLabel="Remove preview image" onClick={() => updateForm('image', '')} className={`${BTN_SECONDARY} mt-2`}>
+                    <UiIcon as={Trash2} size={16} className="text-red-600" />
+                    <Span className="text-sm font-semibold text-red-600">Remove</Span>
+                  </Button>
+                </>
+              ) : (
+                <Button type="button" onClick={() => handleImageChange('image')} className={BTN_SECONDARY}>
+                  <UiIcon as={Upload} size={16} className="text-slate-600" />
+                  <Span className={BTN_TEXT_SECONDARY}>Upload preview image</Span>
+                </Button>
+              )}
             </Div>
-            <Label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-              <Input
-                type="checkbox"
-                checked={formData.is_accept_share_ride === 1}
-                onChange={(e) => updateForm('is_accept_share_ride', e.target.checked ? 1 : 0)}
-                className="h-4 w-4 rounded border-slate-300"
-              />
-              Accept share ride
-            </Label>
-            <Label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-              <Input
-                type="checkbox"
-                checked={formData.active}
-                onChange={(e) => {
-                  updateForm('active', e.target.checked);
-                  updateForm('status', e.target.checked ? 1 : 0);
-                }}
-                className="h-4 w-4 rounded border-slate-300"
-              />
-              Active vehicle type
-            </Label>
-          </Div>
+          </Field>
 
-          <Div className="flex flex-col gap-3 lg:items-end">
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || loading}
-              className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-xl bg-yellow-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-yellow-500 disabled:opacity-60"
-            >
-              <UiIcon as={Save} size={16} />
-              {isSaving ? 'Saving...' : id ? 'Update' : 'Create'}
-            </Button>
-            <Button onClick={() => navigate('/taxi/admin/pricing/vehicle-type')} className="text-sm font-medium text-slate-500 transition hover:text-slate-700">
-              Cancel
-            </Button>
-          </Div>
+          <Field label="Map icon" hint="Saved to the database and used on the app maps">
+            <Div className="h-[180px] rounded-lg border border-slate-200 bg-white overflow-hidden items-center justify-center">
+              <Img src={MapBackground} alt="Map preview" className="absolute inset-0 w-full h-full" contentFit="cover" />
+              <Img src={mapIconPreview} alt="Icon preview" className="w-14 h-14" contentFit="contain" />
+            </Div>
+            <Div className="flex-row flex-wrap gap-2 mt-2">
+              <Button type="button" onClick={() => handleImageChange('map_icon')} className={BTN_SECONDARY}>
+                <UiIcon as={Upload} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Change</Span>
+              </Button>
+              {formData.map_icon ? (
+                <Button type="button" onClick={() => updateForm('map_icon', '')} className={BTN_SECONDARY}>
+                  <Span className="text-sm font-semibold text-red-600">Use icon type instead</Span>
+                </Button>
+              ) : null}
+            </Div>
+          </Field>
         </Div>
-      </Div>
 
-      <AnimatePresence>
-        {!loading && formData.active ? (
-          <motion.div
-            initial={{
-              opacity: 0,
-              scale: 0.8,
+        <Span className="text-xs font-semibold uppercase text-slate-500 mt-4 mb-2">Rider card preview</Span>
+        <Div className="flex-row items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white">
+          <Div className="w-12 h-12 rounded-lg bg-slate-100 items-center justify-center shrink-0">
+            <Img src={previewImage || mapIconPreview} alt="Rider card vehicle preview" className="w-9 h-9" contentFit="contain" />
+          </Div>
+          <Div className="flex-1 min-w-0">
+            <Span className="text-sm font-semibold text-slate-900">{formData.name || 'Taxi'}</Span>
+            <Span className="text-xs text-slate-500">{formData.short_description || formData.description || 'Closest driver 940 m away'}</Span>
+            {showsDeliveryCategorySelector ? (
+              <Span className="text-xs text-slate-500">{`Includes ${Number(formData.service_tax || 0).toFixed(2)}% service tax`}</Span>
+            ) : null}
+          </Div>
+          <Span className="text-sm font-semibold text-slate-900">₹31</Span>
+        </Div>
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle>Compatibility</SectionTitle>
+        <Div className="gap-3">
+          <VehicleMultiSelect
+            label="Supported other vehicle types"
+            options={availableSupportVehicles}
+            value={formData.supported_other_vehicle_types}
+            onChange={(next) => updateForm('supported_other_vehicle_types', next)}
+            placeholder="No supporting vehicle types selected"
+          />
+          <VehicleMultiSelect
+            label="Vehicle preferences"
+            options={preferenceOptions}
+            value={formData.vehicle_preference}
+            onChange={(next) => updateForm('vehicle_preference', next)}
+            placeholder="No preferences selected"
+          />
+        </Div>
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle>Availability</SectionTitle>
+        <Label className="flex-row items-center gap-2 h-11">
+          <Input type="checkbox" checked={formData.is_accept_share_ride === 1} onChange={(e) => updateForm('is_accept_share_ride', e.target.checked ? 1 : 0)} />
+          <Span className="text-sm text-slate-700">Accept share ride</Span>
+        </Label>
+        <Label className="flex-row items-center gap-2 h-11">
+          <Input
+            type="checkbox"
+            checked={formData.active}
+            onChange={(e) => {
+              updateForm('active', e.target.checked);
+              updateForm('status', e.target.checked ? 1 : 0);
             }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.8,
-            }}
-            className="fixed bottom-8 right-8 flex h-14 w-14 items-center justify-center rounded-full bg-[#14b8a6] text-white shadow-2xl"
-          >
-            <UiIcon as={CheckCircle2} size={24} />
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </ScrollDiv>
+          />
+          <Span className="text-sm text-slate-700">Active vehicle type</Span>
+        </Label>
+        <Div className="flex-row items-start gap-2 p-3 rounded-lg bg-blue-50 mt-2">
+          <UiIcon as={Info} size={16} className="text-blue-700 shrink-0 mt-0.5" />
+          <Span className="text-xs text-slate-700 flex-1">
+            Transport type, icon type, supported vehicles and preferences all save to the live vehicle catalogue.
+          </Span>
+        </Div>
+      </Card>
+
+      <Card className={`${tablet ? 'flex-row justify-end' : ''} gap-3`}>
+        <Button type="button" onClick={() => navigate('/taxi/admin/pricing/vehicle-type')} className={BTN_SECONDARY}>
+          <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+        </Button>
+        <Button type="button" onClick={handleSave} disabled={isSaving || loading} className={BTN_PRIMARY}>
+          <UiIcon as={Save} size={16} className="text-white" />
+          <Span className={BTN_TEXT_PRIMARY}>{isSaving ? 'Saving…' : id ? 'Update' : 'Create'}</Span>
+        </Button>
+      </Card>
+    </AdminPage>
   );
 };
 export default VehicleType;

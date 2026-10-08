@@ -1,30 +1,35 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/support/TicketTitle.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronRight, Edit2, Plus, Trash2 } from 'lucide-react-native';
+import { Edit2, Tag, Trash2 } from 'lucide-react-native';
 import { adminSupportService } from '../../../shared/services/supportTicketService';
-import {
-  Button,
-  Div,
-  Form,
-  H1,
-  H3,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+import { Button, Div, Form, Input, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 import { window } from '../../../../../lib/webShim';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../../admin/ui';
+
 const USER_TYPES = ['user', 'driver', 'owner'];
+const COLS = [190, 120, 120, 104];
+const LABELS = ['Title', 'User Type', 'Status', ''];
 const initialForm = {
   title: '',
   userType: 'user',
@@ -128,35 +133,22 @@ const TicketTitle = () => {
     }
   };
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8">
-      <Div className="mb-6">
-        <Div className="mb-2 flex items-center gap-1.5 text-xs text-gray-400">
-          <Span>Support Management</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700">Ticket Title</Span>
-        </Div>
-        <Div className="flex items-center justify-between gap-4">
-          <H1 className="text-xl text-gray-900 font-bold">Ticket Title</H1>
-        </Div>
-      </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Tag}
+        title="Ticket Title"
+        subtitle="The support subjects riders, drivers and owners can pick"
+        breadcrumb={[{ label: 'Support Management' }, { label: 'Ticket Title' }]}
+      />
 
-      {error ? <Div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</Div> : null}
+      {error ? <ErrorState title="Ticket titles error" message={error} onRetry={loadRows} className="mb-4" /> : null}
 
-      <Div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-        <Form onSubmit={submitForm} className="rounded-xl border border-gray-200 bg-white p-6">
-          <Div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
-            <Div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600">
-              <UiIcon as={Plus} size={18} />
-            </Div>
-            <Div>
-              <H3 className="text-sm text-gray-900 font-bold">{editingId ? 'Update Ticket Title' : 'Add Ticket Title'}</H3>
-              <P className="text-xs text-gray-400">Create support title for user/driver/owner flows</P>
-            </Div>
-          </Div>
+      <Form onSubmit={submitForm} className="mb-4">
+        <Card>
+          <SectionTitle>{editingId ? 'Update Ticket Title' : 'Add Ticket Title'}</SectionTitle>
 
-          <Div className="space-y-4">
-            <Div>
-              <Label className="mb-1.5 block text-xs font-semibold text-gray-500">Title</Label>
+          <Div className="gap-3">
+            <Field label="Title" required hint="Shown to the customer when they raise a ticket">
               <Input
                 type="text"
                 value={form.title}
@@ -167,12 +159,11 @@ const TicketTitle = () => {
                   }))
                 }
                 placeholder="e.g. Ride related issue"
-                className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-800 outline-none transition-colors focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                className={INPUT}
               />
-            </Div>
+            </Field>
 
-            <Div>
-              <Label className="mb-1.5 block text-xs font-semibold text-gray-500">User Type</Label>
+            <Field label="User Type">
               <Select
                 value={form.userType}
                 onChange={(event) =>
@@ -181,7 +172,7 @@ const TicketTitle = () => {
                     userType: event.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-800 outline-none transition-colors focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                className={INPUT}
               >
                 {USER_TYPES.map((type) => (
                   <Option key={type} value={type}>
@@ -189,9 +180,9 @@ const TicketTitle = () => {
                   </Option>
                 ))}
               </Select>
-            </Div>
+            </Field>
 
-            <Label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+            <Div className="flex-row items-center gap-2 h-11">
               <Input
                 type="checkbox"
                 checked={form.active}
@@ -201,99 +192,79 @@ const TicketTitle = () => {
                     active: event.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+                className="w-5 h-5"
+                accessibilityLabel="Active"
               />
-              Active
-            </Label>
+              <Span className="text-sm text-slate-700">Active</Span>
+            </Div>
 
-            <Div className="flex gap-3 pt-2">
-              <Button
-                type="submit"
-                disabled={saving}
-                className="flex-1 rounded-lg bg-yellow-400 px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-60 shadow-sm"
-              >
-                {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
+            <Div className="flex-row gap-2">
+              <Button type="submit" disabled={saving} className={`${BTN_PRIMARY} flex-1 ${saving ? 'opacity-50' : ''}`}>
+                <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : editingId ? 'Update' : 'Create'}</Span>
               </Button>
               {editingId ? (
-                <Button
-                  type="button"
-                  onClick={resetForm}
-                  className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-                >
-                  Cancel
+                <Button type="button" onClick={resetForm} className={`${BTN_SECONDARY} flex-1`}>
+                  <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
                 </Button>
               ) : null}
             </Div>
           </Div>
-        </Form>
+        </Card>
+      </Form>
 
-        <Div className="rounded-xl border border-gray-200 bg-white">
-          <Div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4">
-            <H3 className="text-sm text-gray-900 font-bold">Ticket Title List</H3>
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search title..."
-              className="w-60 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </Div>
+      <Card className="mb-4">
+        <SectionTitle>Ticket Title List</SectionTitle>
+        <Toolbar className="mb-0">
+          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search title" className={`${INPUT} flex-1 min-w-[180px]`} />
+        </Toolbar>
+      </Card>
 
-          <Div>
-            <Table cols={[200, 120, 120, 96]} className="w-full">
-              <Thead>
-                <Tr className="border-b border-gray-100 bg-gray-50">
-                  <Th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Title</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">User Type</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Status</Th>
-                  <Th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">Action</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {loading ? (
-                  <Tr>
-                    <Td colSpan={4} className="px-4 py-10 text-center text-sm text-gray-400">
-                      Loading titles...
-                    </Td>
-                  </Tr>
-                ) : filteredRows.length === 0 ? (
-                  <Tr>
-                    <Td colSpan={4} className="px-4 py-10 text-center text-sm text-gray-400">
-                      No support title found.
-                    </Td>
-                  </Tr>
-                ) : (
-                  filteredRows.map((row) => (
-                    <Tr key={row.id} className="border-b border-gray-50 last:border-b-0">
-                      <Td className="px-4 py-3 text-sm font-medium text-gray-900">{row.title}</Td>
-                      <Td className="px-4 py-3 text-sm text-gray-600">{row.userType}</Td>
-                      <Td className="px-4 py-3">
-                        <Button
-                          type="button"
-                          onClick={() => toggleActive(row)}
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${row.active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}
-                        >
-                          {row.active ? 'Active' : 'Inactive'}
-                        </Button>
-                      </Td>
-                      <Td className="px-4 py-3">
-                        <Div className="flex items-center justify-end gap-2">
-                          <Button type="button" onClick={() => onEdit(row)} className="rounded-md border border-gray-200 p-2 text-gray-500 hover:bg-gray-50">
-                            <UiIcon as={Edit2} size={14} />
-                          </Button>
-                          <Button type="button" onClick={() => onDelete(row)} className="rounded-md border border-rose-200 p-2 text-rose-600 hover:bg-rose-50">
-                            <UiIcon as={Trash2} size={14} />
-                          </Button>
-                        </Div>
-                      </Td>
-                    </Tr>
-                  ))
-                )}
-              </Tbody>
-            </Table>
-          </Div>
-        </Div>
-      </Div>
-    </ScrollDiv>
+      {loading ? (
+        <TableSkeleton rows={5} />
+      ) : filteredRows.length === 0 ? (
+        <EmptyState
+          icon={Tag}
+          title={search ? 'No matching title' : 'No support title yet'}
+          message={search ? 'No title matches that search.' : 'Add a title above so customers have something to pick.'}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={LABELS} />
+          <TBody>
+            {filteredRows.map((row, i) => (
+              <Row key={row.id} last={i === filteredRows.length - 1}>
+                <Cell width={COLS[0]}>
+                  <Span className="text-sm font-medium text-slate-900" numberOfLines={2}>
+                    {row.title}
+                  </Span>
+                </Cell>
+                <Cell width={COLS[1]}>{row.userType}</Cell>
+                <Cell width={COLS[2]}>
+                  <Button
+                    type="button"
+                    onClick={() => toggleActive(row)}
+                    accessibilityLabel={row.active ? `Deactivate ${row.title}` : `Activate ${row.title}`}
+                    className="h-11 justify-center"
+                  >
+                    <StatusBadge status={row.active ? 'active' : 'inactive'} label={row.active ? 'Active' : 'Inactive'} />
+                  </Button>
+                </Cell>
+                <Cell width={COLS[3]}>
+                  <Div className="flex-row items-center gap-1">
+                    <Button type="button" onClick={() => onEdit(row)} accessibilityLabel={`Edit ${row.title}`} className="w-11 h-11 items-center justify-center rounded-lg">
+                      <UiIcon as={Edit2} size={18} className="text-slate-500" />
+                    </Button>
+                    <Button type="button" onClick={() => onDelete(row)} accessibilityLabel={`Delete ${row.title}`} className="w-11 h-11 items-center justify-center rounded-lg">
+                      <UiIcon as={Trash2} size={18} className="text-red-600" />
+                    </Button>
+                  </Div>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+    </AdminPage>
   );
 };
 export default TicketTitle;

@@ -277,7 +277,7 @@ const SidebarBadge = ({ count, isActive = false }) => {
   }
   return (
     <Span
-      className={`ml-auto inline-flex min-w-[24px] items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-black ${isActive ? 'bg-white/20 text-white' : 'bg-orange-500 text-white'}`}
+      className={`ml-auto inline-flex min-w-[24px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-orange-500 text-white'}`}
     >
       {count > 99 ? '99+' : count}
     </Span>
@@ -289,7 +289,7 @@ const SidebarItem = ({ icon, label, path, isCollapsed, unreadCount = 0 }) => (
     end
     className={({ isActive }) =>
       cn(
-        'group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 relative',
+        'group flex items-center gap-3 px-4 py-2.5 min-h-[44px] rounded-xl transition-all duration-300 relative',
         isActive
           ? 'bg-white/10 text-white border border-white/15'
           : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5',
@@ -327,7 +327,7 @@ const SidebarGroup = ({
         type="button"
         onClick={toggleGroup}
         className={cn(
-          'group w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-300',
+          'group w-full flex items-center justify-between px-4 py-2.5 min-h-[44px] rounded-xl transition-all duration-300',
           isActive || isExpanded
             ? 'bg-white/10 text-white border border-white/15'
             : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5',
@@ -368,7 +368,7 @@ const SidebarGroup = ({
                 end
                 className={({ isActive: childActive }) =>
                   cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-300',
+                    'flex items-center gap-3 px-3 py-2 min-h-[44px] rounded-xl text-sm font-medium transition-all duration-300',
                     childActive ? 'bg-white/5 text-white' : 'text-neutral-500 hover:text-neutral-200 hover:bg-white/5',
                   )
                 }
@@ -1204,7 +1204,7 @@ const AdminLayoutShell = () => {
     <Button
       type="button"
       onClick={() => dismissNotification(tab, item)}
-      className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400"
+      className="absolute right-1 top-1 h-11 w-11 items-center justify-center rounded-lg text-slate-400"
       accessibilityLabel="Delete notification"
     >
       <UiIcon as={Trash2} size={14} />
@@ -1212,11 +1212,11 @@ const AdminLayoutShell = () => {
   );
   return (
     <FontFamily family="Poppins">
-      <Div className="flex-1 flex-col bg-neutral-100 font-sans text-gray-900">
+      <Div className="flex-1 flex-col bg-slate-50 font-sans text-gray-900">
         <Header className="z-40 border-b border-neutral-200 bg-white shadow-sm" style={{ paddingTop: insets.top }}>
           <Div className="flex h-16 flex-row items-center justify-between px-4">
             <Div className="flex flex-1 min-w-0 flex-row items-center gap-3">
-              <Button type="button" onClick={() => setIsSidebarOpen(true)} className="-ml-2 rounded-lg p-2 text-neutral-700" accessibilityLabel="Open menu">
+              <Button type="button" onClick={() => setIsSidebarOpen(true)} className="-ml-1 h-11 w-11 items-center justify-center rounded-lg text-neutral-700" accessibilityLabel="Open menu">
                 <UiIcon as={Menu} size={22} />
               </Button>
               <Div className="h-6 w-1 rounded-full bg-amber-600" />
@@ -1224,16 +1224,16 @@ const AdminLayoutShell = () => {
             </Div>
 
             <Div className="flex flex-row items-center gap-1">
-              <Button type="button" onClick={() => setIsSearchOpen((current) => !current)} className="rounded-lg p-2 text-neutral-400">
+              <Button type="button" onClick={() => setIsSearchOpen((current) => !current)} className="h-11 w-11 items-center justify-center rounded-lg text-neutral-500" accessibilityLabel="Search menu">
                 <UiIcon as={Search} size={18} />
               </Button>
-              <Button type="button" onClick={() => setIsNotificationsOpen((current) => !current)} className="relative rounded-lg p-2 text-neutral-400">
+              <Button type="button" onClick={() => setIsNotificationsOpen((current) => !current)} className="relative h-11 w-11 items-center justify-center rounded-lg text-neutral-500" accessibilityLabel="Notifications">
                 <UiIcon as={Bell} size={18} />
                 {totalNotificationItems > 0 ? <Div className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-rose-500" /> : null}
               </Button>
               <Button
                 type="button"
-                className="ml-1 flex flex-row items-center gap-1 rounded-full border border-gray-100 bg-gray-50 p-1"
+                className="ml-1 h-11 flex flex-row items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2"
                 onClick={() => setIsUserMenuOpen((current) => !current)}
               >
                 <Div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-slate-500">
@@ -1245,7 +1245,7 @@ const AdminLayoutShell = () => {
           </Div>
         </Header>
 
-        <Main className="flex-1 bg-neutral-100 px-4 pt-4">
+        <Main className="flex-1 bg-slate-50">
           <Outlet />
         </Main>
 
@@ -1258,14 +1258,14 @@ const AdminLayoutShell = () => {
               style={{ top: insets.top + 60 }}
             >
               <Div className="px-4 py-2 border-b border-gray-100 mb-1">
-                <Span className="text-[11px] font-black text-gray-950">{adminProfile?.name || 'Admin'}</Span>
-                <Span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                <Span className="text-sm font-bold text-slate-900">{adminProfile?.name || 'Admin'}</Span>
+                <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {adminProfile?.admin_type === 'subadmin' ? adminProfile?.role || 'Subadmin' : 'Superadmin'}
                 </Span>
               </Div>
               <Button type="button" onClick={handleLogout} className="flex w-full flex-row items-center gap-3 rounded-xl px-4 py-3 text-red-600">
                 <UiIcon as={LogOut} size={16} />
-                <Span className="text-[12px] font-bold">Logout Session</Span>
+                <Span className="text-sm font-semibold">Logout Session</Span>
               </Button>
             </Div>
           </Overlay>
@@ -1290,7 +1290,7 @@ const AdminLayoutShell = () => {
                       <Button
                         type="button"
                         onClick={dismissCurrentNotifications}
-                        className="rounded-full border border-slate-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500"
+                        className="h-9 items-center justify-center rounded-full border border-slate-200 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500"
                       >
                         Clear
                       </Button>
@@ -1339,7 +1339,7 @@ const AdminLayoutShell = () => {
                           }}
                           className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 items-stretch"
                         >
-                          <Div className="flex flex-row items-start justify-between gap-3 pr-8">
+                          <Div className="flex flex-row items-start justify-between gap-3 pr-12">
                             <Div className="flex-1 min-w-0">
                               <P className="truncate text-sm font-bold text-slate-900">
                                 {item.requestId} · {item.userName}
@@ -1348,7 +1348,7 @@ const AdminLayoutShell = () => {
                                 Pickup: {formatAdminNotificationLocation(item.pickupLabel, 'Pickup location set')}
                               </P>
                             </Div>
-                            <Span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                            <Span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
                               {item.tripStatus || 'Upcoming'}
                             </Span>
                           </Div>
@@ -1381,12 +1381,12 @@ const AdminLayoutShell = () => {
                         }}
                         className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 items-stretch"
                       >
-                        <Div className="flex flex-row items-start justify-between gap-3 pr-8">
+                        <Div className="flex flex-row items-start justify-between gap-3 pr-12">
                           <Div className="flex-1 min-w-0">
                             <P className="truncate text-sm font-bold text-slate-900">{item.title}</P>
                             <P className="mt-1 truncate text-xs font-semibold text-slate-500">{item.body}</P>
                           </Div>
-                          <Span className="rounded-full bg-sky-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-sky-700">{item.senderRole}</Span>
+                          <Span className="rounded-full bg-sky-50 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-sky-700">{item.senderRole}</Span>
                         </Div>
                         <Div className="mt-2 flex flex-row items-center justify-end">
                           <Span className="text-[11px] font-semibold text-slate-400">{formatRelativeAdminTime(item.createdAt)}</Span>
@@ -1409,7 +1409,7 @@ const AdminLayoutShell = () => {
                       setBookingPage((current) => Math.max(1, current - 1));
                     }
                   }}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-40"
+                  className="h-10 items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-600 disabled:opacity-40"
                 >
                   Previous
                 </Button>
@@ -1426,7 +1426,7 @@ const AdminLayoutShell = () => {
                       setBookingPage((current) => current + 1);
                     }
                   }}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-40"
+                  className="h-10 items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-600 disabled:opacity-40"
                 >
                   Next
                 </Button>
@@ -1510,7 +1510,7 @@ const AdminLayoutShell = () => {
                         <Span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Taxi Admin</Span>
                       </Div>
                     </Div>
-                    <Button type="button" onClick={() => setIsSidebarOpen(false)} className="absolute right-0 top-0 p-1 text-neutral-400" accessibilityLabel="Close menu">
+                    <Button type="button" onClick={() => setIsSidebarOpen(false)} className="absolute right-0 top-0 h-11 w-11 items-center justify-center text-neutral-400" accessibilityLabel="Close menu">
                       <UiIcon as={X} className="w-5 h-5 text-neutral-400" />
                     </Button>
                   </Div>

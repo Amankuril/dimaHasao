@@ -1,32 +1,29 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/fee-settings/FeeSettings.jsx (tools/port.js first pass). */
 import { useState, useEffect, useMemo } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Save, Loader2, DollarSign, Plus, Trash2, Edit, Check, X } from 'lucide-react-native';
-import { Button } from '../../../../components/shadcn';
+import { Save, Loader2, IndianRupee, Plus, Trash2, Edit, Check, X } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
+import { Button as HButton, Div, Input, Option, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import {
-  Button as HButton,
-  Div,
-  H1,
-  H2,
-  H3,
-  H4,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  LoadingState,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -316,383 +313,302 @@ export default function FeeSettings() {
     });
     setEditingRangeIndex(null);
   };
+  const { tablet } = useLayoutWidth();
+  const RANGE_COLS = [110, 110, 140, 120];
+  const sortedRanges = feeSettings.deliveryFeeRanges
+    .map((range, originalIndex) => ({
+      range,
+      originalIndex,
+    }))
+    .sort((a, b) => a.range.min - b.range.min);
+  const feeFields = [
+    {
+      key: 'freeDeliveryUpTo',
+      label: 'Free delivery up to (\u20B9)',
+      hint: 'Orders at or above this amount get free delivery',
+      placeholder: '500',
+      min: '0',
+      step: '1',
+    },
+    {
+      key: 'deliveryFee',
+      label: 'Default delivery fee (\u20B9)',
+      hint: 'Used only when no delivery fee range matches and the free delivery threshold is not met',
+      placeholder: 'Leave empty to disable fallback',
+      min: '0',
+      step: '1',
+    },
+    {
+      key: 'platformFee',
+      label: 'Platform fee (\u20B9)',
+      hint: 'Platform service fee per order',
+      placeholder: '5',
+      min: '0',
+      step: '1',
+    },
+    {
+      key: 'packagingFee',
+      label: 'Packaging charges fee (\u20B9)',
+      hint: 'Packaging charges fee per order',
+      placeholder: '10',
+      min: '0',
+      step: '1',
+    },
+    {
+      key: 'gstRate',
+      label: 'GST rate (%)',
+      hint: 'GST percentage applied on order subtotal',
+      placeholder: '5',
+      min: '0',
+      max: '100',
+      step: '0.1',
+    },
+  ];
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      {/* Header Section */}
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-        <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <Div className="flex items-center gap-3">
-            <LinearGradient
-              colors={['#4ADE80', '#16A34A']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ width: 40, height: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}
-            >
-              <UiIcon as={DollarSign} className="w-6 h-6 text-white" />
-            </LinearGradient>
-            <H1 className="text-2xl font-bold text-slate-900">Delivery & Platform Fee</H1>
-          </Div>
-          <Div className="flex items-center gap-2">
-            <Label className="text-sm font-medium text-slate-700 whitespace-nowrap">Zone:</Label>
-            <Select
-              nativeID="fee-zone-select"
-              value={selectedZoneId}
-              onChange={(e) => setSelectedZoneId(e.target.value)}
-              className="px-3 py-2 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm min-w-[10rem]"
-              disabled={zonesLoading || zones.length === 0}
-            >
-              {zones.length === 0 ? (
-                <Option value="">No zones</Option>
-              ) : (
-                zones.map((zone) => (
-                  <Option key={zone._id || zone.id} value={zone._id || zone.id}>
-                    {zone.name || zone.zoneName || 'Unnamed Zone'}
-                  </Option>
-                ))
-              )}
-            </Select>
-          </Div>
-        </Div>
-        <P className="text-sm text-slate-600">Configure delivery fee, platform fee, and GST settings for the selected zone</P>
-      </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={IndianRupee}
+        title="Delivery & Platform Fee"
+        subtitle="Configure delivery fee, platform fee and GST settings for the selected zone"
+        breadcrumb={[{ label: 'Food' }, { label: 'Fee settings' }]}
+        actions={
+          <HButton
+            onClick={handleSaveFeeSettings}
+            disabled={savingFeeSettings || loadingFeeSettings || !selectedZoneId || !isDirty}
+            className={BTN_PRIMARY}
+          >
+            <UiIcon as={savingFeeSettings ? Loader2 : Save} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>{savingFeeSettings ? 'Saving\u2026' : 'Save settings'}</Span>
+          </HButton>
+        }
+      />
 
-      {/* Fee Settings Panel */}
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <Div className="p-6">
-          <Div className="flex items-center justify-between mb-6">
-            <Div>
-              <H2 className="text-xl font-bold text-slate-900">Fee Configuration</H2>
-              <P className="text-sm text-slate-500 mt-1">Set the fees and charges that will be applied to orders in this zone</P>
-            </Div>
-            <Button
-              onClick={handleSaveFeeSettings}
-              disabled={savingFeeSettings || loadingFeeSettings || !selectedZoneId || !isDirty}
-              className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {savingFeeSettings ? (
-                <>
-                  <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <UiIcon as={Save} className="w-4 h-4" />
-                  Save Settings
-                </>
-              )}
-            </Button>
-          </Div>
+      <Card className="mb-4">
+        <Field label="Zone" hint="Fees below apply to this zone only">
+          <Select
+            nativeID="fee-zone-select"
+            value={selectedZoneId}
+            onChange={(e) => setSelectedZoneId(e.target.value)}
+            className={INPUT}
+            disabled={zonesLoading || zones.length === 0}
+          >
+            {zones.length === 0 ? (
+              <Option value="">No zones</Option>
+            ) : (
+              zones.map((zone) => (
+                <Option key={zone._id || zone.id} value={zone._id || zone.id}>
+                  {zone.name || zone.zoneName || 'Unnamed Zone'}
+                </Option>
+              ))
+            )}
+          </Select>
+        </Field>
+      </Card>
 
-          {loadingFeeSettings ? (
-            <Div className="flex items-center justify-center py-12">
-              <UiIcon as={Loader2} className="w-6 h-6 animate-spin text-green-600" />
-            </Div>
-          ) : (
-            <>
-              {/* Delivery Fee Ranges Section */}
-              <Div className="mb-8">
-                <Div className="flex items-center justify-between mb-4">
-                  <Div>
-                    <H3 className="text-lg font-semibold text-slate-900">Delivery Fee by Distance Range (km)</H3>
-                    <P className="text-sm text-slate-500 mt-1">Set delivery fees based on distance slabs</P>
+      {loadingFeeSettings ? (
+        <LoadingState label="Loading fee settings\u2026" />
+      ) : !selectedZoneId ? (
+        <EmptyState
+          icon={IndianRupee}
+          title="No zone selected"
+          message={zones.length === 0 ? 'Create a delivery zone first — fees are configured per zone.' : 'Pick a zone above to configure its fees.'}
+        />
+      ) : (
+        <>
+          <Card className="mb-4">
+            <SectionTitle>Delivery fee by distance range (km)</SectionTitle>
+            <Span className="text-sm text-slate-500 mb-3">Set delivery fees based on distance slabs.</Span>
+
+            {sortedRanges.length > 0 ? (
+              <DataTable cols={RANGE_COLS} className="mb-3">
+                <THead cols={RANGE_COLS} labels={['Min (km)', 'Max (km)', 'Delivery fee (\u20B9)', 'Actions']} />
+                <TBody>
+                  {sortedRanges.map(({ range, originalIndex }, i) => {
+                    const isEditing = editingRangeIndex === originalIndex;
+                    return (
+                      <Row key={originalIndex} last={i === sortedRanges.length - 1} className={isEditing ? 'bg-blue-50' : ''}>
+                        <Cell width={RANGE_COLS[0]}>
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              value={newRange.min}
+                              onChange={(e) =>
+                                setNewRange({
+                                  ...newRange,
+                                  min: e.target.value,
+                                })
+                              }
+                              className={INPUT}
+                            />
+                          ) : (
+                            <Span className="text-sm text-slate-700">{`${range.min} km`}</Span>
+                          )}
+                        </Cell>
+                        <Cell width={RANGE_COLS[1]}>
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              value={newRange.max}
+                              onChange={(e) =>
+                                setNewRange({
+                                  ...newRange,
+                                  max: e.target.value,
+                                })
+                              }
+                              className={INPUT}
+                            />
+                          ) : (
+                            <Span className="text-sm text-slate-700">{`${range.max} km`}</Span>
+                          )}
+                        </Cell>
+                        <Cell width={RANGE_COLS[2]}>
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              value={newRange.fee}
+                              onChange={(e) =>
+                                setNewRange({
+                                  ...newRange,
+                                  fee: e.target.value,
+                                })
+                              }
+                              className={INPUT}
+                            />
+                          ) : (
+                            <Span className="text-sm font-semibold text-slate-900">{`\u20B9${range.fee}`}</Span>
+                          )}
+                        </Cell>
+                        <Cell width={RANGE_COLS[3]}>
+                          <Div className="flex-row items-center gap-1">
+                            {isEditing ? (
+                              <>
+                                <HButton onClick={handleSaveEditRange} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Save range">
+                                  <UiIcon as={Check} size={16} className="text-blue-600" />
+                                </HButton>
+                                <HButton onClick={handleCancelEdit} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Cancel editing range">
+                                  <UiIcon as={X} size={16} className="text-slate-600" />
+                                </HButton>
+                              </>
+                            ) : (
+                              <>
+                                <HButton onClick={() => handleEditRange(originalIndex)} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Edit range">
+                                  <UiIcon as={Edit} size={16} className="text-blue-600" />
+                                </HButton>
+                                <HButton onClick={() => handleDeleteRange(originalIndex)} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Delete range">
+                                  <UiIcon as={Trash2} size={16} className="text-red-600" />
+                                </HButton>
+                              </>
+                            )}
+                          </Div>
+                        </Cell>
+                      </Row>
+                    );
+                  })}
+                </TBody>
+              </DataTable>
+            ) : (
+              <Span className="text-sm text-slate-500 mb-3">No distance ranges yet. Add the first slab below.</Span>
+            )}
+
+            {editingRangeIndex === null && (
+              <Div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <Div className="flex-row items-center gap-2 mb-3">
+                  <UiIcon as={Plus} size={16} className="text-blue-600" />
+                  <Span className="text-base font-semibold text-slate-900 flex-1">Add distance range</Span>
+                </Div>
+                <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+                  <Div className="flex-1 min-w-[140px]">
+                    <Field label="Min distance (km)">
+                      <Input
+                        type="number"
+                        value={newRange.min}
+                        onChange={(e) =>
+                          setNewRange({
+                            ...newRange,
+                            min: e.target.value,
+                          })
+                        }
+                        min="0"
+                        step="1"
+                        className={INPUT}
+                        placeholder="0"
+                      />
+                    </Field>
+                  </Div>
+                  <Div className="flex-1 min-w-[140px]">
+                    <Field label="Max distance (km)">
+                      <Input
+                        type="number"
+                        value={newRange.max}
+                        onChange={(e) =>
+                          setNewRange({
+                            ...newRange,
+                            max: e.target.value,
+                          })
+                        }
+                        min="0"
+                        step="1"
+                        className={INPUT}
+                        placeholder="5"
+                      />
+                    </Field>
+                  </Div>
+                  <Div className="flex-1 min-w-[140px]">
+                    <Field label="Delivery fee (\u20B9)">
+                      <Input
+                        type="number"
+                        value={newRange.fee}
+                        onChange={(e) =>
+                          setNewRange({
+                            ...newRange,
+                            fee: e.target.value,
+                          })
+                        }
+                        min="0"
+                        step="1"
+                        className={INPUT}
+                        placeholder="50"
+                      />
+                    </Field>
                   </Div>
                 </Div>
-
-                {/* Ranges Table */}
-                {feeSettings.deliveryFeeRanges.length > 0 && (
-                  <Div className="mb-4">
-                    <Table className="w-full border border-slate-200 rounded-lg" cols={[120, 120, 150, 120]}>
-                      <Thead className="bg-slate-50">
-                        <Tr>
-                          <Th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 border-b border-slate-200">Min (km)</Th>
-                          <Th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 border-b border-slate-200">Max (km)</Th>
-                          <Th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 border-b border-slate-200">Delivery Fee (₹)</Th>
-                          <Th className="px-4 py-3 text-center text-sm font-semibold text-slate-700 border-b border-slate-200">Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {feeSettings.deliveryFeeRanges
-                          .map((range, originalIndex) => ({
-                            range,
-                            originalIndex,
-                          }))
-                          .sort((a, b) => a.range.min - b.range.min)
-                          .map(({ range, originalIndex }) => {
-                            const isEditing = editingRangeIndex === originalIndex;
-                            return (
-                              <Tr key={originalIndex} className={`${isEditing ? 'bg-blue-50' : 'hover:bg-slate-50'} transition-colors`}>
-                                <Td className="px-4 py-3 text-sm text-slate-900 border-b border-slate-100">
-                                  {isEditing ? (
-                                    <Input
-                                      type="number"
-                                      value={newRange.min}
-                                      onChange={(e) =>
-                                        setNewRange({
-                                          ...newRange,
-                                          min: e.target.value,
-                                        })
-                                      }
-                                      className="w-24 px-2 py-1 border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                  ) : (
-                                    <>{range.min} km</>
-                                  )}
-                                </Td>
-                                <Td className="px-4 py-3 text-sm text-slate-900 border-b border-slate-100">
-                                  {isEditing ? (
-                                    <Input
-                                      type="number"
-                                      value={newRange.max}
-                                      onChange={(e) =>
-                                        setNewRange({
-                                          ...newRange,
-                                          max: e.target.value,
-                                        })
-                                      }
-                                      className="w-24 px-2 py-1 border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                  ) : (
-                                    <>{range.max} km</>
-                                  )}
-                                </Td>
-                                <Td className="px-4 py-3 text-sm font-medium text-green-600 border-b border-slate-100">
-                                  {isEditing ? (
-                                    <Div className="flex items-center gap-1">
-                                      <Span className="text-slate-400">₹</Span>
-                                      <Input
-                                        type="number"
-                                        value={newRange.fee}
-                                        onChange={(e) =>
-                                          setNewRange({
-                                            ...newRange,
-                                            fee: e.target.value,
-                                          })
-                                        }
-                                        className="w-24 px-2 py-1 border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-green-600 font-medium"
-                                      />
-                                    </Div>
-                                  ) : (
-                                    <>₹{range.fee}</>
-                                  )}
-                                </Td>
-                                <Td className="px-4 py-3 text-center border-b border-slate-100">
-                                  <Div className="flex items-center justify-center gap-2">
-                                    {isEditing ? (
-                                      <>
-                                        <HButton onClick={handleSaveEditRange} className="p-1.5 text-green-600 hover:bg-green-100 rounded transition-colors">
-                                          <UiIcon as={Check} className="w-4 h-4" />
-                                        </HButton>
-                                        <HButton onClick={handleCancelEdit} className="p-1.5 text-red-600 hover:bg-red-100 rounded transition-colors">
-                                          <UiIcon as={X} className="w-4 h-4" />
-                                        </HButton>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <HButton
-                                          onClick={() => handleEditRange(originalIndex)}
-                                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                        >
-                                          <UiIcon as={Edit} className="w-4 h-4" />
-                                        </HButton>
-                                        <HButton
-                                          onClick={() => handleDeleteRange(originalIndex)}
-                                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                        >
-                                          <UiIcon as={Trash2} className="w-4 h-4" />
-                                        </HButton>
-                                      </>
-                                    )}
-                                  </Div>
-                                </Td>
-                              </Tr>
-                            );
-                          })}
-                      </Tbody>
-                    </Table>
-                  </Div>
-                )}
-
-                {/* Add New Range Form - Only show when NOT editing */}
-                {editingRangeIndex === null && (
-                  <Div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <Div className="flex items-center gap-2 mb-3">
-                      <UiIcon as={Plus} className="w-4 h-4 text-green-600" />
-                      <H4 className="text-sm font-semibold text-slate-700">Add Distance Range</H4>
-                    </Div>
-                    <Div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <Div>
-                        <Label className="block text-xs font-medium text-slate-600 mb-1">Min Distance (km)</Label>
-                        <Input
-                          type="number"
-                          value={newRange.min}
-                          onChange={(e) =>
-                            setNewRange({
-                              ...newRange,
-                              min: e.target.value,
-                            })
-                          }
-                          min="0"
-                          step="1"
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                          placeholder="0"
-                        />
-                      </Div>
-                      <Div>
-                        <Label className="block text-xs font-medium text-slate-600 mb-1">Max Distance (km)</Label>
-                        <Input
-                          type="number"
-                          value={newRange.max}
-                          onChange={(e) =>
-                            setNewRange({
-                              ...newRange,
-                              max: e.target.value,
-                            })
-                          }
-                          min="0"
-                          step="1"
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                          placeholder="5"
-                        />
-                      </Div>
-                      <Div>
-                        <Label className="block text-xs font-medium text-slate-600 mb-1">Delivery Fee (₹)</Label>
-                        <Input
-                          type="number"
-                          value={newRange.fee}
-                          onChange={(e) =>
-                            setNewRange({
-                              ...newRange,
-                              fee: e.target.value,
-                            })
-                          }
-                          min="0"
-                          step="1"
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                          placeholder="50"
-                        />
-                      </Div>
-                      <Div className="flex items-end">
-                        <Button
-                          onClick={handleAddRange}
-                          className="bg-green-600 hover:bg-green-700 text-white text-sm w-full flex items-center justify-center gap-2"
-                        >
-                          <UiIcon as={Plus} className="w-4 h-4" />
-                          Add Range
-                        </Button>
-                      </Div>
-                    </Div>
-                    <P className="text-xs text-slate-500 mt-2 italic">Example: Orders between 0 km and 5 km will have ₹50 delivery fee.</P>
-                  </Div>
-                )}
+                <HButton onClick={handleAddRange} className={`${BTN_SECONDARY} mt-3`}>
+                  <UiIcon as={Plus} size={16} className="text-slate-600" />
+                  <Span className={BTN_TEXT_SECONDARY}>Add range</Span>
+                </HButton>
+                <Span className="text-xs text-slate-500 mt-2">Example: orders between 0 km and 5 km will have a \u20B950 delivery fee.</Span>
               </Div>
+            )}
+          </Card>
 
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-200 pt-6 mt-6">
-                {/* Free Delivery Up To */}
-                <Div className="space-y-2">
-                  <Label className="block text-sm font-semibold text-slate-700">Free Delivery Up To (₹)</Label>
-                  <Input
-                    type="number"
-                    value={feeSettings.freeDeliveryUpTo}
-                    onChange={(e) =>
-                      setFeeSettings({
-                        ...feeSettings,
-                        freeDeliveryUpTo: e.target.value,
-                      })
-                    }
-                    min="0"
-                    step="1"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                    placeholder="500"
-                  />
-                  <P className="text-xs text-slate-500">Orders at or above this amount get free delivery</P>
+          <Card>
+            <SectionTitle>Fees and charges</SectionTitle>
+            <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+              {feeFields.map((f) => (
+                <Div key={f.key} className={tablet ? 'min-w-[260px] flex-1' : ''}>
+                  <Field label={f.label} hint={f.hint}>
+                    <Input
+                      type="number"
+                      value={feeSettings[f.key]}
+                      onChange={(e) =>
+                        setFeeSettings({
+                          ...feeSettings,
+                          [f.key]: e.target.value,
+                        })
+                      }
+                      min={f.min}
+                      max={f.max}
+                      step={f.step}
+                      className={INPUT}
+                      placeholder={f.placeholder}
+                    />
+                  </Field>
                 </Div>
-
-                {/* Default Delivery Fee (Fallback) */}
-                <Div className="space-y-2">
-                  <Label className="block text-sm font-semibold text-slate-700">
-                    Default Delivery Fee (₹) <Span className="text-slate-400 font-normal">(Optional)</Span>
-                  </Label>
-                  <Input
-                    type="number"
-                    value={feeSettings.deliveryFee}
-                    onChange={(e) =>
-                      setFeeSettings({
-                        ...feeSettings,
-                        deliveryFee: e.target.value,
-                      })
-                    }
-                    min="0"
-                    step="1"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                    placeholder="Leave empty to disable fallback"
-                  />
-                  <P className="text-xs text-slate-500">Used only when no delivery fee range matches and free delivery threshold is not met</P>
-                </Div>
-
-                {/* Platform Fee */}
-                <Div className="space-y-2">
-                  <Label className="block text-sm font-semibold text-slate-700">Platform Fee (₹)</Label>
-                  <Input
-                    type="number"
-                    value={feeSettings.platformFee}
-                    onChange={(e) =>
-                      setFeeSettings({
-                        ...feeSettings,
-                        platformFee: e.target.value,
-                      })
-                    }
-                    min="0"
-                    step="1"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                    placeholder="5"
-                  />
-                  <P className="text-xs text-slate-500">Platform service fee per order</P>
-                </Div>
-                {/* Packaging Fee */}
-                <Div className="space-y-2">
-                  <Label className="block text-sm font-semibold text-slate-700">Packaging Charges Fee (₹)</Label>
-                  <Input
-                    type="number"
-                    value={feeSettings.packagingFee}
-                    onChange={(e) =>
-                      setFeeSettings({
-                        ...feeSettings,
-                        packagingFee: e.target.value,
-                      })
-                    }
-                    min="0"
-                    step="1"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                    placeholder="10"
-                  />
-                  <P className="text-xs text-slate-500">Packaging charges fee per order</P>
-                </Div>
-
-                {/* GST Rate */}
-                <Div className="space-y-2">
-                  <Label className="block text-sm font-semibold text-slate-700">GST Rate (%)</Label>
-                  <Input
-                    type="number"
-                    value={feeSettings.gstRate}
-                    onChange={(e) =>
-                      setFeeSettings({
-                        ...feeSettings,
-                        gstRate: e.target.value,
-                      })
-                    }
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                    placeholder="5"
-                  />
-                  <P className="text-xs text-slate-500">GST percentage applied on order subtotal</P>
-                </Div>
-              </Div>
-            </>
-          )}
-        </Div>
-      </Div>
-    </ScrollDiv>
+              ))}
+            </Div>
+          </Card>
+        </>
+      )}
+    </AdminPage>
   );
 }

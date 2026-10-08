@@ -1,53 +1,36 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/promotions/PromoCodes.jsx (tools/port.js first pass). */
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Plus,
-  Filter,
-  ChevronRight,
-  Trash2,
-  Loader2,
-  Ticket,
-  MapPin,
-  Users,
-  Zap,
-  Percent,
-  ArrowLeft,
-  Save,
-  IndianRupee,
-  Calendar,
-  ShieldCheck,
-  Hash,
-  Pencil,
-  X,
-} from 'lucide-react-native';
-import { motion, AnimatePresence } from '../../../../../lib/motion';
+import { Plus, Filter, Trash2, Loader2, Ticket, ArrowLeft, Save, Pencil, X } from 'lucide-react-native';
 import { useLocation, useNavigate, useParams } from '../../../../../lib/webRouter';
 import {
-  Button,
-  Div,
-  H1,
-  H3,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, CheckBox, Div, Form, Input, Option, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 import { alert, window } from '../../../../../lib/webShim';
 import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 const BASE = API_BASE_URL + '/admin/promos';
 const LIST_PATH = '/taxi/admin/promotions/promo-codes';
 const CREATE_PATH = '/taxi/admin/promotions/promo-codes/create';
-const Motion = motion;
 const PROMO_TRANSPORT_OPTIONS = [
   {
     value: 'all',
@@ -74,9 +57,7 @@ const PROMO_TRANSPORT_OPTIONS = [
     label: 'Pooling',
   },
 ];
-const inputClass =
-  'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white focus:border-[#FFC400] focus:ring-1 focus:ring-[#FFC400] outline-none transition-colors disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed';
-const labelClass = 'block text-xs font-medium text-gray-500 mb-1.5';
+const COLS = [120, 140, 170, 180, 120, 150];
 const createInitialFormData = () => ({
   service_location_id: '',
   service_location_ids: [],
@@ -148,39 +129,38 @@ const LocationMultiSelect = ({ locations, selectedIds, onChange }) => {
    * toggles the list instead.
    */
   return (
-    <Div className="relative">
+    <Div>
       <Div
-        className="min-h-[42px] w-full border border-gray-200 rounded-lg px-3 py-2 bg-white flex flex-wrap gap-2 cursor-pointer focus-within:border-[#FFC400] focus-within:ring-1 focus-within:ring-[#FFC400] transition-colors"
+        className="min-h-11 w-full border border-slate-300 rounded-lg px-3 py-2 bg-white flex-row flex-wrap items-center gap-2"
         onClick={() => setIsOpen((open) => !open)}
       >
-        {selectedIds.length === 0 && <Span className="text-gray-400 text-sm py-0.5">Select service locations...</Span>}
+        {selectedIds.length === 0 && <Span className="text-sm text-slate-400">Select service locations…</Span>}
         {selectedIds.map((id) => {
           const loc = locations.find((l) => String(l._id) === String(id));
           return loc ? (
-            <Span
-              key={id}
-              className="inline-flex items-center gap-1.5 bg-[#FFC400]/10 text-[#0B1220] px-2.5 py-1 rounded-md text-xs font-medium border border-[#FFC400]/20 transition-colors hover:bg-[#FFC400]/20"
-            >
-              {loc.service_location_name || loc.name}
-              <Button type="button" onClick={(e) => removeLocation(e, id)} className="text-[#0B1220]/50 hover:text-[#0B1220] focus:outline-none">
-                <UiIcon as={X} size={12} strokeWidth={3} />
+            <Div key={id} className="flex-row items-center gap-1.5 bg-blue-100 px-2.5 py-1 rounded-full">
+              <Span className="text-xs font-semibold text-blue-700">{loc.service_location_name || loc.name}</Span>
+              <Button type="button" onClick={(e) => removeLocation(e, id)} accessibilityLabel="Remove location" className="w-6 h-6 items-center justify-center">
+                <UiIcon as={X} size={12} className="text-blue-700" />
               </Button>
-            </Span>
+            </Div>
           ) : null;
         })}
         <Input
           type="text"
-          className="flex-1 min-w-[120px] outline-none text-sm bg-transparent"
+          className="flex-1 min-w-[120px] text-sm text-slate-900"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={selectedIds.length === 0 ? '' : 'Search...'}
+          placeholder={selectedIds.length === 0 ? '' : 'Search…'}
         />
       </Div>
 
       {isOpen && (
-        <ScrollDiv className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
+        <ScrollDiv className="mt-1 bg-white border border-slate-200 rounded-lg max-h-60">
           {filteredLocations.length === 0 ? (
-            <Div className="p-3 text-sm text-gray-500 text-center">No locations found.</Div>
+            <Div className="p-3">
+              <Span className="text-sm text-slate-500 text-center">No locations found.</Span>
+            </Div>
           ) : (
             filteredLocations.map((loc) => {
               const isSelected = selectedIds.includes(String(loc._id));
@@ -188,15 +168,10 @@ const LocationMultiSelect = ({ locations, selectedIds, onChange }) => {
                 <Div
                   key={loc._id}
                   onClick={() => toggleSelection(String(loc._id))}
-                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                  className="flex-row items-center gap-3 px-3 min-h-11 border-b border-slate-100"
                 >
-                  <Input
-                    type="checkbox"
-                    checked={isSelected}
-                    readOnly
-                    className="w-4 h-4 text-[#0B1220] rounded border-gray-300 focus:ring-[#FFC400] cursor-pointer"
-                  />
-                  <Span className="text-sm text-gray-700">{loc.service_location_name || loc.name}</Span>
+                  <CheckBox checked={isSelected} />
+                  <Span className="text-sm text-slate-700 flex-1">{loc.service_location_name || loc.name}</Span>
                 </Div>
               );
             })
@@ -206,51 +181,6 @@ const LocationMultiSelect = ({ locations, selectedIds, onChange }) => {
     </Div>
   );
 };
-const HeaderBlock = ({ isCreateRoute, isEditRoute, onBack }) => {
-  const title = isEditRoute ? 'Edit Promo Code' : isCreateRoute ? 'Create Promo Code' : 'Promo Code';
-  return (
-    <Div className="mb-4">
-      <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-        <Span>Promotions</Span>
-        <UiIcon as={ChevronRight} size={12} />
-        <Span className="text-gray-700">{title}</Span>
-      </Div>
-      <Div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <H1 className="text-xl text-gray-900 font-bold">{title}</H1>
-        {isCreateRoute || isEditRoute ? (
-          <Button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <UiIcon as={ArrowLeft} size={16} /> Back
-          </Button>
-        ) : null}
-      </Div>
-    </Div>
-  );
-};
-const SectionCard = ({ icon: Icon, title, description, children }) => (
-  <Div className="bg-white rounded-xl border border-gray-200 p-4">
-    <Div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-100">
-      <Div className="w-9 h-9 rounded-lg bg-[#FFC400]/10 flex items-center justify-center text-[#0B1220]">
-        <Icon size={18} />
-      </Div>
-      <Div>
-        <H3 className="text-sm text-gray-900 font-bold">{title}</H3>
-        <P className="text-xs text-gray-400">{description}</P>
-      </Div>
-    </Div>
-    {children}
-  </Div>
-);
-const FieldLabel = ({ icon: Icon, children, required = false }) => (
-  <Label className={labelClass}>
-    <UiIcon as={Icon} size={12} className="inline mr-1 text-gray-400" />
-    {children}
-    {required ? ' *' : ''}
-  </Label>
-);
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   try {
@@ -266,28 +196,13 @@ const formatDate = (dateString) => {
   }
 };
 const getStatusInfo = (promo) => {
-  if (!promo.active)
-    return {
-      label: 'Disabled',
-      color: 'bg-gray-100 text-gray-600 border border-gray-200',
-    };
+  if (!promo.active) return { label: 'Disabled' };
   const now = new Date();
   const from = new Date(promo.from);
   const to = new Date(promo.to);
-  if (now < from)
-    return {
-      label: 'Scheduled',
-      color: 'bg-[#FFC400]/10 text-[#0B1220] border border-[#FFC400]/30',
-    };
-  if (now > to)
-    return {
-      label: 'Expired',
-      color: 'bg-rose-50 text-rose-700 border border-rose-200',
-    };
-  return {
-    label: 'Active',
-    color: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  };
+  if (now < from) return { label: 'Scheduled' };
+  if (now > to) return { label: 'Expired' };
+  return { label: 'Active' };
 };
 const PromoCodes = () => {
   const navigate = useNavigate();
@@ -298,6 +213,7 @@ const PromoCodes = () => {
   const isFormView = isCreateRoute || isEditRoute;
   const [promos, setPromos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [locations, setLocations] = useState([]);
   const [usersList, setUsersList] = useState([]);
@@ -305,8 +221,10 @@ const PromoCodes = () => {
   const [filters, setFilters] = useState(createInitialFilters);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const token = localStorage.getItem('adminToken') || '';
+  const { tablet } = useLayoutWidth();
   const fetchData = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`${API_BASE_URL}/admin/promotions/bootstrap`, {
         headers: {
@@ -321,12 +239,15 @@ const PromoCodes = () => {
           setUsersList(data.data?.users || []);
         } else {
           console.error('API returned failure:', data.message);
+          setLoadError(data.message || 'Failed to load promo codes');
         }
       } else {
         console.error('API call failed with status:', res.status);
+        setLoadError(`Request failed with status ${res.status}`);
       }
     } catch (err) {
       console.error('Fetch Data Error:', err);
+      setLoadError(err?.message || 'Failed to load promo codes');
     } finally {
       setIsLoading(false);
     }
@@ -510,61 +431,52 @@ const PromoCodes = () => {
       alert('Network Error');
     }
   };
+  const half = tablet ? 'flex-1' : '';
   return (
-    <ScrollDiv className="min-h-full bg-gray-50 text-gray-900">
-      <HeaderBlock isCreateRoute={isCreateRoute} isEditRoute={isEditRoute} onBack={() => navigate(LIST_PATH)} />
+    <AdminPage maxWidth={isFormView ? 720 : 1200}>
+      <PageHeader
+        icon={Ticket}
+        title={isEditRoute ? 'Edit promo code' : isCreateRoute ? 'Create promo code' : 'Promo codes'}
+        subtitle={isFormView ? 'Discount limits, validity window and who the code applies to' : 'Rider discount codes across the transport modules'}
+        breadcrumb={[
+          { label: 'Promotions' },
+          { label: 'Promo codes' },
+          ...(isEditRoute ? [{ label: 'Edit' }] : isCreateRoute ? [{ label: 'Create' }] : []),
+        ]}
+        actions={
+          isFormView ? (
+            <Button type="button" onClick={() => navigate(LIST_PATH)} className={BTN_SECONDARY}>
+              <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+            </Button>
+          ) : (
+            <>
+              <Button type="button" onClick={() => navigate(CREATE_PATH)} className={BTN_PRIMARY}>
+                <UiIcon as={Plus} size={16} className="text-white" />
+                <Span className={BTN_TEXT_PRIMARY}>Add promo code</Span>
+              </Button>
+              <Button type="button" onClick={() => setIsFilterOpen((current) => !current)} className={BTN_SECONDARY}>
+                <UiIcon as={Filter} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>{isFilterOpen ? 'Hide filters' : 'Filters'}</Span>
+              </Button>
+            </>
+          )
+        }
+      />
 
-      <AnimatePresence mode="wait">
-        {!isFormView ? (
-          <Motion.div
-            key="list"
-            initial={{
-              opacity: 0,
-              y: 10,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -10,
-            }}
-            className="space-y-4"
-          >
-            <Div className="bg-white rounded-xl border border-gray-200 p-4">
-              <Div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <Div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                  <Span className="font-medium text-gray-600">Promo codes management</Span>
-                  <Span className="hidden sm:inline text-gray-300">|</Span>
-                  <Span>Total: {filteredPromos.length}</Span>
-                </Div>
-                <Div className="flex flex-col gap-3 sm:flex-row">
-                  <Button
-                    type="button"
-                    onClick={() => setIsFilterOpen((current) => !current)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <UiIcon as={Filter} size={16} /> {isFilterOpen ? 'Hide Filters' : 'Filters'}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => navigate(CREATE_PATH)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#FFC400] border border-[#FFC400] rounded-lg hover:bg-[#E5B000] transition-colors"
-                  >
-                    <UiIcon as={Plus} size={16} /> Add Promo Code
-                  </Button>
-                </Div>
-              </Div>
+      {!isFormView ? (
+        <>
+          <Card className="mb-4">
+            <SectionTitle className={isFilterOpen ? undefined : 'mb-0'}>Promo codes · {filteredPromos.length} total</SectionTitle>
 
-              {isFilterOpen ? (
-                <Div className="mt-5 grid grid-cols-1 gap-4 border-t border-gray-100 pt-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
-                  <Div>
-                    <Label className={labelClass}>Service Location</Label>
+            {isFilterOpen ? (
+              <Div className="gap-3">
+                <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+                  <Field label="Service location" className={half}>
                     <Select
                       value={filters.service_location_id}
                       onChange={(event) => handleFilterChange('service_location_id', event.target.value)}
-                      className={inputClass}
+                      className={INPUT}
                     >
                       <Option value="">All service locations</Option>
                       {locations.map((locationItem) => (
@@ -573,15 +485,10 @@ const PromoCodes = () => {
                         </Option>
                       ))}
                     </Select>
-                  </Div>
+                  </Field>
 
-                  <Div>
-                    <Label className={labelClass}>Transport Type</Label>
-                    <Select
-                      value={filters.transport_type}
-                      onChange={(event) => handleFilterChange('transport_type', event.target.value)}
-                      className={inputClass}
-                    >
+                  <Field label="Transport type" className={half}>
+                    <Select value={filters.transport_type} onChange={(event) => handleFilterChange('transport_type', event.target.value)} className={INPUT}>
                       <Option value="">All transport types</Option>
                       {PROMO_TRANSPORT_OPTIONS.map((option) => (
                         <Option key={option.value} value={option.value}>
@@ -589,364 +496,272 @@ const PromoCodes = () => {
                         </Option>
                       ))}
                     </Select>
-                  </Div>
-
-                  <Div>
-                    <Label className={labelClass}>Status</Label>
-                    <Select value={filters.active} onChange={(event) => handleFilterChange('active', event.target.value)} className={inputClass}>
-                      <Option value="">All statuses</Option>
-                      <Option value="true">Active</Option>
-                      <Option value="false">Disabled</Option>
-                      <Option value="expired">Expired</Option>
-                      <Option value="scheduled">Scheduled</Option>
-                    </Select>
-                  </Div>
-
-                  <Div className="flex items-end">
-                    <Button
-                      type="button"
-                      onClick={clearFilters}
-                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 md:w-auto"
-                    >
-                      Reset
-                    </Button>
-                  </Div>
+                  </Field>
                 </Div>
-              ) : null}
+
+                <Field label="Status">
+                  <Select value={filters.active} onChange={(event) => handleFilterChange('active', event.target.value)} className={INPUT}>
+                    <Option value="">All statuses</Option>
+                    <Option value="true">Active</Option>
+                    <Option value="false">Disabled</Option>
+                    <Option value="expired">Expired</Option>
+                    <Option value="scheduled">Scheduled</Option>
+                  </Select>
+                </Field>
+
+                <Toolbar className="mb-0">
+                  <Button type="button" onClick={clearFilters} className={BTN_SECONDARY}>
+                    <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+                  </Button>
+                </Toolbar>
+              </Div>
+            ) : null}
+          </Card>
+
+          {isLoading ? (
+            <TableSkeleton rows={5} />
+          ) : loadError ? (
+            <ErrorState title="Could not load promo codes" message={loadError} onRetry={fetchData} />
+          ) : filteredPromos.length === 0 ? (
+            <EmptyState
+              icon={Ticket}
+              title="No promo codes found"
+              message={
+                filters.service_location_id || filters.transport_type || filters.active
+                  ? 'No promo code matches the filters you picked.'
+                  : 'Add your first promo code and it will be listed here.'
+              }
+              actionLabel="Add promo code"
+              onAction={() => navigate(CREATE_PATH)}
+            />
+          ) : (
+            <DataTable cols={COLS}>
+              <THead cols={COLS} labels={['Code', 'Transport type', 'Service location', 'From – to date', 'Status', 'Action']} />
+              <TBody>
+                {filteredPromos.map((promo, i) => {
+                  const statusInfo = getStatusInfo(promo);
+                  return (
+                    <Row key={promo._id} last={i === filteredPromos.length - 1}>
+                      <Cell width={COLS[0]}>
+                        <Span className="text-sm font-semibold text-slate-900" numberOfLines={2}>
+                          {promo.code}
+                        </Span>
+                      </Cell>
+                      <Cell width={COLS[1]}>{getTransportTypeLabel(promo.transport_type)}</Cell>
+                      <Cell width={COLS[2]}>{getPromoLocationLabel(promo)}</Cell>
+                      <Cell width={COLS[3]}>
+                        {formatDate(promo.from)} - {formatDate(promo.to)}
+                      </Cell>
+                      <Cell width={COLS[4]}>
+                        <StatusBadge status={statusInfo.label} />
+                      </Cell>
+                      <Cell width={COLS[5]} align="right">
+                        <Div className="flex-row items-center justify-end gap-1">
+                          <Button
+                            type="button"
+                            onClick={() => handleToggleStatus(promo._id)}
+                            className="h-11 px-3 rounded-lg border border-slate-300 bg-white items-center justify-center"
+                          >
+                            <Span className={`text-xs font-semibold ${promo.active ? 'text-red-600' : 'text-green-700'}`}>
+                              {promo.active ? 'Deactivate' : 'Activate'}
+                            </Span>
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => navigate(`/taxi/admin/promotions/promo-codes/edit/${promo._id}`)}
+                            accessibilityLabel={`Edit ${promo.code}`}
+                            className="w-11 h-11 items-center justify-center rounded-lg border border-slate-200 bg-white"
+                          >
+                            <UiIcon as={Pencil} size={16} className="text-slate-600" />
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => handleDelete(promo._id)}
+                            accessibilityLabel={`Delete ${promo.code}`}
+                            className="w-11 h-11 items-center justify-center rounded-lg border border-slate-200 bg-white"
+                          >
+                            <UiIcon as={Trash2} size={16} className="text-red-600" />
+                          </Button>
+                        </Div>
+                      </Cell>
+                    </Row>
+                  );
+                })}
+              </TBody>
+            </DataTable>
+          )}
+        </>
+      ) : (
+        <Form onSubmit={handleSubmit}>
+          <Card className="mb-4 gap-4">
+            <SectionTitle className="mb-0">Promo details</SectionTitle>
+
+            <Field label="Service locations" required>
+              <LocationMultiSelect
+                locations={locations}
+                selectedIds={formData.service_location_ids}
+                onChange={(ids) => handleFieldChange('service_location_ids', ids)}
+              />
+            </Field>
+
+            <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+              <Field label="Transport type" required className={half}>
+                <Select required value={formData.transport_type} onChange={(e) => handleFieldChange('transport_type', e.target.value)} className={INPUT}>
+                  <Option value="">Select</Option>
+                  {PROMO_TRANSPORT_OPTIONS.map((option) => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label="Users" required={formData.user_specific} className={half}>
+                <Select
+                  required={formData.user_specific}
+                  disabled={!formData.user_specific}
+                  value={formData.user_id}
+                  onChange={(e) => handleFieldChange('user_id', e.target.value)}
+                  className={INPUT}
+                >
+                  <Option value="">{formData.user_specific ? 'Select Users' : 'All Users'}</Option>
+                  {usersList.map((user) => (
+                    <Option key={user._id} value={user._id}>
+                      {user.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
             </Div>
 
-            <Div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <Table cols={[130, 150, 180, 190, 120, 96]} className="w-full text-left">
-                  <Thead className="bg-gray-50">
-                    <Tr className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <Th className="px-3 py-2">Code</Th>
-                      <Th className="px-3 py-2">Transport Type</Th>
-                      <Th className="px-3 py-2">Service Location</Th>
-                      <Th className="px-3 py-2">From - To Date</Th>
-                      <Th className="px-3 py-2">Status</Th>
-                      <Th className="px-3 py-2 text-right">Action</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody className="divide-y divide-gray-100">
-                    {isLoading ? (
-                      <Tr>
-                        <Td colSpan="6" className="px-6 py-16 text-center text-sm font-medium text-gray-500">
-                          <Div className="flex items-center justify-center gap-3">
-                            <UiIcon as={Loader2} className="animate-spin text-[#FFC400]" size={24} />
-                            Loading Promo Codes...
-                          </Div>
-                        </Td>
-                      </Tr>
-                    ) : filteredPromos.length === 0 ? (
-                      <Tr>
-                        <Td colSpan="6" className="px-6 py-16 text-center">
-                          <Div className="flex flex-col items-center gap-3 text-gray-400">
-                            <UiIcon as={Ticket} size={44} strokeWidth={1.5} className="text-gray-300" />
-                            <P className="text-sm font-medium text-gray-500">No promo codes found.</P>
-                            <Button
-                              type="button"
-                              onClick={() => navigate(CREATE_PATH)}
-                              className="mt-2 text-sm font-medium text-[#0B1220] hover:text-[#0B1220] hover:underline"
-                            >
-                              + Add your first promo code
-                            </Button>
-                          </Div>
-                        </Td>
-                      </Tr>
-                    ) : (
-                      filteredPromos.map((promo) => (
-                        <Tr key={promo._id} className="hover:bg-gray-50 transition-colors">
-                          <Td className="px-4 py-2 whitespace-nowrap text-[13px] font-semibold text-gray-900">{promo.code}</Td>
-                          <Td className="px-4 py-2 whitespace-nowrap text-[13px] text-gray-600">{getTransportTypeLabel(promo.transport_type)}</Td>
-                          <Td className="px-4 py-2 whitespace-nowrap text-[13px] text-gray-600 max-w-[200px] truncate">{getPromoLocationLabel(promo)}</Td>
-                          <Td className="px-4 py-2 whitespace-nowrap text-[13px] text-gray-600">
-                            {formatDate(promo.from)} - {formatDate(promo.to)}
-                          </Td>
-                          <Td className="px-4 py-2 whitespace-nowrap">
-                            {(() => {
-                              const statusInfo = getStatusInfo(promo);
-                              return (
-                                <Span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusInfo.color}`}>
-                                  {statusInfo.label}
-                                </Span>
-                              );
-                            })()}
-                          </Td>
-                          <Td className="px-4 py-2 whitespace-nowrap text-right">
-                            <Div className="flex items-center justify-end gap-1.5">
-                              <Button
-                                type="button"
-                                onClick={() => handleToggleStatus(promo._id)}
-                                className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${promo.active ? 'text-rose-600 border-rose-200 hover:bg-rose-50' : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50'}`}
-                              >
-                                {promo.active ? 'Deactivate' : 'Activate'}
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={() => navigate(`/taxi/admin/promotions/promo-codes/edit/${promo._id}`)}
-                                className="p-1.5 text-[#0B1220] bg-[#FFC400]/10 rounded hover:bg-[#FFC400]/20 transition-colors"
-                              >
-                                <UiIcon as={Pencil} size={16} />
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={() => handleDelete(promo._id)}
-                                className="p-1.5 text-rose-600 bg-rose-50 rounded hover:bg-rose-100 transition-colors"
-                              >
-                                <UiIcon as={Trash2} size={16} />
-                              </Button>
-                            </Div>
-                          </Td>
-                        </Tr>
-                      ))
-                    )}
-                  </Tbody>
-              </Table>
-            </Div>
-          </Motion.div>
-        ) : (
-          <Motion.form
-            key="form"
-            initial={{
-              opacity: 0,
-              scale: 0.98,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.98,
-            }}
-            onSubmit={handleSubmit}
-            className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4"
-          >
-            <Div className="space-y-4">
-              <SectionCard icon={Ticket} title="Promo Details" description="Enter the basic promo code details">
-                <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Div className="md:col-span-2">
-                    <FieldLabel icon={MapPin} required>
-                      Service Locations
-                    </FieldLabel>
-                    <LocationMultiSelect
-                      locations={locations}
-                      selectedIds={formData.service_location_ids}
-                      onChange={(ids) => handleFieldChange('service_location_ids', ids)}
-                    />
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={Zap} required>
-                      Transport Type
-                    </FieldLabel>
-                    <Select
-                      required
-                      value={formData.transport_type}
-                      onChange={(e) => handleFieldChange('transport_type', e.target.value)}
-                      className={inputClass}
-                    >
-                      <Option value="">Select</Option>
-                      {PROMO_TRANSPORT_OPTIONS.map((option) => (
-                        <Option key={option.value} value={option.value}>
-                          {option.label}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={Users} required={formData.user_specific}>
-                      Users
-                    </FieldLabel>
-                    <Select
-                      required={formData.user_specific}
-                      disabled={!formData.user_specific}
-                      value={formData.user_id}
-                      onChange={(e) => handleFieldChange('user_id', e.target.value)}
-                      className={inputClass}
-                    >
-                      <Option value="">{formData.user_specific ? 'Select Users' : 'All Users'}</Option>
-                      {usersList.map((user) => (
-                        <Option key={user._id} value={user._id}>
-                          {user.name}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={ShieldCheck}>User Specific</FieldLabel>
-                    <Label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 cursor-pointer">
-                      <Input
-                        type="checkbox"
-                        checked={formData.user_specific}
-                        onChange={(e) => handleUserSpecificChange(e.target.checked)}
-                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#0B1220] focus:ring-[#FFC400] cursor-pointer"
-                      />
-                      <Div>
-                        <P className="text-sm font-medium text-gray-800">Apply for selected user only</P>
-                        <P className="text-xs text-gray-400">Unchecked rehne par promo all users ke liye available rahega.</P>
-                      </Div>
-                    </Label>
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={Ticket} required>
-                      Code
-                    </FieldLabel>
-                    <Input
-                      type="text"
-                      placeholder="Enter Code"
-                      required
-                      value={formData.code}
-                      onChange={(e) => handleFieldChange('code', e.target.value.toUpperCase())}
-                      className={inputClass}
-                    />
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={IndianRupee} required>
-                      Minimum Trip Amount
-                    </FieldLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Enter Minimum Trip Amount"
-                      required
-                      value={formData.minimum_trip_amount}
-                      onChange={(e) => handleFieldChange('minimum_trip_amount', e.target.value)}
-                      className={inputClass}
-                    />
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={IndianRupee} required>
-                      Maximum Discount Amount
-                    </FieldLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Enter Maximum Discount Amount"
-                      required
-                      value={formData.maximum_discount_amount}
-                      onChange={(e) => handleFieldChange('maximum_discount_amount', e.target.value)}
-                      className={inputClass}
-                    />
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={IndianRupee} required>
-                      Cumulative Maximum Discount Amount
-                    </FieldLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Enter Cumulative Maximum Discount Amount"
-                      required
-                      value={formData.cumulative_max_discount_amount}
-                      onChange={(e) => handleFieldChange('cumulative_max_discount_amount', e.target.value)}
-                      className={inputClass}
-                    />
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={Percent} required>
-                      Discount Percentage
-                    </FieldLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Enter Discount Percentage"
-                      required
-                      value={formData.discount_percentage}
-                      onChange={(e) => handleFieldChange('discount_percentage', e.target.value)}
-                      className={inputClass}
-                    />
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={Calendar} required>
-                      From Date
-                    </FieldLabel>
-                    <Input type="date" required value={formData.from} onChange={(e) => handleFieldChange('from', e.target.value)} className={inputClass} />
-                  </Div>
-
-                  <Div>
-                    <FieldLabel icon={Calendar} required>
-                      To Date
-                    </FieldLabel>
-                    <Input type="date" required value={formData.to} onChange={(e) => handleFieldChange('to', e.target.value)} className={inputClass} />
-                  </Div>
-
-                  <Div className="md:col-span-2">
-                    <FieldLabel icon={Hash} required>
-                      How many times the user can use Same promo code?
-                    </FieldLabel>
-                    <Input
-                      type="number"
-                      min="1"
-                      placeholder="Enter how many times the user can use same promo code"
-                      required
-                      value={formData.uses_per_user}
-                      onChange={(e) => handleFieldChange('uses_per_user', e.target.value)}
-                      className={inputClass}
-                    />
-                  </Div>
-
-                  <Div className="md:col-span-2">
-                    <FieldLabel icon={ShieldCheck}>Promo Status</FieldLabel>
-                    <Label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 cursor-pointer">
-                      <Input
-                        type="checkbox"
-                        checked={formData.active}
-                        onChange={(e) => handleFieldChange('active', e.target.checked)}
-                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#0B1220] focus:ring-[#FFC400] cursor-pointer"
-                      />
-                      <Div>
-                        <P className="text-sm font-medium text-gray-800">Promo is active</P>
-                        <P className="text-xs text-gray-400">Uncheck to save this promo in deactivated state.</P>
-                      </Div>
-                    </Label>
-                  </Div>
+            <Field label="User specific">
+              <Div className="flex-row items-start gap-3 rounded-lg border border-slate-300 bg-white px-3 py-3">
+                <CheckBox checked={formData.user_specific} onChange={(e) => handleUserSpecificChange(e.target.checked)} />
+                <Div className="flex-1 min-w-0">
+                  <Span className="text-sm font-medium text-slate-900">Apply for the selected user only</Span>
+                  <Span className="text-xs text-slate-500">Left unchecked, the promo stays available to every user.</Span>
                 </Div>
-              </SectionCard>
+              </Div>
+            </Field>
+
+            <Field label="Code" required>
+              <Input
+                type="text"
+                placeholder="Enter Code"
+                required
+                value={formData.code}
+                onChange={(e) => handleFieldChange('code', e.target.value.toUpperCase())}
+                className={INPUT}
+              />
+            </Field>
+
+            <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+              <Field label="Minimum trip amount" required className={half}>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter Minimum Trip Amount"
+                  required
+                  value={formData.minimum_trip_amount}
+                  onChange={(e) => handleFieldChange('minimum_trip_amount', e.target.value)}
+                  className={INPUT}
+                />
+              </Field>
+
+              <Field label="Maximum discount amount" required className={half}>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter Maximum Discount Amount"
+                  required
+                  value={formData.maximum_discount_amount}
+                  onChange={(e) => handleFieldChange('maximum_discount_amount', e.target.value)}
+                  className={INPUT}
+                />
+              </Field>
             </Div>
 
-            <Div className="space-y-4">
-              <Div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-3 bg-[#FFC400] text-white rounded-lg text-sm font-medium hover:bg-[#E5B000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-                >
-                  {submitting ? <UiIcon as={Loader2} className="animate-spin" size={16} /> : <UiIcon as={Save} size={16} />}
-                  {isEditRoute ? 'Update Promo Code' : 'Save Promo Code'}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => navigate(LIST_PATH)}
-                  className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-                >
-                  Cancel
-                </Button>
-              </Div>
+            <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+              <Field label="Cumulative maximum discount amount" required className={half}>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter Cumulative Maximum Discount Amount"
+                  required
+                  value={formData.cumulative_max_discount_amount}
+                  onChange={(e) => handleFieldChange('cumulative_max_discount_amount', e.target.value)}
+                  className={INPUT}
+                />
+              </Field>
 
-              <Div className="bg-white rounded-xl border border-gray-200 p-4">
-                <H3 className="text-sm text-gray-900 mb-2 font-bold">How It Works</H3>
-                <P className="text-xs leading-5 text-gray-500">
-                  Service location, transport module, discount limits, end-of-day expiry, status control, and uses-per-user sab fields active hain.
-                </P>
-              </Div>
+              <Field label="Discount percentage" required className={half}>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter Discount Percentage"
+                  required
+                  value={formData.discount_percentage}
+                  onChange={(e) => handleFieldChange('discount_percentage', e.target.value)}
+                  className={INPUT}
+                />
+              </Field>
             </Div>
-          </Motion.form>
-        )}
-      </AnimatePresence>
-    </ScrollDiv>
+
+            <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+              <Field label="From date" required className={half}>
+                <Input type="date" required value={formData.from} onChange={(e) => handleFieldChange('from', e.target.value)} className={INPUT} />
+              </Field>
+              <Field label="To date" required className={half}>
+                <Input type="date" required value={formData.to} onChange={(e) => handleFieldChange('to', e.target.value)} className={INPUT} />
+              </Field>
+            </Div>
+
+            <Field label="Uses per user" required hint="How many times one user can redeem the same code.">
+              <Input
+                type="number"
+                min="1"
+                placeholder="Enter how many times the user can use same promo code"
+                required
+                value={formData.uses_per_user}
+                onChange={(e) => handleFieldChange('uses_per_user', e.target.value)}
+                className={INPUT}
+              />
+            </Field>
+
+            <Field label="Promo status">
+              <Div className="flex-row items-start gap-3 rounded-lg border border-slate-300 bg-white px-3 py-3">
+                <CheckBox checked={formData.active} onChange={(e) => handleFieldChange('active', e.target.checked)} />
+                <Div className="flex-1 min-w-0">
+                  <Span className="text-sm font-medium text-slate-900">Promo is active</Span>
+                  <Span className="text-xs text-slate-500">Uncheck to save this promo deactivated.</Span>
+                </Div>
+              </Div>
+            </Field>
+          </Card>
+
+          <Card className="mb-4 gap-2">
+            <Button type="submit" disabled={submitting} className={`${BTN_PRIMARY} ${submitting ? 'opacity-60' : ''}`}>
+              {submitting ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Save} size={16} className="text-white" />}
+              <Span className={BTN_TEXT_PRIMARY}>{isEditRoute ? 'Update promo code' : 'Save promo code'}</Span>
+            </Button>
+            <Button type="button" onClick={() => navigate(LIST_PATH)} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+            </Button>
+          </Card>
+
+          <Card>
+            <SectionTitle className="mb-2">How it works</SectionTitle>
+            <Span className="text-sm text-slate-500">
+              Service location, transport module, discount limits, the validity window, status control and uses-per-user are all live fields.
+            </Span>
+          </Card>
+        </Form>
+      )}
+    </AdminPage>
   );
 };
 export default PromoCodes;

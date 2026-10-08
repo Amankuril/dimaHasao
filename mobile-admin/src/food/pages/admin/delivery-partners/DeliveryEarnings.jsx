@@ -1,6 +1,6 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/delivery-partners/DeliveryEarnings.jsx (tools/port.js first pass). */
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Download, ChevronDown, DollarSign, Calendar, Filter, Loader2, FileText, FileSpreadsheet, Code } from 'lucide-react-native';
+import { Download, ChevronDown, Wallet, Users, FileText, FileSpreadsheet, Code } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
 import {
   DropdownMenu,
@@ -12,13 +12,37 @@ import {
 } from '../../../../components/shadcn';
 import { toast } from '../../../../lib/notify';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
-import { Button, Div, H1, Input, Label, Option, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Option, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { saveTextFile } from '../../../../lib/files';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 const formatCurrency = (amount) => {
-  return `\u20B9${Number(amount || 0).toLocaleString('en-IN', {
+  return `₹${Number(amount || 0).toLocaleString('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -34,6 +58,8 @@ const formatDate = (dateString) => {
     minute: '2-digit',
   });
 };
+const COLS = [60, 170, 130, 130, 170, 110, 120, 120, 150];
+const LABELS = ['SI', 'Delivery Boy', 'Phone', 'Order ID', 'Restaurant', 'Earning', 'Order Total', 'Status', 'Date'];
 export default function DeliveryEarnings() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -61,6 +87,8 @@ export default function DeliveryEarnings() {
     toDate: '',
   });
   const [deliveryPartners, setDeliveryPartners] = useState([]);
+  const { tablet } = useLayoutWidth();
+  const filterColumn = tablet ? 'flex-1 min-w-[220px]' : undefined;
 
   // Fetch delivery partners for filter dropdown
   const fetchDeliveryPartners = useCallback(async () => {
@@ -223,234 +251,159 @@ export default function DeliveryEarnings() {
   };
   if (loading && earnings.length === 0) {
     return (
-      <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center">
-        <Div className="flex flex-col items-center gap-4">
-          <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-500" />
-          <P className="text-gray-600">Loading delivery earnings...</P>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={Wallet}
+          title="Delivery Earning"
+          subtitle="Every delivery partner payout, order by order"
+          breadcrumb={[{ label: 'Food' }, { label: 'Delivery partners' }, { label: 'Earnings' }]}
+        />
+        <LoadingState label="Loading delivery earnings…" />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen w-full max-w-full overflow-x-hidden">
-      <Div className="w-full mx-auto">
-        {/* Page Header */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
-          <Div className="flex items-center justify-between">
-            <Div className="flex items-center gap-3">
-              <Div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center">
-                <UiIcon as={DollarSign} className="w-5 h-5 text-white" />
-              </Div>
-              <Div>
-                <H1 className="text-2xl font-bold text-slate-900">Delivery Earning</H1>
-                <P className="text-sm text-slate-600">View all delivery boy earnings and details</P>
-              </Div>
-            </Div>
-          </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Wallet}
+        title="Delivery Earning"
+        subtitle="Every delivery partner payout, order by order"
+        breadcrumb={[{ label: 'Food' }, { label: 'Delivery partners' }, { label: 'Earnings' }]}
+        actions={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className={BTN_SECONDARY}>
+                <UiIcon as={Download} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-500" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <UiIcon as={FileSpreadsheet} size={16} className="mr-2 text-slate-500" />
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('json')}>
+                <UiIcon as={Code} size={16} className="mr-2 text-slate-500" />
+                Export as JSON
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
+
+      <StatGrid className="mb-4">
+        <StatCard label="Total delivery boys" value={String(summary.totalDeliveryPartners || 0)} icon={Users} tone="info" />
+        <StatCard label="Total earnings" value={formatCurrency(summary.totalEarnings || 0)} icon={Wallet} tone="success" />
+        <StatCard label="Total orders" value={String(summary.totalOrders || 0)} icon={FileText} tone="neutral" />
+      </StatGrid>
+
+      <Card className="mb-4">
+        <SectionTitle>Filters</SectionTitle>
+        <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+          <Field label="Period" className={filterColumn}>
+            <Select value={filters.period} onChange={(e) => handleFilterChange('period', e.target.value)} className={INPUT}>
+              <Option value="all">All Time</Option>
+              <Option value="today">Today</Option>
+              <Option value="week">This Week</Option>
+              <Option value="month">This Month</Option>
+            </Select>
+          </Field>
+          <Field label="Delivery Boy" className={filterColumn}>
+            <Select value={filters.deliveryPartnerId} onChange={(e) => handleFilterChange('deliveryPartnerId', e.target.value)} className={INPUT}>
+              <Option value="">All Delivery Boys</Option>
+              {deliveryPartners.map((dp) => (
+                <Option key={dp._id} value={dp._id}>
+                  {dp.name}
+                </Option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="From Date" className={filterColumn}>
+            <Input type="date" value={filters.fromDate} onChange={(e) => handleFilterChange('fromDate', e.target.value)} className={INPUT} />
+          </Field>
+          <Field label="To Date" className={filterColumn}>
+            <Input
+              type="date"
+              value={filters.toDate}
+              onChange={(e) => handleFilterChange('toDate', e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              className={INPUT}
+            />
+          </Field>
         </Div>
-
-        {/* Summary Cards */}
-        <Div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-            <Div className="flex items-center justify-between">
-              <Div>
-                <P className="text-sm text-slate-600 mb-1">Total Delivery Boys</P>
-                <P className="text-2xl font-bold text-slate-900">{summary.totalDeliveryPartners || 0}</P>
-              </Div>
-              <Div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <UiIcon as={DollarSign} className="w-6 h-6 text-blue-600" />
-              </Div>
-            </Div>
-          </Div>
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-            <Div className="flex items-center justify-between">
-              <Div>
-                <P className="text-sm text-slate-600 mb-1">Total Earnings</P>
-                <P className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalEarnings || 0)}</P>
-              </Div>
-              <Div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <UiIcon as={DollarSign} className="w-6 h-6 text-green-600" />
-              </Div>
-            </Div>
-          </Div>
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-            <Div className="flex items-center justify-between">
-              <Div>
-                <P className="text-sm text-slate-600 mb-1">Total Orders</P>
-                <P className="text-2xl font-bold text-slate-900">{summary.totalOrders || 0}</P>
-              </Div>
-              <Div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <UiIcon as={FileText} className="w-6 h-6 text-purple-600" />
-              </Div>
-            </Div>
-          </Div>
-        </Div>
-
-        {/* Filters */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
-          <Div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Div>
-              <Label className="block text-sm font-medium text-slate-700 mb-2">Period</Label>
-              <Select
-                value={filters.period}
-                onChange={(e) => handleFilterChange('period', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <Option value="all">All Time</Option>
-                <Option value="today">Today</Option>
-                <Option value="week">This Week</Option>
-                <Option value="month">This Month</Option>
-              </Select>
-            </Div>
-            <Div>
-              <Label className="block text-sm font-medium text-slate-700 mb-2">Delivery Boy</Label>
-              <Select
-                value={filters.deliveryPartnerId}
-                onChange={(e) => handleFilterChange('deliveryPartnerId', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <Option value="">All Delivery Boys</Option>
-                {deliveryPartners.map((dp) => (
-                  <Option key={dp._id} value={dp._id}>
-                    {dp.name}
-                  </Option>
-                ))}
-              </Select>
-            </Div>
-            <Div>
-              <Label className="block text-sm font-medium text-slate-700 mb-2">From Date</Label>
-              <Input
-                type="date"
-                value={filters.fromDate}
-                onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </Div>
-            <Div>
-              <Label className="block text-sm font-medium text-slate-700 mb-2">To Date</Label>
-              <Input
-                type="date"
-                value={filters.toDate}
-                onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </Div>
-          </Div>
-        </Div>
-
-        {/* Search and Export */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
-          <Div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <Div className="relative flex-1 w-full sm:w-auto">
-              <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Search by name, phone, order ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </Div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
-                  <UiIcon as={Download} className="w-4 h-4" />
-                  <Span>Export</Span>
-                  <UiIcon as={ChevronDown} className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleExport('csv')}>
-                  <UiIcon as={FileText} className="w-4 h-4 mr-2" />
-                  Export as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('excel')}>
-                  <UiIcon as={FileSpreadsheet} className="w-4 h-4 mr-2" />
-                  Export as Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('json')}>
-                  <UiIcon as={Code} className="w-4 h-4 mr-2" />
-                  Export as JSON
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </Div>
-        </Div>
-
-        {/* Earnings Table */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-          {error && <Div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</Div>}
-
-          <Div>
-            <Table className="w-full" cols={[60, 170, 130, 130, 180, 110, 120, 120, 150]}>
-              <Thead className="bg-slate-50 border-b border-slate-200">
-                <Tr>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">SI</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Delivery Boy</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Phone</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Order ID</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Restaurant</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Earning</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Order Total</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Status</Th>
-                  <Th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Date</Th>
-                </Tr>
-              </Thead>
-              <Tbody className="divide-y divide-slate-100">
-                {earnings.length === 0 ? (
-                  <Tr>
-                    <Td colSpan={9} className="px-4 py-12 text-center">
-                      <Div className="flex flex-col items-center justify-center">
-                        <P className="text-lg font-semibold text-slate-700 mb-1">No Earnings Found</P>
-                        <P className="text-sm text-slate-500">No earnings match your filters</P>
-                      </Div>
-                    </Td>
-                  </Tr>
-                ) : (
-                  earnings.map((earning, index) => (
-                    <Tr key={earning.transactionId || index} className="hover:bg-slate-50">
-                      <Td className="px-4 py-3 text-sm text-slate-700">{(currentPage - 1) * pageSize + index + 1}</Td>
-                      <Td className="px-4 py-3 text-sm font-medium text-slate-900">{earning.deliveryPartnerName || 'N/A'}</Td>
-                      <Td className="px-4 py-3 text-sm text-slate-700">{earning.deliveryPartnerPhone || 'N/A'}</Td>
-                      <Td className="px-4 py-3 text-sm text-blue-600 font-medium">{earning.orderId || 'N/A'}</Td>
-                      <Td className="px-4 py-3 text-sm text-slate-700">{earning.restaurantName || 'N/A'}</Td>
-                      <Td className="px-4 py-3 text-sm font-semibold text-green-600">{formatCurrency(earning.amount)}</Td>
-                      <Td className="px-4 py-3 text-sm text-slate-700">{formatCurrency(earning.orderTotal)}</Td>
-                      <Td className="px-4 py-3 text-sm">
-                        <Span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${earning.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
-                        >
-                          {earning.orderStatus || 'N/A'}
-                        </Span>
-                      </Td>
-                      <Td className="px-4 py-3 text-sm text-slate-700">{formatDate(earning.createdAt)}</Td>
-                    </Tr>
-                  ))
-                )}
-              </Tbody>
-            </Table>
-          </Div>
-
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              try {
-                localStorage.setItem('admin_delivery_earnings_pageSize', String(size));
-              } catch {
-                /* ignore */
-              }
-            }}
-            itemLabel="earnings"
+        <Toolbar className="mt-3 mb-0">
+          <Input
+            type="text"
+            placeholder="Search by name, phone, order ID…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`${INPUT} flex-1 min-w-[200px]`}
           />
-        </Div>
-      </Div>
-    </ScrollDiv>
+        </Toolbar>
+      </Card>
+
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : error ? (
+        <ErrorState title="Could not load earnings" message={error} onRetry={fetchEarnings} />
+      ) : earnings.length === 0 ? (
+        <EmptyState
+          icon={Wallet}
+          title="No earnings found"
+          message="No earnings match your filters. Widen the date range or clear the search."
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={LABELS} />
+          <TBody>
+            {earnings.map((earning, index) => (
+              <Row key={earning.transactionId || index} last={index === earnings.length - 1}>
+                <Cell width={COLS[0]}>{String((currentPage - 1) * pageSize + index + 1)}</Cell>
+                <Cell width={COLS[1]}>
+                  <Span className="text-sm font-medium text-slate-900">{earning.deliveryPartnerName || 'N/A'}</Span>
+                </Cell>
+                <Cell width={COLS[2]}>{earning.deliveryPartnerPhone || 'N/A'}</Cell>
+                <Cell width={COLS[3]}>{earning.orderId || 'N/A'}</Cell>
+                <Cell width={COLS[4]}>{earning.restaurantName || 'N/A'}</Cell>
+                <Cell width={COLS[5]} align="right">
+                  <Span className="text-sm font-semibold text-slate-900">{formatCurrency(earning.amount)}</Span>
+                </Cell>
+                <Cell width={COLS[6]} align="right">
+                  {formatCurrency(earning.orderTotal)}
+                </Cell>
+                <Cell width={COLS[7]}>
+                  <StatusBadge status={earning.orderStatus || 'pending'} label={earning.orderStatus || 'N/A'} />
+                </Cell>
+                <Cell width={COLS[8]}>{formatDate(earning.createdAt)}</Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          try {
+            localStorage.setItem('admin_delivery_earnings_pageSize', String(size));
+          } catch {
+            /* ignore */
+          }
+        }}
+        itemLabel="earnings"
+        className="mt-3 rounded-xl border border-slate-200"
+      />
+    </AdminPage>
   );
 }

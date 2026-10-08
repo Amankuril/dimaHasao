@@ -1,38 +1,40 @@
 /* Ported from Frontend/src/modules/Hotel/app/admin/pages/AdminProperties.jsx (tools/port.js first pass). */
 import React, { useState, useEffect, useCallback } from 'react';
-import { AnimatePresence } from '../../../../lib/motion';
-import { Building2, Search, MoreVertical, MapPin, CheckCircle, XCircle, Clock, Star, ShieldAlert, Trash2, Eye, ChevronLeft, ChevronRight, Download } from 'lucide-react-native';
+import { Building2, Search, MoreVertical, MapPin, CheckCircle, XCircle, Star, Trash2, Eye, Download } from 'lucide-react-native';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import { categoryService } from '../../../services/categoryService';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, H2, Input, Link, Option, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Input, Link, Option, Overlay, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { saveTextFile } from '../../../../lib/files';
-const PropertyStatusBadge = ({ status }) => {
-  const styles = {
-    approved: 'bg-green-100 text-green-700 border-green-200 font-bold',
-    pending: 'bg-amber-100 text-amber-700 border-amber-200 font-bold',
-    rejected: 'bg-red-100 text-red-700 border-red-200 font-bold',
-    suspended: 'bg-gray-100 text-gray-700 border-gray-200 font-bold',
-    draft: 'bg-gray-100 text-gray-500 border-gray-200 font-bold',
-  };
-  const icons = {
-    approved: <UiIcon as={CheckCircle} size={10} className="mr-1" />,
-    pending: <UiIcon as={Clock} size={10} className="mr-1" />,
-    rejected: <UiIcon as={XCircle} size={10} className="mr-1" />,
-    suspended: <UiIcon as={ShieldAlert} size={10} className="mr-1" />,
-    draft: <UiIcon as={Clock} size={10} className="mr-1" />,
-  };
-  return (
-    <Span className={`flex items-center w-fit px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold border ${styles[status] || styles.pending}`}>
-      {icons[status] || icons.pending}
-      {status}
-    </Span>
-  );
-};
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  Pagination,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
+
+const COLS = [220, 130, 190, 130, 56];
+const LABELS = ['Property', 'Type', 'Owner', 'Status', ''];
+const MENU_ITEM = 'flex-row items-center gap-2 px-4 h-11';
+
 const AdminProperties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [totalProperties, setTotalProperties] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -77,6 +79,7 @@ const AdminProperties = () => {
         };
         const data = await adminService.getHotels(params);
         if (data.success) {
+          setLoadError(null);
           setProperties(data.hotels || []);
           setTotalProperties(data.total || 0);
           setTotalPages(Math.ceil((data.total || 0) / limit));
@@ -88,6 +91,7 @@ const AdminProperties = () => {
       } catch (error) {
         if (error.response?.status !== 401) {
           console.error('Error fetching properties:', error);
+          setLoadError(error.message || 'Failed to load properties');
           toast.error('Failed to load properties');
         }
       } finally {
@@ -167,8 +171,12 @@ const AdminProperties = () => {
     saveTextFile(`properties-export-${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv;charset=utf-8;');
     toast.success('CSV exported successfully');
   };
+
+  const menuProperty = properties.find((p) => p._id === activeDropdown);
+  const hasFilter = Boolean(filters.search || filters.status || filters.type);
+
   return (
-    <ScrollDiv className="space-y-6 relative" onClick={() => setActiveDropdown(null)}>
+    <AdminPage maxWidth={1200}>
       <ConfirmationModal
         isOpen={modalConfig.isOpen}
         onClose={() =>
@@ -180,50 +188,40 @@ const AdminProperties = () => {
         {...modalConfig}
       />
 
-      <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Div>
-          <H2 className="text-2xl font-bold text-gray-900 uppercase tracking-tight">Property Management ({totalProperties})</H2>
-          <P className="text-gray-500 text-[10px] font-bold uppercase tracking-tight">Manage listings, approvals, and quality control.</P>
-        </Div>
-        <Div className="flex gap-2">
-          <Button
-            onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            <UiIcon as={Download} size={14} /> Export CSV
+      <PageHeader
+        icon={Building2}
+        title="Property management"
+        subtitle={`${totalProperties} listing${totalProperties === 1 ? '' : 's'} — approvals and quality control`}
+        breadcrumb={[{ label: 'Hotel' }, { label: 'Properties' }]}
+        actions={
+          <Button onClick={handleExportCSV} className={BTN_SECONDARY} accessibilityLabel="Export properties as CSV">
+            <UiIcon as={Download} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Export CSV</Span>
           </Button>
-        </Div>
-      </Div>
+        }
+      />
 
-      <Div className="bg-white p-4 border border-gray-200 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <Div className="relative flex-1">
-          <UiIcon as={Search} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search properties by name or city..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-transparent rounded-xl text-xs font-bold uppercase focus:bg-white focus:border-black outline-none transition-all tracking-tight"
-          />
-        </Div>
-        <Div className="flex gap-2 w-full md:w-auto">
-          <Select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
-          >
-            <Option value="">All Status</Option>
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center gap-2 flex-1 min-w-[200px] h-11 px-3 rounded-lg border border-slate-300 bg-white">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Search by property name or city"
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              className="flex-1 text-sm text-slate-900"
+            />
+          </Div>
+          <Select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} className={`${INPUT} w-36`} placeholder="All status">
+            <Option value="">All status</Option>
             <Option value="pending">Pending</Option>
             <Option value="approved">Approved</Option>
             <Option value="rejected">Rejected</Option>
             <Option value="suspended">Suspended</Option>
           </Select>
-          <Select
-            value={filters.type}
-            onChange={(e) => handleFilterChange('type', e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
-          >
-            <Option value="">All Types</Option>
+          <Select value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)} className={`${INPUT} w-36`} placeholder="All types">
+            <Option value="">All types</Option>
             <Option value="hotel">Hotel</Option>
             <Option value="resort">Resort</Option>
             <Option value="homestay">Homestay</Option>
@@ -234,156 +232,114 @@ const AdminProperties = () => {
               </Option>
             ))}
           </Select>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
-      <Div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden min-h-[400px]">
-        <Table cols={[220, 130, 190, 130, 80]} className="w-full text-left border-collapse">
-            <Thead>
-              <Tr className="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
-                <Th className="p-4">Property Name</Th>
-                <Th className="p-4">Type</Th>
-                <Th className="p-4">Owner</Th>
-                <Th className="p-4">Status</Th>
-                <Th className="p-4 text-center">Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody className="divide-y divide-gray-100 uppercase tracking-tight font-bold">
-              {loading ? (
-                [1, 2, 3, 4, 5].map((i) => (
-                  <Tr key={i} className="animate-pulse">
-                    <Td colSpan="6" className="p-4">
-                      <Div className="h-10 bg-gray-50 rounded-lg"></Div>
-                    </Td>
-                  </Tr>
-                ))
-              ) : (
-                <AnimatePresence>
-                  {properties.length > 0 ? (
-                    properties.map((property) => (
-                      <Tr key={property._id} className="transition-colors group relative">
-                        <Td className="p-4">
-                          <Link to={`/hotel/admin/properties/${property._id}`} className="flex items-center gap-3">
-                            <Div className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0 border border-white shadow-sm">
-                              <UiIcon as={Building2} size={18} />
-                            </Div>
-                            <Div>
-                              <Div className="flex items-center gap-2">
-                                <P className="text-sm font-bold text-gray-900 uppercase tracking-tight">{property.propertyName || 'Untitled'}</P>
-                                {property.avgRating > 0 && (
-                                  <Span className="flex items-center bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded text-[9px] font-black border border-yellow-100">
-                                    <UiIcon as={Star} size={8} className="fill-yellow-500 text-yellow-500 mr-0.5" />
-                                    {property.avgRating?.toFixed(1)}
-                                  </Span>
-                                )}
-                              </Div>
-                              <Div className="flex items-center text-[10px] text-gray-400 font-bold mt-0.5 uppercase tracking-tighter">
-                                <UiIcon as={MapPin} size={10} className="mr-1" />
-                                {property.address?.city || 'No Address'}, {property.address?.state || ''}
-                              </Div>
-                            </Div>
-                          </Link>
-                        </Td>
-                        <Td className="p-4">
-                          <P className="text-[10px] text-gray-700 font-bold uppercase">
-                            {property.dynamicCategory?.displayName || property.propertyType || 'N/A'}
-                          </P>
-                        </Td>
-                        <Td className="p-4">
-                          <P className="text-[10px] text-gray-700 font-bold uppercase mb-0.5">{property.partnerId?.name || 'Unknown Partner'}</P>
-                          <P className="text-[10px] text-gray-500 font-medium normal-case tracking-tight">{property.partnerId?.email || 'No Email'}</P>
-                        </Td>
-                        <Td className="p-4">
-                          <PropertyStatusBadge status={property.status} />
-                        </Td>
-                        <Td className="p-4 text-center relative">
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveDropdown(activeDropdown === property._id ? null : property._id);
-                            }}
-                            className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-colors"
-                          >
-                            <UiIcon as={MoreVertical} size={16} />
-                          </Button>
-
-                          {activeDropdown === property._id && (
-                            <Div className="absolute right-8 top-8 w-40 bg-white border border-gray-200 rounded-lg shadow-xl z-20 py-1 text-left">
-                              <Link
-                                to={`/hotel/admin/properties/${property._id}`}
-                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-gray-700"
-                              >
-                                <UiIcon as={Eye} size={14} /> View Details
-                              </Link>
-                              {property.status === 'pending' && (
-                                <>
-                                  <Button
-                                    onClick={() => handleAction('approve', property)}
-                                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-green-50 text-[10px] font-bold uppercase text-green-700"
-                                  >
-                                    <UiIcon as={CheckCircle} size={14} /> Approve
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleAction('reject', property)}
-                                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-[10px] font-bold uppercase text-red-700"
-                                  >
-                                    <UiIcon as={XCircle} size={14} /> Reject
-                                  </Button>
-                                </>
-                              )}
-                              <Div className="h-px bg-gray-100 my-1"></Div>
-                              <Button
-                                onClick={() => handleAction('delete', property)}
-                                className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-[10px] font-bold uppercase text-red-700"
-                              >
-                                <UiIcon as={Trash2} size={14} /> Delete Property
-                              </Button>
-                            </Div>
-                          )}
-                        </Td>
-                      </Tr>
-                    ))
-                  ) : (
-                    <Tr>
-                      <Td colSpan="6" className="p-8 text-center text-gray-500">
-                        <Div className="flex flex-col items-center gap-2">
-                          <UiIcon as={Building2} size={32} className="text-gray-300" />
-                          <P className="text-xs font-bold uppercase">No properties found</P>
+      {loading ? (
+        <LoadingState label="Loading properties…" />
+      ) : loadError ? (
+        <ErrorState title="Could not load properties" message={loadError} onRetry={() => fetchProperties(currentPage, filters)} />
+      ) : properties.length === 0 ? (
+        <EmptyState
+          icon={Building2}
+          title={hasFilter ? 'No matching properties' : 'No properties yet'}
+          message={hasFilter ? 'No listing matches the current search or filters.' : 'Listings appear here once partners submit their properties.'}
+        />
+      ) : (
+        <>
+          <DataTable cols={COLS}>
+            <THead cols={COLS} labels={LABELS} />
+            <TBody>
+              {properties.map((property, i) => (
+                <Row key={property._id} last={i === properties.length - 1}>
+                  <Cell width={COLS[0]}>
+                    <Div className="flex-row items-center gap-2">
+                      <Div className="w-9 h-9 rounded-lg bg-slate-100 items-center justify-center shrink-0">
+                        <UiIcon as={Building2} size={18} className="text-slate-500" />
+                      </Div>
+                      <Link to={`/hotel/admin/properties/${property._id}`} className="flex-1 min-w-0">
+                        <Div className="flex-row items-center gap-2">
+                          <Span className="text-sm font-medium text-slate-900 flex-1" numberOfLines={2}>
+                            {property.propertyName || 'Untitled'}
+                          </Span>
+                          {property.avgRating > 0 ? <StatusBadge tone="warning" icon={Star} label={property.avgRating?.toFixed(1)} /> : null}
                         </Div>
-                      </Td>
-                    </Tr>
-                  )}
-                </AnimatePresence>
-              )}
-            </Tbody>
-        </Table>
+                        <Div className="flex-row items-center gap-1">
+                          <UiIcon as={MapPin} size={11} className="text-slate-400" />
+                          <Span className="text-xs text-slate-500 flex-1" numberOfLines={1}>
+                            {property.address?.city || 'No address'}
+                            {property.address?.state ? `, ${property.address.state}` : ''}
+                          </Span>
+                        </Div>
+                      </Link>
+                    </Div>
+                  </Cell>
+                  <Cell width={COLS[1]}>{property.dynamicCategory?.displayName || property.propertyType || 'N/A'}</Cell>
+                  <Cell width={COLS[2]}>
+                    <Span className="text-sm text-slate-900" numberOfLines={1}>
+                      {property.partnerId?.name || 'Unknown partner'}
+                    </Span>
+                    <Span className="text-xs text-slate-500" numberOfLines={1}>
+                      {property.partnerId?.email || 'No email'}
+                    </Span>
+                  </Cell>
+                  <Cell width={COLS[3]}>
+                    <StatusBadge status={property.status} />
+                  </Cell>
+                  <Cell width={COLS[4]} align="center">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdown(activeDropdown === property._id ? null : property._id);
+                      }}
+                      accessibilityLabel={`Actions for ${property.propertyName || 'property'}`}
+                      className="w-11 h-11 items-center justify-center rounded-lg"
+                    >
+                      <UiIcon as={MoreVertical} size={18} className="text-slate-500" />
+                    </Button>
+                  </Cell>
+                </Row>
+              ))}
+            </TBody>
+          </DataTable>
+          <Pagination
+            page={currentPage}
+            pages={totalPages}
+            total={totalProperties}
+            onPrev={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            onNext={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          />
+        </>
+      )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <Div className="p-4 border-t border-gray-100 flex items-center justify-between">
-            <P className="text-[10px] font-bold text-gray-500 uppercase">
-              Page {currentPage} of {totalPages}
-            </P>
-            <Div className="flex gap-2">
-              <Button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <UiIcon as={ChevronLeft} size={16} />
-              </Button>
-              <Button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <UiIcon as={ChevronRight} size={16} />
-              </Button>
-            </Div>
+      {activeDropdown && menuProperty ? (
+        <Overlay onClose={() => setActiveDropdown(null)} className="flex-1 items-center justify-center p-4 bg-black/40" onClick={() => setActiveDropdown(null)}>
+          <Div className="w-64 bg-white rounded-xl border border-slate-200 py-1" onClick={(e) => e.stopPropagation()}>
+            <Link to={`/hotel/admin/properties/${menuProperty._id}`} onClick={() => setActiveDropdown(null)} className={MENU_ITEM}>
+              <UiIcon as={Eye} size={16} className="text-slate-500" />
+              <Span className="text-sm font-medium text-slate-700">View details</Span>
+            </Link>
+            {menuProperty.status === 'pending' ? (
+              <>
+                <Button onClick={() => handleAction('approve', menuProperty)} className={MENU_ITEM}>
+                  <UiIcon as={CheckCircle} size={16} className="text-slate-500" />
+                  <Span className="text-sm font-medium text-slate-700">Approve</Span>
+                </Button>
+                <Button onClick={() => handleAction('reject', menuProperty)} className={MENU_ITEM}>
+                  <UiIcon as={XCircle} size={16} className="text-slate-500" />
+                  <Span className="text-sm font-medium text-slate-700">Reject</Span>
+                </Button>
+              </>
+            ) : null}
+            <Div className="h-px bg-slate-100 my-1" />
+            <Button onClick={() => handleAction('delete', menuProperty)} className={MENU_ITEM}>
+              <UiIcon as={Trash2} size={16} className="text-red-600" />
+              <Span className="text-sm font-medium text-red-600">Delete property</Span>
+            </Button>
           </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+        </Overlay>
+      ) : null}
+    </AdminPage>
   );
 };
 export default AdminProperties;

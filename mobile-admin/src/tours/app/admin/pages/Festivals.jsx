@@ -11,8 +11,27 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock, Loader2, Plus, QrCode, 
 import { toast } from '../../../../lib/notify';
 import festivalService from '../../../services/festivalService';
 import FestivalDetail from './FestivalDetail';
-import { StatCard, StepIndicator } from '../components/ui';
-import { Button, Div, Form, H2, H3, Img, Input, Label, P, ScrollDiv, Section, Span, Strong, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { StepIndicator } from '../components/ui';
+import {
+  AdminPage,
+  BTN_DANGER,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  Card,
+  EmptyState,
+  Field,
+  INPUT,
+  PageHeader,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  TableSkeleton,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Img, Input, P, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
 const STEPS = [
   {
     key: 'festival',
@@ -35,8 +54,6 @@ const STEPS = [
     icon: Sparkles,
   },
 ];
-const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
-const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
 const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const toLines = (v) =>
   String(v || '')
@@ -72,11 +89,12 @@ const toLocalInput = (value) => {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 16);
 };
+/** The festival life-cycle words, mapped onto the kit's status tones. */
 const LIFECYCLE_TONE = {
-  live: 'bg-emerald-100 text-emerald-700',
-  upcoming: 'bg-sky-100 text-sky-700',
-  ended: 'bg-gray-200 text-gray-600',
-  scheduled: 'bg-gray-100 text-gray-500',
+  live: 'success',
+  upcoming: 'info',
+  ended: 'neutral',
+  scheduled: 'warning',
 };
 const BLANK_CATEGORY = {
   name: '',
@@ -107,6 +125,8 @@ const fromFestival = (f) =>
         highlights: (f.highlights || []).join('\n'),
       };
 const Festivals = () => {
+  const { tablet } = useLayoutWidth();
+  const formCols = tablet ? 2 : 1;
   const [festivals, setFestivals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
@@ -295,143 +315,118 @@ const Festivals = () => {
   if (editing) {
     const isLastStep = step === STEPS.length - 1;
     return (
-      <ScrollDiv className="p-4 pb-20">
-        <Form onSubmit={submit} className="space-y-6">
-          <Div>
-            <H2 className="text-2xl font-bold text-gray-900">{editing._id ? `Edit ${editing.name}` : 'Add a festival'}</H2>
-            <P className="text-gray-500 text-sm mt-0.5">Passes go on sale as soon as it is visible.</P>
-          </Div>
+      <AdminPage maxWidth={720}>
+        <Form onSubmit={submit}>
+          <PageHeader
+            title={editing._id ? `Edit ${editing.name}` : 'Add a festival'}
+            subtitle="Passes go on sale as soon as it is visible."
+            breadcrumb={[{ label: 'Tours' }, { label: 'Festivals' }, { label: editing._id ? 'Edit' : 'New' }]}
+          />
 
-          <Div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+          <Div className="mb-4">
             <StepIndicator steps={STEPS} current={step} />
           </Div>
 
           {step === 0 && (
-            <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-              <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
-                <UiIcon as={CalendarDays} size={15} className="text-[#0a4d2b]" /> The festival
-              </H3>
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Div>
-                  <Label className={label}>
-                    Name <Span className="text-red-500">*</Span>
-                  </Label>
-                  <Input className={field} value={form.name} onChange={set('name')} />
-                </Div>
-                <Div>
-                  <Label className={label}>Tagline</Label>
-                  <Input className={field} value={form.tagline} onChange={set('tagline')} />
-                </Div>
-                <Div>
-                  <Label className={label}>Dates (as shown)</Label>
-                  <Input className={field} value={form.dates} onChange={set('dates')} placeholder="Nov 14 - Nov 17, 2026" />
-                </Div>
-                <Div>
-                  <Label className={label}>Organizer</Label>
-                  <Input className={field} value={form.organizer} onChange={set('organizer')} />
-                </Div>
-                <Div>
-                  <Label className={label}>Starts</Label>
-                  <Input className={field} type="date" value={form.startDate} onChange={set('startDate')} />
-                </Div>
-                <Div>
-                  <Label className={label}>Ends</Label>
-                  <Input className={field} type="date" value={form.endDate} onChange={set('endDate')} />
-                  <P className="text-xs text-gray-400 mt-1.5">Used to hide past festivals; the label above is what people read.</P>
-                </Div>
-                <Div>
-                  <Label className={label}>Venue</Label>
-                  <Input className={field} value={form.venue} onChange={set('venue')} />
-                </Div>
-                <Div>
-                  <Label className={label}>Location</Label>
-                  <Input className={field} value={form.location} onChange={set('location')} />
-                </Div>
+            <Card className="mb-4 gap-4">
+              <SectionTitle action={<UiIcon as={CalendarDays} size={16} className="text-blue-600" />}>The festival</SectionTitle>
+              <Div className={`grid grid-cols-${formCols} gap-3`}>
+                <Field label="Name" required>
+                  <Input className={INPUT} value={form.name} onChange={set('name')} />
+                </Field>
+                <Field label="Tagline">
+                  <Input className={INPUT} value={form.tagline} onChange={set('tagline')} />
+                </Field>
+                <Field label="Dates (as shown)">
+                  <Input className={INPUT} value={form.dates} onChange={set('dates')} placeholder="Nov 14 - Nov 17, 2026" />
+                </Field>
+                <Field label="Organizer">
+                  <Input className={INPUT} value={form.organizer} onChange={set('organizer')} />
+                </Field>
+                <Field label="Starts">
+                  <Input className={INPUT} type="date" value={form.startDate} onChange={set('startDate')} />
+                </Field>
+                <Field label="Ends" hint="Used to hide past festivals; the label above is what people read.">
+                  <Input className={INPUT} type="date" value={form.endDate} onChange={set('endDate')} />
+                </Field>
+                <Field label="Venue">
+                  <Input className={INPUT} value={form.venue} onChange={set('venue')} />
+                </Field>
+                <Field label="Location">
+                  <Input className={INPUT} value={form.location} onChange={set('location')} />
+                </Field>
               </Div>
 
-              <Div>
-                <Label className={label}>
-                  Hero image URL <Span className="text-red-500">*</Span>
-                </Label>
-                <Input className={field} value={form.heroImage} onChange={set('heroImage')} placeholder="https://…" />
-              </Div>
+              <Field label="Hero image URL" required>
+                <Input className={INPUT} value={form.heroImage} onChange={set('heroImage')} placeholder="https://…" />
+              </Field>
 
-              <Div>
-                <Label className={label}>Description</Label>
-                <Textarea className={field} rows={3} value={form.description} onChange={set('description')} />
-              </Div>
+              <Field label="Description">
+                <Textarea className={`${INPUT} h-auto py-2.5`} rows={3} value={form.description} onChange={set('description')} />
+              </Field>
 
-              <Div>
-                <Label className={label}>Highlights — one per line</Label>
-                <Textarea className={field} rows={4} value={form.highlights} onChange={set('highlights')} />
-              </Div>
-            </Section>
+              <Field label="Highlights" hint="One per line.">
+                <Textarea className={`${INPUT} h-auto py-2.5`} rows={4} value={form.highlights} onChange={set('highlights')} />
+              </Field>
+            </Card>
           )}
 
           {step === 1 && (
-            <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-              <Div className="pb-3 border-b border-gray-100">
-                <H3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                  <UiIcon as={Clock} size={15} className="text-[#0a4d2b]" /> Booking window
-                </H3>
-                <P className="text-xs text-gray-400 mt-0.5">When people may buy passes. Both are optional and both can be changed later.</P>
-              </Div>
+            <Card className="mb-4 gap-4">
+              <SectionTitle action={<UiIcon as={Clock} size={16} className="text-blue-600" />}>Booking window</SectionTitle>
+              <P className="text-sm text-slate-500">When people may buy passes. Both are optional and both can be changed later.</P>
 
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Div>
-                  <Label className={label}>Bookings open</Label>
-                  <Input className={field} type="datetime-local" value={form.bookingOpensAt} onChange={set('bookingOpensAt')} />
-                  <P className="text-xs text-gray-400 mt-1.5">Blank opens as soon as the festival is visible.</P>
-                </Div>
-                <Div>
-                  <Label className={label}>Bookings close</Label>
-                  <Input className={field} type="datetime-local" value={form.bookingClosesAt} onChange={set('bookingClosesAt')} />
-                  <P className="text-xs text-gray-400 mt-1.5">Blank closes when the festival ends.</P>
-                </Div>
+              <Div className={`grid grid-cols-${formCols} gap-3`}>
+                <Field label="Bookings open" hint="Blank opens as soon as the festival is visible.">
+                  <Input className={INPUT} type="datetime-local" value={form.bookingOpensAt} onChange={set('bookingOpensAt')} />
+                </Field>
+                <Field label="Bookings close" hint="Blank closes when the festival ends.">
+                  <Input className={INPUT} type="datetime-local" value={form.bookingClosesAt} onChange={set('bookingClosesAt')} />
+                </Field>
               </Div>
 
               {editing?._id && editing?.bookingWindow && (
-                <P
-                  className={`text-xs font-semibold rounded-xl px-3 py-2.5 ${editing.bookingWindow.isOpen ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}
-                >
-                  {editing.bookingWindow.isOpen
-                    ? `Open for booking now${editing.bookingWindow.closesAt ? ` — closes ${new Date(editing.bookingWindow.closesAt).toLocaleString('en-IN')}` : ''}`
-                    : editing.bookingWindow.reason}
-                </P>
+                <Div className={`rounded-lg px-3 py-2.5 border ${editing.bookingWindow.isOpen ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                  <P className={`text-sm font-semibold ${editing.bookingWindow.isOpen ? 'text-green-700' : 'text-amber-700'}`}>
+                    {editing.bookingWindow.isOpen
+                      ? `Open for booking now${editing.bookingWindow.closesAt ? ` — closes ${new Date(editing.bookingWindow.closesAt).toLocaleString('en-IN')}` : ''}`
+                      : editing.bookingWindow.reason}
+                  </P>
+                </Div>
               )}
-            </Section>
+            </Card>
           )}
 
           {step === 2 && (
-            <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-              <Div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                <Div>
-                  <H3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                    <UiIcon as={Ticket} size={15} className="text-[#0a4d2b]" /> Pass categories &amp; seats
-                  </H3>
-                  <P className="text-xs text-gray-400 mt-0.5">Seats can be raised but never dropped below what has been booked.</P>
-                </Div>
-                <Button
-                  type="button"
-                  onClick={() =>
-                    setCategories((c) => [
-                      ...c,
-                      {
-                        ...BLANK_CATEGORY,
-                      },
-                    ])
-                  }
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[11px] font-bold text-gray-600"
-                >
-                  <UiIcon as={Plus} size={12} /> Add a pass
-                </Button>
-              </Div>
+            <Card className="mb-4 gap-4">
+              <SectionTitle
+                action={
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      setCategories((c) => [
+                        ...c,
+                        {
+                          ...BLANK_CATEGORY,
+                        },
+                      ])
+                    }
+                    className={BTN_SECONDARY}
+                  >
+                    <UiIcon as={Plus} size={14} className="text-slate-600" />
+                    <Span className={BTN_TEXT_SECONDARY}>Add a pass</Span>
+                  </Button>
+                }
+              >
+                Pass categories &amp; seats
+              </SectionTitle>
+              <P className="text-sm text-slate-500">Seats can be raised but never dropped below what has been booked.</P>
 
               {categories.map((cat, index) => (
-                <Div key={index} className="p-4 bg-gray-50 rounded-xl space-y-3">
-                  <Div className="flex items-center gap-2">
+                <Div key={index} className="p-3 bg-slate-50 border border-slate-200 rounded-lg gap-3">
+                  <Div className="flex-row items-center gap-2">
                     <Input
-                      className={`${field} flex-1`}
+                      className={`${INPUT} flex-1`}
                       value={cat.name}
                       placeholder="e.g. 3-Day Season Pass"
                       onChange={(e) => setCategory(index, 'name', e.target.value)}
@@ -439,271 +434,240 @@ const Festivals = () => {
                     <Button
                       type="button"
                       onClick={() => setCategories((c) => c.filter((_, i) => i !== index))}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                      className="w-11 h-11 rounded-lg items-center justify-center border border-red-200 bg-white"
                       accessibilityLabel="Remove pass"
                     >
-                      <UiIcon as={Trash2} size={14} />
+                      <UiIcon as={Trash2} size={16} className="text-red-600" />
                     </Button>
                   </Div>
 
-                  <Div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Div>
-                      <Label className={label}>Price</Label>
-                      <Input className={field} type="number" min="0" value={cat.price} onChange={(e) => setCategory(index, 'price', e.target.value)} />
-                    </Div>
-                    <Div>
-                      <Label className={label}>Was</Label>
+                  <Div className={`grid grid-cols-${formCols} gap-3`}>
+                    <Field label="Price">
+                      <Input className={INPUT} type="number" min="0" value={cat.price} onChange={(e) => setCategory(index, 'price', e.target.value)} />
+                    </Field>
+                    <Field label="Was">
                       <Input
-                        className={field}
+                        className={INPUT}
                         type="number"
                         min="0"
                         value={cat.originalPrice}
                         onChange={(e) => setCategory(index, 'originalPrice', e.target.value)}
                       />
-                    </Div>
-                    <Div>
-                      <Label className={label}>Seats</Label>
+                    </Field>
+                    <Field
+                      label="Seats"
+                      hint={
+                        cat.soldTickets > 0
+                          ? `${cat.soldTickets} booked · ${Math.max(0, (Number(cat.totalTickets) || 0) - cat.soldTickets)} available`
+                          : undefined
+                      }
+                    >
                       <Input
-                        className={field}
+                        className={INPUT}
                         type="number"
                         min={cat.soldTickets || 0}
                         value={cat.totalTickets}
                         onChange={(e) => setCategory(index, 'totalTickets', e.target.value)}
                       />
-                      {cat.soldTickets > 0 && (
-                        <P className="text-xs text-amber-700 mt-1.5 font-semibold">
-                          {cat.soldTickets} booked · {Math.max(0, (Number(cat.totalTickets) || 0) - cat.soldTickets)} available
-                        </P>
-                      )}
-                    </Div>
-                    <Div>
-                      <Label className={label}>Max per order</Label>
+                    </Field>
+                    <Field label="Max per order">
                       <Input
-                        className={field}
+                        className={INPUT}
                         type="number"
                         min="1"
                         value={cat.maxPerBooking}
                         onChange={(e) => setCategory(index, 'maxPerBooking', e.target.value)}
                       />
-                    </Div>
+                    </Field>
                   </Div>
 
-                  <Div>
-                    <Label className={label}>What it includes — one per line</Label>
-                    <Textarea className={field} rows={2} value={cat.perks} onChange={(e) => setCategory(index, 'perks', e.target.value)} />
-                  </Div>
+                  <Field label="What it includes" hint="One per line.">
+                    <Textarea className={`${INPUT} h-auto py-2.5`} rows={2} value={cat.perks} onChange={(e) => setCategory(index, 'perks', e.target.value)} />
+                  </Field>
 
-                  <Div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-                    <Input type="checkbox" checked={cat.isActive !== false} onChange={(e) => setCategory(index, 'isActive', e.target.checked)} />
-                    On sale
+                  <Div className="flex-row items-center gap-3">
+                    <Input
+                      type="checkbox"
+                      className="w-5 h-5"
+                      checked={cat.isActive !== false}
+                      onChange={(e) => setCategory(index, 'isActive', e.target.checked)}
+                    />
+                    <Span className="text-sm text-slate-700 flex-1">On sale</Span>
                   </Div>
                 </Div>
               ))}
-            </Section>
+            </Card>
           )}
 
           {step === 3 && (
-            <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-              <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 mb-4 flex items-center gap-2">
-                <UiIcon as={Sparkles} size={15} className="text-[#0a4d2b]" /> Visibility
-              </H3>
-              <Div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <Div>
-                  <Label className={label}>Sort order</Label>
-                  <Input className={field} type="number" value={form.sortOrder} onChange={set('sortOrder')} />
-                  <P className="text-xs text-gray-400 mt-1.5">Lower shows first in the list.</P>
-                </Div>
-                <Div className="flex items-center gap-2 text-sm text-gray-700 pb-2">
-                  <Input type="checkbox" checked={form.isActive} onChange={set('isActive')} />
-                  <Span>
-                    <Strong>Visible</Strong> in the app
-                  </Span>
-                </Div>
-                <Div className="flex items-center gap-2 text-sm text-gray-700 pb-2">
-                  <Input type="checkbox" checked={form.isFeatured} onChange={set('isFeatured')} />
-                  <Span>
-                    <Strong>Featured</Strong> — shows this festival as the top banner on the Festivals page
-                  </Span>
-                </Div>
+            <Card className="mb-4 gap-4">
+              <SectionTitle action={<UiIcon as={Sparkles} size={16} className="text-blue-600" />}>Visibility</SectionTitle>
+              <Field label="Sort order" hint="Lower shows first in the list.">
+                <Input className={INPUT} type="number" value={form.sortOrder} onChange={set('sortOrder')} />
+              </Field>
+              <Div className="flex-row items-center gap-3">
+                <Input type="checkbox" className="w-5 h-5" checked={form.isActive} onChange={set('isActive')} />
+                <P className="text-sm text-slate-700 flex-1">Visible in the app</P>
               </Div>
-              <P className="text-xs text-gray-400 mt-2">
+              <Div className="flex-row items-start gap-3">
+                <Input type="checkbox" className="w-5 h-5" checked={form.isFeatured} onChange={set('isFeatured')} />
+                <P className="text-sm text-slate-700 flex-1">Featured — shows this festival as the top banner on the Festivals page</P>
+              </Div>
+              <P className="text-xs text-slate-500">
                 Only one festival should be marked Featured at a time. Leave all unchecked to hide the banner entirely.
               </P>
-            </Section>
+            </Card>
           )}
 
-          <Div className="flex items-center gap-3 pb-8">
+          <Div className="flex-row flex-wrap items-center gap-2">
             {step > 0 && (
-              <Button
-                type="button"
-                onClick={goBack}
-                className="flex items-center gap-1.5 px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50"
-              >
-                <UiIcon as={ChevronLeft} size={16} /> Back
+              <Button type="button" onClick={goBack} className={BTN_SECONDARY}>
+                <UiIcon as={ChevronLeft} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Back</Span>
               </Button>
             )}
             {!isLastStep ? (
-              <Button
-                type="button"
-                onClick={goNext}
-                className="flex items-center gap-1.5 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]"
-              >
-                Next <UiIcon as={ChevronRight} size={16} />
+              <Button type="button" onClick={goNext} className={BTN_PRIMARY}>
+                <Span className={BTN_TEXT_PRIMARY}>Next</Span>
+                <UiIcon as={ChevronRight} size={16} className="text-white" />
               </Button>
             ) : (
-              <Button
-                type="submit"
-                disabled={saving}
-                className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
-              >
-                {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />}
-                {editing._id ? 'Save changes' : 'Add festival'}
+              <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
+                {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Save} size={16} className="text-white" />}
+                <Span className={BTN_TEXT_PRIMARY}>{editing._id ? 'Save changes' : 'Add festival'}</Span>
               </Button>
             )}
-            <Button
-              type="button"
-              onClick={closeForm}
-              className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 ml-auto"
-            >
-              Cancel
+            <Button type="button" onClick={closeForm} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
           </Div>
         </Form>
-      </ScrollDiv>
+      </AdminPage>
     );
   }
 
   /* ----------------------------- list ----------------------------- */
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-5">
-      <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Div>
-          <H2 className="text-2xl font-bold text-gray-900">Festivals</H2>
-          <P className="text-gray-500 text-sm mt-0.5">Events the platform runs, and the passes they sell.</P>
-        </Div>
-        <Button
-          type="button"
-          onClick={openNew}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]"
-        >
-          <UiIcon as={Plus} size={16} /> Add a festival
-        </Button>
-      </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        title="Festivals"
+        subtitle="Events the platform runs, and the passes they sell."
+        breadcrumb={[{ label: 'Tours' }, { label: 'Festivals' }]}
+        actions={
+          <Button type="button" onClick={openNew} className={BTN_PRIMARY}>
+            <UiIcon as={Plus} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>Add a festival</Span>
+          </Button>
+        }
+      />
 
       {!loading && festivals.length > 0 && (
-        <Div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatGrid className="mb-4">
           <StatCard label="Festivals" value={festivals.length} />
-          <StatCard label="Live now" value={festivals.filter((f) => f.status === 'live').length} tone="text-[#0a4d2b]" />
+          <StatCard label="Live now" value={festivals.filter((f) => f.status === 'live').length} tone="success" />
           <StatCard label="Seats booked" value={festivals.reduce((n, f) => n + (f.ticketCategories || []).reduce((s, c) => s + (c.soldTickets || 0), 0), 0)} />
           <StatCard
             label="Revenue"
             value={currency(festivals.reduce((n, f) => n + (f.ticketCategories || []).reduce((s, c) => s + (c.soldTickets || 0) * (c.price || 0), 0), 0))}
-            tone="text-[#0a4d2b]"
+            tone="success"
           />
-        </Div>
+        </StatGrid>
       )}
 
-      <Form onSubmit={verifyPass} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-3">
-        <H3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-          <UiIcon as={QrCode} size={16} className="text-[#0a4d2b]" /> Gate check-in
-        </H3>
-        <Div className="flex gap-2">
-          <Input className={`${field} flex-1`} value={scan} onChange={(e) => setScan(e.target.value)} placeholder="Scan or type a pass code, e.g. DH-PASS-…" />
-          <Button
-            type="submit"
-            disabled={scanning || !scan.trim()}
-            className="px-5 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60 shrink-0"
-          >
-            {scanning ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : 'Check in'}
-          </Button>
-        </Div>
-        {scanResult && (
-          <Div
-            className={`flex items-start gap-2 p-3 rounded-xl text-sm ${scanResult.valid ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}
-          >
-            <Span className="font-bold">{scanResult.valid ? 'Accepted' : 'Refused'}</Span>
-            <Span className="flex-1">— {scanResult.message}</Span>
-            <Button type="button" onClick={() => setScanResult(null)} className="text-gray-400">
-              <UiIcon as={X} size={14} />
+      <Card className="mb-4 gap-3">
+        <Form onSubmit={verifyPass}>
+          <SectionTitle action={<UiIcon as={QrCode} size={16} className="text-blue-600" />}>Gate check-in</SectionTitle>
+          <Div className="flex-row flex-wrap items-center gap-2">
+            <Input
+              className={`${INPUT} flex-1`}
+              style={{ minWidth: 180 }}
+              value={scan}
+              onChange={(e) => setScan(e.target.value)}
+              placeholder="Scan or type a pass code, e.g. DH-PASS-…"
+            />
+            <Button type="submit" disabled={scanning || !scan.trim()} className={BTN_PRIMARY}>
+              {scanning ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>Check in</Span>
             </Button>
           </Div>
-        )}
-      </Form>
+          {scanResult && (
+            <Div
+              className={`flex-row items-start gap-2 mt-3 p-3 rounded-lg border ${scanResult.valid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}
+            >
+              <Span className={`text-sm font-semibold ${scanResult.valid ? 'text-green-700' : 'text-red-700'}`}>
+                {scanResult.valid ? 'Accepted' : 'Refused'}
+              </Span>
+              <Span className={`text-sm flex-1 ${scanResult.valid ? 'text-green-700' : 'text-red-700'}`}>— {scanResult.message}</Span>
+              <Button type="button" onClick={() => setScanResult(null)} className="w-11 h-11 items-center justify-center" accessibilityLabel="Dismiss">
+                <UiIcon as={X} size={16} className="text-slate-500" />
+              </Button>
+            </Div>
+          )}
+        </Form>
+      </Card>
 
       {loading ? (
-        <Div className="p-12 text-center text-gray-400">
-          <UiIcon as={Loader2} size={22} className="animate-spin inline" />
-        </Div>
+        <TableSkeleton rows={4} />
       ) : festivals.length === 0 ? (
-        <Div className="p-10 text-center text-gray-400 text-xs">No festivals yet — add the first one.</Div>
+        <EmptyState title="No festivals yet" message="Add the first festival and the passes it sells." actionLabel="Add a festival" onAction={openNew} />
       ) : (
-        <Div className="space-y-3">
+        <Div className="gap-3">
           {festivals.map((f) => {
             const sold = (f.ticketCategories || []).reduce((n, c) => n + (c.soldTickets || 0), 0);
             const total = (f.ticketCategories || []).reduce((n, c) => n + (c.totalTickets || 0), 0);
             const revenue = (f.ticketCategories || []).reduce((n, c) => n + (c.soldTickets || 0) * (c.price || 0), 0);
             return (
-              <Div key={f._id} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-start gap-4">
-                <Img
-                  src={f.heroImage}
-                  alt=""
-                  className="w-24 h-20 rounded-xl object-cover bg-gray-100 shrink-0"
-                  fallback={<Div className="w-24 h-20 shrink-0" />}
-                />
+              <Card key={f._id} className="gap-3">
+                <Div className="flex-row items-start gap-3" onClick={() => setViewingId(f._id)}>
+                  <Img src={f.heroImage} alt="" className="w-20 h-20 rounded-lg object-cover bg-slate-100 shrink-0" fallback={<Div className="w-20 h-20 shrink-0" />} />
 
-                <Button type="button" onClick={() => setViewingId(f._id)} className="flex-1 basis-56 min-w-0 text-left cursor-pointer">
-                  <Div className="flex flex-wrap items-center gap-2">
-                    <P className="font-bold text-gray-900">{f.name}</P>
-                    {f.status && (
-                      <Span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${LIFECYCLE_TONE[f.status] || 'bg-gray-100 text-gray-500'}`}>
-                        {f.status}
-                      </Span>
-                    )}
-                    {!f.isActive && <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700">hidden</Span>}
-                    {f.bookingOpen === false && (
-                      <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">booking shut</Span>
-                    )}
-                  </Div>
-                  <P className="text-xs text-gray-500 mt-1">
-                    {f.dates} · {f.venue}
-                  </P>
-                  <P className="text-xs text-gray-700 mt-2 font-semibold">
-                    {sold} of {total} seats booked
-                    <Span className="font-medium text-emerald-700"> · {Math.max(0, total - sold)} available</Span>
-                    <Span className="font-medium text-gray-400"> · {currency(revenue)} taken</Span>
-                  </P>
-                  <P className="text-[11px] text-[#0a4d2b] mt-1.5 font-bold">View seats &amp; bookings →</P>
-                </Button>
-
-                <Div className="flex flex-row-reverse sm:flex-col items-center sm:items-end justify-end gap-3 sm:gap-2 w-full sm:w-auto shrink-0">
-                  <Div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-                    <Input type="checkbox" checked={f.isActive} disabled={busyId === f._id} onChange={() => toggle(f)} />
-                    Visible
-                  </Div>
-                  <Div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      onClick={() => openEdit(f)}
-                      className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-700 hover:bg-gray-50"
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      type="button"
-                      disabled={busyId === f._id}
-                      onClick={() => remove(f)}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold disabled:opacity-50 ${confirmingId === f._id ? 'bg-red-600 text-white hover:bg-red-700' : 'text-red-600 hover:bg-red-50'}`}
-                    >
-                      {confirmingId === f._id ? 'Delete for good?' : 'Delete'}
-                    </Button>
+                  <Div className="flex-1 min-w-0">
+                    <P className="text-base font-semibold text-slate-900" numberOfLines={2}>
+                      {f.name}
+                    </P>
+                    <P className="text-xs text-slate-500 mt-0.5" numberOfLines={2}>
+                      {f.dates} · {f.venue}
+                    </P>
+                    <P className="text-sm text-slate-700 mt-1.5" numberOfLines={2}>
+                      {sold} of {total} seats booked · {Math.max(0, total - sold)} available · {currency(revenue)} taken
+                    </P>
+                    <P className="text-sm font-semibold text-blue-600 mt-1.5">View seats &amp; bookings →</P>
                   </Div>
                 </Div>
-              </Div>
+
+                <Div className="flex-row flex-wrap items-center gap-2">
+                  {f.status ? <StatusBadge status={f.status} tone={LIFECYCLE_TONE[f.status] || 'neutral'} label={f.status} /> : null}
+                  {!f.isActive && <StatusBadge status="hidden" tone="warning" label="hidden" />}
+                  {f.bookingOpen === false && <StatusBadge status="booking shut" tone="danger" label="booking shut" />}
+                </Div>
+
+                <Div className="flex-row flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+                  <Div className="flex-row items-center gap-2 mr-auto">
+                    <Input type="checkbox" className="w-5 h-5" checked={f.isActive} disabled={busyId === f._id} onChange={() => toggle(f)} />
+                    <Span className="text-sm text-slate-700">Visible</Span>
+                  </Div>
+                  <Button type="button" onClick={() => openEdit(f)} className={BTN_SECONDARY}>
+                    <Span className={BTN_TEXT_SECONDARY}>Edit</Span>
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={busyId === f._id}
+                    onClick={() => remove(f)}
+                    className={
+                      confirmingId === f._id ? BTN_DANGER : 'flex-row items-center justify-center gap-2 h-11 px-4 rounded-lg border border-red-200 bg-white'
+                    }
+                  >
+                    <Span className={`text-sm font-semibold ${confirmingId === f._id ? 'text-white' : 'text-red-600'}`}>
+                      {confirmingId === f._id ? 'Delete for good?' : 'Delete'}
+                    </Span>
+                  </Button>
+                </Div>
+              </Card>
             );
           })}
         </Div>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Festivals;

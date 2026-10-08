@@ -1,14 +1,26 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/management/AdminCreate.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, ChevronRight, Loader2, LockKeyhole, MapPinned, Shield, UserRound } from 'lucide-react-native';
+import { ArrowLeft, Check, Loader2, Shield } from 'lucide-react-native';
 import { useNavigate, useParams } from '../../../../../lib/webRouter';
 import { toast } from '../../../../../lib/notify';
 import { adminService } from '../../services/adminService';
 import { ADMIN_PERMISSION_GROUPS } from '../../constants/adminAccess';
-import { Button, Div, Form, H1, H3, Input, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
-const inputClass =
-  'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-100';
-const labelClass = 'mb-2 block text-xs font-black uppercase tracking-[0.18em] text-slate-500';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  LoadingState,
+  ErrorState,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, Form, Input, Span, Icon as UiIcon } from '../../../../../components/web';
 const initialForm = {
   name: '',
   email: '',
@@ -26,14 +38,13 @@ const PermissionCheckbox = ({ checked, label, onChange }) => (
   <Button
     type="button"
     onClick={onChange}
-    className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${checked ? 'border-blue-200 bg-blue-50 text-blue-900' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'}`}
+    accessibilityLabel={label}
+    className={`flex-row items-center justify-between gap-3 min-h-11 rounded-lg border px-3 py-2 ${checked ? 'border-blue-600 bg-blue-100' : 'border-slate-300 bg-white'}`}
   >
-    <Span className="text-sm font-bold">{label}</Span>
-    <Span
-      className={`flex h-5 w-5 items-center justify-center rounded-full border ${checked ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white text-transparent'}`}
-    >
-      <UiIcon as={Check} size={12} />
-    </Span>
+    <Span className={`text-sm font-medium flex-1 ${checked ? 'text-blue-700' : 'text-slate-700'}`}>{label}</Span>
+    <Div className={`h-5 w-5 items-center justify-center rounded-full border ${checked ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-white'}`}>
+      {checked ? <UiIcon as={Check} size={12} className="text-white" /> : null}
+    </Div>
   </Button>
 );
 const AdminCreate = () => {
@@ -44,15 +55,18 @@ const AdminCreate = () => {
   const [serviceLocations, setServiceLocations] = useState([]);
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const { tablet } = useLayoutWidth();
   const setField = (key, value) =>
     setForm((current) => ({
       ...current,
       [key]: value,
     }));
-  useEffect(() => {
-    const load = async () => {
+  const load = React.useCallback(async () => {
+    {
       setLoading(true);
+      setLoadError(null);
       try {
         const [serviceLocationResponse, zoneResponse, adminResponse] = await Promise.all([
           adminService.getServiceLocations(),
@@ -86,13 +100,16 @@ const AdminCreate = () => {
           });
         }
       } catch (error) {
+        setLoadError(error?.response?.data?.message || error?.message || 'Unable to load admin setup data.');
         toast.error(error?.response?.data?.message || error?.message || 'Unable to load admin setup data.');
       } finally {
         setLoading(false);
       }
-    };
-    load();
+    }
   }, [id, isEdit, navigate]);
+  useEffect(() => {
+    load();
+  }, [load]);
   const visibleZones = useMemo(() => {
     if (form.admin_type === 'superadmin') {
       return zones;
@@ -180,257 +197,219 @@ const AdminCreate = () => {
       setSaving(false);
     }
   };
+  const header = (
+    <PageHeader
+      icon={Shield}
+      title={isEdit ? 'Update scoped access' : 'Create scoped subadmin'}
+      subtitle="Assign module access first, then limit the account to the right service locations and zones."
+      breadcrumb={[{ label: 'Admin management' }, { label: isEdit ? 'Edit admin' : 'Create subadmin' }]}
+      actions={
+        <Button type="button" onClick={() => navigate('/taxi/admin/management/admins')} className={BTN_SECONDARY}>
+          <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+          <Span className={BTN_TEXT_SECONDARY}>Back to admins</Span>
+        </Button>
+      }
+    />
+  );
   if (loading) {
     return (
-      <ScrollDiv className="flex min-h-screen items-center justify-center bg-slate-50">
-        <Div className="flex flex-col items-center gap-3">
-          <UiIcon as={Loader2} size={30} className="animate-spin text-blue-600" />
-          <P className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Preparing access form</P>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        {header}
+        <LoadingState label="Preparing access form…" />
+      </AdminPage>
     );
   }
+  if (loadError) {
+    return (
+      <AdminPage maxWidth={720}>
+        {header}
+        <ErrorState title="Could not load the admin setup" message={loadError} onRetry={load} />
+      </AdminPage>
+    );
+  }
+  const half = tablet ? 'flex-1' : '';
+  const grid = tablet ? 'grid grid-cols-2 gap-3' : 'gap-3';
   return (
-    <ScrollDiv className="min-h-screen bg-[linear-gradient(180deg,_#EFF6FF_0%,_#F8FAFC_32%)] p-6 lg:p-8">
-      <Div className="mx-auto max-w-7xl space-y-6">
-        <Div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <Div>
-            <Div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
-              <Span>Admin Management</Span>
-              <UiIcon as={ChevronRight} size={12} />
-              <Span className="text-slate-700">{isEdit ? 'Edit Admin' : 'Create Subadmin'}</Span>
+    <AdminPage maxWidth={720}>
+      {header}
+
+      <Form onSubmit={handleSubmit}>
+        <Card className="mb-4 gap-4">
+          <SectionTitle className="mb-0">Identity</SectionTitle>
+
+          <Field label="Admin type" hint="Who will use this access profile.">
+            <Div className="flex-row gap-2">
+              {[
+                {
+                  key: 'superadmin',
+                  label: 'Superadmin',
+                },
+                {
+                  key: 'subadmin',
+                  label: 'Subadmin',
+                },
+              ].map((option) => (
+                <Button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setField('admin_type', option.key)}
+                  className={`flex-1 h-11 rounded-lg border items-center justify-center ${
+                    form.admin_type === option.key ? 'border-blue-600 bg-blue-100' : 'border-slate-300 bg-white'
+                  }`}
+                >
+                  <Span className={`text-sm font-semibold ${form.admin_type === option.key ? 'text-blue-700' : 'text-slate-700'}`}>{option.label}</Span>
+                </Button>
+              ))}
             </Div>
-            <H1 className="text-3xl font-black tracking-tight text-slate-950">{isEdit ? 'Update Scoped Access' : 'Create Scoped Subadmin'}</H1>
-            <P className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
-              Assign module access first, then limit the account to the right service locations and zones.
-            </P>
+          </Field>
+
+          <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+            <Field label="Name" required className={half}>
+              <Input value={form.name} onChange={(event) => setField('name', event.target.value)} className={INPUT} />
+            </Field>
+            <Field label="Email" required className={half}>
+              <Input value={form.email} onChange={(event) => setField('email', event.target.value)} className={INPUT} />
+            </Field>
           </Div>
 
-          <Button
-            type="button"
-            onClick={() => navigate('/taxi/admin/management/admins')}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"
-          >
-            <UiIcon as={ArrowLeft} size={16} />
-            Back to Admins
-          </Button>
-        </Div>
+          <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+            <Field label="Phone" className={half}>
+              <Input value={form.phone} onChange={(event) => setField('phone', event.target.value)} className={INPUT} />
+            </Field>
+            <Field label="Role label" className={half}>
+              <Input value={form.role} onChange={(event) => setField('role', event.target.value)} className={INPUT} />
+            </Field>
+          </Div>
 
-        <Form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-          <Div className="space-y-6 xl:col-span-4">
-            <Div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
-              <Div className="mb-6 flex items-center gap-3">
-                <Div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
-                  <UiIcon as={UserRound} size={18} />
-                </Div>
-                <Div>
-                  <H3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Identity</H3>
-                  <P className="text-xs font-semibold text-slate-500">Who will use this access profile</P>
-                </Div>
-              </Div>
+          <Field label="Account status">
+            <Button
+              type="button"
+              onClick={() => setField('active', !form.active)}
+              className={`flex-row items-center justify-between min-h-11 rounded-lg border px-3 ${
+                form.active ? 'border-green-200 bg-green-100' : 'border-red-200 bg-red-100'
+              }`}
+            >
+              <Span className={`text-sm font-medium ${form.active ? 'text-green-700' : 'text-red-700'}`}>
+                {form.active ? 'Active account' : 'Inactive account'}
+              </Span>
+              <Span className={`text-xs font-semibold ${form.active ? 'text-green-700' : 'text-red-700'}`}>{form.active ? 'Enabled' : 'Disabled'}</Span>
+            </Button>
+          </Field>
+        </Card>
 
-              <Div className="space-y-5">
-                <Div>
-                  <Label className={labelClass}>Admin Type</Label>
-                  <Div className="grid grid-cols-2 gap-3">
-                    {[
-                      {
-                        key: 'superadmin',
-                        label: 'Superadmin',
-                      },
-                      {
-                        key: 'subadmin',
-                        label: 'Subadmin',
-                      },
-                    ].map((option) => (
-                      <Button
-                        key={option.key}
-                        type="button"
-                        onClick={() => setField('admin_type', option.key)}
-                        className={`rounded-2xl border px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition-all ${form.admin_type === option.key ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-500'}`}
-                      >
-                        {option.label}
-                      </Button>
+        <Card className="mb-4 gap-4">
+          <SectionTitle className="mb-0">Credentials</SectionTitle>
+          <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+            <Field
+              label="Password"
+              required={!isEdit}
+              hint={isEdit ? 'Leave blank to keep the current password.' : 'Set the initial login password.'}
+              className={half}
+            >
+              <Input type="password" value={form.password} onChange={(event) => setField('password', event.target.value)} className={INPUT} />
+            </Field>
+            <Field label="Confirm password" required={!isEdit} className={half}>
+              <Input
+                type="password"
+                value={form.passwordConfirmation}
+                onChange={(event) => setField('passwordConfirmation', event.target.value)}
+                className={INPUT}
+              />
+            </Field>
+          </Div>
+        </Card>
+
+        <Card className="mb-4 gap-4">
+          <SectionTitle className="mb-0">Sidebar permissions</SectionTitle>
+          {form.admin_type === 'superadmin' ? (
+            <Div className="rounded-lg border border-amber-200 bg-amber-100 px-3 py-3">
+              <Span className="text-sm text-amber-700">Superadmin inherits all sidebar menus and API permissions automatically.</Span>
+            </Div>
+          ) : (
+            <Div className="gap-4">
+              <Span className="text-sm text-slate-500">Choose which menu groups and modules the admin can access.</Span>
+              {ADMIN_PERMISSION_GROUPS.map((group) => (
+                <Div key={group.title} className="gap-2">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{group.title}</Span>
+                  <Div className={grid}>
+                    {group.items.map((permission) => (
+                      <PermissionCheckbox
+                        key={permission.key}
+                        checked={form.permissions.includes(permission.key)}
+                        label={permission.label}
+                        onChange={() => handlePermissionToggle(permission.key)}
+                      />
                     ))}
                   </Div>
                 </Div>
-
-                <Div>
-                  <Label className={labelClass}>Name</Label>
-                  <Input value={form.name} onChange={(event) => setField('name', event.target.value)} className={inputClass} />
-                </Div>
-                <Div>
-                  <Label className={labelClass}>Email</Label>
-                  <Input value={form.email} onChange={(event) => setField('email', event.target.value)} className={inputClass} />
-                </Div>
-                <Div>
-                  <Label className={labelClass}>Phone</Label>
-                  <Input value={form.phone} onChange={(event) => setField('phone', event.target.value)} className={inputClass} />
-                </Div>
-                <Div>
-                  <Label className={labelClass}>Role Label</Label>
-                  <Input value={form.role} onChange={(event) => setField('role', event.target.value)} className={inputClass} />
-                </Div>
-                <Div>
-                  <Label className={labelClass}>Account Status</Label>
-                  <Button
-                    type="button"
-                    onClick={() => setField('active', !form.active)}
-                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-bold transition-all ${form.active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}
-                  >
-                    <Span>{form.active ? 'Active account' : 'Inactive account'}</Span>
-                    <Span className="text-xs font-black uppercase tracking-[0.18em]">{form.active ? 'Enabled' : 'Disabled'}</Span>
-                  </Button>
-                </Div>
-              </Div>
+              ))}
             </Div>
+          )}
+        </Card>
 
-            <Div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
-              <Div className="mb-6 flex items-center gap-3">
-                <Div className="rounded-2xl bg-slate-100 p-3 text-slate-700">
-                  <UiIcon as={LockKeyhole} size={18} />
-                </Div>
-                <Div>
-                  <H3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Credentials</H3>
-                  <P className="text-xs font-semibold text-slate-500">{isEdit ? 'Leave blank to keep the current password.' : 'Set initial login password.'}</P>
-                </Div>
-              </Div>
-
-              <Div className="space-y-5">
-                <Div>
-                  <Label className={labelClass}>Password</Label>
-                  <Input type="password" value={form.password} onChange={(event) => setField('password', event.target.value)} className={inputClass} />
-                </Div>
-                <Div>
-                  <Label className={labelClass}>Confirm Password</Label>
-                  <Input
-                    type="password"
-                    value={form.passwordConfirmation}
-                    onChange={(event) => setField('passwordConfirmation', event.target.value)}
-                    className={inputClass}
-                  />
-                </Div>
-              </Div>
+        <Card className="mb-4 gap-4">
+          <SectionTitle className="mb-0">Service location scope</SectionTitle>
+          {form.admin_type === 'superadmin' ? (
+            <Div className="rounded-lg border border-blue-200 bg-blue-100 px-3 py-3">
+              <Span className="text-sm text-blue-700">Superadmin scope stays global, so no location or zone limits are applied.</Span>
             </Div>
-          </Div>
-
-          <Div className="space-y-6 xl:col-span-8">
-            <Div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
-              <Div className="mb-6 flex items-center gap-3">
-                <Div className="rounded-2xl bg-violet-50 p-3 text-violet-700">
-                  <UiIcon as={Shield} size={18} />
-                </Div>
-                <Div>
-                  <H3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Sidebar Permissions</H3>
-                  <P className="text-xs font-semibold text-slate-500">Choose which menu groups and modules the admin can access.</P>
-                </Div>
-              </Div>
-
-              {form.admin_type === 'superadmin' ? (
-                <Div className="rounded-3xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-bold text-amber-800">
-                  Superadmin inherits all sidebar menus and API permissions automatically.
-                </Div>
-              ) : (
-                <Div className="space-y-6">
-                  {ADMIN_PERMISSION_GROUPS.map((group) => (
-                    <Div key={group.title} className="space-y-3">
-                      <Div className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">{group.title}</Div>
-                      <Div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        {group.items.map((permission) => (
-                          <PermissionCheckbox
-                            key={permission.key}
-                            checked={form.permissions.includes(permission.key)}
-                            label={permission.label}
-                            onChange={() => handlePermissionToggle(permission.key)}
-                          />
-                        ))}
-                      </Div>
-                    </Div>
-                  ))}
-                </Div>
-              )}
-            </Div>
-
-            <Div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
-              <Div className="mb-6 flex items-center gap-3">
-                <Div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700">
-                  <UiIcon as={MapPinned} size={18} />
-                </Div>
-                <Div>
-                  <H3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Service Location Scope</H3>
-                  <P className="text-xs font-semibold text-slate-500">Subadmins only see records inside the locations and zones selected here.</P>
+          ) : (
+            <Div className="gap-4">
+              <Span className="text-sm text-slate-500">Subadmins only see records inside the locations and zones selected here.</Span>
+              <Div className="gap-2">
+                <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assigned service locations</Span>
+                <Div className={grid}>
+                  {serviceLocations.map((location) => {
+                    const value = String(location._id || location.id || '');
+                    const checked = form.service_location_ids.includes(value);
+                    return (
+                      <PermissionCheckbox
+                        key={value}
+                        checked={checked}
+                        label={`${location.service_location_name || location.name} ${location.country ? `• ${location.country}` : ''}`}
+                        onChange={() => handleMultiSelect('service_location_ids', value)}
+                      />
+                    );
+                  })}
                 </Div>
               </Div>
 
-              {form.admin_type === 'superadmin' ? (
-                <Div className="rounded-3xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-bold text-blue-800">
-                  Superadmin scope stays global, so no location or zone limits are applied.
-                </Div>
-              ) : (
-                <Div className="space-y-6">
-                  <Div>
-                    <Div className={labelClass}>Assigned Service Locations</Div>
-                    <Div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                      {serviceLocations.map((location) => {
-                        const value = String(location._id || location.id || '');
-                        const checked = form.service_location_ids.includes(value);
-                        return (
-                          <PermissionCheckbox
-                            key={value}
-                            checked={checked}
-                            label={`${location.service_location_name || location.name} ${location.country ? `• ${location.country}` : ''}`}
-                            onChange={() => handleMultiSelect('service_location_ids', value)}
-                          />
-                        );
-                      })}
-                    </Div>
+              <Div className="gap-2">
+                <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assigned zones</Span>
+                {visibleZones.length === 0 ? (
+                  <Span className="text-sm text-slate-500">Select service locations first to unlock matching zones.</Span>
+                ) : (
+                  <Div className={grid}>
+                    {visibleZones.map((zone) => {
+                      const value = String(zone._id || zone.id || '');
+                      const checked = form.zone_ids.includes(value);
+                      return (
+                        <PermissionCheckbox
+                          key={value}
+                          checked={checked}
+                          label={zone.name || 'Unnamed Zone'}
+                          onChange={() => handleMultiSelect('zone_ids', value)}
+                        />
+                      );
+                    })}
                   </Div>
-
-                  <Div>
-                    <Div className={labelClass}>Assigned Zones</Div>
-                    <Div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                      {visibleZones.map((zone) => {
-                        const value = String(zone._id || zone.id || '');
-                        const checked = form.zone_ids.includes(value);
-                        return (
-                          <PermissionCheckbox
-                            key={value}
-                            checked={checked}
-                            label={zone.name || 'Unnamed Zone'}
-                            onChange={() => handleMultiSelect('zone_ids', value)}
-                          />
-                        );
-                      })}
-                    </Div>
-                    {visibleZones.length === 0 && (
-                      <P className="text-sm font-semibold text-slate-400">Select service locations first to unlock matching zones.</P>
-                    )}
-                  </Div>
-                </Div>
-              )}
+                )}
+              </Div>
             </Div>
+          )}
+        </Card>
 
-            <Div className="flex flex-col gap-3 rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                onClick={() => navigate('/taxi/admin/management/admins')}
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1D4ED8] px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 hover:bg-[#1E40AF] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : null}
-                {isEdit ? 'Update Admin Access' : 'Create Admin Access'}
-              </Button>
-            </Div>
-          </Div>
-        </Form>
-      </Div>
-    </ScrollDiv>
+        <Card className="gap-2">
+          <Button type="submit" disabled={saving} className={`${BTN_PRIMARY} ${saving ? 'opacity-70' : ''}`}>
+            {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+            <Span className={BTN_TEXT_PRIMARY}>{isEdit ? 'Update admin access' : 'Create admin access'}</Span>
+          </Button>
+          <Button type="button" onClick={() => navigate('/taxi/admin/management/admins')} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+          </Button>
+        </Card>
+      </Form>
+    </AdminPage>
   );
 };
 export default AdminCreate;

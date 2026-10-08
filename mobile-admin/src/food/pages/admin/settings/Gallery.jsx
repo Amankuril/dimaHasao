@@ -1,10 +1,9 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/settings/Gallery.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { Folder, Plus, ArrowLeft, HardDrive, Upload, File, Image, X, Search, MoreVertical, Download, Trash2 } from 'lucide-react-native';
+import { Folder, Plus, ArrowLeft, HardDrive, File, Image, Trash2 } from 'lucide-react-native';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../../components/shadcn';
-import { Input } from '../../../../components/shadcn';
-import { Button, Div, H1, H3, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Button, Div, Input, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Toolbar, Field, EmptyState, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../admin/ui';
 import { pickDocument } from '../../../../lib/files';
 import { alert } from '../../../../lib/webShim';
 export default function Gallery() {
@@ -251,179 +250,157 @@ export default function Gallery() {
     }
   };
   const currentFolderItems = currentPath ? fileSystem[currentPath]?.items || [] : [];
+  const { width, tablet, wide } = useLayoutWidth();
+  // Tiles wrap instead of being squeezed into eight columns on a phone.
+  const tileColumns = wide ? 6 : tablet ? 4 : 3;
+  const tileWidth = Math.floor(((tablet ? Math.min(width, 1200) : width) - 32 - 32 - (tileColumns - 1) * 12) / tileColumns);
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Page Header */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex items-center gap-3">
-            <LinearGradient colors={['#FACC15', '#CA8A04']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 40, height: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}>
-              <UiIcon as={Folder} className="w-5 h-5 text-white" />
-            </LinearGradient>
-            <H1 className="text-2xl font-bold text-slate-900">File Manager</H1>
-          </Div>
-        </Div>
-
-        {/* Main Content */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-          {/* Top Bar */}
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <Div className="flex flex-wrap items-center gap-4">
-              <Button className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium flex items-center gap-2">
-                <UiIcon as={HardDrive} className="w-4 h-4" />
-                Local storage
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Folder}
+        title="File manager"
+        subtitle="Folders and uploads used across the storefront and app."
+        breadcrumb={currentPath ? [{ label: 'Food' }, { label: 'Gallery' }, { label: currentPath }] : [{ label: 'Food' }, { label: 'Gallery' }]}
+        actions={
+          <>
+            <Button onClick={handleFileSelect} className={BTN_PRIMARY} accessibilityLabel="Add new files">
+              <UiIcon as={Plus} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Add new</Span>
+            </Button>
+            <Button onClick={() => setIsFolderDialogOpen(true)} className={BTN_SECONDARY} accessibilityLabel="Create a new folder">
+              <UiIcon as={Folder} size={16} className="text-slate-700" />
+              <Span className={BTN_TEXT_SECONDARY}>New folder</Span>
+            </Button>
+            {currentPath ? (
+              <Button onClick={handleBack} className={BTN_SECONDARY} accessibilityLabel="Back to all folders">
+                <UiIcon as={ArrowLeft} size={16} className="text-slate-700" />
+                <Span className={BTN_TEXT_SECONDARY}>Back</Span>
               </Button>
-              <Div className="flex items-center gap-2">
-                <Span className="text-sm text-slate-700">Public</Span>
-                <Span className="px-2.5 py-0.5 bg-slate-200 text-slate-700 rounded-full text-xs font-medium">{folders.length}</Span>
-              </Div>
-              {currentPath && (
-                <Div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Span>/</Span>
-                  <Span className="font-medium">{currentPath}</Span>
-                </Div>
-              )}
-            </Div>
+            ) : null}
+          </>
+        }
+      />
 
-            <Div className="flex flex-wrap items-center gap-2">
-              {currentPath && (
-                <Button
-                  onClick={handleBack}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium flex items-center gap-2"
-                >
-                  <UiIcon as={ArrowLeft} className="w-4 h-4" />
-                  Back
-                </Button>
-              )}
-              <Button
-                onClick={() => setIsFolderDialogOpen(true)}
-                className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium flex items-center gap-2"
-              >
-                <UiIcon as={Folder} className="w-4 h-4" />
-                New Folder
-              </Button>
-              <Button
-                onClick={handleFileSelect}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium flex items-center gap-2"
-              >
-                <UiIcon as={Plus} className="w-4 h-4" />
-                Add New
-              </Button>
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            <Div className="flex-row items-center gap-2">
+              <UiIcon as={HardDrive} size={16} className="text-slate-500" />
+              <Span className="text-xs text-slate-500">{folders.length} folders</Span>
             </Div>
-          </Div>
+          }
+        >
+          Local storage
+        </SectionTitle>
+        <Toolbar className="mb-0">
+          <Input
+            type="search"
+            placeholder="Search folders…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`${INPUT} flex-1 min-w-[180px]`}
+          />
+        </Toolbar>
+      </Card>
 
-          {/* Search Bar */}
-          <Div className="mb-6">
-            <Div className="relative">
-              <UiIcon as={Search} className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Search folders..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 text-sm border-slate-300 rounded-lg"
-              />
-            </Div>
-          </Div>
-
-          {/* Folder/File Grid */}
-          {currentPath ? (
-            <Div>
-              <Div className="mb-4">
-                <H3 className="text-sm font-semibold text-slate-700">Files in {currentPath}</H3>
-              </Div>
-              {currentFolderItems.length === 0 ? (
-                <Div className="text-center py-12 text-slate-500">
-                  <UiIcon as={File} className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-                  <P className="text-sm">No files in this folder</P>
-                </Div>
-              ) : (
-                <Div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
-                  {currentFolderItems.map((file, index) => (
-                    <Div key={index} className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity group relative">
-                      <Div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
-                        {file.type?.startsWith('image/') ? (
-                          <UiIcon as={Image} className="w-8 h-8 text-blue-600" />
-                        ) : (
-                          <UiIcon as={File} className="w-8 h-8 text-blue-600" />
-                        )}
-                      </Div>
-                      <Span className="text-xs text-slate-700 text-center max-w-full truncate">{file.name}</Span>
-                      <Div className="absolute top-0 right-0">
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Handle file delete
-                          }}
-                          className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                        >
-                          <UiIcon as={X} className="w-3 h-3" />
-                        </Button>
-                      </Div>
-                    </Div>
-                  ))}
-                </Div>
-              )}
-            </Div>
+      {currentPath ? (
+        <Card>
+          <SectionTitle>Files in {currentPath}</SectionTitle>
+          {currentFolderItems.length === 0 ? (
+            <EmptyState
+              icon={File}
+              title="This folder is empty"
+              message="Upload files to keep them together here."
+              actionLabel="Add new"
+              onAction={handleFileSelect}
+              className="border-0"
+            />
           ) : (
-            <Div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
-              {filteredFolders.map((folder, index) => (
-                <Div
-                  key={index}
-                  className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity group relative"
-                  onClick={() => handleFolderClick(folder)}
-                >
-                  <Div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center mb-2">
-                    <UiIcon as={Folder} className="w-8 h-8 text-yellow-600" />
+            <Div className="flex-row flex-wrap gap-3">
+              {currentFolderItems.map((file, index) => (
+                <Div key={index} className="items-center gap-1.5" style={{ width: tileWidth }}>
+                  <Div className="w-16 h-16 bg-blue-100 rounded-lg items-center justify-center">
+                    <UiIcon as={file.type?.startsWith('image/') ? Image : File} size={28} className="text-blue-600" />
                   </Div>
-                  <Span className="text-xs text-slate-700 text-center max-w-full truncate">{folder}</Span>
-                  <Div className="absolute top-0 right-0">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFolder(folder);
-                      }}
-                      className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                    >
-                      <UiIcon as={Trash2} className="w-3 h-3" />
-                    </Button>
-                  </Div>
+                  <Span className="text-xs text-slate-700 text-center" numberOfLines={2}>
+                    {file.name}
+                  </Span>
                 </Div>
               ))}
             </Div>
           )}
-        </Div>
-      </Div>
+        </Card>
+      ) : (
+        <Card>
+          <SectionTitle>Folders</SectionTitle>
+          {filteredFolders.length === 0 ? (
+            <EmptyState
+              icon={Folder}
+              title={searchQuery ? 'No folder matches that search' : 'No folders yet'}
+              message={searchQuery ? `Nothing is named like “${searchQuery}”.` : 'Create a folder to organise uploads.'}
+              actionLabel={searchQuery ? 'Clear search' : 'New folder'}
+              onAction={searchQuery ? () => setSearchQuery('') : () => setIsFolderDialogOpen(true)}
+              className="border-0"
+            />
+          ) : (
+            <Div className="flex-row flex-wrap gap-3">
+              {filteredFolders.map((folder, index) => (
+                <Div key={index} className="items-center gap-1.5" style={{ width: tileWidth }}>
+                  <Div
+                    onClick={() => handleFolderClick(folder)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open folder ${folder}`}
+                    className="w-16 h-16 bg-yellow-100 rounded-lg items-center justify-center"
+                  >
+                    <UiIcon as={Folder} size={28} className="text-yellow-600" />
+                  </Div>
+                  <Span className="text-xs text-slate-700 text-center" numberOfLines={2}>
+                    {folder}
+                  </Span>
+                  <Button
+                    onClick={() => handleDeleteFolder(folder)}
+                    accessibilityLabel={`Delete folder ${folder}`}
+                    className="w-11 h-11 items-center justify-center rounded-lg"
+                  >
+                    <UiIcon as={Trash2} size={16} className="text-red-600" />
+                  </Button>
+                </Div>
+              ))}
+            </Div>
+          )}
+        </Card>
+      )}
 
       {/* Upload Dialog */}
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-md bg-white">
           <DialogHeader>
-            <DialogTitle>Upload Files</DialogTitle>
+            <DialogTitle>Upload files</DialogTitle>
           </DialogHeader>
-          <Div className="space-y-4">
-            <Div>
-              <P className="text-sm text-slate-600 mb-2">{selectedFiles.length} file(s) selected:</P>
-              <ScrollDiv className="max-h-40 space-y-1">
-                {selectedFiles.map((file, index) => (
-                  <Div key={index} className="text-xs text-slate-700 bg-slate-50 p-2 rounded">
+          <Div className="gap-3">
+            <Span className="text-sm text-slate-500">{selectedFiles.length} file(s) selected</Span>
+            <ScrollDiv style={{ maxHeight: 200 }} contentClassName="gap-1.5">
+              {selectedFiles.map((file, index) => (
+                <Div key={index} className="rounded-lg bg-slate-100 px-3 py-2">
+                  <Span className="text-xs text-slate-700">
                     {file.name} ({(file.size / 1024).toFixed(2)} KB)
-                  </Div>
-                ))}
-              </ScrollDiv>
-            </Div>
-            <Div className="flex justify-end gap-2">
+                  </Span>
+                </Div>
+              ))}
+            </ScrollDiv>
+            <Div className="flex-row justify-end gap-2">
               <Button
                 onClick={() => {
                   setIsUploadDialogOpen(false);
                   setSelectedFiles([]);
                 }}
-                className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300"
+                className={BTN_SECONDARY}
+                accessibilityLabel="Cancel the upload"
               >
-                Cancel
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
-              <Button onClick={handleUpload} className="px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600">
-                Upload
+              <Button onClick={handleUpload} className={BTN_PRIMARY} accessibilityLabel="Upload the selected files">
+                <Span className={BTN_TEXT_PRIMARY}>Upload</Span>
               </Button>
             </Div>
           </Div>
@@ -434,38 +411,41 @@ export default function Gallery() {
       <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>
         <DialogContent className="max-w-md bg-white">
           <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogTitle>Create a folder</DialogTitle>
           </DialogHeader>
-          <Div className="space-y-4">
-            <Input
-              type="text"
-              placeholder="Folder name"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleCreateFolder();
-                }
-              }}
-              className="w-full"
-            />
-            <Div className="flex justify-end gap-2">
+          <Div className="gap-3">
+            <Field label="Folder name" required>
+              <Input
+                type="text"
+                placeholder="Folder name"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleCreateFolder();
+                  }
+                }}
+                className={INPUT}
+              />
+            </Field>
+            <Div className="flex-row justify-end gap-2">
               <Button
                 onClick={() => {
                   setIsFolderDialogOpen(false);
                   setNewFolderName('');
                 }}
-                className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300"
+                className={BTN_SECONDARY}
+                accessibilityLabel="Cancel creating a folder"
               >
-                Cancel
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
-              <Button onClick={handleCreateFolder} className="px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600">
-                Create
+              <Button onClick={handleCreateFolder} className={BTN_PRIMARY} accessibilityLabel="Create the folder">
+                <Span className={BTN_TEXT_PRIMARY}>Create</Span>
               </Button>
             </Div>
           </Div>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

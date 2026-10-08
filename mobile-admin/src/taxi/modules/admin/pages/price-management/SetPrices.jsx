@@ -1,68 +1,37 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/price-management/SetPrices.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
-import {
-  Plus,
-  Search,
-  MapPin,
-  Car,
-  ChevronRight,
-  Trash2,
-  Edit2,
-  Save,
-  ArrowLeft,
-  Loader2,
-  CreditCard,
-  User,
-  Zap,
-  Truck,
-  Layers,
-  ShieldCheck,
-  Activity,
-  DollarSign,
-  Tag,
-  Clock,
-  ChevronLeft,
-  Gift,
-  Settings,
-  Filter,
-  Cone,
-  Info,
-  ChevronDown,
-  Globe,
-  Eye,
-  Menu,
-  X,
-} from 'lucide-react-native';
-import { motion, AnimatePresence } from '../../../../../lib/motion';
+import { Plus, Search, Trash2, Edit2, Save, Zap, Gift, Filter, Cone, Info, X, DollarSign } from 'lucide-react-native';
 import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 import { useLocation, useNavigate, useParams } from '../../../../../lib/webRouter';
 import { adminService } from '../../services/adminService';
 import {
-  Button,
-  Div,
-  Form,
-  H1,
-  H2,
-  H3,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  Pagination,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  TableSkeleton,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, Form, Input, Label, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 import { alert, window } from '../../../../../lib/webShim';
-const inputClass =
-  'w-full border border-gray-200 rounded-md px-2 py-0.5 text-xs text-gray-800 bg-white hover:border-indigo-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 transition-all outline-none shadow-sm';
-const labelClass = 'block text-[10px] font-semibold text-gray-700 mb-0';
+const PRICE_COLS = [150, 150, 170, 110, 230];
+const PRICE_LABELS = ['Zone', 'Transport type', 'Vehicle type', 'Status', 'Actions'];
 const paymentTypeOptions = [
   {
     value: 'cash',
@@ -203,15 +172,20 @@ const togglePaymentType = (currentValue, targetValue) => {
   }
   return [...currentItems, targetValue];
 };
-const StatusToggle = ({ active, onToggle }) => (
+/** A 44 px-tall switch, so the row target is tappable on a phone. */
+const StatusToggle = ({ active, onToggle, label }) => (
   <Button
+    type="button"
+    accessibilityLabel={label}
     onClick={(e) => {
       e.stopPropagation();
       onToggle();
     }}
-    className={`w-11 h-6 rounded-full transition-colors relative flex items-center ${active ? 'bg-yellow-400' : 'bg-gray-200'}`}
+    className="h-11 justify-center"
   >
-    <Div className={`absolute w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${active ? 'translate-x-[22px]' : 'translate-x-1'}`} />
+    <Div className={`w-12 h-7 rounded-full justify-center px-1 ${active ? 'bg-green-600' : 'bg-slate-300'}`}>
+      <Div className={`w-5 h-5 rounded-full bg-white ${active ? 'self-end' : 'self-start'}`} />
+    </Div>
   </Button>
 );
 const initialFormState = {
@@ -283,6 +257,8 @@ const SetPrices = ({ mode }) => {
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [formData, setFormData] = useState(initialFormState);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const { columns, tablet } = useLayoutWidth();
   const selectedVehicleType = React.useMemo(
     () => vehicleTypes.find((vehicle) => String(vehicle._id || vehicle.id) === String(formData.vehicle_type || '')) || null,
     [formData.vehicle_type, vehicleTypes],
@@ -319,6 +295,7 @@ const SetPrices = ({ mode }) => {
   }, [selectedVehicleType]);
   const fetchInitialData = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const auth = {
         Authorization: `Bearer ${token}`,
@@ -405,6 +382,7 @@ const SetPrices = ({ mode }) => {
       }
     } catch (error) {
       console.error('Fetch Data Error:', error);
+      setLoadError(error?.response?.data?.message || 'Failed to load pricing data');
     } finally {
       setLoading(false);
     }
@@ -570,962 +548,793 @@ const SetPrices = ({ mode }) => {
       alert(error?.response?.data?.message || 'Failed to delete pricing rule.');
     }
   };
-  return (
-    <ScrollDiv className="min-h-screen bg-[#F8F9FD] flex flex-col font-sans">
-      <AnimatePresence mode="wait">
-        {view === 'list' ? (
-          <motion.div
-            key="list"
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-            }}
-            className="p-3 lg:p-4 space-y-3"
-          >
-            {/* Header */}
-            <Div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
-              <H1
-                className="text-2xl font-bold text-[#1E293B]"
-                style={{
-                    }}
+  if (view === 'list') {
+    const clearFilters = () => {
+      setTransportFilter('');
+      setStatusFilter('');
+      setZoneFilter('');
+      setVehicleFilter('');
+      setSearchTerm('');
+      setPage(1);
+    };
+    const hasFilters = Boolean(transportFilter || statusFilter || zoneFilter || vehicleFilter || searchTerm);
+    const lastPage = Math.max(1, Number(paginator.last_page || 1));
+    return (
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={DollarSign}
+          title="Set prices"
+          subtitle="Per-zone, per-vehicle fare rules"
+          breadcrumb={[{ label: 'Taxi' }, { label: 'Pricing' }, { label: 'Set prices' }]}
+          actions={
+            <Button type="button" onClick={() => navigate('/taxi/admin/pricing/set-price/create')} className={BTN_PRIMARY}>
+              <UiIcon as={Plus} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Add set price</Span>
+            </Button>
+          }
+        />
+
+        <Card className="mb-4">
+          <SectionTitle
+            action={
+              <Button
+                type="button"
+                onClick={() => setShowFilters((current) => !current)}
+                accessibilityLabel={showFilters ? 'Hide filters' : 'Show filters'}
+                className={BTN_SECONDARY}
               >
-                Set Prices
-              </H1>
-              <Div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium tracking-tight">
-                <Span className="hover:text-slate-600 transition-colors cursor-pointer" onClick={() => fetchInitialData()}>
-                  Set Prices
-                </Span>
-                <UiIcon as={ChevronRight} size={10} className="text-slate-300" />
-                <Span className="text-slate-800 font-bold">Listing</Span>
-              </Div>
-            </Div>
-
-            <Div className="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
-              <Div className="border-b border-gray-50 bg-white px-4 py-3 space-y-2">
-                <Div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                  <Div className="flex flex-wrap items-center gap-2 text-sm text-slate-400 font-medium">
-                    <Span>show</Span>
-                    <Div className="relative">
-                      <Select
-                        value={itemsPerPage}
-                        onChange={(event) => {
-                          setItemsPerPage(Number(event.target.value) || 10);
-                          setPage(1);
-                        }}
-                        className="appearance-none bg-white border border-gray-200 rounded px-4 py-1.5 pr-8 focus:outline-none focus:border-indigo-500 cursor-pointer text-slate-700 font-bold text-[13px]"
-                      >
-                        {[10, 25, 50].map((value) => (
-                          <Option key={value} value={value}>
-                            {value}
-                          </Option>
-                        ))}
-                      </Select>
-                      <UiIcon as={ChevronDown} size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </Div>
-                    <Span>entries</Span>
-                  </Div>
-
-                  <Div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <Div className="relative min-w-[200px]">
-                      <UiIcon as={Search} size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(event) => {
-                          setSearchTerm(event.target.value);
-                          setPage(1);
-                        }}
-                        placeholder="Search zone, vehicle, location..."
-                        className="w-full rounded-md border border-gray-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-700 outline-none transition-all focus:border-indigo-500"
-                      />
-                    </Div>
-                    <Button
-                      onClick={() => fetchInitialData()}
-                      className={`w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-full text-slate-400 hover:text-indigo-600 transition-all shadow-sm ${loading ? 'animate-spin' : ''}`}
-                    >
-                      {loading ? <UiIcon as={Loader2} size={14} /> : <UiIcon as={Search} size={14} />}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setShowFilters((current) => !current)}
-                      className={`flex items-center gap-1.5 px-4 py-1.5 rounded text-xs font-bold shadow-sm transition-colors ${showFilters ? 'bg-yellow-400 text-black' : 'bg-gray-100 hover:bg-gray-200 text-slate-700'}`}
-                    >
-                      <UiIcon as={Filter} size={14} /> Filters
-                    </Button>
-                    <Button
-                      onClick={() => navigate('/taxi/admin/pricing/set-price/create')}
-                      className="flex items-center gap-1.5 px-4 py-1.5 bg-yellow-400 hover:bg-yellow-500 text-black rounded text-xs font-bold shadow-sm"
-                    >
-                      <UiIcon as={Plus} size={14} /> Add Set Price
-                    </Button>
-                  </Div>
-                </Div>
-
-                {showFilters ? (
-                  <Div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <Div className="relative">
-                      <Select
-                        value={transportFilter}
-                        onChange={(event) => {
-                          setTransportFilter(event.target.value);
-                          setPage(1);
-                        }}
-                        className={`${inputClass} appearance-none pr-10`}
-                      >
-                        <Option value="">All transport types</Option>
-                        <Option value="taxi">Taxi</Option>
-                        <Option value="delivery">Delivery</Option>
-                        <Option value="pooling">Pooling</Option>
-                        <Option value="both">Both</Option>
-                      </Select>
-                      <UiIcon as={ChevronDown} size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </Div>
-
-                    <Div className="relative">
-                      <Select
-                        value={statusFilter}
-                        onChange={(event) => {
-                          setStatusFilter(event.target.value);
-                          setPage(1);
-                        }}
-                        className={`${inputClass} appearance-none pr-10`}
-                      >
-                        <Option value="">All statuses</Option>
-                        <Option value="active">Active</Option>
-                        <Option value="inactive">Inactive</Option>
-                      </Select>
-                      <UiIcon as={ChevronDown} size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </Div>
-
-                    <Div className="relative">
-                      <Select
-                        value={zoneFilter}
-                        onChange={(event) => {
-                          setZoneFilter(event.target.value);
-                          setPage(1);
-                        }}
-                        className={`${inputClass} appearance-none pr-10`}
-                      >
-                        <Option value="">All zones</Option>
-                        <Option value={ALL_ZONES_OPTION_VALUE}>All</Option>
-                        {zones.map((zone) => (
-                          <Option key={zone._id || zone.id} value={zone._id || zone.id}>
-                            {zone.name}
-                          </Option>
-                        ))}
-                      </Select>
-                      <UiIcon as={ChevronDown} size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </Div>
-
-                    <Div className="relative">
-                      <Select
-                        value={vehicleFilter}
-                        onChange={(event) => {
-                          setVehicleFilter(event.target.value);
-                          setPage(1);
-                        }}
-                        className={`${inputClass} appearance-none pr-10`}
-                      >
-                        <Option value="">All vehicle types</Option>
-                        {vehicleTypes.map((vehicle) => (
-                          <Option key={vehicle._id || vehicle.id} value={vehicle._id || vehicle.id}>
-                            {vehicle.name}
-                          </Option>
-                        ))}
-                      </Select>
-                      <UiIcon as={ChevronDown} size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </Div>
-
-                    <Div className="md:col-span-2 xl:col-span-4 flex justify-end">
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setTransportFilter('');
-                          setStatusFilter('');
-                          setZoneFilter('');
-                          setVehicleFilter('');
-                          setSearchTerm('');
-                          setPage(1);
-                        }}
-                        className="rounded-md border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
-                      >
-                        Clear filters
-                      </Button>
-                    </Div>
-                  </Div>
-                ) : null}
-              </Div>
-
-                <Table cols={[160, 150, 170, 120, 110]} className="w-full text-left">
-                  <Thead className="bg-[#FBFCFF]">
-                    <Tr className="border-b border-gray-100 text-sm font-semibold text-slate-700">
-                      <Th className="px-4 py-2">Zone</Th>
-                      <Th className="px-4 py-2">Transport Type</Th>
-                      <Th className="px-4 py-2">Vehicle Type</Th>
-                      <Th className="px-4 py-2">Status</Th>
-                      <Th className="px-4 py-2 text-right pr-6">Action</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody className="divide-y divide-gray-50">
-                    {loading && prizes.length === 0 ? (
-                      <Tr>
-                        <Td colSpan="5" className="py-12 text-center text-slate-300 font-bold uppercase tracking-widest text-xs animate-pulse">
-                          Syncing Price Matrix...
-                        </Td>
-                      </Tr>
-                    ) : prizes.length === 0 ? (
-                      <Tr>
-                        <Td colSpan="5" className="py-12 text-center text-slate-400 italic text-xs">
-                          No price rules matched the current search or filters.
-                        </Td>
-                      </Tr>
-                    ) : (
-                      prizes.map((prize) => (
-                        <Tr key={prize.id || prize._id} className="hover:bg-slate-50/50 transition-colors">
-                          <Td className="px-4 py-2 text-xs font-semibold text-slate-700 capitalize">{(prize.zone_name || 'India').toLowerCase()}</Td>
-                          <Td className="px-4 py-2 text-xs text-slate-600 font-medium">
-                            {prize.transport_type === 'both' ? 'All' : prize.transport_type === 'taxi' ? 'Ride Hailing' : prize.transport_type || 'All'}
-                          </Td>
-                          <Td className="px-4 py-2 text-xs text-slate-800 font-bold capitalize">{(prize.vehicle_type_name || 'Premium Car').toLowerCase()}</Td>
-                          <Td className="px-4 py-2">
-                            <StatusToggle
-                              active={Number(prize.active) === 1}
-                              onToggle={async () => {
-                                try {
-                                  const idsToToggle =
-                                    Array.isArray(prize.grouped_ids) && prize.grouped_ids.length > 0
-                                      ? prize.grouped_ids
-                                      : [prize.id || prize._id].filter(Boolean);
-                                  await Promise.all(
-                                    idsToToggle.map((targetId) =>
-                                      fetch(`${baseUrl}/types/set-prices/${targetId}`, {
-                                        method: 'PATCH',
-                                        headers: {
-                                          Authorization: `Bearer ${token}`,
-                                          'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify({
-                                          active: Number(prize.active) === 1 ? 0 : 1,
-                                        }),
-                                      }),
-                                    ),
-                                  );
-                                  fetchInitialData();
-                                } catch (e) {}
-                              }}
-                            />
-                          </Td>
-                          <Td className="px-4 py-2 text-right pr-6">
-                            <Div className="flex items-center justify-end gap-1.5">
-                              <Button
-                                onClick={() => navigate(`/taxi/admin/pricing/set-price/edit/${prize.id || prize._id}`)}
-                                className="w-7 h-7 flex items-center justify-center bg-[#FFF7ED] text-[#F97316] rounded transition-colors hover:bg-orange-100"
-                              >
-                                <UiIcon as={Edit2} size={12} />
-                              </Button>
-                              <Button
-                                onClick={() => navigate('/taxi/admin/pricing/package-pricing')}
-                                className="w-7 h-7 flex items-center justify-center bg-[#F0FDFA] text-[#14B8A6] rounded transition-colors hover:bg-emerald-100"
-                              >
-                                <UiIcon as={Gift} size={12} />
-                              </Button>
-                              <Button
-                                onClick={() => navigate(`/taxi/admin/pricing/set-price/surge/${prize.id || prize._id}`)}
-                                className="w-7 h-7 flex items-center justify-center bg-[#FEF2F2] text-[#EF4444] rounded transition-colors hover:bg-red-100"
-                              >
-                                <UiIcon as={Zap} size={12} />
-                              </Button>
-                              <Button
-                                onClick={() => navigate(`/taxi/admin/pricing/set-price/incentive/${prize.id || prize._id}`)}
-                                className="w-7 h-7 flex items-center justify-center bg-[#EEF2FF] text-[#6366F1] rounded transition-colors hover:bg-indigo-100"
-                              >
-                                <UiIcon as={Cone} size={12} />
-                              </Button>
-                              <Button
-                                onClick={() => handleDeleteSetPrice(prize)}
-                                className="w-7 h-7 flex items-center justify-center bg-[#FEF2F2] text-[#DC2626] rounded transition-colors hover:bg-red-100"
-                              >
-                                <UiIcon as={Trash2} size={12} />
-                              </Button>
-                            </Div>
-                          </Td>
-                        </Tr>
-                      ))
-                    )}
-                  </Tbody>
-                </Table>
-
-              <Div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-2.5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-                <Span>
-                  Showing {paginator.from || 0} to {paginator.to || 0} of {paginator.total || 0} entries
-                </Span>
-                <Div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => setPage((current) => Math.max(1, current - 1))}
-                    disabled={Number(paginator.current_page || page) <= 1}
-                    className="flex items-center gap-1 rounded border border-gray-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition disabled:opacity-50"
-                  >
-                    <UiIcon as={ChevronLeft} size={14} />
-                    Prev
-                  </Button>
-                  <Span className="rounded bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">
-                    Page {paginator.current_page || page} / {Math.max(1, Number(paginator.last_page || 1))}
-                  </Span>
-                  <Button
-                    type="button"
-                    onClick={() => setPage((current) => Math.min(Math.max(1, Number(paginator.last_page || 1)), current + 1))}
-                    disabled={Number(paginator.current_page || page) >= Math.max(1, Number(paginator.last_page || 1))}
-                    className="rounded border border-gray-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition disabled:opacity-50"
-                  >
-                    Next
-                  </Button>
-                </Div>
-              </Div>
-            </Div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="create"
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-            }}
-            className="p-3 lg:p-4 space-y-3"
+                <UiIcon as={Filter} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>{showFilters ? 'Hide filters' : 'Filters'}</Span>
+              </Button>
+            }
           >
-            {/* Form Header */}
-            <Div className="flex items-center justify-between border-b border-gray-100 pb-1 mb-2">
-              <H1
-                className="text-xl font-bold text-[#1E293B]"
-                style={{
-                    }}
-              >
-                {mode === 'edit' ? 'Edit Set Price' : 'Create Set Price'}
-              </H1>
-              <Div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
-                <Span className="hover:text-slate-600 transition-colors cursor-pointer" onClick={() => navigate('/taxi/admin/pricing/set-price')}>
-                  Set Prices
-                </Span>
-                <UiIcon as={ChevronRight} size={10} className="text-slate-300" />
-                <Span className="text-slate-800 font-bold">{mode === 'edit' ? 'Edit' : 'Create'}</Span>
-              </Div>
+            Search
+          </SectionTitle>
+          <Toolbar className="mb-0">
+            <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white flex-1 min-w-[200px]">
+              <UiIcon as={Search} size={16} className="text-slate-400" />
+              <Input
+                type="text"
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search zone, vehicle or location"
+                className="flex-1 text-sm text-slate-900"
+              />
             </Div>
+            <Select
+              value={itemsPerPage}
+              onChange={(event) => {
+                setItemsPerPage(Number(event.target.value) || 10);
+                setPage(1);
+              }}
+              className={`${INPUT} w-32`}
+            >
+              {[10, 25, 50].map((value) => (
+                <Option key={value} value={value}>
+                  {value} / page
+                </Option>
+              ))}
+            </Select>
+          </Toolbar>
 
-            <Div className="bg-white rounded-md border border-gray-100 shadow-sm p-2 relative">
-              {loading && mode === 'edit' && (
-                <Div className="absolute inset-0 bg-white/80 z-20 flex flex-col items-center justify-center gap-4">
-                  <UiIcon as={Loader2} className="animate-spin text-indigo-600" size={40} />
-                  <P className="text-xs font-black text-slate-400 uppercase tracking-widest">Hydrating Form State...</P>
-                </Div>
-              )}
-
-              <Div className="flex justify-end mb-2">
-                <Button
-                  type="button"
-                  onClick={() => setShowHowItWorks(true)}
-                  className="text-[10px] font-bold text-[#00BFA5] underline decoration-dotted underline-offset-4"
+          {showFilters ? (
+            <Div className={`grid grid-cols-${columns} gap-3 mt-3`}>
+              <Field label="Transport type">
+                <Select
+                  value={transportFilter}
+                  onChange={(event) => {
+                    setTransportFilter(event.target.value);
+                    setPage(1);
+                  }}
+                  className={INPUT}
                 >
-                  How It Works
+                  <Option value="">All transport types</Option>
+                  <Option value="taxi">Taxi</Option>
+                  <Option value="delivery">Delivery</Option>
+                  <Option value="pooling">Pooling</Option>
+                  <Option value="both">Both</Option>
+                </Select>
+              </Field>
+
+              <Field label="Status">
+                <Select
+                  value={statusFilter}
+                  onChange={(event) => {
+                    setStatusFilter(event.target.value);
+                    setPage(1);
+                  }}
+                  className={INPUT}
+                >
+                  <Option value="">All statuses</Option>
+                  <Option value="active">Active</Option>
+                  <Option value="inactive">Inactive</Option>
+                </Select>
+              </Field>
+
+              <Field label="Zone">
+                <Select
+                  value={zoneFilter}
+                  onChange={(event) => {
+                    setZoneFilter(event.target.value);
+                    setPage(1);
+                  }}
+                  className={INPUT}
+                >
+                  <Option value="">All zones</Option>
+                  <Option value={ALL_ZONES_OPTION_VALUE}>All</Option>
+                  {zones.map((zone) => (
+                    <Option key={zone._id || zone.id} value={zone._id || zone.id}>
+                      {zone.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label="Vehicle type">
+                <Select
+                  value={vehicleFilter}
+                  onChange={(event) => {
+                    setVehicleFilter(event.target.value);
+                    setPage(1);
+                  }}
+                  className={INPUT}
+                >
+                  <Option value="">All vehicle types</Option>
+                  {vehicleTypes.map((vehicle) => (
+                    <Option key={vehicle._id || vehicle.id} value={vehicle._id || vehicle.id}>
+                      {vehicle.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Div className="justify-end">
+                <Button type="button" onClick={clearFilters} className={BTN_SECONDARY}>
+                  <Span className={BTN_TEXT_SECONDARY}>Clear filters</Span>
                 </Button>
               </Div>
-
-              <Form onSubmit={handleSave} className="space-y-2">
-                <Div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-2 gap-y-1">
-                  {/* Top Section */}
-                  <Div>
-                    <Label className={labelClass}>
-                      Zone <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Div className="relative">
-                      <Select
-                        required
-                        className={inputClass + ' appearance-none cursor-pointer'}
-                        value={formData.zone_id}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            zone_id: e.target.value,
-                          }))
-                        }
-                      >
-                        <Option value="">Select Zone</Option>
-                        <Option value={ALL_ZONES_OPTION_VALUE}>All Zones</Option>
-                        {zones.map((z) => (
-                          <Option key={z._id || z.id} value={z._id || z.id}>
-                            {z.name}
-                          </Option>
-                        ))}
-                      </Select>
-                      <UiIcon as={ChevronDown} size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </Div>
-                    {isAllZonesSelection(formData.zone_id) && (
-                      <P className="mt-2 text-[11px] font-medium text-slate-400">
-                        Saving with <Span className="font-black text-slate-600">All Zones</Span> creates one global pricing rule for this vehicle type that
-                        applies when a zone-specific rule is not set.
-                      </P>
-                    )}
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Vehicle Type <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Div className="relative">
-                      <Select
-                        required
-                        className={inputClass + ' appearance-none cursor-pointer'}
-                        value={formData.vehicle_type}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            vehicle_type: e.target.value,
-                          }))
-                        }
-                      >
-                        <Option value="">Select Vehicle Type</Option>
-                        {vehicleTypes.map((v) => (
-                          <Option key={v._id || v.id} value={v._id || v.id}>
-                            {v.name}
-                          </Option>
-                        ))}
-                      </Select>
-                      <UiIcon as={ChevronDown} size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </Div>
-                    <P className="mt-2 text-[11px] font-medium text-slate-400">
-                      Transport type is taken from the selected vehicle type:{' '}
-                      <Span className="font-black uppercase tracking-[0.12em] text-slate-600">
-                        {formatTransportTypeLabel(derivedTransportType || formData.transport_type)}
-                      </Span>
-                    </P>
-                  </Div>
-                </Div>
-
-                <Div className="border-t border-gray-100 pt-1 mt-1">
-                  <Label className={labelClass}>
-                    Payment Type <Span className="text-rose-500">*</Span>
-                  </Label>
-                  <Div className="space-y-1 mt-0.5">
-                    <Div className="flex flex-wrap gap-2">
-                      {paymentTypeOptions.map((option) => {
-                        const isSelected = normalizePaymentTypes(formData.payment_type).includes(option.value);
-                        return (
-                          <Button
-                            key={option.value}
-                            type="button"
-                            onClick={() =>
-                              setFormData((previous) => ({
-                                ...previous,
-                                payment_type: togglePaymentType(previous.payment_type, option.value),
-                              }))
-                            }
-                            className={`rounded border px-2 py-1 text-left transition-all ${isSelected ? 'border-emerald-300 bg-emerald-50 shadow-sm' : 'border-gray-200 bg-white hover:border-indigo-300'}`}
-                          >
-                            <Div className="flex items-center gap-2">
-                              <Div
-                                className={`flex h-4 w-4 items-center justify-center rounded border text-[10px] font-black ${isSelected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 bg-white text-transparent'}`}
-                              >
-                                ✓
-                              </Div>
-                              <Div>
-                                <P className="text-[10px] font-bold text-slate-800 leading-none">{option.label}</P>
-                              </Div>
-                            </Div>
-                          </Button>
-                        );
-                      })}
-                    </Div>
-                    <Input type="hidden" required value={normalizePaymentTypes(formData.payment_type).join(',')} onChange={() => {}} />
-                  </Div>
-                </Div>
-                <Div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-2 gap-y-1 pt-1 mt-1 border-t border-gray-100">
-                  <Div>
-                    <Label className={labelClass}>
-                      Admin Comm. (Driver) <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Div className="flex gap-1">
-                      <Select
-                        className={inputClass + ' w-20 py-1'}
-                        value={formData.admin_commission_type_from_driver}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            admin_commission_type_from_driver: e.target.value,
-                          }))
-                        }
-                      >
-                        <Option value="1">%</Option>
-                        <Option value="2">Fixed</Option>
-                      </Select>
-                      <Input
-                        type="number"
-                        min="0"
-                        required
-                        className={inputClass + ' py-1'}
-                        value={formData.admin_commission_from_driver}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            admin_commission_from_driver: clampNonNegativeInput('admin_commission_from_driver', e.target.value),
-                          }))
-                        }
-                      />
-                    </Div>
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Service Tax (%) <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      required
-                      className={inputClass + ' py-1'}
-                      value={formData.service_tax}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          service_tax: clampNonNegativeInput('service_tax', e.target.value),
-                        }))
-                      }
-                    />
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Base Price <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      required
-                      className={inputClass + ' py-1'}
-                      value={formData.base_price}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          base_price: clampNonNegativeInput('base_price', e.target.value),
-                        }))
-                      }
-                    />
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Base Distance <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      required
-                      className={inputClass + ' py-1'}
-                      value={formData.base_distance}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          base_distance: clampNonNegativeInput('base_distance', e.target.value),
-                        }))
-                      }
-                    />
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Price / Distance <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      required
-                      className={inputClass + ' py-1'}
-                      value={formData.price_per_distance}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          price_per_distance: clampNonNegativeInput('price_per_distance', e.target.value),
-                        }))
-                      }
-                    />
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Time Price / Min <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      required
-                      className={inputClass + ' py-1'}
-                      value={formData.time_price}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          time_price: clampNonNegativeInput('time_price', e.target.value),
-                        }))
-                      }
-                    />
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Waiting Charge <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      required
-                      className={inputClass + ' py-1'}
-                      value={formData.waiting_charge}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          waiting_charge: clampNonNegativeInput('waiting_charge', e.target.value),
-                        }))
-                      }
-                    />
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Free Wait (Before) <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      required
-                      className={inputClass + ' py-1'}
-                      value={formData.free_waiting_before}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          free_waiting_before: clampNonNegativeInput('free_waiting_before', e.target.value),
-                        }))
-                      }
-                    />
-                  </Div>
-                  <Div>
-                    <Label className={labelClass}>
-                      Free Wait (After) <Span className="text-rose-500">*</Span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      required
-                      className={inputClass + ' py-1'}
-                      value={formData.free_waiting_after}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          free_waiting_after: clampNonNegativeInput('free_waiting_after', e.target.value),
-                        }))
-                      }
-                    />
-                  </Div>
-                  <Div className="col-span-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-2 gap-y-1 pt-1 border-t border-gray-100 mt-1">
-                    <Div className="flex items-center gap-1">
-                      <Input
-                        type="checkbox"
-                        className="w-3 h-3 rounded border-gray-300"
-                        checked={formData.enable_airport_ride}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            enable_airport_ride: e.target.checked,
-                          }))
-                        }
-                      />
-                      <Span className="text-[10px] font-semibold text-gray-700">Airport Ride</Span>
-                    </Div>
-                    <Div className="flex items-center gap-1">
-                      <Input
-                        type="checkbox"
-                        className="w-3 h-3 rounded border-gray-300"
-                        checked={formData.enable_outstation_ride}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            enable_outstation_ride: e.target.checked,
-                          }))
-                        }
-                      />
-                      <Span className="text-[10px] font-semibold text-gray-700">Outstation Ride</Span>
-                    </Div>
-                  </Div>
-
-                  {formData.enable_airport_ride && (
-                    <Div className="col-span-1 sm:col-span-2 md:col-span-4 lg:col-span-6 flex gap-2">
-                      <Div className="flex-1">
-                        <Label className={labelClass}>Airport Surge</Label>
-                        <Input
-                          type="number"
-                          className={inputClass + ' py-1'}
-                          value={formData.airport_surge}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              airport_surge: e.target.value,
-                            }))
-                          }
-                        />
-                      </Div>
-                      <Div className="flex-1">
-                        <Label className={labelClass}>Support Fee</Label>
-                        <Input
-                          type="number"
-                          className={inputClass + ' py-1'}
-                          value={formData.support_airport_fee}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              support_airport_fee: e.target.value,
-                            }))
-                          }
-                        />
-                      </Div>
-                    </Div>
-                  )}
-
-                  {formData.enable_outstation_ride && (
-                    <Div className="col-span-1 sm:col-span-2 md:col-span-4 lg:col-span-6 flex gap-2">
-                      <Div className="flex-1">
-                        <Label className={labelClass}>Out. Base</Label>
-                        <Input
-                          type="number"
-                          className={inputClass + ' py-1'}
-                          value={formData.outstation_base_price}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              outstation_base_price: e.target.value,
-                            }))
-                          }
-                        />
-                      </Div>
-                      <Div className="flex-1">
-                        <Label className={labelClass}>Out. Dist</Label>
-                        <Input
-                          type="number"
-                          className={inputClass + ' py-1'}
-                          value={formData.outstation_base_distance}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              outstation_base_distance: e.target.value,
-                            }))
-                          }
-                        />
-                      </Div>
-                      <Div className="flex-1">
-                        <Label className={labelClass}>Out. Price/Dist</Label>
-                        <Input
-                          type="number"
-                          className={inputClass + ' py-1'}
-                          value={formData.outstation_price_per_distance}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              outstation_price_per_distance: e.target.value,
-                            }))
-                          }
-                        />
-                      </Div>
-                    </Div>
-                  )}
-                </Div>
-
-                {/* Section: Cancellation Fee */}
-                <Div className="space-y-1 pt-1 mt-1 border-t border-gray-100">
-                  <H2 className="text-[10px] font-bold text-[#1E293B] uppercase tracking-wider">Cancellation Fee</H2>
-                  <Div className="grid grid-cols-1 md:grid-cols-3 gap-x-2 gap-y-1">
-                    <Div>
-                      <Label className={labelClass}>
-                        Cancellation Fee for User <Span className="text-rose-500">*</Span>
-                      </Label>
-                      <Div className="flex border border-gray-200 rounded-md overflow-hidden focus-within:border-indigo-500">
-                        <Select
-                          className="bg-gray-50 px-3 text-[11px] font-black border-r outline-none cursor-pointer"
-                          value={formData.user_cancellation_fee_type}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              user_cancellation_fee_type: e.target.value,
-                            }))
-                          }
-                        >
-                          <Option value="percentage">%</Option>
-                          <Option value="fixed">FIXED</Option>
-                        </Select>
-                        <Input
-                          type="number"
-                          min="0"
-                          className="flex-1 px-2.5 py-1.5 text-xs outline-none"
-                          placeholder="User Cancellation Fee"
-                          value={formData.user_cancellation_fee}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              user_cancellation_fee: clampNonNegativeInput('user_cancellation_fee', e.target.value),
-                            }))
-                          }
-                        />
-                      </Div>
-                    </Div>
-                    <Div>
-                      <Label className={labelClass}>
-                        Cancellation Fee for Driver <Span className="text-rose-500">*</Span>
-                      </Label>
-                      <Div className="flex border border-gray-200 rounded-md overflow-hidden focus-within:border-indigo-500">
-                        <Select
-                          className="bg-gray-50 px-3 text-[11px] font-black border-r outline-none cursor-pointer"
-                          value={formData.driver_cancellation_fee_type}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              driver_cancellation_fee_type: e.target.value,
-                            }))
-                          }
-                        >
-                          <Option value="percentage">%</Option>
-                          <Option value="fixed">FIXED</Option>
-                        </Select>
-                        <Input
-                          type="number"
-                          min="0"
-                          className="flex-1 px-2.5 py-1.5 text-xs outline-none"
-                          placeholder="Driver Cancellation Fee"
-                          value={formData.driver_cancellation_fee}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              driver_cancellation_fee: clampNonNegativeInput('driver_cancellation_fee', e.target.value),
-                            }))
-                          }
-                        />
-                      </Div>
-                    </Div>
-                    <Div>
-                      <Label className={labelClass}>
-                        Fee Goes to <Span className="text-rose-500">*</Span>
-                      </Label>
-                      <Div className="relative">
-                        <Select
-                          required
-                          className={inputClass + ' appearance-none cursor-pointer'}
-                          value={formData.cancellation_fee_goes_to}
-                          onChange={(e) =>
-                            setFormData((p) => ({
-                              ...p,
-                              cancellation_fee_goes_to: e.target.value,
-                            }))
-                          }
-                        >
-                          <Option value="">Select who get cancellation fee</Option>
-                          <Option value="admin">Admin</Option>
-                          <Option value="driver">Driver</Option>
-                        </Select>
-                        <UiIcon as={ChevronDown} size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </Div>
-                    </Div>
-                  </Div>
-                </Div>
-
-                {/* Footer Action */}
-                <Div className="pt-2 flex justify-end border-t border-gray-50 mt-1">
-                  <Button
-                    type="submit"
-                    disabled={saving}
-                    className="px-6 py-1.5 bg-yellow-400 text-black rounded text-xs font-bold shadow-lg hover:opacity-90 transition-all active:scale-95 flex items-center gap-2"
-                  >
-                    {saving && <UiIcon as={Loader2} size={16} className="animate-spin" />}
-                    {saving ? 'Saving Changes...' : 'Save'}
-                  </Button>
-                </Div>
-              </Form>
-
-              <AnimatePresence>
-                {showHowItWorks && (
-                  <motion.div
-                    initial={{
-                      x: '100%',
-                      opacity: 0,
-                    }}
-                    animate={{
-                      x: 0,
-                      opacity: 1,
-                    }}
-                    exit={{
-                      x: '100%',
-                      opacity: 0,
-                    }}
-                    transition={{
-                      type: 'spring',
-                      damping: 25,
-                      stiffness: 200,
-                    }}
-                    className="absolute top-10 right-4 h-auto max-h-[85%] w-72 bg-white border border-gray-100 shadow-2xl z-50 rounded-xl"
-                  >
-                    <ScrollDiv className="p-4">
-                    <Div className="flex items-center justify-between mb-4">
-                      <H3 className="text-xs font-bold text-[#1E293B] uppercase tracking-wider">How It Works</H3>
-                      <Button
-                        onClick={() => setShowHowItWorks(false)}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"
-                      >
-                        <UiIcon as={X} size={14} />
-                      </Button>
-                    </Div>
-                    <Div className="space-y-3 text-xs text-gray-600">
-                      <Div>
-                        <P className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5">
-                          <UiIcon as={MapPin} size={12} className="text-[#00BFA5]" /> Zone
-                        </P>
-                        <P className="leading-snug text-gray-500 pl-4.5">Select the geographical area where this pricing applies.</P>
-                      </Div>
-                      <Div>
-                        <P className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5">
-                          <UiIcon as={Car} size={12} className="text-[#00BFA5]" /> Vehicle Type
-                        </P>
-                        <P className="leading-snug text-gray-500 pl-4.5">The vehicle category (e.g. Mini, SUV). This automatically sets the transport type.</P>
-                      </Div>
-                      <Div>
-                        <P className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5">
-                          <UiIcon as={CreditCard} size={12} className="text-[#00BFA5]" /> Payment Type
-                        </P>
-                        <P className="leading-snug text-gray-500 pl-4.5">Allowed payment methods for this ride type.</P>
-                      </Div>
-                      <Div>
-                        <P className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5">
-                          <UiIcon as={DollarSign} size={12} className="text-[#00BFA5]" /> Commission
-                        </P>
-                        <P className="leading-snug text-gray-500 pl-4.5">Platform earnings rules for drivers and fleet owners.</P>
-                      </Div>
-                      <Div>
-                        <P className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5">
-                          <UiIcon as={ShieldCheck} size={12} className="text-[#00BFA5]" /> Cancellation Fee
-                        </P>
-                        <P className="leading-snug text-gray-500 pl-4.5">Charges applied if the user or driver cancels the ride.</P>
-                      </Div>
-                      <Div>
-                        <P className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5">
-                          <UiIcon as={Globe} size={12} className="text-[#00BFA5]" /> Airport / Outstation
-                        </P>
-                        <P className="leading-snug text-gray-500 pl-4.5">
-                          Enable toggles to add special pricing rules for airport trips or inter-city outstation rides.
-                        </P>
-                      </Div>
-                    </Div>
-                    </ScrollDiv>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </Div>
-          </motion.div>
+          ) : null}
+        </Card>
+
+        {loading && prizes.length === 0 ? (
+          <TableSkeleton rows={6} />
+        ) : loadError ? (
+          <ErrorState title="Could not load pricing rules" message={loadError} onRetry={() => fetchInitialData()} />
+        ) : prizes.length === 0 ? (
+          <EmptyState
+            icon={DollarSign}
+            title={hasFilters ? 'No price rules match' : 'No price rules yet'}
+            message={hasFilters ? 'No price rules matched the current search or filters.' : 'Add a price rule so riders see a real fare instead of the fallback.'}
+            actionLabel={hasFilters ? 'Clear filters' : 'Add set price'}
+            onAction={hasFilters ? clearFilters : () => navigate('/taxi/admin/pricing/set-price/create')}
+          />
+        ) : (
+          <>
+            <DataTable cols={PRICE_COLS}>
+              <THead cols={PRICE_COLS} labels={PRICE_LABELS} />
+              <TBody>
+                {prizes.map((prize, i, all) => (
+                  <Row key={prize.id || prize._id} last={i === all.length - 1}>
+                    <Cell width={PRICE_COLS[0]}>{prize.zone_name || 'India'}</Cell>
+                    <Cell width={PRICE_COLS[1]}>
+                      {prize.transport_type === 'both' ? 'All' : prize.transport_type === 'taxi' ? 'Ride hailing' : prize.transport_type || 'All'}
+                    </Cell>
+                    <Cell width={PRICE_COLS[2]}>
+                      <Span className="text-sm font-semibold text-slate-900">{prize.vehicle_type_name || 'Premium Car'}</Span>
+                    </Cell>
+                    <Cell width={PRICE_COLS[3]}>
+                      <StatusToggle
+                        active={Number(prize.active) === 1}
+                        label={`Toggle ${prize.vehicle_type_name || 'rule'}`}
+                        onToggle={async () => {
+                          try {
+                            const idsToToggle =
+                              Array.isArray(prize.grouped_ids) && prize.grouped_ids.length > 0 ? prize.grouped_ids : [prize.id || prize._id].filter(Boolean);
+                            await Promise.all(
+                              idsToToggle.map((targetId) =>
+                                fetch(`${baseUrl}/types/set-prices/${targetId}`, {
+                                  method: 'PATCH',
+                                  headers: {
+                                    Authorization: `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({
+                                    active: Number(prize.active) === 1 ? 0 : 1,
+                                  }),
+                                }),
+                              ),
+                            );
+                            fetchInitialData();
+                          } catch (e) {}
+                        }}
+                      />
+                    </Cell>
+                    <Cell width={PRICE_COLS[4]}>
+                      <Div className="flex-row items-center gap-1">
+                        <Button
+                          type="button"
+                          accessibilityLabel="Edit price rule"
+                          onClick={() => navigate(`/taxi/admin/pricing/set-price/edit/${prize.id || prize._id}`)}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
+                        >
+                          <UiIcon as={Edit2} size={16} className="text-slate-600" />
+                        </Button>
+                        <Button
+                          type="button"
+                          accessibilityLabel="Package pricing"
+                          onClick={() => navigate('/taxi/admin/pricing/package-pricing')}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
+                        >
+                          <UiIcon as={Gift} size={16} className="text-slate-600" />
+                        </Button>
+                        <Button
+                          type="button"
+                          accessibilityLabel="Surge pricing"
+                          onClick={() => navigate(`/taxi/admin/pricing/set-price/surge/${prize.id || prize._id}`)}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
+                        >
+                          <UiIcon as={Zap} size={16} className="text-slate-600" />
+                        </Button>
+                        <Button
+                          type="button"
+                          accessibilityLabel="Driver incentives"
+                          onClick={() => navigate(`/taxi/admin/pricing/set-price/incentive/${prize.id || prize._id}`)}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
+                        >
+                          <UiIcon as={Cone} size={16} className="text-slate-600" />
+                        </Button>
+                        <Button
+                          type="button"
+                          accessibilityLabel="Delete price rule"
+                          onClick={() => handleDeleteSetPrice(prize)}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
+                        >
+                          <UiIcon as={Trash2} size={16} className="text-red-600" />
+                        </Button>
+                      </Div>
+                    </Cell>
+                  </Row>
+                ))}
+              </TBody>
+            </DataTable>
+            <Pagination
+              page={Number(paginator.current_page || page)}
+              pages={lastPage}
+              total={paginator.total || 0}
+              onPrev={() => setPage((current) => Math.max(1, current - 1))}
+              onNext={() => setPage((current) => Math.min(lastPage, current + 1))}
+            />
+          </>
         )}
-      </AnimatePresence>
-    </ScrollDiv>
+      </AdminPage>
+    );
+  }
+  const formHeader = (
+    <PageHeader
+      icon={DollarSign}
+      title={mode === 'edit' ? 'Edit set price' : 'Create set price'}
+      subtitle="Zone, vehicle, fares and cancellation rules"
+      breadcrumb={[
+        { label: 'Taxi' },
+        { label: 'Set prices', onPress: () => navigate('/taxi/admin/pricing/set-price') },
+        { label: mode === 'edit' ? 'Edit' : 'Create' },
+      ]}
+      actions={
+        <>
+          <Button type="button" onClick={() => navigate('/taxi/admin/pricing/set-price')} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+          </Button>
+          <Button type="button" onClick={() => setShowHowItWorks((current) => !current)} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>{showHowItWorks ? 'Hide help' : 'How it works'}</Span>
+          </Button>
+        </>
+      }
+    />
+  );
+  if (loading && mode === 'edit') {
+    return (
+      <AdminPage maxWidth={900}>
+        {formHeader}
+        <LoadingState label="Loading price rule…" />
+      </AdminPage>
+    );
+  }
+  if (loadError && mode === 'edit') {
+    return (
+      <AdminPage maxWidth={900}>
+        {formHeader}
+        <ErrorState title="Could not load this price rule" message={loadError} onRetry={() => fetchInitialData()} />
+      </AdminPage>
+    );
+  }
+  return (
+    <AdminPage maxWidth={900}>
+      {formHeader}
+
+      {showHowItWorks ? (
+        <Card className="mb-4">
+          <SectionTitle
+            action={
+              <Button type="button" accessibilityLabel="Close help" onClick={() => setShowHowItWorks(false)} className="w-11 h-11 items-center justify-center">
+                <UiIcon as={X} size={16} className="text-slate-600" />
+              </Button>
+            }
+          >
+            How it works
+          </SectionTitle>
+          <Div className="gap-3">
+            {[
+              ['Zone', 'Select the geographical area where this pricing applies.'],
+              ['Vehicle type', 'The vehicle category (Mini, SUV…). It also sets the transport type.'],
+              ['Payment type', 'Allowed payment methods for this ride type.'],
+              ['Commission', 'Platform earnings rules for drivers and fleet owners.'],
+              ['Cancellation fee', 'Charges applied if the user or driver cancels the ride.'],
+              ['Airport / outstation', 'Enable the toggles to add special pricing for airport or inter-city rides.'],
+            ].map(([title, body]) => (
+              <Div key={title}>
+                <Span className="text-sm font-semibold text-slate-900">{title}</Span>
+                <Span className="text-sm text-slate-500">{body}</Span>
+              </Div>
+            ))}
+          </Div>
+        </Card>
+      ) : null}
+
+      <Form onSubmit={handleSave}>
+        <Card className="mb-4">
+          <SectionTitle>Scope</SectionTitle>
+          <Div className={`grid grid-cols-${columns} gap-3`}>
+            <Field
+              label="Zone"
+              required
+              hint={
+                isAllZonesSelection(formData.zone_id)
+                  ? 'All Zones creates one global rule for this vehicle type, used when no zone-specific rule is set.'
+                  : undefined
+              }
+            >
+              <Select
+                required
+                className={INPUT}
+                value={formData.zone_id}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    zone_id: e.target.value,
+                  }))
+                }
+              >
+                <Option value="">Select zone</Option>
+                <Option value={ALL_ZONES_OPTION_VALUE}>All zones</Option>
+                {zones.map((z) => (
+                  <Option key={z._id || z.id} value={z._id || z.id}>
+                    {z.name}
+                  </Option>
+                ))}
+              </Select>
+            </Field>
+
+            <Field label="Vehicle type" required hint={`Transport type: ${formatTransportTypeLabel(derivedTransportType || formData.transport_type)}`}>
+              <Select
+                required
+                className={INPUT}
+                value={formData.vehicle_type}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    vehicle_type: e.target.value,
+                  }))
+                }
+              >
+                <Option value="">Select vehicle type</Option>
+                {vehicleTypes.map((v) => (
+                  <Option key={v._id || v.id} value={v._id || v.id}>
+                    {v.name}
+                  </Option>
+                ))}
+              </Select>
+            </Field>
+          </Div>
+        </Card>
+
+        <Card className="mb-4">
+          <SectionTitle>Payment types</SectionTitle>
+          <Div className="flex-row flex-wrap gap-2">
+            {paymentTypeOptions.map((option) => {
+              const isSelected = normalizePaymentTypes(formData.payment_type).includes(option.value);
+              return (
+                <Button
+                  key={option.value}
+                  type="button"
+                  onClick={() =>
+                    setFormData((previous) => ({
+                      ...previous,
+                      payment_type: togglePaymentType(previous.payment_type, option.value),
+                    }))
+                  }
+                  className={isSelected ? BTN_PRIMARY : BTN_SECONDARY}
+                >
+                  <Span className={isSelected ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{option.label}</Span>
+                </Button>
+              );
+            })}
+          </Div>
+          <Input type="hidden" required value={normalizePaymentTypes(formData.payment_type).join(',')} onChange={() => {}} />
+        </Card>
+
+        <Card className="mb-4">
+          <SectionTitle>Fares</SectionTitle>
+          <Div className={`grid grid-cols-${columns} gap-3`}>
+            <Field label="Admin commission from driver" required>
+              <Div className="flex-row gap-2">
+                <Select
+                  className={`${INPUT} w-24`}
+                  value={formData.admin_commission_type_from_driver}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      admin_commission_type_from_driver: e.target.value,
+                    }))
+                  }
+                >
+                  <Option value="1">%</Option>
+                  <Option value="2">Fixed</Option>
+                </Select>
+                <Input
+                  type="number"
+                  min="0"
+                  required
+                  className={`${INPUT} flex-1`}
+                  value={formData.admin_commission_from_driver}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      admin_commission_from_driver: clampNonNegativeInput('admin_commission_from_driver', e.target.value),
+                    }))
+                  }
+                />
+              </Div>
+            </Field>
+
+            <Field label="Service tax (%)" required>
+              <Input
+                type="number"
+                min="0"
+                required
+                className={INPUT}
+                value={formData.service_tax}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    service_tax: clampNonNegativeInput('service_tax', e.target.value),
+                  }))
+                }
+              />
+            </Field>
+
+            <Field label="Base price" required>
+              <Input
+                type="number"
+                min="0"
+                required
+                className={INPUT}
+                value={formData.base_price}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    base_price: clampNonNegativeInput('base_price', e.target.value),
+                  }))
+                }
+              />
+            </Field>
+
+            <Field label="Base distance" required>
+              <Input
+                type="number"
+                min="0"
+                required
+                className={INPUT}
+                value={formData.base_distance}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    base_distance: clampNonNegativeInput('base_distance', e.target.value),
+                  }))
+                }
+              />
+            </Field>
+
+            <Field label="Price per distance" required>
+              <Input
+                type="number"
+                min="0"
+                required
+                className={INPUT}
+                value={formData.price_per_distance}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    price_per_distance: clampNonNegativeInput('price_per_distance', e.target.value),
+                  }))
+                }
+              />
+            </Field>
+
+            <Field label="Time price per minute" required>
+              <Input
+                type="number"
+                min="0"
+                required
+                className={INPUT}
+                value={formData.time_price}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    time_price: clampNonNegativeInput('time_price', e.target.value),
+                  }))
+                }
+              />
+            </Field>
+
+            <Field label="Waiting charge" required>
+              <Input
+                type="number"
+                min="0"
+                required
+                className={INPUT}
+                value={formData.waiting_charge}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    waiting_charge: clampNonNegativeInput('waiting_charge', e.target.value),
+                  }))
+                }
+              />
+            </Field>
+
+            <Field label="Free waiting before pickup" required>
+              <Input
+                type="number"
+                min="0"
+                required
+                className={INPUT}
+                value={formData.free_waiting_before}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    free_waiting_before: clampNonNegativeInput('free_waiting_before', e.target.value),
+                  }))
+                }
+              />
+            </Field>
+
+            <Field label="Free waiting after pickup" required>
+              <Input
+                type="number"
+                min="0"
+                required
+                className={INPUT}
+                value={formData.free_waiting_after}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    free_waiting_after: clampNonNegativeInput('free_waiting_after', e.target.value),
+                  }))
+                }
+              />
+            </Field>
+          </Div>
+        </Card>
+
+        <Card className="mb-4">
+          <SectionTitle>Ride types</SectionTitle>
+          <Label className="flex-row items-center gap-2 h-11">
+            <Input
+              type="checkbox"
+              checked={formData.enable_airport_ride}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  enable_airport_ride: e.target.checked,
+                }))
+              }
+            />
+            <Span className="text-sm text-slate-700">Airport ride</Span>
+          </Label>
+          <Label className="flex-row items-center gap-2 h-11">
+            <Input
+              type="checkbox"
+              checked={formData.enable_outstation_ride}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  enable_outstation_ride: e.target.checked,
+                }))
+              }
+            />
+            <Span className="text-sm text-slate-700">Outstation ride</Span>
+          </Label>
+
+          {formData.enable_airport_ride ? (
+            <Div className={`grid grid-cols-${columns} gap-3 mt-3`}>
+              <Field label="Airport surge">
+                <Input
+                  type="number"
+                  className={INPUT}
+                  value={formData.airport_surge}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      airport_surge: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Airport support fee">
+                <Input
+                  type="number"
+                  className={INPUT}
+                  value={formData.support_airport_fee}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      support_airport_fee: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+            </Div>
+          ) : null}
+
+          {formData.enable_outstation_ride ? (
+            <Div className={`grid grid-cols-${columns} gap-3 mt-3`}>
+              <Field label="Outstation base price">
+                <Input
+                  type="number"
+                  className={INPUT}
+                  value={formData.outstation_base_price}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      outstation_base_price: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Outstation base distance">
+                <Input
+                  type="number"
+                  className={INPUT}
+                  value={formData.outstation_base_distance}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      outstation_base_distance: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Outstation price per distance">
+                <Input
+                  type="number"
+                  className={INPUT}
+                  value={formData.outstation_price_per_distance}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      outstation_price_per_distance: e.target.value,
+                    }))
+                  }
+                />
+              </Field>
+            </Div>
+          ) : null}
+        </Card>
+
+        <Card className="mb-4">
+          <SectionTitle>Cancellation fee</SectionTitle>
+          <Div className={`grid grid-cols-${columns} gap-3`}>
+            <Field label="Cancellation fee for user" required>
+              <Div className="flex-row gap-2">
+                <Select
+                  className={`${INPUT} w-24`}
+                  value={formData.user_cancellation_fee_type}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      user_cancellation_fee_type: e.target.value,
+                    }))
+                  }
+                >
+                  <Option value="percentage">%</Option>
+                  <Option value="fixed">Fixed</Option>
+                </Select>
+                <Input
+                  type="number"
+                  min="0"
+                  className={`${INPUT} flex-1`}
+                  placeholder="0"
+                  value={formData.user_cancellation_fee}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      user_cancellation_fee: clampNonNegativeInput('user_cancellation_fee', e.target.value),
+                    }))
+                  }
+                />
+              </Div>
+            </Field>
+
+            <Field label="Cancellation fee for driver" required>
+              <Div className="flex-row gap-2">
+                <Select
+                  className={`${INPUT} w-24`}
+                  value={formData.driver_cancellation_fee_type}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      driver_cancellation_fee_type: e.target.value,
+                    }))
+                  }
+                >
+                  <Option value="percentage">%</Option>
+                  <Option value="fixed">Fixed</Option>
+                </Select>
+                <Input
+                  type="number"
+                  min="0"
+                  className={`${INPUT} flex-1`}
+                  placeholder="0"
+                  value={formData.driver_cancellation_fee}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      driver_cancellation_fee: clampNonNegativeInput('driver_cancellation_fee', e.target.value),
+                    }))
+                  }
+                />
+              </Div>
+            </Field>
+
+            <Field label="Fee goes to" required>
+              <Select
+                required
+                className={INPUT}
+                value={formData.cancellation_fee_goes_to}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    cancellation_fee_goes_to: e.target.value,
+                  }))
+                }
+              >
+                <Option value="">Select who gets the cancellation fee</Option>
+                <Option value="admin">Admin</Option>
+                <Option value="driver">Driver</Option>
+              </Select>
+            </Field>
+          </Div>
+          <Div className="flex-row items-start gap-2 p-3 rounded-lg bg-blue-50 mt-3">
+            <UiIcon as={Info} size={16} className="text-blue-700 shrink-0 mt-0.5" />
+            <Span className="text-xs text-slate-700 flex-1">A percentage fee is taken from the fare; a fixed fee is charged as entered.</Span>
+          </Div>
+        </Card>
+
+        <Card className={`${tablet ? 'flex-row justify-end' : ''} gap-3`}>
+          <Button type="button" onClick={() => navigate('/taxi/admin/pricing/set-price')} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+          </Button>
+          <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
+            <UiIcon as={Save} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : 'Save'}</Span>
+          </Button>
+        </Card>
+      </Form>
+    </AdminPage>
   );
 };
 export default SetPrices;

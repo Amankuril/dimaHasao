@@ -9,20 +9,29 @@
  */
 import React from 'react';
 import { ToggleRight } from 'lucide-react-native';
-import { Div, H2, Link, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, BTN_PRIMARY } from '../../../../admin/ui';
+import { Div, Link, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 export default function CustomizationSettings() {
   return (
-    <ScrollDiv className="max-w-xl mx-auto p-10 text-center">
-      <Span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
-        <UiIcon as={ToggleRight} size={26} />
-      </Span>
-
-      <H2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">These settings moved</H2>
-      <P className="mt-2 text-sm text-neutral-500">COD, payment and availability switches are now managed for every module together in Global admin.</P>
-
-      <Link to="/global/admin/toggles" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-5 py-3 text-sm font-bold text-white">
-        Open Toggle Management
-      </Link>
-    </ScrollDiv>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={ToggleRight}
+        title="Customization settings"
+        subtitle="COD, payment and availability switches now live in Global admin"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Customization' }]}
+      />
+      <Card className="items-center py-10 px-6 gap-2">
+        <Div className="w-12 h-12 rounded-full bg-amber-100 items-center justify-center mb-1">
+          <UiIcon as={ToggleRight} size={22} className="text-amber-700" />
+        </Div>
+        <Text style={tw`text-base font-semibold text-slate-900 text-center`}>These settings moved</Text>
+        <Text style={tw`text-sm text-slate-500 text-center`}>COD, payment and availability switches are now managed for every module together in Global admin.</Text>
+        <Link to="/global/admin/toggles" className={`${BTN_PRIMARY} mt-3`}>
+          <Text style={tw`text-sm font-semibold text-white`}>Open Toggle Management</Text>
+        </Link>
+      </Card>
+    </AdminPage>
   );
 }

@@ -1,7 +1,10 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/ReactSite.jsx (tools/port.js first pass). */
 import { useState } from 'react';
 import { X, Monitor } from 'lucide-react-native';
-import { A, Button, Div, Form, H1, Input, Label, P, ScrollDiv, Icon as UiIcon } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, Field, INPUT, BTN_PRIMARY, BTN_TEXT_PRIMARY, useLayoutWidth } from '../../../../admin/ui';
+import { A, Button, Div, Form, Input, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { alert } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -10,6 +13,8 @@ export default function ReactSite() {
   const [reactLicenseCode, setReactLicenseCode] = useState('');
   const [reactDomain, setReactDomain] = useState('');
   const [showWarning, setShowWarning] = useState(true);
+  const { tablet } = useLayoutWidth();
+  const half = tablet ? { width: '48.5%' } : { width: '100%' };
   const handleSave = (e) => {
     e.preventDefault();
     debugLog('Saving React Site:', {
@@ -19,68 +24,64 @@ export default function ReactSite() {
     alert('React Site settings saved successfully!');
   };
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto max-w-5xl">
-        {/* Page Title */}
-        <Div className="mb-3">
-          <Div className="flex items-center gap-2">
-            <UiIcon as={Monitor} className="w-5 h-5 text-slate-600" />
-            <H1 className="text-lg font-bold text-slate-900">React Site Setup</H1>
-          </Div>
-        </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={Monitor}
+        title="React Site Setup"
+        subtitle="License and domain for the React storefront"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'React site' }]}
+      />
 
-        {/* Warning Banner */}
-        {showWarning && (
-          <Div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 flex items-start justify-between gap-3">
-            <P className="text-xs text-slate-700 flex-1">
-              Please check if your domain is register or not at 6amTech Store .{' '}
-              <A href="#" className="text-blue-600 hover:underline">
+      {showWarning ? (
+        <Card className="mb-4 bg-amber-50 border-amber-200 flex-row items-start gap-3">
+          <Div className="flex-1 min-w-0">
+            <Text style={tw`text-sm text-slate-700`}>
+              Please check if your domain is registered at the 6amTech Store.{' '}
+              <A href="#" className="text-sm font-semibold text-blue-600">
                 Click here
               </A>{' '}
-              To login in Store.
-            </P>
-            <Button type="button" onClick={() => setShowWarning(false)} className="p-1 hover:bg-amber-100 rounded transition-colors flex-shrink-0">
-              <UiIcon as={X} className="w-4 h-4 text-slate-600" />
-            </Button>
+              to log in to the Store.
+            </Text>
           </Div>
-        )}
+          <Button
+            type="button"
+            onClick={() => setShowWarning(false)}
+            accessibilityLabel="Dismiss notice"
+            className="w-11 h-11 -mt-2 -mr-2 rounded-lg items-center justify-center shrink-0"
+          >
+            <UiIcon as={X} size={16} className="text-slate-600" />
+          </Button>
+        </Card>
+      ) : null}
 
-        {/* Form Section */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-          <Form onSubmit={handleSave}>
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <Div>
-                <Label className="block text-xs font-semibold text-slate-700 mb-1.5">React License Code</Label>
+      <Card>
+        <Form onSubmit={handleSave}>
+          <Div className="flex-row flex-wrap gap-3 mb-4">
+            <Div style={half}>
+              <Field label="React License Code">
                 <Input
                   type="text"
                   value={reactLicenseCode}
                   onChange={(e) => setReactLicenseCode(e.target.value)}
                   placeholder="React license code"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={INPUT}
                 />
-              </Div>
-
-              <Div>
-                <Label className="block text-xs font-semibold text-slate-700 mb-1.5">React Domain</Label>
-                <Input
-                  type="text"
-                  value={reactDomain}
-                  onChange={(e) => setReactDomain(e.target.value)}
-                  placeholder="React Domain"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </Div>
+              </Field>
             </Div>
-
-            {/* Save Button */}
-            <Div className="flex justify-end">
-              <Button type="submit" className="px-6 py-2.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                Save
-              </Button>
+            <Div style={half}>
+              <Field label="React Domain">
+                <Input type="text" value={reactDomain} onChange={(e) => setReactDomain(e.target.value)} placeholder="React Domain" className={INPUT} />
+              </Field>
             </Div>
-          </Form>
-        </Div>
-      </Div>
-    </ScrollDiv>
+          </Div>
+
+          <Div className="flex-row justify-end">
+            <Button type="submit" className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Save</Span>
+            </Button>
+          </Div>
+        </Form>
+      </Card>
+    </AdminPage>
   );
 }

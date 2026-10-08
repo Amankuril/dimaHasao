@@ -17,6 +17,7 @@ import {
   Eye,
   Edit,
   Trash2,
+  Megaphone,
 } from 'lucide-react-native';
 import { emptyAds } from '../../../utils/adminFallbackData';
 import {
@@ -26,8 +27,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from '../../../../components/shadcn';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../../components/shadcn';
 import SettingsDialog from '../../../components/admin/orders/SettingsDialog';
 import {
   exportAdvertisementsToCSV,
@@ -35,7 +40,30 @@ import {
   exportAdvertisementsToPDF,
   exportAdvertisementsToJSON,
 } from '../../../components/admin/advertisements/advertisementsExportUtils';
-import { Button, Div, H1, Input, Label, Option, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_DANGER,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
+
 export default function AdsList() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,6 +90,7 @@ export default function AdsList() {
     priority: true,
     actions: true,
   });
+  const { tablet } = useLayoutWidth();
   const columnsConfig = {
     si: 'Serial Number',
     adsId: 'Ads ID',
@@ -180,252 +209,213 @@ export default function AdsList() {
   };
   const restaurants = [...new Set(ads.map((ad) => ad.restaurantName))].filter(Boolean);
   const statuses = [...new Set(ads.map((ad) => ad.status))].filter(Boolean);
-  const tableCols = [
-    ['si', 60],
-    ['adsId', 120],
-    ['adsTitle', 180],
-    ['restaurantInfo', 200],
-    ['adsType', 130],
-    ['duration', 190],
-    ['status', 120],
-    ['priority', 100],
-    ['actions', 96],
-  ]
-    .filter(([key]) => visibleColumns[key])
-    .map(([, width]) => width);
+  const columnWidths = {
+    si: 56,
+    adsId: 120,
+    adsTitle: 180,
+    restaurantInfo: 200,
+    adsType: 140,
+    duration: 180,
+    status: 120,
+    priority: 110,
+    actions: 64,
+  };
+  const columnLabels = {
+    si: 'SI',
+    adsId: 'Ads ID',
+    adsTitle: 'Ads Title',
+    restaurantInfo: 'Restaurant Info',
+    adsType: 'Ads Type',
+    duration: 'Duration',
+    status: 'Status',
+    priority: 'Priority',
+    actions: 'Action',
+  };
+  const shownKeys = Object.keys(columnWidths).filter((key) => visibleColumns[key]);
+  const tableCols = shownKeys.map((key) => columnWidths[key]);
+  const tableLabels = shownKeys.map((key) => columnLabels[key]);
+  const widthOf = (key) => columnWidths[key];
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      {/* Header */}
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-        <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <Div className="flex items-center gap-3">
-            <Div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <UiIcon as={Plus} className="w-5 h-5 text-white" />
-            </Div>
-            <Div className="flex items-center gap-2">
-              <H1 className="text-2xl font-bold text-slate-900">Ads List</H1>
-              <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">{filteredAds.length}</Span>
-            </Div>
-          </Div>
-
-          <Button
-            onClick={() => navigate('/admin/new-advertisement')}
-            className="px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 transition-all shadow-md"
-          >
-            <UiIcon as={Plus} className="w-4 h-4" />
-            New Advertisement
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Megaphone}
+        title="Ads List"
+        subtitle={`${filteredAds.length} ${filteredAds.length === 1 ? 'advertisement' : 'advertisements'} in this list`}
+        breadcrumb={[{ label: 'Food' }, { label: 'Advertisements' }, { label: 'Ads list' }]}
+        actions={
+          <Button onClick={() => navigate('/admin/new-advertisement')} className={BTN_PRIMARY}>
+            <UiIcon as={Plus} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>New Advertisement</Span>
           </Button>
-        </Div>
+        }
+      />
 
-        <Div className="flex items-center gap-3">
-          <Select
-            value={adsType}
-            onChange={(e) => setAdsType(e.target.value)}
-            className="px-4 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-          >
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Select value={adsType} onChange={(e) => setAdsType(e.target.value)} className={`${INPUT} min-w-[170px]`}>
             <Option value="all">All Ads</Option>
             <Option value="Restaurant Promotion">Restaurant Promotion</Option>
             <Option value="Video promotion">Video promotion</Option>
           </Select>
 
-          <Div className="relative flex-1 sm:flex-initial min-w-[250px]">
+          <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white flex-1 min-w-[200px]">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
             <Input
               type="text"
               placeholder="Search by ads ID or restaurant"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+              className="flex-1 text-sm text-slate-900"
             />
-            <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           </Div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
-                <UiIcon as={Download} className="w-4 h-4" />
-                <Span className="text-black font-bold">Export</Span>
-                <UiIcon as={ChevronDown} className="w-3 h-3" />
+              <Button className={BTN_SECONDARY}>
+                <UiIcon as={Download} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-500" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg">
               <DropdownMenuLabel>Export Format</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleExport('csv')} className="cursor-pointer">
-                <UiIcon as={FileDown} className="w-4 h-4 mr-2" />
+                <UiIcon as={FileDown} size={16} className="mr-2 text-slate-500" />
                 Export as CSV
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport('excel')} className="cursor-pointer">
-                <UiIcon as={FileSpreadsheet} className="w-4 h-4 mr-2" />
+                <UiIcon as={FileSpreadsheet} size={16} className="mr-2 text-slate-500" />
                 Export as Excel
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer">
-                <UiIcon as={FileText} className="w-4 h-4 mr-2" />
+                <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
                 Export as PDF
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport('json')} className="cursor-pointer">
-                <UiIcon as={Code} className="w-4 h-4 mr-2" />
+                <UiIcon as={Code} size={16} className="mr-2 text-slate-500" />
                 Export as JSON
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button
-            onClick={() => setIsFilterOpen(true)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all relative ${activeFiltersCount > 0 ? 'border-emerald-500 bg-emerald-50' : ''}`}
-          >
-            <UiIcon as={Filter} className="w-4 h-4" />
-            <Span className="text-black font-bold">Filters</Span>
-            {activeFiltersCount > 0 && (
-              <Span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
-                {activeFiltersCount}
-              </Span>
-            )}
+          <Button onClick={() => setIsFilterOpen(true)} className={BTN_SECONDARY}>
+            <UiIcon as={Filter} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Filters</Span>
+            {activeFiltersCount > 0 ? <StatusBadge tone="info" label={String(activeFiltersCount)} /> : null}
           </Button>
 
-          <Button
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
-          >
-            <UiIcon as={Settings} className="w-5 h-5" />
+          <Button onClick={() => setIsSettingsOpen(true)} className={`${BTN_SECONDARY} w-11 px-0`} accessibilityLabel="Table settings">
+            <UiIcon as={Settings} size={18} className="text-slate-600" />
           </Button>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
-      {/* Table */}
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <Div className="overflow-x-hidden">
-          <Table className="w-full" cols={tableCols}>
-            <Thead className="bg-slate-50 border-b border-slate-200">
-              <Tr>
-                {visibleColumns.si && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</Th>}
-                {visibleColumns.adsId && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads ID</Th>}
-                {visibleColumns.adsTitle && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads Title</Th>}
-                {visibleColumns.restaurantInfo && (
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant Info</Th>
-                )}
-                {visibleColumns.adsType && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads Type</Th>}
-                {visibleColumns.duration && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Duration</Th>}
-                {visibleColumns.status && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</Th>}
-                {visibleColumns.priority && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Priority</Th>}
-                {visibleColumns.actions && <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>}
-              </Tr>
-            </Thead>
-            <Tbody className="bg-white divide-y divide-slate-100">
-              {filteredAds.length === 0 ? (
-                <Tr>
-                  <Td colSpan={Object.values(visibleColumns).filter((v) => v).length} className="px-6 py-20 text-center">
-                    <P className="text-lg font-semibold text-slate-700 mb-1">No Data Found</P>
-                    <P className="text-sm text-slate-500">No ads match your search</P>
-                  </Td>
-                </Tr>
-              ) : (
-                filteredAds.map((ad) => (
-                  <Tr key={ad.sl} className="hover:bg-slate-50 transition-colors">
-                    {visibleColumns.si && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-700">{ad.sl}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.adsId && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Button onClick={() => handleViewAd(ad)} className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                          {ad.adsId}
+      {filteredAds.length === 0 ? (
+        <EmptyState
+          icon={Megaphone}
+          title="No advertisements found"
+          message={
+            searchQuery || activeFiltersCount > 0 || adsType !== 'all'
+              ? 'No ads match your search or filters. Clear them to see everything.'
+              : 'Create an advertisement to promote a restaurant in the customer app.'
+          }
+          actionLabel="New Advertisement"
+          onAction={() => navigate('/admin/new-advertisement')}
+        />
+      ) : (
+        <DataTable cols={tableCols}>
+          <THead cols={tableCols} labels={tableLabels} />
+          <TBody>
+            {filteredAds.map((ad, i, all) => (
+              <Row key={ad.sl} last={i === all.length - 1}>
+                {visibleColumns.si ? <Cell width={widthOf('si')}>{String(ad.sl)}</Cell> : null}
+                {visibleColumns.adsId ? (
+                  <Cell width={widthOf('adsId')}>
+                    <Button onClick={() => handleViewAd(ad)} className="h-11 justify-center" accessibilityLabel={`View ${ad.adsId}`}>
+                      <Span className="text-sm font-semibold text-blue-600">{ad.adsId}</Span>
+                    </Button>
+                  </Cell>
+                ) : null}
+                {visibleColumns.adsTitle ? (
+                  <Cell width={widthOf('adsTitle')}>
+                    <Span className="text-sm font-semibold text-slate-900">{ad.adsTitle}</Span>
+                  </Cell>
+                ) : null}
+                {visibleColumns.restaurantInfo ? (
+                  <Cell width={widthOf('restaurantInfo')}>
+                    <Div className="flex-row items-center gap-2">
+                      <Div className="w-9 h-9 rounded-lg bg-slate-100 items-center justify-center shrink-0">
+                        <UiIcon as={Building2} size={16} className="text-slate-500" />
+                      </Div>
+                      <Div className="flex-1 min-w-0">
+                        <Span className="text-sm font-semibold text-slate-900">{ad.restaurantName}</Span>
+                        <Span className="text-xs text-slate-500">{ad.restaurantEmail}</Span>
+                      </Div>
+                    </Div>
+                  </Cell>
+                ) : null}
+                {visibleColumns.adsType ? <Cell width={widthOf('adsType')}>{ad.adsType}</Cell> : null}
+                {visibleColumns.duration ? <Cell width={widthOf('duration')}>{ad.duration}</Cell> : null}
+                {visibleColumns.status ? (
+                  <Cell width={widthOf('status')}>
+                    <StatusBadge status={ad.status} />
+                  </Cell>
+                ) : null}
+                {visibleColumns.priority ? (
+                  <Cell width={widthOf('priority')}>
+                    <Select
+                      value={ad.priority || ''}
+                      onChange={(e) => handlePriorityChange(ad.sl, e.target.value)}
+                      className="h-11 px-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900 w-full"
+                    >
+                      <Option value="">N/A</Option>
+                      <Option value="1">1</Option>
+                      <Option value="2">2</Option>
+                      <Option value="3">3</Option>
+                    </Select>
+                  </Cell>
+                ) : null}
+                {visibleColumns.actions ? (
+                  <Cell width={widthOf('actions')} align="center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel={`Actions for ${ad.adsId}`}>
+                          <UiIcon as={MoreVertical} size={18} className="text-slate-600" />
                         </Button>
-                      </Td>
-                    )}
-                    {visibleColumns.adsTitle && (
-                      <Td className="px-6 py-4">
-                        <Span className="text-sm font-medium text-slate-900">{ad.adsTitle}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.restaurantInfo && (
-                      <Td className="px-6 py-4">
-                        <Div className="flex items-center gap-3">
-                          <Div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                            <UiIcon as={Building2} className="w-5 h-5 text-orange-600" />
-                          </Div>
-                          <Div className="flex flex-col">
-                            <Span className="text-sm font-medium text-slate-900">{ad.restaurantName}</Span>
-                            <Span className="text-xs text-slate-500">{ad.restaurantEmail}</Span>
-                          </Div>
-                        </Div>
-                      </Td>
-                    )}
-                    {visibleColumns.adsType && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">{ad.adsType}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.duration && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">{ad.duration}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.status && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">{ad.status}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.priority && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Select
-                          value={ad.priority || ''}
-                          onChange={(e) => handlePriorityChange(ad.sl, e.target.value)}
-                          className="px-2 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-                        >
-                          <Option value="">N/A</Option>
-                          <Option value="1">1</Option>
-                          <Option value="2">2</Option>
-                          <Option value="3">3</Option>
-                        </Select>
-                      </Td>
-                    )}
-                    {visibleColumns.actions && (
-                      <Td className="px-6 py-4 whitespace-nowrap text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button className="p-1.5 rounded text-slate-600 hover:bg-slate-100 transition-colors">
-                              <UiIcon as={MoreVertical} className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                            <DropdownMenuItem onClick={() => handleViewAd(ad)} className="cursor-pointer">
-                              <UiIcon as={Eye} className="w-4 h-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEditAd(ad)} className="cursor-pointer">
-                              <UiIcon as={Edit} className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDeleteClick(ad)} className="cursor-pointer text-red-600">
-                              <UiIcon as={Trash2} className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </Td>
-                    )}
-                  </Tr>
-                ))
-              )}
-            </Tbody>
-          </Table>
-        </Div>
-      </Div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 rounded-lg">
+                        <DropdownMenuItem onClick={() => handleViewAd(ad)} className="cursor-pointer">
+                          <UiIcon as={Eye} size={16} className="mr-2 text-slate-500" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditAd(ad)} className="cursor-pointer">
+                          <UiIcon as={Edit} size={16} className="mr-2 text-slate-500" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDeleteClick(ad)} className="cursor-pointer text-red-600">
+                          <UiIcon as={Trash2} size={16} className="mr-2 text-red-600" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </Cell>
+                ) : null}
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
 
       {/* Filter Panel */}
       <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <UiIcon as={Filter} className="w-5 h-5" />
-              Filter Ads
-            </DialogTitle>
+        <DialogContent className="max-w-md bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-2">
+            <DialogTitle>Filter Ads</DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6 space-y-4">
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Status</Label>
+          <Div className="px-4 pb-4 gap-3">
+            <Field label="Status">
               <Select
                 value={filters.status}
                 onChange={(e) =>
@@ -434,7 +424,7 @@ export default function AdsList() {
                     status: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className={INPUT}
               >
                 <Option value="">All Statuses</Option>
                 {statuses.map((status) => (
@@ -443,9 +433,8 @@ export default function AdsList() {
                   </Option>
                 ))}
               </Select>
-            </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Restaurant</Label>
+            </Field>
+            <Field label="Restaurant">
               <Select
                 value={filters.restaurant}
                 onChange={(e) =>
@@ -454,7 +443,7 @@ export default function AdsList() {
                     restaurant: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className={INPUT}
               >
                 <Option value="">All Restaurants</Option>
                 {restaurants.map((restaurant) => (
@@ -463,9 +452,8 @@ export default function AdsList() {
                   </Option>
                 ))}
               </Select>
-            </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Priority</Label>
+            </Field>
+            <Field label="Priority">
               <Select
                 value={filters.priority}
                 onChange={(e) =>
@@ -474,26 +462,20 @@ export default function AdsList() {
                     priority: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className={INPUT}
               >
                 <Option value="">All Priorities</Option>
                 <Option value="1">1</Option>
                 <Option value="2">2</Option>
                 <Option value="3">3</Option>
               </Select>
-            </Div>
-            <Div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button
-                onClick={handleResetFilters}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset
+            </Field>
+            <Div className="flex-row items-center gap-2 pt-2 border-t border-slate-200">
+              <Button onClick={handleResetFilters} className={`${BTN_SECONDARY} flex-1`}>
+                <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
               </Button>
-              <Button
-                onClick={handleApplyFilters}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
-              >
-                Apply
+              <Button onClick={handleApplyFilters} className={`${BTN_PRIMARY} flex-1`}>
+                <Span className={BTN_TEXT_PRIMARY}>Apply</Span>
               </Button>
             </Div>
           </Div>
@@ -512,45 +494,29 @@ export default function AdsList() {
 
       {/* View Ad Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-2xl bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <DialogHeader className="px-6 pt-6 pb-4">
+        <DialogContent className="max-w-2xl bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-2">
             <DialogTitle>Advertisement Details</DialogTitle>
           </DialogHeader>
           {selectedAd && (
-            <Div className="px-6 pb-6 space-y-4">
-              <Div className="grid grid-cols-2 gap-4">
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Ads ID</P>
-                  <P className="text-sm text-slate-900">{selectedAd.adsId}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Ads Title</P>
-                  <P className="text-sm text-slate-900">{selectedAd.adsTitle}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Restaurant Name</P>
-                  <P className="text-sm text-slate-900">{selectedAd.restaurantName}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Restaurant Email</P>
-                  <P className="text-sm text-slate-900">{selectedAd.restaurantEmail}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Ads Type</P>
-                  <P className="text-sm text-slate-900">{selectedAd.adsType}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Duration</P>
-                  <P className="text-sm text-slate-900">{selectedAd.duration}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Status</P>
-                  <P className="text-sm text-slate-900">{selectedAd.status}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Priority</P>
-                  <P className="text-sm text-slate-900">{selectedAd.priority || 'N/A'}</P>
-                </Div>
+            <Div className="px-4 pb-4">
+              <SectionTitle>{selectedAd.adsTitle}</SectionTitle>
+              <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+                {[
+                  ['Ads ID', selectedAd.adsId],
+                  ['Ads Title', selectedAd.adsTitle],
+                  ['Restaurant Name', selectedAd.restaurantName],
+                  ['Restaurant Email', selectedAd.restaurantEmail],
+                  ['Ads Type', selectedAd.adsType],
+                  ['Duration', selectedAd.duration],
+                  ['Status', selectedAd.status],
+                  ['Priority', selectedAd.priority || 'N/A'],
+                ].map(([label, value]) => (
+                  <Div key={label} className="gap-1">
+                    <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</P>
+                    {label === 'Status' ? <StatusBadge status={value} /> : <P className="text-sm text-slate-900">{String(value ?? '')}</P>}
+                  </Div>
+                ))}
               </Div>
             </Div>
           )}
@@ -559,24 +525,21 @@ export default function AdsList() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <DialogHeader className="px-6 pt-6 pb-4">
+        <DialogContent className="max-w-md bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-2">
             <DialogTitle>Delete Advertisement</DialogTitle>
             <DialogDescription>Are you sure you want to delete this advertisement? This action cannot be undone.</DialogDescription>
           </DialogHeader>
-          <Div className="px-6 pb-6 flex items-center justify-end gap-3">
-            <Button
-              onClick={() => setIsDeleteOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-            >
-              Cancel
+          <Div className="px-4 pb-4 flex-row items-center gap-2">
+            <Button onClick={() => setIsDeleteOpen(false)} className={`${BTN_SECONDARY} flex-1`}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button onClick={handleDelete} className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all shadow-md">
-              Delete
+            <Button onClick={handleDelete} className={`${BTN_DANGER} flex-1`}>
+              <Span className={BTN_TEXT_PRIMARY}>Delete</Span>
             </Button>
           </Div>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

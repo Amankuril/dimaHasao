@@ -12,29 +12,31 @@
  * blended number.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, Loader2, Search } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import festivalService from '../../../services/festivalService';
 import {
-  Button,
-  Div,
-  H1,
-  H3,
-  Img,
-  Input,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+  Card,
+  Cell,
+  DataTable,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  LoadingState,
+  PageHeader,
+  Row,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  TBody,
+  THead,
+  Toolbar,
+} from '../../../../admin/ui';
+import { Button, Div, Img, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import usePrompt from '../components/usePrompt';
 const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const when = (value) =>
@@ -48,16 +50,16 @@ const when = (value) =>
       })
     : '—';
 const STATUS_TONE = {
-  confirmed: 'bg-emerald-100 text-emerald-700',
-  pending: 'bg-amber-100 text-amber-700',
-  used: 'bg-sky-100 text-sky-700',
-  cancelled: 'bg-gray-200 text-gray-600',
+  confirmed: 'success',
+  pending: 'warning',
+  used: 'info',
+  cancelled: 'neutral',
 };
 const LIFECYCLE_TONE = {
-  live: 'bg-emerald-100 text-emerald-700',
-  upcoming: 'bg-sky-100 text-sky-700',
-  ended: 'bg-gray-200 text-gray-600',
-  scheduled: 'bg-gray-100 text-gray-500',
+  live: 'success',
+  upcoming: 'info',
+  ended: 'neutral',
+  scheduled: 'warning',
 };
 const FILTERS = [
   {
@@ -81,6 +83,8 @@ const FILTERS = [
     label: 'Cancelled',
   },
 ];
+const CAT_COLS = [170, 110, 90, 90, 90, 90, 110, 120];
+const BOOK_COLS = [130, 180, 140, 80, 110, 150, 150, 150, 120];
 const FestivalDetail = ({ festivalId, onBack }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -137,213 +141,194 @@ const FestivalDetail = ({ festivalId, onBack }) => {
         .includes(query),
     );
   });
+  const backButton = (
+    <Button type="button" onClick={onBack} className={BTN_SECONDARY}>
+      <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+      <Span className={BTN_TEXT_SECONDARY}>All festivals</Span>
+    </Button>
+  );
   if (loading && !data) {
     return (
-      <ScrollDiv className="p-4 pb-20" contentClassName="py-20 items-center">
-        <UiIcon as={Loader2} className="animate-spin text-gray-400" />
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader title="Festival" subtitle="Seats, categories and bookings." actions={backButton} />
+        <LoadingState label="Loading this festival…" />
+      </AdminPage>
     );
   }
-  if (!data) return null;
+  if (!data) {
+    return (
+      <AdminPage maxWidth={1200}>
+        <PageHeader title="Festival" subtitle="Seats, categories and bookings." actions={backButton} />
+        <ErrorState title="This festival could not be loaded" message="Go back and open it again." onRetry={load} />
+      </AdminPage>
+    );
+  }
   const { festival, categories, totals } = data;
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-5">
-      <Button type="button" onClick={onBack} className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800">
-        <UiIcon as={ArrowLeft} size={15} /> All festivals
-      </Button>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        title={festival.name}
+        subtitle={`${festival.dates || ''}${festival.venue ? ` · ${festival.venue}` : ''}`}
+        breadcrumb={[{ label: 'Tours' }, { label: 'Festivals', onPress: onBack }, { label: festival.name }]}
+        actions={backButton}
+      />
 
       {/* Header */}
-      <Div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-wrap items-start gap-5">
-        <Img
-          src={festival.heroImage}
-          alt=""
-          className="w-28 h-24 rounded-xl object-cover bg-gray-100 shrink-0"
-          fallback={<Div className="w-28 h-24 shrink-0" />}
-        />
-
-        <Div className="flex-1 basis-64 min-w-0">
-          <Div className="flex flex-wrap items-center gap-2">
-            <H1 className="text-lg font-bold text-gray-900">{festival.name}</H1>
-            <Span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${LIFECYCLE_TONE[festival.status] || ''}`}>{festival.status}</Span>
-            {!festival.isActive && <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700">hidden</Span>}
+      <Card className="mb-4 gap-3">
+        <Div className="flex-row items-start gap-3">
+          <Img src={festival.heroImage} alt="" className="w-24 h-20 rounded-lg object-cover bg-slate-100 shrink-0" fallback={<Div className="w-24 h-20 shrink-0" />} />
+          <Div className="flex-1 min-w-0 gap-2">
+            <Div className="flex-row flex-wrap items-center gap-2">
+              {festival.status ? <StatusBadge status={festival.status} tone={LIFECYCLE_TONE[festival.status] || 'neutral'} label={festival.status} /> : null}
+              {!festival.isActive && <StatusBadge status="hidden" tone="warning" label="hidden" />}
+            </Div>
+            <P className={`text-sm font-semibold ${festival.bookingOpen ? 'text-green-700' : 'text-amber-700'}`}>
+              {festival.bookingOpen
+                ? `Booking open${festival.bookingClosesAt ? ` until ${when(festival.bookingClosesAt)}` : ''}`
+                : festival.bookingClosedReason}
+            </P>
           </Div>
-          <P className="text-sm text-gray-500 mt-1">
-            {festival.dates}
-            {festival.venue ? ` · ${festival.venue}` : ''}
-          </P>
-
-          <P
-            className={`mt-2.5 inline-block text-xs font-semibold rounded-lg px-2.5 py-1.5 ${festival.bookingOpen ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}
-          >
-            {festival.bookingOpen ? `Booking open${festival.bookingClosesAt ? ` until ${when(festival.bookingClosesAt)}` : ''}` : festival.bookingClosedReason}
-          </P>
         </Div>
-      </Div>
+      </Card>
 
       {/* Seats at a glance */}
-      <Div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        {[
-          {
-            label: 'Seats configured',
-            value: totals.configuredSeats,
-          },
-          {
-            label: 'Available',
-            value: totals.availableSeats,
-          },
-          {
-            label: 'Paid',
-            value: totals.paidSeats,
-          },
-          {
-            label: 'Held (unpaid)',
-            value: totals.heldSeats,
-          },
-          {
-            label: 'Revenue',
-            value: currency(totals.revenue),
-          },
-        ].map((card) => (
-          <Div key={card.label} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-            <P className="text-xs font-semibold text-gray-500">{card.label}</P>
-            <P className="text-xl font-black text-gray-900 mt-1">{card.value}</P>
-          </Div>
-        ))}
-      </Div>
+      <StatGrid className="mb-4">
+        <StatCard label="Seats configured" value={totals.configuredSeats} />
+        <StatCard label="Available" value={totals.availableSeats} tone="info" />
+        <StatCard label="Paid" value={totals.paidSeats} tone="success" />
+        <StatCard label="Held (unpaid)" value={totals.heldSeats} tone="warning" />
+        <StatCard label="Revenue" value={currency(totals.revenue)} tone="success" />
+      </StatGrid>
 
       {/* Per category */}
-      <Div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <H3 className="font-bold text-gray-900 text-sm p-4 pb-3 border-b border-gray-100">Seats by category</H3>
-        <Table cols={[170, 100, 80, 80, 80, 80, 100, 110]} className="w-full text-sm">
-          <Thead className="bg-gray-50 text-gray-500">
-            <Tr>
-              {['Category', 'Price', 'Seats', 'Booked', 'Paid', 'Held', 'Available', 'Revenue'].map((h, i) => (
-                <Th key={h} className={`px-4 py-2.5 text-xs font-bold ${i === 0 ? 'text-left' : 'text-right'}`}>
-                  {h}
-                </Th>
-              ))}
-            </Tr>
-          </Thead>
-          <Tbody className="divide-y divide-gray-100">
-            {categories.map((c) => {
+      <SectionTitle>Seats by category</SectionTitle>
+      {categories.length === 0 ? (
+        <EmptyState title="No pass categories" message="Add a pass on the festival's edit screen." className="mb-4" />
+      ) : (
+        <DataTable cols={CAT_COLS} className="mb-4">
+          <THead cols={CAT_COLS} labels={['Category', 'Price', 'Seats', 'Booked', 'Paid', 'Held', 'Available', 'Revenue']} />
+          <TBody>
+            {categories.map((c, i, a) => {
               const soldOut = c.availableSeats === 0;
               return (
-                <Tr key={c._id} className="hover:bg-gray-50/60">
-                  <Td className="px-4 py-3">
-                    <Div className="flex-row flex-wrap items-center gap-2">
-                      <Span className="font-semibold text-gray-800">{c.name}</Span>
-                      {!c.isActive && <Span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-gray-200 text-gray-600">closed</Span>}
-                    </Div>
-                  </Td>
-                  <Td className="px-4 py-3 text-right text-gray-700">{currency(c.price)}</Td>
-                  <Td className="px-4 py-3 text-right text-gray-700">{c.configuredSeats}</Td>
-                  <Td className="px-4 py-3 text-right text-gray-700">{c.bookedSeats}</Td>
-                  <Td className="px-4 py-3 text-right font-semibold text-emerald-700">{c.paidSeats}</Td>
-                  <Td className="px-4 py-3 text-right text-amber-700">{c.heldSeats || '—'}</Td>
-                  <Td className={`px-4 py-3 text-right font-bold ${soldOut ? 'text-red-600' : 'text-gray-900'}`}>{soldOut ? 'Sold out' : c.availableSeats}</Td>
-                  <Td className="px-4 py-3 text-right text-gray-700">{currency(c.revenue)}</Td>
-                </Tr>
+                <Row key={c._id} last={i === a.length - 1}>
+                  <Cell width={CAT_COLS[0]}>
+                    <P className="text-sm font-semibold text-slate-800" numberOfLines={2}>
+                      {c.name}
+                    </P>
+                    {!c.isActive && <StatusBadge status="closed" tone="neutral" label="closed" className="mt-1" />}
+                  </Cell>
+                  <Cell width={CAT_COLS[1]} align="right">{currency(c.price)}</Cell>
+                  <Cell width={CAT_COLS[2]} align="right">{c.configuredSeats}</Cell>
+                  <Cell width={CAT_COLS[3]} align="right">{c.bookedSeats}</Cell>
+                  <Cell width={CAT_COLS[4]} align="right">
+                    <P className="text-sm font-semibold text-green-700">{c.paidSeats}</P>
+                  </Cell>
+                  <Cell width={CAT_COLS[5]} align="right">
+                    <P className="text-sm text-amber-700">{c.heldSeats || '—'}</P>
+                  </Cell>
+                  <Cell width={CAT_COLS[6]} align="right">
+                    <P className={`text-sm font-semibold ${soldOut ? 'text-red-600' : 'text-slate-900'}`}>{soldOut ? 'Sold out' : c.availableSeats}</P>
+                  </Cell>
+                  <Cell width={CAT_COLS[7]} align="right">{currency(c.revenue)}</Cell>
+                </Row>
               );
             })}
-          </Tbody>
-        </Table>
-      </Div>
+          </TBody>
+        </DataTable>
+      )}
 
       {/* Bookings */}
-      <Div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <Div className="flex flex-wrap items-center justify-between gap-2 p-4 pb-3 border-b border-gray-100">
-          <H3 className="font-bold text-gray-900 text-sm">
-            Bookings <Span className="text-gray-400 font-semibold">({totals.bookings})</Span>
-          </H3>
+      <SectionTitle>{`Bookings (${totals.bookings})`}</SectionTitle>
+      <Toolbar>
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Booking ID, name or phone"
+          className={`${INPUT} flex-1`}
+          style={{ minWidth: 180 }}
+        />
+        <Select value={status} onChange={(e) => setStatus(e.target.value)} className={`${INPUT} flex-1`} style={{ minWidth: 150 }}>
+          {FILTERS.map((f) => (
+            <Option key={f.value} value={f.value}>
+              {f.label}
+            </Option>
+          ))}
+        </Select>
+      </Toolbar>
 
-          <Div className="flex flex-wrap items-center gap-2">
-            <Div className="relative justify-center">
-              <UiIcon as={Search} size={14} className="absolute left-2.5 z-10 text-gray-400" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Booking ID, name or phone"
-                className="pl-8 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] w-56"
-              />
-            </Div>
-            <Select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b]"
-            >
-              {FILTERS.map((f) => (
-                <Option key={f.value} value={f.value}>
-                  {f.label}
-                </Option>
-              ))}
-            </Select>
-          </Div>
-        </Div>
-
-        {bookings.length === 0 ? (
-          <P className="py-12 text-center text-sm text-gray-400">{query || status !== 'all' ? 'No bookings match this filter.' : 'Nobody has booked yet.'}</P>
-        ) : (
-          <Table cols={[130, 190, 140, 80, 110, 160, 150, 150, 120]} className="w-full text-sm">
-            <Thead className="bg-gray-50 text-gray-500">
-              <Tr>
-                {['Booking ID', 'Attendee', 'Category', 'Seats', 'Amount', 'Status', 'Pass', 'Booked on', ''].map((h, i) => (
-                  <Th key={h} className={`px-4 py-2.5 text-xs font-bold ${['Seats', 'Amount'].includes(h) ? 'text-right' : 'text-left'}`}>
-                    {h}
-                  </Th>
-                ))}
-              </Tr>
-            </Thead>
-            <Tbody className="divide-y divide-gray-100">
-              {bookings.map((b) => {
-                // The account that booked; the attendee named on the pass may
-                // differ when someone books for a friend.
-                const user = b.userId || {};
-                return (
-                  <Tr key={b._id} className="hover:bg-gray-50/60">
-                    <Td className="px-4 py-3 font-mono text-xs font-bold text-gray-800">{b.bookingId}</Td>
-                    <Td className="px-4 py-3">
-                      <P className="font-semibold text-gray-800">{b.attendee?.name || user.name || 'Unknown'}</P>
-                      <P className="text-xs text-gray-500">
-                        {b.attendee?.phone || user.phone || ''}
-                        {user.name && b.attendee?.name && user.name !== b.attendee.name ? ` · booked by ${user.name}` : ''}
-                      </P>
-                    </Td>
-                    <Td className="px-4 py-3 text-gray-700">{b.ticketCategoryName}</Td>
-                    <Td className="px-4 py-3 text-right font-semibold text-gray-900">{b.ticketCount}</Td>
-                    <Td className="px-4 py-3 text-right text-gray-700">{currency(b.totalAmount)}</Td>
-                    <Td className="px-4 py-3">
-                      <Div className="flex-row flex-wrap items-center gap-1.5">
-                        <Span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${STATUS_TONE[b.bookingStatus] || ''}`}>{b.bookingStatus}</Span>
-                        {b.paymentStatus !== 'paid' && b.bookingStatus !== 'cancelled' && (
-                          <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">unpaid</Span>
-                        )}
-                      </Div>
-                    </Td>
-                    <Td className="px-4 py-3 font-mono text-[11px] text-gray-500">{b.qrCode || '—'}</Td>
-                    <Td className="px-4 py-3 text-xs text-gray-500">{when(b.createdAt)}</Td>
-                    <Td className="px-4 py-3 text-right">
-                      {b.bookingStatus === 'cancelled' ? (
-                        <Span className="text-[11px] text-gray-300">—</Span>
-                      ) : (
-                        <Button
-                          type="button"
-                          disabled={cancellingId === b._id}
-                          onClick={() => cancelBooking(b)}
-                          className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
-                        >
-                          Cancel
-                        </Button>
-                      )}
-                    </Td>
-                  </Tr>
-                );
-              })}
-            </Tbody>
-          </Table>
-        )}
-      </Div>
+      {bookings.length === 0 ? (
+        <EmptyState
+          title={query || status !== 'all' ? 'No bookings match this filter' : 'Nobody has booked yet'}
+          message={query || status !== 'all' ? 'Clear the search or widen the status filter.' : 'Passes bought in the app appear here.'}
+        />
+      ) : (
+        <DataTable cols={BOOK_COLS}>
+          <THead cols={BOOK_COLS} labels={['Booking ID', 'Attendee', 'Category', 'Seats', 'Amount', 'Status', 'Pass', 'Booked on', 'Actions']} />
+          <TBody>
+            {bookings.map((b, i, a) => {
+              // The account that booked; the attendee named on the pass may
+              // differ when someone books for a friend.
+              const user = b.userId || {};
+              return (
+                <Row key={b._id} last={i === a.length - 1}>
+                  <Cell width={BOOK_COLS[0]}>
+                    <P className="text-sm font-semibold text-slate-800" numberOfLines={1}>
+                      {b.bookingId}
+                    </P>
+                  </Cell>
+                  <Cell width={BOOK_COLS[1]}>
+                    <P className="text-sm font-semibold text-slate-800" numberOfLines={1}>
+                      {b.attendee?.name || user.name || 'Unknown'}
+                    </P>
+                    <P className="text-xs text-slate-500 mt-0.5" numberOfLines={2}>
+                      {b.attendee?.phone || user.phone || ''}
+                      {user.name && b.attendee?.name && user.name !== b.attendee.name ? ` · booked by ${user.name}` : ''}
+                    </P>
+                  </Cell>
+                  <Cell width={BOOK_COLS[2]}>{b.ticketCategoryName}</Cell>
+                  <Cell width={BOOK_COLS[3]} align="right">
+                    <P className="text-sm font-semibold text-slate-900">{b.ticketCount}</P>
+                  </Cell>
+                  <Cell width={BOOK_COLS[4]} align="right">{currency(b.totalAmount)}</Cell>
+                  <Cell width={BOOK_COLS[5]}>
+                    <Div className="gap-1">
+                      <StatusBadge status={b.bookingStatus} tone={STATUS_TONE[b.bookingStatus] || 'neutral'} label={b.bookingStatus} />
+                      {b.paymentStatus !== 'paid' && b.bookingStatus !== 'cancelled' && <StatusBadge status="unpaid" tone="danger" label="unpaid" />}
+                    </Div>
+                  </Cell>
+                  <Cell width={BOOK_COLS[6]}>
+                    <P className="text-xs text-slate-500" numberOfLines={2}>
+                      {b.qrCode || '—'}
+                    </P>
+                  </Cell>
+                  <Cell width={BOOK_COLS[7]}>
+                    <P className="text-xs text-slate-500" numberOfLines={2}>
+                      {when(b.createdAt)}
+                    </P>
+                  </Cell>
+                  <Cell width={BOOK_COLS[8]}>
+                    {b.bookingStatus === 'cancelled' ? (
+                      <Span className="text-sm text-slate-400">—</Span>
+                    ) : (
+                      <Button
+                        type="button"
+                        disabled={cancellingId === b._id}
+                        onClick={() => cancelBooking(b)}
+                        className="h-11 px-3 rounded-lg border border-red-200 bg-white items-center justify-center disabled:opacity-50"
+                      >
+                        <Span className="text-sm font-semibold text-red-600">Cancel</Span>
+                      </Button>
+                    )}
+                  </Cell>
+                </Row>
+              );
+            })}
+          </TBody>
+        </DataTable>
+      )}
       {promptDialog}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default FestivalDetail;

@@ -1,12 +1,144 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/LandingPageSettings.jsx (tools/port.js first pass). */
-import { useState } from 'react';
-import { Monitor, Info, X, ChevronRight, RotateCcw, Save } from 'lucide-react-native';
+import { Children, useState } from 'react';
+import { Monitor, Info, X, RotateCcw, Save, Upload } from 'lucide-react-native';
 import mobileImage1 from '../../../assets/Transaction-report-icons/mobile_image1.png';
 import { pickImage, objectUrl } from '../../../../lib/files';
-import { Button, Div, H1, H2, HScroll, Img, Input, Label, Option, P, ScrollDiv, Select, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../admin/ui';
+import { Button, Div, HScroll, Img, Input, Option, P, Select, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
+
+const TEXTAREA = 'px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900';
+
+/** The section tab strip: scrolls sideways, 44px targets, never clipped. */
+function TabStrip({ tabs, active, onSelect, label }) {
+  return (
+    <Card className="mb-4" padded={false}>
+      <HScroll contentClassName="flex-row items-center gap-2 p-2">
+        {tabs.map((tab) => {
+          const isActive = tab === active;
+          return (
+            <Button
+              key={tab}
+              type="button"
+              onClick={() => onSelect(tab)}
+              accessibilityLabel={`${label}: ${tab}`}
+              className={`h-11 px-4 rounded-lg items-center justify-center ${isActive ? 'bg-blue-600' : 'bg-white'}`}
+            >
+              <Span className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-700'}`}>{tab}</Span>
+            </Button>
+          );
+        })}
+      </HScroll>
+    </Card>
+  );
+}
+
+/** The language strip inside a section: one row, scrolls, 44px targets. */
+function LanguageStrip({ languages, active, onSelect, className }) {
+  return (
+    <HScroll className={className} contentClassName="flex-row items-center gap-3">
+      {languages.map((lang) => {
+        const isActive = lang.id === active;
+        return (
+          <Button
+            key={lang.id}
+            type="button"
+            onClick={() => onSelect(lang.id)}
+            accessibilityLabel={`Language: ${lang.label}`}
+            className={`h-11 px-1 justify-center border-b-2 ${isActive ? 'border-blue-600' : 'border-white'}`}
+          >
+            <Span className={`text-sm font-semibold ${isActive ? 'text-blue-600' : 'text-slate-600'}`}>{lang.label}</Span>
+          </Button>
+        );
+      })}
+    </HScroll>
+  );
+}
+
+/** Two columns from 700px, one below it — the grid classes native drops, measured. */
+function FormGrid({ children, max = 2, className }) {
+  const { tablet } = useLayoutWidth();
+  const [width, setWidth] = useState(0);
+  const items = Children.toArray(children).filter(Boolean);
+  const cols = tablet && width ? Math.min(max, items.length) : 1;
+  const itemWidth = cols > 1 ? (width - 12 * (cols - 1)) / cols : '100%';
+  return (
+    <Div
+      className={`flex-row flex-wrap gap-3 ${className || ''}`}
+      onLayout={(e) => {
+        const w = Math.round(e.nativeEvent.layout.width);
+        if (w && Math.abs(w - width) > 1) setWidth(w);
+      }}
+    >
+      {items.map((child, i) => (
+        <Div key={i} style={{ width: itemWidth }}>
+          {child}
+        </Div>
+      ))}
+    </Div>
+  );
+}
+
+/** The Reset / Save pair every section carries. */
+function SectionActions({ onReset, onSave }) {
+  return (
+    <Div className="flex-row flex-wrap items-center justify-end gap-2 mt-4">
+      <Button type="button" onClick={onReset} className={BTN_SECONDARY} accessibilityLabel="Reset this section">
+        <UiIcon as={RotateCcw} size={16} className="text-slate-600" />
+        <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+      </Button>
+      <Button type="button" onClick={onSave} className={BTN_PRIMARY} accessibilityLabel="Save this section">
+        <UiIcon as={Save} size={16} className="text-white" />
+        <Span className={BTN_TEXT_PRIMARY}>Save</Span>
+      </Button>
+    </Div>
+  );
+}
+
+/** A section's on/off header: the checkbox and its name in one 44px row. */
+function SectionToggle({ label, checked, defaultChecked, onChange }) {
+  return (
+    <Div className="flex-row items-center gap-3 mb-3 h-11">
+      <Input
+        type="checkbox"
+        checked={checked}
+        defaultChecked={defaultChecked}
+        onChange={onChange}
+        className="w-5 h-5 rounded border-slate-300"
+      />
+      <Span className="text-base font-semibold text-slate-900 flex-1">{label}</Span>
+    </Div>
+  );
+}
+
+/** An image slot: the preview with a 44px remove button, or a tap-to-upload tile. */
+function ImageSlot({ src, alt, onPick, onRemove, width, height }) {
+  if (src) {
+    return (
+      <Div className="flex-row items-start gap-2">
+        <Img src={src} alt={alt} className="rounded-lg border border-slate-200" style={{ width, height }} contentFit="cover" />
+        <Button type="button" onClick={onRemove} accessibilityLabel={`Remove ${alt} image`} className="w-11 h-11 rounded-lg bg-red-600 items-center justify-center">
+          <UiIcon as={X} size={16} className="text-white" />
+        </Button>
+      </Div>
+    );
+  }
+  return (
+    <Button
+      type="button"
+      onClick={onPick}
+      accessibilityLabel={`Upload ${alt} image`}
+      className="rounded-lg border border-dashed border-slate-300 bg-slate-50 items-center justify-center gap-2"
+      style={{ width, height }}
+    >
+      <UiIcon as={Upload} size={18} className="text-slate-400" />
+      <Span className="text-xs font-semibold text-slate-500">Upload</Span>
+    </Button>
+  );
+}
+
 export default function LandingPageSettings({ type = 'admin' }) {
   const isAdmin = type === 'admin';
 
@@ -99,7 +231,7 @@ export default function LandingPageSettings({ type = 'admin' }) {
     },
     {
       id: 'es',
-      label: 'Spanish - espa�ol(ES)',
+      label: 'Spanish - español(ES)',
     },
   ];
   const handleImageUpload = async (setter, field) => {
@@ -158,1757 +290,753 @@ export default function LandingPageSettings({ type = 'admin' }) {
     // Handle save logic here
     debugLog('Saving...');
   };
+
   if (isAdmin) {
     return (
-      <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen w-full">
-          <Div
-            className="w-full mx-auto overflow-hidden"
-            style={{
-              maxWidth: '100%',
-            }}
-          >
-            {/* Page Header */}
-            <Div
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 w-full overflow-hidden"
-              style={{
-                maxWidth: '100%',
-              }}
-            >
-              <Div className="flex items-center gap-2 min-w-0">
-                <UiIcon as={Monitor} className="w-5 h-5 text-slate-700 flex-shrink-0" />
-                <H1 className="text-xl lg:text-2xl font-bold text-slate-900 truncate">Admin Landing Page</H1>
-              </Div>
-              <Div className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium flex items-center gap-1 flex-shrink-0">
-                <Span>See how it works!</Span>
-                <UiIcon as={Info} className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Div>
+      <AdminPage maxWidth={720}>
+        <PageHeader
+          icon={Monitor}
+          title="Admin Landing Page"
+          subtitle="Edit one section at a time, then save it."
+          breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Admin landing page' }]}
+          actions={
+            <Div className="flex-row items-center gap-1.5">
+              <UiIcon as={Info} size={14} className="text-blue-600" />
+              <Span className="text-sm font-semibold text-blue-600">See how it works!</Span>
             </Div>
+          }
+        />
 
-            {/* Main Navigation Tabs */}
-            <Div
-              className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3 w-full overflow-hidden"
-              style={{
-                maxWidth: '100%',
-              }}
-            >
-              <Div className="flex flex-wrap items-center gap-1.5 w-full">
-                {adminTabs.map((tab) => {
-                  const isActive = tab === adminActiveTab;
-                  return (
-                    <Button
-                      key={tab}
-                      type="button"
-                      onClick={() => setAdminActiveTab(tab)}
-                      className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${isActive ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
-                    >
-                      {tab}
-                    </Button>
-                  );
-                })}
-                <UiIcon as={ChevronRight} className="w-4 h-4 text-slate-400 ml-1 flex-shrink-0" />
-              </Div>
-            </Div>
+        <TabStrip tabs={adminTabs} active={adminActiveTab} onSelect={setAdminActiveTab} label="Section" />
 
-            {/* Language Tabs */}
-            <Div
-              className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3 w-full overflow-hidden"
-              style={{
-                maxWidth: '100%',
-              }}
-            >
-              <Div className="flex flex-wrap items-center gap-2 sm:gap-3 border-b border-slate-200 pb-2 w-full">
-                {languages.map((lang) => {
-                  const isActive = lang.id === adminActiveLanguage;
-                  return (
-                    <Button
-                      key={lang.id}
-                      type="button"
-                      onClick={() => setAdminActiveLanguage(lang.id)}
-                      className={`text-xs sm:text-sm font-medium transition-all pb-1 whitespace-nowrap flex-shrink-0 ${isActive ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
-                    >
-                      {lang.label}
-                    </Button>
-                  );
-                })}
-              </Div>
-            </Div>
+        <Card className="mb-4">
+          <SectionTitle>Language</SectionTitle>
+          <LanguageStrip languages={languages} active={adminActiveLanguage} onSelect={setAdminActiveLanguage} />
+        </Card>
 
-            {/* Header Content Section */}
-            {adminActiveTab === 'Header' && (
-              <Div
-                className="space-y-3 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                {/* Header Content Section */}
-                <Div
-                  className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                  style={{
-                    maxWidth: '100%',
-                  }}
-                >
-                  <Div className="flex items-center gap-2 mb-4">
+        {/* Header Content Section */}
+        {adminActiveTab === 'Header' && (
+          <Div className="gap-4">
+            <Card>
+              <SectionToggle
+                label="Header Content Section"
+                checked={adminHeaderContent.enabled}
+                onChange={(e) =>
+                  setAdminHeaderContent((prev) => ({
+                    ...prev,
+                    enabled: e.target.checked,
+                  }))
+                }
+              />
+              <Div className="gap-3">
+                <Field label="Title">
+                  <Input
+                    type="text"
+                    value={adminHeaderContent.title}
+                    onChange={(e) =>
+                      setAdminHeaderContent((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Subtitle">
+                  <Input
+                    type="text"
+                    value={adminHeaderContent.subtitle}
+                    onChange={(e) =>
+                      setAdminHeaderContent((prev) => ({
+                        ...prev,
+                        subtitle: e.target.value,
+                      }))
+                    }
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Tagline">
+                  <Input
+                    type="text"
+                    value={adminHeaderContent.tagline}
+                    onChange={(e) =>
+                      setAdminHeaderContent((prev) => ({
+                        ...prev,
+                        tagline: e.target.value,
+                      }))
+                    }
+                    className={INPUT}
+                  />
+                </Field>
+                <FormGrid>
+                  <Field label="Button Name">
                     <Input
-                      type="checkbox"
-                      nativeID="header-content"
-                      checked={adminHeaderContent.enabled}
+                      type="text"
+                      value={adminHeaderContent.buttonName}
                       onChange={(e) =>
                         setAdminHeaderContent((prev) => ({
                           ...prev,
-                          enabled: e.target.checked,
+                          buttonName: e.target.value,
                         }))
                       }
-                      className="w-4 h-4 text-blue-600 rounded border-slate-300"
+                      className={INPUT}
                     />
-                    <Label className="text-xs sm:text-sm font-semibold text-slate-900">Header Content Section</Label>
-                  </Div>
-
-                  <Div className="space-y-3">
-                    <Div>
-                      <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Title
-                        <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                      </Label>
+                  </Field>
+                  <Field label="Redirect Link" hint={adminHeaderContent.redirectLinkEnabled ? 'The button opens this link.' : 'The link is switched off.'}>
+                    <Div className="flex-row items-center gap-2">
                       <Input
                         type="text"
-                        value={adminHeaderContent.title}
+                        value={adminHeaderContent.redirectLink}
                         onChange={(e) =>
                           setAdminHeaderContent((prev) => ({
                             ...prev,
-                            title: e.target.value,
+                            redirectLink: e.target.value,
                           }))
                         }
-                        className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className={`${INPUT} flex-1`}
                       />
-                    </Div>
-
-                    <Div>
-                      <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Subtitle
-                        <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                      </Label>
-                      <Input
-                        type="text"
-                        value={adminHeaderContent.subtitle}
-                        onChange={(e) =>
+                      <Button
+                        type="button"
+                        onClick={() =>
                           setAdminHeaderContent((prev) => ({
                             ...prev,
-                            subtitle: e.target.value,
+                            redirectLinkEnabled: !prev.redirectLinkEnabled,
                           }))
                         }
-                        className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                        accessibilityLabel={adminHeaderContent.redirectLinkEnabled ? 'Turn the redirect link off' : 'Turn the redirect link on'}
+                        className={`h-11 px-4 rounded-lg items-center justify-center ${adminHeaderContent.redirectLinkEnabled ? 'bg-blue-600' : 'bg-slate-100'}`}
+                      >
+                        <Span className={`text-sm font-semibold ${adminHeaderContent.redirectLinkEnabled ? 'text-white' : 'text-slate-600'}`}>
+                          {adminHeaderContent.redirectLinkEnabled ? 'ON' : 'OFF'}
+                        </Span>
+                      </Button>
                     </Div>
-
-                    <Div>
-                      <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Tagline
-                        <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                      </Label>
-                      <Input
-                        type="text"
-                        value={adminHeaderContent.tagline}
-                        onChange={(e) =>
-                          setAdminHeaderContent((prev) => ({
-                            ...prev,
-                            tagline: e.target.value,
-                          }))
-                        }
-                        className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </Div>
-
-                    <Div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <Div>
-                        <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                          Button Name
-                          <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                        </Label>
-                        <Input
-                          type="text"
-                          value={adminHeaderContent.buttonName}
-                          onChange={(e) =>
-                            setAdminHeaderContent((prev) => ({
-                              ...prev,
-                              buttonName: e.target.value,
-                            }))
-                          }
-                          className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </Div>
-
-                      <Div>
-                        <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                          Redirect Link
-                          <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                        </Label>
-                        <Div className="flex items-center gap-2 min-w-0">
-                          <Input
-                            type="text"
-                            value={adminHeaderContent.redirectLink}
-                            onChange={(e) =>
-                              setAdminHeaderContent((prev) => ({
-                                ...prev,
-                                redirectLink: e.target.value,
-                              }))
-                            }
-                            className="flex-1 min-w-0 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <Button
-                            type="button"
-                            onClick={() =>
-                              setAdminHeaderContent((prev) => ({
-                                ...prev,
-                                redirectLinkEnabled: !prev.redirectLinkEnabled,
-                              }))
-                            }
-                            className={`px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-all whitespace-nowrap ${adminHeaderContent.redirectLinkEnabled ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`}
-                          >
-                            {adminHeaderContent.redirectLinkEnabled ? 'ON' : 'OFF'}
-                          </Button>
-                        </Div>
-                      </Div>
-                    </Div>
-                  </Div>
-
-                  <Div className="flex justify-end gap-2 mt-4">
-                    <Button
-                      type="button"
-                      onClick={handleReset}
-                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      <UiIcon as={RotateCcw} className="w-3 h-3" />
-                      Reset
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleSave}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      <UiIcon as={Save} className="w-3 h-3" />
-                      Save
-                    </Button>
-                  </Div>
-                </Div>
-
-                {/* Image Content Section */}
-                <Div
-                  className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                  style={{
-                    maxWidth: '100%',
-                  }}
-                >
-                  <Div className="flex items-center gap-2 mb-4">
-                    <Input
-                      type="checkbox"
-                      nativeID="image-content"
-                      checked={adminImageContent.enabled}
-                      onChange={(e) =>
-                        setAdminImageContent((prev) => ({
-                          ...prev,
-                          enabled: e.target.checked,
-                        }))
-                      }
-                      className="w-4 h-4 text-blue-600 rounded border-slate-300"
-                    />
-                    <Label className="text-xs sm:text-sm font-semibold text-slate-900">Image Content</Label>
-                  </Div>
-
-                  <Div className="space-y-3">
-                    <Div>
-                      <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Content Image (800x800px)</Label>
-                      <Div className="relative inline-block">
-                        {adminImageContent.contentImage ? (
-                          <Div className="relative">
-                            <Img
-                              src={adminImageContent.contentImage}
-                              alt="Content"
-                              className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg border border-slate-300"
-                            />
-                            <Button
-                              type="button"
-                              onClick={() => handleImageRemove(setAdminImageContent, 'contentImage')}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                            >
-                              <UiIcon as={X} className="w-3 h-3" />
-                            </Button>
-                          </Div>
-                        ) : (
-                          <Div className="cursor-pointer" onClick={() => handleImageUpload(setAdminImageContent, 'contentImage')}>
-                            <Div className="w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center hover:border-blue-500 transition-colors">
-                              <Span className="text-xs text-slate-500">Upload</Span>
-                            </Div>
-                          </Div>
-                        )}
-                      </Div>
-                    </Div>
-
-                    <Div>
-                      <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Background Image (1600x1700px)</Label>
-                      <Div className="relative inline-block">
-                        {adminImageContent.backgroundImage ? (
-                          <Div className="relative">
-                            <Img
-                              src={adminImageContent.backgroundImage}
-                              alt="Background"
-                              className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg border border-slate-300"
-                            />
-                            <Button
-                              type="button"
-                              onClick={() => handleImageRemove(setAdminImageContent, 'backgroundImage')}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                            >
-                              <UiIcon as={X} className="w-3 h-3" />
-                            </Button>
-                          </Div>
-                        ) : (
-                          <Div className="cursor-pointer" onClick={() => handleImageUpload(setAdminImageContent, 'backgroundImage')}>
-                            <Div className="w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center hover:border-blue-500 transition-colors">
-                              <Span className="text-xs text-slate-500">Upload</Span>
-                            </Div>
-                          </Div>
-                        )}
-                      </Div>
-                    </Div>
-                  </Div>
-
-                  <Div className="flex justify-end gap-2 mt-4">
-                    <Button
-                      type="button"
-                      onClick={handleReset}
-                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      <UiIcon as={RotateCcw} className="w-3 h-3" />
-                      Reset
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleSave}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      <UiIcon as={Save} className="w-3 h-3" />
-                      Save
-                    </Button>
-                  </Div>
-                </Div>
-
-                {/* Floating Icon Content Section */}
-                <Div
-                  className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                  style={{
-                    maxWidth: '100%',
-                  }}
-                >
-                  <Div className="flex items-center gap-2 mb-4">
-                    <Input
-                      type="checkbox"
-                      nativeID="floating-icon"
-                      checked={adminFloatingIcon.enabled}
-                      onChange={(e) =>
-                        setAdminFloatingIcon((prev) => ({
-                          ...prev,
-                          enabled: e.target.checked,
-                        }))
-                      }
-                      className="w-4 h-4 text-blue-600 rounded border-slate-300"
-                    />
-                    <Label className="text-xs sm:text-sm font-semibold text-slate-900">Floating Icon Content</Label>
-                  </Div>
-
-                  <Div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <Div>
-                      <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Total Order
-                        <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                      </Label>
-                      <Input
-                        type="text"
-                        value={adminFloatingIcon.totalOrder}
-                        onChange={(e) =>
-                          setAdminFloatingIcon((prev) => ({
-                            ...prev,
-                            totalOrder: e.target.value,
-                          }))
-                        }
-                        className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </Div>
-
-                    <Div>
-                      <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Total User
-                        <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                      </Label>
-                      <Input
-                        type="text"
-                        value={adminFloatingIcon.totalUser}
-                        onChange={(e) =>
-                          setAdminFloatingIcon((prev) => ({
-                            ...prev,
-                            totalUser: e.target.value,
-                          }))
-                        }
-                        className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </Div>
-
-                    <Div>
-                      <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Total Reviews
-                        <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                      </Label>
-                      <Input
-                        type="text"
-                        value={adminFloatingIcon.totalReviews}
-                        onChange={(e) =>
-                          setAdminFloatingIcon((prev) => ({
-                            ...prev,
-                            totalReviews: e.target.value,
-                          }))
-                        }
-                        className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </Div>
-                  </Div>
-
-                  <Div className="flex justify-end gap-2 mt-4">
-                    <Button
-                      type="button"
-                      onClick={handleReset}
-                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      <UiIcon as={RotateCcw} className="w-3 h-3" />
-                      Reset
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleSave}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                    >
-                      <UiIcon as={Save} className="w-3 h-3" />
-                      Save
-                    </Button>
-                  </Div>
-                </Div>
+                  </Field>
+                </FormGrid>
               </Div>
-            )}
+              <SectionActions onReset={handleReset} onSave={handleSave} />
+            </Card>
 
-            {/* About us Section */}
-            {adminActiveTab === 'About us' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">About us Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Title
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter about us title"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Description
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Textarea
-                      rows={4}
-                      placeholder="Enter about us description"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
+            {/* Image Content Section */}
+            <Card>
+              <SectionToggle
+                label="Image Content"
+                checked={adminImageContent.enabled}
+                onChange={(e) =>
+                  setAdminImageContent((prev) => ({
+                    ...prev,
+                    enabled: e.target.checked,
+                  }))
+                }
+              />
+              <Div className="gap-3">
+                <Field label="Content Image" hint="800 x 800 px">
+                  <ImageSlot
+                    src={adminImageContent.contentImage}
+                    alt="Content"
+                    width={128}
+                    height={128}
+                    onPick={() => handleImageUpload(setAdminImageContent, 'contentImage')}
+                    onRemove={() => handleImageRemove(setAdminImageContent, 'contentImage')}
+                  />
+                </Field>
+                <Field label="Section Background Image" hint="1600 x 1700 px">
+                  <ImageSlot
+                    src={adminImageContent.backgroundImage}
+                    alt="Background"
+                    width={128}
+                    height={128}
+                    onPick={() => handleImageUpload(setAdminImageContent, 'backgroundImage')}
+                    onRemove={() => handleImageRemove(setAdminImageContent, 'backgroundImage')}
+                  />
+                </Field>
               </Div>
-            )}
+              <SectionActions onReset={handleReset} onSave={handleSave} />
+            </Card>
 
-            {/* Features Section */}
-            {adminActiveTab === 'Features' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Features Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Section Title
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter features section title"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Number of Features
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="number"
-                      placeholder="Enter number"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
-
-            {/* Services Section */}
-            {adminActiveTab === 'Services' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Services Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Section Title
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter services section title"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Section Description
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Textarea
-                      rows={3}
-                      placeholder="Enter services description"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
-
-            {/* Earn money Section */}
-            {adminActiveTab === 'Earn money' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Earn money Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Section Title
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter earn money section title"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Button Text
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter button text"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
-
-            {/* Why choose us Section */}
-            {adminActiveTab === 'Why choose us' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Why choose us Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Section Title
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter why choose us title"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Number of Reasons
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="number"
-                      placeholder="Enter number"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
-
-            {/* Testimonials Section */}
-            {adminActiveTab === 'Testimonials' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Testimonials Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Section Title
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter testimonials section title"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Number of Testimonials
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="number"
-                      placeholder="Enter number"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
-
-            {/* Available zone Section */}
-            {adminActiveTab === 'Available zone' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Available zone Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Section Title
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter available zone section title"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Enable Zone Display
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Div className="flex items-center gap-2">
-                      <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                      <Span className="text-xs sm:text-sm text-slate-700">Show available zones</Span>
-                    </Div>
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
-
-            {/* Fixed data Section */}
-            {adminActiveTab === 'Fixed data' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Fixed data Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Company Name
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter company name"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Contact Email
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="email"
-                      placeholder="Enter contact email"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Contact Phone
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="tel"
-                      placeholder="Enter contact phone"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
-
-            {/* Button & links Section */}
-            {adminActiveTab === 'Button & links' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Button & links Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Primary Button Text
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter primary button text"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Primary Button Link
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="url"
-                      placeholder="Enter button link URL"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Secondary Button Text
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter secondary button text"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Secondary Button Link
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Input
-                      type="url"
-                      placeholder="Enter button link URL"
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
-
-            {/* Background color Section */}
-            {adminActiveTab === 'Background color' && (
-              <Div
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 w-full overflow-hidden"
-                style={{
-                  maxWidth: '100%',
-                }}
-              >
-                <Div className="flex items-center gap-2 mb-4">
-                  <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" defaultChecked />
-                  <Label className="text-xs sm:text-sm font-semibold text-slate-900">Background color Section</Label>
-                </Div>
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Primary Background Color
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Div className="flex items-center gap-2">
-                      <Div className="w-16 h-10 rounded border border-slate-300" style={{ backgroundColor: adminBackgroundColors.primary || 'transparent' }} />
-                      <Input
-                        type="text"
-                        value={adminBackgroundColors.primary}
-                        onChange={(e) =>
-                          setAdminBackgroundColors((prev) => ({
-                            ...prev,
-                            primary: e.target.value,
-                          }))
-                        }
-                        placeholder="#ffffff"
-                        className="flex-1 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </Div>
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Secondary Background Color
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Div className="flex items-center gap-2">
-                      <Div className="w-16 h-10 rounded border border-slate-300" style={{ backgroundColor: adminBackgroundColors.secondary || 'transparent' }} />
-                      <Input
-                        type="text"
-                        value={adminBackgroundColors.secondary}
-                        onChange={(e) =>
-                          setAdminBackgroundColors((prev) => ({
-                            ...prev,
-                            secondary: e.target.value,
-                          }))
-                        }
-                        placeholder="#f8f9fa"
-                        className="flex-1 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </Div>
-                  </Div>
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      Accent Color
-                      <UiIcon as={Info} className="w-3 h-3 text-slate-400" />
-                    </Label>
-                    <Div className="flex items-center gap-2">
-                      <Div className="w-16 h-10 rounded border border-slate-300" style={{ backgroundColor: adminBackgroundColors.accent || 'transparent' }} />
-                      <Input
-                        type="text"
-                        value={adminBackgroundColors.accent}
-                        onChange={(e) =>
-                          setAdminBackgroundColors((prev) => ({
-                            ...prev,
-                            accent: e.target.value,
-                          }))
-                        }
-                        placeholder="#006fbd"
-                        className="flex-1 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </Div>
-                  </Div>
-                </Div>
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" /> Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" /> Save
-                  </Button>
-                </Div>
-              </Div>
-            )}
+            {/* Floating Icon Content Section */}
+            <Card>
+              <SectionToggle
+                label="Floating Icon Content"
+                checked={adminFloatingIcon.enabled}
+                onChange={(e) =>
+                  setAdminFloatingIcon((prev) => ({
+                    ...prev,
+                    enabled: e.target.checked,
+                  }))
+                }
+              />
+              <FormGrid>
+                <Field label="Total Order">
+                  <Input
+                    type="text"
+                    value={adminFloatingIcon.totalOrder}
+                    onChange={(e) =>
+                      setAdminFloatingIcon((prev) => ({
+                        ...prev,
+                        totalOrder: e.target.value,
+                      }))
+                    }
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Total User">
+                  <Input
+                    type="text"
+                    value={adminFloatingIcon.totalUser}
+                    onChange={(e) =>
+                      setAdminFloatingIcon((prev) => ({
+                        ...prev,
+                        totalUser: e.target.value,
+                      }))
+                    }
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Total Reviews">
+                  <Input
+                    type="text"
+                    value={adminFloatingIcon.totalReviews}
+                    onChange={(e) =>
+                      setAdminFloatingIcon((prev) => ({
+                        ...prev,
+                        totalReviews: e.target.value,
+                      }))
+                    }
+                    className={INPUT}
+                  />
+                </Field>
+              </FormGrid>
+              <SectionActions onReset={handleReset} onSave={handleSave} />
+            </Card>
           </Div>
-      </ScrollDiv>
+        )}
+
+        {/* About us Section */}
+        {adminActiveTab === 'About us' && (
+          <Card>
+            <SectionToggle label="About us Section" defaultChecked />
+            <Div className="gap-3">
+              <Field label="Title">
+                <Input type="text" placeholder="Enter about us title" className={INPUT} />
+              </Field>
+              <Field label="Description">
+                <Textarea rows={4} placeholder="Enter about us description" className={TEXTAREA} />
+              </Field>
+            </Div>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Features Section */}
+        {adminActiveTab === 'Features' && (
+          <Card>
+            <SectionToggle label="Features Section" defaultChecked />
+            <FormGrid>
+              <Field label="Section Title">
+                <Input type="text" placeholder="Enter features section title" className={INPUT} />
+              </Field>
+              <Field label="Number of Features">
+                <Input type="number" placeholder="Enter number" className={INPUT} />
+              </Field>
+            </FormGrid>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Services Section */}
+        {adminActiveTab === 'Services' && (
+          <Card>
+            <SectionToggle label="Services Section" defaultChecked />
+            <Div className="gap-3">
+              <Field label="Section Title">
+                <Input type="text" placeholder="Enter services section title" className={INPUT} />
+              </Field>
+              <Field label="Section Description">
+                <Textarea rows={3} placeholder="Enter services description" className={TEXTAREA} />
+              </Field>
+            </Div>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Earn money Section */}
+        {adminActiveTab === 'Earn money' && (
+          <Card>
+            <SectionToggle label="Earn money Section" defaultChecked />
+            <FormGrid>
+              <Field label="Section Title">
+                <Input type="text" placeholder="Enter earn money section title" className={INPUT} />
+              </Field>
+              <Field label="Button Text">
+                <Input type="text" placeholder="Enter button text" className={INPUT} />
+              </Field>
+            </FormGrid>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Why choose us Section */}
+        {adminActiveTab === 'Why choose us' && (
+          <Card>
+            <SectionToggle label="Why choose us Section" defaultChecked />
+            <FormGrid>
+              <Field label="Section Title">
+                <Input type="text" placeholder="Enter why choose us title" className={INPUT} />
+              </Field>
+              <Field label="Number of Reasons">
+                <Input type="number" placeholder="Enter number" className={INPUT} />
+              </Field>
+            </FormGrid>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Testimonials Section */}
+        {adminActiveTab === 'Testimonials' && (
+          <Card>
+            <SectionToggle label="Testimonials Section" defaultChecked />
+            <FormGrid>
+              <Field label="Section Title">
+                <Input type="text" placeholder="Enter testimonials section title" className={INPUT} />
+              </Field>
+              <Field label="Number of Testimonials">
+                <Input type="number" placeholder="Enter number" className={INPUT} />
+              </Field>
+            </FormGrid>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Available zone Section */}
+        {adminActiveTab === 'Available zone' && (
+          <Card>
+            <SectionToggle label="Available zone Section" defaultChecked />
+            <Div className="gap-3">
+              <Field label="Section Title">
+                <Input type="text" placeholder="Enter available zone section title" className={INPUT} />
+              </Field>
+              <Field label="Enable Zone Display">
+                <Div className="flex-row items-center gap-3 h-11">
+                  <Input type="checkbox" className="w-5 h-5 rounded border-slate-300" defaultChecked />
+                  <Span className="text-sm text-slate-700 flex-1">Show available zones</Span>
+                </Div>
+              </Field>
+            </Div>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Fixed data Section */}
+        {adminActiveTab === 'Fixed data' && (
+          <Card>
+            <SectionToggle label="Fixed data Section" defaultChecked />
+            <Div className="gap-3">
+              <Field label="Company Name">
+                <Input type="text" placeholder="Enter company name" className={INPUT} />
+              </Field>
+              <FormGrid>
+                <Field label="Contact Email">
+                  <Input type="email" placeholder="Enter contact email" className={INPUT} />
+                </Field>
+                <Field label="Contact Phone">
+                  <Input type="tel" placeholder="Enter contact phone" className={INPUT} />
+                </Field>
+              </FormGrid>
+            </Div>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Button & links Section */}
+        {adminActiveTab === 'Button & links' && (
+          <Card>
+            <SectionToggle label="Button & links Section" defaultChecked />
+            <Div className="gap-3">
+              <FormGrid>
+                <Field label="Primary Button Text">
+                  <Input type="text" placeholder="Enter primary button text" className={INPUT} />
+                </Field>
+                <Field label="Primary Button Link">
+                  <Input type="url" placeholder="Enter button link URL" className={INPUT} />
+                </Field>
+              </FormGrid>
+              <FormGrid>
+                <Field label="Secondary Button Text">
+                  <Input type="text" placeholder="Enter secondary button text" className={INPUT} />
+                </Field>
+                <Field label="Secondary Button Link">
+                  <Input type="url" placeholder="Enter button link URL" className={INPUT} />
+                </Field>
+              </FormGrid>
+            </Div>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+
+        {/* Background color Section */}
+        {adminActiveTab === 'Background color' && (
+          <Card>
+            <SectionToggle label="Background color Section" defaultChecked />
+            <Div className="gap-3">
+              <Field label="Primary Background Color">
+                <Div className="flex-row items-center gap-2">
+                  <Div className="w-11 h-11 rounded-lg border border-slate-200" style={{ backgroundColor: adminBackgroundColors.primary || 'transparent' }} />
+                  <Input
+                    type="text"
+                    value={adminBackgroundColors.primary}
+                    onChange={(e) =>
+                      setAdminBackgroundColors((prev) => ({
+                        ...prev,
+                        primary: e.target.value,
+                      }))
+                    }
+                    placeholder="#ffffff"
+                    className={`${INPUT} flex-1`}
+                  />
+                </Div>
+              </Field>
+              <Field label="Secondary Background Color">
+                <Div className="flex-row items-center gap-2">
+                  <Div className="w-11 h-11 rounded-lg border border-slate-200" style={{ backgroundColor: adminBackgroundColors.secondary || 'transparent' }} />
+                  <Input
+                    type="text"
+                    value={adminBackgroundColors.secondary}
+                    onChange={(e) =>
+                      setAdminBackgroundColors((prev) => ({
+                        ...prev,
+                        secondary: e.target.value,
+                      }))
+                    }
+                    placeholder="#f8f9fa"
+                    className={`${INPUT} flex-1`}
+                  />
+                </Div>
+              </Field>
+              <Field label="Accent Color">
+                <Div className="flex-row items-center gap-2">
+                  <Div className="w-11 h-11 rounded-lg border border-slate-200" style={{ backgroundColor: adminBackgroundColors.accent || 'transparent' }} />
+                  <Input
+                    type="text"
+                    value={adminBackgroundColors.accent}
+                    onChange={(e) =>
+                      setAdminBackgroundColors((prev) => ({
+                        ...prev,
+                        accent: e.target.value,
+                      }))
+                    }
+                    placeholder="#006fbd"
+                    className={`${INPUT} flex-1`}
+                  />
+                </Div>
+              </Field>
+            </Div>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
+        )}
+      </AdminPage>
     );
   }
 
   // React Landing Page
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen w-full">
-        <Div className="w-full mx-auto max-w-full overflow-hidden">
-          {/* Page Header */}
-          <Div className="flex items-center gap-2 mb-3 max-w-full overflow-hidden">
-            <UiIcon as={Monitor} className="w-5 h-5 text-slate-700" />
-            <H1 className="text-xl lg:text-2xl font-bold text-slate-900">React Landing Page</H1>
-          </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={Monitor}
+        title="React Landing Page"
+        subtitle="Edit one section at a time, then save it."
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'React landing page' }]}
+      />
 
-          {/* Main Navigation Tabs */}
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3 max-w-full overflow-hidden">
-            <HScroll className="w-full" contentClassName="flex items-center gap-1.5">
-                {reactTabs.map((tab) => {
-                  const isActive = tab === reactActiveTab;
-                  return (
-                    <Button
-                      key={tab}
-                      type="button"
-                      onClick={() => setReactActiveTab(tab)}
-                      className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${isActive ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
-                    >
-                      {tab}
-                    </Button>
-                  );
-                })}
-            </HScroll>
-          </Div>
+      <TabStrip tabs={reactTabs} active={reactActiveTab} onSelect={setReactActiveTab} label="Section" />
 
-          {/* Header Section */}
-          {reactActiveTab === 'Header' && (
-            <Div className="space-y-3 max-w-full overflow-hidden">
-              <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-                <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Header Section</H2>
-                <P className="text-xs sm:text-sm text-slate-600 mb-3">Manage main banner content including title, subtitle, and background image.</P>
-
-                {/* Language Tabs */}
-                <HScroll className="w-full border-b border-slate-200 pb-2 mb-4" contentClassName="flex items-center gap-2 sm:gap-3">
-                    {languages.map((lang) => {
-                      const isActive = lang.id === reactActiveLanguage;
-                      return (
-                        <Button
-                          key={lang.id}
-                          type="button"
-                          onClick={() => setReactActiveLanguage(lang.id)}
-                          className={`text-xs sm:text-sm font-medium transition-all pb-1 whitespace-nowrap ${isActive ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
-                        >
-                          {lang.label}
-                        </Button>
-                      );
-                    })}
-                </HScroll>
-
-                <Div className="space-y-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Title ({reactHeaderContent.title.length}/50)*</Label>
-                    <Input
-                      type="text"
-                      value={reactHeaderContent.title}
-                      onChange={(e) =>
-                        setReactHeaderContent((prev) => ({
-                          ...prev,
-                          title: e.target.value,
-                        }))
-                      }
-                      maxLength={50}
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Subtitle ({reactHeaderContent.subtitle.length}/100)*</Label>
-                    <Input
-                      type="text"
-                      value={reactHeaderContent.subtitle}
-                      onChange={(e) =>
-                        setReactHeaderContent((prev) => ({
-                          ...prev,
-                          subtitle: e.target.value,
-                        }))
-                      }
-                      maxLength={100}
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Background Image*</Label>
-                    <P className="text-xs text-slate-500 mb-1.5">Upload your section background image.</P>
-                    <P className="text-xs text-slate-500 mb-2">Jpeg, jpg, png, gif, webp Less Than 2MB (1260 x 360 px)</P>
-                    <Div className="relative inline-block">
-                      {reactHeaderContent.backgroundImage ? (
-                        <Div className="relative">
-                          <Img
-                            src={reactHeaderContent.backgroundImage}
-                            alt="Background"
-                            className="w-40 h-24 sm:w-48 sm:h-32 object-cover rounded-lg border border-slate-300"
-                          />
-                          <Button
-                            type="button"
-                            onClick={() => handleImageRemove(setReactHeaderContent, 'backgroundImage')}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          >
-                            <UiIcon as={X} className="w-3 h-3" />
-                          </Button>
-                        </Div>
-                      ) : (
-                        <Div className="cursor-pointer" onClick={() => handleImageUpload(setReactHeaderContent, 'backgroundImage')}>
-                          <Div className="w-40 h-24 sm:w-48 sm:h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center hover:border-blue-500 transition-colors">
-                            <Span className="text-xs text-slate-500">Upload Image</Span>
-                          </Div>
-                        </Div>
-                      )}
-                    </Div>
-                  </Div>
-                </Div>
-
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" />
-                    Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" />
-                    Save
-                  </Button>
-                </Div>
-              </Div>
-
-              {/* Location picker section */}
-              <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-                <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Location picker section</H2>
-                <P className="text-xs sm:text-sm text-slate-600 mb-3">
-                  Customize location search bar and placeholder text to help users find nearby restaurants.
-                </P>
-
-                {/* Language Tabs */}
-                <HScroll className="w-full border-b border-slate-200 pb-2 mb-4" contentClassName="flex items-center gap-2 sm:gap-3">
-                    {languages.map((lang) => {
-                      const isActive = lang.id === reactActiveLanguage;
-                      return (
-                        <Button
-                          key={lang.id}
-                          type="button"
-                          onClick={() => setReactActiveLanguage(lang.id)}
-                          className={`text-xs sm:text-sm font-medium transition-all pb-1 whitespace-nowrap ${isActive ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
-                        >
-                          {lang.label}
-                        </Button>
-                      );
-                    })}
-                </HScroll>
-
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
-                    Placeholder ({reactLocationPicker.placeholder.length}/50)*
-                  </Label>
-                  <Input
-                    type="text"
-                    value={reactLocationPicker.placeholder}
-                    onChange={(e) =>
-                      setReactLocationPicker((prev) => ({
-                        ...prev,
-                        placeholder: e.target.value,
-                      }))
-                    }
-                    maxLength={50}
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" />
-                    Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" />
-                    Save
-                  </Button>
-                </Div>
-              </Div>
-
-              {/* Business Statistics Section */}
-              <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-                <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Business Statistics Section</H2>
-                <P className="text-xs sm:text-sm text-slate-600 mb-3">
-                  Display key business statistics like total restaurants, happy customers, and average delivery time.
-                </P>
-
-                <Div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Restaurant*</Label>
-                    <Input
-                      type="number"
-                      value={reactBusinessStats.restaurant}
-                      onChange={(e) =>
-                        setReactBusinessStats((prev) => ({
-                          ...prev,
-                          restaurant: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Happy Customer*</Label>
-                    <Input
-                      type="number"
-                      value={reactBusinessStats.happyCustomer}
-                      onChange={(e) =>
-                        setReactBusinessStats((prev) => ({
-                          ...prev,
-                          happyCustomer: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-
-                  <Div>
-                    <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Average Delivery (Minutes)*</Label>
-                    <Input
-                      type="number"
-                      value={reactBusinessStats.averageDelivery}
-                      onChange={(e) =>
-                        setReactBusinessStats((prev) => ({
-                          ...prev,
-                          averageDelivery: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-
-                <Div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={RotateCcw} className="w-3 h-3" />
-                    Reset
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                  >
-                    <UiIcon as={Save} className="w-3 h-3" />
-                    Save
-                  </Button>
-                </Div>
-              </Div>
+      {/* Header Section */}
+      {reactActiveTab === 'Header' && (
+        <Div className="gap-4">
+          <Card>
+            <SectionTitle>Header Section</SectionTitle>
+            <P className="text-sm text-slate-500 mb-3">Manage main banner content including title, subtitle, and background image.</P>
+            <LanguageStrip className="mb-3" languages={languages} active={reactActiveLanguage} onSelect={setReactActiveLanguage} />
+            <Div className="gap-3">
+              <Field label="Title" required hint={`${reactHeaderContent.title.length}/50 characters`}>
+                <Input
+                  type="text"
+                  value={reactHeaderContent.title}
+                  onChange={(e) =>
+                    setReactHeaderContent((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                  maxLength={50}
+                  className={INPUT}
+                />
+              </Field>
+              <Field label="Subtitle" required hint={`${reactHeaderContent.subtitle.length}/100 characters`}>
+                <Input
+                  type="text"
+                  value={reactHeaderContent.subtitle}
+                  onChange={(e) =>
+                    setReactHeaderContent((prev) => ({
+                      ...prev,
+                      subtitle: e.target.value,
+                    }))
+                  }
+                  maxLength={100}
+                  className={INPUT}
+                />
+              </Field>
+              <Field label="Section Background Image" required hint="Jpeg, jpg, png, gif or webp under 2MB (1260 x 360 px)">
+                <ImageSlot
+                  src={reactHeaderContent.backgroundImage}
+                  alt="Background"
+                  width={192}
+                  height={120}
+                  onPick={() => handleImageUpload(setReactHeaderContent, 'backgroundImage')}
+                  onRemove={() => handleImageRemove(setReactHeaderContent, 'backgroundImage')}
+                />
+              </Field>
             </Div>
-          )}
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
 
-          {/* Services Section */}
-          {reactActiveTab === 'Services' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Services Section</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure services section content and settings.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter section title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Description</Label>
-                  <Textarea
-                    rows={4}
-                    placeholder="Enter section description"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
+          {/* Location picker section */}
+          <Card>
+            <SectionTitle>Location picker section</SectionTitle>
+            <P className="text-sm text-slate-500 mb-3">Customize location search bar and placeholder text to help users find nearby restaurants.</P>
+            <LanguageStrip className="mb-3" languages={languages} active={reactActiveLanguage} onSelect={setReactActiveLanguage} />
+            <Field label="Placeholder" required hint={`${reactLocationPicker.placeholder.length}/50 characters`}>
+              <Input
+                type="text"
+                value={reactLocationPicker.placeholder}
+                onChange={(e) =>
+                  setReactLocationPicker((prev) => ({
+                    ...prev,
+                    placeholder: e.target.value,
+                  }))
+                }
+                maxLength={50}
+                className={INPUT}
+              />
+            </Field>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
 
-          {/* Stepper Section */}
-          {reactActiveTab === 'Stepper Section' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Stepper Section</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure step-by-step process display.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Step 1 Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter step 1 title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Step 2 Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter step 2 title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Step 3 Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter step 3 title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
-
-          {/* Promotional Banner */}
-          {reactActiveTab === 'Promotional Banner' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Promotional Banner</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure promotional banner content and images.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Banner Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter banner title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Banner Image</Label>
-                  <Div className="relative inline-block">
-                    <Div className="cursor-pointer">
-                      <Div className="w-40 h-24 sm:w-48 sm:h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center hover:border-blue-500 transition-colors">
-                        <Span className="text-xs text-slate-500">Upload Image</Span>
-                      </Div>
-                    </Div>
-                  </Div>
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
-
-          {/* Categories */}
-          {reactActiveTab === 'Categories' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Categories Section</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure food categories display settings.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter categories section title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Number of Categories to Display</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter number"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
-
-          {/* Download Apps */}
-          {reactActiveTab === 'Download Apps' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Download Apps Section</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure mobile app download links and information.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter section title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Google Play Store Link</Label>
-                  <Input
-                    type="url"
-                    placeholder="https://play.google.com/..."
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Apple App Store Link</Label>
-                  <Input
-                    type="url"
-                    placeholder="https://apps.apple.com/..."
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
-
-          {/* Gallery */}
-          {reactActiveTab === 'Gallery' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Gallery Section</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure image gallery settings and display options.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter gallery section title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Number of Images per Row</Label>
-                  <Select className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <Option>3</Option>
-                    <Option>4</Option>
-                    <Option>6</Option>
-                  </Select>
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
-
-          {/* Available zone */}
-          {reactActiveTab === 'Available zone' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Available Zone Section</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure available delivery zones display.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter section title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Enable Zone Display</Label>
-                  <Div className="flex items-center gap-2">
-                    <Input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-slate-300" />
-                    <Span className="text-xs sm:text-sm text-slate-700">Show available zones</Span>
-                  </Div>
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
-
-          {/* Registration section */}
-          {reactActiveTab === 'Registration section' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Registration Section</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure user registration section settings.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter registration section title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Registration Button Text</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter button text"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
-
-          {/* Testimonials */}
-          {reactActiveTab === 'Testimonials' && (
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 max-w-full overflow-hidden">
-              <H2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1.5">Testimonials Section</H2>
-              <P className="text-xs sm:text-sm text-slate-600 mb-4">Configure customer testimonials display settings.</P>
-              <Div className="space-y-3">
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Section Title</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter testimonials section title"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-                <Div>
-                  <Label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Number of Testimonials to Display</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter number"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </Div>
-              </Div>
-              <Div className="flex justify-end gap-2 mt-4">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={RotateCcw} className="w-3 h-3" />
-                  Reset
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-1.5"
-                >
-                  <UiIcon as={Save} className="w-3 h-3" />
-                  Save
-                </Button>
-              </Div>
-            </Div>
-          )}
+          {/* Business Statistics Section */}
+          <Card>
+            <SectionTitle>Business Statistics Section</SectionTitle>
+            <P className="text-sm text-slate-500 mb-3">Display key business statistics like total restaurants, happy customers, and average delivery time.</P>
+            <FormGrid>
+              <Field label="Restaurant" required>
+                <Input
+                  type="number"
+                  value={reactBusinessStats.restaurant}
+                  onChange={(e) =>
+                    setReactBusinessStats((prev) => ({
+                      ...prev,
+                      restaurant: e.target.value,
+                    }))
+                  }
+                  className={INPUT}
+                />
+              </Field>
+              <Field label="Happy Customer" required>
+                <Input
+                  type="number"
+                  value={reactBusinessStats.happyCustomer}
+                  onChange={(e) =>
+                    setReactBusinessStats((prev) => ({
+                      ...prev,
+                      happyCustomer: e.target.value,
+                    }))
+                  }
+                  className={INPUT}
+                />
+              </Field>
+              <Field label="Average Delivery (Minutes)" required>
+                <Input
+                  type="number"
+                  value={reactBusinessStats.averageDelivery}
+                  onChange={(e) =>
+                    setReactBusinessStats((prev) => ({
+                      ...prev,
+                      averageDelivery: e.target.value,
+                    }))
+                  }
+                  className={INPUT}
+                />
+              </Field>
+            </FormGrid>
+            <SectionActions onReset={handleReset} onSave={handleSave} />
+          </Card>
         </Div>
-    </ScrollDiv>
+      )}
+
+      {/* Services Section */}
+      {reactActiveTab === 'Services' && (
+        <Card>
+          <SectionTitle>Services Section</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure services section content and settings.</P>
+          <Div className="gap-3">
+            <Field label="Section Title">
+              <Input type="text" placeholder="Enter section title" className={INPUT} />
+            </Field>
+            <Field label="Section Description">
+              <Textarea rows={4} placeholder="Enter section description" className={TEXTAREA} />
+            </Field>
+          </Div>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+
+      {/* Stepper Section */}
+      {reactActiveTab === 'Stepper Section' && (
+        <Card>
+          <SectionTitle>Stepper Section</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure step-by-step process display.</P>
+          <Div className="gap-3">
+            <Field label="Step 1 Title">
+              <Input type="text" placeholder="Enter step 1 title" className={INPUT} />
+            </Field>
+            <Field label="Step 2 Title">
+              <Input type="text" placeholder="Enter step 2 title" className={INPUT} />
+            </Field>
+            <Field label="Step 3 Title">
+              <Input type="text" placeholder="Enter step 3 title" className={INPUT} />
+            </Field>
+          </Div>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+
+      {/* Promotional Banner */}
+      {reactActiveTab === 'Promotional Banner' && (
+        <Card>
+          <SectionTitle>Promotional Banner</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure promotional banner content and images.</P>
+          <Div className="gap-3">
+            <Field label="Banner Title">
+              <Input type="text" placeholder="Enter banner title" className={INPUT} />
+            </Field>
+            <Field label="Banner Image">
+              <ImageSlot src={null} alt="Banner" width={192} height={120} />
+            </Field>
+          </Div>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+
+      {/* Categories */}
+      {reactActiveTab === 'Categories' && (
+        <Card>
+          <SectionTitle>Categories Section</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure food categories display settings.</P>
+          <FormGrid>
+            <Field label="Section Title">
+              <Input type="text" placeholder="Enter categories section title" className={INPUT} />
+            </Field>
+            <Field label="Number of Categories to Display">
+              <Input type="number" placeholder="Enter number" className={INPUT} />
+            </Field>
+          </FormGrid>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+
+      {/* Download Apps */}
+      {reactActiveTab === 'Download Apps' && (
+        <Card>
+          <SectionTitle>Download Apps Section</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure mobile app download links and information.</P>
+          <Div className="gap-3">
+            <Field label="Section Title">
+              <Input type="text" placeholder="Enter section title" className={INPUT} />
+            </Field>
+            <Field label="Google Play Store Link">
+              <Input type="url" placeholder="https://play.google.com/..." className={INPUT} />
+            </Field>
+            <Field label="Apple App Store Link">
+              <Input type="url" placeholder="https://apps.apple.com/..." className={INPUT} />
+            </Field>
+          </Div>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+
+      {/* Gallery */}
+      {reactActiveTab === 'Gallery' && (
+        <Card>
+          <SectionTitle>Gallery Section</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure image gallery settings and display options.</P>
+          <FormGrid>
+            <Field label="Section Title">
+              <Input type="text" placeholder="Enter gallery section title" className={INPUT} />
+            </Field>
+            <Field label="Number of Images per Row">
+              <Select className={INPUT}>
+                <Option>3</Option>
+                <Option>4</Option>
+                <Option>6</Option>
+              </Select>
+            </Field>
+          </FormGrid>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+
+      {/* Available zone */}
+      {reactActiveTab === 'Available zone' && (
+        <Card>
+          <SectionTitle>Available Zone Section</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure available delivery zones display.</P>
+          <Div className="gap-3">
+            <Field label="Section Title">
+              <Input type="text" placeholder="Enter section title" className={INPUT} />
+            </Field>
+            <Field label="Enable Zone Display">
+              <Div className="flex-row items-center gap-3 h-11">
+                <Input type="checkbox" className="w-5 h-5 rounded border-slate-300" />
+                <Span className="text-sm text-slate-700 flex-1">Show available zones</Span>
+              </Div>
+            </Field>
+          </Div>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+
+      {/* Registration section */}
+      {reactActiveTab === 'Registration section' && (
+        <Card>
+          <SectionTitle>Registration Section</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure user registration section settings.</P>
+          <FormGrid>
+            <Field label="Section Title">
+              <Input type="text" placeholder="Enter registration section title" className={INPUT} />
+            </Field>
+            <Field label="Registration Button Text">
+              <Input type="text" placeholder="Enter button text" className={INPUT} />
+            </Field>
+          </FormGrid>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+
+      {/* Testimonials */}
+      {reactActiveTab === 'Testimonials' && (
+        <Card>
+          <SectionTitle>Testimonials Section</SectionTitle>
+          <P className="text-sm text-slate-500 mb-3">Configure customer testimonials display settings.</P>
+          <FormGrid>
+            <Field label="Section Title">
+              <Input type="text" placeholder="Enter testimonials section title" className={INPUT} />
+            </Field>
+            <Field label="Number of Testimonials to Display">
+              <Input type="number" placeholder="Enter number" className={INPUT} />
+            </Field>
+          </FormGrid>
+          <SectionActions onReset={handleReset} onSave={handleSave} />
+        </Card>
+      )}
+    </AdminPage>
   );
 }

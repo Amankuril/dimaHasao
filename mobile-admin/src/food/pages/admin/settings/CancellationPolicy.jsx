@@ -5,7 +5,9 @@ import api from '../../../../api/food';
 import { API_ENDPOINTS } from '../../../../api/config';
 import { Textarea } from '../../../../components/shadcn';
 import { unwrapLegalPage, plainTextToLegalHtml } from '../../../utils/legalContentFormat';
-import { Button, Div, H1, P, ScrollDiv, Span } from '../../../../components/web';
+import { Button, Div, Span } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, LoadingState, EmptyState, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY } from '../../../../admin/ui';
+import { FileText } from 'lucide-react-native';
 import HtmlContent from '../../../../components/HtmlContent';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -72,51 +74,31 @@ export default function CancellationPolicy() {
       setSaving(false);
     }
   };
-  if (loading) {
-    return (
-      <ScrollDiv className="h-full bg-slate-50 p-4 lg:p-6 flex items-center justify-center">
-        <Div className="text-center">
-          <Div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></Div>
-          <P className="mt-4 text-slate-600">Loading...</P>
-        </Div>
-      </ScrollDiv>
-    );
-  }
   return (
-    <ScrollDiv className="h-full bg-slate-50 p-4 lg:p-6">
-      <Div className="max-w-6xl mx-auto">
-        {/* Page Header */}
-        <Div className="mb-6">
-          <H1 className="text-2xl font-bold text-slate-900">Cancellation Policy</H1>
-          <P className="text-sm text-slate-600 mt-1">Manage your Cancellation Policy content</P>
-        </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={FileText}
+        title="Cancellation Policy"
+        subtitle="Manage the cancellation policy customers and partners read in the apps."
+        breadcrumb={[{ label: 'Food' }, { label: 'Settings' }, { label: 'Cancellation Policy' }]}
+        actions={
+          <>
+            <Button className={viewMode === 'edit' ? BTN_PRIMARY : BTN_SECONDARY} onClick={() => setViewMode('edit')} accessibilityLabel="Edit content">
+              <Span className={viewMode === 'edit' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Edit</Span>
+            </Button>
+            <Button className={viewMode === 'preview' ? BTN_PRIMARY : BTN_SECONDARY} onClick={() => setViewMode('preview')} accessibilityLabel="Preview content">
+              <Span className={viewMode === 'preview' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Preview</Span>
+            </Button>
+          </>
+        }
+      />
 
-        {/* Text Area */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-          <Div className="flex items-center justify-between gap-3 mb-3">
-            <Div className="flex-1 text-sm text-slate-600">
-              Use headings like <Span className="font-mono">#</Span>, <Span className="font-mono">##</Span> and bold like{' '}
-              <Span className="font-mono">**text**</Span>.
-            </Div>
-            <Div className="inline-flex rounded-lg border border-slate-200 overflow-hidden">
-              <Button
-                type="button"
-                onClick={() => setViewMode('edit')}
-                className={`px-3 py-1.5 text-sm font-medium ${viewMode === 'edit' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}`}
-              >
-                Edit
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setViewMode('preview')}
-                className={`px-3 py-1.5 text-sm font-medium ${viewMode === 'preview' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}`}
-              >
-                Preview
-              </Button>
-            </Div>
-          </Div>
-
-          {viewMode === 'edit' ? (
+      {loading ? (
+        <LoadingState label="Loading the cancellation policy…" />
+      ) : viewMode === 'edit' ? (
+        <Card>
+          <SectionTitle>Content</SectionTitle>
+          <Field hint="Use # and ## for headings and **text** for bold.">
             <Textarea
               value={cancellationData.content}
               onChange={(e) =>
@@ -126,28 +108,32 @@ export default function CancellationPolicy() {
                 }))
               }
               placeholder="Enter cancellation policy content..."
-              className="min-h-[600px] w-full text-sm text-slate-700 leading-relaxed resize-y"
+              rows={14}
+              className="px-3 py-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700"
               style={{ textAlign: 'left', width: '100%' }}
             />
-          ) : (
-            <Div className="min-h-[600px] w-full rounded-md border border-slate-200 bg-white p-4">
-              <HtmlContent html={plainTextToLegalHtml(cancellationData.content)} soraHeadings={false} color="#334155" />
-            </Div>
-          )}
-        </Div>
+          </Field>
+        </Card>
+      ) : cancellationData.content ? (
+        <Card>
+          <SectionTitle>Preview</SectionTitle>
+          <HtmlContent html={plainTextToLegalHtml(cancellationData.content)} soraHeadings={false} color="#334155" />
+        </Card>
+      ) : (
+        <EmptyState
+          title="Nothing written yet"
+          message="This cancellation policy is empty, so customers see no policy in the app."
+          actionLabel="Write it now"
+          onAction={() => setViewMode('edit')}
+          icon={FileText}
+        />
+      )}
 
-        {/* Submit Button */}
-        <Div className="flex justify-end mt-6">
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={saving}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </Div>
+      <Div className="flex-row justify-end mt-4">
+        <Button type="button" onClick={handleSubmit} disabled={saving} className={`${BTN_PRIMARY}${saving ? ' opacity-50' : ''}`} accessibilityLabel="Save changes">
+          <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : 'Save changes'}</Span>
+        </Button>
       </Div>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

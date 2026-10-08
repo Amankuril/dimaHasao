@@ -12,10 +12,20 @@ import React, { useEffect, useState } from 'react';
 import { Loader2, Save, ShieldCheck } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import globalService from '../../../services/globalService';
-import { Button, Div, Form, H2, H3, Input, Label, P, ScrollDiv, Section, Span, Icon as UiIcon } from '../../../../components/web';
-const field =
-  'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition disabled:bg-gray-50 disabled:text-gray-500';
-const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
+import {
+  AdminPage,
+  BTN_PRIMARY,
+  BTN_TEXT_PRIMARY,
+  Card,
+  ErrorState,
+  Field,
+  INPUT,
+  LoadingState,
+  PageHeader,
+  SectionTitle,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Input, P, Span, Icon as UiIcon } from '../../../../components/web';
 const LEVEL_LABELS = {
   platform_superadmin: 'Platform superadmin — every module',
   food_superadmin: 'Food superadmin',
@@ -25,6 +35,7 @@ const LEVEL_LABELS = {
   subadmin: 'Subadmin',
 };
 const Profile = () => {
+  const { tablet } = useLayoutWidth();
   const [admin, setAdmin] = useState(null);
   const [form, setForm] = useState({
     name: '',
@@ -70,70 +81,63 @@ const Profile = () => {
       setSaving(false);
     }
   };
+  const header = <PageHeader title="My Profile" subtitle="Your administrator account, shared across every module." icon={ShieldCheck} />;
   if (loading) {
     return (
-      <ScrollDiv className="p-4 pb-20">
-        <Div className="p-12 items-center">
-          <UiIcon as={Loader2} size={22} className="animate-spin inline" />
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        {header}
+        <LoadingState label="Loading your profile…" />
+      </AdminPage>
+    );
+  }
+  if (!admin) {
+    return (
+      <AdminPage maxWidth={720}>
+        {header}
+        <ErrorState title="Your profile could not be loaded" message="Reopen this screen to try again." />
+      </AdminPage>
     );
   }
   return (
-    // The web's page padding comes from the panel's <main className="p-4 pb-20">; here each page carries it.
-    <ScrollDiv className="p-4 pb-20">
-      <Form onSubmit={submit} className="space-y-6 max-w-3xl">
-        <Div>
-          <H2 className="text-2xl font-bold text-gray-900">My Profile</H2>
-          <P className="text-gray-500 text-sm mt-0.5">Your administrator account, shared across every module.</P>
-        </Div>
+    <AdminPage maxWidth={720}>
+      <Form onSubmit={submit}>
+        {header}
 
-        {admin && (
-          <Div className="bg-[#0a4d2b]/5 border border-[#0a4d2b]/15 rounded-2xl p-4 flex items-start gap-3">
-            <UiIcon as={ShieldCheck} size={18} className="text-[#0a4d2b] mt-0.5 shrink-0" />
-            <Div className="text-sm">
-              <P className="font-bold text-gray-900">{LEVEL_LABELS[admin.adminLevel] || admin.adminLevel}</P>
-              <P className="text-gray-600 mt-0.5">
-                {admin.servicesAccess?.length ? `Modules: ${admin.servicesAccess.join(', ')}` : 'No module restriction'}
-                {admin.module ? ` · scoped to ${admin.module}` : ''}
-              </P>
-              <P className="text-xs text-gray-400 mt-1">Only a platform superadmin can change an access level.</P>
-            </Div>
+        <Card className="mb-4 flex-row items-start gap-3">
+          <UiIcon as={ShieldCheck} size={18} className="text-blue-600 shrink-0" />
+          <Div className="flex-1 min-w-0">
+            <P className="text-sm font-semibold text-slate-900">{LEVEL_LABELS[admin.adminLevel] || admin.adminLevel}</P>
+            <P className="text-sm text-slate-600 mt-0.5">
+              {admin.servicesAccess?.length ? `Modules: ${admin.servicesAccess.join(', ')}` : 'No module restriction'}
+              {admin.module ? ` · scoped to ${admin.module}` : ''}
+            </P>
+            <P className="text-xs text-slate-500 mt-1">Only a platform superadmin can change an access level.</P>
           </Div>
-        )}
+        </Card>
 
-        <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-          <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100">Details</H3>
+        <Card className="mb-4 gap-4">
+          <SectionTitle>Details</SectionTitle>
 
-          <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Div>
-              <Label className={label}>Name</Label>
-              <Input nativeID="admin-name" className={field} value={form.name} onChange={set('name')} />
-            </Div>
-            <Div>
-              <Label className={label}>Phone</Label>
-              <Input nativeID="admin-phone" className={field} value={form.phone} onChange={set('phone')} />
-            </Div>
+          <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+            <Field label="Name">
+              <Input nativeID="admin-name" className={INPUT} value={form.name} onChange={set('name')} />
+            </Field>
+            <Field label="Phone">
+              <Input nativeID="admin-phone" className={INPUT} value={form.phone} onChange={set('phone')} />
+            </Field>
           </Div>
 
-          <Div>
-            <Label className={label}>
-              Email <Span className="text-red-500">*</Span>
-            </Label>
-            <Input nativeID="admin-email" className={field} type="email" value={form.email} onChange={set('email')} />
-            <P className="text-xs text-gray-400 mt-1.5">This is what you sign in with.</P>
-          </Div>
-        </Section>
+          <Field label="Email" required hint="This is what you sign in with.">
+            <Input nativeID="admin-email" className={INPUT} type="email" value={form.email} onChange={set('email')} />
+          </Field>
+        </Card>
 
-        <Button
-          type="submit"
-          disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
-        >
-          {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />} Save changes
+        <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
+          {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Save} size={16} className="text-white" />}
+          <Span className={BTN_TEXT_PRIMARY}>Save changes</Span>
         </Button>
       </Form>
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Profile;

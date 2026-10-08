@@ -1,22 +1,27 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/settings/SMSGateways.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Loader2, MessageSquare, ShieldCheck, ArrowLeft, CheckCircle2, AlertCircle, Smartphone } from 'lucide-react-native';
+import { Loader2, MessageSquare, ArrowLeft, Smartphone, Save } from 'lucide-react-native';
 import { adminService } from '../../services/adminService';
 import { toast } from '../../../../../lib/notify';
-import { Button, Div, H1, H3, Img, Input, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, StatusBadge, Field, LoadingState, ErrorState, EmptyState, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../../admin/ui';
+import { Button, Div, Img, Input, P, Span, Icon as UiIcon } from '../../../../../components/web';
 import { Switch } from '../../../../../components/shadcn';
 import { window } from '../../../../../lib/webShim';
 const SMSGateways = () => {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [settings, setSettings] = useState({});
   const [submitting, setSubmitting] = useState({});
+  const { tablet } = useLayoutWidth();
   const fetchData = async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const res = await adminService.getSMSSettings();
       setSettings(res.data?.settings || {});
     } catch (err) {
       console.error('Fetch error:', err);
+      setLoadError(err?.message || 'Failed to load SMS settings');
       toast.error('Failed to load SMS settings');
     } finally {
       setLoading(false);
@@ -147,128 +152,100 @@ const SMSGateways = () => {
       ],
     },
   ];
-  const inputClass =
-    'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors';
-  const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
+  const header = (
+    <PageHeader
+      icon={MessageSquare}
+      title="SMS Gateways"
+      subtitle="OTP and transactional SMS providers"
+      breadcrumb={[{ label: 'Settings' }, { label: 'Third-party' }, { label: 'SMS Gateways' }]}
+      actions={
+        <Button onClick={() => window.history.back()} className={BTN_SECONDARY}>
+          <UiIcon as={ArrowLeft} size={16} className="text-slate-700" />
+          <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+        </Button>
+      }
+    />
+  );
   if (loading) {
     return (
-      <ScrollDiv className="flex items-center justify-center min-h-screen bg-gray-50">
-        <UiIcon as={Loader2} className="animate-spin text-indigo-600" size={32} />
-      </ScrollDiv>
+      <AdminPage maxWidth={900}>
+        {header}
+        <LoadingState label="Loading SMS settings…" />
+      </AdminPage>
+    );
+  }
+  if (loadError) {
+    return (
+      <AdminPage maxWidth={900}>
+        {header}
+        <ErrorState title="Could not load SMS settings" message={loadError} onRetry={fetchData} />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8 font-sans">
-      {/* Header Block */}
-      <Div className="mb-8">
-        <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-          <Span>Settings</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span>Third-party</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700">SMS Gateways</Span>
-        </Div>
-        <Div className="flex items-center justify-between">
-          <H1 className="text-xl text-gray-900 font-bold">SMS Gateways</H1>
-          <Button
-            onClick={() => window.history.back()}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            <UiIcon as={ArrowLeft} size={16} /> Back
-          </Button>
-        </Div>
-      </Div>
+    <AdminPage maxWidth={900}>
+      {header}
 
-      <Div className="space-y-8">
-        {/* Top Feature Toggle Card */}
-        <Div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center justify-between shadow-sm">
-          <Div className="flex items-center gap-3">
-            <Div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-              <UiIcon as={Smartphone} size={20} />
-            </Div>
-            <Div>
-              <H3 className="text-sm font-bold text-gray-900">Push Notifications & OTP</H3>
-              <P className="text-xs text-gray-400">Enable Firebase OTP for user authentication</P>
-            </Div>
+      <Card className="mb-4">
+        <Div className="flex-row items-center justify-between gap-3">
+          <Div className="w-10 h-10 rounded-lg bg-blue-100 items-center justify-center shrink-0">
+            <UiIcon as={Smartphone} size={20} className="text-blue-600" />
           </Div>
-          <Switch checked={getSettingValue('firebase.enabled') === '1'} onCheckedChange={() => handleToggle('Firebase OTP', 'firebase.enabled')} className={getSettingValue('firebase.enabled') === '1' ? 'bg-indigo-600' : 'bg-gray-200'} />
+          <Div className="flex-1 min-w-0">
+            <P className="text-sm font-semibold text-slate-900">Push notifications & OTP</P>
+            <P className="text-xs text-slate-500">Enable Firebase OTP for user authentication</P>
+          </Div>
+          <Switch checked={getSettingValue('firebase.enabled') === '1'} onCheckedChange={() => handleToggle('Firebase OTP', 'firebase.enabled')} />
         </Div>
+      </Card>
 
-        {/* SMS Provider Grid */}
-        <Div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      {smsProviders.length === 0 ? (
+        <EmptyState icon={MessageSquare} title="No SMS providers" message="No gateway integrations are available in this build." />
+      ) : (
+        <Div className={tablet ? 'flex-row flex-wrap gap-4' : 'gap-4'}>
           {smsProviders.map((provider) => {
             const isEnabled = getSettingValue(provider.enableKey) === '1';
             return (
-              <Div
-                key={provider.slug}
-                className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full transform transition-all duration-200 hover:shadow-md"
-              >
-                {/* Card Header */}
-                <Div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white">
-                  <Div className="flex items-center gap-4">
-                    <Div className="w-14 h-14 rounded-xl flex items-center justify-center border border-gray-100 bg-white p-2">
-                      <Img src={provider.logo} alt={provider.name} className="w-full h-full object-contain" />
-                    </Div>
-                    <Div>
-                      <H3 className="text-sm font-bold text-gray-900 tracking-tight">{provider.name} Integration</H3>
-                      <P className="text-[11px] font-medium text-gray-400 flex items-center gap-1 mt-0.5">
-                        {isEnabled ? (
-                          <Span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
-                            <UiIcon as={CheckCircle2} size={10} /> Enabled
-                          </Span>
-                        ) : (
-                          <Span className="flex items-center gap-1 text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md">
-                            <UiIcon as={AlertCircle} size={10} /> Disabled
-                          </Span>
-                        )}
-                      </P>
-                    </Div>
+              <Card key={provider.slug} className={tablet ? 'gap-4 flex-1 min-w-[320px]' : 'gap-4'}>
+                <Div className="flex-row items-center gap-3">
+                  <Div className="w-12 h-12 rounded-lg border border-slate-200 bg-white p-2 shrink-0">
+                    <Img src={provider.logo} alt={provider.name} className="w-full h-full" contentFit="contain" />
                   </Div>
-                  <Switch checked={isEnabled} onCheckedChange={() => handleToggle(provider.name, provider.enableKey)} className={isEnabled ? 'bg-indigo-600' : 'bg-gray-200'} />
+                  <Div className="flex-1 min-w-0 gap-1">
+                    <P className="text-sm font-semibold text-slate-900">{provider.name}</P>
+                    <StatusBadge status={isEnabled ? 'enabled' : 'disabled'} label={isEnabled ? 'Enabled' : 'Disabled'} />
+                  </Div>
+                  <Switch checked={isEnabled} onCheckedChange={() => handleToggle(provider.name, provider.enableKey)} />
                 </Div>
 
-                {/* Card Body */}
-                <Div className="p-6 flex-1 space-y-5">
-                  {provider.fields.map((field) => (
-                    <Div key={field.key}>
-                      <Label className={labelClass}>{field.label}</Label>
-                      <Input
-                        type="text"
-                        value={getSettingValue(field.key)}
-                        onChange={(e) => updateLocalValue(field.key, e.target.value)}
-                        placeholder={`Your ${provider.name} ${field.label}`}
-                        className={inputClass}
-                      />
-                    </Div>
-                  ))}
-                </Div>
+                {provider.fields.map((field) => (
+                  <Field key={field.key} label={field.label}>
+                    <Input
+                      type="text"
+                      value={getSettingValue(field.key)}
+                      onChange={(e) => updateLocalValue(field.key, e.target.value)}
+                      placeholder={`Your ${provider.name} ${field.label}`}
+                      className={INPUT}
+                    />
+                  </Field>
+                ))}
 
-                {/* Card Footer */}
-                <Div className="p-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                  <Div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold uppercase tracking-widest px-2">
-                    <UiIcon as={MessageSquare} size={12} className="text-gray-300" />
-                    SMS Verified
-                  </Div>
+                <Div className="border-t border-slate-100 pt-4">
                   <Button
                     onClick={() => handleSave(provider.name, provider.slug)}
                     disabled={submitting[provider.name]}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                    className={`${BTN_PRIMARY} ${submitting[provider.name] ? 'opacity-60' : ''}`}
                   >
-                    {submitting[provider.name] ? (
-                      <>
-                        <UiIcon as={Loader2} size={16} className="animate-spin" /> Updating...
-                      </>
-                    ) : (
-                      'Update Integration'
-                    )}
+                    <UiIcon as={submitting[provider.name] ? Loader2 : Save} size={16} className="text-white" />
+                    <Span className={BTN_TEXT_PRIMARY}>{submitting[provider.name] ? 'Updating…' : 'Update integration'}</Span>
                   </Button>
                 </Div>
-              </Div>
+              </Card>
             );
           })}
         </Div>
-      </Div>
-    </ScrollDiv>
+      )}
+    </AdminPage>
   );
 };
 export default SMSGateways;

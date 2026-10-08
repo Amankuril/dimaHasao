@@ -1,13 +1,40 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/CancellationAnalytics.jsx. */
 import { useEffect, useState } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ban, TrendingDown, UserX, Car, DollarSign, ShieldAlert, AlertTriangle, RefreshCw, Clock } from 'lucide-react-native';
+import { Ban, TrendingDown, UserX, Car, IndianRupee, ShieldAlert, AlertTriangle, RefreshCw, Clock } from 'lucide-react-native';
 import api from '../../../shared/api/axiosInstance';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, H1, H2, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
+import {
+  A,
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  EmptyState,
+  ErrorState,
+  TableSkeleton,
+  useLayoutWidth,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
+
+const BREADCRUMB = [{ label: 'Taxi' }, { label: 'Safety' }, { label: 'Cancellations' }];
+
+const STAGES = [
+  { key: 'searching', label: 'Searching', hint: 'Before driver acceptance' },
+  { key: 'accepted', label: 'Accepted', hint: 'Driver on the way' },
+  { key: 'arrived', label: 'Arrived', hint: 'At pickup location' },
+];
+
 export default function CancellationAnalytics() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { tablet } = useLayoutWidth();
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
@@ -24,17 +51,38 @@ export default function CancellationAnalytics() {
   useEffect(() => {
     fetchAnalytics();
   }, []);
+  const header = (
+    <PageHeader
+      icon={Ban}
+      title="Ride Cancellation Analytics"
+      subtitle="Breakdown of ride cancellations, driver misconduct flags and revenue impact."
+      breadcrumb={BREADCRUMB}
+      actions={
+        <Button onClick={fetchAnalytics} className={BTN_SECONDARY} accessibilityLabel="Refresh analytics">
+          <UiIcon as={RefreshCw} size={16} className="text-slate-600" />
+          <Span className={BTN_TEXT_SECONDARY}>Refresh</Span>
+        </Button>
+      }
+    />
+  );
   if (loading) {
     return (
-      <ScrollDiv className="p-6 space-y-6 max-w-7xl mx-auto animate-pulse">
-        <Div className="h-8 bg-slate-200 rounded w-1/4" />
-        <Div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Div key={i} className="h-28 bg-slate-200 rounded-2xl" />
-          ))}
-        </Div>
-        <Div className="h-64 bg-slate-200 rounded-2xl" />
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        {header}
+        <StatGrid className="mb-4">
+          <TableSkeleton rows={2} />
+          <TableSkeleton rows={2} />
+        </StatGrid>
+        <TableSkeleton rows={5} />
+      </AdminPage>
+    );
+  }
+  if (!data) {
+    return (
+      <AdminPage maxWidth={1200}>
+        {header}
+        <ErrorState title="Could not load cancellation analytics" message="The report did not come back. Check the connection and try again." onRetry={fetchAnalytics} />
+      </AdminPage>
     );
   }
   const {
@@ -50,217 +98,145 @@ export default function CancellationAnalytics() {
     topDriverCancellations = [],
     flaggedRides = [],
   } = data || {};
+  const share = (part) => (totalCancelledRides > 0 ? `${Math.round((part / totalCancelledRides) * 100)}% of all cancellations` : 'No cancellations yet');
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 space-y-6">
-      {/* Top Bar */}
-      <Div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <Div>
-          <Div className="flex flex-row items-center gap-2">
-            <UiIcon as={Ban} className="w-7 h-7 text-red-600" />
-            <H1 className="flex-1 text-2xl font-bold text-slate-900">Ride Cancellation Analytics</H1>
-          </Div>
-          <P className="text-xs text-slate-500 mt-1">Real-time breakdown of ride cancellations, driver misconduct flags, and revenue impact.</P>
-        </Div>
-        <Button
-          onClick={fetchAnalytics}
-          className="flex-row items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-sm self-start"
-        >
-          <UiIcon as={RefreshCw} className="w-4 h-4 text-slate-500" />
-          Refresh
-        </Button>
-      </Div>
+    <AdminPage maxWidth={1200}>
+      {header}
 
-      {/* KPI Cards */}
-      <Div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
-          <Div className="flex items-center justify-between">
-            <Span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Cancelled Rides</Span>
-            <Div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
-              <UiIcon as={Ban} className="w-5 h-5" />
-            </Div>
-          </Div>
-          <Div className="flex items-baseline justify-between">
-            <Span className="text-2xl font-black text-slate-900">{totalCancelledRides}</Span>
-            <Span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{cancellationRate}% rate</Span>
-          </Div>
-          <P className="text-[11px] text-slate-400">out of {totalRidesCount} total ride requests</P>
-        </Div>
+      <StatGrid className="mb-4">
+        <StatCard label="Total cancelled rides" value={totalCancelledRides} hint={`${cancellationRate}% of ${totalRidesCount} ride requests`} icon={Ban} tone="danger" />
+        <StatCard label="Customer cancellations" value={customerCancellations} hint={share(customerCancellations)} icon={UserX} tone="warning" />
+        <StatCard label="Driver cancellations" value={driverCancellations} hint={share(driverCancellations)} icon={Car} tone="warning" />
+        <StatCard
+          label="Est. revenue lost"
+          value={`₹${totalRevenueLost.toLocaleString('en-IN')}`}
+          hint={`₹${totalCancellationFeesCollected.toLocaleString('en-IN')} fees collected`}
+          icon={IndianRupee}
+          tone="danger"
+        />
+      </StatGrid>
 
-        <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
-          <Div className="flex items-center justify-between">
-            <Span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Customer Cancellations</Span>
-            <Div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-              <UiIcon as={UserX} className="w-5 h-5" />
-            </Div>
+      {flaggedRides.length > 0 ? (
+        <Card className="mb-4">
+          <SectionTitle action={<StatusBadge status="pending" label="Action required" />}>Flagged driver behaviour ({flaggedRides.length})</SectionTitle>
+          <Div className="flex-row items-center gap-2 mb-3">
+            <UiIcon as={ShieldAlert} size={16} className="text-red-600" />
+            <Text style={tw`text-xs text-slate-500 flex-1`}>Cancellations a customer reported as misconduct.</Text>
           </Div>
-          <Span className="text-2xl font-black text-slate-900">{customerCancellations}</Span>
-          <P className="text-[11px] text-slate-400">
-            {totalCancelledRides > 0 ? `${Math.round((customerCancellations / totalCancelledRides) * 100)}% of total cancellations` : '0%'}
-          </P>
-        </Div>
-
-        <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
-          <Div className="flex items-center justify-between">
-            <Span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Driver Cancellations</Span>
-            <Div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
-              <UiIcon as={Car} className="w-5 h-5" />
-            </Div>
-          </Div>
-          <Span className="text-2xl font-black text-slate-900">{driverCancellations}</Span>
-          <P className="text-[11px] text-slate-400">
-            {totalCancelledRides > 0 ? `${Math.round((driverCancellations / totalCancelledRides) * 100)}% of total cancellations` : '0%'}
-          </P>
-        </Div>
-
-        <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
-          <Div className="flex items-center justify-between">
-            <Span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Est. Revenue Lost</Span>
-            <Div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
-              <UiIcon as={DollarSign} className="w-5 h-5" />
-            </Div>
-          </Div>
-          <Span className="text-2xl font-black text-slate-900">₹{totalRevenueLost.toLocaleString('en-IN')}</Span>
-          <P className="text-[11px] text-emerald-600 font-semibold">₹{totalCancellationFeesCollected.toLocaleString('en-IN')} fees collected</P>
-        </Div>
-      </Div>
-
-      {/* Flagged Driver Behavior Alerts */}
-      {flaggedRides.length > 0 && (
-        <LinearGradient
-          colors={['#FEF2F2', '#FFFBEB']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{ borderWidth: 1, borderColor: '#FECACA', borderRadius: 16, padding: 20, gap: 16 }}
-        >
-          <Div className="flex items-center justify-between gap-2">
-            <Div className="flex flex-1 items-center gap-2">
-              <UiIcon as={ShieldAlert} className="w-5 h-5 text-red-600" />
-              <H2 className="flex-1 text-sm font-bold text-red-900">Flagged Driver Behavior Reports ({flaggedRides.length})</H2>
-            </Div>
-            <Span className="text-[11px] font-bold text-red-700 bg-red-100 px-2.5 py-1 rounded-full uppercase">Action Required</Span>
-          </Div>
-
-          <ScrollDiv nestedScrollEnabled className="space-y-2 max-h-60 pr-1">
+          <Div className="gap-2">
             {flaggedRides.map((item, idx) => (
-              <Div
-                key={idx}
-                className="bg-white p-3.5 rounded-xl border border-red-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
-              >
-                <Div>
-                  <Span className="font-bold text-slate-900">{item.reason}</Span>
-                  {item.comment && <P className="text-slate-500 italic mt-0.5">&quot;{item.comment}&quot;</P>}
-                  <P className="text-[11px] text-slate-400 mt-1">
-                    Customer: <Span className="font-semibold text-slate-700">{item.customerName}</Span> ({item.customerPhone}) | Driver:{' '}
-                    <Span className="font-semibold text-slate-700">{item.driverName}</Span> ({item.driverPhone})
-                  </P>
+              <Div key={idx} className="rounded-lg border border-slate-200 bg-slate-50 p-3 gap-1">
+                <Div className="flex-row items-start justify-between gap-3">
+                  <Text style={tw`text-sm font-semibold text-slate-900 flex-1`} numberOfLines={2}>
+                    {item.reason}
+                  </Text>
+                  <Text style={tw`text-xs text-slate-500`} numberOfLines={1}>
+                    {new Date(item.cancelledAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </Text>
                 </Div>
-                <Div className="text-right shrink-0">
-                  <Span className="text-[11px] text-slate-400">
-                    {new Date(item.cancelledAt).toLocaleString('en-IN', {
-                      day: '2-digit',
-                      month: 'short',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </Span>
-                </Div>
+                {item.comment ? (
+                  <Text style={tw`text-sm text-slate-700`} numberOfLines={3}>
+                    “{item.comment}”
+                  </Text>
+                ) : null}
+                <Text style={tw`text-xs text-slate-500`} numberOfLines={2}>
+                  Customer: {item.customerName} ({item.customerPhone})
+                </Text>
+                <Text style={tw`text-xs text-slate-500`} numberOfLines={2}>
+                  Driver: {item.driverName} ({item.driverPhone})
+                </Text>
               </Div>
             ))}
-          </ScrollDiv>
-        </LinearGradient>
-      )}
-
-      {/* Main Grid: Reasons & Stages */}
-      <Div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Reasons Breakdown */}
-        <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-          <Div className="flex flex-row items-center gap-2">
-            <UiIcon as={TrendingDown} className="w-4 h-4 text-orange-500" />
-            <H2 className="flex-1 text-sm font-bold text-slate-900">Most Common Cancellation Reasons</H2>
           </Div>
+        </Card>
+      ) : null}
 
-          <ScrollDiv nestedScrollEnabled className="space-y-3 max-h-80 pr-1">
-            {reasonsBreakdown.length > 0 ? (
-              reasonsBreakdown.map((item, idx) => {
+      <Div className={tablet ? 'grid grid-cols-2 gap-3' : 'gap-3'}>
+        <Card>
+          <SectionTitle>Most common cancellation reasons</SectionTitle>
+          <Div className="flex-row items-center gap-2 mb-3">
+            <UiIcon as={TrendingDown} size={16} className="text-slate-500" />
+            <Text style={tw`text-xs text-slate-500 flex-1`}>Share of every cancelled ride.</Text>
+          </Div>
+          {reasonsBreakdown.length > 0 ? (
+            <Div className="gap-3">
+              {reasonsBreakdown.map((item, idx) => {
                 const pct = totalCancelledRides > 0 ? Math.round((item.count / totalCancelledRides) * 100) : 0;
                 return (
-                  <Div key={idx} className="space-y-1">
-                    <Div className="flex justify-between text-xs font-semibold">
-                      <Span className="text-slate-800">{item.reason}</Span>
-                      <Span className="text-slate-500 font-bold">
+                  <Div key={idx} className="gap-1.5">
+                    <Div className="flex-row items-start justify-between gap-3">
+                      <Text style={tw`text-sm text-slate-700 flex-1`} numberOfLines={2}>
+                        {item.reason}
+                      </Text>
+                      <Text style={tw`text-sm font-semibold text-slate-900`}>
                         {item.count} ({pct}%)
-                      </Span>
+                      </Text>
                     </Div>
-                    <Div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <LinearGradient
-                        colors={['#F97316', '#EF4444']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={{ height: '100%', borderRadius: 9999, width: `${Math.max(pct, 4)}%` }}
-                      />
+                    <Div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <Div className="h-2 rounded-full" style={{ width: `${Math.max(pct, 4)}%`, backgroundColor: A.primary }} />
                     </Div>
                   </Div>
                 );
-              })
-            ) : (
-              <P className="text-xs text-slate-400 italic">No cancellation reasons recorded yet.</P>
-            )}
-          </ScrollDiv>
-        </Div>
-
-        {/* Stage & Driver Breakdown */}
-        <Div className="space-y-6">
-          {/* Stage Breakdown Card */}
-          <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-            <Div className="flex flex-row items-center gap-2">
-              <UiIcon as={Clock} className="w-4 h-4 text-blue-500" />
-              <H2 className="flex-1 text-sm font-bold text-slate-900">Cancellation Stage Breakdown</H2>
+              })}
             </Div>
+          ) : (
+            <EmptyState
+              icon={TrendingDown}
+              title="No cancellation reasons yet"
+              message="Reasons appear here once riders or drivers cancel a trip."
+              className="border-0 py-6 px-0"
+            />
+          )}
+        </Card>
 
-            <Div className="flex flex-row gap-3">
-              <Div className="flex-1 items-center p-3 bg-blue-50/60 rounded-xl border border-blue-100">
-                <P className="text-xs font-bold text-blue-600 uppercase">Searching</P>
-                <P className="text-xl font-black text-slate-900 mt-1">{stageBreakdown.searching || 0}</P>
-                <P className="text-[10px] text-slate-400 mt-0.5 text-center">Before Driver Acceptance</P>
-              </Div>
-
-              <Div className="flex-1 items-center p-3 bg-amber-50/60 rounded-xl border border-amber-100">
-                <P className="text-xs font-bold text-amber-600 uppercase">Accepted</P>
-                <P className="text-xl font-black text-slate-900 mt-1">{stageBreakdown.accepted || 0}</P>
-                <P className="text-[10px] text-slate-400 mt-0.5 text-center">Driver On The Way</P>
-              </Div>
-
-              <Div className="flex-1 items-center p-3 bg-red-50/60 rounded-xl border border-red-100">
-                <P className="text-xs font-bold text-red-600 uppercase">Arrived</P>
-                <P className="text-xl font-black text-slate-900 mt-1">{stageBreakdown.arrived || 0}</P>
-                <P className="text-[10px] text-slate-400 mt-0.5 text-center">At Pickup Location</P>
-              </Div>
+        <Div className="gap-3">
+          <Card>
+            <SectionTitle>Cancellation stage breakdown</SectionTitle>
+            <Div className="flex-row items-center gap-2 mb-3">
+              <UiIcon as={Clock} size={16} className="text-slate-500" />
+              <Text style={tw`text-xs text-slate-500 flex-1`}>When in the trip the cancellation happened.</Text>
             </Div>
-          </Div>
+            <Div className="grid grid-cols-3 gap-2">
+              {STAGES.map((stage) => (
+                <Div key={stage.key} className="items-center rounded-lg border border-slate-200 bg-slate-50 p-3 gap-1">
+                  <Text style={tw`text-xs font-semibold uppercase tracking-wide text-slate-500 text-center`} numberOfLines={1}>
+                    {stage.label}
+                  </Text>
+                  <Text style={tw`text-xl font-bold text-slate-900`}>{stageBreakdown[stage.key] || 0}</Text>
+                  <Text style={tw`text-xs text-slate-500 text-center`} numberOfLines={2}>
+                    {stage.hint}
+                  </Text>
+                </Div>
+              ))}
+            </Div>
+          </Card>
 
-          {/* Top Driver Offender Cancellations */}
-          {topDriverCancellations.length > 0 && (
-            <Div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
-              <Div className="flex flex-row items-center gap-2">
-                <UiIcon as={AlertTriangle} className="w-4 h-4 text-amber-500" />
-                <H2 className="flex-1 text-sm font-bold text-slate-900">Drivers With Frequent Cancellations</H2>
+          {topDriverCancellations.length > 0 ? (
+            <Card>
+              <SectionTitle>Drivers with frequent cancellations</SectionTitle>
+              <Div className="flex-row items-center gap-2 mb-3">
+                <UiIcon as={AlertTriangle} size={16} className="text-slate-500" />
+                <Text style={tw`text-xs text-slate-500 flex-1`}>Highest cancellation counts in the period.</Text>
               </Div>
-
-              <Div className="space-y-2">
+              <Div className="gap-2">
                 {topDriverCancellations.map((driver, idx) => (
-                  <Div key={idx} className="flex items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl text-xs">
-                    <Div className="flex-1">
-                      <P className="font-bold text-slate-900">{driver.driverName}</P>
-                      <P className="text-[11px] text-slate-500">{driver.driverPhone}</P>
+                  <Div key={idx} className="flex-row items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
+                    <Div className="flex-1 min-w-0">
+                      <Text style={tw`text-sm font-semibold text-slate-900`} numberOfLines={1}>
+                        {driver.driverName}
+                      </Text>
+                      <Text style={tw`text-xs text-slate-500`} numberOfLines={1}>
+                        {driver.driverPhone}
+                      </Text>
                     </Div>
-                    <Span className="font-extrabold text-red-600 bg-red-100 px-2.5 py-1 rounded-full">{driver.cancellationCount} cancellations</Span>
+                    <StatusBadge tone="danger" label={`${driver.cancellationCount} cancellations`} />
                   </Div>
                 ))}
               </Div>
-            </Div>
-          )}
+            </Card>
+          ) : null}
         </Div>
       </Div>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

@@ -1,7 +1,8 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/settings/EmailTemplate.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { Mail, Info, Folder, Upload, FileText, Save, RotateCcw } from 'lucide-react-native';
-import { Button, Div, Form, H1, H2, Input, Label, P, ScrollDiv, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { Mail, Save, RotateCcw } from 'lucide-react-native';
+import { Button, Div, Form, Input, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Toolbar, Field, EmptyState, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../admin/ui';
 import HtmlContent from '../../../../components/HtmlContent';
 import { objectUrl, pickImage } from '../../../../lib/files';
 const debugLog = (...args) => {};
@@ -272,372 +273,247 @@ export default function EmailTemplate() {
       .replace(/{startDate}/g, '2024-06-01')
       .replace(/{endDate}/g, '2024-08-31');
   };
+  const { tablet } = useLayoutWidth();
+  const sendMailLabels = {
+    'forgot-password': 'Send mail on forgot password',
+    'new-restaurant': 'Send mail on new restaurant registration',
+    'new-deliveryman': 'Send mail on new deliveryman registration',
+    'withdraw-request': 'Send mail on withdraw request',
+    'campaign-join': 'Send mail on campaign join request',
+    'refund-request': 'Send mail on refund request',
+    'new-advertisement': 'Send mail on new advertisement',
+  };
+  const anyPageLink =
+    formData.pageLinks.privacyPolicy || formData.pageLinks.refundPolicy || formData.pageLinks.cancellationPolicy || formData.pageLinks.contactUs;
+  const anySocial =
+    formData.socialMediaLinks.facebook ||
+    formData.socialMediaLinks.instagram ||
+    formData.socialMediaLinks.twitter ||
+    formData.socialMediaLinks.linkedin ||
+    formData.socialMediaLinks.pinterest;
+  const checkboxRow = 'flex-row items-center gap-3 h-11';
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Page Header */}
-        <Div className="mb-6">
-          <H1 className="text-2xl font-bold text-slate-900">Email Templates</H1>
-        </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Mail}
+        title="Email templates"
+        subtitle="The mails the platform sends, and what each one says."
+        breadcrumb={[{ label: 'Food' }, { label: 'Settings' }, { label: 'Email templates' }]}
+      />
 
-        {/* Template Navigation */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
-          <Div className="flex flex-wrap gap-2 mb-4">
-            {templates.map((template) => (
+      <Card className="mb-4">
+        <SectionTitle>Template</SectionTitle>
+        <Toolbar>
+          {templates.map((template) => (
+            <Button
+              key={template.id}
+              onClick={() => handleTemplateChange(template.id)}
+              className={activeTemplate === template.id ? BTN_PRIMARY : BTN_SECONDARY}
+              accessibilityLabel={`Edit the ${template.label} template`}
+            >
+              <Span className={activeTemplate === template.id ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{template.label}</Span>
+            </Button>
+          ))}
+        </Toolbar>
+        <Div
+          className="flex-row items-center gap-3 pt-3 border-t border-slate-200"
+          onClick={() => setSendMailEnabled(!sendMailEnabled)}
+          accessibilityRole="switch"
+          accessibilityLabel={sendMailLabels[activeTemplate] || 'Send this mail'}
+        >
+          <Span className="flex-1 text-sm font-medium text-slate-700">{sendMailLabels[activeTemplate]}</Span>
+          <Div className={`w-11 h-6 rounded-full justify-center ${sendMailEnabled ? 'bg-blue-600 items-end' : 'bg-slate-300 items-start'}`}>
+            <Div className="h-4 w-4 mx-1 rounded-full bg-white" />
+          </Div>
+        </Div>
+      </Card>
+
+      <Div className={tablet ? 'flex-row items-start gap-4' : 'gap-4'}>
+        {/* Email preview */}
+        <Card className={tablet ? 'flex-1' : null}>
+          <SectionTitle>Preview</SectionTitle>
+          <Span className="text-base font-semibold text-slate-900 mb-2">{formData.mainTitle}</Span>
+          {formData.mailBody ? (
+            <HtmlContent
+              html={getPreviewContent()
+                .split('\n')
+                .map((line) => `<p>${line}</p>`)
+                .join('')}
+              soraHeadings={false}
+              color="#334155"
+              fontSize={14}
+              lineHeight={20}
+            />
+          ) : (
+            <EmptyState title="Nothing to preview" message="Write the mail body on the right to see it here." className="border-0" icon={Mail} />
+          )}
+
+          <Div className="mt-4 pt-4 border-t border-slate-200 gap-3">
+            <Span className="text-sm text-slate-500">{formData.footerText}</Span>
+
+            {anyPageLink ? (
+              <Div className="flex-row flex-wrap gap-2">
+                {formData.pageLinks.privacyPolicy && <Span className="text-xs text-slate-500">Privacy Policy</Span>}
+                {formData.pageLinks.refundPolicy && <Span className="text-xs text-slate-500">Refund Policy</Span>}
+                {formData.pageLinks.cancellationPolicy && <Span className="text-xs text-slate-500">Cancellation Policy</Span>}
+                {formData.pageLinks.contactUs && <Span className="text-xs text-slate-500">Contact us</Span>}
+              </Div>
+            ) : null}
+
+            {anySocial ? (
+              <Div className="flex-row flex-wrap gap-2">
+                {formData.socialMediaLinks.facebook && <Span className="text-xs text-slate-500">Facebook</Span>}
+                {formData.socialMediaLinks.instagram && <Span className="text-xs text-slate-500">Instagram</Span>}
+                {formData.socialMediaLinks.twitter && <Span className="text-xs text-slate-500">Twitter</Span>}
+                {formData.socialMediaLinks.linkedin && <Span className="text-xs text-slate-500">LinkedIn</Span>}
+                {formData.socialMediaLinks.pinterest && <Span className="text-xs text-slate-500">Pinterest</Span>}
+              </Div>
+            ) : null}
+
+            <Span className="text-xs text-slate-500">{formData.copyrightContent}</Span>
+          </Div>
+        </Card>
+
+        {/* Editor */}
+        <Card className={tablet ? 'flex-1' : null}>
+          <SectionTitle>Content</SectionTitle>
+          <Toolbar>
+            {languages.map((lang) => (
               <Button
-                key={template.id}
-                onClick={() => handleTemplateChange(template.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTemplate === template.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                key={lang.id}
+                onClick={() => setActiveLanguage(lang.id)}
+                className={activeLanguage === lang.id ? BTN_PRIMARY : BTN_SECONDARY}
+                accessibilityLabel={`Edit the ${lang.label} version`}
               >
-                {template.label}
+                <Span className={activeLanguage === lang.id ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{lang.label}</Span>
               </Button>
             ))}
-          </Div>
+          </Toolbar>
 
-          {/* Toggle Switch */}
-          <Div className="flex items-center justify-between pt-4 border-t border-slate-200">
-            <Div className="flex items-center gap-2">
-              <Label className="text-sm font-semibold text-slate-700">
-                {activeTemplate === 'forgot-password' && 'Send Mail On Forget Password'}
-                {activeTemplate === 'new-restaurant' && 'Send Mail On New Restaurant Registration'}
-                {activeTemplate === 'new-deliveryman' && 'Send Mail On New Deliveryman Registration'}
-                {activeTemplate === 'withdraw-request' && 'Send Mail On Withdraw Request'}
-                {activeTemplate === 'campaign-join' && 'Send Mail On Campaign Join Request'}
-                {activeTemplate === 'refund-request' && 'Send Mail On Refund Request'}
-                {activeTemplate === 'new-advertisement' && 'Send Mail On New Advertisement'}
-              </Label>
-              <UiIcon as={Info} className="w-4 h-4 text-slate-400" />
-            </Div>
-            <Button
-              type="button"
-              onClick={() => setSendMailEnabled(!sendMailEnabled)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${sendMailEnabled ? 'bg-blue-600 justify-end' : 'bg-slate-300 justify-start'}`}
-            >
-              <Span className="inline-block h-4 w-4 mx-1 rounded-full bg-white" />
-            </Button>
-          </Div>
-        </Div>
-
-        {/* Main Content - Two Column Layout */}
-        <Div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Email Preview */}
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <Div className="flex items-center gap-3 mb-4">
-              <Div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                <UiIcon as={Folder} className="w-6 h-6 text-orange-600" />
-              </Div>
-              <H2 className="text-lg font-bold text-slate-900">{formData.mainTitle}</H2>
-            </Div>
-
-            <Div className="space-y-4 text-sm text-slate-700">
-              <HtmlContent
-                html={getPreviewContent()
-                  .split('\n')
-                  .map((line) => `<p>${line}</p>`)
-                  .join('')}
-                soraHeadings={false}
-                color="#334155"
-                fontSize={14}
-                lineHeight={20}
-              />
-            </Div>
-
-            <Div className="mt-8 pt-6 border-t border-slate-200">
-              <P className="text-sm text-slate-600 mb-4">{formData.footerText} Thanks & Regards, StackFood</P>
-
-              {/* Logo placeholder */}
-              <Div className="mb-4">
-                <Div className="w-32 h-12 bg-slate-200 rounded flex items-center justify-center">
-                  <Span className="text-xs text-slate-500">StackFood Logo</Span>
-                </Div>
-              </Div>
-
-              {/* Page Links */}
-              {(formData.pageLinks.privacyPolicy ||
-                formData.pageLinks.refundPolicy ||
-                formData.pageLinks.cancellationPolicy ||
-                formData.pageLinks.contactUs) && (
-                <Div className="flex flex-wrap gap-2 mb-4 text-xs text-slate-600">
-                  {formData.pageLinks.privacyPolicy && <Span>• Privacy Policy</Span>}
-                  {formData.pageLinks.refundPolicy && <Span>• Refund Policy</Span>}
-                  {formData.pageLinks.cancellationPolicy && <Span>• Cancelation Policy</Span>}
-                  {formData.pageLinks.contactUs && <Span>• Contact us</Span>}
-                </Div>
-              )}
-
-              {/* Social Media Icons */}
-              {(formData.socialMediaLinks.facebook ||
-                formData.socialMediaLinks.instagram ||
-                formData.socialMediaLinks.twitter ||
-                formData.socialMediaLinks.linkedin ||
-                formData.socialMediaLinks.pinterest) && (
-                <Div className="flex gap-3 mb-4">
-                  {formData.socialMediaLinks.facebook && (
-                    <Div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                      <Span className="text-white text-xs font-bold">F</Span>
-                    </Div>
-                  )}
-                  {formData.socialMediaLinks.instagram && (
-                    <Div className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center">
-                      <Span className="text-white text-xs font-bold">I</Span>
-                    </Div>
-                  )}
-                  {formData.socialMediaLinks.twitter && (
-                    <Div className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center">
-                      <Span className="text-white text-xs font-bold">T</Span>
-                    </Div>
-                  )}
-                  {formData.socialMediaLinks.linkedin && (
-                    <Div className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center">
-                      <Span className="text-white text-xs font-bold">in</Span>
-                    </Div>
-                  )}
-                  {formData.socialMediaLinks.pinterest && (
-                    <Div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center">
-                      <Span className="text-white text-xs font-bold">P</Span>
-                    </Div>
-                  )}
-                </Div>
-              )}
-
-              {/* Copyright */}
-              <P className="text-xs text-slate-500">{formData.copyrightContent}</P>
-            </Div>
-          </Div>
-
-          {/* Right Column - Editing Controls */}
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            {/* Language Tabs */}
-            <Div className="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-4">
-              {languages.map((lang) => (
-                <Button
-                  key={lang.id}
-                  onClick={() => setActiveLanguage(lang.id)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${activeLanguage === lang.id ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-                >
-                  {lang.label}
-                </Button>
-              ))}
-            </Div>
-
-            <Form onSubmit={handleSubmit} className="space-y-6">
-              {/* Read Instructions Link */}
-              <Div className="flex items-center gap-2 mb-4">
-                <Div className="flex items-center gap-1">
-                  <Span className="text-sm text-blue-600">Read Instructions</Span>
-                  <UiIcon as={Info} className="w-4 h-4 text-blue-600" />
-                </Div>
-              </Div>
-
-              {/* Icon Section */}
-              <Div>
-                <Div className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
-                  Icon
-                  <UiIcon as={Info} className="w-4 h-4 text-slate-400" />
-                </Div>
-                <Div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Choose File"
-                    value={formData.icon ? 'File selected' : ''}
-                    readOnly
-                    className="flex-1 px-4 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                  <Button
-                    type="button"
-                    onClick={async () => handleFileUpload('icon', await pickImage())}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                  >
-                    Browse
-                  </Button>
-                </Div>
-              </Div>
-
-              {/* Header Content */}
-              <Div>
-                <Div className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
-                  Header Content
-                  <UiIcon as={Folder} className="w-4 h-4 text-slate-400" />
-                </Div>
-                <Div>
-                  <Label className="block text-xs text-slate-600 mb-1">Main Title(Default)</Label>
-                  <Input
-                    type="text"
-                    value={formData.mainTitle}
-                    onChange={(e) => handleInputChange('mainTitle', e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  />
-                </Div>
-              </Div>
-
-              {/* Mail Body Message */}
-              <Div>
-                <Div className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
-                  Mail Body Message(Default)
-                  <UiIcon as={Info} className="w-4 h-4 text-slate-400" />
-                </Div>
-                {/* Rich Text Editor Placeholder - Simple textarea for now */}
-                <Div className="border border-slate-300 rounded-lg">
-                  {/* Toolbar Placeholder */}
-                  <Div className="border-b border-slate-200 p-2 flex flex-wrap gap-1 bg-slate-50">
-                    <Button type="button" className="p-1.5 hover:bg-slate-200 rounded text-xs">
-                      B
-                    </Button>
-                    <Button type="button" className="p-1.5 hover:bg-slate-200 rounded text-xs">
-                      I
-                    </Button>
-                    <Button type="button" className="p-1.5 hover:bg-slate-200 rounded text-xs">
-                      U
-                    </Button>
-                    <Button type="button" className="p-1.5 hover:bg-slate-200 rounded text-xs">
-                      S
-                    </Button>
-                    <Button type="button" className="p-1.5 hover:bg-slate-200 rounded text-xs">
-                      Color
-                    </Button>
-                    <Button type="button" className="p-1.5 hover:bg-slate-200 rounded text-xs">
-                      Link
-                    </Button>
-                    <Button type="button" className="p-1.5 hover:bg-slate-200 rounded text-xs">
-                      Image
-                    </Button>
-                  </Div>
-                  <Textarea
-                    value={formData.mailBody}
-                    onChange={(e) => handleInputChange('mailBody', e.target.value)}
-                    rows={8}
-                    className="w-full px-4 py-2 border-0 rounded-b-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                  />
-                </Div>
-              </Div>
-
-              {/* Footer Content */}
-              <Div>
-                <Div className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1">
-                  Footer Content
-                  <UiIcon as={Folder} className="w-4 h-4 text-slate-400" />
-                </Div>
-
-                <Div className="space-y-4">
-                  <Div>
-                    <Label className="block text-xs text-slate-600 mb-1">Section Text(Default)</Label>
-                    <Input
-                      type="text"
-                      value={formData.footerText}
-                      onChange={(e) => handleInputChange('footerText', e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  </Div>
-
-                  {/* Page Links Checkboxes */}
-                  <Div>
-                    <Label className="block text-xs text-slate-600 mb-2">Page Links</Label>
-                    <Div className="space-y-2">
-                      {[
-                        {
-                          key: 'privacyPolicy',
-                          label: 'Privacy Policy',
-                        },
-                        {
-                          key: 'refundPolicy',
-                          label: 'Refund Policy',
-                        },
-                        {
-                          key: 'cancellationPolicy',
-                          label: 'Cancelation Policy',
-                        },
-                        {
-                          key: 'contactUs',
-                          label: 'Contact Us',
-                        },
-                      ].map((item) => (
-                        <Div key={item.key} className="flex items-center gap-2">
-                          <Input
-                            type="checkbox"
-                            checked={formData.pageLinks[item.key]}
-                            onChange={(e) => handleCheckboxChange('pageLinks', item.key, e.target.checked)}
-                            className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                          />
-                          <Span className="text-sm text-slate-700">{item.label}</Span>
-                        </Div>
-                      ))}
-                    </Div>
-                  </Div>
-
-                  {/* Social Media Links Checkboxes */}
-                  <Div>
-                    <Label className="block text-xs text-slate-600 mb-2">Social Media Links</Label>
-                    <Div className="space-y-2">
-                      {[
-                        {
-                          key: 'facebook',
-                          label: 'Facebook',
-                        },
-                        {
-                          key: 'instagram',
-                          label: 'Instagram',
-                        },
-                        {
-                          key: 'twitter',
-                          label: 'Twitter',
-                        },
-                        {
-                          key: 'linkedin',
-                          label: 'LinkedIn',
-                        },
-                        {
-                          key: 'pinterest',
-                          label: 'Pinterest',
-                        },
-                      ].map((item) => (
-                        <Div key={item.key} className="flex items-center gap-2">
-                          <Input
-                            type="checkbox"
-                            checked={formData.socialMediaLinks[item.key]}
-                            onChange={(e) => handleCheckboxChange('socialMediaLinks', item.key, e.target.checked)}
-                            className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                          />
-                          <Span className="text-sm text-slate-700">{item.label}</Span>
-                        </Div>
-                      ))}
-                    </Div>
-                  </Div>
-
-                  {/* Copyright Content */}
-                  <Div>
-                    <Label className="block text-xs text-slate-600 mb-1">Copyright Content(Default)</Label>
-                    <Input
-                      type="text"
-                      value={formData.copyrightContent}
-                      onChange={(e) => handleInputChange('copyrightContent', e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Action Buttons */}
-              <Div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+          <Form onSubmit={handleSubmit} className="gap-3">
+            <Field label="Icon" hint="A small image shown at the top of the mail.">
+              <Div className="flex-row items-center gap-2">
+                <Input type="text" placeholder="No file chosen" value={formData.icon ? 'File selected' : ''} readOnly className={`${INPUT} flex-1`} />
                 <Button
                   type="button"
-                  onClick={handleReset}
-                  className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium flex items-center gap-2"
+                  onClick={async () => handleFileUpload('icon', await pickImage())}
+                  className={BTN_SECONDARY}
+                  accessibilityLabel="Choose an icon file"
                 >
-                  <UiIcon as={RotateCcw} className="w-4 h-4" />
-                  Reset
-                </Button>
-                <Button
-                  type="submit"
-                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-                >
-                  <UiIcon as={Save} className="w-4 h-4" />
-                  Save
+                  <Span className={BTN_TEXT_SECONDARY}>Browse</Span>
                 </Button>
               </Div>
-            </Form>
-          </Div>
-        </Div>
+            </Field>
+
+            <Field label="Main title">
+              <Input type="text" value={formData.mainTitle} onChange={(e) => handleInputChange('mainTitle', e.target.value)} className={INPUT} />
+            </Field>
+
+            <Field label="Mail body" hint="Placeholders such as {userName} are filled in when the mail is sent.">
+              <Textarea
+                value={formData.mailBody}
+                onChange={(e) => handleInputChange('mailBody', e.target.value)}
+                rows={8}
+                className="px-3 py-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+              />
+            </Field>
+
+            <Field label="Footer text">
+              <Input type="text" value={formData.footerText} onChange={(e) => handleInputChange('footerText', e.target.value)} className={INPUT} />
+            </Field>
+
+            <Field label="Page links">
+              <Div>
+                {[
+                  {
+                    key: 'privacyPolicy',
+                    label: 'Privacy Policy',
+                  },
+                  {
+                    key: 'refundPolicy',
+                    label: 'Refund Policy',
+                  },
+                  {
+                    key: 'cancellationPolicy',
+                    label: 'Cancellation Policy',
+                  },
+                  {
+                    key: 'contactUs',
+                    label: 'Contact Us',
+                  },
+                ].map((item) => (
+                  <Div key={item.key} className={checkboxRow}>
+                    <Input
+                      type="checkbox"
+                      checked={formData.pageLinks[item.key]}
+                      onChange={(e) => handleCheckboxChange('pageLinks', item.key, e.target.checked)}
+                      className="w-5 h-5"
+                    />
+                    <Span className="flex-1 text-sm text-slate-700">{item.label}</Span>
+                  </Div>
+                ))}
+              </Div>
+            </Field>
+
+            <Field label="Social media links">
+              <Div>
+                {[
+                  {
+                    key: 'facebook',
+                    label: 'Facebook',
+                  },
+                  {
+                    key: 'instagram',
+                    label: 'Instagram',
+                  },
+                  {
+                    key: 'twitter',
+                    label: 'Twitter',
+                  },
+                  {
+                    key: 'linkedin',
+                    label: 'LinkedIn',
+                  },
+                  {
+                    key: 'pinterest',
+                    label: 'Pinterest',
+                  },
+                ].map((item) => (
+                  <Div key={item.key} className={checkboxRow}>
+                    <Input
+                      type="checkbox"
+                      checked={formData.socialMediaLinks[item.key]}
+                      onChange={(e) => handleCheckboxChange('socialMediaLinks', item.key, e.target.checked)}
+                      className="w-5 h-5"
+                    />
+                    <Span className="flex-1 text-sm text-slate-700">{item.label}</Span>
+                  </Div>
+                ))}
+              </Div>
+            </Field>
+
+            <Field label="Copyright">
+              <Input
+                type="text"
+                value={formData.copyrightContent}
+                onChange={(e) => handleInputChange('copyrightContent', e.target.value)}
+                className={INPUT}
+              />
+            </Field>
+
+            <Div className="flex-row flex-wrap justify-end gap-2 pt-3 border-t border-slate-200">
+              <Button type="button" onClick={handleReset} className={BTN_SECONDARY} accessibilityLabel="Reset this template">
+                <UiIcon as={RotateCcw} size={16} className="text-slate-700" />
+                <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+              </Button>
+              <Button type="submit" className={BTN_PRIMARY} accessibilityLabel="Save this template">
+                <UiIcon as={Save} size={16} className="text-white" />
+                <Span className={BTN_TEXT_PRIMARY}>Save</Span>
+              </Button>
+            </Div>
+          </Form>
+        </Card>
       </Div>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

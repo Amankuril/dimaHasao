@@ -1,32 +1,35 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/Cashback.jsx. */
 import { useState, useMemo } from 'react';
-import { Search, Download, ChevronDown, Edit, Trash2, Calendar, RefreshCw } from 'lucide-react-native';
+import { Search, Edit, Trash2, RefreshCw } from 'lucide-react-native';
 import { emptyCashbacks } from '../../utils/adminFallbackData';
 import {
-  Button,
-  Div,
-  Form,
-  HScroll,
-  H1,
-  H2,
-  Input,
-  Label,
-  Option,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../admin/ui';
+import { Button, Div, Form, HScroll, Input, Option, Select, Span, Icon as UiIcon } from '../../../components/web';
 import { alert, window } from '../../../lib/webShim';
 const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
-const debugError = (...args) => {};
+
+const COLS = [56, 170, 140, 110, 190, 110, 120, 104];
+const LABELS = ['SI', 'Name', 'Cashback Type', 'Amount', 'Duration', 'Total Used', 'Status', 'Action'];
+
 export default function Cashback() {
   const [activeLanguage, setActiveLanguage] = useState('default');
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +46,7 @@ export default function Cashback() {
     endDate: '',
     limitForSameUser: '',
   });
+  const { tablet } = useLayoutWidth();
   const languageTabs = [
     {
       key: 'default',
@@ -62,9 +66,10 @@ export default function Cashback() {
     },
     {
       key: 'es',
-      label: 'Spanish - espa�ol(ES)',
+      label: 'Spanish - español(ES)',
     },
   ];
+  const activeLanguageLabel = activeLanguage === 'default' ? 'Default' : languageTabs.find((t) => t.key === activeLanguage)?.label;
   const filteredCashbacks = useMemo(() => {
     let result = [...cashbacks];
     if (cashbackType !== 'all') {
@@ -122,250 +127,183 @@ export default function Cashback() {
     }
   };
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Create Cashback Offer Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex items-center gap-3 mb-4">
-            <Div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center">
-              <UiIcon as={RefreshCw} className="w-5 h-5 text-white" />
-            </Div>
-            <H1 className="text-2xl font-bold text-slate-900">Create Cashback Offer</H1>
-          </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={RefreshCw}
+        title="Create Cashback Offer"
+        subtitle="Set up a cashback offer and review the ones already live"
+        breadcrumb={[{ label: 'Food' }, { label: 'Promotions' }, { label: 'Cashback' }]}
+      />
 
-          {/* Language Tabs */}
-          <HScroll className="flex items-center gap-2 border-b border-slate-200 mb-6">
-            {languageTabs.map((tab) => (
-              <Button
-                key={tab.key}
-                onClick={() => setActiveLanguage(tab.key)}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeLanguage === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
-              >
-                {tab.label}
-              </Button>
-            ))}
-          </HScroll>
+      {/* Create Cashback Offer */}
+      <Card className="mb-4">
+        {/* Language Tabs */}
+        <HScroll className="mb-4 border-b border-slate-200" contentClassName="flex-row items-center">
+          {languageTabs.map((tab) => (
+            <Button
+              key={tab.key}
+              onClick={() => setActiveLanguage(tab.key)}
+              className={`px-4 h-11 justify-center border-b-2 ${activeLanguage === tab.key ? 'border-blue-600' : 'border-transparent'}`}
+            >
+              <Span className={`text-sm font-semibold ${activeLanguage === tab.key ? 'text-blue-600' : 'text-slate-600'}`}>{tab.label}</Span>
+            </Button>
+          ))}
+        </HScroll>
 
-          <Form onSubmit={handleSubmit}>
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Title ({activeLanguage === 'default' ? 'Default' : languageTabs.find((t) => t.key === activeLanguage)?.label})
-                </Label>
-                <Input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </Div>
+        <Form onSubmit={handleSubmit}>
+          <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3 mb-4`}>
+            <Field label={`Title (${activeLanguageLabel})`}>
+              <Input type="text" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} className={INPUT} />
+            </Field>
 
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Select Customer</Label>
-                <Select
-                  value={formData.customer}
-                  onChange={(e) => handleInputChange('customer', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                >
-                  <Option value="">Select customer</Option>
-                </Select>
-              </Div>
-
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Cashback Type <Span className="text-red-500">*</Span>
-                </Label>
-                <Select
-                  value={formData.cashbackType}
-                  onChange={(e) => handleInputChange('cashbackType', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                >
-                  <Option value="Percentage (%)">Percentage (%)</Option>
-                  <Option value="Amount ($)">Amount ($)</Option>
-                </Select>
-              </Div>
-
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Cashback Amount ({formData.cashbackType === 'Percentage (%)' ? '%' : '$'}) <Span className="text-red-500">*</Span>
-                </Label>
-                <Input
-                  type="number"
-                  value={formData.cashbackAmount}
-                  onChange={(e) => handleInputChange('cashbackAmount', e.target.value)}
-                  placeholder="Ex: 100"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </Div>
-
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Minimum Purchase ($)</Label>
-                <Input
-                  type="number"
-                  value={formData.minPurchase}
-                  onChange={(e) => handleInputChange('minPurchase', e.target.value)}
-                  placeholder="Ex: 100"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </Div>
-
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Maximum Discount ($)</Label>
-                <Input
-                  type="number"
-                  value={formData.maxDiscount}
-                  onChange={(e) => handleInputChange('maxDiscount', e.target.value)}
-                  placeholder="Ex: 100"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </Div>
-
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Start Date</Label>
-                <Div className="relative">
-                  <Input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => handleInputChange('startDate', e.target.value)}
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  />
-                  <UiIcon as={Calendar} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </Div>
-              </Div>
-
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">End Date</Label>
-                <Div className="relative">
-                  <Input
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => handleInputChange('endDate', e.target.value)}
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  />
-                  <UiIcon as={Calendar} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </Div>
-              </Div>
-
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Limit For Same User</Label>
-                <Input
-                  type="number"
-                  value={formData.limitForSameUser}
-                  onChange={(e) => handleInputChange('limitForSameUser', e.target.value)}
-                  placeholder="Ex: 5"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-              </Div>
-            </Div>
-
-            <Div className="flex items-center justify-end gap-4 mt-6">
-              <Button
-                type="button"
-                onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset
-              </Button>
-              <Button type="submit" className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md">
-                Submit
-              </Button>
-            </Div>
-          </Form>
-        </Div>
-
-        {/* Cashback List Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-2">
-              <H2 className="text-xl font-bold text-slate-900">Cashback List</H2>
-              <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">{filteredCashbacks.length}</Span>
-            </Div>
-
-            <Div className="flex items-center gap-3">
-              <Select
-                value={cashbackType}
-                onChange={(e) => setCashbackType(e.target.value)}
-                className="px-4 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                <Option value="all">All CashBacks</Option>
-                <Option value="Percentage">Percentage</Option>
-                <Option value="Amount">Amount</Option>
+            <Field label="Select Customer">
+              <Select value={formData.customer} onChange={(e) => handleInputChange('customer', e.target.value)} className={INPUT}>
+                <Option value="">Select customer</Option>
               </Select>
+            </Field>
 
-              <Div className="relative flex-1 sm:flex-initial min-w-[200px]">
-                <Input
-                  type="text"
-                  placeholder="Ex: Search by title"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                />
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </Div>
-            </Div>
+            <Field label="Cashback Type" required>
+              <Select value={formData.cashbackType} onChange={(e) => handleInputChange('cashbackType', e.target.value)} className={INPUT}>
+                <Option value="Percentage (%)">Percentage (%)</Option>
+                <Option value="Amount ($)">Amount ($)</Option>
+              </Select>
+            </Field>
+
+            <Field label={`Cashback Amount (${formData.cashbackType === 'Percentage (%)' ? '%' : '$'})`} required>
+              <Input
+                type="number"
+                value={formData.cashbackAmount}
+                onChange={(e) => handleInputChange('cashbackAmount', e.target.value)}
+                placeholder="Ex: 100"
+                className={INPUT}
+              />
+            </Field>
+
+            <Field label="Minimum Purchase ($)">
+              <Input
+                type="number"
+                value={formData.minPurchase}
+                onChange={(e) => handleInputChange('minPurchase', e.target.value)}
+                placeholder="Ex: 100"
+                className={INPUT}
+              />
+            </Field>
+
+            <Field label="Maximum Discount ($)">
+              <Input
+                type="number"
+                value={formData.maxDiscount}
+                onChange={(e) => handleInputChange('maxDiscount', e.target.value)}
+                placeholder="Ex: 100"
+                className={INPUT}
+              />
+            </Field>
+
+            <Field label="Start Date">
+              <Input type="date" value={formData.startDate} onChange={(e) => handleInputChange('startDate', e.target.value)} className={INPUT} />
+            </Field>
+
+            <Field label="End Date">
+              <Input type="date" value={formData.endDate} onChange={(e) => handleInputChange('endDate', e.target.value)} className={INPUT} />
+            </Field>
+
+            <Field label="Limit For Same User">
+              <Input
+                type="number"
+                value={formData.limitForSameUser}
+                onChange={(e) => handleInputChange('limitForSameUser', e.target.value)}
+                placeholder="Ex: 5"
+                className={INPUT}
+              />
+            </Field>
           </Div>
 
-          {/* Table */}
-          <Table cols={[60, 180, 130, 100, 200, 100, 100, 96]} className="w-full">
-              <Thead className="bg-slate-50 border-b border-slate-200">
-                <Tr>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">CashBack Type</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Duration</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Used</Th>
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</Th>
-                  <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>
-                </Tr>
-              </Thead>
-              <Tbody className="bg-white divide-y divide-slate-100">
-                {filteredCashbacks.map((cashback) => (
-                  <Tr key={cashback.sl} className="hover:bg-slate-50 transition-colors">
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm font-medium text-slate-700">{cashback.sl}</Span>
-                    </Td>
-                    <Td className="px-6 py-4">
-                      <Span className="text-sm font-medium text-slate-900">{cashback.name}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm text-slate-700">{cashback.cashbackType}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm font-medium text-slate-900">{cashback.amount}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm text-slate-700">{cashback.duration}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm text-slate-700">{cashback.totalUsed}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Button
-                        onClick={() => handleToggleStatus(cashback.sl)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${cashback.status ? 'bg-blue-600' : 'bg-slate-300'}`}
-                      >
-                        <Div
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${cashback.status ? 'translate-x-6' : 'translate-x-1'}`}
-                        />
-                      </Button>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap text-center">
-                      <Div className="flex items-center justify-center gap-2">
-                        <Button className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors">
-                          <UiIcon as={Edit} className="w-4 h-4" />
-                        </Button>
-                        <Button onClick={() => handleDelete(cashback.sl)} className="p-1.5 rounded text-red-600 hover:bg-red-50 transition-colors">
-                          <UiIcon as={Trash2} className="w-4 h-4" />
-                        </Button>
-                      </Div>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-        </Div>
-      </Div>
-    </ScrollDiv>
+          <Div className={`flex-row items-center gap-2 ${tablet ? 'justify-end' : ''}`}>
+            <Button type="button" onClick={handleReset} className={`${BTN_SECONDARY} ${tablet ? '' : 'flex-1'}`}>
+              <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+            </Button>
+            <Button type="submit" className={`${BTN_PRIMARY} ${tablet ? '' : 'flex-1'}`}>
+              <Span className={BTN_TEXT_PRIMARY}>Submit</Span>
+            </Button>
+          </Div>
+        </Form>
+      </Card>
+
+      {/* Cashback List */}
+      <Card className="mb-4">
+        <SectionTitle>{`Cashback List (${filteredCashbacks.length})`}</SectionTitle>
+        <Toolbar className="mb-0">
+          <Select value={cashbackType} onChange={(e) => setCashbackType(e.target.value)} className={`${INPUT} min-w-[160px]`}>
+            <Option value="all">All CashBacks</Option>
+            <Option value="Percentage">Percentage</Option>
+            <Option value="Amount">Amount</Option>
+          </Select>
+
+          <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white flex-1 min-w-[200px]">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Ex: Search by title"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 text-sm text-slate-900"
+            />
+          </Div>
+        </Toolbar>
+      </Card>
+
+      {filteredCashbacks.length === 0 ? (
+        <EmptyState
+          icon={RefreshCw}
+          title="No cashback offers"
+          message={
+            searchQuery || cashbackType !== 'all' ? 'No offers match your search or filter.' : 'Create a cashback offer above and it will be listed here.'
+          }
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={LABELS} />
+          <TBody>
+            {filteredCashbacks.map((cashback, i, all) => (
+              <Row key={cashback.sl} last={i === all.length - 1}>
+                <Cell width={COLS[0]}>{String(cashback.sl)}</Cell>
+                <Cell width={COLS[1]}>
+                  <Span className="text-sm font-semibold text-slate-900">{cashback.name}</Span>
+                </Cell>
+                <Cell width={COLS[2]}>{cashback.cashbackType}</Cell>
+                <Cell width={COLS[3]}>
+                  <Span className="text-sm font-semibold text-slate-900">{String(cashback.amount)}</Span>
+                </Cell>
+                <Cell width={COLS[4]}>{cashback.duration}</Cell>
+                <Cell width={COLS[5]}>{String(cashback.totalUsed)}</Cell>
+                <Cell width={COLS[6]}>
+                  <Button
+                    onClick={() => handleToggleStatus(cashback.sl)}
+                    className="h-11 justify-center"
+                    accessibilityLabel={`Toggle status for ${cashback.name}`}
+                  >
+                    <StatusBadge status={cashback.status ? 'active' : 'inactive'} />
+                  </Button>
+                </Cell>
+                <Cell width={COLS[7]}>
+                  <Div className="flex-row items-center gap-1">
+                    <Button className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel={`Edit ${cashback.name}`}>
+                      <UiIcon as={Edit} size={16} className="text-blue-600" />
+                    </Button>
+                    <Button
+                      onClick={() => handleDelete(cashback.sl)}
+                      className="w-11 h-11 rounded-lg items-center justify-center"
+                      accessibilityLabel={`Delete ${cashback.name}`}
+                    >
+                      <UiIcon as={Trash2} size={16} className="text-red-600" />
+                    </Button>
+                  </Div>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+    </AdminPage>
   );
 }

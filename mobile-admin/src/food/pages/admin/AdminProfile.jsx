@@ -1,17 +1,33 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/AdminProfile.jsx (tools/port.js first pass). */
 import { useState, useEffect } from 'react';
 import { adminAPI, uploadAPI } from '../../../api/food';
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '../../../components/shadcn';
 import { objectUrl, pickImage } from '../../../lib/files';
 import { toast } from '../../../lib/notify';
-import { User, Mail, Phone, Save, Upload, X, Pencil, Eye, EyeOff } from 'lucide-react-native';
+import { User, Save, Upload, X, Pencil, Eye, EyeOff } from 'lucide-react-native';
 import { ActivityIndicator } from 'react-native';
-import { Button as HtmlButton, Div, Form, H1, Img, P, ScrollDiv, Span, Icon as UiIcon } from '../../../components/web';
+import { Button as HtmlButton, Div, Form, Img, Input, P, Span, Icon as UiIcon } from '../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatusBadge,
+  Field,
+  LoadingState,
+  ErrorState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../admin/ui';
 import { window } from '../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 export default function AdminProfile() {
+  const { tablet } = useLayoutWidth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -250,20 +266,18 @@ export default function AdminProfile() {
   };
   if (loading) {
     return (
-      <Div className="flex items-center justify-center h-64">
-        <ActivityIndicator size="large" color="#525252" />
-      </Div>
+      <AdminPage maxWidth={720}>
+        <PageHeader title="Profile" subtitle="Manage your admin profile information" breadcrumb={[{ label: 'Food' }, { label: 'Profile' }]} />
+        <LoadingState label="Loading your profile…" />
+      </AdminPage>
     );
   }
   if (!profile) {
     return (
-      <ScrollDiv className="flex-1 p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <P className="text-neutral-600">Failed to load profile data</P>
-          </CardContent>
-        </Card>
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        <PageHeader title="Profile" subtitle="Manage your admin profile information" breadcrumb={[{ label: 'Food' }, { label: 'Profile' }]} />
+        <ErrorState title="Failed to load profile data" message="Your admin profile could not be fetched. Check the connection and try again." onRetry={fetchProfile} />
+      </AdminPage>
     );
   }
 
@@ -285,311 +299,209 @@ export default function AdminProfile() {
     const masked = localPart[0] + '*'.repeat(Math.min(localPart.length - 1, 5)) + '@' + domain;
     return masked;
   };
-  return (
-    <ScrollDiv className="flex-1 p-6 space-y-6">
-      <Div>
-        <H1 className="text-3xl font-bold text-neutral-900">Profile</H1>
-        <P className="text-neutral-600 mt-1">Manage your admin profile information</P>
+  const fieldsDisabled = !isEditMode || saving || uploading;
+  const inputClass = `${INPUT} ${fieldsDisabled ? 'bg-slate-50 text-slate-500' : ''}`;
+  const passwordRow = (id, label, value, onChangeText, visibleKey) => (
+    <Field label={label} className={tablet ? 'flex-1 min-w-[260px]' : null}>
+      <Div className="relative">
+        <Input
+          nativeID={id}
+          type={showPasswords[visibleKey] ? 'text' : 'password'}
+          value={value}
+          onChange={(e) => onChangeText(e.target.value)}
+          placeholder={label === 'Old Password' ? 'Enter old password' : label === 'New Password' ? 'Enter new password' : 'Confirm new password'}
+          disabled={fieldsDisabled}
+          className={`${inputClass} pr-12`}
+        />
+        <HtmlButton
+          type="button"
+          onClick={() =>
+            setShowPasswords((prev) => ({
+              ...prev,
+              [visibleKey]: !prev[visibleKey],
+            }))
+          }
+          disabled={fieldsDisabled}
+          className="absolute right-0 top-0 bottom-0 w-11 items-center justify-center"
+          accessibilityLabel={showPasswords[visibleKey] ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+        >
+          <UiIcon as={showPasswords[visibleKey] ? EyeOff : Eye} size={18} className="text-slate-500" />
+        </HtmlButton>
       </Div>
+    </Field>
+  );
+  return (
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={User}
+        title="Profile"
+        subtitle={isEditMode ? 'Update your profile details below' : 'View and manage your admin profile'}
+        breadcrumb={[{ label: 'Food' }, { label: 'Profile' }]}
+        actions={
+          !isEditMode ? (
+            <HtmlButton type="button" onClick={handleStartEditing} className={BTN_PRIMARY}>
+              <UiIcon as={Pencil} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Edit profile</Span>
+            </HtmlButton>
+          ) : (
+            <>
+              <HtmlButton
+                type="button"
+                onClick={() => handleSubmit({ preventDefault() {} })}
+                disabled={saving || uploading}
+                className={BTN_PRIMARY}
+                style={saving || uploading ? { opacity: 0.7 } : null}
+              >
+                {saving || uploading ? <ActivityIndicator size="small" color="#fff" /> : <UiIcon as={Save} size={16} className="text-white" />}
+                <Span className={BTN_TEXT_PRIMARY}>{uploading ? 'Uploading image…' : saving ? 'Saving…' : 'Save changes'}</Span>
+              </HtmlButton>
+              <HtmlButton type="button" onClick={handleCancelEditing} disabled={saving || uploading} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+              </HtmlButton>
+            </>
+          )
+        }
+      />
 
-      <Card>
-        <CardHeader>
-          <Div className="flex flex-row flex-wrap items-center justify-between gap-4 w-full">
-            <Div className="flex-1">
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>{isEditMode ? 'Update your profile details below' : 'View your admin profile details'}</CardDescription>
-            </Div>
-            {!isEditMode ? (
-              <Button type="button" onClick={handleStartEditing} className="bg-black text-white hover:bg-neutral-900">
-                <UiIcon as={Pencil} className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
+      <Card className="mb-4">
+        <Div className="flex-row items-center gap-4">
+          <Div className="w-16 h-16 rounded-full bg-slate-100 items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+            {profile.profileImage ? (
+              <Img src={profile.profileImage} alt={profile.name} className="w-full h-full" contentFit="cover" />
             ) : (
-              <Div className="flex items-center gap-3">
-                <Button type="button" variant="outline" onClick={handleCancelEditing} disabled={saving || uploading} className="h-10 px-6">
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleSubmit({ preventDefault() {} })}
-                  disabled={saving || uploading}
-                  className="bg-black text-white hover:bg-neutral-900 h-10 px-6"
-                >
-                  {uploading ? (
-                    <>
-                      <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
-                      Uploading image...
-                    </>
-                  ) : saving ? (
-                    <>
-                      <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <UiIcon as={Save} className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </Div>
+              <Span className="text-xl font-semibold text-slate-600">{getInitials(profile.name)}</Span>
             )}
           </Div>
-        </CardHeader>
-        <CardContent>
-          <Form nativeID="admin-profile-form" onSubmit={handleSubmit} className="space-y-6">
-            {/* Profile Picture Section */}
-            <Div className="flex items-center gap-6 pb-6 border-b border-neutral-200">
-              <Div className="w-20 h-20 rounded-full bg-neutral-100 flex items-center justify-center overflow-hidden border-2 border-neutral-300">
-                {profile.profileImage ? (
-                  <Img src={profile.profileImage} alt={profile.name} className="w-full h-full object-cover" />
-                ) : (
-                  <Span className="text-2xl font-semibold text-neutral-600">{getInitials(profile.name)}</Span>
-                )}
-              </Div>
-              <Div className="flex-1">
-                <P className="text-sm font-medium text-neutral-900">{profile.name}</P>
-                <P className="text-xs text-neutral-500 mt-1">{maskEmail(profile.email)}</P>
-                <P className="text-xs text-neutral-500 mt-1">
-                  Role: <Span className="font-medium capitalize">{profile.role || 'admin'}</Span>
-                </P>
-              </Div>
+          <Div className="flex-1 min-w-0 gap-0.5">
+            <P className="text-base font-semibold text-slate-900" numberOfLines={1}>
+              {profile.name}
+            </P>
+            <P className="text-sm text-slate-500" numberOfLines={1}>
+              {maskEmail(profile.email)}
+            </P>
+            <Div className="flex-row items-center gap-2 mt-1">
+              <Span className="text-xs text-slate-500 capitalize">{profile.role || 'admin'}</Span>
+              <StatusBadge status={profile.isActive !== false ? 'active' : 'inactive'} label={profile.isActive !== false ? 'Active' : 'Inactive'} />
             </Div>
-
-            {/* Form Fields */}
-            <Div className="grid gap-6 md:grid-cols-2">
-              <Div className="space-y-2">
-                <Label htmlFor="name" className="flex items-center gap-2">
-                  <UiIcon as={User} className="w-4 h-4" />
-                  Full Name
-                </Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter your full name"
-                  required
-                  disabled={!isEditMode || saving || uploading}
-                  className={`h-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
-                />
-              </Div>
-
-              <Div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
-                  <UiIcon as={Mail} className="w-4 h-4" />
-                  Email Address
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Enter your email address"
-                  required
-                  disabled={!isEditMode || saving || uploading}
-                  className={`h-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
-                />
-                <P className="text-xs text-neutral-500">Email can be changed</P>
-              </Div>
-
-              <Div className="space-y-2">
-                <Label htmlFor="phone" className="flex items-center gap-2">
-                  <UiIcon as={Phone} className="w-4 h-4" />
-                  Phone Number
-                </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="Enter phone number (optional)"
-                  disabled={!isEditMode || saving || uploading}
-                  className={`h-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
-                />
-              </Div>
-
-              <Div className="space-y-2 md:col-span-2">
-                <Label htmlFor="profileImage">Profile Image</Label>
-                {imagePreview || profile.profileImage ? (
-                  <Div className="relative w-48 h-48 border-2 border-neutral-300 rounded-lg overflow-hidden">
-                    <Img src={imagePreview || profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                    {isEditMode && (
-                      <>
-                        {/* Hover reveals "Change Image" on the web; on touch it is always shown. */}
-                        <Div className="absolute inset-0 bg-black/40 flex items-center justify-center" onClick={handleFileSelect}>
-                          <Span className="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium overflow-hidden">Change Image</Span>
-                        </Div>
-                        <HtmlButton
-                          type="button"
-                          onClick={handleRemoveImage}
-                          className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-full shadow-lg z-10"
-                          accessibilityLabel="Remove image"
-                        >
-                          <UiIcon as={X} className="w-4 h-4 text-white" />
-                        </HtmlButton>
-                      </>
-                    )}
-                  </Div>
-                ) : (
-                  <Div
-                    onClick={isEditMode && !saving && !uploading ? handleFileSelect : undefined}
-                    className={`flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed border-neutral-300 rounded-lg bg-neutral-50 ${isEditMode ? '' : 'opacity-70'}`}
-                  >
-                    <UiIcon as={Upload} className="w-8 h-8 text-neutral-400 mb-2" />
-                    <P className="text-sm text-neutral-600">{isEditMode ? 'Click to upload' : 'No profile image'}</P>
-                    <P className="text-xs text-neutral-500 mt-1">PNG, JPG, WEBP (max 5MB)</P>
-                  </Div>
-                )}
-                {isEditMode && imagePreview && <P className="text-xs text-green-600 mt-1">New image selected. Click &quot;Save Changes&quot; to upload.</P>}
-                {isEditMode && profile.profileImage && !imagePreview && <P className="text-xs text-neutral-500 mt-1">Tap the image to change it</P>}
-              </Div>
-
-              <Div className="space-y-2">
-                <Label htmlFor="currentPassword">Old Password</Label>
-                <Div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showPasswords.currentPassword ? 'text' : 'password'}
-                    value={passwordData.currentPassword}
-                    onChange={(e) =>
-                      setPasswordData((prev) => ({
-                        ...prev,
-                        currentPassword: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter old password"
-                    disabled={!isEditMode || saving || uploading}
-                    className={`h-11 pr-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
-                  />
-                  <HtmlButton
-                    type="button"
-                    onClick={() =>
-                      setShowPasswords((prev) => ({
-                        ...prev,
-                        currentPassword: !prev.currentPassword,
-                      }))
-                    }
-                    disabled={!isEditMode || saving || uploading}
-                    className="absolute right-3 top-0 bottom-0 justify-center disabled:opacity-50"
-                    accessibilityLabel={showPasswords.currentPassword ? 'Hide old password' : 'Show old password'}
-                  >
-                    {showPasswords.currentPassword ? (
-                      <UiIcon as={EyeOff} className="w-4 h-4 text-neutral-500" />
-                    ) : (
-                      <UiIcon as={Eye} className="w-4 h-4 text-neutral-500" />
-                    )}
-                  </HtmlButton>
-                </Div>
-              </Div>
-
-              <Div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Div className="relative">
-                  <Input
-                    id="newPassword"
-                    type={showPasswords.newPassword ? 'text' : 'password'}
-                    value={passwordData.newPassword}
-                    onChange={(e) =>
-                      setPasswordData((prev) => ({
-                        ...prev,
-                        newPassword: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter new password"
-                    disabled={!isEditMode || saving || uploading}
-                    className={`h-11 pr-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
-                  />
-                  <HtmlButton
-                    type="button"
-                    onClick={() =>
-                      setShowPasswords((prev) => ({
-                        ...prev,
-                        newPassword: !prev.newPassword,
-                      }))
-                    }
-                    disabled={!isEditMode || saving || uploading}
-                    className="absolute right-3 top-0 bottom-0 justify-center disabled:opacity-50"
-                    accessibilityLabel={showPasswords.newPassword ? 'Hide new password' : 'Show new password'}
-                  >
-                    {showPasswords.newPassword ? (
-                      <UiIcon as={EyeOff} className="w-4 h-4 text-neutral-500" />
-                    ) : (
-                      <UiIcon as={Eye} className="w-4 h-4 text-neutral-500" />
-                    )}
-                  </HtmlButton>
-                </Div>
-              </Div>
-
-              <Div className="space-y-2 md:col-span-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showPasswords.confirmPassword ? 'text' : 'password'}
-                    value={passwordData.confirmPassword}
-                    onChange={(e) =>
-                      setPasswordData((prev) => ({
-                        ...prev,
-                        confirmPassword: e.target.value,
-                      }))
-                    }
-                    placeholder="Confirm new password"
-                    disabled={!isEditMode || saving || uploading}
-                    className={`h-11 pr-11 ${!isEditMode ? 'bg-neutral-50 cursor-not-allowed' : ''}`}
-                  />
-                  <HtmlButton
-                    type="button"
-                    onClick={() =>
-                      setShowPasswords((prev) => ({
-                        ...prev,
-                        confirmPassword: !prev.confirmPassword,
-                      }))
-                    }
-                    disabled={!isEditMode || saving || uploading}
-                    className="absolute right-3 top-0 bottom-0 justify-center disabled:opacity-50"
-                    accessibilityLabel={showPasswords.confirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-                  >
-                    {showPasswords.confirmPassword ? (
-                      <UiIcon as={EyeOff} className="w-4 h-4 text-neutral-500" />
-                    ) : (
-                      <UiIcon as={Eye} className="w-4 h-4 text-neutral-500" />
-                    )}
-                  </HtmlButton>
-                </Div>
-              </Div>
-            </Div>
-
-            {/* Additional Info */}
-            <Div className="pt-4 border-t border-neutral-200 space-y-2">
-              <Div className="flex items-center justify-between text-sm">
-                <Span className="text-neutral-600">Account Status</Span>
-                <Span className={`font-medium ${profile.isActive !== false ? 'text-green-600' : 'text-red-600'}`}>
-                  {profile.isActive !== false ? 'Active' : 'Inactive'}
-                </Span>
-              </Div>
-              {profile.lastLogin && (
-                <Div className="flex items-center justify-between text-sm">
-                  <Span className="text-neutral-600">Last Login</Span>
-                  <Span className="text-neutral-900">{new Date(profile.lastLogin).toLocaleString()}</Span>
-                </Div>
-              )}
-              {profile.loginCount !== undefined && (
-                <Div className="flex items-center justify-between text-sm">
-                  <Span className="text-neutral-600">Total Logins</Span>
-                  <Span className="text-neutral-900">{profile.loginCount}</Span>
-                </Div>
-              )}
-              {profile.createdAt && (
-                <Div className="flex items-center justify-between text-sm">
-                  <Span className="text-neutral-600">Member Since</Span>
-                  <Span className="text-neutral-900">{new Date(profile.createdAt).toLocaleDateString()}</Span>
-                </Div>
-              )}
-            </Div>
-          </Form>
-        </CardContent>
+          </Div>
+        </Div>
       </Card>
-    </ScrollDiv>
+
+      <Form nativeID="admin-profile-form" onSubmit={handleSubmit}>
+        <Card className="mb-4">
+          <SectionTitle>Account details</SectionTitle>
+          <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+            <Field label="Full Name" required className={tablet ? 'flex-1 min-w-[260px]' : null}>
+              <Input
+                nativeID="name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Enter your full name"
+                required
+                disabled={fieldsDisabled}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Email Address" required hint="Email can be changed" className={tablet ? 'flex-1 min-w-[260px]' : null}>
+              <Input
+                nativeID="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="Enter your email address"
+                required
+                disabled={fieldsDisabled}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Phone Number" hint="Optional" className={tablet ? 'flex-1 min-w-[260px]' : null}>
+              <Input
+                nativeID="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                placeholder="Enter phone number (optional)"
+                disabled={fieldsDisabled}
+                className={inputClass}
+              />
+            </Field>
+          </Div>
+        </Card>
+
+        <Card className="mb-4">
+          <SectionTitle>Profile image</SectionTitle>
+          {imagePreview || profile.profileImage ? (
+            <Div className="relative w-40 h-40 border border-slate-200 rounded-xl overflow-hidden">
+              <Img src={imagePreview || profile.profileImage} alt="Profile" className="w-full h-full" contentFit="cover" />
+              {isEditMode && (
+                <>
+                  {/* Hover reveals "Change Image" on the web; on touch it is always shown. */}
+                  <Div className="absolute inset-0 bg-black/40 items-center justify-center" onClick={handleFileSelect} accessibilityRole="button" accessibilityLabel="Change image">
+                    <Span className="bg-white text-slate-900 px-4 py-2 rounded-lg text-sm font-semibold">Change image</Span>
+                  </Div>
+                  <HtmlButton type="button" onClick={handleRemoveImage} className="absolute top-1 right-1 w-11 h-11 items-center justify-center" accessibilityLabel="Remove image">
+                    <Div className="w-7 h-7 rounded-full bg-red-600 items-center justify-center">
+                      <UiIcon as={X} size={14} className="text-white" />
+                    </Div>
+                  </HtmlButton>
+                </>
+              )}
+            </Div>
+          ) : (
+            <Div
+              onClick={isEditMode && !saving && !uploading ? handleFileSelect : undefined}
+              accessibilityRole={isEditMode ? 'button' : undefined}
+              accessibilityLabel={isEditMode ? 'Upload a profile image' : undefined}
+              className={`items-center justify-center w-40 h-40 border border-dashed border-slate-300 rounded-xl bg-slate-50 ${isEditMode ? '' : 'opacity-70'}`}
+            >
+              <UiIcon as={Upload} size={28} className="text-slate-400 mb-2" />
+              <P className="text-sm text-slate-600">{isEditMode ? 'Tap to upload' : 'No profile image'}</P>
+              <P className="text-xs text-slate-500 mt-1">PNG, JPG, WEBP (max 5MB)</P>
+            </Div>
+          )}
+          {isEditMode && imagePreview ? <P className="text-xs text-slate-500 mt-2">New image selected. Tap &quot;Save changes&quot; to upload.</P> : null}
+          {isEditMode && profile.profileImage && !imagePreview ? <P className="text-xs text-slate-500 mt-2">Tap the image to change it</P> : null}
+        </Card>
+
+        <Card className="mb-4">
+          <SectionTitle>Change password</SectionTitle>
+          <P className="text-sm text-slate-500 -mt-2 mb-3">Leave these empty to keep your current password.</P>
+          <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+            {passwordRow('currentPassword', 'Old Password', passwordData.currentPassword, (v) => setPasswordData((prev) => ({ ...prev, currentPassword: v })), 'currentPassword')}
+            {passwordRow('newPassword', 'New Password', passwordData.newPassword, (v) => setPasswordData((prev) => ({ ...prev, newPassword: v })), 'newPassword')}
+            {passwordRow('confirmPassword', 'Confirm Password', passwordData.confirmPassword, (v) => setPasswordData((prev) => ({ ...prev, confirmPassword: v })), 'confirmPassword')}
+          </Div>
+        </Card>
+
+        <Card>
+          <SectionTitle>Account activity</SectionTitle>
+          <Div className="gap-2.5">
+            <Div className="flex-row items-center justify-between gap-3">
+              <Span className="text-sm text-slate-500">Account status</Span>
+              <StatusBadge status={profile.isActive !== false ? 'active' : 'inactive'} label={profile.isActive !== false ? 'Active' : 'Inactive'} />
+            </Div>
+            {profile.lastLogin ? (
+              <Div className="flex-row items-start justify-between gap-3">
+                <Span className="text-sm text-slate-500">Last login</Span>
+                <Span className="flex-1 text-sm text-slate-900 text-right">{new Date(profile.lastLogin).toLocaleString()}</Span>
+              </Div>
+            ) : null}
+            {profile.loginCount !== undefined ? (
+              <Div className="flex-row items-center justify-between gap-3">
+                <Span className="text-sm text-slate-500">Total logins</Span>
+                <Span className="text-sm text-slate-900">{profile.loginCount}</Span>
+              </Div>
+            ) : null}
+            {profile.createdAt ? (
+              <Div className="flex-row items-start justify-between gap-3">
+                <Span className="text-sm text-slate-500">Member since</Span>
+                <Span className="flex-1 text-sm text-slate-900 text-right">{new Date(profile.createdAt).toLocaleDateString()}</Span>
+              </Div>
+            ) : null}
+          </Div>
+        </Card>
+      </Form>
+    </AdminPage>
   );
 }

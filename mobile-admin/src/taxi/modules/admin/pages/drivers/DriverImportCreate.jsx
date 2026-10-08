@@ -1,13 +1,13 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/drivers/DriverImportCreate.jsx (tools/port.js first pass). */
 import React, { useState } from 'react';
-import { ArrowLeft, ChevronRight, FileText, UploadCloud, X } from 'lucide-react-native';
+import { ArrowLeft, FileText, UploadCloud, X } from 'lucide-react-native';
 import { useNavigate } from '../../../../../lib/webRouter';
 import { toast } from '../../../../../lib/notify';
 import { adminService } from '../../services/adminService';
 import { DRIVER_IMPORT_COLUMNS, parseDriverImportFile, validateDriverImportFile } from './driverImportSchema';
 import { pickSpreadsheet } from '../../../../../lib/files';
-import { Button, Div, Form, H1, H3, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
+import { Button, Div, Form, P, Span, Icon as UiIcon } from '../../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY } from '../../../../../admin/ui';
 const formatFileSize = (size = 0) => `${(size / (1024 * 1024)).toFixed(2)} MB`;
 const DriverImportCreate = () => {
   const navigate = useNavigate();
@@ -63,113 +63,88 @@ const DriverImportCreate = () => {
     }
   };
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8">
-      <Div className="mb-6">
-        <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-          <Span>Drivers</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span>Bulk Upload</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700">Create Import</Span>
-        </Div>
-
-        <Div className="flex items-center justify-between gap-4">
-          <H1 className="text-xl text-gray-900 font-bold">Create Import</H1>
-          <Button
-            type="button"
-            onClick={goBack}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <UiIcon as={ArrowLeft} size={16} /> Back
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={UploadCloud}
+        title="Create import"
+        subtitle="Upload one CSV or XLSX file of drivers"
+        breadcrumb={[{ label: 'Drivers' }, { label: 'Bulk upload' }, { label: 'Create import' }]}
+        actions={
+          <Button type="button" onClick={goBack} className={BTN_SECONDARY}>
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-700" />
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
           </Button>
-        </Div>
-      </Div>
+        }
+      />
 
-      <Form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <Div className="bg-white rounded-xl border border-gray-200 p-6">
-          <Div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-            <Div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-              <UiIcon as={UploadCloud} size={18} />
-            </Div>
-            <Div>
-              <H3 className="text-sm text-gray-900 font-bold">Driver Import File</H3>
-              <P className="text-xs text-gray-400">Use only these columns: {DRIVER_IMPORT_COLUMNS.join(', ')}</P>
-            </Div>
-          </Div>
+      <Form onSubmit={handleSubmit} className="gap-4">
+        <Card className="mb-4">
+          <SectionTitle>Driver import file</SectionTitle>
 
-          <Div className="grid grid-cols-1 gap-5">
-            <Div>
-              <Label className={labelClass}>Import File *</Label>
+          <Field label="Import file" required error={error || undefined} hint={`Use only these columns: ${DRIVER_IMPORT_COLUMNS.join(', ')}`}>
+            <Button
+              type="button"
+              onClick={openPicker}
+              accessibilityLabel={selectedFile ? 'Replace selected file' : 'Select file'}
+              className="w-full min-h-[180px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8"
+            >
+              <Div className="h-12 w-12 items-center justify-center rounded-lg bg-white border border-slate-200 mb-2">
+                <UiIcon as={UploadCloud} size={22} className="text-blue-600" />
+              </Div>
+              <Span className="text-sm font-semibold text-slate-900">{selectedFile ? 'Replace selected file' : 'Select file'}</Span>
+              <Span className="text-xs text-slate-500 text-center">CSV or XLSX files only, with no extra columns</Span>
+            </Button>
+          </Field>
+
+          {selectedFile ? (
+            <Div className="mt-3 flex-row items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+              <Div className="flex-1 min-w-0 flex-row items-center gap-3">
+                <Div className="h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                  <UiIcon as={FileText} size={18} className="text-blue-600" />
+                </Div>
+                <Div className="flex-1 min-w-0">
+                  <P className="text-sm font-medium text-slate-900" numberOfLines={1}>
+                    {selectedFile.name}
+                  </P>
+                  <P className="mt-0.5 text-xs text-slate-500">{formatFileSize(selectedFile.size)}</P>
+                </Div>
+              </Div>
               <Button
                 type="button"
-                onClick={openPicker}
-                className="flex min-h-[220px] w-full flex-col items-center justify-center rounded-lg border border-dashed px-6 py-8 text-center transition-colors border-gray-200 bg-gray-50"
+                accessibilityLabel="Remove selected file"
+                onClick={() => {
+                  setSelectedFile(null);
+                  setError('');
+                }}
+                className="h-11 w-11 items-center justify-center rounded-lg"
               >
-                <Span className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-white text-indigo-600 border border-gray-200">
-                  <UiIcon as={UploadCloud} size={22} />
-                </Span>
-                <Span className="text-sm font-semibold text-gray-900">{selectedFile ? 'Replace selected file' : 'Select file'}</Span>
-                <Span className="mt-1 text-xs text-gray-500">CSV or XLSX files only, with no extra columns</Span>
+                <UiIcon as={X} size={18} className="text-slate-500" />
               </Button>
             </Div>
+          ) : null}
 
-            {selectedFile && (
-              <Div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3">
-                <Div className="flex min-w-0 items-center gap-3">
-                  <Div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                    <UiIcon as={FileText} size={18} />
-                  </Div>
-                  <Div className="min-w-0">
-                    <P className="truncate text-sm font-medium text-gray-900">{selectedFile.name}</P>
-                    <P className="mt-0.5 text-xs text-gray-400">{formatFileSize(selectedFile.size)}</P>
-                  </Div>
-                </Div>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setSelectedFile(null);
-                    setError('');
-                  }}
-                  className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                >
-                  <UiIcon as={X} size={16} />
-                </Button>
-              </Div>
-            )}
-
-            <Div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <P className="text-xs font-semibold text-gray-500 mb-2">Required Excel Columns</P>
-              <Div className="flex flex-wrap gap-2">
-                {DRIVER_IMPORT_COLUMNS.map((column) => (
-                  <Span key={column} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-800">
-                    {column}
-                  </Span>
-                ))}
-              </Div>
+          <Div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+            <P className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Required columns</P>
+            <Div className="flex-row flex-wrap gap-2">
+              {DRIVER_IMPORT_COLUMNS.map((column) => (
+                <Span key={column} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700">
+                  {column}
+                </Span>
+              ))}
             </Div>
-
-            {error && <Div className="rounded-lg border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">{error}</Div>}
           </Div>
-        </Div>
+        </Card>
 
-        <Div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3 self-start">
-          <Button
-            type="submit"
-            className="w-full py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:cursor-not-allowed disabled:bg-indigo-200"
-            disabled={!selectedFile || isSubmitting}
-          >
-            {isSubmitting ? 'Importing...' : 'Create Import'}
+        <Card className="gap-2">
+          <Button type="submit" className={`${BTN_PRIMARY} w-full ${!selectedFile || isSubmitting ? 'opacity-50' : ''}`} disabled={!selectedFile || isSubmitting}>
+            <Span className={BTN_TEXT_PRIMARY}>{isSubmitting ? 'Importing…' : 'Create import'}</Span>
           </Button>
-          <Button
-            type="button"
-            onClick={goBack}
-            className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-          >
-            Cancel
+          <Button type="button" onClick={goBack} className={`${BTN_SECONDARY} w-full`}>
+            <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
           </Button>
-        </Div>
+        </Card>
       </Form>
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default DriverImportCreate;

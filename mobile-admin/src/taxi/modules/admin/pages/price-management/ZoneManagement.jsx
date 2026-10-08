@@ -1,62 +1,41 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/price-management/ZoneManagement.jsx (tools/port.js first pass). */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from '../../../../../lib/motion';
 import { useNavigate, useParams } from '../../../../../lib/webRouter';
-import {
-  Search,
-  Plus,
-  Edit2,
-  Trash2,
-  Navigation,
-  Loader2,
-  ChevronRight,
-  Target,
-  Zap,
-  Tag,
-  Save,
-  ArrowLeft,
-  Maximize2,
-  Map as MapIcon,
-  Globe,
-  Info,
-  Layers,
-  MousePointer2,
-  X,
-  MapPin,
-} from 'lucide-react-native';
+import { Search, Plus, Edit2, Trash2, Navigation, Loader2, Target, Save, ArrowLeft, Globe, Info, Zap, X } from 'lucide-react-native';
 import { Circle, EditablePolygon, GMap, Polygon, fromLatLng, regionFor, toLatLng } from '../../../../../components/maps';
 import { useDrawingGoogleMapsLoader } from '../../utils/googleMaps';
 import { adminService } from '../../services/adminService';
 import { buildCountryBoundaryUrl, normalizeBoundaryRings, isDriverAvailable } from '../../utils/mapUtils';
 import PlaceSearchField from './PlaceSearchField';
 import {
-  Button,
-  Div,
-  H1,
-  H3,
-  H4,
-  HScroll,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  Pagination,
+  EmptyState,
+  ErrorState,
+  TableSkeleton,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, HScroll, Input, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 import { alert, window } from '../../../../../lib/webShim';
-const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-[#FFC400] focus:ring-1 focus:ring-[#FFC400] outline-none transition-colors';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
-const cardClass = 'bg-white rounded-xl border border-gray-200 p-6 shadow-sm';
 const ADMIN_LANGUAGE_OPTIONS = ['English', 'Hindi', 'Arabic', 'French', 'Spanish'];
+const ZONE_COLS = [60, 230, 130, 140];
+const ZONE_LABELS = ['S.No', 'Market zone', 'Status', 'Actions'];
 const ZoneManagement = ({ mode: initialMode = 'list' }) => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -76,6 +55,7 @@ const ZoneManagement = ({ mode: initialMode = 'list' }) => {
   const [countryBoundaryPaths, setCountryBoundaryPaths] = useState([]);
   const [boundaryLoading, setBoundaryLoading] = useState(false);
   const mapRef = useRef(null);
+  const { columns, tablet } = useLayoutWidth();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('English');
   const [currentPage, setCurrentPage] = useState(1);
@@ -425,528 +405,400 @@ const ZoneManagement = ({ mode: initialMode = 'list' }) => {
       cancelled = true;
     };
   }, [selectedCountry, view]);
-  return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-6 lg:p-8 animate-in fade-in duration-500">
-      <AnimatePresence mode="wait">
-        {view === 'list' ? (
-          <motion.div
-            key="list"
-            initial={{
-              opacity: 0,
-              y: 10,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -10,
-            }}
-            className="max-w-7xl mx-auto space-y-6"
-          >
-            <Div className="mb-6">
-              <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-                <Span>Pricing</Span>
-                <UiIcon as={ChevronRight} size={12} />
-                <Span className="text-gray-700">Zone Management</Span>
-              </Div>
-              <Div className="flex items-center justify-between">
-                <Div>
-                  <H1 className="text-xl text-gray-900 font-bold">Zone Management</H1>
-                  <P className="text-xs text-gray-400 mt-1">Configure geofenced boundaries for operational control.</P>
-                </Div>
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigate('/taxi/admin/pricing/zone/create');
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#FFC400] text-[#0B1220] rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm relative z-50"
-                >
-                  <UiIcon as={Plus} size={16} /> Add Market Zone
-                </Button>
-              </Div>
+  if (view === 'list') {
+    return (
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={Target}
+          title="Zone management"
+          subtitle="Geofenced boundaries for operational control"
+          breadcrumb={[{ label: 'Taxi' }, { label: 'Pricing' }, { label: 'Zones' }]}
+          actions={
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate('/taxi/admin/pricing/zone/create');
+              }}
+              className={BTN_PRIMARY}
+            >
+              <UiIcon as={Plus} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Add market zone</Span>
+            </Button>
+          }
+        />
+
+        <Card className="mb-4">
+          <Div className="flex-row items-center justify-between gap-3">
+            <Div className="flex-1 min-w-0">
+              <Span className="text-base font-semibold text-slate-900">Dynamic peak pricing</Span>
+              <Span className="text-sm text-slate-500">Surge modifiers across every zone</Span>
             </Div>
-
-            <Div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center justify-between shadow-sm">
-              <Div className="flex items-center gap-4">
-                <Div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${enablePeakZoneGlobal ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-300'}`}
-                >
-                  <UiIcon as={Zap} size={20} className={enablePeakZoneGlobal ? 'animate-pulse' : ''} />
-                </Div>
-                <Div>
-                  <H3 className="text-sm text-gray-900 font-bold">Dynamic Peak Pricing</H3>
-                  <P className="text-[11px] text-gray-400">Toggle surge modifiers across all zones globally</P>
-                </Div>
+            <Button
+              type="button"
+              accessibilityLabel={enablePeakZoneGlobal ? 'Turn off dynamic peak pricing' : 'Turn on dynamic peak pricing'}
+              onClick={() => setEnablePeakZoneGlobal(!enablePeakZoneGlobal)}
+              className="h-11 flex-row items-center gap-2"
+            >
+              <UiIcon as={Zap} size={16} className={enablePeakZoneGlobal ? 'text-green-700' : 'text-slate-400'} />
+              <Div className={`w-12 h-7 rounded-full justify-center px-1 ${enablePeakZoneGlobal ? 'bg-green-600' : 'bg-slate-300'}`}>
+                <Div className={`w-5 h-5 rounded-full bg-white ${enablePeakZoneGlobal ? 'self-end' : 'self-start'}`} />
               </Div>
-              <Button
-                onClick={() => setEnablePeakZoneGlobal(!enablePeakZoneGlobal)}
-                className={`relative w-11 h-6 rounded-full transition-colors ${enablePeakZoneGlobal ? 'bg-[#FFC400]' : 'bg-gray-200'}`}
-              >
-                <Div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${enablePeakZoneGlobal ? 'translate-x-5' : ''}`} />
-              </Button>
+            </Button>
+          </Div>
+        </Card>
+
+        <Card className="mb-4">
+          <Toolbar className="mb-0">
+            <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white flex-1 min-w-[200px]">
+              <UiIcon as={Search} size={16} className="text-slate-400" />
+              <Input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search zones"
+                className="flex-1 text-sm text-slate-900"
+              />
             </Div>
+            <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className={`${INPUT} w-32`}>
+              {[10, 20, 50].map((size) => (
+                <Option key={size} value={size}>
+                  {size} / page
+                </Option>
+              ))}
+            </Select>
+          </Toolbar>
+        </Card>
 
-            <Div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              <Div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                <Div className="relative w-full max-w-sm">
-                  <UiIcon as={Search} size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search zones..."
-                    className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#FFC400] focus:border-[#FFC400] transition-all font-medium"
-                  />
-                </Div>
-              </Div>
-
-              <Div>
-                {loading ? (
-                  <Div className="flex flex-col items-center justify-center py-20">
-                    <UiIcon as={Loader2} className="animate-spin text-[#FFC400] mb-2" size={32} />
-                    <P className="text-xs text-gray-400 font-medium">Loading data...</P>
-                  </Div>
-                ) : filteredZones.length > 0 ? (
-                  <Table cols={[80, 230, 130, 110]} className="w-full text-sm">
-                    <Thead>
-                      <Tr className="bg-gray-50/50 border-b border-gray-100">
-                        <Th className="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">S.No</Th>
-                        <Th className="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Market Zone Identity</Th>
-                        <Th className="px-6 py-3.5 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</Th>
-                        <Th className="px-6 py-3.5 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody className="divide-y divide-gray-100">
-                      {paginatedZones.map((zone, idx) => (
-                        <Tr key={zone._id || zone.id} className="hover:bg-gray-50/50 transition-colors group">
-                          <Td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-400">
-                            {((currentPage - 1) * pageSize + idx + 1).toString().padStart(2, '0')}
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Div className="flex items-center gap-3">
-                              <Div className="w-9 h-9 rounded-lg bg-[#FFC400]/10 flex items-center justify-center text-[#FFC400] shadow-sm border border-[#FFC400]/20 transition-transform group-hover:scale-105">
-                                <UiIcon as={Target} size={16} />
-                              </Div>
-                              <Span className="font-semibold text-gray-900">{zone.name || zone.zone_name}</Span>
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap text-center">
-                            <Button
-                              onClick={() => handleStatusToggle(zone._id || zone.id, zone.active)}
-                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider ${zone.active ? 'bg-emerald-50 text-gray-900 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}
-                            >
-                              {zone.active ? 'Active' : 'Inactive'}
-                            </Button>
-                          </Td>
-                          <Td className="px-6 py-4 whitespace-nowrap text-right">
-                            <Div className="flex items-center justify-end gap-2 relative z-50">
-                              <Button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  navigate(`/taxi/admin/pricing/zone/edit/${zone._id || zone.id}`);
-                                }}
-                                className="p-2 text-gray-400 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-lg transition-colors"
-                              >
-                                <UiIcon as={Edit2} size={14} />
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleDelete(zone._id || zone.id);
-                                }}
-                                className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                              >
-                                <UiIcon as={Trash2} size={14} />
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleExplore(zone);
-                                }}
-                                className="p-2 text-gray-400 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-lg transition-colors"
-                              >
-                                <UiIcon as={Globe} size={14} />
-                              </Button>
-                            </Div>
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                ) : (
-                  <Div className="py-20 text-center">
-                    <Div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-200 mx-auto mb-4">
-                      <UiIcon as={Navigation} size={32} />
-                    </Div>
-                    <H3 className="text-sm text-gray-900 mb-1 font-bold">No Zones Configured</H3>
-                    <P className="text-xs text-gray-400 max-w-xs mx-auto">Map your operational sector boundaries to initiate geofencing.</P>
-                  </Div>
-                )}
-              </Div>
-
-              {!loading && filteredZones.length > 0 && (
-                <Div className="flex flex-col gap-4 border-t border-gray-100 bg-gray-50/40 px-4 py-4 md:flex-row md:items-center md:justify-between">
-                  <Div className="flex items-center gap-3 text-xs text-gray-500">
-                    <Span className="font-medium">
-                      Showing {Math.min((currentPage - 1) * pageSize + 1, filteredZones.length)} to {Math.min(currentPage * pageSize, filteredZones.length)} of{' '}
-                      {filteredZones.length} zones
-                    </Span>
-                    <Select
-                      value={pageSize}
-                      onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 outline-none transition-colors focus:border-[#FFC400]"
-                    >
-                      {[10, 20, 50].map((size) => (
-                        <Option key={size} value={size}>
-                          {size} / page
-                        </Option>
-                      ))}
-                    </Select>
-                  </Div>
-
-                  <Div className="flex items-center justify-end gap-2">
-                    <Button
-                      type="button"
-                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                      disabled={currentPage === 1}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-[#FFC400]/50 hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Previous
-                    </Button>
-                    <Span className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-gray-700 border border-gray-200">
-                      Page {currentPage} of {totalZonePages}
-                    </Span>
-                    <Button
-                      type="button"
-                      onClick={() => setCurrentPage((page) => Math.min(totalZonePages, page + 1))}
-                      disabled={currentPage === totalZonePages}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-[#FFC400]/50 hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Next
-                    </Button>
-                  </Div>
-                </Div>
-              )}
-            </Div>
-          </motion.div>
+        {loading ? (
+          <TableSkeleton rows={6} />
+        ) : fetchError ? (
+          <ErrorState title="Could not load zones" message={fetchError} onRetry={fetchData} />
+        ) : filteredZones.length === 0 ? (
+          <EmptyState
+            icon={Navigation}
+            title={zones.length ? 'No zones match your search' : 'No zones configured'}
+            message={zones.length ? 'Try a different zone name.' : 'Map your operational boundaries to start geofencing.'}
+            actionLabel={zones.length ? undefined : 'Add market zone'}
+            onAction={zones.length ? undefined : () => navigate('/taxi/admin/pricing/zone/create')}
+          />
         ) : (
-          <motion.div
-            key="form"
-            initial={{
-              opacity: 0,
-              x: 20,
-            }}
-            animate={{
-              opacity: 1,
-              x: 0,
-            }}
-            exit={{
-              opacity: 0,
-              x: -20,
-            }}
-            className="max-w-7xl mx-auto space-y-6 pb-20"
-          >
-            <Div className="mb-6">
-              <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-                <Span>Pricing</Span>
-                <UiIcon as={ChevronRight} size={12} />
-                <Span>Zone Management</Span>
-                <UiIcon as={ChevronRight} size={12} />
-                <Span className="text-gray-700">{editingId ? 'Edit' : 'Create'}</Span>
-              </Div>
-              <Div className="flex items-center justify-between">
-                <H1 className="text-xl text-gray-900 font-bold">{editingId ? 'Edit Market Zone' : 'Add Market Zone'}</H1>
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigate('/taxi/admin/pricing/zone');
-                    setView('list');
-                  }}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm relative z-50"
-                >
-                  <UiIcon as={ArrowLeft} size={14} /> Back
-                </Button>
-              </Div>
-            </Div>
-
-            <Div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-              {/* Form Section */}
-              <Div className="xl:col-span-4 space-y-6">
-                <Div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                  <Div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                    <Div className="w-9 h-9 rounded-lg bg-[#FFC400]/10 flex items-center justify-center text-[#FFC400]">
-                      <UiIcon as={Tag} size={18} />
-                    </Div>
-                    <Div>
-                      <H3 className="text-sm text-gray-900 font-bold">Zone Identity</H3>
-                      <P className="text-xs text-gray-400">Basic identification settings</P>
-                    </Div>
-                  </Div>
-
-                  <Div className="space-y-5">
-                    <Div>
-                      <Label className={labelClass}>Service Location</Label>
-                      <Select
-                        value={formData.service_location_id}
-                        onChange={(e) => {
-                          const nextId = e.target.value;
-                          setFormData({
-                            ...formData,
-                            service_location_id: nextId,
-                          });
-                          const loc = serviceLocations.find((l) => String(l._id || l.id) === String(nextId));
-                          if (loc?.latitude) {
-                            const center = {
-                              lat: Number(loc.latitude),
-                              lng: Number(loc.longitude),
-                            };
-                            setMapCenter(center);
-                            mapRef.current?.panTo(center);
-                          }
-                        }}
-                        className={inputClass}
-                      >
-                        <Option value="">Select Service Location</Option>
-                        {serviceLocations.map((sl) => (
-                          <Option key={sl._id || sl.id} value={sl._id || sl.id}>
-                            {sl.name || sl.service_location_name}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Div>
-
-                    <Div>
-                      <HScroll className="flex items-center gap-1 border-b border-gray-100 mb-4 pb-1">
-                        {ADMIN_LANGUAGE_OPTIONS.map((lang) => (
-                          <Button
-                            type="button"
-                            key={lang}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setActiveTab(lang);
-                            }}
-                            className={`px-4 py-2 text-xs font-medium transition-colors relative whitespace-nowrap shrink-0 ${activeTab === lang ? 'text-[#FFC400]' : 'text-gray-400 hover:text-gray-600'}`}
-                          >
-                            {lang}
-                            {activeTab === lang && <motion.div layoutId="activeTab" className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[#FFC400]" />}
-                          </Button>
-                        ))}
-                      </HScroll>
-
-                      <Div>
-                        <Label className={labelClass}>Zone Name *</Label>
-                        <Input
-                          type="text"
-                          value={formData.name[activeTab] || ''}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              name: {
-                                ...formData.name,
-                                [activeTab]: e.target.value,
-                              },
-                            })
-                          }
-                          placeholder={`Name in ${activeTab}`}
-                          className={inputClass}
-                        />
-                      </Div>
-                    </Div>
-
-                    <Div>
-                      <Label className={labelClass}>Boundary Shape</Label>
-                      <Div className="grid grid-cols-2 gap-3">
-                        {[
-                          {
-                            id: 'polygon',
-                            label: 'Polygon Boundary',
-                          },
-                          {
-                            id: 'circle',
-                            label: 'Circle Radius',
-                          },
-                        ].map((option) => (
-                          <Button
-                            key={option.id}
-                            type="button"
-                            onClick={() => setBoundaryMode(option.id)}
-                            className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${boundaryMode === option.id ? 'border-[#FFC400] bg-[#FFC400]/10 text-[#0B1220]' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}
-                          >
-                            {option.label}
-                          </Button>
-                        ))}
-                      </Div>
-                    </Div>
-
-                    {boundaryMode === 'circle' ? (
-                      <Div>
-                        <Label className={labelClass}>Circle Boundary Radius (meters)</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={circleRadiusMeters}
-                          onChange={(e) => setCircleRadiusMeters(e.target.value)}
-                          placeholder="Enter circle radius in meters"
-                          className={inputClass}
-                        />
-                      </Div>
-                    ) : null}
-                  </Div>
-                </Div>
-
-                <Div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3 shadow-sm">
-                  <Button
-                    disabled={saving}
-                    onClick={handleSave}
-                    className="w-full py-3 bg-[#FFC400] text-[#0B1220] rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />}
-                    {editingId ? 'Update Zone' : 'Save'}
-                  </Button>
-                  <Button
-                    onClick={() => navigate('/taxi/admin/pricing/zone')}
-                    className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-                  >
-                    Cancel
-                  </Button>
-                </Div>
-              </Div>
-
-              {/* Map Section */}
-              <Div className="xl:col-span-8 space-y-6">
-                <Div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <Div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 md:flex-row md:items-center md:justify-between">
-                    <Div className="w-full md:max-w-md">
-                      <Div className="flex h-12 w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 shadow-sm">
-                        <UiIcon as={Search} className="text-gray-400" size={18} />
-                        {isLoaded ? (
-                          <PlaceSearchField
-                            onPlace={onPlaceChanged}
-                            icon={null}
-                            placeholder="Search for a city or zone"
-                            className="w-full bg-transparent text-sm font-semibold text-gray-800 outline-none"
-                          />
-                        ) : (
-                          <Input
-                            type="text"
-                            placeholder={loadError ? 'Google Maps failed to load' : 'Loading map search...'}
-                            disabled
-                            className="w-full bg-transparent text-sm font-semibold text-gray-400 outline-none placeholder:text-gray-400"
-                          />
-                        )}
-                      </Div>
-                    </Div>
-
-                    <Div className="flex flex-wrap items-center justify-between gap-3 md:justify-end">
-                      <Div className="rounded-full bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-500">
-                        State and city labels remain visible while you draw zone boundaries.
-                      </Div>
+          <>
+            <DataTable cols={ZONE_COLS}>
+              <THead cols={ZONE_COLS} labels={ZONE_LABELS} />
+              <TBody>
+                {paginatedZones.map((zone, idx, all) => (
+                  <Row key={zone._id || zone.id} last={idx === all.length - 1}>
+                    <Cell width={ZONE_COLS[0]}>{((currentPage - 1) * pageSize + idx + 1).toString().padStart(2, '0')}</Cell>
+                    <Cell width={ZONE_COLS[1]}>
+                      <Span className="text-sm font-semibold text-slate-900">{zone.name || zone.zone_name || 'Unnamed zone'}</Span>
+                    </Cell>
+                    <Cell width={ZONE_COLS[2]}>
                       <Button
                         type="button"
-                        onClick={() => {
-                          setPolygonCoords([]);
-                          setCircleCenter(null);
-                          setCircleRadiusMeters('');
-                        }}
-                        className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-rose-600 shadow-sm transition-all border border-gray-200 hover:bg-rose-50 active:scale-95"
+                        accessibilityLabel={`Toggle status for ${zone.name || zone.zone_name || 'zone'}`}
+                        onClick={() => handleStatusToggle(zone._id || zone.id, zone.active)}
+                        className="h-11 justify-center"
                       >
-                        <UiIcon as={X} size={14} />
-                        Clear Map
+                        <StatusBadge status={zone.active ? 'active' : 'inactive'} />
                       </Button>
-                    </Div>
-                  </Div>
-
-                  <Div className="p-2">
-                    {isLoaded ? (
-                      <Div className="w-full rounded-lg overflow-hidden relative">
-                        <Div className="pb-2">
-                          <P className="text-[11px] font-semibold text-slate-500">
-                            {boundaryMode === 'circle'
-                              ? 'Tap the map to place the circle centre, then set its radius in the form.'
-                              : 'Tap the map to add boundary points. Drag a point to move it, tap a point to remove it.'}
-                          </P>
-                        </Div>
-                        <GMap
-                          ref={mapRef}
-                          className="w-full h-[460px] rounded-lg"
-                          initialRegion={regionFor(polygonCoords.length ? polygonCoords : [mapCenter])}
-                          mapType="standard"
-                          onPress={handleMapPress}
+                    </Cell>
+                    <Cell width={ZONE_COLS[3]}>
+                      <Div className="flex-row items-center gap-1">
+                        <Button
+                          type="button"
+                          accessibilityLabel={`Edit ${zone.name || 'zone'}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigate(`/taxi/admin/pricing/zone/edit/${zone._id || zone.id}`);
+                          }}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
                         >
-                          {boundaryMode === 'polygon' && polygonCoords.length > 0 && (
-                            <EditablePolygon
-                              points={polygonCoords}
-                              onChange={setPolygonCoords}
-                              strokeColor="#FFC400"
-                              fillColor="rgba(255,196,0,0.25)"
-                              vertexColor="#FFC400"
-                              onVertexPress={(index) => setPolygonCoords((prev) => prev.filter((_, i) => i !== index))}
-                            />
-                          )}
-                          {boundaryMode === 'circle' && circleCenter && Number(circleRadiusMeters) > 0 ? (
-                            <Circle
-                              center={toLatLng(circleCenter)}
-                              radius={Number(circleRadiusMeters)}
-                              fillColor="rgba(255,196,0,0.18)"
-                              strokeColor="#FFC400"
-                              strokeWidth={2}
-                            />
-                          ) : null}
-                          {countryBoundaryPaths.map((path, index) => (
-                            <Polygon
-                              key={index}
-                              coordinates={path.map(toLatLng)}
-                              strokeColor="#f43f5e"
-                              fillColor="rgba(244,63,94,0.05)"
-                              strokeWidth={1.5}
-                              lineDashPattern={[5, 5]}
-                              tappable={false}
-                            />
-                          ))}
-                        </GMap>
+                          <UiIcon as={Edit2} size={16} className="text-slate-600" />
+                        </Button>
+                        <Button
+                          type="button"
+                          accessibilityLabel={`Explore ${zone.name || 'zone'} on the map`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleExplore(zone);
+                          }}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
+                        >
+                          <UiIcon as={Globe} size={16} className="text-slate-600" />
+                        </Button>
+                        <Button
+                          type="button"
+                          accessibilityLabel={`Delete ${zone.name || 'zone'}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDelete(zone._id || zone.id);
+                          }}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
+                        >
+                          <UiIcon as={Trash2} size={16} className="text-red-600" />
+                        </Button>
                       </Div>
-                    ) : (
-                      <Div className="flex h-[460px] items-center justify-center bg-gray-50 rounded-lg">
-                        <UiIcon as={Loader2} className="animate-spin text-gray-300" size={32} />
-                      </Div>
-                    )}
-                  </Div>
-                </Div>
-
-                <Div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-amber-800 flex items-start gap-3 shadow-sm">
-                  <UiIcon as={Info} size={18} className="text-amber-500 shrink-0 mt-0.5" />
-                  <P className="text-sm font-medium">Avoid drawing multiple zones that overlap with each other.</P>
-                </Div>
-
-                <Div className="bg-gray-900 rounded-xl p-6 text-white overflow-hidden relative shadow-md">
-                  <Div className="relative z-10">
-                    <H4 className="text-sm mb-2 flex items-center gap-2 font-bold">
-                      <UiIcon as={MapPin} size={16} className="text-[#FFC400]" /> Mapping Intelligence
-                    </H4>
-                    <P className="text-xs text-gray-300 leading-relaxed">
-                      Use the polygon or circle tool at the top of the map to define your zone boundary. Click to place polygon vertices and close the shape, or
-                      drop a circle and adjust its radius for a radial market boundary. The red dashed line represents the country boundary for reference.
-                    </P>
-                  </Div>
-                </Div>
-              </Div>
-            </Div>
-          </motion.div>
+                    </Cell>
+                  </Row>
+                ))}
+              </TBody>
+            </DataTable>
+            <Pagination
+              page={currentPage}
+              pages={totalZonePages}
+              total={filteredZones.length}
+              onPrev={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              onNext={() => setCurrentPage((page) => Math.min(totalZonePages, page + 1))}
+            />
+          </>
         )}
-      </AnimatePresence>
-    </ScrollDiv>
+      </AdminPage>
+    );
+  }
+  return (
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Target}
+        title={editingId ? 'Edit market zone' : 'Add market zone'}
+        subtitle="Name the zone, then draw its boundary on the map"
+        breadcrumb={[{ label: 'Taxi' }, { label: 'Zones', onPress: () => navigate('/taxi/admin/pricing/zone') }, { label: editingId ? 'Edit' : 'Create' }]}
+        actions={
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate('/taxi/admin/pricing/zone');
+              setView('list');
+            }}
+            className={BTN_SECONDARY}
+          >
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+          </Button>
+        }
+      />
+
+      <Card className="mb-4">
+        <SectionTitle>Zone identity</SectionTitle>
+        <Div className={`grid grid-cols-${columns} gap-3`}>
+          <Field label="Service location">
+            <Select
+              value={formData.service_location_id}
+              onChange={(e) => {
+                const nextId = e.target.value;
+                setFormData({
+                  ...formData,
+                  service_location_id: nextId,
+                });
+                const loc = serviceLocations.find((l) => String(l._id || l.id) === String(nextId));
+                if (loc?.latitude) {
+                  const center = {
+                    lat: Number(loc.latitude),
+                    lng: Number(loc.longitude),
+                  };
+                  setMapCenter(center);
+                  mapRef.current?.panTo(center);
+                }
+              }}
+              className={INPUT}
+            >
+              <Option value="">Select service location</Option>
+              {serviceLocations.map((sl) => (
+                <Option key={sl._id || sl.id} value={sl._id || sl.id}>
+                  {sl.name || sl.service_location_name}
+                </Option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label={`Zone name (${activeTab})`} required>
+            <Input
+              type="text"
+              value={formData.name[activeTab] || ''}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  name: {
+                    ...formData.name,
+                    [activeTab]: e.target.value,
+                  },
+                })
+              }
+              placeholder={`Name in ${activeTab}`}
+              className={INPUT}
+            />
+          </Field>
+        </Div>
+
+        <Span className="text-xs font-semibold uppercase text-slate-500 mt-3 mb-2">Language</Span>
+        <HScroll contentClassName="flex-row gap-2">
+          {ADMIN_LANGUAGE_OPTIONS.map((lang) => (
+            <Button
+              type="button"
+              key={lang}
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab(lang);
+              }}
+              className={activeTab === lang ? BTN_PRIMARY : BTN_SECONDARY}
+            >
+              <Span className={activeTab === lang ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{lang}</Span>
+            </Button>
+          ))}
+        </HScroll>
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle>Boundary shape</SectionTitle>
+        <Div className="flex-row gap-2">
+          {[
+            {
+              id: 'polygon',
+              label: 'Polygon boundary',
+            },
+            {
+              id: 'circle',
+              label: 'Circle radius',
+            },
+          ].map((option) => (
+            <Button
+              key={option.id}
+              type="button"
+              onClick={() => setBoundaryMode(option.id)}
+              className={`${boundaryMode === option.id ? BTN_PRIMARY : BTN_SECONDARY} flex-1`}
+            >
+              <Span className={boundaryMode === option.id ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{option.label}</Span>
+            </Button>
+          ))}
+        </Div>
+        {boundaryMode === 'circle' ? (
+          <Field label="Circle boundary radius (metres)" className="mt-3">
+            <Input
+              type="number"
+              min="1"
+              value={circleRadiusMeters}
+              onChange={(e) => setCircleRadiusMeters(e.target.value)}
+              placeholder="Enter radius in metres"
+              className={INPUT}
+            />
+          </Field>
+        ) : null}
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            <Button
+              type="button"
+              onClick={() => {
+                setPolygonCoords([]);
+                setCircleCenter(null);
+                setCircleRadiusMeters('');
+              }}
+              className={BTN_SECONDARY}
+            >
+              <UiIcon as={X} size={16} className="text-red-600" />
+              <Span className="text-sm font-semibold text-red-600">Clear map</Span>
+            </Button>
+          }
+        >
+          Boundary
+        </SectionTitle>
+
+        <Div className="gap-3">
+          <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            {isLoaded ? (
+              <PlaceSearchField onPlace={onPlaceChanged} icon={null} placeholder="Search for a city or zone" className="flex-1 text-sm text-slate-900" />
+            ) : (
+              <Input
+                type="text"
+                placeholder={loadError ? 'Google Maps failed to load' : 'Loading map search…'}
+                disabled
+                className="flex-1 text-sm text-slate-400"
+              />
+            )}
+          </Div>
+
+          <Span className="text-xs text-slate-500">
+            {boundaryMode === 'circle'
+              ? 'Tap the map to place the circle centre, then set its radius above.'
+              : 'Tap the map to add boundary points. Drag a point to move it, tap a point to remove it.'}
+          </Span>
+
+          {loadError ? (
+            <ErrorState title="Map could not load" message="Check the Google Maps key, then try again." />
+          ) : isLoaded ? (
+            <GMap
+              ref={mapRef}
+              className="w-full h-[400px] rounded-lg"
+              initialRegion={regionFor(polygonCoords.length ? polygonCoords : [mapCenter])}
+              mapType="standard"
+              onPress={handleMapPress}
+            >
+              {boundaryMode === 'polygon' && polygonCoords.length > 0 && (
+                <EditablePolygon
+                  points={polygonCoords}
+                  onChange={setPolygonCoords}
+                  strokeColor="#155DFC"
+                  fillColor="rgba(21,93,252,0.2)"
+                  vertexColor="#155DFC"
+                  onVertexPress={(index) => setPolygonCoords((prev) => prev.filter((_, i) => i !== index))}
+                />
+              )}
+              {boundaryMode === 'circle' && circleCenter && Number(circleRadiusMeters) > 0 ? (
+                <Circle
+                  center={toLatLng(circleCenter)}
+                  radius={Number(circleRadiusMeters)}
+                  fillColor="rgba(21,93,252,0.15)"
+                  strokeColor="#155DFC"
+                  strokeWidth={2}
+                />
+              ) : null}
+              {countryBoundaryPaths.map((path, index) => (
+                <Polygon
+                  key={index}
+                  coordinates={path.map(toLatLng)}
+                  strokeColor="#C10007"
+                  fillColor="rgba(193,0,7,0.05)"
+                  strokeWidth={1.5}
+                  lineDashPattern={[5, 5]}
+                  tappable={false}
+                />
+              ))}
+            </GMap>
+          ) : (
+            <Div className="h-[400px] rounded-lg bg-slate-100 items-center justify-center">
+              <UiIcon as={Loader2} size={28} className="text-slate-400" />
+              <Span className="text-sm text-slate-500 mt-2">{boundaryLoading ? 'Loading boundary…' : 'Loading map…'}</Span>
+            </Div>
+          )}
+
+          <Div className="flex-row items-start gap-2 p-3 rounded-lg bg-blue-50">
+            <UiIcon as={Info} size={16} className="text-blue-700 shrink-0 mt-0.5" />
+            <Span className="text-xs text-slate-700 flex-1">
+              Avoid drawing zones that overlap. The red dashed line is the country boundary, shown for reference only.
+            </Span>
+          </Div>
+        </Div>
+      </Card>
+
+      <Card className={`${tablet ? 'flex-row justify-end' : ''} gap-3`}>
+        <Button type="button" onClick={() => navigate('/taxi/admin/pricing/zone')} className={BTN_SECONDARY}>
+          <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+        </Button>
+        <Button type="button" disabled={saving} onClick={handleSave} className={BTN_PRIMARY}>
+          <UiIcon as={Save} size={16} className="text-white" />
+          <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : editingId ? 'Update zone' : 'Save zone'}</Span>
+        </Button>
+      </Card>
+    </AdminPage>
   );
 };
 export default ZoneManagement;

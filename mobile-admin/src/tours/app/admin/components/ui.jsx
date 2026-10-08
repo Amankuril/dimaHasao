@@ -1,8 +1,26 @@
-/* Ported from Frontend/src/modules/Tours/app/admin/components/ui.jsx (tools/port.js first pass). */
-/** Small shared pieces for the tours admin pages. */
+/* Ported from Frontend/src/modules/Tours/app/admin/pages/../components/ui.jsx (tools/port.js first pass). */
+/**
+ * Small shared pieces for the tours admin pages.
+ *
+ * These are now thin adapters over the admin design system in
+ * `src/admin/ui.jsx`, so the tours and festivals screens get the same card,
+ * header, badge and empty-state treatment as the other four panels without
+ * every page having to be rewritten against the kit by hand. The exported
+ * shapes are unchanged — only what they paint is.
+ */
 import React from 'react';
-import { Check, Loader2 } from 'lucide-react-native';
-import { Div, H2, P, Span, Icon as UiIcon } from '../../../../components/web';
+import { Check } from 'lucide-react-native';
+import {
+  Card,
+  EmptyState as KitEmptyState,
+  LoadingState,
+  PageHeader as KitPageHeader,
+  StatCard as KitStatCard,
+  StatusBadge,
+  toneFor,
+} from '../../../../admin/ui';
+import { Div, Span, Icon as UiIcon } from '../../../../components/web';
+
 export const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 export const shortDate = (value) =>
   value
@@ -12,76 +30,82 @@ export const shortDate = (value) =>
         year: 'numeric',
       })
     : '—';
-export const PageHeader = ({ title, subtitle, action }) => (
-  <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-    <Div>
-      <H2 className="text-2xl font-bold text-gray-900">{title}</H2>
-      {subtitle && <P className="text-gray-500 text-sm mt-0.5">{subtitle}</P>}
-    </Div>
-    {action}
-  </Div>
-);
-export const Spinner = () => (
-  <Div className="p-12 text-center text-gray-400">
-    <UiIcon as={Loader2} size={22} className="animate-spin inline" />
-  </Div>
-);
-export const EmptyState = ({ message }) => <Div className="p-10 text-center text-gray-400 text-xs">{message}</Div>;
-export const StatCard = ({ label, value, tone = 'text-gray-900' }) => (
-  <Div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-    <P className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}</P>
-    <P className={`text-2xl font-black mt-1 ${tone}`}>{value}</P>
-  </Div>
-);
-const STATUS_TONES = {
-  approved: 'bg-emerald-100 text-emerald-700',
-  pending: 'bg-amber-100 text-amber-700',
-  rejected: 'bg-red-100 text-red-700',
-  draft: 'bg-gray-100 text-gray-600',
-  confirmed: 'bg-blue-100 text-blue-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  cancelled: 'bg-red-100 text-red-700',
-  ongoing: 'bg-purple-100 text-purple-700',
-  processing: 'bg-blue-100 text-blue-700',
-  failed: 'bg-red-100 text-red-700',
-  advance_paid: 'bg-amber-100 text-amber-700',
-  paid: 'bg-emerald-100 text-emerald-700',
-  // Festival life-cycle, from festivalStatus() on the backend.
-  live: 'bg-emerald-100 text-emerald-700',
-  upcoming: 'bg-blue-100 text-blue-700',
-  ended: 'bg-gray-100 text-gray-600',
-  scheduled: 'bg-amber-100 text-amber-700',
+
+export const PageHeader = ({ title, subtitle, action }) => <KitPageHeader title={title} subtitle={subtitle} actions={action} />;
+
+export const Spinner = () => <LoadingState />;
+
+export const EmptyState = ({ message }) => <KitEmptyState title="Nothing here yet" message={message} />;
+
+/**
+ * The old `tone` was a tailwind text colour; the kit colours a tile by meaning
+ * instead, so the colour is mapped rather than passed through.
+ */
+const TONE_FROM_CLASS = (tone) => {
+  const value = String(tone || '');
+  if (value.includes('amber') || value.includes('orange')) return 'warning';
+  if (value.includes('red')) return 'danger';
+  if (value.includes('0a4d2b') || value.includes('emerald') || value.includes('green')) return 'success';
+  return 'info';
+};
+
+export const StatCard = ({ label, value, tone }) => <KitStatCard label={label} value={value} tone={TONE_FROM_CLASS(tone)} />;
+
+/**
+ * Status words the kit's own table does not know about yet — the festival
+ * life-cycle and the tours payment states — mapped onto a kit tone so the same
+ * word is never two colours across the panels.
+ */
+const EXTRA_TONE = {
+  live: 'success',
+  upcoming: 'info',
+  ended: 'neutral',
+  draft: 'neutral',
+  advance_paid: 'warning',
+  no_show: 'danger',
+};
+
+export const StatusPill = ({ status }) => {
+  const key = String(status || '')
+    .trim()
+    .toLowerCase();
+  if (!key) return null;
+  return <StatusBadge status={key} tone={EXTRA_TONE[key] || toneFor(key)} label={key.replace(/_/g, ' ')} />;
 };
 
 /** A numbered progress rail for a multi-step admin form. `steps` is `[{key,label,icon}]`. */
 export const StepIndicator = ({ steps, current }) => (
-  <Div className="flex items-center mb-1">
-    {steps.map((s, i) => {
-      const done = i < current;
-      const active = i === current;
-      const Icon = s.icon;
-      return (
-        <React.Fragment key={s.key}>
-          <Div className="flex flex-col items-center gap-1.5 shrink-0">
-            <Div
-              className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-colors ${done ? 'bg-[#0a4d2b] border-[#0a4d2b] text-white' : active ? 'border-[#0a4d2b] text-[#0a4d2b] bg-white' : 'border-gray-200 text-gray-300 bg-white'}`}
-            >
-              {done ? <UiIcon as={Check} size={16} /> : Icon ? <UiIcon as={Icon} size={15} /> : <Span className="text-xs font-bold">{i + 1}</Span>}
+  <Card>
+    <Div className="flex-row items-start">
+      {steps.map((s, i) => {
+        const done = i < current;
+        const active = i === current;
+        const Icon = s.icon;
+        return (
+          <React.Fragment key={s.key}>
+            <Div className="items-center gap-1.5 shrink-0" style={{ width: 72 }}>
+              <Div
+                className={`w-9 h-9 rounded-full items-center justify-center border-2 ${done ? 'bg-blue-600 border-blue-600' : active ? 'border-blue-600 bg-white' : 'border-slate-200 bg-white'}`}
+              >
+                {done ? (
+                  <UiIcon as={Check} size={16} className="text-white" />
+                ) : Icon ? (
+                  <UiIcon as={Icon} size={15} className={active ? 'text-blue-600' : 'text-slate-400'} />
+                ) : (
+                  <Span className={`text-xs font-semibold ${active ? 'text-blue-600' : 'text-slate-400'}`}>{i + 1}</Span>
+                )}
+              </Div>
+              <Span
+                className={`text-xs font-semibold text-center ${active ? 'text-blue-600' : done ? 'text-slate-600' : 'text-slate-400'}`}
+                numberOfLines={2}
+              >
+                {s.label}
+              </Span>
             </Div>
-            <Span
-              className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-center leading-tight w-16 ${active ? 'text-[#0a4d2b]' : done ? 'text-gray-500' : 'text-gray-300'}`}
-            >
-              {s.label}
-            </Span>
-          </Div>
-          {i < steps.length - 1 && <Div className={`flex-1 h-0.5 rounded mb-4 mx-1 ${i < current ? 'bg-[#0a4d2b]' : 'bg-gray-200'}`} />}
-        </React.Fragment>
-      );
-    })}
-  </Div>
-);
-export const StatusPill = ({ status }) => (
-  <Span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${STATUS_TONES[status] || 'bg-gray-100 text-gray-600'}`}>
-    {String(status || '').replace(/_/g, ' ')}
-  </Span>
+            {i < steps.length - 1 && <Div className={`flex-1 h-0.5 rounded mt-4 ${i < current ? 'bg-blue-600' : 'bg-slate-200'}`} />}
+          </React.Fragment>
+        );
+      })}
+    </Div>
+  </Card>
 );

@@ -39,14 +39,14 @@ const ImageField = ({ label, value, onChange, folder = 'tours/destinations', hin
   };
   return (
     <Div className={className}>
-      {label && <Label className="block text-[13px] font-semibold text-gray-700 mb-1.5">{label}</Label>}
+      {label && <Label className="text-sm font-medium text-slate-700 mb-1.5">{label}</Label>}
 
       <Div className="flex items-start gap-3">
         <Button
           type="button"
           onClick={pick}
           disabled={busy}
-          className="relative w-28 h-24 shrink-0 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-[#0a4d2b]/40 hover:bg-gray-100 transition-colors flex items-center justify-center overflow-hidden disabled:opacity-60"
+          className="relative w-28 h-24 shrink-0 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 hover:border-blue-400 flex items-center justify-center overflow-hidden disabled:opacity-60"
         >
           {busy ? (
             <UiIcon as={Loader2} size={20} className="animate-spin text-gray-400" />
@@ -55,20 +55,20 @@ const ImageField = ({ label, value, onChange, folder = 'tours/destinations', hin
           ) : (
             <Span className="flex flex-col items-center gap-1 text-gray-400">
               <UiIcon as={ImagePlus} size={20} />
-              <Span className="text-[10px] font-bold">Upload</Span>
+              <Span className="text-xs font-semibold">Upload</Span>
             </Span>
           )}
         </Button>
 
         <Div className="flex-1 min-w-0 pt-1">
-          <P className="text-xs text-gray-500">{hint || 'JPG, PNG, HEIC or WebP. Stored as compressed WebP.'}</P>
+          <P className="text-xs text-slate-500">{hint || 'JPG, PNG, HEIC or WebP. Stored as compressed WebP.'}</P>
           {value && (
             <Div className="flex items-center gap-2 mt-2">
               <Button
                 type="button"
                 onClick={pick}
                 disabled={busy}
-                className="px-2.5 py-1 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="h-11 px-4 rounded-lg border border-slate-300 bg-white items-center justify-center text-sm font-semibold text-slate-700 disabled:opacity-50"
               >
                 Replace
               </Button>
@@ -76,7 +76,7 @@ const ImageField = ({ label, value, onChange, folder = 'tours/destinations', hin
                 type="button"
                 onClick={clear}
                 disabled={busy}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                className="flex-row items-center justify-center gap-1 h-11 px-4 rounded-lg border border-red-200 bg-white text-sm font-semibold text-red-600 disabled:opacity-50"
               >
                 <UiIcon as={X} size={12} /> Remove
               </Button>
@@ -121,19 +121,19 @@ export const ImageListField = ({ label, value = [], onChange, folder, max = 8 })
   };
   return (
     <Div>
-      {label && <Label className="block text-[13px] font-semibold text-gray-700 mb-1.5">{label}</Label>}
+      {label && <Label className="text-sm font-medium text-slate-700 mb-1.5">{label}</Label>}
 
       <Div className="flex flex-wrap gap-2">
         {value.map((url, index) => (
-          <Div key={`${url}-${index}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group">
+          <Div key={`${url}-${index}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-200">
             <Img src={url} alt="" className="w-full h-full object-cover" />
             <Button
               type="button"
               onClick={() => removeAt(index)}
-              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center"
+              className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 items-center justify-center"
               accessibilityLabel="Remove image"
             >
-              <UiIcon as={X} size={11} />
+              <UiIcon as={X} size={13} className="text-white" />
             </Button>
           </Div>
         ))}
@@ -143,14 +143,14 @@ export const ImageListField = ({ label, value = [], onChange, folder, max = 8 })
             type="button"
             onClick={add}
             disabled={busy}
-            className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-[#0a4d2b]/40 flex items-center justify-center text-gray-400 disabled:opacity-60"
+            className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 items-center justify-center disabled:opacity-60"
           >
             {busy ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={ImagePlus} size={16} />}
           </Button>
         )}
       </Div>
 
-      <P className="text-xs text-gray-400 mt-1.5">
+      <P className="text-xs text-slate-500 mt-1.5">
         {value.length} of {max}
       </P>
     </Div>

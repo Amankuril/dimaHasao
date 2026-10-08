@@ -8,7 +8,7 @@ import { API_BASE_URL } from '../../../api/config';
 import { adminAPI } from '../../../api/food';
 import { getCurrentUser, getModuleToken, setAuthData, getModuleRefreshToken } from '../../../admin/session';
 import { canAccessPath, getFirstAllowedPath, isSubAdmin } from '../../utils/subAdminPermissions';
-import { Button, Div, Main, Icon as UiIcon } from '../../../components/web';
+import { Button, Div, Main, Span, Icon as UiIcon } from '../../../components/web';
 import { router } from 'expo-router';
 const debugError = () => {};
 export default function AdminLayout() {
@@ -107,7 +107,7 @@ export default function AdminLayout() {
   // native screen has no DOM to insert into, so the same button sits in a slim row
   // above the page on the same routes.
   return (
-    <Div className="flex-1 bg-neutral-200 flex flex-col overflow-hidden admin-module-container">
+    <Div className="flex-1 bg-slate-50 flex flex-col overflow-hidden admin-module-container">
       {/* Top Navbar */}
       <AdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
@@ -116,25 +116,21 @@ export default function AdminLayout() {
 
       {/* Backend disconnected banner */}
       {!API_BASE_URL && (
-        <Div className="w-full bg-amber-100 border-b border-amber-300 px-4 py-2 text-center text-sm text-amber-900">
-          Backend disconnected. Data is not live.
+        <Div className="w-full bg-amber-50 border-b border-amber-200 px-4 py-2.5">
+          <Span className="text-sm text-center text-amber-800">Backend disconnected. Data is not live.</Span>
         </Div>
       )}
 
       {showBackButton && (
-        <Div className="flex flex-row items-center px-4 pt-3 bg-neutral-100">
-          <Button
-            onClick={handleBackClick}
-            accessibilityLabel="Go Back"
-            className="flex items-center justify-center p-2 rounded-lg bg-white/60 border border-slate-200 shadow-sm"
-          >
-            <UiIcon as={ArrowLeft} className="w-4 h-4 text-slate-700" />
+        <Div className="flex-row items-center px-4 pt-3 bg-slate-50">
+          <Button onClick={handleBackClick} accessibilityLabel="Go Back" className="w-11 h-11 items-center justify-center rounded-lg border border-slate-300 bg-white">
+            <UiIcon as={ArrowLeft} size={18} className="text-slate-700" />
           </Button>
         </Div>
       )}
 
       {/* Page Content */}
-      <Main className="flex-1 min-h-0 w-full max-w-full overflow-hidden bg-neutral-100">
+      <Main className="flex-1 min-h-0 w-full max-w-full overflow-hidden bg-slate-50">
         <Outlet />
       </Main>
     </Div>

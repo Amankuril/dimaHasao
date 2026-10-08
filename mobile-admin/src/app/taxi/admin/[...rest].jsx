@@ -1,6 +1,7 @@
 import { FileText } from 'lucide-react-native';
 import { useLocation, useNavigate } from '../../../lib/webRouter';
-import { Button, Div, H2, P, Span, Icon as UiIcon } from '../../../components/web';
+import { Button, Span } from '../../../components/web';
+import { AdminPage, EmptyState, BTN_PRIMARY, BTN_TEXT_PRIMARY } from '../../../admin/ui';
 
 /*
  * Web: <Route path="*" element={<AdminSectionPlaceholder />} /> inside the
@@ -20,23 +21,15 @@ export default function AdminSectionPlaceholder() {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
   return (
-    <Div className="flex items-center justify-center min-h-[70vh]">
-      <Div className="max-w-xl w-full bg-white rounded-[32px] border border-gray-100 shadow-sm p-10 text-center">
-        <Div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-5">
-          <UiIcon as={FileText} size={28} />
-        </Div>
-        <H2 className="text-2xl font-black text-gray-950 uppercase tracking-tight">{title || 'Admin Section'}</H2>
-        <P className="mt-3 text-sm font-medium text-gray-500 leading-6">
-          This admin section is not wired to the user app. It stays inside the admin shell so navigation remains safe.
-        </P>
-        <Button
-          type="button"
-          onClick={() => navigate('/taxi/admin/dashboard')}
-          className="mt-8 flex flex-row items-center justify-center px-6 py-3 rounded-xl bg-[#2563EB] text-white text-[12px] font-black uppercase tracking-widest shadow-lg shadow-blue-900/20"
-        >
-          <Span>Back to Dashboard</Span>
-        </Button>
-      </Div>
-    </Div>
+    <AdminPage maxWidth={720}>
+      <EmptyState
+        icon={FileText}
+        title={title || 'Admin section'}
+        message="This admin section is not wired to the user app. It stays inside the admin shell so navigation remains safe."
+      />
+      <Button type="button" onClick={() => navigate('/taxi/admin/dashboard')} className={`${BTN_PRIMARY} mt-4 self-center`}>
+        <Span className={BTN_TEXT_PRIMARY}>Back to dashboard</Span>
+      </Button>
+    </AdminPage>
   );
 }

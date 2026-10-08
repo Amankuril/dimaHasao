@@ -3,11 +3,17 @@ import { useState, useEffect } from 'react';
 import { Phone, Save, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react-native';
 import { adminAPI } from '../../../api/food';
 import { toast } from '../../../lib/notify';
-import { Button, Div, Form, H1, Input, Label, P, ScrollDiv, Icon as UiIcon } from '../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, INPUT, INPUT_ERROR, BTN_PRIMARY, BTN_TEXT_PRIMARY, LoadingState, useLayoutWidth } from '../../../admin/ui';
+
+/* Two columns from 700px: the kit's grid classes are dropped on native, so the width is measured. */
+const PAGE_MAX = 720;
+import { Button, Div, Form, Input, Span, Icon as UiIcon } from '../../../components/web';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 export default function DeliveryEmergencyHelp() {
+  const { width, tablet } = useLayoutWidth();
+  const colWidth = tablet ? (Math.min(width, PAGE_MAX) - 32 - 32 - 12) / 2 : null;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -139,104 +145,67 @@ export default function DeliveryEmergencyHelp() {
       description: 'Phone number for insurance claims and policy help',
     },
   ];
+  const header = (
+    <PageHeader
+      icon={Phone}
+      title="Delivery emergency help"
+      subtitle="Emergency contact numbers shown to delivery partners. Tapping one in the app dials it."
+      breadcrumb={[{ label: 'Food' }, { label: 'Delivery' }, { label: 'Emergency help' }]}
+    />
+  );
   if (loading) {
     return (
-      <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-        <Div className="max-w-4xl mx-auto">
-          <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <Div className="flex items-center justify-center py-12">
-              <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-slate-600" />
-            </Div>
-          </Div>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={PAGE_MAX}>
+        {header}
+        <LoadingState label="Loading emergency numbers…" />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-4xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          {/* Header */}
-          <Div className="flex items-center gap-3 mb-6">
-            <UiIcon as={Phone} className="w-6 h-6 text-slate-600" />
-            <Div>
-              <H1 className="text-2xl font-bold text-slate-900">Delivery Emergency Help</H1>
-              <P className="text-sm text-slate-600 mt-1">Manage emergency contact numbers for delivery partners</P>
-            </Div>
-          </Div>
+    <AdminPage maxWidth={PAGE_MAX}>
+      {header}
+      <Card className="mb-3 flex-row items-start gap-3">
+        <UiIcon as={AlertCircle} size={18} className="text-blue-600 mt-0.5" />
+        <Div className="flex-1 gap-1">
+          <Span className="text-sm font-semibold text-slate-900">Important information</Span>
+          <Span className="text-sm text-slate-700">
+            These numbers appear in the delivery partner app&apos;s emergency help section. Tapping an option dials the matching number.
+          </Span>
+        </Div>
+      </Card>
 
-          {/* Info Card */}
-          <Div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <Div className="flex items-start gap-3">
-              <UiIcon as={AlertCircle} className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-              <Div className="text-sm text-blue-800">
-                <P className="font-semibold mb-1">Important Information</P>
-                <P>
-                  These phone numbers will be displayed to delivery partners in the emergency help section. When a delivery partner clicks on any emergency
-                  option, it will automatically dial the corresponding number.
-                </P>
-              </Div>
-            </Div>
-          </Div>
-
-          {/* Form */}
-          <Form onSubmit={handleSubmit} className="space-y-6">
+      <Card>
+        <SectionTitle>Emergency numbers</SectionTitle>
+        <Form onSubmit={handleSubmit}>
+          <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
             {emergencyFields.map((field) => (
-              <Div key={field.id} className="space-y-2">
-                <Label className="block text-sm font-semibold text-slate-900">{field.label}</Label>
-                <P className="text-xs text-slate-600 mb-2">{field.description}</P>
-                <Div className="relative">
+              <Div key={field.id} style={colWidth ? { width: colWidth } : null}>
+                <Field label={field.label} hint={field.description} error={formErrors[field.id]}>
                   <Input
                     type="text"
                     value={formData[field.id]}
                     onChange={(e) => handleInputChange(field.id, e.target.value)}
                     placeholder={field.placeholder}
                     maxLength={fieldLimits[field.id] || 15}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors[field.id] ? 'border-red-300 focus:ring-red-500' : 'border-slate-300'}`}
+                    className={formErrors[field.id] ? INPUT_ERROR : INPUT}
                   />
-                  {formErrors[field.id] && (
-                    <P className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                      <UiIcon as={AlertCircle} className="w-4 h-4" />
-                      {formErrors[field.id]}
-                    </P>
-                  )}
-                </Div>
+                </Field>
               </Div>
             ))}
+          </Div>
+          <Div className="mt-4 pt-4 border-t border-slate-200">
+            <Button type="submit" disabled={saving} className={`${BTN_PRIMARY} self-start`}>
+              <UiIcon as={saving ? Loader2 : Save} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : 'Save emergency numbers'}</Span>
+            </Button>
+          </Div>
+        </Form>
+      </Card>
 
-            {/* Submit Button */}
-            <Div className="pt-4 border-t border-slate-200">
-              <Button
-                type="submit"
-                disabled={saving}
-                className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {saving ? (
-                  <>
-                    <UiIcon as={Loader2} className="w-5 h-5 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <UiIcon as={Save} className="w-5 h-5" />
-                    Save Emergency Numbers
-                  </>
-                )}
-              </Button>
-            </Div>
-          </Form>
-
-          {/* Success Message */}
-          {!loading && !saving && (
-            <Div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <Div className="flex items-center gap-2 text-green-800">
-                <UiIcon as={CheckCircle2} className="w-5 h-5" />
-                <P className="text-sm font-medium">Changes will be reflected immediately for all delivery partners</P>
-              </Div>
-            </Div>
-          )}
-        </Div>
+      <Div className="flex-row items-center gap-2 mt-3">
+        <UiIcon as={CheckCircle2} size={14} className="text-green-700" />
+        <Span className="text-xs text-slate-500 flex-1">Changes reach every delivery partner immediately.</Span>
       </Div>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

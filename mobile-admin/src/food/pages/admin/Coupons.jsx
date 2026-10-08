@@ -1,37 +1,38 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/Coupons.jsx (tools/port.js first pass). */
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Search } from 'lucide-react-native';
+import { Search, Ticket, Plus, X } from 'lucide-react-native';
 import { adminAPI } from '../../../api/food';
 import { toast } from '../../../lib/notify';
 import AdminListPagination from '../../components/admin/AdminListPagination';
 import {
-  Button,
-  Div,
-  Form,
-  H1,
-  H2,
-  H3,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../components/web';
-const debugLog = (...args) => {};
-const debugWarn = (...args) => {};
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  EmptyState,
+  ErrorState,
+  TableSkeleton,
+  Field,
+  INPUT,
+  INPUT_ERROR,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../admin/ui';
+import { Button, Div, Form, Input, Option, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../components/web';
 const debugError = (...args) => {};
-const RequiredMark = () => <Span className="text-red-500">*</Span>;
 export default function Coupons() {
   const pageRef = useRef(null);
+  const { tablet, columns } = useLayoutWidth();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -376,17 +377,43 @@ export default function Coupons() {
     });
   };
 
+
   // Filter offers based on search query
   const filteredOffers = offers;
+  const COLS = [56, 170, 150, 140, 120, 140, 160, 140, 110, 110, 120, 120, 130, 150];
+  const LABELS = [
+    'SI',
+    'Restaurant',
+    'Dish',
+    'Coupon Code',
+    'Coupon Type',
+    'Customer Scope',
+    'Discount',
+    'Price',
+    'Min Order',
+    'Usage',
+    'Status',
+    'Show In Cart',
+    'Valid Until',
+    'Actions',
+  ];
+  const formatDate = (dateVal) => {
+    const d = new Date(dateVal);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-US', {
+      month: 'short',
+    });
+    return `${dd} ${month} ${d.getFullYear()}`;
+  };
   return (
-    <ScrollDiv ref={pageRef} className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
-            <Div className="flex items-center gap-3">
-              <H1 className="text-2xl font-bold text-slate-900">Restaurant Offers & Coupons</H1>
-            </Div>
+    <AdminPage maxWidth={1200} padded={false} scroll={false} contentClassName="flex-1">
+      <ScrollDiv ref={pageRef} className="flex-1" contentStyle={{ padding: 16, paddingBottom: 32 }}>
+        <PageHeader
+          icon={Ticket}
+          title="Restaurant Offers & Coupons"
+          subtitle={loading ? 'Loading offers…' : `${totalItems} ${totalItems === 1 ? 'offer' : 'offers'} across the district`}
+          breadcrumb={[{ label: 'Food' }, { label: 'Promotions' }, { label: 'Coupons' }]}
+          actions={
             <Button
               type="button"
               onClick={() => {
@@ -397,60 +424,45 @@ export default function Coupons() {
                   setIsAddOpen(true);
                 }
               }}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
+              className={isAddOpen ? BTN_SECONDARY : BTN_PRIMARY}
             >
-              {isAddOpen ? 'Close' : 'Add Coupon'}
+              <UiIcon as={isAddOpen ? X : Plus} size={16} className={isAddOpen ? 'text-slate-600' : 'text-white'} />
+              <Span className={isAddOpen ? BTN_TEXT_SECONDARY : BTN_TEXT_PRIMARY}>{isAddOpen ? 'Close' : 'Add Coupon'}</Span>
             </Button>
-          </Div>
+          }
+        />
 
-          {isAddOpen && (
-            <Form onSubmit={handleCreateCoupon} className="border border-slate-200 rounded-xl p-4 mb-5 bg-slate-50">
-              <H3 className="text-base font-semibold text-slate-900 mb-3">{editingOfferId ? 'Edit Coupon' : 'Create Coupon'}</H3>
-
-              <Div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Coupon Type</Label>
-                  <Select
-                    value={formData.couponType}
-                    onChange={(e) => handleFormChange('couponType', e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
+        {isAddOpen && (
+          <Card className="mb-4">
+            <SectionTitle>{editingOfferId ? 'Edit Coupon' : 'Create Coupon'}</SectionTitle>
+            <Form onSubmit={handleCreateCoupon}>
+              <Div className={`grid grid-cols-${columns} gap-3`}>
+                <Field label="Coupon Type">
+                  <Select value={formData.couponType} onChange={(e) => handleFormChange('couponType', e.target.value)} className={INPUT}>
                     <Option value="all">Both</Option>
                     <Option value="delivery">Delivery</Option>
                     <Option value="takeaway">Takeaway</Option>
                   </Select>
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Coupon Code <RequiredMark />
-                  </Label>
+                <Field label="Coupon Code" required error={errors.couponCode}>
                   <Input
                     type="text"
                     value={formData.couponCode}
                     onChange={(e) => handleFormChange('couponCode', e.target.value)}
                     placeholder="e.g. NEWUSER50"
-                    className={`w-full px-3 py-2.5 text-sm rounded-lg border ${errors.couponCode ? 'border-red-500' : 'border-slate-300'} bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    className={errors.couponCode ? INPUT_ERROR : INPUT}
                   />
-                  {errors.couponCode && <P className="mt-1 text-xs text-red-600">{errors.couponCode}</P>}
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Discount Type</Label>
-                  <Select
-                    value={formData.discountType}
-                    onChange={(e) => handleFormChange('discountType', e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
+                <Field label="Discount Type">
+                  <Select value={formData.discountType} onChange={(e) => handleFormChange('discountType', e.target.value)} className={INPUT}>
                     <Option value="percentage">Percentage</Option>
                     <Option value="flat-price">Flat Amount</Option>
                   </Select>
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">
-                    {formData.discountType === 'percentage' ? 'Discount (%)' : 'Discount Amount'} <RequiredMark />
-                  </Label>
+                <Field label={formData.discountType === 'percentage' ? 'Discount (%)' : 'Discount Amount'} required error={errors.discountValue}>
                   <Input
                     type="number"
                     min="1"
@@ -458,61 +470,45 @@ export default function Coupons() {
                     value={formData.discountValue}
                     onChange={(e) => handleFormChange('discountValue', e.target.value)}
                     placeholder={formData.discountType === 'percentage' ? 'e.g. 20' : 'e.g. 100'}
-                    className={`w-full px-3 py-2.5 text-sm rounded-lg border ${errors.discountValue ? 'border-red-500' : 'border-slate-300'} bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    className={errors.discountValue ? INPUT_ERROR : INPUT}
                   />
-                  {errors.discountValue && <P className="mt-1 text-xs text-red-600">{errors.discountValue}</P>}
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Customer Scope</Label>
-                  <Select
-                    value={formData.customerScope}
-                    onChange={(e) => handleFormChange('customerScope', e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
+                <Field label="Customer Scope">
+                  <Select value={formData.customerScope} onChange={(e) => handleFormChange('customerScope', e.target.value)} className={INPUT}>
                     <Option value="all">All Users</Option>
                     <Option value="first-time">First-time Users</Option>
                   </Select>
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Restaurant Scope</Label>
-                  <Select
-                    value={formData.restaurantScope}
-                    onChange={(e) => handleFormChange('restaurantScope', e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
+                <Field label="Restaurant Scope">
+                  <Select value={formData.restaurantScope} onChange={(e) => handleFormChange('restaurantScope', e.target.value)} className={INPUT}>
                     <Option value="all">All Restaurants</Option>
                     <Option value="selected">Selected Restaurant</Option>
                   </Select>
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Start Date (Optional)</Label>
+                <Field label="Start Date" hint="Optional" error={errors.startDate}>
                   <Input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => handleFormChange('startDate', e.target.value)}
                     min={editingOfferId ? undefined : todayYMD()}
-                    className={`w-full px-3 py-2.5 text-sm rounded-lg border ${errors.startDate ? 'border-red-500' : 'border-slate-300'} bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    className={errors.startDate ? INPUT_ERROR : INPUT}
                   />
-                  {errors.startDate && <P className="mt-1 text-xs text-red-600">{errors.startDate}</P>}
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Expiry Date (Optional)</Label>
+                <Field label="Expiry Date" hint="Optional" error={errors.endDate}>
                   <Input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => handleFormChange('endDate', e.target.value)}
                     min={formData.startDate || (editingOfferId ? undefined : todayYMD())}
-                    className={`w-full px-3 py-2.5 text-sm rounded-lg border ${errors.endDate ? 'border-red-500' : 'border-slate-300'} bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    className={errors.endDate ? INPUT_ERROR : INPUT}
                   />
-                  {errors.endDate && <P className="mt-1 text-xs text-red-600">{errors.endDate}</P>}
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Min Order Value (₹)</Label>
+                <Field label="Min Order Value (₹)" error={errors.minOrderValue}>
                   <Input
                     type="number"
                     min="0"
@@ -520,22 +516,16 @@ export default function Coupons() {
                     value={formData.minOrderValue}
                     onChange={(e) => handleFormChange('minOrderValue', e.target.value)}
                     placeholder="e.g. 199"
-                    className={`w-full px-3 py-2.5 text-sm rounded-lg border ${errors.minOrderValue ? 'border-red-500' : 'border-slate-300'} bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    className={errors.minOrderValue ? INPUT_ERROR : INPUT}
                   />
-                  {errors.minOrderValue && <P className="mt-1 text-xs text-red-600">{errors.minOrderValue}</P>}
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Max Discount (₹)
-                    {formData.discountType === 'percentage' && (
-                      <>
-                        {' '}
-                        <RequiredMark />
-                      </>
-                    )}
-                    {formData.discountType === 'flat-price' && <Span className="font-normal text-slate-400"> (optional)</Span>}
-                  </Label>
+                <Field
+                  label="Max Discount (₹)"
+                  required={formData.discountType === 'percentage'}
+                  hint={formData.discountType === 'flat-price' ? 'Not used for flat amounts' : undefined}
+                  error={formData.discountType === 'percentage' ? errors.maxDiscount : undefined}
+                >
                   <Input
                     type="number"
                     min="0"
@@ -544,13 +534,11 @@ export default function Coupons() {
                     onChange={(e) => handleFormChange('maxDiscount', e.target.value)}
                     placeholder="e.g. 100"
                     disabled={formData.discountType === 'flat-price'}
-                    className={`w-full px-3 py-2.5 text-sm rounded-lg border ${errors.maxDiscount ? 'border-red-500' : 'border-slate-300'} bg-white disabled:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    className={errors.maxDiscount ? INPUT_ERROR : INPUT}
                   />
-                  {formData.discountType === 'percentage' && errors.maxDiscount && <P className="mt-1 text-xs text-red-600">{errors.maxDiscount}</P>}
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Usage Limit (global)</Label>
+                <Field label="Usage Limit (global)" error={errors.usageLimit}>
                   <Input
                     type="number"
                     min="0"
@@ -558,13 +546,11 @@ export default function Coupons() {
                     value={formData.usageLimit}
                     onChange={(e) => handleFormChange('usageLimit', e.target.value)}
                     placeholder="e.g. 1000"
-                    className={`w-full px-3 py-2.5 text-sm rounded-lg border ${errors.usageLimit ? 'border-red-500' : 'border-slate-300'} bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    className={errors.usageLimit ? INPUT_ERROR : INPUT}
                   />
-                  {errors.usageLimit && <P className="mt-1 text-xs text-red-600">{errors.usageLimit}</P>}
-                </Div>
+                </Field>
 
-                <Div>
-                  <Label className="block text-xs font-semibold text-slate-600 mb-1">Per User Limit</Label>
+                <Field label="Per User Limit" error={errors.perUserLimit}>
                   <Input
                     type="number"
                     min="0"
@@ -572,51 +558,38 @@ export default function Coupons() {
                     value={formData.perUserLimit}
                     onChange={(e) => handleFormChange('perUserLimit', e.target.value)}
                     placeholder="e.g. 1"
-                    className={`w-full px-3 py-2.5 text-sm rounded-lg border ${errors.perUserLimit ? 'border-red-500' : 'border-slate-300'} bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    className={errors.perUserLimit ? INPUT_ERROR : INPUT}
                   />
-                  {errors.perUserLimit && <P className="mt-1 text-xs text-red-600">{errors.perUserLimit}</P>}
-                </Div>
+                </Field>
 
-                <Div className="flex items-center gap-2">
+                <Div className="flex-row items-center gap-2 h-11">
                   <Input
                     nativeID="isFirstOrderOnly"
                     type="checkbox"
                     checked={formData.isFirstOrderOnly}
                     onChange={(e) => handleFormChange('isFirstOrderOnly', e.target.checked)}
-                    className="h-4 w-4"
+                    className="w-5 h-5"
                   />
-                  <Label className="text-sm text-slate-700">First order only</Label>
+                  <Span className="text-sm text-slate-700">First order only</Span>
                 </Div>
 
                 {formData.restaurantScope === 'selected' && (
-                  <Div className="md:col-span-2 lg:col-span-3">
-                    <Label className="block text-xs font-semibold text-slate-600 mb-1">
-                      Select Restaurant <RequiredMark />
-                    </Label>
-                    <Select
-                      value={formData.restaurantId}
-                      onChange={(e) => handleFormChange('restaurantId', e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <Option value="">Choose a restaurant</Option>
-                      {restaurants.map((restaurant) => (
-                        <Option key={restaurant._id} value={restaurant._id}>
-                          {restaurant.name}
-                        </Option>
-                      ))}
-                    </Select>
+                  <Div className="col-span-full">
+                    <Field label="Select Restaurant" required>
+                      <Select value={formData.restaurantId} onChange={(e) => handleFormChange('restaurantId', e.target.value)} className={INPUT}>
+                        <Option value="">Choose a restaurant</Option>
+                        {restaurants.map((restaurant) => (
+                          <Option key={restaurant._id} value={restaurant._id}>
+                            {restaurant.name}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Field>
                   </Div>
                 )}
               </Div>
 
-              <Div className="mt-4 flex items-center gap-3">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || Object.keys(errors).length > 0 || !isFormDirty}
-                  className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                >
-                  {editingOfferId ? (isSubmitting ? 'Saving...' : 'Save Coupon') : isSubmitting ? 'Creating...' : 'Create Coupon'}
-                </Button>
+              <Div className={`flex-row items-center gap-2 mt-4 ${tablet ? 'justify-end' : ''}`}>
                 {editingOfferId && (
                   <Button
                     type="button"
@@ -624,225 +597,165 @@ export default function Coupons() {
                       resetForm();
                       setIsAddOpen(false);
                     }}
-                    className="px-4 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors"
+                    className={`${BTN_SECONDARY} ${tablet ? '' : 'flex-1'}`}
                   >
-                    Cancel
+                    <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
                   </Button>
                 )}
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || Object.keys(errors).length > 0 || !isFormDirty}
+                  className={`${BTN_PRIMARY} ${tablet ? '' : 'flex-1'}`}
+                >
+                  <Span className={BTN_TEXT_PRIMARY}>
+                    {editingOfferId ? (isSubmitting ? 'Saving…' : 'Save Coupon') : isSubmitting ? 'Creating…' : 'Create Coupon'}
+                  </Span>
+                </Button>
               </Div>
             </Form>
-          )}
+          </Card>
+        )}
 
-          {/* Search Bar */}
-          <Div className="relative">
-            <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <Input
-              type="text"
-              placeholder="Search by restaurant name, dish name, or coupon code..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </Div>
-        </Div>
+        {/* Search */}
+        <Card className="mb-4">
+          <Toolbar className="mb-0">
+            <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white flex-1 min-w-[200px]">
+              <UiIcon as={Search} size={16} className="text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Search by restaurant, dish or coupon code"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 text-sm text-slate-900"
+              />
+            </Div>
+          </Toolbar>
+        </Card>
 
         {/* Offers List */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex items-center justify-between mb-4">
-            <H2 className="text-xl font-bold text-slate-900">Offers List</H2>
-            <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
-              {loading ? <Span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" /> : `${totalItems} ${totalItems === 1 ? 'offer' : 'offers'}`}
-            </Span>
-          </Div>
-
-          {loading ? (
-            <Div className="text-center py-20">
-              <Div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></Div>
-              <P className="text-sm text-slate-500 mt-4">Loading offers...</P>
-            </Div>
-          ) : error ? (
-            <Div className="text-center py-20">
-              <P className="text-lg font-semibold text-red-600 mb-1">Error</P>
-              <P className="text-sm text-slate-500">{error}</P>
-            </Div>
-          ) : filteredOffers.length === 0 ? (
-            <Div className="text-center py-20">
-              <P className="text-lg font-semibold text-slate-700 mb-1">No Offers Found</P>
-              <P className="text-sm text-slate-500">{searchQuery ? 'No offers match your search criteria' : 'No offers have been created yet'}</P>
-            </Div>
-          ) : (
-            <Div>
-              <Table className="w-full" cols={[70, 170, 160, 140, 130, 140, 120, 110, 110, 110, 120, 120, 140, 180]}>
-                <Thead className="bg-slate-50 border-b border-slate-200">
-                  <Tr>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">SI</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Restaurant</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Dish</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Coupon Code</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Coupon Type</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Customer Scope</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Discount</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Price</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Min Order</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Usage</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Status</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Show In Cart</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Valid Until</Th>
-                    <Th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">Actions</Th>
-                  </Tr>
-                </Thead>
-                <Tbody className="bg-white divide-y divide-slate-100">
-                  {filteredOffers.map((offer) => (
-                    <Tr key={`${offer.offerId}-${offer.dishId}`} className="hover:bg-slate-50 transition-colors">
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-700">{offer.sl}</Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-900">
-                          {offer.restaurantScope === 'all' || offer.restaurantName === 'All Restaurants' ? 'All Restaurants' : offer.restaurantName}
-                        </Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">{offer.dishName}</Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm font-mono font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded whitespace-nowrap">{offer.couponCode}</Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${offer.couponType === 'delivery' ? 'bg-emerald-100 text-emerald-700' : offer.couponType === 'takeaway' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'}`}
-                        >
-                          {offer.couponType === 'delivery' ? 'Delivery' : offer.couponType === 'takeaway' ? 'Takeaway' : 'Both'}
-                        </Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${offer.customerGroup === 'new' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'}`}
-                        >
-                          {offer.customerGroup === 'new' ? 'First-time Users' : 'All Users'}
-                        </Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700 whitespace-nowrap">
-                          {offer.discountType === 'flat-price'
-                            ? `\u20B9${offer.originalPrice - offer.discountedPrice} OFF`
-                            : `${offer.discountPercentage}% OFF${Number(offer.maxDiscount) ? ` (up to \u20B9${Number(offer.maxDiscount)})` : ''}`}
-                        </Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">
-                          {offer.dishId === 'all' ? (
-                            Number(offer.minOrderValue) ? (
-                              `Min \u20B9${Number(offer.minOrderValue)}`
-                            ) : (
-                              'All Items'
-                            )
-                          ) : (
-                            <Div className="flex items-center gap-2">
-                              <Span className="text-xs text-slate-400 line-through">
-                                {'\u20B9'}
-                                {offer.originalPrice}
-                              </Span>
-                              <Span className="text-sm font-semibold text-green-600">
-                                {'\u20B9'}
-                                {offer.discountedPrice}
-                              </Span>
-                            </Div>
-                          )}
-                        </Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">{Number(offer.minOrderValue) ? `\u20B9${Number(offer.minOrderValue)}` : '—'}</Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">
-                          {`${Number(offer.usedCount || 0)} / ${Number(offer.usageLimit || 0) > 0 ? Number(offer.usageLimit) : '∞'}`}
-                        </Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        {(() => {
-                          const expired = offer.endDate ? new Date(offer.endDate).getTime() < new Date(new Date().toDateString()).getTime() : false;
-                          const status = expired ? 'expired' : offer.status || 'inactive';
-                          const cls =
-                            status === 'active'
-                              ? 'bg-green-100 text-green-700'
-                              : status === 'paused'
-                                ? 'bg-orange-100 text-orange-700'
-                                : status === 'expired'
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-gray-100 text-gray-700';
-                          return <Span className={`px-2 py-1 rounded-full text-xs font-medium ${cls}`}>{status}</Span>;
-                        })()}
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
+        {loading ? (
+          <TableSkeleton rows={6} />
+        ) : error ? (
+          <ErrorState title="Could not load offers" message={error} onRetry={fetchOffers} />
+        ) : filteredOffers.length === 0 ? (
+          <EmptyState
+            icon={Ticket}
+            title="No offers found"
+            message={searchQuery ? 'No offers match your search criteria.' : 'No offers have been created yet. Add one to start discounting orders.'}
+            actionLabel={searchQuery ? undefined : 'Add Coupon'}
+            onAction={searchQuery ? undefined : () => setIsAddOpen(true)}
+          />
+        ) : (
+          <DataTable cols={COLS}>
+            <THead cols={COLS} labels={LABELS} />
+            <TBody>
+              {filteredOffers.map((offer, i, all) => {
+                const expired = offer.endDate ? new Date(offer.endDate).getTime() < new Date(new Date().toDateString()).getTime() : false;
+                const status = expired ? 'expired' : offer.status || 'inactive';
+                const shown = offer.showInCart !== false;
+                return (
+                  <Row key={`${offer.offerId}-${offer.dishId}`} last={i === all.length - 1}>
+                    <Cell width={COLS[0]}>{String(offer.sl ?? '')}</Cell>
+                    <Cell width={COLS[1]}>
+                      <Span className="text-sm font-semibold text-slate-900">
+                        {offer.restaurantScope === 'all' || offer.restaurantName === 'All Restaurants' ? 'All Restaurants' : offer.restaurantName}
+                      </Span>
+                    </Cell>
+                    <Cell width={COLS[2]}>{offer.dishName}</Cell>
+                    <Cell width={COLS[3]}>
+                      <Span className="text-sm font-semibold text-blue-600">{offer.couponCode}</Span>
+                    </Cell>
+                    <Cell width={COLS[4]}>
+                      <StatusBadge
+                        tone={offer.couponType === 'delivery' ? 'success' : offer.couponType === 'takeaway' ? 'warning' : 'neutral'}
+                        label={offer.couponType === 'delivery' ? 'Delivery' : offer.couponType === 'takeaway' ? 'Takeaway' : 'Both'}
+                      />
+                    </Cell>
+                    <Cell width={COLS[5]}>
+                      <StatusBadge
+                        tone={offer.customerGroup === 'new' ? 'info' : 'neutral'}
+                        label={offer.customerGroup === 'new' ? 'First-time Users' : 'All Users'}
+                      />
+                    </Cell>
+                    <Cell width={COLS[6]}>
+                      {offer.discountType === 'flat-price'
+                        ? `₹${offer.originalPrice - offer.discountedPrice} OFF`
+                        : `${offer.discountPercentage}% OFF${Number(offer.maxDiscount) ? ` (up to ₹${Number(offer.maxDiscount)})` : ''}`}
+                    </Cell>
+                    <Cell width={COLS[7]}>
+                      {offer.dishId === 'all' ? (
+                        Number(offer.minOrderValue) ? (
+                          `Min ₹${Number(offer.minOrderValue)}`
+                        ) : (
+                          'All Items'
+                        )
+                      ) : (
+                        <Div className="flex-row items-center gap-2">
+                          <Span className="text-xs text-slate-400 line-through">{`₹${offer.originalPrice}`}</Span>
+                          <Span className="text-sm font-semibold text-slate-900">{`₹${offer.discountedPrice}`}</Span>
+                        </Div>
+                      )}
+                    </Cell>
+                    <Cell width={COLS[8]}>{Number(offer.minOrderValue) ? `₹${Number(offer.minOrderValue)}` : '—'}</Cell>
+                    <Cell width={COLS[9]}>{`${Number(offer.usedCount || 0)} / ${Number(offer.usageLimit || 0) > 0 ? Number(offer.usageLimit) : '∞'}`}</Cell>
+                    <Cell width={COLS[10]}>
+                      <StatusBadge status={status} tone={status === 'paused' ? 'warning' : undefined} />
+                    </Cell>
+                    <Cell width={COLS[11]}>
+                      <Button
+                        type="button"
+                        onClick={() => handleToggleShowInCart(offer.offerId, offer.dishId, shown)}
+                        disabled={!!updatingCartVisibility[`${offer.offerId}-${offer.dishId}`]}
+                        className="h-11 justify-center"
+                        accessibilityLabel={`Toggle cart visibility for ${offer.couponCode}`}
+                      >
+                        <StatusBadge tone={shown ? 'success' : 'neutral'} label={shown ? 'Shown' : 'Hidden'} />
+                      </Button>
+                    </Cell>
+                    <Cell width={COLS[12]}>{offer.endDate ? formatDate(offer.endDate) : 'No expiry'}</Cell>
+                    <Cell width={COLS[13]}>
+                      <Div className="flex-row items-center gap-2">
                         <Button
                           type="button"
-                          onClick={() => handleToggleShowInCart(offer.offerId, offer.dishId, offer.showInCart !== false)}
-                          disabled={!!updatingCartVisibility[`${offer.offerId}-${offer.dishId}`]}
-                          className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${offer.showInCart !== false ? 'bg-green-600' : 'bg-slate-300'} disabled:opacity-60`}
+                          onClick={() => handleEditClick(offer)}
+                          className="h-11 px-3 rounded-lg bg-blue-600 items-center justify-center"
+                          accessibilityLabel={`Edit ${offer.couponCode}`}
                         >
-                          <Span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${offer.showInCart !== false ? 'translate-x-7' : 'translate-x-1'}`}
-                          />
+                          <Span className="text-xs font-semibold text-white">Edit</Span>
                         </Button>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700 whitespace-nowrap">
-                          {offer.endDate
-                            ? (() => {
-                                const d = new Date(offer.endDate);
-                                const dd = String(d.getDate()).padStart(2, '0');
-                                const month = d.toLocaleString('en-US', {
-                                  month: 'short',
-                                });
-                                const yyyy = d.getFullYear();
-                                return `${dd} ${month} ${yyyy}`;
-                              })()
-                            : 'No expiry'}
-                        </Span>
-                      </Td>
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            onClick={() => handleEditClick(offer)}
-                            className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => handleDeleteOffer(offer.offerId)}
-                            disabled={!!deletingOffer[offer.offerId]}
-                            className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 disabled:opacity-60"
-                          >
-                            {deletingOffer[offer.offerId] ? 'Deleting...' : 'Delete'}
-                          </Button>
-                        </Div>
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </Div>
-          )}
+                        <Button
+                          type="button"
+                          onClick={() => handleDeleteOffer(offer.offerId)}
+                          disabled={!!deletingOffer[offer.offerId]}
+                          className="h-11 px-3 rounded-lg bg-red-600 items-center justify-center"
+                          accessibilityLabel={`Delete ${offer.couponCode}`}
+                        >
+                          <Span className="text-xs font-semibold text-white">{deletingOffer[offer.offerId] ? 'Deleting…' : 'Delete'}</Span>
+                        </Button>
+                      </Div>
+                    </Cell>
+                  </Row>
+                );
+              })}
+            </TBody>
+          </DataTable>
+        )}
 
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              try {
-                localStorage.setItem('admin_coupons_pageSize', String(size));
-              } catch {}
-              setCurrentPage(1);
-            }}
-            itemLabel="offers"
-          />
-        </Div>
-      </Div>
-    </ScrollDiv>
+        <AdminListPagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            try {
+              localStorage.setItem('admin_coupons_pageSize', String(size));
+            } catch {}
+            setCurrentPage(1);
+          }}
+          itemLabel="offers"
+        />
+      </ScrollDiv>
+    </AdminPage>
   );
 }

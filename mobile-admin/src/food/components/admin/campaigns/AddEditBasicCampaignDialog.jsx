@@ -1,8 +1,8 @@
 /* Ported from Frontend/src/modules/Food/components/admin/campaigns/AddEditBasicCampaignDialog.jsx. */
-import { Plus, Pencil, Calendar, Clock } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../../components/shadcn';
-import { Button, Div, Form, Input, Label, P, Span, Icon as UiIcon } from '../../../../components/web';
+import { Field, INPUT, INPUT_ERROR, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../admin/ui';
+import { Button, Div, Form, Input, Span } from '../../../../components/web';
 export default function AddEditBasicCampaignDialog({ isOpen, onOpenChange, campaign, onSave }) {
   const [formData, setFormData] = useState({
     title: '',
@@ -12,6 +12,7 @@ export default function AddEditBasicCampaignDialog({ isOpen, onOpenChange, campa
     timeEnd: '',
   });
   const [errors, setErrors] = useState({});
+  const { tablet } = useLayoutWidth();
   useEffect(() => {
     if (campaign) {
       setFormData({
@@ -69,20 +70,14 @@ export default function AddEditBasicCampaignDialog({ isOpen, onOpenChange, campa
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-white p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-          <DialogTitle className="flex items-center gap-2">
-            {campaign ? <UiIcon as={Pencil} className="w-5 h-5 text-blue-600" /> : <UiIcon as={Plus} className="w-5 h-5 text-blue-600" />}
-            {campaign ? 'Edit Campaign' : 'Add New Campaign'}
-          </DialogTitle>
+        <DialogHeader className="px-4 pt-4 pb-2">
+          <DialogTitle>{campaign ? 'Edit Campaign' : 'Add New Campaign'}</DialogTitle>
           <DialogDescription>{campaign ? 'Update campaign information' : 'Create a new basic campaign'}</DialogDescription>
         </DialogHeader>
 
         <Form onSubmit={handleSubmit}>
-          <Div className="px-6 py-6 space-y-6">
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Title <Span className="text-red-500">*</Span>
-              </Label>
+          <Div className="px-4 py-3 gap-3">
+            <Field label="Title" required error={errors.title}>
               <Input
                 type="text"
                 value={formData.title}
@@ -93,115 +88,80 @@ export default function AddEditBasicCampaignDialog({ isOpen, onOpenChange, campa
                   }))
                 }
                 placeholder="Enter campaign title"
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.title ? 'border-red-500' : 'border-slate-300'}`}
+                className={errors.title ? INPUT_ERROR : INPUT}
                 required
               />
-              {errors.title && <P className="text-xs text-red-500 mt-1">{errors.title}</P>}
-            </Div>
+            </Field>
 
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Start Date <Span className="text-red-500">*</Span>
-                </Label>
-                <Div className="relative">
-                  <Input
-                    type="date"
-                    value={formData.dateStart}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        dateStart: e.target.value,
-                      }))
-                    }
-                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.dateStart ? 'border-red-500' : 'border-slate-300'}`}
-                    required
-                  />
-                  <UiIcon as={Calendar} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </Div>
-                {errors.dateStart && <P className="text-xs text-red-500 mt-1">{errors.dateStart}</P>}
-              </Div>
+            <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+              <Field label="Start Date" required error={errors.dateStart}>
+                <Input
+                  type="date"
+                  value={formData.dateStart}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      dateStart: e.target.value,
+                    }))
+                  }
+                  className={errors.dateStart ? INPUT_ERROR : INPUT}
+                  required
+                />
+              </Field>
 
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  End Date <Span className="text-red-500">*</Span>
-                </Label>
-                <Div className="relative">
-                  <Input
-                    type="date"
-                    value={formData.dateEnd}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        dateEnd: e.target.value,
-                      }))
-                    }
-                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.dateEnd ? 'border-red-500' : 'border-slate-300'}`}
-                    required
-                  />
-                  <UiIcon as={Calendar} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </Div>
-                {errors.dateEnd && <P className="text-xs text-red-500 mt-1">{errors.dateEnd}</P>}
-              </Div>
-            </Div>
+              <Field label="End Date" required error={errors.dateEnd}>
+                <Input
+                  type="date"
+                  value={formData.dateEnd}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      dateEnd: e.target.value,
+                    }))
+                  }
+                  className={errors.dateEnd ? INPUT_ERROR : INPUT}
+                  required
+                />
+              </Field>
 
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Start Time <Span className="text-red-500">*</Span>
-                </Label>
-                <Div className="relative">
-                  <Input
-                    type="time"
-                    value={formData.timeStart}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        timeStart: e.target.value,
-                      }))
-                    }
-                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.timeStart ? 'border-red-500' : 'border-slate-300'}`}
-                    required
-                  />
-                  <UiIcon as={Clock} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </Div>
-                {errors.timeStart && <P className="text-xs text-red-500 mt-1">{errors.timeStart}</P>}
-              </Div>
+              <Field label="Start Time" required error={errors.timeStart}>
+                <Input
+                  type="time"
+                  value={formData.timeStart}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      timeStart: e.target.value,
+                    }))
+                  }
+                  className={errors.timeStart ? INPUT_ERROR : INPUT}
+                  required
+                />
+              </Field>
 
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                  End Time <Span className="text-red-500">*</Span>
-                </Label>
-                <Div className="relative">
-                  <Input
-                    type="time"
-                    value={formData.timeEnd}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        timeEnd: e.target.value,
-                      }))
-                    }
-                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${errors.timeEnd ? 'border-red-500' : 'border-slate-300'}`}
-                    required
-                  />
-                  <UiIcon as={Clock} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </Div>
-                {errors.timeEnd && <P className="text-xs text-red-500 mt-1">{errors.timeEnd}</P>}
-              </Div>
+              <Field label="End Time" required error={errors.timeEnd}>
+                <Input
+                  type="time"
+                  value={formData.timeEnd}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      timeEnd: e.target.value,
+                    }))
+                  }
+                  className={errors.timeEnd ? INPUT_ERROR : INPUT}
+                  required
+                />
+              </Field>
             </Div>
           </Div>
 
-          <Div className="px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-3">
-            <Button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-            >
-              Cancel
+          <Div className="px-4 py-3 border-t border-slate-200 flex-row items-center gap-2">
+            <Button type="button" onClick={() => onOpenChange(false)} className={`${BTN_SECONDARY} flex-1`}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button type="submit" className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md">
-              {campaign ? 'Update Campaign' : 'Create Campaign'}
+            <Button type="submit" className={`${BTN_PRIMARY} flex-1`}>
+              <Span className={BTN_TEXT_PRIMARY}>{campaign ? 'Update Campaign' : 'Create Campaign'}</Span>
             </Button>
           </Div>
         </Form>

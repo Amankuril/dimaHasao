@@ -1,13 +1,34 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/addons/AddonsList.jsx (tools/port.js first pass). */
 import { useEffect, useMemo, useState } from 'react';
-import { Eye, Loader2, Search, Trash2, Pencil } from 'lucide-react-native';
+import { Eye, Trash2, Pencil, Utensils } from 'lucide-react-native';
 import { Switch } from '../../../../components/shadcn';
 import { adminAPI, uploadAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../../components/shadcn';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
 import { pickImage, objectUrl } from '../../../../lib/files';
-import { Button, Div, H1, Img, Input, Label, P, ScrollDiv, Span, Table, Tbody, Td, Textarea, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Img, Input, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_DANGER,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 const debugError = (...args) => {};
 const getItemCreatedMs = (item = {}) => {
   const direct = [item.requestedAt, item.createdAt, item.updatedAt].map((v) => new Date(v).getTime()).find((ms) => Number.isFinite(ms) && ms > 0);
@@ -188,187 +209,149 @@ export default function AddonsList() {
   const handleDelete = (addon) => {
     setPendingDelete(addon);
   };
+  const COLS = [60, 64, 190, 170, 110, 150];
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen space-y-6">
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <Div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <Div>
-            <Div className="flex items-center gap-3">
-              <H1 className="text-2xl font-bold text-slate-900">Restaurant add-ons</H1>
-            </Div>
-            <Div className="text-sm text-slate-500 mt-1">Manage add-ons submitted by restaurants.</Div>
-          </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Utensils}
+        title="Restaurant add-ons"
+        subtitle={loading ? 'Loading add-ons\u2026' : `${countLabel} approved add-on${countLabel === 1 ? '' : 's'} submitted by restaurants`}
+        breadcrumb={[{ label: 'Food' }, { label: 'Add-ons' }]}
+      />
 
-          <Div className="flex items-center gap-2" />
-        </Div>
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Input
+            type="search"
+            placeholder="Search add-ons or restaurant…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`${INPUT} flex-1 min-w-[200px]`}
+          />
+        </Toolbar>
+      </Card>
 
-        <Div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <Div className="relative w-full sm:w-96">
-            <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input
-              type="text"
-              placeholder="Search add-ons or restaurant..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-            />
-          </Div>
-          <Div className="text-sm text-slate-600">
-            Showing <Span className="font-semibold">{countLabel}</Span>
-          </Div>
-        </Div>
-      </Div>
-
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <Div>
-          <Table className="w-full" cols={[70, 80, 200, 180, 110, 132]}>
-            <Thead className="bg-slate-50 border-b border-slate-200">
-              <Tr>
-                <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SL</Th>
-                <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Image</Th>
-                <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</Th>
-                <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant</Th>
-                <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Price</Th>
-                <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>
-              </Tr>
-            </Thead>
-            <Tbody className="bg-white divide-y divide-slate-100">
-              {loading ? (
-                <Tr>
-                  <Td colSpan={6} className="px-6 py-20 text-center">
-                    <Div className="flex flex-col items-center justify-center">
-                      <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600 mb-2" />
-                      <P className="text-sm text-slate-500">Loading add-ons...</P>
-                    </Div>
-                  </Td>
-                </Tr>
-              ) : filteredAddons.length === 0 ? (
-                <Tr>
-                  <Td colSpan={6} className="px-6 py-20 text-center">
-                    <Div className="flex flex-col items-center justify-center">
-                      <P className="text-lg font-semibold text-slate-700 mb-1">No Data Found</P>
-                      <P className="text-sm text-slate-500">No add-ons match your search</P>
-                    </Div>
-                  </Td>
-                </Tr>
-              ) : (
-                filteredAddons.map((addon, index) => (
-                  <Tr key={String(addon.id || addon._id)} className="hover:bg-slate-50 transition-colors">
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center">
-                        <Img
-                          src={getAddonImage(addon)}
-                          alt={getAddonTitle(addon)}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/40';
-                          }}
-                        />
-                      </Div>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Div className="flex flex-col">
-                        <Span className="text-sm font-medium text-slate-900">{getAddonTitle(addon)}</Span>
-                        <Span className="text-xs text-slate-500">ID #{formatAddonId(addon.id || addon._id)}</Span>
-                      </Div>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Div className="flex flex-col">
-                        <Span className="text-sm text-slate-900">{addon?.restaurant?.name || '-'}</Span>
-                        {addon?.restaurant?.ownerPhone ? <Span className="text-xs text-slate-500">{addon.restaurant.ownerPhone}</Span> : null}
-                      </Div>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap">
-                      <Span className="text-sm font-medium text-slate-900">₹{Number(addon?.draft?.price ?? addon?.price ?? 0).toFixed(2)}</Span>
-                    </Td>
-                    <Td className="px-6 py-4 whitespace-nowrap text-center">
-                      <Div className="flex items-center justify-center gap-2 flex-wrap">
-                        <Button onClick={() => handleViewDetails(addon)} className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors">
-                          <UiIcon as={Eye} className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleEdit(addon)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                        >
-                          <UiIcon as={Pencil} className="w-4 h-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={() => handleDelete(addon)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
-                        >
-                          <UiIcon as={Trash2} className="w-4 h-4" />
-                          Delete
-                        </Button>
-                      </Div>
-                    </Td>
-                  </Tr>
-                ))
-              )}
-            </Tbody>
-          </Table>
-        </Div>
-
-        <AdminListPagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            try {
-              localStorage.setItem('admin_addons_pageSize', String(size));
-            } catch {}
-            setCurrentPage(1);
-          }}
-          itemLabel="add-ons"
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : filteredAddons.length === 0 ? (
+        <EmptyState
+          icon={Utensils}
+          title="No add-ons found"
+          message={debouncedSearch ? 'No add-on matches your search. Try another name or restaurant.' : 'Approved restaurant add-ons appear here.'}
         />
-      </Div>
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={['SL', 'Image', 'Name', 'Restaurant', 'Price', 'Actions']} />
+          <TBody>
+            {filteredAddons.map((addon, index) => (
+              <Row key={String(addon.id || addon._id)} last={index === filteredAddons.length - 1}>
+                <Cell width={COLS[0]} numberOfLines={1}>{String((currentPage - 1) * pageSize + index + 1)}</Cell>
+                <Cell width={COLS[1]}>
+                  <Div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 items-center justify-center">
+                    <Img
+                      src={getAddonImage(addon)}
+                      alt={getAddonTitle(addon)}
+                      className="w-full h-full"
+                      contentFit="cover"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/40';
+                      }}
+                    />
+                  </Div>
+                </Cell>
+                <Cell width={COLS[2]}>
+                  <Div className="gap-0.5">
+                    <Span className="text-sm font-medium text-slate-900">{getAddonTitle(addon)}</Span>
+                    <Span className="text-xs text-slate-500">ID #{formatAddonId(addon.id || addon._id)}</Span>
+                  </Div>
+                </Cell>
+                <Cell width={COLS[3]}>
+                  <Div className="gap-0.5">
+                    <Span className="text-sm text-slate-900">{addon?.restaurant?.name || '-'}</Span>
+                    {addon?.restaurant?.ownerPhone ? <Span className="text-xs text-slate-500">{addon.restaurant.ownerPhone}</Span> : null}
+                  </Div>
+                </Cell>
+                <Cell width={COLS[4]} numberOfLines={1}>
+                  {`\u20B9${Number(addon?.draft?.price ?? addon?.price ?? 0).toFixed(2)}`}
+                </Cell>
+                <Cell width={COLS[5]}>
+                  <Div className="flex-row items-center gap-1">
+                    <Button onClick={() => handleViewDetails(addon)} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="View add-on details">
+                      <UiIcon as={Eye} size={16} className="text-slate-600" />
+                    </Button>
+                    <Button onClick={() => handleEdit(addon)} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Edit add-on">
+                      <UiIcon as={Pencil} size={16} className="text-blue-600" />
+                    </Button>
+                    <Button onClick={() => handleDelete(addon)} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="Delete add-on">
+                      <UiIcon as={Trash2} size={16} className="text-red-600" />
+                    </Button>
+                  </Div>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          try {
+            localStorage.setItem('admin_addons_pageSize', String(size));
+          } catch {}
+          setCurrentPage(1);
+        }}
+        itemLabel="add-ons"
+      />
 
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
         <DialogContent className="max-w-xl p-0 overflow-hidden">
-          <DialogHeader className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <DialogTitle className="text-lg font-semibold text-slate-900">Add-on Details</DialogTitle>
+          <DialogHeader className="px-4 py-3 border-b border-slate-200">
+            <DialogTitle>Add-on details</DialogTitle>
           </DialogHeader>
           {selectedAddon && (
-            <Div className="p-6 space-y-5">
-              <Div className="flex items-center gap-4">
+            <Div className="p-4 gap-4">
+              <Div className="flex-row items-center gap-3">
                 <Img
                   src={getAddonImage(selectedAddon)}
                   alt={getAddonTitle(selectedAddon)}
-                  className="w-20 h-20 rounded-xl object-cover border border-slate-200"
+                  className="w-16 h-16 rounded-xl"
+                  contentFit="cover"
                   onError={(e) => {
                     e.target.src = 'https://via.placeholder.com/64';
                   }}
                 />
-                <Div>
-                  <P className="text-lg font-semibold text-slate-900">{getAddonTitle(selectedAddon)}</P>
-                  <P className="text-sm text-slate-500 mt-0.5">ID #{formatAddonId(selectedAddon.id || selectedAddon._id)}</P>
+                <Div className="flex-1 min-w-0 gap-0.5">
+                  <Span className="text-base font-semibold text-slate-900">{getAddonTitle(selectedAddon)}</Span>
+                  <Span className="text-sm text-slate-500">ID #{formatAddonId(selectedAddon.id || selectedAddon._id)}</Span>
                 </Div>
               </Div>
 
-              <Div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 border border-slate-200 rounded-lg p-4">
-                <P>
-                  <Span className="font-semibold text-slate-700">Restaurant:</Span>{' '}
-                  <Span className="text-slate-900">{selectedAddon?.restaurant?.name || '-'}</Span>
-                </P>
-                <P>
-                  <Span className="font-semibold text-slate-700">Price:</Span>{' '}
-                  <Span className="text-slate-900">₹{Number(selectedAddon?.draft?.price ?? 0).toFixed(2)}</Span>
-                </P>
-                <P>
-                  <Span className="font-semibold text-slate-700">Available:</Span>{' '}
-                  <Span className="text-slate-900">{selectedAddon?.isAvailable ? 'Yes' : 'No'}</Span>
-                </P>
+              <Div className="flex-row flex-wrap gap-3 rounded-lg bg-slate-50 p-3">
+                {[
+                  ['Restaurant', selectedAddon?.restaurant?.name || '-'],
+                  ['Price', `\u20B9${Number(selectedAddon?.draft?.price ?? 0).toFixed(2)}`],
+                ].map(([label, value]) => (
+                  <Div key={label} className="flex-1 min-w-[120px] gap-0.5">
+                    <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</Span>
+                    <Span className="text-sm text-slate-900">{value}</Span>
+                  </Div>
+                ))}
+                <Div className="flex-1 min-w-[120px] gap-1">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Available</Span>
+                  <StatusBadge status={selectedAddon?.isAvailable ? 'active' : 'inactive'} label={selectedAddon?.isAvailable ? 'Yes' : 'No'} />
+                </Div>
               </Div>
 
               {selectedAddon?.draft?.description ? (
-                <P className="text-sm text-slate-700 leading-relaxed">
-                  <Span className="font-semibold text-slate-800">Description:</Span> {selectedAddon.draft.description}
-                </P>
+                <Div className="gap-1">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Description</Span>
+                  <Span className="text-sm text-slate-700">{selectedAddon.draft.description}</Span>
+                </Div>
               ) : null}
             </Div>
           )}
@@ -377,37 +360,36 @@ export default function AddonsList() {
 
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="max-w-md p-0 overflow-hidden">
-          <DialogHeader className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <DialogTitle className="text-lg font-semibold text-slate-900">Edit Add-on</DialogTitle>
+          <DialogHeader className="px-4 py-3 border-b border-slate-200">
+            <DialogTitle>Edit add-on</DialogTitle>
           </DialogHeader>
-          <Div className="p-6 space-y-4">
-            <Div className="flex items-start gap-3">
+          <Div className="p-4 gap-3">
+            <Div className="flex-row items-start gap-3">
               {editImagePreview ? (
-                <Img src={editImagePreview} alt="Preview" className="w-16 h-16 rounded-md object-cover border" />
+                <Img src={editImagePreview} alt="Preview" className="w-16 h-16 rounded-lg" contentFit="cover" />
               ) : (
-                <Div className="w-16 h-16 rounded-md border border-dashed border-slate-300 flex items-center justify-center text-xs text-slate-500">
-                  No image
+                <Div className="w-16 h-16 rounded-lg border border-dashed border-slate-300 items-center justify-center">
+                  <Span className="text-xs text-slate-500">No image</Span>
                 </Div>
               )}
-              <Div className="flex-1">
-                <Label className="block text-sm font-medium text-slate-700 mb-1">Change Image</Label>
-                <Button
-                  type="button"
-                  onClick={async () => {
-                    const file = await pickImage();
-                    if (!file) return;
-                    setEditImageFile(file);
-                    setEditImagePreview(objectUrl(file));
-                  }}
-                  className="px-3 py-2 border border-slate-300 rounded-md text-sm text-slate-700 bg-white"
-                >
-                  Choose image
-                </Button>
-                <P className="text-xs text-slate-500">PNG, JPG, WEBP up to 5MB</P>
+              <Div className="flex-1 min-w-0">
+                <Field label="Change image" hint="PNG, JPG, WEBP up to 5MB">
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      const file = await pickImage();
+                      if (!file) return;
+                      setEditImageFile(file);
+                      setEditImagePreview(objectUrl(file));
+                    }}
+                    className={BTN_SECONDARY}
+                  >
+                    <Span className={BTN_TEXT_SECONDARY}>Choose image</Span>
+                  </Button>
+                </Field>
               </Div>
             </Div>
-            <Div>
-              <Label className="block text-sm font-medium text-slate-700 mb-1">Name</Label>
+            <Field label="Name" required>
               <Input
                 type="text"
                 value={editForm.name}
@@ -417,11 +399,10 @@ export default function AddonsList() {
                     name: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                className={INPUT}
               />
-            </Div>
-            <Div>
-              <Label className="block text-sm font-medium text-slate-700 mb-1">Price</Label>
+            </Field>
+            <Field label="Price" required>
               <Input
                 type="number"
                 min="0"
@@ -433,11 +414,10 @@ export default function AddonsList() {
                     price: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                className={INPUT}
               />
-            </Div>
-            <Div>
-              <Label className="block text-sm font-medium text-slate-700 mb-1">Description</Label>
+            </Field>
+            <Field label="Description">
               <Textarea
                 rows={3}
                 value={editForm.description}
@@ -447,10 +427,10 @@ export default function AddonsList() {
                     description: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
               />
-            </Div>
-            <Div className="flex items-center gap-2">
+            </Field>
+            <Div className="flex-row items-center gap-2 h-11">
               <Switch
                 checked={editForm.isAvailable}
                 onCheckedChange={(checked) =>
@@ -463,61 +443,35 @@ export default function AddonsList() {
               <Span className="text-sm text-slate-700">Available</Span>
             </Div>
           </Div>
-          <Div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-2">
-            <Button
-              type="button"
-              onClick={() => setShowEditModal(false)}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-            >
-              Cancel
+          <Div className="px-4 py-3 border-t border-slate-200 flex-row flex-wrap justify-end gap-2">
+            <Button type="button" onClick={() => setShowEditModal(false)} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button
-              type="button"
-              onClick={handleSaveEdit}
-              disabled={submittingAction}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submittingAction ? 'Saving...' : 'Save'}
+            <Button type="button" onClick={handleSaveEdit} disabled={submittingAction} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>{submittingAction ? 'Saving\u2026' : 'Save'}</Span>
             </Button>
           </Div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && setPendingDelete(null)}>
-        <DialogContent className="max-w-md w-full rounded-xl p-0 overflow-hidden shadow-xl">
-          <Div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-            <DialogTitle className="text-lg font-semibold text-slate-900">Delete add-on?</DialogTitle>
-            <Button
-              type="button"
-              onClick={() => setPendingDelete(null)}
-              className="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
-              accessibilityLabel="Close"
-            >
-              ✕
-            </Button>
+        <DialogContent className="max-w-md w-full rounded-xl p-0 overflow-hidden">
+          <DialogHeader className="px-4 py-3 border-b border-slate-200">
+            <DialogTitle>Delete add-on?</DialogTitle>
+          </DialogHeader>
+          <Div className="px-4 py-4">
+            <Span className="text-sm text-slate-700">This action cannot be undone.</Span>
           </Div>
-          <Div className="px-5 pt-4 pb-2">
-            <P className="text-sm text-slate-700">This action cannot be undone.</P>
-          </Div>
-          <Div className="px-5 py-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50">
-            <Button
-              type="button"
-              onClick={() => setPendingDelete(null)}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-100 transition-colors"
-            >
-              No
+          <Div className="px-4 py-3 border-t border-slate-200 flex-row flex-wrap justify-end gap-2">
+            <Button type="button" onClick={() => setPendingDelete(null)} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>No</Span>
             </Button>
-            <Button
-              type="button"
-              onClick={confirmDelete}
-              disabled={submittingAction}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submittingAction ? 'Deleting...' : 'Yes, delete'}
+            <Button type="button" onClick={confirmDelete} disabled={submittingAction} className={BTN_DANGER}>
+              <Span className={BTN_TEXT_PRIMARY}>{submittingAction ? 'Deleting\u2026' : 'Yes, delete'}</Span>
             </Button>
           </Div>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

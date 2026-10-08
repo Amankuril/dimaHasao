@@ -5,7 +5,24 @@ import { MapPin, ArrowLeft, Save, X, Shapes, Search } from 'lucide-react-native'
 import { adminAPI } from '../../../../api/food';
 import { getGoogleMapsApiKey } from '../../../utils/googleMapsApiKey';
 import { EditablePolygon, GMap, Polygon, fromLatLng, regionFor, toLatLng } from '../../../../components/maps';
-import { Button, Div, Form, H1, H2, Input, Label, Option, P, ScrollDiv, Select, Small, Span, Strong, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Form, Input, Option, Select, Span, Strong, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  LoadingState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_DANGER,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
 import { alert } from '../../../../lib/webShim';
 import PlacesSearchInput from './PlacesSearchInput';
 import { DotMarker, INDIA_REGION, InfoCard, MapTypeToggle, regionAtZoom, useMapTouchLock, zonePath } from './zoneMapParts';
@@ -46,6 +63,7 @@ export default function AddZone() {
   const [mapType, setMapType] = useState('standard');
   const [loading, setLoading] = useState(false);
   const [scrollEnabled, touchLock] = useMapTouchLock();
+  const { tablet, width } = useLayoutWidth();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -289,240 +307,189 @@ export default function AddZone() {
       setLoading(false);
     }
   };
+  // The map fills the width it is given, tall enough to draw on without filling a tablet screen.
+  const mapHeight = Math.max(320, Math.min(tablet ? 520 : 420, Math.round(width * 1.1)));
   return (
-    <ScrollDiv className="min-h-screen bg-slate-50" scrollEnabled={scrollEnabled}>
-      <Div className="p-4 lg:p-6 max-w-7xl mx-auto">
-        {/* Header */}
-        <Div className="flex items-center gap-4 mb-6">
-          <Button onClick={() => navigate('/admin/food/zone-setup')} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
-            <UiIcon as={ArrowLeft} className="w-5 h-5 text-slate-600" />
+    <AdminPage maxWidth={1200} scrollEnabled={scrollEnabled}>
+      <PageHeader
+        icon={MapPin}
+        title={isEditMode ? 'Edit Zone' : 'Add New Zone'}
+        subtitle={isEditMode ? 'Update this delivery zone' : 'Create a delivery zone for customers'}
+        breadcrumb={[
+          { label: 'Food' },
+          { label: 'Zone setup', onPress: () => navigate('/admin/food/zone-setup') },
+          { label: isEditMode ? 'Edit zone' : 'Add zone' },
+        ]}
+        actions={
+          <Button onClick={() => navigate('/admin/food/zone-setup')} className={BTN_SECONDARY}>
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Back to Zones</Span>
           </Button>
-          <Div className="flex-1 flex items-center gap-3">
-            <Div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
-              <UiIcon as={MapPin} className="w-5 h-5 text-white" />
-            </Div>
-            <Div className="flex-1">
-              <H1 className="text-2xl font-bold text-slate-900">{isEditMode ? 'Edit Zone' : 'Add New Zone'}</H1>
-              <P className="text-sm text-slate-600">{isEditMode ? 'Update delivery zone for customer' : 'Create a delivery zone for customer'}</P>
-            </Div>
-          </Div>
-        </Div>
+        }
+      />
 
-        <Form onSubmit={handleSubmit}>
-          <Div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Panel - Form */}
-            <Div className="space-y-6">
-              <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-                <H2 className="text-lg font-semibold text-slate-900 mb-4">Zone Details</H2>
+      <Form onSubmit={handleSubmit}>
+        <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+          {/* Zone details */}
+          <Card className="gap-4">
+            <SectionTitle>Zone Details</SectionTitle>
+            <Field label="Country" required>
+              <Select value={formData.country} onChange={(e) => handleInputChange('country', e.target.value)} className={INPUT} required>
+                <Option value="India">India</Option>
+              </Select>
+            </Field>
+            <Field label="Zone name" required hint="Shown to admins when assigning restaurants">
+              <Input
+                type="text"
+                value={formData.zoneName}
+                onChange={(e) => handleInputChange('zoneName', e.target.value)}
+                placeholder="Enter zone name"
+                className={INPUT}
+                required
+              />
+            </Field>
+            <Field label="Unit" required>
+              <Select value={formData.unit} onChange={(e) => handleInputChange('unit', e.target.value)} className={INPUT} required>
+                <Option value="kilometer">Kilometers (km)</Option>
+                <Option value="miles">Miles (mi)</Option>
+              </Select>
+            </Field>
+          </Card>
 
-                <Div className="space-y-4">
-                  {/* Country Selection */}
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Country <Span className="text-red-500">*</Span>
-                    </Label>
-                    <Select
-                      value={formData.country}
-                      onChange={(e) => handleInputChange('country', e.target.value)}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <Option value="India">India</Option>
-                    </Select>
-                  </Div>
-
-                  {/* Zone Name */}
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Create Zone name <Span className="text-red-500">*</Span>
-                    </Label>
-                    <Input
-                      type="text"
-                      value={formData.zoneName}
-                      onChange={(e) => handleInputChange('zoneName', e.target.value)}
-                      placeholder="Enter zone name"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </Div>
-
-                  {/* Select Unit */}
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Select Unit <Span className="text-red-500">*</Span>
-                    </Label>
-                    <Select
-                      value={formData.unit}
-                      onChange={(e) => handleInputChange('unit', e.target.value)}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <Option value="kilometer">Kilometers (km)</Option>
-                      <Option value="miles">Miles (mi)</Option>
-                    </Select>
-                  </Div>
-                </Div>
-              </Div>
-            </Div>
-
-            {/* Right Panel - Map */}
-            <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <Div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <H2 className="text-lg font-semibold text-slate-900">Draw Zone on Map</H2>
-                <Div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    onClick={toggleDrawingMode}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isDrawing ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                  >
-                    <UiIcon as={Shapes} className="w-4 h-4" />
-                    <Span>{isDrawing ? 'Finish Drawing' : 'Start Drawing'}</Span>
+          {/* Map */}
+          <Card className="gap-3">
+            <SectionTitle
+              action={
+                <Div className="flex-row items-center gap-2">
+                  <Button type="button" onClick={toggleDrawingMode} className={isDrawing ? BTN_DANGER : BTN_PRIMARY}>
+                    <UiIcon as={Shapes} size={16} className="text-white" />
+                    <Span className={BTN_TEXT_PRIMARY}>{isDrawing ? 'Finish' : 'Draw'}</Span>
                   </Button>
                   {coordinates.length > 0 && (
-                    <Button
-                      type="button"
-                      onClick={clearDrawing}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
-                    >
-                      <UiIcon as={X} className="w-4 h-4" />
-                      <Span>Clear</Span>
+                    <Button type="button" onClick={clearDrawing} className={BTN_SECONDARY}>
+                      <UiIcon as={X} size={16} className="text-slate-600" />
+                      <Span className={BTN_TEXT_SECONDARY}>Clear</Span>
                     </Button>
                   )}
                 </Div>
-              </Div>
-
-              <Div className="mb-4">
-                <Div className="relative">
-                  <UiIcon as={Search} className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                  <PlacesSearchInput
-                    placeholder="Search location on map..."
-                    className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg"
-                    onPlace={(place) => {
-                      const lat = place?.geometry?.location?.lat?.();
-                      const lng = place?.geometry?.location?.lng?.();
-                      if (Number.isFinite(lat) && Number.isFinite(lng) && mapInstanceRef.current) {
-                        mapInstanceRef.current.animateToRegion(regionAtZoom(lat, lng, 15), 300); // Zoom in when location is selected
-                      }
-                    }}
-                  />
-                </Div>
-                {isDrawing && (
-                  <P className="text-xs text-blue-600 mt-2">
-                    Click on the map to add points ({MIN_POINTS}&ndash;{MAX_POINTS}), then click <Strong>Finish Drawing</Strong>.
-                  </P>
-                )}
-                {coordinates.length > 0 && (
-                  <P className="text-xs text-slate-600 mt-2">
-                    Points drawn: <Strong>{coordinates.length}</Strong>
-                    {coordinates.length < 3 && <Span className="text-red-600 ml-2"> (Minimum 3 points required)</Span>}
-                  </P>
-                )}
-              </Div>
-
-              <Div className="relative h-[600px]" {...touchLock}>
-                <GMap
-                  ref={mapInstanceRef}
-                  className="w-full h-full rounded-lg"
-                  initialRegion={INDIA_REGION}
-                  mapType={mapType}
-                  zoomControlEnabled
-                  onMapReady={() => setMapLoading(false)}
-                  onPress={handleMapPress}
-                >
-                  {existingZones.map((zone) => {
-                    const path = zonePath(zone.coordinates);
-                    if (path.length < 3) return null;
-                    return (
-                      <Polygon
-                        key={zone._id || zone.id}
-                        coordinates={path}
-                        strokeColor="rgba(59,130,246,0.6)"
-                        strokeWidth={2}
-                        fillColor="rgba(59,130,246,0.15)"
-                        zIndex={0}
-                        tappable={!isDrawing}
-                        onPress={() => setInfoZone(zone)}
-                      />
-                    );
-                  })}
-                  {isDrawing ? (
-                    <>
-                      {drawingPreview.length >= 2 ? (
-                        <Polygon coordinates={drawingPreview.map(toLatLng)} strokeColor="#9333ea" strokeWidth={2} fillColor="rgba(147,51,234,0.35)" zIndex={1} tappable={false} />
-                      ) : null}
-                      {drawPoints.map((p, i) => (
-                        <DotMarker key={`d${i}`} coordinate={toLatLng(p)} title={`Point ${i + 1}`} />
-                      ))}
-                    </>
-                  ) : coordinates.length >= 3 ? (
-                    <EditablePolygon
-                      points={coordinates}
-                      onChange={handlePolygonEdit}
-                      strokeColor="rgba(147,51,234,0.8)"
-                      strokeWidth={3}
-                      fillColor="rgba(147,51,234,0.35)"
-                      vertexColor="#9333ea"
-                    />
-                  ) : null}
-                </GMap>
-                <MapTypeToggle value={mapType} onChange={setMapType} />
-                {infoZone && !isDrawing ? (
-                  <InfoCard onClose={() => setInfoZone(null)}>
-                    <Strong className="text-sm text-slate-900">{infoZone.name || infoZone.zoneName || 'Unnamed Zone'}</Strong>
-                    <Small className="text-xs text-slate-600">Country: {infoZone.country || 'N/A'}</Small>
-                  </InfoCard>
-                ) : null}
-
-                {mapLoading && (
-                  <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg" pointerEvents="none">
-                    <Div className="text-center">
-                      <Div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></Div>
-                      <P className="text-slate-600">Loading map...</P>
-                    </Div>
-                  </Div>
-                )}
-
-                {!googleMapsApiKey && !mapLoading && (
-                  <Div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
-                    <Div className="text-center p-6">
-                      <UiIcon as={MapPin} className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                      <P className="text-sm text-slate-600">Google Maps API key not found</P>
-                    </Div>
-                  </Div>
-                )}
-              </Div>
-            </Div>
-          </Div>
-
-          {/* Action Buttons */}
-          <Div className="flex justify-end gap-3 mt-6">
-            <Button
-              type="button"
-              onClick={() => navigate('/admin/food/zone-setup')}
-              className="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              }
             >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading || coordinates.length < 3 || !formData.zoneName || !formData.country}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <Div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></Div>
-                  <Span>Saving...</Span>
-                </>
-              ) : (
-                <>
-                  <UiIcon as={Save} className="w-4 h-4" />
-                  <Span>Save Zone</Span>
-                </>
+              Draw Zone on Map
+            </SectionTitle>
+
+            <Div className="gap-2">
+              <Div className="flex-row items-center gap-2">
+                <UiIcon as={Search} size={16} className="text-slate-400" />
+                <PlacesSearchInput
+                  placeholder="Search location on map"
+                  className={`${INPUT} flex-1`}
+                  onPlace={(place) => {
+                    const lat = place?.geometry?.location?.lat?.();
+                    const lng = place?.geometry?.location?.lng?.();
+                    if (Number.isFinite(lat) && Number.isFinite(lng) && mapInstanceRef.current) {
+                      mapInstanceRef.current.animateToRegion(regionAtZoom(lat, lng, 15), 300); // Zoom in when location is selected
+                    }
+                  }}
+                />
+              </Div>
+              {isDrawing && (
+                <Text style={tw`text-xs text-blue-600`}>
+                  Tap the map to add points ({MIN_POINTS}–{MAX_POINTS}), then tap Finish.
+                </Text>
               )}
-            </Button>
-          </Div>
-        </Form>
-      </Div>
-    </ScrollDiv>
+              {coordinates.length > 0 && (
+                <Text style={tw`text-xs text-slate-500`}>
+                  Points drawn: {coordinates.length}
+                  {coordinates.length < 3 ? ' · minimum 3 required' : ''}
+                </Text>
+              )}
+            </Div>
+
+            <Div className="relative rounded-lg overflow-hidden" style={{ height: mapHeight }} {...touchLock}>
+              <GMap
+                ref={mapInstanceRef}
+                className="w-full h-full bg-slate-100"
+                initialRegion={INDIA_REGION}
+                mapType={mapType}
+                zoomControlEnabled
+                onMapReady={() => setMapLoading(false)}
+                onPress={handleMapPress}
+              >
+                {existingZones.map((zone) => {
+                  const path = zonePath(zone.coordinates);
+                  if (path.length < 3) return null;
+                  return (
+                    <Polygon
+                      key={zone._id || zone.id}
+                      coordinates={path}
+                      strokeColor="rgba(59,130,246,0.6)"
+                      strokeWidth={2}
+                      fillColor="rgba(59,130,246,0.15)"
+                      zIndex={0}
+                      tappable={!isDrawing}
+                      onPress={() => setInfoZone(zone)}
+                    />
+                  );
+                })}
+                {isDrawing ? (
+                  <>
+                    {drawingPreview.length >= 2 ? (
+                      <Polygon coordinates={drawingPreview.map(toLatLng)} strokeColor="#9333ea" strokeWidth={2} fillColor="rgba(147,51,234,0.35)" zIndex={1} tappable={false} />
+                    ) : null}
+                    {drawPoints.map((p, i) => (
+                      <DotMarker key={`d${i}`} coordinate={toLatLng(p)} title={`Point ${i + 1}`} />
+                    ))}
+                  </>
+                ) : coordinates.length >= 3 ? (
+                  <EditablePolygon
+                    points={coordinates}
+                    onChange={handlePolygonEdit}
+                    strokeColor="rgba(147,51,234,0.8)"
+                    strokeWidth={3}
+                    fillColor="rgba(147,51,234,0.35)"
+                    vertexColor="#9333ea"
+                  />
+                ) : null}
+              </GMap>
+              <MapTypeToggle value={mapType} onChange={setMapType} />
+              {infoZone && !isDrawing ? (
+                <InfoCard onClose={() => setInfoZone(null)}>
+                  <Strong className="text-sm font-semibold text-slate-900">{infoZone.name || infoZone.zoneName || 'Unnamed Zone'}</Strong>
+                  <Span className="text-xs text-slate-500">Country: {infoZone.country || 'N/A'}</Span>
+                </InfoCard>
+              ) : null}
+
+              {mapLoading && (
+                <Div className="absolute inset-0 items-center justify-center bg-slate-100" pointerEvents="none">
+                  <LoadingState label="Loading map…" className="border-0 bg-transparent" />
+                </Div>
+              )}
+
+              {!googleMapsApiKey && !mapLoading && (
+                <Div className="absolute inset-0 items-center justify-center bg-slate-100 px-6">
+                  <UiIcon as={MapPin} size={28} className="text-slate-400 mb-2" />
+                  <Text style={tw`text-sm text-slate-500 text-center`}>Google Maps API key not found</Text>
+                </Div>
+              )}
+            </Div>
+          </Card>
+        </Div>
+
+        {/* Actions */}
+        <Div className="flex-row flex-wrap items-center justify-end gap-2 mt-4">
+          <Button type="button" onClick={() => navigate('/admin/food/zone-setup')} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+          </Button>
+          <Button
+            type="submit"
+            disabled={loading || coordinates.length < 3 || !formData.zoneName || !formData.country}
+            className={`${BTN_PRIMARY} ${loading || coordinates.length < 3 || !formData.zoneName || !formData.country ? 'opacity-50' : ''}`}
+          >
+            <UiIcon as={Save} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>{loading ? 'Saving…' : 'Save Zone'}</Span>
+          </Button>
+        </Div>
+      </Form>
+    </AdminPage>
   );
 }

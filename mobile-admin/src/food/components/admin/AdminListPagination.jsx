@@ -3,7 +3,9 @@
 /**
  * Orders-style list pagination: rows-per-page + Prev/Next + numbered pages.
  */
-import { Button, Div, Option, Select, Span } from '../../../components/web';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { Button, Div, Option, Select, Span, Icon as UiIcon } from '../../../components/web';
+import { BTN_SECONDARY, BTN_TEXT_SECONDARY } from '../../../admin/ui';
 export default function AdminListPagination({
   currentPage = 1,
   pageSize = 20,
@@ -24,9 +26,9 @@ export default function AdminListPagination({
     if (safe !== page) onPageChange?.(safe);
   };
   return (
-    <Div className={`flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-white px-4 py-4 ${className}`}>
-      <Div className="flex items-center gap-3">
-        <Span className="text-sm text-slate-500 font-medium">Rows per page:</Span>
+    <Div className={`flex-row flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 ${className}`}>
+      <Div className="flex-row items-center gap-2">
+        <Span className="text-xs text-slate-500">Rows</Span>
         <Select
           value={size}
           onChange={(e) => {
@@ -34,7 +36,7 @@ export default function AdminListPagination({
             onPageSizeChange?.(next);
             onPageChange?.(1);
           }}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm min-w-[72px]"
+          className="h-10 min-w-[72px] rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900"
         >
           {pageSizeOptions.map((opt) => (
             <Option key={opt} value={opt}>
@@ -42,24 +44,31 @@ export default function AdminListPagination({
             </Option>
           ))}
         </Select>
+        <Span className="text-xs text-slate-500">
+          {totalCount.toLocaleString('en-IN')} {itemLabel} · page {page} of {totalPages}
+        </Span>
       </Div>
 
-      <Div className="flex flex-row justify-between w-full">
+      <Div className="flex-row items-center gap-2">
         <Button
           type="button"
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
-          className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
+          accessibilityLabel="Previous page"
+          className={`${BTN_SECONDARY} ${page === 1 ? 'opacity-50' : ''}`}
         >
-          Previous
+          <UiIcon as={ChevronLeft} size={14} className="text-slate-600" />
+          <Span className={BTN_TEXT_SECONDARY}>Prev</Span>
         </Button>
         <Button
           type="button"
           onClick={() => setPage(page + 1)}
           disabled={page >= totalPages}
-          className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
+          accessibilityLabel="Next page"
+          className={`${BTN_SECONDARY} ${page >= totalPages ? 'opacity-50' : ''}`}
         >
-          Next
+          <Span className={BTN_TEXT_SECONDARY}>Next</Span>
+          <UiIcon as={ChevronRight} size={14} className="text-slate-600" />
         </Button>
       </Div>
     </Div>

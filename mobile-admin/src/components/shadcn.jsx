@@ -27,8 +27,14 @@ const flat = (...classes) => StyleSheet.flatten(tw.style(cn(...classes))) || {};
 function Slot({ asChild, children, onPress, ...rest }) {
   if (asChild && isValidElement(children)) {
     const own = children.props.onClick || children.props.onPress;
+    // cloneElement writes an explicit `undefined` over the child's own prop, so
+    // a trigger passing `className={undefined}` would strip the child's classes.
+    const given = {};
+    Object.keys(rest).forEach((k) => {
+      if (rest[k] !== undefined) given[k] = rest[k];
+    });
     return cloneElement(children, {
-      ...rest,
+      ...given,
       onClick: (e) => {
         own?.(e);
         onPress?.(e);

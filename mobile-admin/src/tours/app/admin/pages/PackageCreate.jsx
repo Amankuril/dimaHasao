@@ -11,9 +11,9 @@ import React, { useState } from 'react';
 import { useNavigate } from '../../../../lib/webRouter';
 import adminService from '../../../services/adminService';
 import PackageForm from '../../../components/PackageForm';
-import { PageHeader } from '../components/ui';
+import { AdminPage, Card, PageHeader } from '../../../../admin/ui';
 import { toast } from '../../../../lib/notify';
-import { Div, Input, P, ScrollDiv, Section, Strong } from '../../../../components/web';
+import { CheckBox, Div, P, Strong } from '../../../../components/web';
 const PackageCreate = () => {
   const navigate = useNavigate();
   const [publishImmediately, setPublishImmediately] = useState(true);
@@ -37,26 +37,30 @@ const PackageCreate = () => {
     }
   };
   return (
-    <ScrollDiv className="p-4 pb-20">
+    <AdminPage maxWidth={720}>
       <PackageForm
         onSubmit={submit}
         saving={saving}
         submitLabel={publishImmediately ? 'Create and publish' : 'Save as draft'}
         onCancel={() => navigate('/tours/admin/packages')}
       >
-        <PageHeader title="Create a package" subtitle="Published to the travellers' app as soon as you save, unless you keep it as a draft." />
+        <PageHeader
+          title="Create a package"
+          subtitle="Published to the travellers' app as soon as you save, unless you keep it as a draft."
+          breadcrumb={[{ label: 'Tours' }, { label: 'Packages' }, { label: 'New' }]}
+        />
 
-        <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-          <Div className="flex items-start gap-2.5 text-sm text-gray-700">
-            <Input type="checkbox" checked={publishImmediately} onChange={(e) => setPublishImmediately(e.target.checked)} className="mt-0.5" />
-            <Div className="flex-1">
-              <Strong>Publish immediately</Strong>
-              <P className="text-xs text-gray-400">Turn this off to save it as a draft that travellers cannot see yet.</P>
+        <Card className="mb-4">
+          <Div className="flex-row items-start gap-3">
+            <CheckBox checked={publishImmediately} onChange={(e) => setPublishImmediately(e.target.checked)} />
+            <Div className="flex-1 min-w-0">
+              <Strong className="text-sm text-slate-900">Publish immediately</Strong>
+              <P className="text-xs text-slate-500 mt-0.5">Turn this off to save it as a draft that travellers cannot see yet.</P>
             </Div>
           </Div>
-        </Section>
+        </Card>
       </PackageForm>
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default PackageCreate;

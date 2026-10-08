@@ -1,7 +1,22 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/JoinUsPageSetup.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { Plus, Trash2, Settings, ChevronDown } from 'lucide-react-native';
-import { Button, Div, Form, H1, H2, Input, Label, Option, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import { Plus, Trash2, ClipboardList } from 'lucide-react-native';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Input, Label, Option, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { alert } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -25,8 +40,15 @@ const defaultFields = [
   'Owner First Name',
 ];
 const fieldTypes = ['Text', 'Date', 'File Upload', 'Number', 'Email', 'Phone'];
+const FORMATS = [
+  { key: 'jpg', label: 'JPG, JPEG or PNG' },
+  { key: 'pdf', label: 'PDF' },
+  { key: 'docs', label: 'DOCS' },
+];
 export default function JoinUsPageSetup() {
   const [activeTab, setActiveTab] = useState('restaurant');
+  const { tablet } = useLayoutWidth();
+  const col = tablet ? { width: '48.5%' } : { width: '100%' };
   const [customFields, setCustomFields] = useState([
     {
       id: 1,
@@ -166,191 +188,161 @@ export default function JoinUsPageSetup() {
     ]);
   };
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto max-w-7xl">
-        {/* Page Title */}
-        <Div className="mb-3">
-          <H1 className="text-lg font-bold text-slate-900">New Join Request Form Setup</H1>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={ClipboardList}
+        title="New Join Request Form Setup"
+        subtitle="Choose which fields partners fill in when they apply"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Join request form' }]}
+      />
+
+      <Card className="mb-4" padded={false}>
+        <Div className="flex-row flex-wrap gap-2 p-2">
+          <Button
+            onClick={() => setActiveTab('restaurant')}
+            className={`flex-row items-center justify-center h-11 px-4 rounded-lg ${activeTab === 'restaurant' ? 'bg-blue-600' : 'bg-white'}`}
+          >
+            <Span className={activeTab === 'restaurant' ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>Restaurant form</Span>
+          </Button>
+          <Button
+            onClick={() => setActiveTab('deliveryman')}
+            className={`flex-row items-center justify-center h-11 px-4 rounded-lg ${activeTab === 'deliveryman' ? 'bg-blue-600' : 'bg-white'}`}
+          >
+            <Span className={activeTab === 'deliveryman' ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>Deliveryman form</Span>
+          </Button>
         </Div>
+      </Card>
 
-        {/* Tabs */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3">
-          <Div className="flex gap-2">
-            <Button
-              onClick={() => setActiveTab('restaurant')}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors border-b-2 ${activeTab === 'restaurant' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
-            >
-              Restaurant Registration Form
-            </Button>
-            <Button
-              onClick={() => setActiveTab('deliveryman')}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors border-b-2 ${activeTab === 'deliveryman' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
-            >
-              DeliveryMan Registration Form
-            </Button>
+      <Form onSubmit={handleSubmit}>
+        <Card className="mb-4">
+          <SectionTitle>Default input fields</SectionTitle>
+          <Div className="flex-row flex-wrap gap-2">
+            {defaultFields.map((field, index) => (
+              <Div key={index} className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                <Span className="text-xs text-slate-700">{field}</Span>
+              </Div>
+            ))}
           </Div>
-        </Div>
+        </Card>
 
-        <Form onSubmit={handleSubmit}>
-          {/* Default Input Fields */}
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-3 relative">
-            <H2 className="text-sm font-semibold text-slate-900 mb-3">Default Input Fields</H2>
-            <Div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {defaultFields.map((field, index) => (
-                <Div key={index} className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
-                  <Span className="text-xs text-slate-700">{field}</Span>
-                </Div>
-              ))}
-            </Div>
-            <UiIcon as={Settings} className="absolute top-4 right-4 w-4 h-4 text-slate-400" />
-          </Div>
-
-          {/* Custom Input Fields */}
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-3">
-            <Div className="flex items-center justify-between mb-4">
-              <H2 className="text-sm font-semibold text-slate-900">Custom Input Fields</H2>
-              <Button
-                type="button"
-                onClick={handleAddField}
-                className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
-              >
-                <UiIcon as={Plus} className="w-3.5 h-3.5" />
-                <Span>Add New Field</Span>
+        <Card className="mb-4">
+          <SectionTitle
+            action={
+              <Button type="button" onClick={handleAddField} className={BTN_PRIMARY}>
+                <UiIcon as={Plus} size={16} className="text-white" />
+                <Span className={BTN_TEXT_PRIMARY}>Add field</Span>
               </Button>
-            </Div>
+            }
+          >
+            Custom input fields
+          </SectionTitle>
 
-            <Div className="space-y-4">
-              {customFields.map((field) => (
-                <Div key={field.id} className="p-4 border border-slate-200 rounded-lg bg-slate-50">
-                  <Div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                    {/* Type Dropdown */}
-                    <Div>
-                      <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Type</Label>
-                      <Div className="relative">
-                        <Select
-                          value={field.type}
-                          onChange={(e) => handleFieldChange(field.id, 'type', e.target.value)}
-                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
-                        >
-                          {fieldTypes.map((type) => (
-                            <Option key={type} value={type}>
-                              {type}
-                            </Option>
-                          ))}
-                        </Select>
-                        <UiIcon as={ChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
-                      </Div>
-                    </Div>
+          <Div className="gap-3">
+            {customFields.map((field) => (
+              <Div key={field.id} className="p-3 border border-slate-200 rounded-lg bg-slate-50 gap-3">
+                <Div className="flex-row flex-wrap gap-3">
+                  <Div style={col}>
+                    <Field label="Type">
+                      <Select value={field.type} onChange={(e) => handleFieldChange(field.id, 'type', e.target.value)} className={INPUT}>
+                        {fieldTypes.map((type) => (
+                          <Option key={type} value={type}>
+                            {type}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Field>
+                  </Div>
 
-                    {/* Input Field Title */}
-                    <Div>
-                      <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Input Field Title</Label>
+                  <Div style={col}>
+                    <Field label="Input field title">
                       <Input
                         type="text"
                         value={field.title}
                         onChange={(e) => handleFieldChange(field.id, 'title', e.target.value)}
                         placeholder="Enter field title"
-                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className={INPUT}
                       />
-                    </Div>
+                    </Field>
+                  </Div>
 
-                    {/* Place Holder */}
-                    {field.type !== 'File Upload' && (
-                      <Div>
-                        <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Place Holder</Label>
+                  {field.type !== 'File Upload' ? (
+                    <Div style={col}>
+                      <Field label="Placeholder">
                         <Input
                           type="text"
                           value={field.placeholder}
                           onChange={(e) => handleFieldChange(field.id, 'placeholder', e.target.value)}
                           placeholder="Enter placeholder"
-                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className={INPUT}
                         />
-                      </Div>
-                    )}
-                  </Div>
-
-                  {/* File Upload Specific Options */}
-                  {field.type === 'File Upload' && (
-                    <Div className="space-y-3 mb-3">
-                      <Div className="flex items-center gap-2">
-                        <Input
-                          type="checkbox"
-                          checked={field.uploadMultiple}
-                          onChange={(e) => handleFieldChange(field.id, 'uploadMultiple', e.target.checked)}
-                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                        />
-                        <Label className="text-xs text-slate-700">Upload Multiple Files</Label>
-                      </Div>
-                      <Div>
-                        <Label className="block text-xs font-semibold text-slate-700 mb-2">File Format</Label>
-                        <Div className="flex flex-wrap gap-3">
-                          <Div className="flex items-center gap-2">
-                            <Input
-                              type="checkbox"
-                              checked={field.fileFormats.jpg}
-                              onChange={() => handleFileFormatChange(field.id, 'jpg')}
-                              className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                            />
-                            <Label className="text-xs text-slate-700">JPG JPEG or PNG</Label>
-                          </Div>
-                          <Div className="flex items-center gap-2">
-                            <Input
-                              type="checkbox"
-                              checked={field.fileFormats.pdf}
-                              onChange={() => handleFileFormatChange(field.id, 'pdf')}
-                              className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                            />
-                            <Label className="text-xs text-slate-700">PDF</Label>
-                          </Div>
-                          <Div className="flex items-center gap-2">
-                            <Input
-                              type="checkbox"
-                              checked={field.fileFormats.docs}
-                              onChange={() => handleFileFormatChange(field.id, 'docs')}
-                              className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                            />
-                            <Label className="text-xs text-slate-700">DOCS</Label>
-                          </Div>
-                        </Div>
-                      </Div>
+                      </Field>
                     </Div>
-                  )}
+                  ) : null}
+                </Div>
 
-                  {/* Is Required and Delete */}
-                  <Div className="flex items-center justify-between">
-                    <Div className="flex items-center gap-2">
+                {field.type === 'File Upload' ? (
+                  <Div className="gap-2">
+                    <Div className="flex-row items-center gap-2 min-h-11">
                       <Input
                         type="checkbox"
-                        checked={field.isRequired}
-                        onChange={(e) => handleFieldChange(field.id, 'isRequired', e.target.checked)}
-                        className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                        checked={field.uploadMultiple}
+                        onChange={(e) => handleFieldChange(field.id, 'uploadMultiple', e.target.checked)}
+                        className="w-5 h-5 border-slate-300 rounded"
                       />
-                      <Label className="text-xs text-slate-700">Is Required ?</Label>
+                      <Label className="text-sm text-slate-700">Upload multiple files</Label>
                     </Div>
-                    <Button type="button" onClick={() => handleDeleteField(field.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors">
-                      <UiIcon as={Trash2} className="w-3.5 h-3.5" />
-                    </Button>
+                    <Div className="gap-1.5">
+                      <Text style={tw`text-sm font-medium text-slate-700`}>File format</Text>
+                      <Div className="flex-row flex-wrap gap-3">
+                        {FORMATS.map((fmt) => (
+                          <Div key={fmt.key} className="flex-row items-center gap-2 min-h-11">
+                            <Input
+                              type="checkbox"
+                              checked={field.fileFormats[fmt.key]}
+                              onChange={() => handleFileFormatChange(field.id, fmt.key)}
+                              className="w-5 h-5 border-slate-300 rounded"
+                            />
+                            <Label className="text-sm text-slate-700">{fmt.label}</Label>
+                          </Div>
+                        ))}
+                      </Div>
+                    </Div>
                   </Div>
-                </Div>
-              ))}
-            </Div>
-          </Div>
+                ) : null}
 
-          {/* Action Buttons */}
-          <Div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              onClick={handleReset}
-              className="px-4 py-2 text-xs font-medium bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              Reset
-            </Button>
-            <Button type="submit" className="px-4 py-2 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              Submit
-            </Button>
+                <Div className="flex-row items-center justify-between gap-2 pt-2 border-t border-slate-200">
+                  <Div className="flex-row items-center gap-2 min-h-11">
+                    <Input
+                      type="checkbox"
+                      checked={field.isRequired}
+                      onChange={(e) => handleFieldChange(field.id, 'isRequired', e.target.checked)}
+                      className="w-5 h-5 border-slate-300 rounded"
+                    />
+                    <Label className="text-sm text-slate-700">Is required?</Label>
+                  </Div>
+                  <Button
+                    type="button"
+                    onClick={() => handleDeleteField(field.id)}
+                    accessibilityLabel="Delete field"
+                    className="w-11 h-11 rounded-lg items-center justify-center"
+                  >
+                    <UiIcon as={Trash2} size={18} className="text-red-600" />
+                  </Button>
+                </Div>
+              </Div>
+            ))}
           </Div>
-        </Form>
-      </Div>
-    </ScrollDiv>
+        </Card>
+
+        <Div className="flex-row flex-wrap justify-end gap-2">
+          <Button type="button" onClick={handleReset} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+          </Button>
+          <Button type="submit" className={BTN_PRIMARY}>
+            <Span className={BTN_TEXT_PRIMARY}>Submit</Span>
+          </Button>
+        </Div>
+      </Form>
+    </AdminPage>
   );
 }

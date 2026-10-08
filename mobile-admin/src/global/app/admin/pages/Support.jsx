@@ -11,7 +11,21 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2, MessageSquare, Search, Send } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import globalService from '../../../services/globalService';
-import { Button, Div, H1, Input, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  Card,
+  EmptyState,
+  INPUT,
+  PageHeader,
+  StatusBadge,
+  TableSkeleton,
+  Toolbar,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
 const MODULES = ['food', 'taxi', 'hotel', 'tours', 'festivals', 'platform'];
 
 /**
@@ -48,21 +62,13 @@ const GROUPS = [
     label: 'Done',
   },
 ];
-const MODULE_TONE = {
-  food: 'bg-orange-100 text-orange-700',
-  taxi: 'bg-amber-100 text-amber-800',
-  hotel: 'bg-sky-100 text-sky-700',
-  tours: 'bg-emerald-100 text-emerald-700',
-  festivals: 'bg-violet-100 text-violet-700',
-  platform: 'bg-gray-200 text-gray-700',
-};
+/** Priority words mapped onto the kit's tones, so the same word is one colour. */
 const PRIORITY_TONE = {
-  low: 'bg-gray-100 text-gray-600',
-  medium: 'bg-blue-50 text-blue-700',
-  high: 'bg-amber-100 text-amber-800',
-  urgent: 'bg-red-100 text-red-700',
+  low: 'neutral',
+  medium: 'info',
+  high: 'warning',
+  urgent: 'danger',
 };
-const field = 'px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
 const when = (value) =>
   value
     ? new Date(value).toLocaleString('en-IN', {
@@ -139,46 +145,45 @@ const Support = () => {
     }
   };
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-5">
-      <Div className="flex flex-wrap items-start justify-between gap-4">
-        <Div>
-          <H1 className="text-xl font-bold text-gray-900">Support</H1>
-          <P className="text-sm text-gray-500 mt-0.5">Every module&apos;s tickets, in one place.</P>
-        </Div>
-
-        {stats && (
-          <Div className="flex items-center gap-2 flex-wrap">
-            <Span className="px-3 py-1.5 rounded-xl bg-white border border-gray-200 text-xs font-bold text-gray-700">{stats.total} total</Span>
-            <Span className={`px-3 py-1.5 rounded-xl text-xs font-bold ${stats.waiting > 0 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500'}`}>
-              {stats.waiting} waiting
-            </Span>
-          </Div>
-        )}
-      </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        title="Support"
+        subtitle="Every module's tickets, in one place."
+        icon={MessageSquare}
+        actions={
+          stats ? (
+            <>
+              <StatusBadge status="total" tone="neutral" label={`${stats.total} total`} />
+              <StatusBadge status={stats.waiting > 0 ? 'pending' : 'completed'} label={`${stats.waiting} waiting`} />
+            </>
+          ) : null
+        }
+      />
 
       {/* Filters */}
-      <Div className="flex flex-wrap items-center gap-2">
-        <Select className={field} value={module} onChange={(e) => setModule(e.target.value)}>
-          <Option value="">All services</Option>
-          {MODULES.map((m) => (
-            <Option key={m} value={m}>
-              {m}
-              {stats?.byModule?.[m] ? ` (${stats.byModule[m].total})` : ''}
-            </Option>
-          ))}
-        </Select>
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Select className={`${INPUT} flex-1`} style={{ minWidth: 150 }} value={module} onChange={(e) => setModule(e.target.value)}>
+            <Option value="">All services</Option>
+            {MODULES.map((m) => (
+              <Option key={m} value={m}>
+                {m}
+                {stats?.byModule?.[m] ? ` (${stats.byModule[m].total})` : ''}
+              </Option>
+            ))}
+          </Select>
 
-        <Select className={field} value={group} onChange={(e) => setGroup(e.target.value)}>
-          {GROUPS.map((g) => (
-            <Option key={g.value} value={g.value}>
-              {g.label}
-            </Option>
-          ))}
-        </Select>
+          <Select className={`${INPUT} flex-1`} style={{ minWidth: 150 }} value={group} onChange={(e) => setGroup(e.target.value)}>
+            {GROUPS.map((g) => (
+              <Option key={g.value} value={g.value}>
+                {g.label}
+              </Option>
+            ))}
+          </Select>
 
-        <Div className="flex items-center gap-2 flex-1 min-w-[220px]">
           <Input
-            className={`${field} flex-1`}
+            className={`${INPUT} flex-1`}
+            style={{ minWidth: 180 }}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
@@ -186,121 +191,121 @@ const Support = () => {
             }}
             placeholder="Ticket code, name, phone or words in the ticket"
           />
-          <Button
-            type="button"
-            onClick={() => setApplied(search.trim())}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]"
-          >
-            <UiIcon as={Search} size={15} /> Search
+          <Button type="button" onClick={() => setApplied(search.trim())} className={BTN_PRIMARY}>
+            <UiIcon as={Search} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>Search</Span>
           </Button>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
       {loading ? (
-        <Div className="py-16 items-center">
-          <UiIcon as={Loader2} className="animate-spin text-gray-400" />
-        </Div>
+        <TableSkeleton rows={5} />
       ) : tickets.length === 0 ? (
-        <Div className="py-16 text-center text-sm text-gray-400 bg-white rounded-2xl border border-gray-200">No tickets match this filter.</Div>
+        <EmptyState
+          title="No tickets match this filter"
+          message={applied || module || group ? 'Widen the filters to see more tickets.' : 'Tickets raised in any app land here.'}
+          actionLabel="Reload"
+          onAction={load}
+        />
       ) : (
-        <Div className="space-y-3">
+        <Div className="gap-3">
           {tickets.map((t) => {
             const isOpen = open === t._id;
             const statuses = STATUSES_BY_MODULE[t.module] || ['open', 'resolved', 'closed'];
             return (
-              <Div key={t._id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <Div className="p-4 flex flex-wrap items-start gap-4">
-                  <Div className="flex-1 basis-64 min-w-0">
-                    <Div className="flex flex-wrap items-center gap-2">
-                      <Span className="font-black tracking-wide text-gray-900 text-sm">{t.ticketCode || '—'}</Span>
-                      <Span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${MODULE_TONE[t.module] || 'bg-gray-100 text-gray-600'}`}>
-                        {t.module}
-                      </Span>
-                      {t.requesterRole && (
-                        <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-600">{t.requesterRole}</Span>
-                      )}
-                      <Span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${PRIORITY_TONE[t.priority] || ''}`}>{t.priority}</Span>
-                    </Div>
+              <Card key={t._id} className="gap-3">
+                <Div className="min-w-0">
+                  <P className="text-base font-semibold text-slate-900" numberOfLines={1}>
+                    {t.ticketCode || '—'}
+                  </P>
+                  <P className="text-sm font-medium text-slate-700 mt-1" numberOfLines={2}>
+                    {t.subject || t.issueType || t.title || 'Support request'}
+                  </P>
+                  <P className="text-sm text-slate-500 mt-1" numberOfLines={2}>
+                    {t.description}
+                  </P>
+                  <P className="text-xs text-slate-500 mt-1.5" numberOfLines={2}>
+                    {t.requesterName || 'Unknown'}
+                    {t.requesterPhone ? ` · ${t.requesterPhone}` : ''}
+                    {t.category ? ` · ${t.category}` : ''}
+                    {` · ${when(t.createdAt)}`}
+                  </P>
+                </Div>
 
-                    <P className="text-sm font-semibold text-gray-800 mt-1.5">{t.subject || t.issueType || t.title || 'Support request'}</P>
-                    <P className="text-xs text-gray-500 mt-1 line-clamp-2">{t.description}</P>
-                    <P className="text-[11px] text-gray-400 mt-1.5">
-                      {t.requesterName || 'Unknown'}
-                      {t.requesterPhone ? ` · ${t.requesterPhone}` : ''}
-                      {t.category ? ` · ${t.category}` : ''}
-                      {` · ${when(t.createdAt)}`}
-                    </P>
-                  </Div>
+                <Div className="flex-row flex-wrap items-center gap-2">
+                  <StatusBadge status={t.module} tone="info" label={t.module} />
+                  {t.requesterRole ? <StatusBadge status={t.requesterRole} tone="neutral" label={t.requesterRole} /> : null}
+                  {t.priority ? <StatusBadge status={t.priority} tone={PRIORITY_TONE[t.priority] || 'neutral'} label={t.priority} /> : null}
+                </Div>
 
-                  <Div className="flex flex-wrap items-center gap-2 shrink-0">
-                    <Select
-                      className={`${field} text-xs`}
-                      value={t.status}
-                      disabled={savingId === t._id}
-                      onChange={(e) =>
-                        patch(t, {
-                          status: e.target.value,
-                        })
-                      }
-                    >
-                      {/* A status the ticket's own module never uses would be
-                          rejected by the server, so only its own are offered. */}
-                      {(statuses.includes(t.status) ? statuses : [t.status, ...statuses]).map((s) => (
-                        <Option key={s} value={s}>
-                          {s}
-                        </Option>
-                      ))}
-                    </Select>
+                <Div className="flex-row flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+                  <Select
+                    className={`${INPUT} flex-1`}
+                    style={{ minWidth: 130 }}
+                    value={t.status}
+                    disabled={savingId === t._id}
+                    onChange={(e) =>
+                      patch(t, {
+                        status: e.target.value,
+                      })
+                    }
+                  >
+                    {/* A status the ticket's own module never uses would be
+                        rejected by the server, so only its own are offered. */}
+                    {(statuses.includes(t.status) ? statuses : [t.status, ...statuses]).map((s) => (
+                      <Option key={s} value={s}>
+                        {s}
+                      </Option>
+                    ))}
+                  </Select>
 
-                    <Select
-                      className={`${field} text-xs`}
-                      value={t.priority}
-                      disabled={savingId === t._id}
-                      onChange={(e) =>
-                        patch(t, {
-                          priority: e.target.value,
-                        })
-                      }
-                    >
-                      {['low', 'medium', 'high', 'urgent'].map((p) => (
-                        <Option key={p} value={p}>
-                          {p}
-                        </Option>
-                      ))}
-                    </Select>
+                  <Select
+                    className={`${INPUT} flex-1`}
+                    style={{ minWidth: 130 }}
+                    value={t.priority}
+                    disabled={savingId === t._id}
+                    onChange={(e) =>
+                      patch(t, {
+                        priority: e.target.value,
+                      })
+                    }
+                  >
+                    {['low', 'medium', 'high', 'urgent'].map((p) => (
+                      <Option key={p} value={p}>
+                        {p}
+                      </Option>
+                    ))}
+                  </Select>
 
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setOpen(isOpen ? null : t._id);
-                        setReply('');
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50"
-                    >
-                      <UiIcon as={MessageSquare} size={14} />
-                      {t.messages?.length || 0}
-                    </Button>
-                  </Div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setOpen(isOpen ? null : t._id);
+                      setReply('');
+                    }}
+                    className={BTN_SECONDARY}
+                  >
+                    <UiIcon as={MessageSquare} size={16} className="text-slate-600" />
+                    <Span className={BTN_TEXT_SECONDARY}>{t.messages?.length || 0}</Span>
+                  </Button>
                 </Div>
 
                 {isOpen && (
-                  <Div className="border-t border-gray-100 bg-gray-50/60 p-4 space-y-3">
-                    <ScrollDiv nestedScrollEnabled className="space-y-2 max-h-72">
+                  <Div className="pt-3 border-t border-slate-100 gap-3">
+                    <ScrollDiv nestedScrollEnabled contentClassName="gap-2" style={{ maxHeight: 288 }}>
                       {(t.messages || []).length === 0 ? (
-                        <P className="text-xs text-gray-400">No messages on this ticket yet.</P>
+                        <P className="text-sm text-slate-500">No messages on this ticket yet.</P>
                       ) : (
                         t.messages.map((m) => {
                           const fromAdmin = m.senderRole === 'admin';
                           return (
-                            <Div key={m._id} className={`flex ${fromAdmin ? 'justify-end' : 'justify-start'}`}>
-                              <Div
-                                className={`max-w-[80%] rounded-2xl px-3 py-2 ${fromAdmin ? 'bg-[#0a4d2b] text-white' : 'bg-white border border-gray-200 text-gray-800'}`}
-                              >
-                                <P className={`text-[10px] font-bold uppercase ${fromAdmin ? 'text-emerald-200' : 'text-gray-400'}`}>
+                            <Div key={m._id} className={`flex-row ${fromAdmin ? 'justify-end' : 'justify-start'}`}>
+                              <Div className={`rounded-xl px-3 py-2 ${fromAdmin ? 'bg-blue-600' : 'bg-slate-50 border border-slate-200'}`} style={{ maxWidth: '85%' }}>
+                                <P className={`text-xs font-semibold uppercase tracking-wide ${fromAdmin ? 'text-blue-100' : 'text-slate-500'}`}>
                                   {m.senderName || m.senderRole}
                                 </P>
-                                <P className="text-sm whitespace-pre-wrap">{m.message}</P>
-                                <P className={`text-[10px] mt-0.5 ${fromAdmin ? 'text-emerald-200/70' : 'text-gray-400'}`}>{when(m.createdAt)}</P>
+                                <P className={`text-sm mt-0.5 ${fromAdmin ? 'text-white' : 'text-slate-700'}`}>{m.message}</P>
+                                <P className={`text-xs mt-0.5 ${fromAdmin ? 'text-blue-100' : 'text-slate-400'}`}>{when(m.createdAt)}</P>
                               </Div>
                             </Div>
                           );
@@ -308,9 +313,10 @@ const Support = () => {
                       )}
                     </ScrollDiv>
 
-                    <Div className="flex items-center gap-2">
+                    <Div className="flex-row flex-wrap items-center gap-2">
                       <Input
-                        className={`${field} flex-1`}
+                        className={`${INPUT} flex-1`}
+                        style={{ minWidth: 180 }}
                         value={reply}
                         onChange={(e) => setReply(e.target.value)}
                         onKeyDown={(e) => {
@@ -318,24 +324,19 @@ const Support = () => {
                         }}
                         placeholder="Reply to the customer…"
                       />
-                      <Button
-                        type="button"
-                        onClick={sendReply}
-                        disabled={sending || !reply.trim()}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-50"
-                      >
-                        {sending ? <UiIcon as={Loader2} size={15} className="animate-spin" /> : <UiIcon as={Send} size={15} />}
-                        Send
+                      <Button type="button" onClick={sendReply} disabled={sending || !reply.trim()} className={BTN_PRIMARY}>
+                        {sending ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Send} size={16} className="text-white" />}
+                        <Span className={BTN_TEXT_PRIMARY}>Send</Span>
                       </Button>
                     </Div>
                   </Div>
                 )}
-              </Div>
+              </Card>
             );
           })}
         </Div>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Support;

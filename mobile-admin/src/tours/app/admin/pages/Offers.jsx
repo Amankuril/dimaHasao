@@ -10,10 +10,27 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Clock, IndianRupee, Loader2, Package, Plus, Save, Tag } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator } from '../components/ui';
-import { Button, Div, Form, H3, Input, Label, Option, P, ScrollDiv, Section, Select, Span, Strong, Icon as UiIcon } from '../../../../components/web';
-const field = 'px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] transition';
-const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
+import { StepIndicator } from '../components/ui';
+import {
+  AdminPage,
+  BTN_DANGER,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  Card,
+  EmptyState,
+  Field,
+  INPUT,
+  PageHeader,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  StatusBadge,
+  TableSkeleton,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Input, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
 const STEPS = [
   {
     key: 'code',
@@ -72,6 +89,8 @@ const rupees = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const worthOf = (o) =>
   o.discountType === 'flat' ? `${rupees(o.discountValue)} off` : `${o.discountValue}% off${o.maxDiscount ? ` up to ${rupees(o.maxDiscount)}` : ''}`;
 const Offers = () => {
+  const { tablet } = useLayoutWidth();
+  const formCols = tablet ? 2 : 1;
   const [offers, setOffers] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -207,27 +226,26 @@ const Offers = () => {
   if (editing) {
     const isLastStep = step === STEPS.length - 1;
     return (
-      <ScrollDiv className="p-4 pb-20">
-        <Form onSubmit={submit} className="space-y-6">
-          <PageHeader title={editing._id ? `Edit ${editing.code}` : 'Create an offer'} subtitle="Travellers enter this code on the tour booking screen." />
+      <AdminPage maxWidth={720}>
+        <Form onSubmit={submit}>
+          <PageHeader
+            title={editing._id ? `Edit ${editing.code}` : 'Create an offer'}
+            subtitle="Travellers enter this code on the tour booking screen."
+            breadcrumb={[{ label: 'Tours' }, { label: 'Offers' }, { label: editing._id ? 'Edit' : 'New' }]}
+          />
 
-          <Div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+          <Div className="mb-4">
             <StepIndicator steps={STEPS} current={step} />
           </Div>
 
           {step === 0 && (
-            <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-              <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
-                <UiIcon as={Tag} size={15} className="text-[#0a4d2b]" /> The code
-              </H3>
+            <Card className="mb-4 gap-4">
+              <SectionTitle action={<UiIcon as={Tag} size={16} className="text-blue-600" />}>The code</SectionTitle>
 
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Div>
-                  <Label className={label}>
-                    Code <Span className="text-red-500">*</Span>
-                  </Label>
+              <Div className={`grid grid-cols-${formCols} gap-3`}>
+                <Field label="Code" required>
                   <Input
-                    className={`${field} uppercase tracking-wide font-bold`}
+                    className={`${INPUT} font-semibold`}
                     value={form.code}
                     onChange={(e) =>
                       setForm((c) => ({
@@ -237,269 +255,229 @@ const Offers = () => {
                     }
                     placeholder="MONSOON20"
                   />
-                </Div>
-                <Div>
-                  <Label className={label}>
-                    Title <Span className="text-red-500">*</Span>
-                  </Label>
-                  <Input className={field} value={form.title} onChange={set('title')} placeholder="Monsoon 20% off" />
-                </Div>
+                </Field>
+                <Field label="Title" required>
+                  <Input className={INPUT} value={form.title} onChange={set('title')} placeholder="Monsoon 20% off" />
+                </Field>
               </Div>
 
-              <Div>
-                <Label className={label}>Description</Label>
-                <Input className={field} value={form.description} onChange={set('description')} placeholder="Shown under the code on the booking screen" />
-              </Div>
-            </Section>
+              <Field label="Description">
+                <Input className={INPUT} value={form.description} onChange={set('description')} placeholder="Shown under the code on the booking screen" />
+              </Field>
+            </Card>
           )}
 
           {step === 1 && (
-            <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-              <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
-                <UiIcon as={IndianRupee} size={15} className="text-[#0a4d2b]" /> What it is worth
-              </H3>
+            <Card className="mb-4 gap-4">
+              <SectionTitle action={<UiIcon as={IndianRupee} size={16} className="text-blue-600" />}>What it is worth</SectionTitle>
 
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Div>
-                  <Label className={label}>Discount type</Label>
-                  <Select className={field} value={form.discountType} onChange={set('discountType')}>
+              <Div className={`grid grid-cols-${formCols} gap-3`}>
+                <Field label="Discount type">
+                  <Select className={INPUT} value={form.discountType} onChange={set('discountType')}>
                     <Option value="percentage">Percentage of the fare</Option>
                     <Option value="flat">Flat amount</Option>
                   </Select>
-                </Div>
-                <Div>
-                  <Label className={label}>
-                    {form.discountType === 'flat' ? 'Amount off (₹)' : 'Percent off (%)'} <Span className="text-red-500">*</Span>
-                  </Label>
-                  <Input className={field} type="number" min="0" value={form.discountValue} onChange={set('discountValue')} />
-                </Div>
+                </Field>
+                <Field label={form.discountType === 'flat' ? 'Amount off (₹)' : 'Percent off (%)'} required>
+                  <Input className={INPUT} type="number" min="0" value={form.discountValue} onChange={set('discountValue')} />
+                </Field>
                 {form.discountType === 'percentage' && (
-                  <Div>
-                    <Label className={label}>Cap the discount at (₹)</Label>
-                    <Input
-                      className={field}
-                      type="number"
-                      min="0"
-                      value={form.maxDiscount}
-                      onChange={set('maxDiscount')}
-                      placeholder="Leave blank for no cap"
-                    />
-                  </Div>
+                  <Field label="Cap the discount at (₹)">
+                    <Input className={INPUT} type="number" min="0" value={form.maxDiscount} onChange={set('maxDiscount')} placeholder="Leave blank for no cap" />
+                  </Field>
                 )}
-                <Div>
-                  <Label className={label}>Minimum fare (₹)</Label>
-                  <Input className={field} type="number" min="0" value={form.minBookingAmount} onChange={set('minBookingAmount')} />
-                  <P className="text-xs text-gray-400 mt-1.5">Below this the code is refused.</P>
-                </Div>
+                <Field label="Minimum fare (₹)" hint="Below this the code is refused.">
+                  <Input className={INPUT} type="number" min="0" value={form.minBookingAmount} onChange={set('minBookingAmount')} />
+                </Field>
               </Div>
 
-              {preview && (
-                <P className="text-sm font-semibold text-[#0a4d2b] bg-[#0a4d2b]/5 rounded-xl px-3 py-2.5">
-                  Travellers will see: <Strong>{preview}</Strong>
-                </P>
-              )}
-              <P className="text-xs text-gray-400">
+              {preview ? (
+                <Div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
+                  <P className="text-sm font-semibold text-blue-700">Travellers will see: {preview}</P>
+                </Div>
+              ) : null}
+              <P className="text-xs text-slate-500">
                 The discount comes off the fare. Tax and the platform commission are still charged on the undiscounted fare.
               </P>
-            </Section>
+            </Card>
           )}
 
           {step === 2 && (
-            <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-              <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
-                <UiIcon as={Clock} size={15} className="text-[#0a4d2b]" /> When and how often
-              </H3>
+            <Card className="mb-4 gap-4">
+              <SectionTitle action={<UiIcon as={Clock} size={16} className="text-blue-600" />}>When and how often</SectionTitle>
 
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Div>
-                  <Label className={label}>Starts</Label>
-                  <Input className={field} type="date" value={form.startDate} onChange={set('startDate')} />
-                  <P className="text-xs text-gray-400 mt-1.5">Blank means immediately.</P>
-                </Div>
-                <Div>
-                  <Label className={label}>Ends</Label>
-                  <Input className={field} type="date" value={form.endDate} onChange={set('endDate')} />
-                  <P className="text-xs text-gray-400 mt-1.5">Blank means it never expires.</P>
-                </Div>
-                <Div>
-                  <Label className={label}>Total redemptions</Label>
-                  <Input className={field} type="number" min="0" value={form.usageLimit} onChange={set('usageLimit')} />
-                  <P className="text-xs text-gray-400 mt-1.5">0 means unlimited.</P>
-                </Div>
-                <Div>
-                  <Label className={label}>Per traveller</Label>
-                  <Input className={field} type="number" min="1" value={form.userLimit} onChange={set('userLimit')} />
-                </Div>
+              <Div className={`grid grid-cols-${formCols} gap-3`}>
+                <Field label="Starts" hint="Blank means immediately.">
+                  <Input className={INPUT} type="date" value={form.startDate} onChange={set('startDate')} />
+                </Field>
+                <Field label="Ends" hint="Blank means it never expires.">
+                  <Input className={INPUT} type="date" value={form.endDate} onChange={set('endDate')} />
+                </Field>
+                <Field label="Total redemptions" hint="0 means unlimited.">
+                  <Input className={INPUT} type="number" min="0" value={form.usageLimit} onChange={set('usageLimit')} />
+                </Field>
+                <Field label="Per traveller">
+                  <Input className={INPUT} type="number" min="1" value={form.userLimit} onChange={set('userLimit')} />
+                </Field>
               </Div>
 
-              <Div className="flex items-center gap-2 text-sm text-gray-700">
-                <Input type="checkbox" checked={form.isActive} onChange={set('isActive')} />
-                <Span>
-                  <Strong>Live</Strong> — travellers can use it
-                </Span>
+              <Div className="flex-row items-center gap-3">
+                <Input type="checkbox" className="w-5 h-5" checked={form.isActive} onChange={set('isActive')} />
+                <P className="text-sm text-slate-700 flex-1">Live — travellers can use it</P>
               </Div>
-            </Section>
+            </Card>
           )}
 
           {step === 3 && (
-            <Section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-              <H3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
-                <UiIcon as={Package} size={15} className="text-[#0a4d2b]" /> Where it applies
-              </H3>
-              <P className="text-xs text-gray-500">Select nothing to let the code work on every tour.</P>
+            <Card className="mb-4 gap-4">
+              <SectionTitle action={<UiIcon as={Package} size={16} className="text-blue-600" />}>Where it applies</SectionTitle>
+              <P className="text-sm text-slate-500">Select nothing to let the code work on every tour.</P>
 
-              <Div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Div>
-                  <Label className={label}>Packages</Label>
-                  <ScrollDiv nestedScrollEnabled className="border border-gray-200 rounded-xl max-h-52 divide-y divide-gray-100">
-                    {packages.length === 0 ? (
-                      <P className="text-xs text-gray-400 p-3">No approved packages.</P>
-                    ) : (
-                      packages.map((p) => (
-                        <Div
-                          key={p._id}
-                          onClick={() => toggleScope('packageIds', String(p._id))}
-                          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700"
-                        >
-                          <Input type="checkbox" checked={form.packageIds.includes(String(p._id))} onChange={() => toggleScope('packageIds', String(p._id))} />
-                          <Span className="truncate flex-1">{p.title}</Span>
-                        </Div>
-                      ))
-                    )}
-                  </ScrollDiv>
-                </Div>
-              </Div>
-            </Section>
+              <Field label="Packages">
+                <ScrollDiv nestedScrollEnabled className="border border-slate-200 rounded-lg" style={{ maxHeight: 240 }}>
+                  {packages.length === 0 ? (
+                    <P className="text-sm text-slate-500 p-3">No approved packages.</P>
+                  ) : (
+                    packages.map((p, i, a) => (
+                      <Div
+                        key={p._id}
+                        onClick={() => toggleScope('packageIds', String(p._id))}
+                        className={`flex-row items-center gap-3 px-3 py-3 ${i === a.length - 1 ? '' : 'border-b border-slate-100'}`}
+                      >
+                        <Input
+                          type="checkbox"
+                          className="w-5 h-5"
+                          checked={form.packageIds.includes(String(p._id))}
+                          onChange={() => toggleScope('packageIds', String(p._id))}
+                        />
+                        <Span className="text-sm text-slate-700 flex-1" numberOfLines={1}>
+                          {p.title}
+                        </Span>
+                      </Div>
+                    ))
+                  )}
+                </ScrollDiv>
+              </Field>
+            </Card>
           )}
 
-          <Div className="flex items-center gap-3 pb-8">
+          <Div className="flex-row flex-wrap items-center gap-2">
             {step > 0 && (
-              <Button
-                type="button"
-                onClick={goBack}
-                className="flex items-center gap-1.5 px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50"
-              >
-                <UiIcon as={ChevronLeft} size={16} /> Back
+              <Button type="button" onClick={goBack} className={BTN_SECONDARY}>
+                <UiIcon as={ChevronLeft} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Back</Span>
               </Button>
             )}
             {!isLastStep ? (
-              <Button
-                type="button"
-                onClick={goNext}
-                className="flex items-center gap-1.5 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]"
-              >
-                Next <UiIcon as={ChevronRight} size={16} />
+              <Button type="button" onClick={goNext} className={BTN_PRIMARY}>
+                <Span className={BTN_TEXT_PRIMARY}>Next</Span>
+                <UiIcon as={ChevronRight} size={16} className="text-white" />
               </Button>
             ) : (
-              <Button
-                type="submit"
-                disabled={saving}
-                className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
-              >
-                {saving ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={Save} size={16} />}
-                {editing._id ? 'Save changes' : 'Create offer'}
+              <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
+                {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Save} size={16} className="text-white" />}
+                <Span className={BTN_TEXT_PRIMARY}>{editing._id ? 'Save changes' : 'Create offer'}</Span>
               </Button>
             )}
-            <Button
-              type="button"
-              onClick={closeForm}
-              className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 ml-auto"
-            >
-              Cancel
+            <Button type="button" onClick={closeForm} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
           </Div>
         </Form>
-      </ScrollDiv>
+      </AdminPage>
     );
   }
 
   /* ----------------------------- list ----------------------------- */
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-5">
+    <AdminPage maxWidth={900}>
       <PageHeader
         title="Offers"
         subtitle="Promo codes travellers can use on tour bookings."
-        action={
-          <Button
-            type="button"
-            onClick={openNew}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]"
-          >
-            <UiIcon as={Plus} size={16} /> Create an offer
+        breadcrumb={[{ label: 'Tours' }, { label: 'Offers' }]}
+        actions={
+          <Button type="button" onClick={openNew} className={BTN_PRIMARY}>
+            <UiIcon as={Plus} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>Create an offer</Span>
           </Button>
         }
       />
 
       {!loading && offers.length > 0 && (
-        <Div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatGrid className="mb-4">
           <StatCard label="Total offers" value={offers.length} />
-          <StatCard label="Live" value={offers.filter((o) => o.isActive).length} tone="text-[#0a4d2b]" />
+          <StatCard label="Live" value={offers.filter((o) => o.isActive).length} tone="success" />
           <StatCard label="Total redemptions" value={offers.reduce((n, o) => n + (o.usageCount || 0), 0)} />
-        </Div>
+        </StatGrid>
       )}
 
       {loading ? (
-        <Spinner />
+        <TableSkeleton rows={4} />
       ) : offers.length === 0 ? (
-        <EmptyState message="No offers yet — create the first one." />
+        <EmptyState title="No offers yet" message="Create the first promo code travellers can use." actionLabel="Create an offer" onAction={openNew} />
       ) : (
-        <Div className="space-y-3">
+        <Div className="gap-3">
           {offers.map((o) => {
             const expired = o.endDate && new Date(o.endDate) < new Date();
             const exhausted = o.usageLimit > 0 && o.usageCount >= o.usageLimit;
             return (
-              <Div key={o._id} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-start gap-4">
-                <Div className="w-12 h-12 rounded-xl bg-[#0a4d2b]/10 text-[#0a4d2b] grid place-items-center shrink-0">
-                  <UiIcon as={Tag} size={20} />
+              <Card key={o._id} className="gap-3">
+                <Div className="flex-row items-start gap-3">
+                  <Div className="w-11 h-11 rounded-lg bg-blue-100 items-center justify-center shrink-0">
+                    <UiIcon as={Tag} size={18} className="text-blue-600" />
+                  </Div>
+
+                  <Div className="flex-1 min-w-0">
+                    <P className="text-base font-semibold text-slate-900" numberOfLines={1}>
+                      {o.code}
+                    </P>
+                    <P className="text-xs text-slate-500 mt-0.5" numberOfLines={2}>
+                      {o.title}
+                    </P>
+                    <P className="text-xs text-slate-500 mt-1" numberOfLines={2}>
+                      Used {o.usageCount}
+                      {o.usageLimit > 0 ? ` of ${o.usageLimit}` : ''}
+                      {o.minBookingAmount > 0 ? ` · min ${rupees(o.minBookingAmount)}` : ''}
+                      {o.packageIds?.length ? ` · ${o.packageIds.length} package(s)` : ''}
+                      {o.endDate ? ` · until ${new Date(o.endDate).toLocaleDateString('en-IN')}` : ''}
+                    </P>
+                  </Div>
                 </Div>
 
-                <Div className="flex-1 basis-48 min-w-0">
-                  <Div className="flex flex-wrap items-center gap-2">
-                    <P className="font-black tracking-wide text-gray-900">{o.code}</P>
-                    <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-600">{worthOf(o)}</Span>
-                    {!o.isActive && <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700">paused</Span>}
-                    {expired && <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">expired</Span>}
-                    {exhausted && <Span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">used up</Span>}
-                  </Div>
-                  <P className="text-xs text-gray-500 mt-1">{o.title}</P>
-                  <P className="text-xs text-gray-400 mt-1">
-                    Used {o.usageCount}
-                    {o.usageLimit > 0 ? ` of ${o.usageLimit}` : ''}
-                    {o.minBookingAmount > 0 ? ` · min ${rupees(o.minBookingAmount)}` : ''}
-                    {o.packageIds?.length ? ` · ${o.packageIds.length} package(s)` : ''}
-                    {o.endDate ? ` · until ${new Date(o.endDate).toLocaleDateString('en-IN')}` : ''}
-                  </P>
+                <Div className="flex-row flex-wrap items-center gap-2">
+                  <StatusBadge status="worth" tone="info" label={worthOf(o)} />
+                  {!o.isActive && <StatusBadge status="paused" tone="warning" label="paused" />}
+                  {expired && <StatusBadge status="expired" label="expired" />}
+                  {exhausted && <StatusBadge status="used up" tone="danger" label="used up" />}
                 </Div>
 
-                <Div className="flex flex-row-reverse sm:flex-col items-center sm:items-end justify-end gap-3 sm:gap-2 w-full sm:w-auto shrink-0">
-                  <Div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-                    <Input type="checkbox" checked={o.isActive} disabled={busyId === o._id} onChange={() => toggle(o)} />
-                    Live
+                <Div className="flex-row flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+                  <Div className="flex-row items-center gap-2 mr-auto">
+                    <Input type="checkbox" className="w-5 h-5" checked={o.isActive} disabled={busyId === o._id} onChange={() => toggle(o)} />
+                    <Span className="text-sm text-slate-700">Live</Span>
                   </Div>
-                  <Div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      onClick={() => openEdit(o)}
-                      className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-700 hover:bg-gray-50"
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      type="button"
-                      disabled={busyId === o._id}
-                      onClick={() => remove(o)}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold disabled:opacity-50 ${confirmingId === o._id ? 'bg-red-600 text-white hover:bg-red-700' : 'text-red-600 hover:bg-red-50'}`}
-                    >
+                  <Button type="button" onClick={() => openEdit(o)} className={BTN_SECONDARY}>
+                    <Span className={BTN_TEXT_SECONDARY}>Edit</Span>
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={busyId === o._id}
+                    onClick={() => remove(o)}
+                    className={
+                      confirmingId === o._id ? BTN_DANGER : 'flex-row items-center justify-center gap-2 h-11 px-4 rounded-lg border border-red-200 bg-white'
+                    }
+                  >
+                    <Span className={`text-sm font-semibold ${confirmingId === o._id ? 'text-white' : 'text-red-600'}`}>
                       {confirmingId === o._id ? 'Delete for good?' : 'Delete'}
-                    </Button>
-                  </Div>
+                    </Span>
+                  </Button>
                 </Div>
-              </Div>
+              </Card>
             );
           })}
         </Div>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default Offers;

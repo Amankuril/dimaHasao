@@ -1,13 +1,27 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/employees/AddEmployee.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { UserPlus, User, Eye, EyeOff, Upload, ChevronDown } from 'lucide-react-native';
-import { Button, Div, Form, H1, H2, Input, Label, Option, P, ScrollDiv, Select, Icon as UiIcon } from '../../../../components/web';
+import { UserPlus, Eye, EyeOff, Upload } from 'lucide-react-native';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Form, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { alert } from '../../../../lib/webShim';
 import { pickImage } from '../../../../lib/files';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 export default function AddEmployee() {
+  const { tablet } = useLayoutWidth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -59,217 +73,124 @@ export default function AddEmployee() {
       confirmPassword: '',
     });
   };
+  const grid = tablet ? 'grid grid-cols-2 gap-3' : 'gap-3';
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex items-center gap-3 mb-4">
-            <Div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <UiIcon as={UserPlus} className="w-5 h-5 text-white" />
-            </Div>
-            <H1 className="text-2xl font-bold text-slate-900">Add New Employee</H1>
-          </Div>
-        </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={UserPlus}
+        title="Add New Employee"
+        subtitle="Create a panel account and set its permissions"
+        breadcrumb={[{ label: 'Food' }, { label: 'Employees' }, { label: 'Add employee' }]}
+      />
 
-        <Form onSubmit={handleSubmit}>
-          {/* General Information */}
-          <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-            <Div className="flex items-center gap-3 mb-6">
-              <UiIcon as={User} className="w-5 h-5 text-slate-600" />
-              <H2 className="text-lg font-semibold text-slate-900">General Information</H2>
-            </Div>
-
-            <Div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Side - Form Fields */}
-              <Div className="lg:col-span-2 space-y-6">
-                <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* First Name */}
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">First name</Label>
-                    <Input
-                      type="text"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      placeholder="Ex: John"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  </Div>
-
-                  {/* Last Name */}
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">Last name</Label>
-                    <Input
-                      type="text"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      placeholder="Ex: Doe"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  </Div>
-                </Div>
-
-                <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Zone */}
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">Zone</Label>
-                    <Div className="relative">
-                      <Select
-                        value={formData.zone}
-                        onChange={(e) => handleInputChange('zone', e.target.value)}
-                        className="w-full px-4 py-2.5 pr-8 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none cursor-pointer"
-                      >
-                        <Option value="All">All</Option>
-                        <Option value="Zone 1">Zone 1</Option>
-                        <Option value="Zone 2">Zone 2</Option>
-                        <Option value="Zone 3">Zone 3</Option>
-                      </Select>
-                      <UiIcon as={ChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    </Div>
-                  </Div>
-
-                  {/* Role */}
-                  <Div>
-                    <Label className="block text-sm font-semibold text-slate-700 mb-2">Role</Label>
-                    <Div className="relative">
-                      <Select
-                        value={formData.role}
-                        onChange={(e) => handleInputChange('role', e.target.value)}
-                        className="w-full px-4 py-2.5 pr-8 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none cursor-pointer"
-                      >
-                        <Option value="">Select Role</Option>
-                        <Option value="manager">Manager</Option>
-                        <Option value="customer-care">Customer Care Executive</Option>
-                        <Option value="admin">Admin</Option>
-                      </Select>
-                      <UiIcon as={ChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    </Div>
-                  </Div>
-                </Div>
-
-                {/* Phone */}
-                <Div>
-                  <Label className="block text-sm font-semibold text-slate-700 mb-2">Phone</Label>
-                  <Div className="flex items-center gap-2">
-                    <Div className="relative">
-                      <Select
-                        value={formData.phoneCode}
-                        onChange={(e) => handleInputChange('phoneCode', e.target.value)}
-                        className="px-4 py-2.5 pr-8 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none cursor-pointer"
-                      >
-                        <Option value="+91">🇮🇳 +91</Option>
-                      </Select>
-                      <UiIcon as={ChevronDown} className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    </Div>
-                    <Input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="Phone number"
-                      className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Right Side - Employee Image */}
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Employee image</Label>
-                <Div
-                  className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors"
-                  onClick={handlePickEmployeeImage}
-                >
-                  <UiIcon as={Upload} className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                  <P className="text-sm font-medium text-slate-700 mb-1">Upload Image</P>
-                  <Div className="text-xs text-slate-500 space-y-1 mt-2">
-                    <P>Image format - jpg png jpeg gif</P>
-                    <P>Image Size - maximum size 2 MB</P>
-                    <P>Image Ratio - 1:1</P>
-                  </Div>
-                </Div>
-              </Div>
-            </Div>
+      <Form onSubmit={handleSubmit}>
+        <Card className="mb-4">
+          <SectionTitle>General information</SectionTitle>
+          <Div className={grid}>
+            <Field label="First name">
+              <Input type="text" value={formData.firstName} onChange={(e) => handleInputChange('firstName', e.target.value)} placeholder="Ex: John" className={INPUT} />
+            </Field>
+            <Field label="Last name">
+              <Input type="text" value={formData.lastName} onChange={(e) => handleInputChange('lastName', e.target.value)} placeholder="Ex: Doe" className={INPUT} />
+            </Field>
+            <Field label="Zone">
+              <Select value={formData.zone} onChange={(e) => handleInputChange('zone', e.target.value)} className={INPUT}>
+                <Option value="All">All</Option>
+                <Option value="Zone 1">Zone 1</Option>
+                <Option value="Zone 2">Zone 2</Option>
+                <Option value="Zone 3">Zone 3</Option>
+              </Select>
+            </Field>
+            <Field label="Role">
+              <Select value={formData.role} onChange={(e) => handleInputChange('role', e.target.value)} className={INPUT} placeholder="Select role">
+                <Option value="">Select Role</Option>
+                <Option value="manager">Manager</Option>
+                <Option value="customer-care">Customer Care Executive</Option>
+                <Option value="admin">Admin</Option>
+              </Select>
+            </Field>
           </Div>
 
-          {/* Account Info */}
-          <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-            <Div className="flex items-center gap-3 mb-6">
-              <UiIcon as={User} className="w-5 h-5 text-slate-600" />
-              <H2 className="text-lg font-semibold text-slate-900">Account Info</H2>
+          <Field label="Phone" className="mt-3">
+            <Div className="flex-row items-center gap-2">
+              <Select
+                value={formData.phoneCode}
+                onChange={(e) => handleInputChange('phoneCode', e.target.value)}
+                className={`${INPUT} w-28`}
+              >
+                <Option value="+91">{'\u{1F1EE}\u{1F1F3}'} +91</Option>
+              </Select>
+              <Input type="tel" value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="Phone number" className={`${INPUT} flex-1`} />
             </Div>
+          </Field>
 
-            <Div className="space-y-6">
-              {/* Email */}
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Email</Label>
+          <Field label="Employee image" hint="jpg, png, jpeg or gif · max 2 MB · 1:1 ratio" className="mt-3">
+            <Div className="border border-dashed border-slate-300 rounded-lg p-6 items-center gap-1 bg-white" onClick={handlePickEmployeeImage}>
+              <UiIcon as={Upload} size={28} className="text-slate-400" />
+              <P className="text-sm font-medium text-slate-700">Upload image</P>
+              <P className="text-xs text-slate-500">{formData.employeeImage ? 'Image selected' : 'Tap to choose a file'}</P>
+            </Div>
+          </Field>
+        </Card>
+
+        <Card className="mb-4">
+          <SectionTitle>Account info</SectionTitle>
+          <Div className="gap-3">
+            <Field label="Email">
+              <Input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="Ex: ex@gmail.com" className={INPUT} />
+            </Field>
+
+            <Field label="Password" hint="Password length 8+">
+              <Div className="flex-row items-center gap-2">
                 <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Ex: ex@gmail.com"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  placeholder="Password length 8+"
+                  className={`${INPUT} flex-1`}
                 />
+                <Button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="w-11 h-11 rounded-lg border border-slate-300 bg-white items-center justify-center"
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <UiIcon as={showPassword ? EyeOff : Eye} size={16} className="text-slate-600" />
+                </Button>
               </Div>
+            </Field>
 
-              {/* Password */}
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Password</Label>
-                <Div className="relative">
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    placeholder="Password length 8+"
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <UiIcon as={EyeOff} className="w-4 h-4" /> : <UiIcon as={Eye} className="w-4 h-4" />}
-                  </Button>
-                </Div>
+            <Field label="Confirm password">
+              <Div className="flex-row items-center gap-2">
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  placeholder="Password length 8+"
+                  className={`${INPUT} flex-1`}
+                />
+                <Button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="w-11 h-11 rounded-lg border border-slate-300 bg-white items-center justify-center"
+                  accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  <UiIcon as={showConfirmPassword ? EyeOff : Eye} size={16} className="text-slate-600" />
+                </Button>
               </Div>
-
-              {/* Confirm Password */}
-              <Div>
-                <Label className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password</Label>
-                <Div className="relative">
-                  <Input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    placeholder="Password length 8+"
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showConfirmPassword ? <UiIcon as={EyeOff} className="w-4 h-4" /> : <UiIcon as={Eye} className="w-4 h-4" />}
-                  </Button>
-                </Div>
-              </Div>
-            </Div>
+            </Field>
           </Div>
+        </Card>
 
-          {/* Action Buttons */}
-          <Div className="flex items-center justify-end gap-4 mb-6">
-            <Button
-              type="button"
-              onClick={handleReset}
-              className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-            >
-              Reset
-            </Button>
-            <Button type="submit" className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md">
-              Submit
-            </Button>
-          </Div>
-        </Form>
-      </Div>
-    </ScrollDiv>
+        <Div className="flex-row flex-wrap items-center justify-end gap-2">
+          <Button type="button" onClick={handleReset} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+          </Button>
+          <Button type="submit" className={BTN_PRIMARY}>
+            <Span className={BTN_TEXT_PRIMARY}>Submit</Span>
+          </Button>
+        </Div>
+      </Form>
+    </AdminPage>
   );
 }

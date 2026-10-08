@@ -1,8 +1,30 @@
 /* Ported from Frontend/src/modules/Hotel/app/admin/pages/AdminContactMessages.jsx (tools/port.js first pass). */
 import React, { useEffect, useState } from 'react';
-import { User, Hotel, Mail, Phone, MessageCircle, ChevronLeft, ChevronRight, X } from 'lucide-react-native';
+import { User, Hotel, Mail, Phone, MessageCircle, X, MessageSquare } from 'lucide-react-native';
 import adminService from '../../../services/adminService';
-import { Button, Div, H2, H3, Option, Overlay, P, ScrollDiv, Select, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, H3, Option, Overlay, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  Pagination,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
+const COLS = [200, 240, 190, 150, 110];
 const AdminContactMessages = () => {
   const [audience, setAudience] = useState('user');
   const [status, setStatus] = useState('');
@@ -54,192 +76,169 @@ const AdminContactMessages = () => {
     }
   };
   return (
-    <ScrollDiv className="space-y-6 pb-24">
-      <Div className="flex flex-col gap-4">
-        <Div>
-          <H2 className="text-2xl font-bold text-gray-900">Contact Messages</H2>
-          <P className="text-gray-500 text-sm">View and triage queries submitted from user and partner apps.</P>
-        </Div>
-        <Div className="flex flex-row flex-wrap gap-3">
-          <Div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl p-1">
-            <Button
-              onClick={() => setAudience('user')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1 ${audience === 'user' ? 'bg-black text-white' : 'text-gray-600'}`}
-            >
-              <UiIcon as={User} size={14} />
-              <Span>User</Span>
-            </Button>
-            <Button
-              onClick={() => setAudience('partner')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1 ${audience === 'partner' ? 'bg-black text-white' : 'text-gray-600'}`}
-            >
-              <UiIcon as={Hotel} size={14} />
-              <Span>Partner</Span>
-            </Button>
-          </Div>
-          <Select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 bg-white outline-none focus:ring-2 focus:ring-black/70"
-          >
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={MessageSquare}
+        title="Contact Messages"
+        subtitle="View and triage queries submitted from the user and partner apps."
+        breadcrumb={[{ label: 'Hotel' }, { label: 'Contact Messages' }]}
+      />
+
+      <Card className="mb-3">
+        <Toolbar className="mb-0">
+          <Button onClick={() => setAudience('user')} className={audience === 'user' ? BTN_PRIMARY : BTN_SECONDARY}>
+            <UiIcon as={User} size={16} className={audience === 'user' ? 'text-white' : 'text-slate-600'} />
+            <Span className={audience === 'user' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>User</Span>
+          </Button>
+          <Button onClick={() => setAudience('partner')} className={audience === 'partner' ? BTN_PRIMARY : BTN_SECONDARY}>
+            <UiIcon as={Hotel} size={16} className={audience === 'partner' ? 'text-white' : 'text-slate-600'} />
+            <Span className={audience === 'partner' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Partner</Span>
+          </Button>
+          <Select value={status} onChange={(e) => setStatus(e.target.value)} className={`${INPUT} flex-1 min-w-[160px]`}>
             <Option value="">All statuses</Option>
             <Option value="new">New</Option>
             <Option value="in_progress">In Progress</Option>
             <Option value="resolved">Resolved</Option>
           </Select>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
-      {error && <Div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl px-4 py-2">{error}</Div>}
-
-      <Div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        <Table cols={[190, 230, 190, 150, 100]} className="min-w-full">
-          <Thead className="border-b border-gray-100">
-            <Tr>
-              <Th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wide">Details</Th>
-              <Th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wide">Message</Th>
-              <Th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wide">Meta</Th>
-              <Th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wide">Status</Th>
-              <Th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wide text-right">Actions</Th>
-            </Tr>
-          </Thead>
-
-          <Tbody className="divide-y divide-gray-100">
-            {loading ? (
-              <Tr>
-                <Td colSpan={5} className="p-8 text-center text-gray-400 text-sm">
-                  Loading messages...
-                </Td>
-              </Tr>
-            ) : messages.length === 0 ? (
-              <Tr>
-                <Td colSpan={5} className="p-8 text-center text-gray-400 text-sm">
-                  No messages found for this filter.
-                </Td>
-              </Tr>
-            ) : (
-              messages.map((m) => (
-                <Tr key={m._id} className="text-xs text-gray-700">
-                  <Td className="px-4 py-4 pr-3 justify-start">
-                    <Div className="font-bold text-gray-900">{m.name}</Div>
-                    {m.email && (
-                      <Div className="flex items-center gap-1 mt-1 text-[11px] text-gray-500">
-                        <UiIcon as={Mail} size={11} />
-                        <Span numberOfLines={1} className="flex-1">{m.email}</Span>
+      {error && messages.length === 0 ? (
+        <ErrorState title="Could not load messages" message={error} onRetry={() => load(page)} />
+      ) : loading ? (
+        <TableSkeleton rows={5} />
+      ) : messages.length === 0 ? (
+        <EmptyState
+          icon={MessageSquare}
+          title="No messages here"
+          message={status ? `No ${audience} messages with that status.` : `Nothing has come in from the ${audience} app yet.`}
+          actionLabel={status ? 'Clear status filter' : undefined}
+          onAction={status ? () => setStatus('') : undefined}
+        />
+      ) : (
+        <>
+          {error ? (
+            <Card className="mb-3 bg-red-100 border-red-200">
+              <P className="text-sm text-red-700">{error}</P>
+            </Card>
+          ) : null}
+          <DataTable cols={COLS}>
+            <THead cols={COLS} labels={['Details', 'Message', 'Meta', 'Status', 'Actions']} />
+            <TBody>
+              {messages.map((m, i) => (
+                <Row key={m._id} last={i === messages.length - 1}>
+                  <Cell width={COLS[0]}>
+                    <P numberOfLines={1} className="text-sm font-semibold text-slate-900">
+                      {m.name}
+                    </P>
+                    {m.email ? (
+                      <Div className="flex-row items-center gap-1 mt-1">
+                        <UiIcon as={Mail} size={12} className="text-slate-400" />
+                        <Span numberOfLines={1} className="text-xs text-slate-500 flex-1">
+                          {m.email}
+                        </Span>
                       </Div>
-                    )}
-                    {m.phone && (
-                      <Div className="flex items-center gap-1 mt-0.5 text-[11px] text-gray-500">
-                        <UiIcon as={Phone} size={11} />
-                        <Span>{m.phone}</Span>
+                    ) : null}
+                    {m.phone ? (
+                      <Div className="flex-row items-center gap-1 mt-0.5">
+                        <UiIcon as={Phone} size={12} className="text-slate-400" />
+                        <Span className="text-xs text-slate-500">{m.phone}</Span>
                       </Div>
-                    )}
-                  </Td>
-                  <Td className="px-4 py-4 pr-3 justify-start">
-                    <P className="font-semibold text-gray-900 mb-1 line-clamp-1">{m.subject}</P>
-                    <P className="text-[11px] text-gray-600 line-clamp-3">{m.message}</P>
-                  </Td>
-                  <Td className="px-4 py-4 pr-3 text-[11px] text-gray-500 justify-start">
-                    <P>Created: {m.createdAt ? new Date(m.createdAt).toLocaleString() : '-'}</P>
-                    <P>Audience: {m.audience}</P>
-                  </Td>
-                  <Td className="px-4 py-4 pr-3">
-                    <Select
-                      value={m.status}
-                      onChange={(e) => handleStatusChange(m._id, e.target.value)}
-                      className="px-2 py-1 rounded-lg border border-gray-200 text-[11px] font-semibold"
-                    >
+                    ) : null}
+                  </Cell>
+                  <Cell width={COLS[1]}>
+                    <P numberOfLines={1} className="text-sm font-semibold text-slate-900">
+                      {m.subject}
+                    </P>
+                    <P numberOfLines={3} className="text-xs text-slate-500 mt-0.5">
+                      {m.message}
+                    </P>
+                  </Cell>
+                  <Cell width={COLS[2]}>
+                    <P numberOfLines={2} className="text-xs text-slate-500">
+                      {m.createdAt ? new Date(m.createdAt).toLocaleString() : '—'}
+                    </P>
+                    <P className="text-xs text-slate-500">Audience: {m.audience}</P>
+                  </Cell>
+                  <Cell width={COLS[3]}>
+                    <Select value={m.status} onChange={(e) => handleStatusChange(m._id, e.target.value)} className={`${INPUT} w-full`}>
                       <Option value="new">New</Option>
                       <Option value="in_progress">In Progress</Option>
                       <Option value="resolved">Resolved</Option>
                     </Select>
-                  </Td>
-                  <Td className="px-4 py-4 items-end">
+                  </Cell>
+                  <Cell width={COLS[4]}>
                     <Button
                       type="button"
                       onClick={() => setSelectedMessage(m)}
-                      className="flex flex-row items-center gap-1 px-2 py-1 rounded-lg border border-gray-200 text-[11px] font-semibold text-gray-700"
+                      className={BTN_SECONDARY}
+                      accessibilityLabel={`Open message from ${m.name}`}
                     >
-                      <UiIcon as={MessageCircle} size={12} />
-                      <Span>Open</Span>
+                      <UiIcon as={MessageCircle} size={14} className="text-slate-600" />
+                      <Span className={BTN_TEXT_SECONDARY}>Open</Span>
                     </Button>
-                  </Td>
-                </Tr>
-              ))
-            )}
-          </Tbody>
-        </Table>
-
-        <Div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-gray-100 text-[11px] text-gray-500">
-          <Div>
-            Showing {messages.length} of {total} messages
-          </Div>
-          <Div className="flex items-center gap-2">
-            <Button disabled={page <= 1} onClick={() => load(page - 1)} className="p-1.5 rounded-lg border border-gray-200 text-gray-600 disabled:opacity-40">
-              <UiIcon as={ChevronLeft} size={14} />
-            </Button>
-            <Span>
-              Page {page} of {totalPages}
-            </Span>
-            <Button
-              disabled={page >= totalPages}
-              onClick={() => load(page + 1)}
-              className="p-1.5 rounded-lg border border-gray-200 text-gray-600 disabled:opacity-40"
-            >
-              <UiIcon as={ChevronRight} size={14} />
-            </Button>
-          </Div>
-        </Div>
-      </Div>
+                  </Cell>
+                </Row>
+              ))}
+            </TBody>
+          </DataTable>
+          <Pagination page={page} pages={totalPages} total={total} onPrev={() => load(page - 1)} onNext={() => load(page + 1)} />
+        </>
+      )}
 
       {selectedMessage && (
-        <Overlay onClose={() => setSelectedMessage(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <Div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 border border-gray-200 max-h-[90vh]">
-            <Div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <Div className="flex-1">
-                <P className="text-[10px] font-bold uppercase text-gray-400">{selectedMessage.audience === 'partner' ? 'Partner Message' : 'User Message'}</P>
-                <H3 className="text-sm font-bold text-gray-900">{selectedMessage.subject}</H3>
+        <Overlay onClose={() => setSelectedMessage(null)} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <Div className="bg-white rounded-xl border border-slate-200 max-w-lg w-full max-h-[90vh]">
+            <Div className="flex-row items-center justify-between gap-3 px-4 py-3 border-b border-slate-200">
+              <Div className="flex-1 min-w-0">
+                <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {selectedMessage.audience === 'partner' ? 'Partner message' : 'User message'}
+                </P>
+                <H3 className="text-base font-semibold text-slate-900" numberOfLines={2}>
+                  {selectedMessage.subject}
+                </H3>
               </Div>
-              <Button onClick={() => setSelectedMessage(null)} className="p-2 rounded-full hover:bg-gray-100 text-gray-500">
-                <UiIcon as={X} size={16} />
+              <Button
+                onClick={() => setSelectedMessage(null)}
+                className="w-11 h-11 rounded-lg items-center justify-center shrink-0"
+                accessibilityLabel="Close message"
+              >
+                <UiIcon as={X} size={18} className="text-slate-500" />
               </Button>
             </Div>
 
-            <ScrollDiv className="px-5 py-4 space-y-4 max-h-[70vh] flex-shrink">
-              <Div className="flex items-start gap-3">
-                <Div className="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-bold">
-                  {selectedMessage.name?.charAt(0)?.toUpperCase() || '?'}
+            <ScrollDiv className="px-4 py-4 max-h-[70vh] flex-shrink" contentClassName="gap-3">
+              <Div className="flex-row items-start gap-3">
+                <Div className="w-10 h-10 rounded-full bg-slate-900 items-center justify-center shrink-0">
+                  <Span className="text-sm font-bold text-white">{selectedMessage.name?.charAt(0)?.toUpperCase() || '?'}</Span>
                 </Div>
-                <Div className="flex-1">
-                  <Div className="flex items-center justify-between gap-2">
-                    <Div className="flex-1">
-                      <P className="text-sm font-bold text-gray-900">{selectedMessage.name}</P>
-                      <P className="text-[10px] font-bold uppercase text-gray-400">
-                        {selectedMessage.email || 'No email'} • {selectedMessage.phone || 'No phone'}
+                <Div className="flex-1 min-w-0">
+                  <Div className="flex-row items-start justify-between gap-2">
+                    <Div className="flex-1 min-w-0">
+                      <P numberOfLines={1} className="text-sm font-semibold text-slate-900">
+                        {selectedMessage.name}
+                      </P>
+                      <P numberOfLines={2} className="text-xs text-slate-500">
+                        {selectedMessage.email || 'No email'} · {selectedMessage.phone || 'No phone'}
                       </P>
                     </Div>
-                    <Span className="px-2 py-0.5 rounded-full border border-gray-200 text-[10px] font-bold uppercase text-gray-600">
-                      {selectedMessage.status.replace('_', ' ')}
-                    </Span>
+                    <StatusBadge status={selectedMessage.status} label={selectedMessage.status.replace('_', ' ')} />
                   </Div>
-                  <P className="text-[10px] text-gray-400 mt-1">
-                    Created at {selectedMessage.createdAt ? new Date(selectedMessage.createdAt).toLocaleString() : '-'}
+                  <P className="text-xs text-slate-500 mt-1">
+                    Created {selectedMessage.createdAt ? new Date(selectedMessage.createdAt).toLocaleString() : '—'}
                   </P>
                 </Div>
               </Div>
 
-              <Div className="border border-gray-100 rounded-xl bg-gray-50/60 p-3">
-                <P className="text-[10px] font-bold text-gray-500 uppercase mb-1">Message</P>
-                <P className="text-xs text-gray-800 leading-relaxed">{selectedMessage.message}</P>
+              <Div className="border border-slate-200 rounded-lg bg-slate-50 p-3">
+                <P className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Message</P>
+                <P className="text-sm text-slate-700">{selectedMessage.message}</P>
               </Div>
 
-              <Div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                <Div className="flex items-center gap-2 text-[11px] text-gray-500">
-                  <Div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <Span>
-                    Audience: {selectedMessage.audience} • ID: {selectedMessage._id.slice(-6)}
-                  </Span>
-                </Div>
+              <Div className="gap-2">
+                <P className="text-xs text-slate-500">
+                  Audience: {selectedMessage.audience} · ID {selectedMessage._id.slice(-6)}
+                </P>
                 <Select
                   value={selectedMessage.status}
                   onChange={async (e) => {
@@ -254,7 +253,7 @@ const AdminContactMessages = () => {
                         : prev,
                     );
                   }}
-                  className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-semibold outline-none focus:ring-2 focus:ring-black/70 bg-white"
+                  className={INPUT}
                 >
                   <Option value="new">New</Option>
                   <Option value="in_progress">In Progress</Option>
@@ -263,18 +262,15 @@ const AdminContactMessages = () => {
               </Div>
             </ScrollDiv>
 
-            <Div className="px-5 py-3 border-t border-gray-100 flex justify-end">
-              <Button
-                onClick={() => setSelectedMessage(null)}
-                className="px-4 py-2 rounded-lg border border-gray-200 text-[11px] font-bold uppercase text-gray-700 hover:bg-gray-50"
-              >
-                Close
+            <Div className="px-4 py-3 border-t border-slate-200 flex-row justify-end">
+              <Button onClick={() => setSelectedMessage(null)} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Close</Span>
               </Button>
             </Div>
           </Div>
         </Overlay>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default AdminContactMessages;

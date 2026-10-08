@@ -1,20 +1,33 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/delivery-partners/EarningAddon.jsx (tools/port.js first pass). */
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, ToggleLeft, ToggleRight, Settings, ArrowUpDown, Check, Columns, Package } from 'lucide-react-native';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../../../../components/shadcn';
+import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, Settings, Check, Columns, Package, Gift } from 'lucide-react-native';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../../components/shadcn';
 import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
-import GradientFill from './GradientFill';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
-import { Button, Div, Form, H1, H3, Input, Label, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, CheckBox, Div, Form, Input, Label, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
 import { window } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -57,6 +70,9 @@ export default function EarningAddon() {
     endDate: '',
     maxRedemptions: '',
   });
+  const { tablet } = useLayoutWidth();
+  const col = tablet ? 'flex-1 min-w-[200px]' : undefined;
+  const rowClass = tablet ? 'flex-row flex-wrap gap-3' : 'gap-3';
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
     return () => clearTimeout(t);
@@ -253,274 +269,177 @@ export default function EarningAddon() {
   const columnsConfig = {
     title: 'Title',
     requiredOrders: 'Required Orders',
-    earningAmount: 'Earning Amount',
+    earningAmount: 'Earning Amount (₹)',
     startDate: 'Start Date',
     endDate: 'End Date',
     status: 'Status',
     redemptions: 'Redemptions',
     actions: 'Actions',
   };
-  const getStatusBadge = (status, isValid) => {
-    const statusConfig = {
-      active: {
-        bg: 'bg-green-100',
-        text: 'text-green-700',
-        label: 'Active',
-      },
-      inactive: {
-        bg: 'bg-gray-100',
-        text: 'text-gray-700',
-        label: 'Inactive',
-      },
-      expired: {
-        bg: 'bg-red-100',
-        text: 'text-red-700',
-        label: 'Expired',
-      },
-      completed: {
-        bg: 'bg-blue-100',
-        text: 'text-blue-700',
-        label: 'Completed',
-      },
-    };
-    const config = statusConfig[status] || statusConfig.inactive;
-    return (
-      <Span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        {config.label} {isValid && status === 'active' && '\u2713'}
-      </Span>
-    );
-  };
   const COLUMN_WIDTHS = {
     title: 200,
-    requiredOrders: 150,
-    earningAmount: 170,
-    startDate: 140,
-    endDate: 140,
+    requiredOrders: 140,
+    earningAmount: 150,
+    startDate: 130,
+    endDate: 130,
     status: 130,
-    redemptions: 140,
-    actions: 132,
+    redemptions: 130,
+    actions: 150,
   };
-  const tableCols = Object.keys(COLUMN_WIDTHS)
-    .filter((key) => visibleColumns[key])
-    .map((key) => COLUMN_WIDTHS[key]);
+  const activeKeys = Object.keys(COLUMN_WIDTHS).filter((key) => visibleColumns[key]);
+  const tableCols = activeKeys.map((key) => COLUMN_WIDTHS[key]);
+  const tableLabels = activeKeys.map((key) => columnsConfig[key]);
+  const widthOf = (key) => COLUMN_WIDTHS[key];
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-2">
-              <H1 className="text-2xl font-bold text-slate-900">Earning Addon Offers</H1>
-              <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">{totalItems}</Span>
-            </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Gift}
+        title="Earning Addon Offers"
+        subtitle={isLoading ? 'Loading offers…' : `${totalItems} offer${totalItems === 1 ? '' : 's'} delivery partners can earn on top of deliveries`}
+        breadcrumb={[{ label: 'Food' }, { label: 'Delivery partners' }, { label: 'Earning addons' }]}
+        actions={
+          <>
+            <Button onClick={() => handleOpenDialog()} className={BTN_PRIMARY}>
+              <UiIcon as={Plus} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Create Offer</Span>
+            </Button>
+            <Button
+              onClick={() => setIsSettingsOpen(true)}
+              accessibilityLabel="Table settings"
+              className="w-11 h-11 rounded-lg border border-slate-300 bg-white items-center justify-center"
+            >
+              <UiIcon as={Settings} size={18} className="text-slate-600" />
+            </Button>
+          </>
+        }
+      />
 
-            <Div className="flex items-center gap-3">
-              <Div className="relative flex-1 sm:flex-initial min-w-[250px]">
-                <Input
-                  type="text"
-                  placeholder="Ex: search offer title"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                />
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </Div>
-              <Button
-                onClick={() => handleOpenDialog()}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 flex items-center gap-2 transition-all"
-              >
-                <UiIcon as={Plus} className="w-4 h-4" />
-                <Span>Create Offer</Span>
-              </Button>
-              <Button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
-              >
-                <UiIcon as={Settings} className="w-5 h-5" />
-              </Button>
-            </Div>
-          </Div>
-
-          {/* Table */}
-          {isLoading ? (
-            <Div className="flex items-center justify-center py-12">
-              <Div className="text-slate-500">Loading...</Div>
-            </Div>
-          ) : (
-            <Div>
-              <Table className="w-full" cols={tableCols}>
-                <Thead className="bg-slate-50 border-b border-slate-200">
-                  <Tr>
-                    {visibleColumns.title && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        <Div className="flex items-center gap-2">
-                          <Span>Title</Span>
-                          <UiIcon as={ArrowUpDown} className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.requiredOrders && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        <Div className="flex items-center gap-2">
-                          <Span>Required Orders</Span>
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.earningAmount && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        <Div className="flex items-center gap-2">
-                          <Span>Earning Amount (₹)</Span>
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.startDate && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        <Div className="flex items-center gap-2">
-                          <Span>Start Date</Span>
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.endDate && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        <Div className="flex items-center gap-2">
-                          <Span>End Date</Span>
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.status && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        <Div className="flex items-center gap-2">
-                          <Span>Status</Span>
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.redemptions && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        <Div className="flex items-center gap-2">
-                          <Span>Redemptions</Span>
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.actions && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Actions</Th>}
-                  </Tr>
-                </Thead>
-                <Tbody className="bg-white divide-y divide-slate-100">
-                  {earningAddons.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={8} className="px-6 py-12 text-center text-slate-500">
-                        No earning addons found. Create your first offer!
-                      </Td>
-                    </Tr>
-                  ) : (
-                    earningAddons.map((addon, index) => (
-                      <Tr key={addon._id} className="hover:bg-slate-50 transition-colors">
-                        {visibleColumns.title && (
-                          <Td className="px-6 py-4">
-                            <Div>
-                              <P className="text-sm font-medium text-slate-900">{addon.title}</P>
-                              {addon.description && <P className="text-xs text-slate-500 mt-1">{addon.description}</P>}
-                            </Div>
-                          </Td>
-                        )}
-                        {visibleColumns.requiredOrders && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Div className="flex items-center gap-1">
-                              <UiIcon as={Package} className="w-4 h-4 text-slate-400" />
-                              <Span className="text-sm font-medium text-slate-900">{addon.requiredOrders}</Span>
-                            </Div>
-                          </Td>
-                        )}
-                        {visibleColumns.earningAmount && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Div className="flex items-center gap-1">
-                              <Span className="text-sm font-semibold text-emerald-500">₹</Span>
-                              <Span className="text-sm font-medium text-slate-900">{addon.earningAmount?.toFixed(2)}</Span>
-                            </Div>
-                          </Td>
-                        )}
-                        {visibleColumns.startDate && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-slate-700">{new Date(addon.startDate).toLocaleDateString()}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.endDate && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-slate-700">{new Date(addon.endDate).toLocaleDateString()}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.status && <Td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(addon.status, addon.isValid)}</Td>}
-                        {visibleColumns.redemptions && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-slate-700">
-                              {addon.currentRedemptions || 0} / {addon.maxRedemptions || '8'}
-                            </Span>
-                          </Td>
-                        )}
-                        {visibleColumns.actions && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Div className="flex items-center gap-2">
-                              <Button
-                                onClick={() => handleToggleStatus(addon._id, addon.status)}
-                                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-                              >
-                                {addon.status === 'active' ? (
-                                  <UiIcon as={ToggleRight} className="w-5 h-5 text-green-500" />
-                                ) : (
-                                  <UiIcon as={ToggleLeft} className="w-5 h-5 text-gray-400" />
-                                )}
-                              </Button>
-                              <Button onClick={() => handleOpenDialog(addon)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
-                                <UiIcon as={Edit} className="w-4 h-4 text-blue-500" />
-                              </Button>
-                              <Button onClick={() => handleDelete(addon._id)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
-                                <UiIcon as={Trash2} className="w-4 h-4 text-red-500" />
-                              </Button>
-                            </Div>
-                          </Td>
-                        )}
-                      </Tr>
-                    ))
-                  )}
-                </Tbody>
-              </Table>
-            </Div>
-          )}
-
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              try {
-                localStorage.setItem('admin_earning_addon_pageSize', String(size));
-              } catch {
-                /* ignore */
-              }
-            }}
-            itemLabel="offers"
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Input
+            type="text"
+            placeholder="Search offer title"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`${INPUT} flex-1 min-w-[200px]`}
           />
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
+
+      {isLoading ? (
+        <TableSkeleton rows={6} />
+      ) : earningAddons.length === 0 ? (
+        <EmptyState
+          icon={Gift}
+          title="No earning addons yet"
+          message={debouncedSearch ? 'No offer matches this search.' : 'Create an offer so partners earn a bonus for completing a set number of orders.'}
+          actionLabel="Create Offer"
+          onAction={() => handleOpenDialog()}
+        />
+      ) : tableCols.length === 0 ? (
+        <EmptyState
+          icon={Columns}
+          title="All columns are hidden"
+          message="Turn a column back on to see the offers."
+          actionLabel="Table settings"
+          onAction={() => setIsSettingsOpen(true)}
+        />
+      ) : (
+        <DataTable cols={tableCols}>
+          <THead cols={tableCols} labels={tableLabels} />
+          <TBody>
+            {earningAddons.map((addon, index) => (
+              <Row key={addon._id} last={index === earningAddons.length - 1}>
+                {visibleColumns.title && (
+                  <Cell width={widthOf('title')}>
+                    <Div className="gap-0.5">
+                      <Span className="text-sm font-medium text-slate-900">{addon.title}</Span>
+                      {addon.description ? (
+                        <Span className="text-xs text-slate-500" numberOfLines={2}>
+                          {addon.description}
+                        </Span>
+                      ) : null}
+                    </Div>
+                  </Cell>
+                )}
+                {visibleColumns.requiredOrders && (
+                  <Cell width={widthOf('requiredOrders')}>
+                    <Div className="flex-row items-center gap-1.5">
+                      <UiIcon as={Package} size={14} className="text-slate-400" />
+                      <Span className="text-sm font-medium text-slate-900">{addon.requiredOrders}</Span>
+                    </Div>
+                  </Cell>
+                )}
+                {visibleColumns.earningAmount && (
+                  <Cell width={widthOf('earningAmount')} align="right">
+                    <Span className="text-sm font-semibold text-slate-900">
+                      {'₹'}
+                      {addon.earningAmount?.toFixed(2)}
+                    </Span>
+                  </Cell>
+                )}
+                {visibleColumns.startDate && <Cell width={widthOf('startDate')}>{new Date(addon.startDate).toLocaleDateString()}</Cell>}
+                {visibleColumns.endDate && <Cell width={widthOf('endDate')}>{new Date(addon.endDate).toLocaleDateString()}</Cell>}
+                {visibleColumns.status && (
+                  <Cell width={widthOf('status')}>
+                    <StatusBadge status={addon.status || 'inactive'} />
+                  </Cell>
+                )}
+                {visibleColumns.redemptions && (
+                  <Cell width={widthOf('redemptions')}>
+                    {`${addon.currentRedemptions || 0} / ${addon.maxRedemptions || '8'}`}
+                  </Cell>
+                )}
+                {visibleColumns.actions && (
+                  <Cell width={widthOf('actions')}>
+                    <Div className="flex-row items-center gap-1">
+                      <Button
+                        onClick={() => handleToggleStatus(addon._id, addon.status)}
+                        accessibilityLabel={addon.status === 'active' ? 'Deactivate offer' : 'Activate offer'}
+                        className="w-11 h-11 rounded-lg items-center justify-center"
+                      >
+                        <UiIcon as={addon.status === 'active' ? ToggleRight : ToggleLeft} size={20} className={addon.status === 'active' ? 'text-green-700' : 'text-slate-400'} />
+                      </Button>
+                      <Button onClick={() => handleOpenDialog(addon)} accessibilityLabel="Edit offer" className="w-11 h-11 rounded-lg items-center justify-center">
+                        <UiIcon as={Edit} size={16} className="text-blue-600" />
+                      </Button>
+                      <Button onClick={() => handleDelete(addon._id)} accessibilityLabel="Delete offer" className="w-11 h-11 rounded-lg items-center justify-center">
+                        <UiIcon as={Trash2} size={16} className="text-red-600" />
+                      </Button>
+                    </Div>
+                  </Cell>
+                )}
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          try {
+            localStorage.setItem('admin_earning_addon_pageSize', String(size));
+          } catch {
+            /* ignore */
+          }
+        }}
+        itemLabel="offers"
+        className="mt-3 rounded-xl border border-slate-200"
+      />
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50 p-0 border-0 shadow-2xl">
-          <Div className="px-5 py-4 rounded-t-2xl overflow-hidden">
-            <GradientFill colors={['#10B981', '#059669']} />
-            <DialogHeader className="mb-0">
-              <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-                <UiIcon as={Package} className="w-4 h-4" />
-                {isEditMode ? 'Edit Earning Addon' : 'Create Earning Addon Offer'}
-              </DialogTitle>
-            </DialogHeader>
-          </Div>
-          <Form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
-            {/* Title Field */}
-            <Div className="space-y-1.5">
-              <Label className="block text-sm font-semibold text-slate-700">
-                Title <Span className="text-red-500">*</Span>
-              </Label>
+        <DialogContent className="max-w-2xl bg-white p-5 gap-4">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base font-semibold text-slate-900">{isEditMode ? 'Edit Earning Addon' : 'Create Earning Addon Offer'}</DialogTitle>
+          </DialogHeader>
+          <Form onSubmit={handleSubmit} className="gap-4">
+            <Field label="Title" required>
               <Input
                 type="text"
                 required
@@ -531,66 +450,49 @@ export default function EarningAddon() {
                     title: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
-                placeholder="e.g., Complete 50 orders and earn \u20B9500"
+                className={INPUT}
+                placeholder="e.g. Complete 50 orders and earn ₹500"
               />
+            </Field>
+
+            <Div className={rowClass}>
+              <Field label="Required Orders" required className={col}>
+                <Input
+                  type="number"
+                  required
+                  min="1"
+                  value={formData.requiredOrders}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      requiredOrders: e.target.value,
+                    })
+                  }
+                  className={INPUT}
+                  placeholder="e.g. 50"
+                />
+              </Field>
+              <Field label="Earning Amount (₹)" required className={col}>
+                <Input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  value={formData.earningAmount}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      earningAmount: e.target.value,
+                    })
+                  }
+                  className={INPUT}
+                  placeholder="e.g. 500.00"
+                />
+              </Field>
             </Div>
 
-            {/* Orders and Earnings Row */}
-            <Div className="grid grid-cols-2 gap-3">
-              <Div className="space-y-1.5">
-                <Label className="block text-sm font-semibold text-slate-700">
-                  Required Orders <Span className="text-red-500">*</Span>
-                </Label>
-                <Div className="relative">
-                  <UiIcon as={Package} className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    type="number"
-                    required
-                    min="1"
-                    value={formData.requiredOrders}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        requiredOrders: e.target.value,
-                      })
-                    }
-                    className="w-full pl-9 pr-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
-                    placeholder="e.g., 50"
-                  />
-                </Div>
-              </Div>
-              <Div className="space-y-1.5">
-                <Label className="block text-sm font-semibold text-slate-700">
-                  Earning Amount (₹) <Span className="text-red-500">*</Span>
-                </Label>
-                <Div className="relative">
-                  <Span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-emerald-500">₹</Span>
-                  <Input
-                    type="number"
-                    required
-                    min="0"
-                    step="0.01"
-                    value={formData.earningAmount}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        earningAmount: e.target.value,
-                      })
-                    }
-                    className="w-full pl-9 pr-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
-                    placeholder="e.g., 500.00"
-                  />
-                </Div>
-              </Div>
-            </Div>
-
-            {/* Date Range Row */}
-            <Div className="grid grid-cols-2 gap-3">
-              <Div className="space-y-1.5">
-                <Label className="block text-sm font-semibold text-slate-700">
-                  Start Date <Span className="text-red-500">*</Span>
-                </Label>
+            <Div className={rowClass}>
+              <Field label="Start Date" required className={col}>
                 <Input
                   type="date"
                   required
@@ -602,13 +504,10 @@ export default function EarningAddon() {
                     })
                   }
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                  className={INPUT}
                 />
-              </Div>
-              <Div className="space-y-1.5">
-                <Label className="block text-sm font-semibold text-slate-700">
-                  End Date <Span className="text-red-500">*</Span>
-                </Label>
+              </Field>
+              <Field label="End Date" required className={col}>
                 <Input
                   type="date"
                   required
@@ -620,14 +519,12 @@ export default function EarningAddon() {
                     })
                   }
                   min={formData.startDate || new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                  className={INPUT}
                 />
-              </Div>
+              </Field>
             </Div>
 
-            {/* Max Redemptions Field */}
-            <Div className="space-y-1.5">
-              <Label className="block text-sm font-semibold text-slate-700">Max Redemptions</Label>
+            <Field label="Max Redemptions" hint="Leave empty for unlimited redemptions">
               <Input
                 type="number"
                 min="1"
@@ -638,27 +535,17 @@ export default function EarningAddon() {
                     maxRedemptions: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                className={INPUT}
                 placeholder="Leave empty for unlimited"
               />
-              <P className="text-xs text-slate-500">Leave empty for unlimited redemptions</P>
-            </Div>
+            </Field>
 
-            {/* Footer Buttons */}
-            <DialogFooter className="pt-3 border-t border-slate-200 mt-4">
-              <Button
-                type="button"
-                onClick={handleCloseDialog}
-                className="px-5 py-2 text-sm font-semibold rounded-lg border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
-              >
-                Cancel
+            <DialogFooter className="flex-row justify-end gap-2 pt-1">
+              <Button type="button" onClick={handleCloseDialog} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
-              <Button
-                type="submit"
-                className="px-5 py-2 text-sm font-semibold rounded-lg text-white shadow-md transition-all overflow-hidden"
-              >
-                <GradientFill colors={['#10B981', '#059669']} />
-                {isEditMode ? 'Update' : 'Create'} Offer
+              <Button type="submit" className={BTN_PRIMARY}>
+                <Span className={BTN_TEXT_PRIMARY}>{isEditMode ? 'Update Offer' : 'Create Offer'}</Span>
               </Button>
             </DialogFooter>
           </Form>
@@ -667,58 +554,30 @@ export default function EarningAddon() {
 
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="max-w-md bg-gradient-to-br from-slate-50 via-white to-slate-50 p-0 border-0 shadow-2xl">
-          <Div className="px-6 py-5 rounded-t-2xl overflow-hidden">
-            <GradientFill colors={['#475569', '#334155']} />
-            <DialogHeader className="mb-0">
-              <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
-                <UiIcon as={Settings} className="w-5 h-5" />
-                Table Settings
-              </DialogTitle>
-            </DialogHeader>
-          </Div>
-          <Div className="px-6 py-6 space-y-6">
-            <Div>
-              <H3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                <UiIcon as={Columns} className="w-4 h-4" />
-                Visible Columns
-              </H3>
-              <ScrollDiv className="space-y-2 max-h-64">
-                {Object.entries(columnsConfig).map(([key, label]) => (
-                  <Label
-                    key={key}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors border border-transparent hover:border-slate-200"
-                  >
-                    <Input
-                      type="checkbox"
-                      checked={visibleColumns[key]}
-                      onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
-                    />
-                    <Span className="text-sm font-medium text-slate-700 flex-1">{label}</Span>
-                    {visibleColumns[key] && <UiIcon as={Check} className="w-4 h-4 text-emerald-600" />}
-                  </Label>
-                ))}
-              </ScrollDiv>
-            </Div>
-            <Div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button
-                onClick={resetColumns}
-                className="px-5 py-2.5 text-sm font-semibold rounded-xl border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
-              >
-                Reset
-              </Button>
-              <Button
-                onClick={() => setIsSettingsOpen(false)}
-                className="px-5 py-2.5 text-sm font-semibold rounded-xl text-white shadow-lg transition-all overflow-hidden"
-              >
-                <GradientFill colors={['#10B981', '#059669']} />
-                Apply
-              </Button>
-            </Div>
-          </Div>
+        <DialogContent className="max-w-md bg-white p-5 gap-3">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base font-semibold text-slate-900">Table Settings</DialogTitle>
+          </DialogHeader>
+          <SectionTitle className="mb-1">Visible columns</SectionTitle>
+          <ScrollDiv className="max-h-72" contentClassName="gap-1">
+            {Object.entries(columnsConfig).map(([key, label]) => (
+              <Label key={key} className="flex-row items-center gap-3 h-11 px-2 rounded-lg" onClick={() => toggleColumn(key)}>
+                <CheckBox checked={visibleColumns[key]} onChange={() => toggleColumn(key)} />
+                <Span className="text-sm text-slate-700 flex-1">{label}</Span>
+                {visibleColumns[key] ? <UiIcon as={Check} size={16} className="text-blue-600" /> : null}
+              </Label>
+            ))}
+          </ScrollDiv>
+          <DialogFooter className="flex-row justify-end gap-2 pt-2">
+            <Button onClick={resetColumns} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+            </Button>
+            <Button onClick={() => setIsSettingsOpen(false)} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Apply</Span>
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

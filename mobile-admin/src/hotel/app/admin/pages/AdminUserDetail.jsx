@@ -1,129 +1,128 @@
 /* Ported from Frontend/src/modules/Hotel/app/admin/pages/AdminUserDetail.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from '../../../../lib/motion';
-import { Mail, Phone, Calendar, CreditCard, AlertTriangle, Ban, CheckCircle, Unlock, Loader2, ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
+import { Mail, Phone, Calendar, CreditCard, Ban, CheckCircle, Unlock, User as UserIcon, Wallet, ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
 import { useParams } from '../../../../lib/webRouter';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, H1, H2, H3, HScroll, Link, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
-const UserBookingsTab = ({ bookings }) => (
-  <Div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-    <Table cols={[120, 200, 130, 120, 110]} className="w-full text-left text-sm">
-      <Thead className="bg-gray-50 border-b border-gray-100 uppercase text-[10px] font-bold tracking-wider text-gray-500">
-        <Tr>
-          <Th className="p-4 font-bold text-gray-600">Booking ID</Th>
-          <Th className="p-4 font-bold text-gray-600">Hotel</Th>
-          <Th className="p-4 font-bold text-gray-600">Date</Th>
-          <Th className="p-4 font-bold text-gray-600">Status</Th>
-          <Th className="p-4 font-bold text-gray-600 text-right">Amount</Th>
-        </Tr>
-      </Thead>
-      <Tbody className="divide-y divide-gray-100">
-        {bookings && bookings.length > 0 ? (
-          bookings.map((booking, i) => (
-            <Tr key={i} className="hover:bg-gray-50">
-              <Td className="p-4 font-mono text-xs text-gray-500">#{booking.bookingId || booking._id.slice(-6)}</Td>
-              <Td className="p-4 font-bold text-gray-900">{booking.propertyId?.propertyName || booking.propertyId?.name || 'Deleted Hotel'}</Td>
-              <Td className="p-4 text-[10px] items-center font-bold text-gray-400 uppercase">{new Date(booking.createdAt).toLocaleDateString()}</Td>
-              <Td className="p-4">
-                <Span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : booking.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}
-                >
-                  {booking.status}
-                </Span>
-              </Td>
-              <Td className="p-4 text-right font-bold">₹{booking.totalAmount?.toLocaleString()}</Td>
-            </Tr>
-          ))
-        ) : (
-          <Tr>
-            <Td colSpan="5" className="p-8 text-center text-gray-400 text-xs font-bold uppercase">
-              No bookings found
-            </Td>
-          </Tr>
-        )}
-      </Tbody>
-    </Table>
-  </Div>
-);
-const UserTransactionsTab = ({ wallet, transactions }) => (
-  <Div className="space-y-6">
-    <Div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <P className="text-[10px] font-bold text-gray-400 uppercase mb-1">Current Balance</P>
-        <H3 className="text-2xl font-black text-gray-900">₹{wallet?.balance?.toLocaleString() || 0}</H3>
-      </Div>
-      <Div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <P className="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Transactions</P>
-        <H3 className="text-2xl font-black text-gray-900">{transactions?.length || 0}</H3>
-      </Div>
-    </Div>
+import { Button, Div, HScroll, Link, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  BTN_DANGER,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
 
-    <Div className="bg-white border border-gray-200 rounded-xl p-6">
-      <H3 className="text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest">Recent Transactions</H3>
-      <Div className="space-y-3">
-        {transactions && transactions.length > 0 ? (
-          transactions.map((txn, i) => {
+const BOOKING_COLS = [110, 190, 130, 120, 110];
+const BOOKING_LABELS = ['Booking', 'Hotel', 'Date', 'Status', 'Amount'];
+
+const UserBookingsTab = ({ bookings }) => {
+  if (!bookings || bookings.length === 0) {
+    return <EmptyState icon={Calendar} title="No bookings yet" message="Stays this guest books will be listed here." />;
+  }
+  return (
+    <DataTable cols={BOOKING_COLS}>
+      <THead cols={BOOKING_COLS} labels={BOOKING_LABELS} />
+      <TBody>
+        {bookings.map((booking, i) => (
+          <Row key={i} last={i === bookings.length - 1}>
+            <Cell width={BOOKING_COLS[0]}>#{booking.bookingId || booking._id.slice(-6)}</Cell>
+            <Cell width={BOOKING_COLS[1]}>
+              <Span className="text-sm font-medium text-slate-900" numberOfLines={2}>
+                {booking.propertyId?.propertyName || booking.propertyId?.name || 'Deleted Hotel'}
+              </Span>
+            </Cell>
+            <Cell width={BOOKING_COLS[2]}>{new Date(booking.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</Cell>
+            <Cell width={BOOKING_COLS[3]}>
+              <StatusBadge status={booking.status} />
+            </Cell>
+            <Cell width={BOOKING_COLS[4]} align="right">
+              <Span className="text-sm font-semibold text-slate-900">₹{booking.totalAmount?.toLocaleString()}</Span>
+            </Cell>
+          </Row>
+        ))}
+      </TBody>
+    </DataTable>
+  );
+};
+
+const UserTransactionsTab = ({ wallet, transactions }) => (
+  <Div className="gap-4">
+    <StatGrid>
+      <StatCard label="Current balance" value={`₹${wallet?.balance?.toLocaleString() || 0}`} icon={Wallet} tone="success" />
+      <StatCard label="Total transactions" value={transactions?.length || 0} icon={CreditCard} tone="info" />
+    </StatGrid>
+
+    {transactions && transactions.length > 0 ? (
+      <Card>
+        <SectionTitle>Recent transactions</SectionTitle>
+        <Div className="gap-2">
+          {transactions.map((txn, i) => {
             const isDebit = txn.type === 'debit';
             const isBooking = txn.category?.includes('booking') || txn.isBooking;
-
-            // Styling Logic based on User Screenshot
             return (
-              <Div key={i} className="flex items-center justify-between p-4 border border-gray-100 rounded-2xl hover:bg-gray-50 transition-colors bg-white">
-                <Div className="flex items-center gap-4">
-                  <Div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 border-2 border-white shadow-sm ${isBooking ? 'bg-orange-50 text-orange-500' : !isDebit ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}
-                  >
-                    {isBooking ? (
-                      <UiIcon as={Calendar} size={20} />
-                    ) : !isDebit ? (
-                      <UiIcon as={ArrowDownLeft} size={20} />
-                    ) : (
-                      <UiIcon as={ArrowUpRight} size={20} />
-                    )}
-                  </Div>
-                  <Div className="min-w-0">
-                    <P className="text-sm font-bold text-gray-900 truncate pr-2">{txn.description}</P>
-                    <P className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tight">
-                      {new Date(txn.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}{' '}
-                      •{' '}
-                      {new Date(txn.createdAt).toLocaleTimeString('en-IN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </P>
-                  </Div>
+              <Div key={i} className="flex-row items-center gap-3 p-3 rounded-lg border border-slate-200">
+                <Div className={`w-10 h-10 rounded-full items-center justify-center shrink-0 ${isBooking ? 'bg-amber-100' : !isDebit ? 'bg-green-100' : 'bg-red-100'}`}>
+                  <UiIcon
+                    as={isBooking ? Calendar : isDebit ? ArrowUpRight : ArrowDownLeft}
+                    size={18}
+                    className={isBooking ? 'text-amber-700' : !isDebit ? 'text-green-700' : 'text-red-700'}
+                  />
                 </Div>
-                <Div className="text-right shrink-0">
-                  <P className={`text-lg font-black tracking-tight ${isDebit ? 'text-gray-900' : 'text-green-600'}`}>
-                    {isDebit ? '-' : '+'}₹{txn.amount?.toLocaleString()}
-                  </P>
-                  <Span
-                    className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-1 ${txn.status === 'completed' || txn.status === 'success' ? 'bg-green-50 text-green-600' : txn.status === 'cancelled' ? 'bg-gray-100 text-gray-500' : 'bg-amber-50 text-amber-600'}`}
-                  >
-                    {txn.status}
+                <Div className="flex-1 min-w-0">
+                  <Span className="text-sm font-medium text-slate-900" numberOfLines={2}>
+                    {txn.description}
                   </Span>
+                  <Span className="text-xs text-slate-500" numberOfLines={1}>
+                    {new Date(txn.createdAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                    {' · '}
+                    {new Date(txn.createdAt).toLocaleTimeString('en-IN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Span>
+                </Div>
+                <Div className="items-end gap-1 shrink-0">
+                  <Span className={`text-sm font-semibold ${isDebit ? 'text-slate-900' : 'text-green-700'}`}>
+                    {isDebit ? '-' : '+'}₹{txn.amount?.toLocaleString()}
+                  </Span>
+                  <StatusBadge status={txn.status} />
                 </Div>
               </Div>
             );
-          })
-        ) : (
-          <Div className="p-10 text-center border-2 border-dashed border-gray-100 rounded-xl">
-            <UiIcon as={CreditCard} size={32} className="mx-auto text-gray-300 mb-2" />
-            <P className="text-xs font-bold uppercase text-gray-400">No transactions history</P>
-          </Div>
-        )}
-      </Div>
-    </Div>
+          })}
+        </Div>
+      </Card>
+    ) : (
+      <EmptyState icon={CreditCard} title="No transaction history" message="Wallet top-ups and payments will appear here." />
+    )}
   </Div>
 );
+
 const AdminUserDetail = () => {
   const { id } = useParams();
+  const { tablet } = useLayoutWidth();
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [wallet, setWallet] = useState(null);
@@ -182,22 +181,25 @@ const AdminUserDetail = () => {
   };
   if (loading) {
     return (
-      <ScrollDiv className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <UiIcon as={Loader2} className="animate-spin text-gray-400" size={48} />
-        <P className="text-gray-500 font-bold uppercase text-xs tracking-widest">Loading user profile...</P>
-      </ScrollDiv>
+      <AdminPage maxWidth={1000}>
+        <PageHeader title="User profile" breadcrumb={[{ label: 'Hotel' }, { label: 'Users' }]} />
+        <LoadingState label="Loading user profile…" />
+      </AdminPage>
     );
   }
   if (!user) {
     return (
-      <ScrollDiv className="text-center py-20">
-        <UiIcon as={AlertTriangle} size={48} className="mx-auto text-red-400 mb-4" />
-        <H2 className="text-2xl font-bold text-gray-900">User Not Found</H2>
-        <P className="text-gray-500 mt-2">{"The user you're looking for doesn't exist or has been deleted."}</P>
-        <Link to="/hotel/admin/users" className="mt-6 inline-block text-black font-bold uppercase text-xs border-b-2 border-black pb-1">
-          Back to Users
+      <AdminPage maxWidth={1000}>
+        <PageHeader title="User profile" breadcrumb={[{ label: 'Hotel' }, { label: 'Users' }]} />
+        <ErrorState
+          title="User not found"
+          message="The user you're looking for doesn't exist or has been deleted."
+          onRetry={fetchUserDetails}
+        />
+        <Link to="/hotel/admin/users" className={`${BTN_SECONDARY} mt-3 self-center`}>
+          <Span className={BTN_TEXT_SECONDARY}>Back to users</Span>
         </Link>
-      </ScrollDiv>
+      </AdminPage>
     );
   }
   const tabs = [
@@ -212,8 +214,9 @@ const AdminUserDetail = () => {
       icon: CreditCard,
     },
   ];
+  const totalSpend = bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
   return (
-    <ScrollDiv className="max-w-5xl mx-auto space-y-8 pb-10">
+    <AdminPage maxWidth={1000}>
       <ConfirmationModal
         isOpen={modalConfig.isOpen}
         onClose={() =>
@@ -225,113 +228,67 @@ const AdminUserDetail = () => {
         {...modalConfig}
       />
 
-      <Div className="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-500 mb-2">
-        <Link to="/hotel/admin/users" className="hover:text-black transition-colors">
-          Users
-        </Link>
-        <Span>/</Span>
-        <Span className="text-black">{user.name}</Span>
-      </Div>
-
-      <Div
-        className={`rounded-2xl p-8 border shadow-sm flex flex-col md:flex-row gap-8 transition-colors ${user.isBlocked ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}
-      >
-        <Div className="flex flex-col items-center md:items-start gap-4 min-w-[200px]">
-          <Div className="w-24 h-24 rounded-full bg-black text-white flex items-center justify-center text-3xl font-bold border-4 border-white shadow-lg relative uppercase">
-            {user.name.charAt(0)}
-            {user.isBlocked && (
-              <Div className="absolute -bottom-2 -right-2 bg-red-600 text-white p-1.5 rounded-full border-4 border-white">
-                <UiIcon as={Ban} size={16} />
-              </Div>
-            )}
-          </Div>
-          <Div className="text-center md:text-left">
-            <H1 className="text-2xl font-bold text-gray-900">{user.name}</H1>
-            <P className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">User ID: #{user._id.slice(-6)}</P>
-            {user.isBlocked && <Span className="text-xs font-bold text-red-600 mt-1 block uppercase">ACCOUNT BLOCKED</Span>}
-          </Div>
-        </Div>
-
-        <Div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          <Div className="space-y-4">
-            <Div className="flex items-center gap-3 text-sm">
-              <UiIcon as={Mail} size={16} className="text-gray-400" />
-              <Span className="text-gray-900 font-bold">{user.email || 'N/A'}</Span>
-              {user.isVerified && <UiIcon as={CheckCircle} size={14} className="text-green-500" />}
-            </Div>
-            <Div className="flex items-center gap-3 text-sm">
-              <UiIcon as={Phone} size={16} className="text-gray-400" />
-              <Span className="text-gray-900 font-bold">{user.phone}</Span>
-              <UiIcon as={CheckCircle} size={14} className="text-green-500" />
-            </Div>
-            <Div className="flex items-center gap-3 text-sm pt-2">
-              <Span
-                className={`text-[10px] font-bold uppercase py-1 px-3 rounded-md ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : user.role === 'partner' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}
-              >
-                {user.role} Account
-              </Span>
-            </Div>
-          </Div>
-
-          <Div className="flex flex-col gap-2">
-            <Div className="p-3 bg-white/50 rounded-lg border border-gray-200/50 flex justify-between items-center">
-              <Span className="text-[10px] text-gray-500 uppercase font-bold">Total Spend</Span>
-              <Span className="text-lg font-bold text-gray-900">₹{bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0).toLocaleString()}</Span>
-            </Div>
-          </Div>
-        </Div>
-
-        <Div className="flex flex-col gap-3 min-w-[160px]">
-          <Button
-            onClick={handleBlockToggle}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-2 border rounded-lg text-xs font-bold uppercase transition-colors ${user.isBlocked ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : 'bg-white text-red-600 border-red-200 hover:bg-red-50'}`}
-          >
-            {user.isBlocked ? <UiIcon as={Unlock} size={16} /> : <UiIcon as={Ban} size={16} />}
-            {user.isBlocked ? 'Unblock User' : 'Block User'}
+      <PageHeader
+        icon={UserIcon}
+        title={user.name}
+        subtitle={`User ID #${user._id.slice(-6)}`}
+        breadcrumb={[{ label: 'Hotel' }, { label: 'Users' }, { label: user.name }]}
+        actions={
+          <Button onClick={handleBlockToggle} className={user.isBlocked ? BTN_PRIMARY : BTN_DANGER}>
+            <UiIcon as={user.isBlocked ? Unlock : Ban} size={16} className="text-white" />
+            <Span className={BTN_TEXT_PRIMARY}>{user.isBlocked ? 'Unblock user' : 'Block user'}</Span>
           </Button>
+        }
+      />
+
+      <Card className="mb-4 gap-3">
+        <Div className="flex-row items-center justify-between gap-3 flex-wrap">
+          <SectionTitle className="mb-0">Account</SectionTitle>
+          <StatusBadge status={user.isBlocked ? 'blocked' : 'active'} label={user.isBlocked ? 'Account blocked' : 'Active'} />
         </Div>
-      </Div>
+        <Div className={tablet ? 'flex-row flex-wrap gap-4' : 'gap-3'}>
+          <Div className={tablet ? 'flex-1 min-w-[260px] gap-3' : 'gap-3'}>
+            <Div className="flex-row items-center gap-2">
+              <UiIcon as={Mail} size={16} className="text-slate-400" />
+              <Span className="text-sm text-slate-700 flex-1" numberOfLines={1}>
+                {user.email || 'N/A'}
+              </Span>
+              {user.isVerified ? <UiIcon as={CheckCircle} size={14} className="text-green-700" /> : null}
+            </Div>
+            <Div className="flex-row items-center gap-2">
+              <UiIcon as={Phone} size={16} className="text-slate-400" />
+              <Span className="text-sm text-slate-700 flex-1" numberOfLines={1}>
+                {user.phone}
+              </Span>
+              <UiIcon as={CheckCircle} size={14} className="text-green-700" />
+            </Div>
+            <StatusBadge tone={user.role === 'user' ? 'neutral' : 'info'} label={`${user.role} account`} />
+          </Div>
+          <Div className={tablet ? 'flex-1 min-w-[260px]' : ''}>
+            <Div className="flex-row items-center justify-between gap-3 h-11 px-3 rounded-lg bg-slate-50 border border-slate-200">
+              <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total spend</Span>
+              <Span className="text-base font-semibold text-slate-900">₹{totalSpend.toLocaleString()}</Span>
+            </Div>
+          </Div>
+        </Div>
+      </Card>
 
-      <Div>
-        <HScroll className="border-b border-gray-200 mb-6" contentClassName="flex">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase transition-colors relative whitespace-nowrap ${activeTab === tab.id ? 'text-black' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-              <UiIcon as={tab.icon} size={16} />
-              {tab.label}
-              {activeTab === tab.id && <motion.div layoutId="activeTabBadgeUser" className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />}
-            </Button>
-          ))}
-        </HScroll>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{
-              opacity: 0,
-              y: 5,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -5,
-            }}
-            transition={{
-              duration: 0.15,
-            }}
+      <HScroll className="mb-4" contentClassName="flex-row gap-2">
+        {tabs.map((tab) => (
+          <Button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-row items-center gap-2 h-11 px-4 rounded-lg border ${activeTab === tab.id ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
           >
-            {activeTab === 'bookings' && <UserBookingsTab bookings={bookings} />}
-            {activeTab === 'transactions' && <UserTransactionsTab wallet={wallet} transactions={transactions} />}
-          </motion.div>
-        </AnimatePresence>
-      </Div>
-    </ScrollDiv>
+            <UiIcon as={tab.icon} size={16} className={activeTab === tab.id ? 'text-white' : 'text-slate-500'} />
+            <Span className={`text-sm font-semibold ${activeTab === tab.id ? 'text-white' : 'text-slate-700'}`}>{tab.label}</Span>
+          </Button>
+        ))}
+      </HScroll>
+
+      {activeTab === 'bookings' ? <UserBookingsTab bookings={bookings} /> : null}
+      {activeTab === 'transactions' ? <UserTransactionsTab wallet={wallet} transactions={transactions} /> : null}
+    </AdminPage>
   );
 };
 export default AdminUserDetail;

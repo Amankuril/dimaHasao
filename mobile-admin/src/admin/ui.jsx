@@ -91,6 +91,32 @@ export function useLayoutWidth() {
   return useMemo(() => ({ width, phone: width < 700, tablet: width >= 700, wide: width >= 1000, columns: width >= 1000 ? 3 : width >= 700 ? 2 : 1 }), [width]);
 }
 
+/**
+ * The width to hand a gifted-charts chart, and the style for its axis labels.
+ *
+ * `width` on those charts is the *plot* width: the y-axis label column is drawn
+ * outside it, so a chart given the full card width overflows by exactly
+ * `axisWidth`. Subtract the page gutter (16+16), the card padding (16+16) and
+ * that column.
+ */
+// gifted-charts draws its labels with a bare RN <Text>, which bypasses
+// components/Text.jsx and so falls back to the OS font. Name the family here.
+export const AXIS_TEXT = { color: A.textMuted, fontSize: 11, fontFamily: 'Poppins_400Regular' };
+
+export function useChartWidth(axisWidth = 44, maxWidth = 1200) {
+  const { width } = useWindowDimensions();
+  return Math.max(200, Math.min(width, maxWidth) - 64 - axisWidth);
+}
+
+/**
+ * Point spacing for a gifted-charts series. `adjustToWidth` divides by
+ * `count - 1`, so a single-point series stretches the chart far past the card;
+ * this keeps every series inside `width`.
+ */
+export function chartSpacing(width, count, initial = 10) {
+  return Math.max(8, Math.floor((width - initial * 2) / Math.max(1, count)));
+}
+
 /* ------------------------------------------------------------------- page */
 
 /**
@@ -133,7 +159,14 @@ export function PageHeader({ title, subtitle, breadcrumb, actions, icon: IconCmp
           {breadcrumb.map((crumb, i) => (
             <Div key={`${crumb.label}-${i}`} className="flex-row items-center gap-1.5">
               {i > 0 ? <Icon as={ChevronRight} size={12} className="text-slate-400" /> : null}
-              <Span className={cn('text-xs', i === breadcrumb.length - 1 ? 'text-slate-900 font-semibold' : 'text-slate-500')} onClick={crumb.onPress}>
+              <Span
+                className={cn('text-xs py-2', i === breadcrumb.length - 1 ? 'text-slate-900 font-semibold' : 'text-slate-500')}
+                onClick={crumb.onPress}
+                // A 12px line of text is not a tap target; the padding plus hitSlop gives it 44.
+                hitSlop={crumb.onPress ? { top: 10, bottom: 10, left: 6, right: 6 } : undefined}
+                accessibilityRole={crumb.onPress ? 'link' : undefined}
+                accessibilityLabel={crumb.onPress ? `Go to ${crumb.label}` : undefined}
+              >
                 {crumb.label}
               </Span>
             </Div>

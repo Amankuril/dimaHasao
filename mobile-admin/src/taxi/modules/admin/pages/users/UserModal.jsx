@@ -1,8 +1,12 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/users/UserModal.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Phone, Lock, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react-native';
-import { Button, Div, Form, H3, Input, Label, Option, Overlay, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+import { ActivityIndicator } from 'react-native';
+import { X, CheckCircle2 } from 'lucide-react-native';
+import { Button, Div, Form, Input, Option, Overlay, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+import { Field, INPUT, INPUT_ERROR, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../../admin/ui';
+
 const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null, isLoading = false }) => {
+  const { tablet } = useLayoutWidth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -58,129 +62,55 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null, isLoading = 
       [name]: type === 'checkbox' ? checked : value,
     }));
   };
+  const cols = tablet ? 2 : 1;
   return (
-    <Overlay onClose={onClose} className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-300">
-      <Div
-        className="bg-white rounded-[32px] w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ScrollDiv className="p-8 space-y-8 max-h-[90vh]">
-          <Div className="flex items-center justify-between">
-            <Div>
-              <H3 className="text-2xl font-bold text-gray-900 tracking-tight">{editingUser ? 'Update Passenger' : 'Create New Passenger'}</H3>
-              <P className="text-sm font-medium text-gray-500 mt-1">
-                {editingUser ? `Editing ID: #${editingUser.id.slice(-6)}` : 'Add a new customer to the platform'}
-              </P>
-            </Div>
-            <Button
-              onClick={onClose}
-              className="w-10 h-10 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-950 hover:bg-gray-50 transition-all"
-            >
-              <UiIcon as={X} size={20} />
-            </Button>
+    <Overlay onClose={onClose} className="flex-1 items-center justify-center p-4">
+      <Div className="bg-white rounded-xl border border-slate-200 w-full max-w-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <Div className="flex-row items-start justify-between gap-3 px-4 pt-4">
+          <Div className="flex-1 min-w-0">
+            <Span className="text-base font-semibold text-slate-900">{editingUser ? 'Update Passenger' : 'Create New Passenger'}</Span>
+            <Span className="text-sm text-slate-500 mt-0.5">{editingUser ? `Editing ID: #${editingUser.id.slice(-6)}` : 'Add a new customer to the platform'}</Span>
           </Div>
+          <Button onClick={onClose} accessibilityLabel="Close" className="w-11 h-11 rounded-lg items-center justify-center">
+            <UiIcon as={X} size={20} className="text-slate-500" />
+          </Button>
+        </Div>
 
-          <Form onSubmit={handleSubmit} className="space-y-6">
-            <Div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Div className="space-y-2">
-                <Label className="text-xs font-bold text-gray-500 block px-1">Full Name</Label>
-                <Div className="relative group">
-                  <UiIcon
-                    as={User}
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-yellow-500 transition-colors"
-                  />
-                  <Input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="e.g. Rahul Sharma"
-                    className={`w-full h-14 pl-12 pr-4 bg-gray-50 border ${errors.name ? 'border-rose-200 bg-rose-50/20' : 'border-gray-200'} rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all`}
-                  />
-                </Div>
-                {errors.name && <P className="text-[10px] font-bold text-rose-500 px-1">{errors.name}</P>}
-              </Div>
+        <ScrollDiv className="max-h-[440px]" contentStyle={{ padding: 16 }}>
+          <Form onSubmit={handleSubmit} className="gap-3">
+            <Div className={`grid grid-cols-${cols} gap-3`}>
+              <Field label="Full Name" required error={errors.name}>
+                <Input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Rahul Sharma" className={errors.name ? INPUT_ERROR : INPUT} />
+              </Field>
 
-              <Div className="space-y-2">
-                <Label className="text-xs font-bold text-gray-500 block px-1">Email Address</Label>
-                <Div className="relative group">
-                  <UiIcon
-                    as={Mail}
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-yellow-500 transition-colors"
-                  />
-                  <Input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="rahul@example.com"
-                    className={`w-full h-14 pl-12 pr-4 bg-gray-50 border ${errors.email ? 'border-rose-200 bg-rose-50/20' : 'border-gray-200'} rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all`}
-                  />
-                </Div>
-                {errors.email && <P className="text-[10px] font-bold text-rose-500 px-1">{errors.email}</P>}
-              </Div>
+              <Field label="Email Address" required error={errors.email}>
+                <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="rahul@example.com" className={errors.email ? INPUT_ERROR : INPUT} />
+              </Field>
 
-              <Div className="space-y-2">
-                <Label className="text-xs font-bold text-gray-500 block px-1">Mobile Number</Label>
-                <Div className="relative group">
-                  <UiIcon
-                    as={Phone}
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-yellow-500 transition-colors"
-                  />
-                  <Input
-                    type="tel"
-                    name="mobile"
-                    value={formData.mobile}
-                    onChange={handleChange}
-                    placeholder="+91 9999999999"
-                    className={`w-full h-14 pl-12 pr-4 bg-gray-50 border ${errors.mobile ? 'border-rose-200 bg-rose-50/20' : 'border-gray-200'} rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all`}
-                  />
-                </Div>
-                {errors.mobile && <P className="text-[10px] font-bold text-rose-500 px-1">{errors.mobile}</P>}
-              </Div>
+              <Field label="Mobile Number" required error={errors.mobile}>
+                <Input type="tel" name="mobile" value={formData.mobile} onChange={handleChange} placeholder="+91 9999999999" className={errors.mobile ? INPUT_ERROR : INPUT} />
+              </Field>
 
-              <Div className="space-y-2">
-                <Label className="text-xs font-bold text-gray-500 block px-1">Gender</Label>
-                <Div className="relative">
-                  <UiIcon as={ChevronDown} size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  <Select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    className="w-full h-14 pl-4 pr-10 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none appearance-none focus:bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all"
-                  >
-                    <Option value="male">Male</Option>
-                    <Option value="female">Female</Option>
-                    <Option value="other">Other</Option>
-                  </Select>
-                </Div>
-              </Div>
+              <Field label="Gender">
+                <Select name="gender" value={formData.gender} onChange={handleChange} className={INPUT}>
+                  <Option value="male">Male</Option>
+                  <Option value="female">Female</Option>
+                  <Option value="other">Other</Option>
+                </Select>
+              </Field>
 
-              <Div className="space-y-2">
-                <Label className="text-xs font-bold text-gray-500 block px-1">{editingUser ? 'Update Password (Optional)' : 'Password'}</Label>
-                <Div className="relative group">
-                  <UiIcon
-                    as={Lock}
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-yellow-500 transition-colors"
-                  />
-                  <Input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder={editingUser ? '••••••••' : 'Enter strong password'}
-                    className={`w-full h-14 pl-12 pr-4 bg-gray-50 border ${errors.password ? 'border-rose-200 bg-rose-50/20' : 'border-gray-200'} rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all`}
-                  />
-                </Div>
-                {errors.password && <P className="text-[10px] font-bold text-rose-500 px-1">{errors.password}</P>}
-              </Div>
+              <Field label={editingUser ? 'Update Password' : 'Password'} required={!editingUser} error={errors.password} hint={editingUser ? 'Leave empty to keep the current password' : undefined}>
+                <Input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder={editingUser ? '••••••••' : 'Enter strong password'}
+                  className={errors.password ? INPUT_ERROR : INPUT}
+                />
+              </Field>
 
-              <Div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-200 mt-auto h-14">
-                <Span className="text-sm font-bold text-gray-700">Active Status</Span>
+              <Field label="Active Status">
                 <Button
                   type="button"
                   onClick={() =>
@@ -189,36 +119,24 @@ const UserModal = ({ isOpen, onClose, onSubmit, editingUser = null, isLoading = 
                       active: !prev.active,
                     }))
                   }
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.active ? 'bg-emerald-500' : 'bg-gray-200'}`}
+                  accessibilityLabel={formData.active ? 'Deactivate this user' : 'Activate this user'}
+                  className="flex-row items-center justify-between gap-3 h-11 px-3 rounded-lg border border-slate-300 bg-white"
                 >
-                  <Span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.active ? 'translate-x-6' : 'translate-x-1'}`}
-                  />
+                  <Span className="text-sm text-slate-700">{formData.active ? 'Active' : 'Inactive'}</Span>
+                  <Div className={`h-6 w-11 rounded-full justify-center ${formData.active ? 'bg-green-600' : 'bg-slate-300'}`}>
+                    <Div className={`h-5 w-5 rounded-full bg-white ${formData.active ? 'ml-5' : 'ml-0.5'}`} />
+                  </Div>
                 </Button>
-              </Div>
+              </Field>
             </Div>
 
-            <Div className="flex gap-4 pt-4">
-              <Button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-4 bg-gray-100 text-gray-900 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all"
-              >
-                Cancel
+            <Div className="flex-row gap-2 mt-1">
+              <Button type="button" onClick={onClose} className={`${BTN_SECONDARY} flex-1`}>
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
               </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 py-4 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-900 transition-all shadow-md flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <Div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></Div>
-                ) : (
-                  <>
-                    <UiIcon as={CheckCircle2} size={16} />
-                    {editingUser ? 'Update Passenger' : 'Submit Passenger'}
-                  </>
-                )}
+              <Button type="submit" disabled={isLoading} className={`${BTN_PRIMARY} flex-1 ${isLoading ? 'opacity-50' : ''}`}>
+                {isLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : <UiIcon as={CheckCircle2} size={16} className="text-white" />}
+                <Span className={BTN_TEXT_PRIMARY}>{editingUser ? 'Update' : 'Submit'}</Span>
               </Button>
             </Div>
           </Form>

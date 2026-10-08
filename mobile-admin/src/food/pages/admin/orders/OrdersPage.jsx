@@ -13,10 +13,9 @@ import ViewOrderDialog from '../../../components/admin/orders/ViewOrderDialog';
 import SettingsDialog from '../../../components/admin/orders/SettingsDialog';
 import RefundModal from '../../../components/admin/orders/RefundModal';
 import { useOrdersManagement } from '../../../components/admin/orders/useOrdersManagement';
-import { TableSkeleton } from '../../../components/admin/orders/TableSkeleton';
+import { AdminPage, ErrorState, TableSkeleton } from '../../../../admin/ui';
 import { refreshSidebarBadges } from '../../../components/admin/AdminSidebar';
 import { getSocketOrigin } from '../../../../shared/utils/socketOrigin';
-import { ScrollDiv } from '../../../../components/web';
 import { document, window } from '../../../../lib/webShim';
 import { playOrderAlertSound, releaseOrderAlertSounds, requestOrderNotificationPermission, showOrderNotification } from '../../../components/admin/orders/orderAlerts';
 const debugLog = (...args) => {};
@@ -90,6 +89,7 @@ export default function OrdersPage({ statusKey = 'all' }) {
   const config = statusConfig[statusKey] || statusConfig['all'];
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => {
     try {
@@ -385,6 +385,7 @@ export default function OrdersPage({ statusKey = 'all' }) {
       const { silent = false, withRingCheck = false } = options;
       try {
         if (!silent) setIsLoading(true);
+        if (!silent) setLoadError(null);
         const params = {
           page: currentPage,
           limit: pageSize,
@@ -447,6 +448,7 @@ export default function OrdersPage({ statusKey = 'all' }) {
         } else {
           debugError('Failed to fetch orders:', response.data);
           if (!silent) toast.error('Failed to fetch orders');
+          if (!silent) setLoadError('Failed to fetch orders');
           setOrders([]);
           setTotalOrders(0);
         }
@@ -457,6 +459,7 @@ export default function OrdersPage({ statusKey = 'all' }) {
           toast.error(error.response?.data?.message || 'Failed to fetch orders');
         }
         if (!silent && status !== 429) {
+          setLoadError(error.response?.data?.message || 'Failed to fetch orders');
           setOrders([]);
           setTotalOrders(0);
         }
@@ -838,7 +841,7 @@ export default function OrdersPage({ statusKey = 'all' }) {
     }
   };
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen w-full max-w-full overflow-x-hidden">
+    <AdminPage maxWidth={1200}>
       <OrdersTopbar
         title={config.title}
         count={totalOrders !== null && totalOrders !== undefined ? totalOrders : count}
@@ -851,7 +854,18 @@ export default function OrdersPage({ statusKey = 'all' }) {
         isLoading={isLoading}
       />
       {isLoading ? (
-        <TableSkeleton rows={8} columns={7} />
+        <TableSkeleton rows={8} />
+      ) : loadError ? (
+        <ErrorState
+          title="Could not load orders"
+          message={loadError}
+          onRetry={() =>
+            fetchOrders({
+              silent: false,
+              withRingCheck: false,
+            })
+          }
+        />
       ) : (
         <>
           <FilterPanel
@@ -937,6 +951,6 @@ export default function OrdersPage({ statusKey = 'all' }) {
           />
         </>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 }

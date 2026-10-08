@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
-import { Search, Filter, AlertCircle, CheckCircle, Clock, XCircle, FileText, Edit } from 'lucide-react-native';
+import { MessageSquareWarning, Edit } from 'lucide-react-native';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/shadcn';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../../components/shadcn';
-import { Button, Div, H1, H3, Input, Label, P, ScrollDiv, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Input, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Toolbar, StatusBadge, Pagination, TableSkeleton, EmptyState, Field, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../admin/ui';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -69,6 +70,8 @@ const COMPLAINT_TYPE_OPTIONS = [
     label: 'Other',
   },
 ];
+const STATUS_TONES = { pending: 'warning', in_progress: 'info', resolved: 'success', rejected: 'danger' };
+const statusLabel = (status) => STATUS_OPTIONS.find((o) => o.value === status)?.label || String(status || 'Unknown');
 export default function RestaurantComplaints() {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -149,226 +152,181 @@ export default function RestaurantComplaints() {
       toast.error('Failed to update complaint');
     }
   };
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'pending':
-        return <UiIcon as={Clock} className="w-4 h-4 text-yellow-600" />;
-      case 'in_progress':
-        return <UiIcon as={AlertCircle} className="w-4 h-4 text-blue-600" />;
-      case 'resolved':
-        return <UiIcon as={CheckCircle} className="w-4 h-4 text-green-600" />;
-      case 'rejected':
-        return <UiIcon as={XCircle} className="w-4 h-4 text-red-600" />;
-      default:
-        return <UiIcon as={FileText} className="w-4 h-4 text-gray-600" />;
-    }
-  };
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'resolved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const { tablet } = useLayoutWidth();
   return (
-    <ScrollDiv className="p-6 space-y-6">
-      <Div>
-        <Div className="flex items-center gap-3">
-          <H1 className="text-2xl font-bold text-gray-900">Restaurant Complaints</H1>
-        </Div>
-        <P className="text-sm text-gray-500 mt-1">Manage and track customer complaints</P>
-      </Div>
+    <AdminPage maxWidth={1000}>
+      <PageHeader
+        icon={MessageSquareWarning}
+        title="Restaurant Complaints"
+        subtitle="Manage and track customer complaints"
+        breadcrumb={[{ label: 'Food' }, { label: 'Restaurants' }, { label: 'Complaints' }]}
+      />
 
-      {/* Filters */}
-      <Div className="bg-white rounded-lg p-4 border border-gray-200 space-y-4">
-        <Div className="flex flex-col gap-4 md:flex-row md:items-center">
-          <Div className="w-full md:max-w-md">
-            <Input
-              type="text"
-              placeholder="Search by order, customer, restaurant..."
-              value={filters.search}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  search: e.target.value.replace(/\s/g, ''),
-                  page: 1,
-                })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+      <Card className="mb-4">
+        <SectionTitle>Filters</SectionTitle>
+        <Toolbar className="mb-0">
+          <Input
+            type="text"
+            placeholder="Search by order, customer, restaurant…"
+            value={filters.search}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                search: e.target.value.replace(/\s/g, ''),
+                page: 1,
+              })
+            }
+            className={`${INPUT} flex-1 min-w-[200px]`}
+          />
+          <Div className={tablet ? 'flex-row gap-2' : 'w-full flex-row gap-2'}>
+            <Div className="flex-1 min-w-[140px]">
+              <Select
+                value={filters.status || 'all'}
+                onValueChange={(value) =>
+                  setFilters({
+                    ...filters,
+                    status: value,
+                    page: 1,
+                  })
+                }
+              >
+                <SelectTrigger className={INPUT}>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Div>
+            <Div className="flex-1 min-w-[140px]">
+              <Select
+                value={filters.complaintType || 'all'}
+                onValueChange={(value) =>
+                  setFilters({
+                    ...filters,
+                    complaintType: value,
+                    page: 1,
+                  })
+                }
+              >
+                <SelectTrigger className={INPUT}>
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COMPLAINT_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Div>
           </Div>
-          <Div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Select
-              value={filters.status || 'all'}
-              onValueChange={(value) =>
-                setFilters({
-                  ...filters,
-                  status: value,
-                  page: 1,
-                })
-              }
-            >
-              <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.complaintType || 'all'}
-              onValueChange={(value) =>
-                setFilters({
-                  ...filters,
-                  complaintType: value,
-                  page: 1,
-                })
-              }
-            >
-              <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                {COMPLAINT_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Div>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
-      {/* Complaints List */}
-      <Div className="bg-white rounded-lg border border-gray-200">
-        {loading ? (
-          <Div className="p-12 text-center">
-            <P className="text-gray-500">Loading complaints...</P>
-          </Div>
-        ) : complaints.length === 0 ? (
-          <Div className="p-12 text-center">
-            <UiIcon as={FileText} className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <P className="text-gray-500">No complaints found</P>
-          </Div>
-        ) : (
-          <Div className="divide-y divide-gray-200">
-            {complaints.map((complaint) => (
-              <Div key={complaint._id} className="p-4 hover:bg-gray-50 transition-colors">
-                <Div className="flex items-start justify-between mb-3">
-                  <Div className="flex-1">
-                    <Div className="flex items-center gap-3 mb-2">
-                      {getStatusIcon(complaint.status)}
-                      <H3 className="font-semibold text-gray-900">{complaint.subject || complaint.issueType?.replace('_', ' ')}</H3>
-                    </Div>
-                    <Div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                      <Div>
-                        <P className="text-xs text-gray-500">Order</P>
-                        <P className="font-medium">#{complaint.orderId?.orderId || 'N/A'}</P>
-                      </Div>
-                      <Div>
-                        <P className="text-xs text-gray-500">Customer</P>
-                        <P className="font-medium">{complaint.userId?.name || 'Customer'}</P>
-                      </Div>
-                      <Div>
-                        <P className="text-xs text-gray-500">Restaurant</P>
-                        <P className="font-medium">{complaint.restaurantId?.restaurantName || 'Restaurant'}</P>
-                      </Div>
-                      <Div>
-                        <P className="text-xs text-gray-500">Type</P>
-                        <P className="font-medium capitalize">{(complaint.issueType || 'other').replace('_', ' ')}</P>
-                      </Div>
-                    </Div>
-                  </Div>
-                  <Button onClick={() => handleOpenModal(complaint)} className="p-2 rounded-md hover:bg-gray-200">
-                    <UiIcon as={Edit} className="w-4 h-4 text-gray-600" />
-                  </Button>
+      {loading ? (
+        <TableSkeleton rows={4} />
+      ) : complaints.length === 0 ? (
+        <EmptyState
+          icon={MessageSquareWarning}
+          title="No complaints found"
+          message="No customer complaints match these filters. Clear the search or pick another status."
+        />
+      ) : (
+        <Div className="gap-3">
+          {complaints.map((complaint) => (
+            <Card key={complaint._id} className="gap-3">
+              <Div className="flex-row items-start gap-3">
+                <Div className="flex-1 min-w-0 gap-1.5">
+                  <Span className="text-base font-semibold text-slate-900">{complaint.subject || (complaint.issueType || 'other').replace('_', ' ')}</Span>
+                  <StatusBadge status={complaint.status} tone={STATUS_TONES[complaint.status]} label={statusLabel(complaint.status)} />
                 </Div>
-                <P className="text-sm text-gray-700 mb-3">{complaint.description}</P>
-                {complaint.restaurantResponse && (
-                  <Div className="bg-blue-50 rounded p-3 mb-3">
-                    <P className="text-xs font-semibold text-blue-700 mb-1">Restaurant Response:</P>
-                    <P className="text-sm text-blue-800">{complaint.restaurantResponse}</P>
-                  </Div>
-                )}
-                {complaint.adminResponse && (
-                  <Div className="bg-green-50 rounded p-3 mb-3">
-                    <P className="text-xs font-semibold text-green-700 mb-1">Admin Response:</P>
-                    <P className="text-sm text-green-800">{complaint.adminResponse}</P>
-                  </Div>
-                )}
-                <P className="text-xs text-gray-400">
-                  {new Date(complaint.createdAt).toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })}
-                </P>
+                <Button
+                  onClick={() => handleOpenModal(complaint)}
+                  className="w-11 h-11 rounded-lg border border-slate-300 bg-white items-center justify-center shrink-0"
+                  accessibilityLabel="Update complaint"
+                >
+                  <UiIcon as={Edit} size={16} className="text-slate-600" />
+                </Button>
               </Div>
-            ))}
-          </Div>
-        )}
-      </Div>
 
-      {/* Pagination */}
-      {pagination.pages > 1 && (
-        <Div className="flex items-center justify-between">
-          <P className="text-sm text-gray-500">
-            Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}{' '}
-            complaints
-          </P>
-          <Div className="flex gap-2">
-            <Button
-              onClick={() =>
-                setFilters({
-                  ...filters,
-                  page: filters.page - 1,
-                })
-              }
-              disabled={filters.page === 1}
-              className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </Button>
-            <Button
-              onClick={() =>
-                setFilters({
-                  ...filters,
-                  page: filters.page + 1,
-                })
-              }
-              disabled={filters.page >= pagination.pages}
-              className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </Button>
-          </Div>
+              <Div className={tablet ? 'flex-row flex-wrap gap-3' : 'gap-3'}>
+                {[
+                  ['Order', `#${complaint.orderId?.orderId || 'N/A'}`],
+                  ['Customer', complaint.userId?.name || 'Customer'],
+                  ['Restaurant', complaint.restaurantId?.restaurantName || 'Restaurant'],
+                  ['Type', (complaint.issueType || 'other').replace('_', ' ')],
+                ].map(([label, value]) => (
+                  <Div key={label} className="min-w-[140px] flex-1 gap-0.5">
+                    <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</Span>
+                    <Span className="text-sm text-slate-700">{value}</Span>
+                  </Div>
+                ))}
+              </Div>
+
+              {complaint.description ? <Span className="text-sm text-slate-700">{complaint.description}</Span> : null}
+
+              {complaint.restaurantResponse ? (
+                <Div className="rounded-lg bg-slate-100 p-3 gap-1">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Restaurant response</Span>
+                  <Span className="text-sm text-slate-700">{complaint.restaurantResponse}</Span>
+                </Div>
+              ) : null}
+              {complaint.adminResponse ? (
+                <Div className="rounded-lg bg-blue-50 p-3 gap-1">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-blue-700">Admin response</Span>
+                  <Span className="text-sm text-slate-700">{complaint.adminResponse}</Span>
+                </Div>
+              ) : null}
+
+              <Span className="text-xs text-slate-500">
+                {new Date(complaint.createdAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </Span>
+            </Card>
+          ))}
         </Div>
+      )}
+
+      {pagination.pages > 1 && (
+        <Pagination
+          page={pagination.page}
+          pages={pagination.pages}
+          total={pagination.total}
+          onPrev={() =>
+            setFilters({
+              ...filters,
+              page: filters.page - 1,
+            })
+          }
+          onNext={() =>
+            setFilters({
+              ...filters,
+              page: filters.page + 1,
+            })
+          }
+        />
       )}
 
       {/* Update Modal */}
       <Dialog open={!!editingComplaint} onOpenChange={(open) => !open && setEditingComplaint(null)}>
-        <DialogContent className="max-w-lg p-6">
+        <DialogContent className="max-w-lg p-4">
           <DialogHeader>
             <DialogTitle>Update Complaint</DialogTitle>
             <DialogDescription>Update the status and provide a response for this complaint.</DialogDescription>
           </DialogHeader>
-          <Div className="space-y-4 py-4">
-            <Div className="space-y-2">
-              <Label className="text-sm font-medium">Status</Label>
+          <Div className="gap-3 py-3">
+            <Field label="Status">
               <Select
                 value={updateData.status}
                 onValueChange={(val) =>
@@ -378,7 +336,7 @@ export default function RestaurantComplaints() {
                   })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className={INPUT}>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -389,12 +347,11 @@ export default function RestaurantComplaints() {
                   ))}
                 </SelectContent>
               </Select>
-            </Div>
-            <Div className="space-y-2">
-              <Label className="text-sm font-medium">Admin Response</Label>
+            </Field>
+            <Field label="Admin Response" hint="The customer sees this response.">
               <Textarea
-                className="w-full min-h-[100px] p-3 border rounded-md"
-                placeholder="Type your response here..."
+                className="w-full min-h-[100px] p-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+                placeholder="Type your response here…"
                 value={updateData.adminResponse}
                 onChange={(e) =>
                   setUpdateData({
@@ -403,18 +360,18 @@ export default function RestaurantComplaints() {
                   })
                 }
               />
-            </Div>
+            </Field>
           </Div>
-          <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button onClick={() => setEditingComplaint(null)} className="px-4 py-2 border rounded-md">
-              Cancel
+          <DialogFooter className="flex-row flex-wrap justify-end gap-2">
+            <Button onClick={() => setEditingComplaint(null)} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button onClick={handleUpdateComplaint} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              Save Changes
+            <Button onClick={handleUpdateComplaint} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Save changes</Span>
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

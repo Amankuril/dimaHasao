@@ -1,33 +1,26 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/restaurant/AddRestaurant.jsx (tools/port.js first pass). */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from '../../../../lib/webRouter';
-import { Building2, Upload, Calendar, CheckCircle2, X, Image as ImageIcon, Clock, Loader2 } from 'lucide-react-native';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../../components/shadcn';
-import { Input } from '../../../../components/shadcn';
-import { Label } from '../../../../components/shadcn';
-import { Button } from '../../../../components/shadcn';
+import { Building2, Upload, CheckCircle2, X, Image as ImageIcon, Loader2 } from 'lucide-react-native';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Switch } from '../../../../components/shadcn';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
 import { adminAPI, uploadAPI, zoneAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
-import { Switch } from '../../../../components/shadcn';
 import { EMAIL_REGEX } from '../../../../lib/emailValidation';
 import { objectUrl, pickImage } from '../../../../lib/files';
-import {
-  Button as HButton,
-  Div,
-  Footer,
-  H2,
-  Header,
-  Img,
-  Input as HInput,
-  Main,
-  Option,
-  P,
-  ScrollDiv,
-  Section,
-  Select,
-  Span,
-  Icon as UiIcon,
-} from '../../../../components/web';
+import { Button as HButton, Div, Img, Input, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {
   console.warn(...args);
@@ -190,6 +183,7 @@ const clearAllFilesFromDB = async () => {
   await Promise.all(keys.map((key) => deleteFileFromDB(key)));
 };
 export default function AddRestaurant() {
+  const { columns } = useLayoutWidth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -742,13 +736,13 @@ export default function AddRestaurant() {
   }, [locationSearchValue, step]);
 
   // Render functions for each step
+  const twoCols = `grid grid-cols-${columns} gap-3`;
   const renderStep1 = () => (
-    <Div className="space-y-6">
-      <Section className="bg-white p-4 sm:p-6 rounded-md">
-        <H2 className="text-lg font-semibold text-black mb-4">Restaurant information</H2>
-        <Div className="space-y-4">
-          <Div>
-            <Label className="text-xs text-gray-700">Restaurant name*</Label>
+    <Div className="gap-3">
+      <Card>
+        <SectionTitle>Restaurant information</SectionTitle>
+        <Div className="gap-3">
+          <Field label="Restaurant name" required hint="Customers will see this name.">
             <Input
               value={step1.restaurantName || ''}
               onChange={(e) =>
@@ -757,13 +751,12 @@ export default function AddRestaurant() {
                   restaurantName: e.target.value,
                 })
               }
-              className="mt-1 bg-white text-sm text-black placeholder-black"
+              className={INPUT}
               placeholder="Customers will see this name"
             />
-          </Div>
-          <Div>
-            <Label className="text-xs text-gray-700">Pure veg restaurant?*</Label>
-            <Div className="mt-2 flex flex-wrap items-center gap-2">
+          </Field>
+          <Field label="Pure veg restaurant?" required hint="This helps users filter restaurants by dietary preference.">
+            <Div className="flex-row flex-wrap items-center gap-2">
               <HButton
                 type="button"
                 onClick={() =>
@@ -772,9 +765,9 @@ export default function AddRestaurant() {
                     pureVegRestaurant: true,
                   })
                 }
-                className={`px-3 py-1.5 text-xs rounded-full border ${step1.pureVegRestaurant === true ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-200'}`}
+                className={`h-11 px-4 items-center justify-center rounded-full border ${step1.pureVegRestaurant === true ? 'bg-green-600 border-green-600' : 'bg-white border-slate-300'}`}
               >
-                Yes, Pure Veg
+                <Span className={`text-sm font-semibold ${step1.pureVegRestaurant === true ? 'text-white' : 'text-slate-700'}`}>Yes, pure veg</Span>
               </HButton>
               <HButton
                 type="button"
@@ -784,35 +777,34 @@ export default function AddRestaurant() {
                     pureVegRestaurant: false,
                   })
                 }
-                className={`px-3 py-1.5 text-xs rounded-full border ${step1.pureVegRestaurant === false ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200'}`}
+                className={`h-11 px-4 items-center justify-center rounded-full border ${step1.pureVegRestaurant === false ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
               >
-                No, Mixed Menu
+                <Span className={`text-sm font-semibold ${step1.pureVegRestaurant === false ? 'text-white' : 'text-slate-700'}`}>No, mixed menu</Span>
               </HButton>
             </Div>
-            <P className="text-[11px] text-gray-500 mt-1">This helps users filter restaurants by dietary preference.</P>
-          </Div>
+          </Field>
         </Div>
-      </Section>
+      </Card>
 
-      <Section className="bg-white p-4 sm:p-6 rounded-md">
-        <H2 className="text-lg font-semibold text-black mb-4">Owner details</H2>
-        <Div className="space-y-4">
-          <Div>
-            <Label className="text-xs text-gray-700">Full name*</Label>
-            <Input
-              value={step1.ownerName || ''}
-              onChange={(e) =>
-                setStep1({
-                  ...step1,
-                  ownerName: normalizeName(e.target.value),
-                })
-              }
-              className="mt-1 bg-white text-sm text-black placeholder-black"
-              placeholder="Owner full name"
-            />
+      <Card>
+        <SectionTitle>Owner details</SectionTitle>
+        <Div className={twoCols}>
+          <Div className="col-span-full">
+            <Field label="Full name" required>
+              <Input
+                value={step1.ownerName || ''}
+                onChange={(e) =>
+                  setStep1({
+                    ...step1,
+                    ownerName: normalizeName(e.target.value),
+                  })
+                }
+                className={INPUT}
+                placeholder="Owner full name"
+              />
+            </Field>
           </Div>
-          <Div>
-            <Label className="text-xs text-gray-700">Email address*</Label>
+          <Field label="Email address" required>
             <Input
               type="email"
               value={step1.ownerEmail || ''}
@@ -822,12 +814,11 @@ export default function AddRestaurant() {
                   ownerEmail: e.target.value,
                 })
               }
-              className="mt-1 bg-white text-sm text-black placeholder-black"
+              className={INPUT}
               placeholder="owner@example.com"
             />
-          </Div>
-          <Div>
-            <Label className="text-xs text-gray-700">Phone number*</Label>
+          </Field>
+          <Field label="Phone number" required>
             <Input
               value={step1.ownerPhone || ''}
               onChange={(e) =>
@@ -836,224 +827,242 @@ export default function AddRestaurant() {
                   ownerPhone: sanitizeDigits(e.target.value).slice(0, 10),
                 })
               }
-              className="mt-1 bg-white text-sm text-black placeholder-black"
+              className={INPUT}
               placeholder="10-digit mobile number"
               inputMode="numeric"
               maxLength={10}
             />
-          </Div>
+          </Field>
         </Div>
-      </Section>
+      </Card>
 
-      <Section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <H2 className="text-lg font-semibold text-black">Restaurant contact & location</H2>
-        <Div className="relative">
-          <Label className="text-xs text-gray-700">Search location</Label>
-          <Div className="relative">
-            <Input
-              value={locationSearchValue}
-              onChange={(e) => setLocationSearchValue(e.target.value)}
-              className="mt-1 bg-white text-sm"
-              placeholder="Search and select restaurant address..."
-            />
-            {isSearchingLocation && (
-              <Div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <UiIcon as={Loader2} className="h-4 w-4 animate-spin text-orange-500" />
+      <Card>
+        <SectionTitle>Restaurant contact &amp; location</SectionTitle>
+        <Div className="gap-3">
+          <Field label="Search location" hint="Search to auto-fill area, city, state, pincode and coordinates.">
+            <Div>
+              <Div>
+                <Input
+                  value={locationSearchValue}
+                  onChange={(e) => setLocationSearchValue(e.target.value)}
+                  className={INPUT}
+                  placeholder="Search and select restaurant address..."
+                />
+                {isSearchingLocation && (
+                  <Div className="absolute right-3 top-3">
+                    <UiIcon as={Loader2} size={16} className="text-slate-400" />
+                  </Div>
+                )}
               </Div>
-            )}
-          </Div>
 
-          {locationSuggestions.length > 0 && (
-            <Div className="mt-1 bg-white border border-gray-200 rounded-md shadow-xl overflow-hidden">
-              {locationSuggestions.map((s) => (
-                <HButton
-                  key={s.id}
-                  type="button"
-                  onClick={() => {
-                    const { lat, lng, display, addr } = s;
-                    const area = addr.suburb || addr.neighbourhood || addr.city_district || addr.locality || '';
-                    const city = addr.city || addr.town || addr.village || '';
-                    const state = addr.state || '';
-                    const pincode = addr.postcode || '';
-                    setStep1((prev) => ({
-                      ...prev,
-                      location: {
-                        ...prev.location,
-                        formattedAddress: display,
-                        addressLine1: display,
-                        area: area || prev.location.area,
-                        city: city || prev.location.city,
-                        state: state || prev.location.state,
-                        pincode: pincode || prev.location.pincode,
-                        latitude: lat,
-                        longitude: lng,
-                      },
-                    }));
-                    setLocationSearchValue(display);
-                    setLocationSuggestions([]);
-                  }}
-                  className="w-full px-4 py-2 text-left text-[13px] font-medium text-gray-700 hover:bg-orange-50 border-b border-gray-100 last:border-none"
-                >
-                  <Span className="truncate text-[13px] font-medium text-gray-700">{s.display}</Span>
-                </HButton>
-              ))}
+              {locationSuggestions.length > 0 && (
+                <Div className="mt-1 bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  {locationSuggestions.map((s, idx) => (
+                    <HButton
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        const { lat, lng, display, addr } = s;
+                        const area = addr.suburb || addr.neighbourhood || addr.city_district || addr.locality || '';
+                        const city = addr.city || addr.town || addr.village || '';
+                        const state = addr.state || '';
+                        const pincode = addr.postcode || '';
+                        setStep1((prev) => ({
+                          ...prev,
+                          location: {
+                            ...prev.location,
+                            formattedAddress: display,
+                            addressLine1: display,
+                            area: area || prev.location.area,
+                            city: city || prev.location.city,
+                            state: state || prev.location.state,
+                            pincode: pincode || prev.location.pincode,
+                            latitude: lat,
+                            longitude: lng,
+                          },
+                        }));
+                        setLocationSearchValue(display);
+                        setLocationSuggestions([]);
+                      }}
+                      className={`w-full px-3 py-3 justify-center ${idx > 0 ? 'border-t border-slate-100' : ''}`}
+                    >
+                      <Span className="text-sm text-slate-700" numberOfLines={2}>
+                        {s.display}
+                      </Span>
+                    </HButton>
+                  ))}
+                </Div>
+              )}
             </Div>
-          )}
+          </Field>
 
-          <P className="text-[11px] text-gray-500 mt-1">Search to auto-fill Area, City, State, Pincode and coordinates.</P>
+          <Field label="Service zone" required hint="Choose the service zone where your restaurant will be available.">
+            <Select
+              value={step1.zoneId || ''}
+              onChange={(e) =>
+                setStep1({
+                  ...step1,
+                  zoneId: e.target.value,
+                })
+              }
+              className={INPUT}
+              disabled={zonesLoading}
+            >
+              <Option value="">{zonesLoading ? 'Loading zones...' : 'Select a zone'}</Option>
+              {zones.map((z) => {
+                const id = String(z?._id || z?.id || '');
+                const label = z?.name || z?.zoneName || z?.serviceLocation || id;
+                return (
+                  <Option key={id} value={id}>
+                    {label}
+                  </Option>
+                );
+              })}
+            </Select>
+          </Field>
+
+          <Field label="Primary contact number" required>
+            <Input
+              value={step1.primaryContactNumber || ''}
+              onChange={(e) =>
+                setStep1({
+                  ...step1,
+                  primaryContactNumber: sanitizeDigits(e.target.value).slice(0, 10),
+                })
+              }
+              className={INPUT}
+              placeholder="Restaurant's primary contact number"
+              inputMode="numeric"
+              maxLength={10}
+            />
+          </Field>
+
+          <Div className={twoCols}>
+            <Field label="Area / sector / locality" required>
+              <Input
+                value={step1.location?.area || ''}
+                onChange={(e) =>
+                  setStep1({
+                    ...step1,
+                    location: {
+                      ...step1.location,
+                      area: e.target.value,
+                    },
+                  })
+                }
+                className={INPUT}
+                placeholder="Area / Sector / Locality"
+              />
+            </Field>
+            <Field label="City" required>
+              <Input
+                value={step1.location?.city || ''}
+                onChange={(e) =>
+                  setStep1({
+                    ...step1,
+                    location: {
+                      ...step1.location,
+                      city: e.target.value,
+                    },
+                  })
+                }
+                className={INPUT}
+                placeholder="City"
+              />
+            </Field>
+            <Field label="Shop / building no.">
+              <Input
+                value={step1.location?.addressLine1 || ''}
+                onChange={(e) =>
+                  setStep1({
+                    ...step1,
+                    location: {
+                      ...step1.location,
+                      addressLine1: e.target.value,
+                    },
+                  })
+                }
+                className={INPUT}
+                placeholder="Optional"
+              />
+            </Field>
+            <Field label="Floor / tower">
+              <Input
+                value={step1.location?.addressLine2 || ''}
+                onChange={(e) =>
+                  setStep1({
+                    ...step1,
+                    location: {
+                      ...step1.location,
+                      addressLine2: e.target.value,
+                    },
+                  })
+                }
+                className={INPUT}
+                placeholder="Optional"
+              />
+            </Field>
+            <Field label="State">
+              <Input
+                value={step1.location?.state || ''}
+                onChange={(e) =>
+                  setStep1({
+                    ...step1,
+                    location: {
+                      ...step1.location,
+                      state: e.target.value,
+                    },
+                  })
+                }
+                className={INPUT}
+                placeholder="Optional"
+              />
+            </Field>
+            <Field label="Pin code">
+              <Input
+                value={step1.location?.pincode || ''}
+                onChange={(e) =>
+                  setStep1({
+                    ...step1,
+                    location: {
+                      ...step1.location,
+                      pincode: e.target.value,
+                    },
+                  })
+                }
+                className={INPUT}
+                placeholder="Optional"
+              />
+            </Field>
+            <Div className="col-span-full">
+              <Field label="Nearby landmark">
+                <Input
+                  value={step1.location?.landmark || ''}
+                  onChange={(e) =>
+                    setStep1({
+                      ...step1,
+                      location: {
+                        ...step1.location,
+                        landmark: e.target.value,
+                      },
+                    })
+                  }
+                  className={INPUT}
+                  placeholder="Optional"
+                />
+              </Field>
+            </Div>
+          </Div>
         </Div>
-        <Div>
-          <Label className="text-xs text-gray-700">Service zone*</Label>
-          <Select
-            value={step1.zoneId || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                zoneId: e.target.value,
-              })
-            }
-            className="mt-1 w-full h-9 rounded-md border border-input bg-white px-3 text-sm"
-            disabled={zonesLoading}
-          >
-            <Option value="">{zonesLoading ? 'Loading zones...' : 'Select a zone'}</Option>
-            {zones.map((z) => {
-              const id = String(z?._id || z?.id || '');
-              const label = z?.name || z?.zoneName || z?.serviceLocation || id;
-              return (
-                <Option key={id} value={id}>
-                  {label}
-                </Option>
-              );
-            })}
-          </Select>
-          <P className="text-[11px] text-gray-500 mt-1">Choose the service zone where your restaurant will be available.</P>
-        </Div>
-        <Div>
-          <Label className="text-xs text-gray-700">Primary contact number*</Label>
-          <Input
-            value={step1.primaryContactNumber || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                primaryContactNumber: sanitizeDigits(e.target.value).slice(0, 10),
-              })
-            }
-            className="mt-1 bg-white text-sm text-black placeholder-black"
-            placeholder="Restaurant's primary contact number"
-            inputMode="numeric"
-            maxLength={10}
-          />
-        </Div>
-        <Div className="space-y-3">
-          <Input
-            value={step1.location?.area || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                location: {
-                  ...step1.location,
-                  area: e.target.value,
-                },
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="Area / Sector / Locality*"
-          />
-          <Input
-            value={step1.location?.city || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                location: {
-                  ...step1.location,
-                  city: e.target.value,
-                },
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="City*"
-          />
-          <Input
-            value={step1.location?.addressLine1 || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                location: {
-                  ...step1.location,
-                  addressLine1: e.target.value,
-                },
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="Shop no. / building no. (optional)"
-          />
-          <Input
-            value={step1.location?.addressLine2 || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                location: {
-                  ...step1.location,
-                  addressLine2: e.target.value,
-                },
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="Floor / tower (optional)"
-          />
-          <Input
-            value={step1.location?.state || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                location: {
-                  ...step1.location,
-                  state: e.target.value,
-                },
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="State (optional)"
-          />
-          <Input
-            value={step1.location?.pincode || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                location: {
-                  ...step1.location,
-                  pincode: e.target.value,
-                },
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="Pin code (optional)"
-          />
-          <Input
-            value={step1.location?.landmark || ''}
-            onChange={(e) =>
-              setStep1({
-                ...step1,
-                location: {
-                  ...step1.location,
-                  landmark: e.target.value,
-                },
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="Nearby landmark (optional)"
-          />
-        </Div>
-      </Section>
+      </Card>
     </Div>
   );
   const renderStep2 = () => (
-    <Div className="space-y-6">
-      <Section className="bg-white p-4 sm:p-6 rounded-md space-y-5">
-        <H2 className="text-lg font-semibold text-black">Menu & photos</H2>
-        <Div className="space-y-2">
-          <Label className="text-xs font-medium text-gray-700">Menu images*</Label>
-          <Div className="mt-1 border border-dashed border-gray-300 rounded-md bg-gray-50/70 px-4 py-3">
+    <Div className="gap-3">
+      <Card>
+        <SectionTitle>Menu &amp; photos</SectionTitle>
+        <Div className="gap-4">
+          <Field label="Menu images" required>
             <HButton
               type="button"
               onClick={async () => {
@@ -1067,117 +1076,112 @@ export default function AddRestaurant() {
                   }));
                 }
               }}
-              className="flex-row justify-center items-center gap-1.5 px-3 py-1.5 rounded-sm bg-white text-black border border-black text-xs font-medium w-full"
+              className={`${BTN_SECONDARY} border-dashed`}
             >
-              <UiIcon as={Upload} className="w-4.5 h-4.5" />
-              <Span>Choose files</Span>
+              <UiIcon as={Upload} size={16} className="text-slate-700" />
+              <Span className={BTN_TEXT_SECONDARY}>Choose files</Span>
             </HButton>
-          </Div>
-          {step2.menuImages.length > 0 && (
-            <Div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {step2.menuImages.map((file, idx) => {
-                const imageUrl = isUploadableFile(file) ? objectUrl(file) : file?.url || file;
+            {step2.menuImages.length > 0 && (
+              <Div className={`mt-2 grid grid-cols-${columns > 1 ? 4 : 2} gap-3`}>
+                {step2.menuImages.map((file, idx) => {
+                  const imageUrl = isUploadableFile(file) ? objectUrl(file) : file?.url || file;
+                  return (
+                    <Div key={idx} className="relative aspect-[4/5] rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                      {imageUrl && <Img src={imageUrl} alt={`Menu ${idx + 1}`} className="w-full h-full object-cover" />}
+                      <HButton
+                        type="button"
+                        accessibilityLabel={`Remove menu image ${idx + 1}`}
+                        onClick={() =>
+                          setStep2((prev) => ({
+                            ...prev,
+                            menuImages: prev.menuImages.filter((_, i) => i !== idx),
+                          }))
+                        }
+                        className="absolute top-1 right-1 w-8 h-8 items-center justify-center bg-red-600 rounded-full"
+                      >
+                        <UiIcon as={X} size={14} className="text-white" />
+                      </HButton>
+                    </Div>
+                  );
+                })}
+              </Div>
+            )}
+          </Field>
+
+          <Field label="Restaurant profile image" required>
+            <Div className="flex-row items-center gap-3">
+              <Div className="h-16 w-16 rounded-full bg-slate-100 border border-slate-200 items-center justify-center overflow-hidden">
+                {step2.profileImage ? (
+                  (() => {
+                    const imageSrc = isUploadableFile(step2.profileImage) ? objectUrl(step2.profileImage) : step2.profileImage?.url || step2.profileImage;
+                    return imageSrc ? (
+                      <Img src={imageSrc} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <UiIcon as={ImageIcon} size={20} className="text-slate-400" />
+                    );
+                  })()
+                ) : (
+                  <UiIcon as={ImageIcon} size={20} className="text-slate-400" />
+                )}
+              </Div>
+              <HButton
+                type="button"
+                onClick={async () => {
+                  const file = await pickImage();
+                  if (file)
+                    setStep2((prev) => ({
+                      ...prev,
+                      profileImage: file,
+                    }));
+                }}
+                className={BTN_SECONDARY}
+              >
+                <UiIcon as={Upload} size={16} className="text-slate-700" />
+                <Span className={BTN_TEXT_SECONDARY}>Upload</Span>
+              </HButton>
+            </Div>
+          </Field>
+        </Div>
+      </Card>
+
+      <Card>
+        <SectionTitle>Menu profile &amp; timings</SectionTitle>
+        <Div className="gap-4">
+          <Field label="Select cuisines" required hint="Up to 3.">
+            <Div className="flex-row flex-wrap gap-2">
+              {cuisinesOptions.map((cuisine) => {
+                const active = step2.cuisines.includes(cuisine);
                 return (
-                  <Div key={idx} className="relative aspect-[4/5] rounded-md overflow-hidden bg-gray-100">
-                    {imageUrl && <Img src={imageUrl} alt={`Menu ${idx + 1}`} className="w-full h-full object-cover" />}
-                    <HButton
-                      type="button"
-                      onClick={() =>
-                        setStep2((prev) => ({
+                  <HButton
+                    key={cuisine}
+                    type="button"
+                    onClick={() => {
+                      setStep2((prev) => {
+                        const exists = prev.cuisines.includes(cuisine);
+                        if (exists)
+                          return {
+                            ...prev,
+                            cuisines: prev.cuisines.filter((c) => c !== cuisine),
+                          };
+                        if (prev.cuisines.length >= 3) return prev;
+                        return {
                           ...prev,
-                          menuImages: prev.menuImages.filter((_, i) => i !== idx),
-                        }))
-                      }
-                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                    >
-                      <UiIcon as={X} className="w-3 h-3" />
-                    </HButton>
-                  </Div>
+                          cuisines: [...prev.cuisines, cuisine],
+                        };
+                      });
+                    }}
+                    className={`h-11 px-4 items-center justify-center rounded-full border ${active ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
+                  >
+                    <Span className={`text-sm font-semibold ${active ? 'text-white' : 'text-slate-700'}`}>{cuisine}</Span>
+                  </HButton>
                 );
               })}
             </Div>
-          )}
-        </Div>
+          </Field>
 
-        <Div className="space-y-2">
-          <Label className="text-xs font-medium text-gray-700">Restaurant profile image*</Label>
-          <Div className="flex items-center gap-4">
-            <Div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-              {step2.profileImage ? (
-                (() => {
-                  const imageSrc = isUploadableFile(step2.profileImage) ? objectUrl(step2.profileImage) : step2.profileImage?.url || step2.profileImage;
-                  return imageSrc ? (
-                    <Img src={imageSrc} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <UiIcon as={ImageIcon} className="w-6 h-6 text-gray-500" />
-                  );
-                })()
-              ) : (
-                <UiIcon as={ImageIcon} className="w-6 h-6 text-gray-500" />
-              )}
-            </Div>
-            <HButton
-              type="button"
-              onClick={async () => {
-                const file = await pickImage();
-                if (file)
-                  setStep2((prev) => ({
-                    ...prev,
-                    profileImage: file,
-                  }));
-              }}
-              className="flex-row justify-center items-center gap-1.5 px-3 py-1.5 rounded-sm bg-white text-black border border-black text-xs font-medium"
-            >
-              <UiIcon as={Upload} className="w-4.5 h-4.5" />
-              <Span>Upload</Span>
-            </HButton>
-          </Div>
-        </Div>
-      </Section>
-
-      <Section className="bg-white p-4 sm:p-6 rounded-md space-y-5">
-        <Div>
-          <Label className="text-xs text-gray-700">Select cuisines (up to 3)*</Label>
-          <Div className="mt-2 flex flex-wrap gap-2">
-            {cuisinesOptions.map((cuisine) => {
-              const active = step2.cuisines.includes(cuisine);
-              return (
-                <HButton
-                  key={cuisine}
-                  type="button"
-                  onClick={() => {
-                    setStep2((prev) => {
-                      const exists = prev.cuisines.includes(cuisine);
-                      if (exists)
-                        return {
-                          ...prev,
-                          cuisines: prev.cuisines.filter((c) => c !== cuisine),
-                        };
-                      if (prev.cuisines.length >= 3) return prev;
-                      return {
-                        ...prev,
-                        cuisines: [...prev.cuisines, cuisine],
-                      };
-                    });
-                  }}
-                  className={`px-3 py-1.5 text-xs rounded-full ${active ? 'bg-black text-white' : 'bg-gray-100 text-gray-800'}`}
-                >
-                  {cuisine}
-                </HButton>
-              );
-            })}
-          </Div>
-        </Div>
-
-        <Div className="space-y-3">
-          <Label className="text-xs text-gray-700">Outlet timings*</Label>
-          <Div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50/60">
-              <Div className="flex items-center gap-2 mb-2">
-                <UiIcon as={Clock} className="w-4 h-4 text-gray-800" />
-                <Span className="text-xs font-medium text-gray-900">Opening time</Span>
-              </Div>
-              <HInput
+          <Div className={twoCols}>
+            <Field label="Opening time" required>
+              <Input
                 type="time"
                 value={normalizeTimeValue(step2.openingTime)}
                 onChange={(e) => {
@@ -1208,16 +1212,12 @@ export default function AddRestaurant() {
                   });
                 }}
                 placeholder="Select time"
-                className="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-xs"
+                className={INPUT}
               />
-            </Div>
+            </Field>
 
-            <Div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50/60">
-              <Div className="flex items-center gap-2 mb-2">
-                <UiIcon as={Clock} className="w-4 h-4 text-gray-800" />
-                <Span className="text-xs font-medium text-gray-900">Closing time</Span>
-              </Div>
-              <HInput
+            <Field label="Closing time" required>
+              <Input
                 type="time"
                 value={normalizeTimeValue(step2.closingTime)}
                 onChange={(e) => {
@@ -1248,92 +1248,83 @@ export default function AddRestaurant() {
                   });
                 }}
                 placeholder="Select time"
-                className="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-xs"
+                className={INPUT}
               />
-            </Div>
+            </Field>
           </Div>
-        </Div>
 
-        <Div>
-          <Label className="text-xs text-gray-700">Estimated delivery time*</Label>
-          <Input
-            value={step2.estimatedDeliveryTime || ''}
-            onChange={(e) =>
-              setStep2({
-                ...step2,
-                estimatedDeliveryTime: e.target.value,
-              })
-            }
-            autoComplete="off"
-            className="mt-1 bg-white text-sm"
-            placeholder="e.g., 25-30 mins"
-          />
-        </Div>
+          <Field label="Estimated delivery time" required>
+            <Input
+              value={step2.estimatedDeliveryTime || ''}
+              onChange={(e) =>
+                setStep2({
+                  ...step2,
+                  estimatedDeliveryTime: e.target.value,
+                })
+              }
+              autoComplete="off"
+              className={INPUT}
+              placeholder="e.g., 25-30 mins"
+            />
+          </Field>
 
-        <Div className="space-y-2">
-          <Label className="text-xs text-gray-700 flex items-center gap-1.5">
-            <UiIcon as={Calendar} className="w-3.5 h-3.5 text-gray-800" />
-            <Span>Open days*</Span>
-          </Label>
-          <Div className="mt-1 grid grid-cols-7 gap-1.5 sm:gap-2">
-            {daysOfWeek.map((day) => {
-              const active = step2.openDays.includes(day);
-              return (
-                <HButton
-                  key={day}
-                  type="button"
-                  onClick={() => {
-                    setStep2((prev) => {
-                      const exists = prev.openDays.includes(day);
-                      if (exists)
+          <Field label="Open days" required>
+            <Div className="grid grid-cols-7 gap-1.5">
+              {daysOfWeek.map((day) => {
+                const active = step2.openDays.includes(day);
+                return (
+                  <HButton
+                    key={day}
+                    type="button"
+                    accessibilityLabel={day}
+                    onClick={() => {
+                      setStep2((prev) => {
+                        const exists = prev.openDays.includes(day);
+                        if (exists)
+                          return {
+                            ...prev,
+                            openDays: prev.openDays.filter((d) => d !== day),
+                          };
                         return {
                           ...prev,
-                          openDays: prev.openDays.filter((d) => d !== day),
+                          openDays: [...prev.openDays, day],
                         };
-                      return {
-                        ...prev,
-                        openDays: [...prev.openDays, day],
-                      };
-                    });
-                  }}
-                  className={`aspect-square flex items-center justify-center rounded-md text-[11px] font-medium ${active ? 'bg-black text-white' : 'bg-gray-100 text-gray-800'}`}
-                >
-                  {day.charAt(0)}
-                </HButton>
-              );
-            })}
-          </Div>
-        </Div>
+                      });
+                    }}
+                    className={`h-11 items-center justify-center rounded-lg border ${active ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
+                  >
+                    <Span className={`text-sm font-semibold ${active ? 'text-white' : 'text-slate-700'}`}>{day.charAt(0)}</Span>
+                  </HButton>
+                );
+              })}
+            </Div>
+          </Field>
 
-        <Div className="flex items-center justify-between p-4 rounded-md border border-gray-100 bg-gray-50/50">
-          <Div className="flex-1">
-            <P className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-              <Span>🛍️</Span>
-              <Span>Takeaway (Pickup)</Span>
-            </P>
-            <P className="text-[11px] text-gray-500 mt-0.5">Allow customers to place orders online and pick them up from the restaurant.</P>
+          <Div className="flex-row items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
+            <Div className="flex-1">
+              <P className="text-sm font-semibold text-slate-900">Takeaway (pickup)</P>
+              <P className="text-xs text-slate-500 mt-0.5">Allow customers to place orders online and pick them up from the restaurant.</P>
+            </Div>
+            <Switch
+              checked={step2.takeawayEnabled}
+              onCheckedChange={(checked) =>
+                setStep2({
+                  ...step2,
+                  takeawayEnabled: checked,
+                })
+              }
+            />
           </Div>
-          <Switch
-            checked={step2.takeawayEnabled}
-            onCheckedChange={(checked) =>
-              setStep2({
-                ...step2,
-                takeawayEnabled: checked,
-              })
-            }
-            className="data-[state=unchecked]:bg-gray-300 data-[state=checked]:bg-green-600"
-          />
         </Div>
-      </Section>
+      </Card>
     </Div>
   );
   const renderStep3 = () => (
-    <Div className="space-y-6">
-      <Section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <H2 className="text-lg font-semibold text-black">PAN details</H2>
-        <Div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Div>
-            <Label className="text-xs text-gray-700">PAN number*</Label>
+    <Div className="gap-3">
+      <Card>
+        <SectionTitle>PAN details</SectionTitle>
+        <Div className={twoCols}>
+          <Field label="PAN number" required>
             <Input
               value={step3.panNumber || ''}
               onChange={(e) =>
@@ -1342,13 +1333,12 @@ export default function AddRestaurant() {
                   panNumber: sanitizePan(e.target.value),
                 })
               }
-              className="mt-1 bg-white text-sm text-black placeholder-black"
+              className={INPUT}
               placeholder="ABCDE1234F"
               maxLength={10}
             />
-          </Div>
-          <Div>
-            <Label className="text-xs text-gray-700">Name on PAN*</Label>
+          </Field>
+          <Field label="Name on PAN" required>
             <Input
               value={step3.nameOnPan || ''}
               onChange={(e) =>
@@ -1357,148 +1347,167 @@ export default function AddRestaurant() {
                   nameOnPan: normalizeName(e.target.value),
                 })
               }
-              className="mt-1 bg-white text-sm text-black placeholder-black"
+              className={INPUT}
             />
+          </Field>
+          <Div className="col-span-full">
+            <Field label="PAN image" required>
+              <HButton
+                type="button"
+                onClick={async () => {
+                  const file = await pickImage();
+                  if (file)
+                    setStep3((prev) => ({
+                      ...prev,
+                      panImage: file,
+                    }));
+                }}
+                className={BTN_SECONDARY}
+              >
+                <UiIcon as={Upload} size={16} className="text-slate-700" />
+                <Span className={BTN_TEXT_SECONDARY} numberOfLines={1}>
+                  {step3.panImage ? getStoredFileLabel(step3.panImage) : 'Choose file'}
+                </Span>
+              </HButton>
+              {step3.panImage && (
+                <Div className="mt-2 flex-row items-center gap-3">
+                  <Div className="h-14 w-14 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                    <Img src={getStoredImageSrc(step3.panImage)} alt="PAN document" className="h-full w-full object-cover" />
+                  </Div>
+                  <P className="flex-1 text-xs text-slate-500" numberOfLines={2}>
+                    Selected: {getStoredFileLabel(step3.panImage)}
+                  </P>
+                </Div>
+              )}
+            </Field>
           </Div>
         </Div>
-        <Div>
-          <Label className="text-xs text-gray-700">PAN image*</Label>
-          <HButton
-            type="button"
-            onClick={async () => {
-              const file = await pickImage();
-              if (file)
-                setStep3((prev) => ({
-                  ...prev,
-                  panImage: file,
-                }));
-            }}
-            className="mt-1 h-9 flex-row items-center gap-2 rounded-md border border-input bg-white px-3"
-          >
-            <UiIcon as={Upload} className="w-4 h-4 text-gray-700" />
-            <Span className="text-sm text-black">{step3.panImage ? getStoredFileLabel(step3.panImage) : 'Choose file'}</Span>
-          </HButton>
-          {step3.panImage && (
-            <Div className="mt-2 flex items-center gap-3">
-              <Div className="h-14 w-14 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
-                <Img src={getStoredImageSrc(step3.panImage)} alt="PAN document" className="h-full w-full object-cover" />
-              </Div>
-              <P className="text-xs text-gray-600">Selected: {getStoredFileLabel(step3.panImage)}</P>
-            </Div>
-          )}
-        </Div>
-      </Section>
+      </Card>
 
-      <Section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <H2 className="text-lg font-semibold text-black">GST details</H2>
-        <Div className="flex gap-4 items-center text-sm">
-          <Span className="text-gray-700">GST registered?</Span>
-          <HButton
-            type="button"
-            onClick={() =>
-              setStep3({
-                ...step3,
-                gstRegistered: true,
-              })
-            }
-            className={`px-3 py-1.5 text-xs rounded-full ${step3.gstRegistered ? 'bg-black text-white' : 'bg-gray-100 text-gray-800'}`}
-          >
-            Yes
-          </HButton>
-          <HButton
-            type="button"
-            onClick={() =>
-              setStep3({
-                ...step3,
-                gstRegistered: false,
-              })
-            }
-            className={`px-3 py-1.5 text-xs rounded-full ${!step3.gstRegistered ? 'bg-black text-white' : 'bg-gray-100 text-gray-800'}`}
-          >
-            No
-          </HButton>
-        </Div>
-        {step3.gstRegistered && (
-          <Div className="space-y-3">
-            <Input
-              value={step3.gstNumber || ''}
-              onChange={(e) =>
-                setStep3({
-                  ...step3,
-                  gstNumber: sanitizeGst(e.target.value),
-                })
-              }
-              className="bg-white text-sm"
-              placeholder="GST number*"
-              maxLength={15}
-            />
-            <Input
-              value={step3.gstLegalName || ''}
-              onChange={(e) =>
-                setStep3({
-                  ...step3,
-                  gstLegalName: normalizeName(e.target.value),
-                })
-              }
-              className="bg-white text-sm"
-              placeholder="Legal name*"
-            />
-            <Input
-              value={step3.gstAddress || ''}
-              onChange={(e) =>
-                setStep3({
-                  ...step3,
-                  gstAddress: e.target.value,
-                })
-              }
-              className="bg-white text-sm"
-              placeholder="Registered address*"
-            />
+      <Card>
+        <SectionTitle>GST details</SectionTitle>
+        <Field label="GST registered?">
+          <Div className="flex-row flex-wrap items-center gap-2">
             <HButton
               type="button"
-              onClick={async () => {
-                const file = await pickImage();
-                if (file)
-                  setStep3((prev) => ({
-                    ...prev,
-                    gstImage: file,
-                  }));
-              }}
-              className=" h-9 flex-row items-center gap-2 rounded-md border border-input bg-white px-3"
+              onClick={() =>
+                setStep3({
+                  ...step3,
+                  gstRegistered: true,
+                })
+              }
+              className={`h-11 px-4 items-center justify-center rounded-full border ${step3.gstRegistered ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
             >
-              <UiIcon as={Upload} className="w-4 h-4 text-gray-700" />
-              <Span className="text-sm text-black">{step3.gstImage ? getStoredFileLabel(step3.gstImage) : 'Choose file'}</Span>
+              <Span className={`text-sm font-semibold ${step3.gstRegistered ? 'text-white' : 'text-slate-700'}`}>Yes</Span>
             </HButton>
-            {step3.gstImage && (
-              <Div className="flex items-center gap-3">
-                <Div className="h-14 w-14 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
-                  <Img src={getStoredImageSrc(step3.gstImage)} alt="GST document" className="h-full w-full object-cover" />
+            <HButton
+              type="button"
+              onClick={() =>
+                setStep3({
+                  ...step3,
+                  gstRegistered: false,
+                })
+              }
+              className={`h-11 px-4 items-center justify-center rounded-full border ${!step3.gstRegistered ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-300'}`}
+            >
+              <Span className={`text-sm font-semibold ${!step3.gstRegistered ? 'text-white' : 'text-slate-700'}`}>No</Span>
+            </HButton>
+          </Div>
+        </Field>
+        {step3.gstRegistered && (
+          <Div className="gap-3 mt-3">
+            <Field label="GST number" required>
+              <Input
+                value={step3.gstNumber || ''}
+                onChange={(e) =>
+                  setStep3({
+                    ...step3,
+                    gstNumber: sanitizeGst(e.target.value),
+                  })
+                }
+                className={INPUT}
+                placeholder="GST number"
+                maxLength={15}
+              />
+            </Field>
+            <Field label="Legal name" required>
+              <Input
+                value={step3.gstLegalName || ''}
+                onChange={(e) =>
+                  setStep3({
+                    ...step3,
+                    gstLegalName: normalizeName(e.target.value),
+                  })
+                }
+                className={INPUT}
+                placeholder="Legal name"
+              />
+            </Field>
+            <Field label="Registered address" required>
+              <Input
+                value={step3.gstAddress || ''}
+                onChange={(e) =>
+                  setStep3({
+                    ...step3,
+                    gstAddress: e.target.value,
+                  })
+                }
+                className={INPUT}
+                placeholder="Registered address"
+              />
+            </Field>
+            <Field label="GST image">
+              <HButton
+                type="button"
+                onClick={async () => {
+                  const file = await pickImage();
+                  if (file)
+                    setStep3((prev) => ({
+                      ...prev,
+                      gstImage: file,
+                    }));
+                }}
+                className={BTN_SECONDARY}
+              >
+                <UiIcon as={Upload} size={16} className="text-slate-700" />
+                <Span className={BTN_TEXT_SECONDARY} numberOfLines={1}>
+                  {step3.gstImage ? getStoredFileLabel(step3.gstImage) : 'Choose file'}
+                </Span>
+              </HButton>
+              {step3.gstImage && (
+                <Div className="mt-2 flex-row items-center gap-3">
+                  <Div className="h-14 w-14 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                    <Img src={getStoredImageSrc(step3.gstImage)} alt="GST document" className="h-full w-full object-cover" />
+                  </Div>
+                  <P className="flex-1 text-xs text-slate-500" numberOfLines={2}>
+                    Selected: {getStoredFileLabel(step3.gstImage)}
+                  </P>
                 </Div>
-                <P className="text-xs text-gray-600">Selected: {getStoredFileLabel(step3.gstImage)}</P>
-              </Div>
-            )}
+              )}
+            </Field>
           </Div>
         )}
-      </Section>
+      </Card>
 
-      <Section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <H2 className="text-lg font-semibold text-black">FSSAI details</H2>
-        <Div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            value={step3.fssaiNumber || ''}
-            onChange={(e) =>
-              setStep3({
-                ...step3,
-                fssaiNumber: sanitizeFssai(e.target.value),
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="FSSAI number*"
-            inputMode="numeric"
-            maxLength={14}
-          />
-          <Div>
-            <Label className="text-xs text-gray-700 mb-1 block">FSSAI expiry date*</Label>
+      <Card>
+        <SectionTitle>FSSAI details</SectionTitle>
+        <Div className={twoCols}>
+          <Field label="FSSAI number" required>
+            <Input
+              value={step3.fssaiNumber || ''}
+              onChange={(e) =>
+                setStep3({
+                  ...step3,
+                  fssaiNumber: sanitizeFssai(e.target.value),
+                })
+              }
+              className={INPUT}
+              placeholder="FSSAI number"
+              inputMode="numeric"
+              maxLength={14}
+            />
+          </Field>
+          <Field label="FSSAI expiry date" required>
             <Input
               type="date"
               value={step3.fssaiExpiry || ''}
@@ -1510,105 +1519,123 @@ export default function AddRestaurant() {
               }
               min={getTodayLocalYMD()}
               autoComplete="off"
-              className="bg-white text-sm"
+              className={INPUT}
             />
+          </Field>
+          <Div className="col-span-full">
+            <Field label="FSSAI image">
+              <HButton
+                type="button"
+                onClick={async () => {
+                  const file = await pickImage();
+                  if (file)
+                    setStep3((prev) => ({
+                      ...prev,
+                      fssaiImage: file,
+                    }));
+                }}
+                className={BTN_SECONDARY}
+              >
+                <UiIcon as={Upload} size={16} className="text-slate-700" />
+                <Span className={BTN_TEXT_SECONDARY} numberOfLines={1}>
+                  {step3.fssaiImage ? getStoredFileLabel(step3.fssaiImage) : 'Choose file'}
+                </Span>
+              </HButton>
+              {step3.fssaiImage && (
+                <Div className="mt-2 flex-row items-center gap-3">
+                  <Div className="h-14 w-14 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                    <Img src={getStoredImageSrc(step3.fssaiImage)} alt="FSSAI document" className="h-full w-full object-cover" />
+                  </Div>
+                  <P className="flex-1 text-xs text-slate-500" numberOfLines={2}>
+                    Selected: {getStoredFileLabel(step3.fssaiImage)}
+                  </P>
+                </Div>
+              )}
+            </Field>
           </Div>
         </Div>
-        <HButton
-          type="button"
-          onClick={async () => {
-            const file = await pickImage();
-            if (file)
-              setStep3((prev) => ({
-                ...prev,
-                fssaiImage: file,
-              }));
-          }}
-          className=" h-9 flex-row items-center gap-2 rounded-md border border-input bg-white px-3"
-        >
-          <UiIcon as={Upload} className="w-4 h-4 text-gray-700" />
-          <Span className="text-sm text-black">{step3.fssaiImage ? getStoredFileLabel(step3.fssaiImage) : 'Choose file'}</Span>
-        </HButton>
-        {step3.fssaiImage && (
-          <Div className="flex items-center gap-3">
-            <Div className="h-14 w-14 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
-              <Img src={getStoredImageSrc(step3.fssaiImage)} alt="FSSAI document" className="h-full w-full object-cover" />
-            </Div>
-            <P className="text-xs text-gray-600">Selected: {getStoredFileLabel(step3.fssaiImage)}</P>
-          </Div>
-        )}
-      </Section>
+      </Card>
 
-      <Section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <H2 className="text-lg font-semibold text-black">Bank account details</H2>
-        <Div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            value={step3.accountNumber || ''}
-            onChange={(e) =>
-              setStep3({
-                ...step3,
-                accountNumber: sanitizeDigits(e.target.value).slice(0, 18),
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="Account number*"
-            inputMode="numeric"
-            maxLength={18}
-          />
-          <Input
-            value={step3.confirmAccountNumber || ''}
-            onChange={(e) =>
-              setStep3({
-                ...step3,
-                confirmAccountNumber: sanitizeDigits(e.target.value).slice(0, 18),
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="Re-enter account number*"
-            inputMode="numeric"
-            maxLength={18}
-          />
+      <Card>
+        <SectionTitle>Bank account details</SectionTitle>
+        <Div className={twoCols}>
+          <Field label="Account number" required>
+            <Input
+              value={step3.accountNumber || ''}
+              onChange={(e) =>
+                setStep3({
+                  ...step3,
+                  accountNumber: sanitizeDigits(e.target.value).slice(0, 18),
+                })
+              }
+              className={INPUT}
+              placeholder="Account number"
+              inputMode="numeric"
+              maxLength={18}
+            />
+          </Field>
+          <Field label="Re-enter account number" required>
+            <Input
+              value={step3.confirmAccountNumber || ''}
+              onChange={(e) =>
+                setStep3({
+                  ...step3,
+                  confirmAccountNumber: sanitizeDigits(e.target.value).slice(0, 18),
+                })
+              }
+              className={INPUT}
+              placeholder="Re-enter account number"
+              inputMode="numeric"
+              maxLength={18}
+            />
+          </Field>
+          <Field label="IFSC code" required>
+            <Input
+              value={step3.ifscCode || ''}
+              onChange={(e) =>
+                setStep3({
+                  ...step3,
+                  ifscCode: sanitizeIfsc(e.target.value),
+                })
+              }
+              className={INPUT}
+              placeholder="IFSC code"
+              maxLength={11}
+            />
+          </Field>
+          <Field label="Account type" required>
+            <Select
+              value={step3.accountType || ''}
+              onChange={(e) =>
+                setStep3({
+                  ...step3,
+                  accountType: e.target.value,
+                })
+              }
+              className={INPUT}
+            >
+              <Option value="">Select account type</Option>
+              <Option value="Saving">Saving</Option>
+              <Option value="Current">Current</Option>
+            </Select>
+          </Field>
+          <Div className="col-span-full">
+            <Field label="Account holder name" required>
+              <Input
+                value={step3.accountHolderName || ''}
+                onChange={(e) =>
+                  setStep3({
+                    ...step3,
+                    accountHolderName: normalizeName(e.target.value),
+                  })
+                }
+                className={INPUT}
+                placeholder="Account holder name"
+              />
+            </Field>
+          </Div>
         </Div>
-        <Div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            value={step3.ifscCode || ''}
-            onChange={(e) =>
-              setStep3({
-                ...step3,
-                ifscCode: sanitizeIfsc(e.target.value),
-              })
-            }
-            className="bg-white text-sm"
-            placeholder="IFSC code*"
-            maxLength={11}
-          />
-          <Select
-            value={step3.accountType || ''}
-            onChange={(e) =>
-              setStep3({
-                ...step3,
-                accountType: e.target.value,
-              })
-            }
-            className="bg-white text-sm border border-input rounded-md h-10 px-3"
-          >
-            <Option value="">Select account type</Option>
-            <Option value="Saving">Saving</Option>
-            <Option value="Current">Current</Option>
-          </Select>
-        </Div>
-        <Input
-          value={step3.accountHolderName || ''}
-          onChange={(e) =>
-            setStep3({
-              ...step3,
-              accountHolderName: normalizeName(e.target.value),
-            })
-          }
-          className="bg-white text-sm"
-          placeholder="Account holder name*"
-        />
-      </Section>
+      </Card>
     </Div>
   );
   const renderStep = () => {
@@ -1617,77 +1644,60 @@ export default function AddRestaurant() {
     return renderStep3();
   };
   return (
-    <ScrollDiv ref={mainContentRef} className="min-h-screen bg-gray-100 flex flex-col">
-      <Header className="px-4 py-4 sm:px-6 sm:py-5 bg-white flex items-center justify-between">
-        <Div className="flex items-center gap-3">
-          <UiIcon as={Building2} className="w-5 h-5 text-blue-600" />
-          <Div className="text-sm font-semibold text-black">Add New Restaurant</Div>
-        </Div>
-        <Div className="text-xs text-gray-600">Step {step} of 3</Div>
-      </Header>
+    <AdminPage maxWidth={720} scroll={false} padded={false} contentClassName="flex-1">
+      <ScrollDiv ref={mainContentRef} className="flex-1 p-4" contentStyle={{ paddingBottom: 24 }}>
+        <PageHeader icon={Building2} title="Add New Restaurant" subtitle={`Step ${step} of 3`} breadcrumb={[{ label: 'Food' }, { label: 'Restaurants' }, { label: 'Add' }]} />
 
-      <Main className="flex-1 px-4 sm:px-6 py-4 space-y-4">{renderStep()}</Main>
+        {renderStep()}
 
-      {formErrors.submit && <Div className="px-4 sm:px-6 pb-2 text-xs text-red-600">{formErrors.submit}</Div>}
+        {formErrors.submit ? (
+          <Div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+            <P className="text-sm text-red-700">{formErrors.submit}</P>
+          </Div>
+        ) : null}
 
-      <Footer className="px-4 sm:px-6 py-3 bg-white">
-        <Div className="flex justify-between items-center">
-          <Button
-            variant="ghost"
+        <Div className="flex-row items-center justify-between gap-2 mt-4">
+          <HButton
+            type="button"
             disabled={step === 1 || isSubmitting}
             onClick={() => setStep((s) => Math.max(1, s - 1))}
-            className="text-sm text-gray-700 bg-transparent"
+            className={`${BTN_SECONDARY} flex-1`}
           >
-            Back
-          </Button>
-          <Button onClick={handleNext} disabled={isSubmitting} className="text-sm bg-black text-white px-6">
-            {step === 3 ? (
-              isSubmitting ? (
-                <>
-                  <UiIcon as={Loader2} className="w-4 h-4 mr-2 animate-spin" /> Creating...{' '}
-                </>
-              ) : (
-                'Create Restaurant'
-              )
-            ) : isSubmitting ? (
-              'Saving...'
-            ) : (
-              'Continue'
-            )}
-          </Button>
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+          </HButton>
+          <HButton type="button" onClick={handleNext} disabled={isSubmitting} className={`${BTN_PRIMARY} flex-1`}>
+            {isSubmitting ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+            <Span className={BTN_TEXT_PRIMARY}>{step === 3 ? (isSubmitting ? 'Creating…' : 'Create restaurant') : isSubmitting ? 'Saving…' : 'Continue'}</Span>
+          </HButton>
         </Div>
-      </Footer>
+      </ScrollDiv>
 
       {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="max-w-md bg-white p-0">
-          <Div className="p-8 text-center">
-            <Div className="flex justify-center mb-6">
-              <Div className="relative">
-                <Div className="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-75"></Div>
-                <Div className="relative bg-emerald-500 rounded-full p-4">
-                  <UiIcon as={CheckCircle2} className="w-8 h-8 text-white" />
-                </Div>
-              </Div>
+          <Div className="p-6 items-center">
+            <Div className="w-12 h-12 rounded-full bg-green-100 items-center justify-center mb-3">
+              <UiIcon as={CheckCircle2} size={24} className="text-green-700" />
             </Div>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-slate-900 mb-2">Restaurant Created Successfully!</DialogTitle>
-              <DialogDescription className="text-sm text-slate-600">The restaurant has been created and is now pending approval.</DialogDescription>
+              <DialogTitle className="text-lg font-semibold text-slate-900 text-center">Restaurant created</DialogTitle>
+              <DialogDescription className="text-sm text-slate-500 text-center mt-1">
+                The restaurant has been created and is now pending approval.
+              </DialogDescription>
             </DialogHeader>
-            <Div className="mt-8">
-              <Button
-                onClick={() => {
-                  setShowSuccessDialog(false);
-                  navigate('/admin/restaurants');
-                }}
-                className="w-full bg-black text-white"
-              >
-                Go to Restaurant List
-              </Button>
-            </Div>
+            <HButton
+              type="button"
+              onClick={() => {
+                setShowSuccessDialog(false);
+                navigate('/admin/restaurants');
+              }}
+              className={`${BTN_PRIMARY} w-full mt-4`}
+            >
+              <Span className={BTN_TEXT_PRIMARY}>Go to restaurant list</Span>
+            </HButton>
           </Div>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

@@ -1,6 +1,6 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/reports/FeedbackExperienceReport.jsx (tools/port.js first pass). */
 import { useState, useEffect } from 'react';
-import { Search, Download, ChevronDown, Filter, Star, RefreshCw, Calendar, Trash2, Eye, User, Mail, Phone, MessageSquare } from 'lucide-react-native';
+import { Search, Download, ChevronDown, Filter, Star, RefreshCw, Trash2, Eye, MessageSquare } from 'lucide-react-native';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,30 +15,37 @@ import { toast } from '../../../../lib/notify';
 import { exportReportsToCSV, exportReportsToExcel, exportReportsToPDF, exportReportsToJSON } from '../../../components/admin/reports/reportsExportUtils';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
 import {
-  Button,
-  Div,
-  H1,
-  H2,
-  H3,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
+const COLS = [60, 190, 100, 220, 120, 150, 110];
+const LABELS = ['SI', 'User', 'Rating', 'Experience', 'Module', 'Date', 'Actions'];
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 export default function FeedbackExperienceReport() {
+  const { tablet } = useLayoutWidth();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -217,13 +224,12 @@ export default function FeedbackExperienceReport() {
     setSelectedFeedback(feedback);
     setShowDetailsDialog(true);
   };
-  const getRatingColor = (rating) => {
-    // Rating is 1-5 scale. Map colors accordingly.
-    if (rating <= 1) return 'bg-red-100 text-red-700';
-    if (rating <= 2) return 'bg-orange-100 text-orange-700';
-    if (rating <= 3) return 'bg-yellow-100 text-yellow-700';
-    if (rating <= 4) return 'bg-blue-100 text-blue-700';
-    return 'bg-green-100 text-green-700';
+  const ratingTone = (rating) => {
+    // Rating is 1-5 scale. Map tones accordingly.
+    if (rating <= 2) return 'danger';
+    if (rating <= 3) return 'warning';
+    if (rating <= 4) return 'info';
+    return 'success';
   };
   const getExperienceLabel = (experience) => {
     const labels = {
@@ -240,405 +246,284 @@ export default function FeedbackExperienceReport() {
   const activeFiltersCount =
     (filters.fromDate ? 1 : 0) + (filters.toDate ? 1 : 0) + (filters.rating ? 1 : 0) + (filters.experience ? 1 : 0) + (filters.module ? 1 : 0);
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen overflow-x-hidden">
-      <Div className="w-full max-w-full">
-        {/* Page Header */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex items-center gap-3">
-            <Div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center">
-              <UiIcon as={MessageSquare} className="w-5 h-5 text-white" />
-            </Div>
-            <H1 className="text-2xl font-bold text-slate-900">Feedback Experience Report</H1>
-          </Div>
-        </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={MessageSquare}
+        title="Feedback Experience Report"
+        subtitle="What customers, restaurants and riders report back"
+        breadcrumb={[{ label: 'Food' }, { label: 'Reports' }, { label: 'Feedback experience' }]}
+      />
 
-        {/* Filter Options Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Button onClick={() => setIsFilterOpen(!isFilterOpen)} className="flex items-center justify-between w-full mb-4">
-            <H3 className="text-sm font-semibold text-slate-700">Filter Options</H3>
-            <UiIcon as={ChevronDown} className={`w-5 h-5 text-slate-600 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
-          </Button>
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            <Button onClick={() => setIsFilterOpen(!isFilterOpen)} accessibilityLabel={isFilterOpen ? 'Hide filters' : 'Show filters'} className="w-11 h-11 items-center justify-center rounded-lg">
+              <UiIcon as={ChevronDown} size={18} className="text-slate-600" />
+            </Button>
+          }
+        >
+          Filter options
+        </SectionTitle>
 
-          {isFilterOpen && (
-            <Div className="space-y-4">
-              <Div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Div className="relative">
-                  <Label className="block text-sm font-semibold text-slate-700 mb-2">From Date</Label>
-                  <Div className="relative">
-                    <UiIcon as={Calendar} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      type="date"
-                      value={filters.fromDate}
-                      max={today}
-                      onChange={(e) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          fromDate: e.target.value > today ? today : e.target.value,
-                        }))
-                      }
-                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
+        {isFilterOpen && (
+          <>
+            <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+              <Field label="From date">
+                <Input
+                  type="date"
+                  value={filters.fromDate}
+                  max={today}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      fromDate: e.target.value > today ? today : e.target.value,
+                    }))
+                  }
+                  className={INPUT}
+                />
+              </Field>
 
-                <Div className="relative">
-                  <Label className="block text-sm font-semibold text-slate-700 mb-2">To Date</Label>
-                  <Div className="relative">
-                    <UiIcon as={Calendar} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      type="date"
-                      value={filters.toDate}
-                      max={today}
-                      onChange={(e) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          toDate: e.target.value > today ? today : e.target.value,
-                        }))
-                      }
-                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-              </Div>
+              <Field label="To date">
+                <Input
+                  type="date"
+                  value={filters.toDate}
+                  max={today}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      toDate: e.target.value > today ? today : e.target.value,
+                    }))
+                  }
+                  className={INPUT}
+                />
+              </Field>
 
-              <Div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Div className="relative">
-                  <Label className="block text-sm font-semibold text-slate-700 mb-2">Rating</Label>
-                  <Select
-                    value={filters.rating}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        rating: e.target.value,
-                      }))
-                    }
-                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <Option value="">All Ratings</Option>
-                    {[0, 1, 2, 3, 4, 5].map((r) => (
-                      <Option key={r} value={r}>
-                        {r}/5
-                      </Option>
-                    ))}
-                  </Select>
-                  <UiIcon as={ChevronDown} className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
-                </Div>
-
-                <Div className="relative">
-                  <Label className="block text-sm font-semibold text-slate-700 mb-2">Experience</Label>
-                  <Select
-                    value={filters.experience}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        experience: e.target.value,
-                      }))
-                    }
-                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <Option value="">All Experiences</Option>
-                    <Option value="very_bad">Very Bad</Option>
-                    <Option value="bad">Bad</Option>
-                    <Option value="below_average">Below Average</Option>
-                    <Option value="average">Average</Option>
-                    <Option value="above_average">Above Average</Option>
-                    <Option value="good">Good</Option>
-                    <Option value="very_good">Very Good</Option>
-                  </Select>
-                  <UiIcon as={ChevronDown} className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
-                </Div>
-
-                <Div className="relative">
-                  <Label className="block text-sm font-semibold text-slate-700 mb-2">Module</Label>
-                  <Select
-                    value={filters.module}
-                    onChange={(e) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        module: e.target.value,
-                      }))
-                    }
-                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <Option value="">All Modules</Option>
-                    <Option value="user">User</Option>
-                    <Option value="restaurant">Restaurant</Option>
-                    <Option value="delivery">Delivery</Option>
-                  </Select>
-                  <UiIcon as={ChevronDown} className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
-                </Div>
-              </Div>
-
-              <Div className="flex items-center justify-end gap-3">
-                <Button
-                  onClick={handleReset}
-                  className="px-6 py-2.5 text-sm font-medium rounded-lg border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 transition-all flex items-center gap-2"
+              <Field label="Rating">
+                <Select
+                  value={filters.rating}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      rating: e.target.value,
+                    }))
+                  }
+                  className={INPUT}
                 >
-                  <UiIcon as={RefreshCw} className="w-4 h-4" />
-                  Reset
-                </Button>
-                <Button
-                  onClick={fetchFeedbackExperiences}
-                  className={`px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all flex items-center gap-2 relative ${activeFiltersCount > 0 ? 'ring-2 ring-blue-300' : ''}`}
+                  <Option value="">All Ratings</Option>
+                  {[0, 1, 2, 3, 4, 5].map((r) => (
+                    <Option key={r} value={r}>
+                      {r}/5
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label="Experience">
+                <Select
+                  value={filters.experience}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      experience: e.target.value,
+                    }))
+                  }
+                  className={INPUT}
                 >
-                  <UiIcon as={Filter} className="w-4 h-4" />
-                  Filter
-                  {activeFiltersCount > 0 && (
-                    <Span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
-                      {activeFiltersCount}
-                    </Span>
-                  )}
-                </Button>
-              </Div>
-            </Div>
-          )}
-        </Div>
+                  <Option value="">All Experiences</Option>
+                  <Option value="very_bad">Very Bad</Option>
+                  <Option value="bad">Bad</Option>
+                  <Option value="below_average">Below Average</Option>
+                  <Option value="average">Average</Option>
+                  <Option value="above_average">Above Average</Option>
+                  <Option value="good">Good</Option>
+                  <Option value="very_good">Very Good</Option>
+                </Select>
+              </Field>
 
-        {/* Summary Cards */}
-        {statistics && (
-          <Div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <Div className="flex items-center justify-between">
-                <Div>
-                  <P className="text-sm font-medium text-slate-600 mb-1">Total Feedback</P>
-                  <P className="text-2xl font-bold text-slate-900">{statistics.totalFeedback || 0}</P>
-                </Div>
-                <Div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <UiIcon as={MessageSquare} className="w-6 h-6 text-purple-600" />
-                </Div>
-              </Div>
-            </Div>
-
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <Div className="flex items-center justify-between">
-                <Div>
-                  <P className="text-sm font-medium text-slate-600 mb-1">Average Rating</P>
-                  <P className="text-2xl font-bold text-slate-900">{statistics.averageRating ? statistics.averageRating.toFixed(1) : '0.0'}/5</P>
-                </Div>
-                <Div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
-                  <UiIcon as={Star} className="w-6 h-6 text-yellow-600" />
-                </Div>
-              </Div>
+              <Field label="Module">
+                <Select
+                  value={filters.module}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      module: e.target.value,
+                    }))
+                  }
+                  className={INPUT}
+                >
+                  <Option value="">All Modules</Option>
+                  <Option value="user">User</Option>
+                  <Option value="restaurant">Restaurant</Option>
+                  <Option value="delivery">Delivery</Option>
+                </Select>
+              </Field>
             </Div>
 
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <Div className="flex items-center justify-between">
-                <Div>
-                  <P className="text-sm font-medium text-slate-600 mb-1">Min Rating</P>
-                  <P className="text-2xl font-bold text-slate-900">{statistics.minRating || 0}/5</P>
-                </Div>
-                <Div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                  <UiIcon as={Star} className="w-6 h-6 text-red-600" />
-                </Div>
-              </Div>
-            </Div>
-
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <Div className="flex items-center justify-between">
-                <Div>
-                  <P className="text-sm font-medium text-slate-600 mb-1">Max Rating</P>
-                  <P className="text-2xl font-bold text-slate-900">{statistics.maxRating || 0}/5</P>
-                </Div>
-                <Div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                  <UiIcon as={Star} className="w-6 h-6 text-green-600" />
-                </Div>
-              </Div>
-            </Div>
-          </Div>
+            <Toolbar className="mt-3 mb-0">
+              <Button onClick={fetchFeedbackExperiences} className={BTN_PRIMARY}>
+                <UiIcon as={Filter} size={16} className="text-white" />
+                <Span className={BTN_TEXT_PRIMARY}>{activeFiltersCount > 0 ? `Filter (${activeFiltersCount})` : 'Filter'}</Span>
+              </Button>
+              <Button onClick={handleReset} className={BTN_SECONDARY}>
+                <UiIcon as={RefreshCw} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+              </Button>
+            </Toolbar>
+          </>
         )}
+      </Card>
 
-        {/* Search and Export Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <Div className="relative flex-1 max-w-md">
-              <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by user name, email, phone..."
-                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </Div>
+      {statistics && (
+        <StatGrid className="mb-4">
+          <StatCard label="Total feedback" value={statistics.totalFeedback || 0} icon={MessageSquare} tone="info" />
+          <StatCard label="Average rating" value={`${statistics.averageRating ? statistics.averageRating.toFixed(1) : '0.0'}/5`} icon={Star} tone="warning" />
+          <StatCard label="Min rating" value={`${statistics.minRating || 0}/5`} icon={Star} tone="danger" />
+          <StatCard label="Max rating" value={`${statistics.maxRating || 0}/5`} icon={Star} tone="success" />
+        </StatGrid>
+      )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
-                <UiIcon as={Download} className="w-4 h-4" />
-                <Span>Export</Span>
-                <UiIcon as={ChevronDown} className="w-3 h-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleExport('csv')}>CSV</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('excel')}>Excel</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('pdf')}>PDF</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('json')}>JSON</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </Div>
-        </Div>
-
-        {/* Feedback Table Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <H2 className="text-xl font-bold text-slate-900">Feedback Experiences</H2>
-            <P className="text-sm text-slate-600">Total: {totalItems}</P>
+      <Card className="mb-4">
+        <SectionTitle>Feedback experiences ({totalItems})</SectionTitle>
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center flex-1 min-w-[200px] gap-2">
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by user name, email, phone…"
+              className={`${INPUT} flex-1`}
+            />
+            <UiIcon as={Search} size={16} className="text-slate-400" />
           </Div>
 
-          {loading ? (
-            <Div className="text-center py-20">
-              <P className="text-slate-600">Loading...</P>
-            </Div>
-          ) : (
-              <Table cols={[70, 180, 110, 220, 110, 140, 80]} className="w-full">
-                <Thead className="bg-slate-50 border-b border-slate-200">
-                  <Tr>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">User</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Rating</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Experience</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Module</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Actions</Th>
-                  </Tr>
-                </Thead>
-                <Tbody className="bg-white divide-y divide-slate-100">
-                  {feedbackExperiences.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={7} className="px-6 py-20 text-center">
-                        <Div className="flex flex-col items-center justify-center">
-                          <P className="text-lg font-semibold text-slate-700 mb-1">No Data Found</P>
-                          <P className="text-sm text-slate-500">No feedback experiences match your search</P>
-                        </Div>
-                      </Td>
-                    </Tr>
-                  ) : (
-                    feedbackExperiences.map((feedback, idx) => (
-                      <Tr key={feedback._id} className="hover:bg-slate-50 transition-colors">
-                        <Td className="px-4 py-3 whitespace-nowrap">
-                          <Span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + idx + 1}</Span>
-                        </Td>
-                        <Td className="px-4 py-3">
-                          <Div className="flex flex-col">
-                            <Span className="text-sm font-medium text-slate-900">{feedback.userName || 'N/A'}</Span>
-                            {feedback.userEmail && <Span className="text-xs text-slate-500">{feedback.userEmail}</Span>}
-                            {feedback.userPhone && <Span className="text-xs text-slate-500">{feedback.userPhone}</Span>}
-                          </Div>
-                        </Td>
-                        <Td className="px-4 py-3 whitespace-nowrap">
-                          <Span className={`px-3 py-1 rounded-full text-xs font-medium ${getRatingColor(feedback.rating)}`}>{feedback.rating}/5</Span>
-                        </Td>
-                        <Td className="px-4 py-3 whitespace-nowrap">
-                          <Span className="text-sm text-slate-700">{getExperienceLabel(feedback.experience)}</Span>
-                        </Td>
-                        <Td className="px-4 py-3 whitespace-nowrap">
-                          <Span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 capitalize">{feedback.module || 'N/A'}</Span>
-                        </Td>
-                        <Td className="px-4 py-3 whitespace-nowrap">
-                          <Span className="text-xs text-slate-700">
-                            {new Date(feedback.createdAt).toLocaleDateString()} {new Date(feedback.createdAt).toLocaleTimeString()}
-                          </Span>
-                        </Td>
-                        <Td className="px-4 py-3 whitespace-nowrap">
-                          <Div className="flex items-center gap-2">
-                            <Button onClick={() => handleViewDetails(feedback)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors">
-                              <UiIcon as={Eye} className="w-4 h-4" />
-                            </Button>
-                            <Button onClick={() => handleDelete(feedback._id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
-                              <UiIcon as={Trash2} className="w-4 h-4" />
-                            </Button>
-                          </Div>
-                        </Td>
-                      </Tr>
-                    ))
-                  )}
-                </Tbody>
-              </Table>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className={BTN_SECONDARY}>
+                <UiIcon as={Download} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-500" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg">
+              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleExport('csv')}>CSV</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>Excel</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>PDF</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('json')}>JSON</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </Toolbar>
+      </Card>
 
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              try {
-                localStorage.setItem('admin_feedback_report_pageSize', String(size));
-              } catch {}
-              setCurrentPage(1);
-            }}
-            itemLabel="feedbacks"
-          />
-        </Div>
-      </Div>
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : feedbackExperiences.length === 0 ? (
+        <EmptyState
+          title="No feedback yet"
+          message="No feedback experiences match your search or filters."
+          actionLabel="Reset filters"
+          onAction={handleReset}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={LABELS} />
+          <TBody>
+            {feedbackExperiences.map((feedback, idx, all) => (
+              <Row key={feedback._id} last={idx === all.length - 1}>
+                <Cell width={COLS[0]}>{(currentPage - 1) * pageSize + idx + 1}</Cell>
+                <Cell width={COLS[1]}>
+                  <Div>
+                    <Span className="text-sm font-medium text-slate-900">{feedback.userName || 'N/A'}</Span>
+                    {feedback.userEmail ? <Span className="text-xs text-slate-500">{feedback.userEmail}</Span> : null}
+                    {feedback.userPhone ? <Span className="text-xs text-slate-500">{feedback.userPhone}</Span> : null}
+                  </Div>
+                </Cell>
+                <Cell width={COLS[2]}>
+                  <StatusBadge tone={ratingTone(feedback.rating)} label={`${feedback.rating}/5`} />
+                </Cell>
+                <Cell width={COLS[3]} numberOfLines={3}>
+                  {getExperienceLabel(feedback.experience)}
+                </Cell>
+                <Cell width={COLS[4]}>
+                  <StatusBadge tone="info" label={feedback.module || 'N/A'} />
+                </Cell>
+                <Cell width={COLS[5]}>
+                  <Span className="text-xs text-slate-700">
+                    {new Date(feedback.createdAt).toLocaleDateString()} {new Date(feedback.createdAt).toLocaleTimeString()}
+                  </Span>
+                </Cell>
+                <Cell width={COLS[6]}>
+                  <Div className="flex-row items-center gap-1">
+                    <Button onClick={() => handleViewDetails(feedback)} accessibilityLabel="View feedback" className="w-11 h-11 rounded-lg items-center justify-center">
+                      <UiIcon as={Eye} size={16} className="text-blue-600" />
+                    </Button>
+                    <Button onClick={() => handleDelete(feedback._id)} accessibilityLabel="Delete feedback" className="w-11 h-11 rounded-lg items-center justify-center">
+                      <UiIcon as={Trash2} size={16} className="text-red-600" />
+                    </Button>
+                  </Div>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          try {
+            localStorage.setItem('admin_feedback_report_pageSize', String(size));
+          } catch {}
+          setCurrentPage(1);
+        }}
+        itemLabel="feedbacks"
+      />
 
       {/* Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="max-w-2xl bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-            <DialogTitle className="text-xl font-bold text-slate-900">Feedback Details</DialogTitle>
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="text-base font-semibold text-slate-900">Feedback Details</DialogTitle>
           </DialogHeader>
           {selectedFeedback && (
-            <Div className="px-6 py-6">
-              <Div className="grid grid-cols-2 gap-6">
-                {/* Left Column */}
-                <Div className="space-y-5">
-                  <Div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-1 block">User Name</Label>
-                    <P className="text-sm text-slate-900 mt-1">{selectedFeedback.userName || 'N/A'}</P>
-                  </Div>
-                  <Div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-1 block">Email</Label>
-                    <P className="text-sm text-slate-900 mt-1 break-words">{selectedFeedback.userEmail || 'N/A'}</P>
-                  </Div>
-                  <Div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-1 block">Experience</Label>
-                    <P className="text-sm text-slate-900 mt-1">{getExperienceLabel(selectedFeedback.experience)}</P>
-                  </Div>
-                  <Div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-1 block">Date</Label>
-                    <P className="text-sm text-slate-900 mt-1">{new Date(selectedFeedback.createdAt).toLocaleString()}</P>
-                  </Div>
-                </Div>
-
-                {/* Right Column */}
-                <Div className="space-y-5">
-                  <Div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-1 block">Rating</Label>
-                    <P className="text-sm text-slate-900 mt-1">
-                      <Span className={`inline-block px-3 py-1.5 rounded-full text-sm font-medium ${getRatingColor(selectedFeedback.rating)}`}>
-                        {selectedFeedback.rating}/10
-                      </Span>
-                    </P>
-                  </Div>
-                  <Div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-1 block">Phone</Label>
-                    <P className="text-sm text-slate-900 mt-1">{selectedFeedback.userPhone || 'N/A'}</P>
-                  </Div>
-                  <Div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-1 block">Module</Label>
-                    <P className="text-sm text-slate-900 mt-1">
-                      <Span className="px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 capitalize">
-                        {selectedFeedback.module || 'N/A'}
-                      </Span>
-                    </P>
-                  </Div>
-                </Div>
+            <Div className="px-4 py-4 gap-3">
+              <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+                <Field label="User name">
+                  <P className="text-sm text-slate-900">{selectedFeedback.userName || 'N/A'}</P>
+                </Field>
+                <Field label="Rating">
+                  <StatusBadge tone={ratingTone(selectedFeedback.rating)} label={`${selectedFeedback.rating}/10`} />
+                </Field>
+                <Field label="Email">
+                  <P className="text-sm text-slate-900">{selectedFeedback.userEmail || 'N/A'}</P>
+                </Field>
+                <Field label="Phone">
+                  <P className="text-sm text-slate-900">{selectedFeedback.userPhone || 'N/A'}</P>
+                </Field>
+                <Field label="Experience">
+                  <P className="text-sm text-slate-900">{getExperienceLabel(selectedFeedback.experience)}</P>
+                </Field>
+                <Field label="Module">
+                  <StatusBadge tone="info" label={selectedFeedback.module || 'N/A'} />
+                </Field>
+                <Field label="Date">
+                  <P className="text-sm text-slate-900">{new Date(selectedFeedback.createdAt).toLocaleString()}</P>
+                </Field>
               </Div>
             </Div>
           )}
-          <DialogFooter className="px-6 pb-6 pt-4 border-t border-slate-200">
-            <Button
-              onClick={() => setShowDetailsDialog(false)}
-              className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm"
-            >
-              Close
+          <DialogFooter className="px-4 pb-4 pt-3 border-t border-slate-200">
+            <Button onClick={() => setShowDetailsDialog(false)} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Close</Span>
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

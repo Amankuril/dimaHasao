@@ -1,48 +1,49 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/delivery-partners/DeliverymanList.jsx (tools/port.js first pass). */
 import React, { useState, useMemo, useEffect } from 'react';
-import {
-  Search,
-  Download,
-  ChevronDown,
-  Eye,
-  User,
-  Star,
-  ArrowUpDown,
-  Settings,
-  FileText,
-  FileSpreadsheet,
-  Loader2,
-  Check,
-  Columns,
-  ExternalLink,
-  Calendar,
-  MapPin,
-  CreditCard,
-  Mail,
-  Phone,
-  Bike,
-  FileCheck,
-  Pencil,
-  Save,
-  Trash2,
-  X,
-} from 'lucide-react-native';
+import { ArrowUpDown, Eye, User, Settings, FileText, FileSpreadsheet, Loader2, Check, Columns, Pencil, Save, Trash2, X } from 'lucide-react-native';
 import { adminAPI } from '../../../../api/food';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../../../../components/shadcn';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../../components/shadcn';
 import { exportDeliverymenToExcel, exportDeliverymenToPDF } from '../../../components/admin/deliveryman/deliverymanExportUtils';
 import { toast } from '../../../../lib/notify';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
-import { A, Button, Div, H1, H3, Img, Input, Label, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { A, Button, CheckBox, Div, Img, Input, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
 import { alert, window } from '../../../../lib/webShim';
-import { LinearGradient } from 'expo-linear-gradient';
+const SORTABLE = ['name', 'rating', 'contact', 'zone', 'totalOrders', 'pocketBalance', 'cashInHand', 'remainingCashLimit'];
+const COLUMN_LABELS = {
+  si: 'SI',
+  name: 'Name',
+  rating: 'Rating',
+  contact: 'Contact',
+  zone: 'Zone',
+  totalOrders: 'Orders',
+  pocketBalance: 'Pocket Balance',
+  cashInHand: 'Cash In Hand',
+  remainingCashLimit: 'Remaining Limit',
+  availabilityStatus: 'Availability',
+  actions: 'Action',
+};
 const debugError = () => {};
 const formatCurrency = (amount) => {
   const numericAmount = Number(amount);
@@ -53,6 +54,8 @@ const formatCurrency = (amount) => {
   })}`;
 };
 export default function DeliverymanList() {
+  const { tablet } = useLayoutWidth();
+  const detailCol = tablet ? 'flex-1 min-w-[200px]' : 'flex-1 min-w-[140px]';
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [deliverymen, setDeliverymen] = useState([]);
@@ -488,802 +491,449 @@ export default function DeliverymanList() {
     } finally {
       setDeletingDeliveryId(null);
     }
-  };
-  const COLUMN_WIDTHS = {
-    si: 70,
-    name: 200,
-    rating: 110,
+  };  const COLUMN_WIDTHS = {
+    si: 60,
+    name: 190,
+    rating: 100,
     contact: 190,
-    zone: 150,
-    totalOrders: 120,
+    zone: 140,
+    totalOrders: 110,
     pocketBalance: 150,
     cashInHand: 150,
-    remainingCashLimit: 180,
-    availabilityStatus: 160,
-    actions: 132,
+    remainingCashLimit: 170,
+    availabilityStatus: 150,
+    actions: 150,
   };
-  const tableCols = Object.keys(COLUMN_WIDTHS)
-    .filter((key) => visibleColumns[key])
-    .map((key) => COLUMN_WIDTHS[key]);
-  return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-3">
-              <UiIcon as={User} className="w-5 h-5 text-slate-600" />
-              <H1 className="text-2xl font-bold text-slate-900">Deliveryman List</H1>
-            </Div>
-
-            <Div className="flex items-center gap-3">
-              <Div className="relative flex-1 sm:flex-initial min-w-[250px]">
-                <Input
-                  type="text"
-                  placeholder="Search by name or restaur..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                />
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </Div>
-
-              <Button
-                onClick={handleExportPDF}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all"
-              >
-                <UiIcon as={FileText} className="w-4 h-4" />
-                <Span className="text-black font-bold">PDF</Span>
-              </Button>
-              <Button
-                onClick={handleExportExcel}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all"
-              >
-                <UiIcon as={FileSpreadsheet} className="w-4 h-4" />
-                <Span className="text-black font-bold">Excel</Span>
-              </Button>
-              <Button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
-              >
-                <UiIcon as={Settings} className="w-5 h-5" />
-              </Button>
-            </Div>
-          </Div>
-
-          <Div className="mb-4">
-            <Div className="flex items-center gap-2">
-              <Span className="text-sm font-semibold text-slate-700">Deliveryman</Span>
-              <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
-                {loading ? <Span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" /> : totalDeliverymen}
-              </Span>
-            </Div>
-          </Div>
-
-          {/* Error Message */}
-          {error && (
-            <Div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <P className="text-sm text-red-700">{error}</P>
-              <Button onClick={fetchDeliverymen} className="mt-2 text-sm text-red-600 underline hover:text-red-800">
-                Retry
-              </Button>
-            </Div>
-          )}
-
-          {/* Table */}
-          <Div>
-            {loading ? (
-              <Div className="flex items-center justify-center py-20">
-                <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600" />
-                <Span className="ml-3 text-sm text-slate-600">Loading delivery partners...</Span>
-              </Div>
-            ) : (
-              <Table className="w-full" cols={tableCols}>
-                <Thead className="bg-slate-50 border-b border-slate-200">
-                  <Tr>
-                    {visibleColumns.si && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                        <Div className="flex items-center gap-2">
-                          <Span>SI</Span>
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.name && (
-                      <Th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
-                        onClick={() => handleSort('name')}
-                      >
-                        <Div className="flex items-center gap-2">
-                          <Span>Name</Span>
-                          <UiIcon as={ArrowUpDown} className={`w-3 h-3 ${sortConfig.key === 'name' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.rating && (
-                      <Th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
-                        onClick={() => handleSort('rating')}
-                      >
-                        <Div className="flex items-center gap-2">
-                          <Span>Rating</Span>
-                          <UiIcon as={ArrowUpDown} className={`w-3 h-3 ${sortConfig.key === 'rating' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.contact && (
-                      <Th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
-                        onClick={() => handleSort('contact')}
-                      >
-                        <Div className="flex items-center gap-2">
-                          <Span>Contact</Span>
-                          <UiIcon as={ArrowUpDown} className={`w-3 h-3 ${sortConfig.key === 'contact' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.zone && (
-                      <Th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
-                        onClick={() => handleSort('zone')}
-                      >
-                        <Div className="flex items-center gap-2">
-                          <Span>Zone</Span>
-                          <UiIcon as={ArrowUpDown} className={`w-3 h-3 ${sortConfig.key === 'zone' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.totalOrders && (
-                      <Th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
-                        onClick={() => handleSort('totalOrders')}
-                      >
-                        <Div className="flex items-center gap-2">
-                          <Span>Total Orders</Span>
-                          <UiIcon as={ArrowUpDown} className={`w-3 h-3 ${sortConfig.key === 'totalOrders' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.pocketBalance && (
-                      <Th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
-                        onClick={() => handleSort('pocketBalance')}
-                      >
-                        <Div className="flex items-center gap-2">
-                          <Span>Pocket Balance</Span>
-                          <UiIcon as={ArrowUpDown} className={`w-3 h-3 ${sortConfig.key === 'pocketBalance' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.cashInHand && (
-                      <Th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
-                        onClick={() => handleSort('cashInHand')}
-                      >
-                        <Div className="flex items-center gap-2">
-                          <Span>Cash In Hand</Span>
-                          <UiIcon as={ArrowUpDown} className={`w-3 h-3 ${sortConfig.key === 'cashInHand' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.remainingCashLimit && (
-                      <Th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
-                        onClick={() => handleSort('remainingCashLimit')}
-                      >
-                        <Div className="flex items-center gap-2">
-                          <Span>Remaining Cash Limit</Span>
-                          <UiIcon as={ArrowUpDown} className={`w-3 h-3 ${sortConfig.key === 'remainingCashLimit' ? 'text-blue-600' : 'text-slate-400'}`} />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.availabilityStatus && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                        <Div className="flex items-center gap-2">
-                          <Span>Availability Status</Span>
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.actions && <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>}
-                  </Tr>
-                </Thead>
-                <Tbody className="bg-white divide-y divide-slate-100">
-                  {filteredDeliverymen.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={Object.values(visibleColumns).filter((v) => v).length} className="px-6 py-8 text-center text-slate-500">
-                        {error ? 'Error loading delivery partners' : 'No delivery partners found'}
-                      </Td>
-                    </Tr>
-                  ) : (
-                    filteredDeliverymen.map((dm, index) => (
-                      <Tr key={dm._id} className="hover:bg-slate-50 transition-colors">
-                        {visibleColumns.si && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.name && (
-                          <Td className="px-6 py-4 whitespace-nowrap align-middle">
-                            <Div className="flex items-center gap-3">
-                              <Div
-                                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-slate-200"
-                                onClick={() => handleView(dm)}
-                              >
-                                <LinearGradient
-                                  colors={['#E8EEF7', '#C5D3E5']}
-                                  start={{ x: 0, y: 0 }}
-                                  end={{ x: 1, y: 1 }}
-                                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                                />
-                                <Img
-                                  src={dm.profileImage?.url ?? dm.profilePhoto ?? '/assets/images/profile_avatar.webp'}
-                                  alt={dm.name}
-                                  className="w-full h-full object-cover"
-                                  fallback="/assets/images/profile_avatar.webp"
-                                />
-                              </Div>
-                              <Span
-                                className="text-sm font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
-                                onClick={() => handleView(dm)}
-                              >
-                                {dm.name}
-                              </Span>
-                            </Div>
-                          </Td>
-                        )}
-                        {visibleColumns.rating && (
-                          <Td className="px-6 py-4 whitespace-nowrap align-middle">
-                            <Div
-                              className="inline-flex items-center justify-center gap-1.5 min-w-[60px] px-2.5 py-1 rounded-lg border"
-                              style={
-                                dm.rating > 0
-                                  ? {
-                                      backgroundColor: '#fffbeb',
-                                      borderColor: '#fde68a',
-                                    }
-                                  : {
-                                      backgroundColor: 'transparent',
-                                      borderColor: 'transparent',
-                                    }
-                              }
-                            >
-                              {dm.rating > 0 ? (
-                                <>
-                                  <Span className="text-sm font-bold text-amber-700 leading-none">{Number(dm.rating).toFixed(1)}</Span>
-                                  <UiIcon as={Star} className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                                </>
-                              ) : (
-                                <Span className="text-sm text-slate-400 leading-none">N/A</Span>
-                              )}
-                            </Div>
-                          </Td>
-                        )}
-                        {visibleColumns.contact && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Div className="flex flex-col">
-                              <Span className="text-sm text-slate-700">{dm.email}</Span>
-                              <Span className="text-xs text-slate-500">{dm.phone}</Span>
-                            </Div>
-                          </Td>
-                        )}
-                        {visibleColumns.zone && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-slate-700">{dm.zone}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.totalOrders && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-slate-700">{dm.totalOrders || 0}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.pocketBalance && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            {editingDeliveryId === String(dm._id) ? (
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={editValues.pocketBalance}
-                                onChange={(e) => updateWalletFieldValue('pocketBalance', e.target.value)}
-                                className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                              />
-                            ) : (
-                              <Span className="text-sm text-slate-700">{formatCurrency(dm.pocketBalance)}</Span>
-                            )}
-                          </Td>
-                        )}
-                        {visibleColumns.cashInHand && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            {editingDeliveryId === String(dm._id) ? (
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={editValues.cashInHand}
-                                onChange={(e) => updateWalletFieldValue('cashInHand', e.target.value)}
-                                className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                              />
-                            ) : (
-                              <Span className="text-sm text-slate-700">{formatCurrency(dm.cashInHand)}</Span>
-                            )}
-                          </Td>
-                        )}
-                        {visibleColumns.remainingCashLimit && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm text-slate-700">{formatCurrency(dm.remainingCashLimit)}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.availabilityStatus && (
-                          <Td className="px-6 py-4">
-                            <Div className="flex flex-col">
-                              <Span className="text-xs">
-                                Active Status: <Span className={`${dm.status === 'Online' ? 'text-blue-600' : 'text-slate-600'} underline`}>{dm.status}</Span>
-                              </Span>
-                            </Div>
-                          </Td>
-                        )}
-                        {visibleColumns.actions && (
-                          <Td className="px-6 py-4 whitespace-nowrap text-center">
-                            <Div className="flex items-center justify-center gap-2">
-                              {editingDeliveryId === String(dm._id) ? (
-                                <>
-                                  <Button
-                                    onClick={() => saveWalletChanges(dm)}
-                                    disabled={savingDeliveryId === String(dm._id)}
-                                    className="p-1.5 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors disabled:opacity-50"
-                                  >
-                                    {savingDeliveryId === String(dm._id) ? (
-                                      <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                      <UiIcon as={Save} className="w-4 h-4" />
-                                    )}
-                                  </Button>
-                                  <Button
-                                    onClick={cancelEditingWallet}
-                                    disabled={savingDeliveryId === String(dm._id)}
-                                    className="p-1.5 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-50"
-                                  >
-                                    <UiIcon as={X} className="w-4 h-4" />
-                                  </Button>
-                                </>
-                              ) : (
-                                <Button
-                                  onClick={() => startEditingWallet(dm)}
-                                  className="p-1.5 rounded bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
-                                >
-                                  <UiIcon as={Pencil} className="w-4 h-4" />
-                                </Button>
-                              )}
-                              <Button onClick={() => handleView(dm)} className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                <UiIcon as={Eye} className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                onClick={() => handleDelete(dm)}
-                                disabled={deletingDeliveryId === String(dm._id)}
-                                className="p-1.5 rounded bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
-                              >
-                                {deletingDeliveryId === String(dm._id) ? (
-                                  <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <UiIcon as={Trash2} className="w-4 h-4" />
-                                )}
-                              </Button>
-                            </Div>
-                          </Td>
-                        )}
-                      </Tr>
-                    ))
-                  )}
-                </Tbody>
-              </Table>
-            )}
-          </Div>
-
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalDeliverymen}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              try {
-                localStorage.setItem('admin_deliverymen_pageSize', String(size));
-              } catch {
-                /* ignore */
-              }
-            }}
-            itemLabel="delivery partners"
-            className="mt-4"
-          />
-        </Div>
+  const activeKeys = Object.keys(COLUMN_WIDTHS).filter((key) => visibleColumns[key]);
+  const tableCols = activeKeys.map((key) => COLUMN_WIDTHS[key]);
+  const widthOf = (key) => COLUMN_WIDTHS[key];
+  const detailRow = (label, value) =>
+    value ? (
+      <Div className={`${detailCol} gap-0.5`} key={label}>
+        <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</P>
+        <P className="text-sm text-slate-900">{value}</P>
       </Div>
+    ) : null;
+  return (
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={User}
+        title="Deliveryman List"
+        subtitle={loading ? 'Loading delivery partners…' : `${totalDeliverymen} delivery partner${totalDeliverymen === 1 ? '' : 's'} and their wallets`}
+        breadcrumb={[{ label: 'Food' }, { label: 'Delivery partners' }, { label: 'Deliveryman list' }]}
+        actions={
+          <>
+            <Button onClick={handleExportPDF} className={BTN_SECONDARY}>
+              <UiIcon as={FileText} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>PDF</Span>
+            </Button>
+            <Button onClick={handleExportExcel} className={BTN_SECONDARY}>
+              <UiIcon as={FileSpreadsheet} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Excel</Span>
+            </Button>
+            <Button
+              onClick={() => setIsSettingsOpen(true)}
+              accessibilityLabel="Table settings"
+              className="w-11 h-11 rounded-lg border border-slate-300 bg-white items-center justify-center"
+            >
+              <UiIcon as={Settings} size={18} className="text-slate-600" />
+            </Button>
+          </>
+        }
+      />
+
+      <Card className="mb-4">
+        <Toolbar className="mb-0">
+          <Input
+            type="text"
+            placeholder="Search by name or phone"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className={`${INPUT} flex-1 min-w-[200px]`}
+          />
+        </Toolbar>
+      </Card>
+
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : error ? (
+        <ErrorState title="Could not load delivery partners" message={error} onRetry={fetchDeliverymen} />
+      ) : filteredDeliverymen.length === 0 ? (
+        <EmptyState
+          icon={User}
+          title="No delivery partners found"
+          message={debouncedSearch ? 'No delivery partner matches this search.' : 'Approved delivery partners appear here with their wallet balances.'}
+        />
+      ) : tableCols.length === 0 ? (
+        <EmptyState
+          icon={Columns}
+          title="All columns are hidden"
+          message="Turn a column back on to see the list."
+          actionLabel="Table settings"
+          onAction={() => setIsSettingsOpen(true)}
+        />
+      ) : (
+        <DataTable cols={tableCols}>
+          <Row className="bg-slate-50 border-b border-slate-200">
+            {activeKeys.map((key) => {
+              const sortable = SORTABLE.includes(key);
+              return (
+                <Cell key={key} width={widthOf(key)} className="py-2.5">
+                  <Div className="flex-row items-center gap-1" onClick={sortable ? () => handleSort(key) : undefined}>
+                    <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500 flex-1" numberOfLines={2}>
+                      {COLUMN_LABELS[key]}
+                    </Span>
+                    {sortable ? <UiIcon as={ArrowUpDown} size={12} className={sortConfig.key === key ? 'text-blue-600' : 'text-slate-400'} /> : null}
+                  </Div>
+                </Cell>
+              );
+            })}
+          </Row>
+          <TBody>
+            {filteredDeliverymen.map((dm, index) => (
+              <Row key={dm._id} last={index === filteredDeliverymen.length - 1}>
+                {visibleColumns.si && <Cell width={widthOf('si')}>{String((currentPage - 1) * pageSize + index + 1)}</Cell>}
+                {visibleColumns.name && (
+                  <Cell width={widthOf('name')}>
+                    <Div className="flex-row items-center gap-2">
+                      <Div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden shrink-0" onClick={() => handleView(dm)}>
+                        <Img
+                          src={dm.profileImage?.url ?? dm.profilePhoto ?? '/assets/images/profile_avatar.webp'}
+                          alt={dm.name}
+                          className="w-full h-full"
+                          contentFit="cover"
+                          fallback="/assets/images/profile_avatar.webp"
+                        />
+                      </Div>
+                      <Span className="text-sm font-medium text-slate-900 flex-1" numberOfLines={2} onClick={() => handleView(dm)}>
+                        {dm.name}
+                      </Span>
+                    </Div>
+                  </Cell>
+                )}
+                {visibleColumns.rating && (
+                  <Cell width={widthOf('rating')}>
+                    {dm.rating > 0 ? (
+                      <StatusBadge tone="warning" label={`${Number(dm.rating).toFixed(1)} ★`} />
+                    ) : (
+                      <Span className="text-sm text-slate-400">N/A</Span>
+                    )}
+                  </Cell>
+                )}
+                {visibleColumns.contact && (
+                  <Cell width={widthOf('contact')}>
+                    <Div className="gap-0.5">
+                      <Span className="text-sm text-slate-700" numberOfLines={1}>
+                        {dm.email}
+                      </Span>
+                      <Span className="text-xs text-slate-500">{dm.phone}</Span>
+                    </Div>
+                  </Cell>
+                )}
+                {visibleColumns.zone && <Cell width={widthOf('zone')}>{dm.zone}</Cell>}
+                {visibleColumns.totalOrders && (
+                  <Cell width={widthOf('totalOrders')} align="right">
+                    {String(dm.totalOrders || 0)}
+                  </Cell>
+                )}
+                {visibleColumns.pocketBalance && (
+                  <Cell width={widthOf('pocketBalance')} align={editingDeliveryId === String(dm._id) ? 'left' : 'right'}>
+                    {editingDeliveryId === String(dm._id) ? (
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={editValues.pocketBalance}
+                        onChange={(e) => updateWalletFieldValue('pocketBalance', e.target.value)}
+                        className={`${INPUT} w-full`}
+                      />
+                    ) : (
+                      formatCurrency(dm.pocketBalance)
+                    )}
+                  </Cell>
+                )}
+                {visibleColumns.cashInHand && (
+                  <Cell width={widthOf('cashInHand')} align={editingDeliveryId === String(dm._id) ? 'left' : 'right'}>
+                    {editingDeliveryId === String(dm._id) ? (
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={editValues.cashInHand}
+                        onChange={(e) => updateWalletFieldValue('cashInHand', e.target.value)}
+                        className={`${INPUT} w-full`}
+                      />
+                    ) : (
+                      formatCurrency(dm.cashInHand)
+                    )}
+                  </Cell>
+                )}
+                {visibleColumns.remainingCashLimit && (
+                  <Cell width={widthOf('remainingCashLimit')} align="right">
+                    {formatCurrency(dm.remainingCashLimit)}
+                  </Cell>
+                )}
+                {visibleColumns.availabilityStatus && (
+                  <Cell width={widthOf('availabilityStatus')}>
+                    <StatusBadge status={dm.status} label={dm.status || 'Unknown'} />
+                  </Cell>
+                )}
+                {visibleColumns.actions && (
+                  <Cell width={widthOf('actions')}>
+                    <Div className="flex-row items-center gap-1">
+                      {editingDeliveryId === String(dm._id) ? (
+                        <>
+                          <Button
+                            onClick={() => saveWalletChanges(dm)}
+                            disabled={savingDeliveryId === String(dm._id)}
+                            accessibilityLabel="Save wallet changes"
+                            className={`w-11 h-11 rounded-lg items-center justify-center ${savingDeliveryId === String(dm._id) ? 'opacity-50' : ''}`}
+                          >
+                            <UiIcon as={savingDeliveryId === String(dm._id) ? Loader2 : Save} size={16} className="text-green-700" />
+                          </Button>
+                          <Button
+                            onClick={cancelEditingWallet}
+                            disabled={savingDeliveryId === String(dm._id)}
+                            accessibilityLabel="Cancel editing"
+                            className={`w-11 h-11 rounded-lg items-center justify-center ${savingDeliveryId === String(dm._id) ? 'opacity-50' : ''}`}
+                          >
+                            <UiIcon as={X} size={16} className="text-slate-600" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button onClick={() => startEditingWallet(dm)} accessibilityLabel="Edit wallet" className="w-11 h-11 rounded-lg items-center justify-center">
+                          <UiIcon as={Pencil} size={16} className="text-slate-600" />
+                        </Button>
+                      )}
+                      <Button onClick={() => handleView(dm)} accessibilityLabel="View delivery partner" className="w-11 h-11 rounded-lg items-center justify-center">
+                        <UiIcon as={Eye} size={16} className="text-blue-600" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(dm)}
+                        disabled={deletingDeliveryId === String(dm._id)}
+                        accessibilityLabel="Deactivate delivery partner"
+                        className={`w-11 h-11 rounded-lg items-center justify-center ${deletingDeliveryId === String(dm._id) ? 'opacity-50' : ''}`}
+                      >
+                        <UiIcon as={deletingDeliveryId === String(dm._id) ? Loader2 : Trash2} size={16} className="text-red-600" />
+                      </Button>
+                    </Div>
+                  </Cell>
+                )}
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
+
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalDeliverymen}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          try {
+            localStorage.setItem('admin_deliverymen_pageSize', String(size));
+          } catch {
+            /* ignore */
+          }
+        }}
+        itemLabel="delivery partners"
+        className="mt-3 rounded-xl border border-slate-200"
+      />
 
       {/* View Details Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-3xl bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100 max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-            <DialogTitle className="text-xl font-bold text-slate-900">Delivery Partner Details</DialogTitle>
+        <DialogContent className="max-w-3xl bg-white p-5 gap-3">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base font-semibold text-slate-900">Delivery Partner Details</DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6">
-            {viewDetails ? (
-              <Div className="space-y-6 mt-4">
-                {/* Profile Image & Basic Info */}
-                <Div className="flex items-start gap-6 pb-6 border-b border-slate-200">
-                  <Div className="flex-shrink-0">
-                    {viewDetails.profileImage?.url ? (
-                      <Img
-                        src={viewDetails.profileImage.url}
-                        alt={viewDetails.name}
-                        className="w-24 h-24 rounded-full object-cover border-2 border-slate-200"
-                        onError={(e) => {
-                          e.currentTarget.src = '/assets/images/profile_avatar.webp';
-                        }}
-                      />
-                    ) : (
-                      <Img
-                        src="/assets/images/profile_avatar.webp"
-                        alt={viewDetails.name}
-                        className="w-24 h-24 rounded-full object-cover border-2 border-slate-200"
-                      />
-                    )}
-                  </Div>
-                  <Div className="flex-1 grid grid-cols-2 gap-4">
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1">
-                        <UiIcon as={User} className="w-3 h-3" /> Name
-                      </Label>
-                      <P className="text-sm font-medium text-slate-900 mt-1">{viewDetails.name || 'N/A'}</P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1">
-                        <UiIcon as={Mail} className="w-3 h-3" /> Email
-                      </Label>
-                      <P className="text-sm text-slate-900 mt-1">{viewDetails.email || 'N/A'}</P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1">
-                        <UiIcon as={Phone} className="w-3 h-3" /> Phone
-                      </Label>
-                      <P className="text-sm text-slate-900 mt-1">{viewDetails.phone || 'N/A'}</P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Delivery ID</Label>
-                      <P className="text-sm font-medium text-slate-900 mt-1">{viewDetails.deliveryId || 'N/A'}</P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Status</Label>
-                      <Span
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${viewDetails.status === 'pending' ? 'bg-blue-100 text-blue-700' : viewDetails.status === 'approved' || viewDetails.status === 'active' ? 'bg-green-100 text-green-700' : viewDetails.status === 'blocked' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}
-                      >
-                        {viewDetails.status === 'blocked' ? 'Rejected' : viewDetails.status?.charAt(0).toUpperCase() + viewDetails.status?.slice(1) || 'N/A'}
-                      </Span>
-                    </Div>
-                    {viewDetails.rejectionReason && (
-                      <Div className="col-span-2">
-                        <Label className="text-xs font-semibold text-slate-500 uppercase text-red-600">Rejection Reason</Label>
-                        <Div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-1">
-                          <P className="text-sm text-red-700 whitespace-pre-wrap">{viewDetails.rejectionReason}</P>
-                        </Div>
-                      </Div>
-                    )}
-                    {viewDetails.dateOfBirth && (
-                      <Div>
-                        <Label className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1">
-                          <UiIcon as={Calendar} className="w-3 h-3" /> Date of Birth
-                        </Label>
-                        <P className="text-sm text-slate-900 mt-1">
-                          {new Date(viewDetails.dateOfBirth).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </P>
-                      </Div>
-                    )}
-                    {viewDetails.gender && (
-                      <Div>
-                        <Label className="text-xs font-semibold text-slate-500 uppercase">Gender</Label>
-                        <P className="text-sm text-slate-900 mt-1 capitalize">{viewDetails.gender || 'N/A'}</P>
-                      </Div>
-                    )}
+          {viewDetails ? (
+            <Div className="gap-3">
+              <Card className="gap-3">
+                <Div className="flex-row items-center gap-3">
+                  <Img
+                    src={viewDetails.profileImage?.url ?? '/assets/images/profile_avatar.webp'}
+                    alt={viewDetails.name}
+                    className="w-16 h-16 rounded-full"
+                    contentFit="cover"
+                    fallback="/assets/images/profile_avatar.webp"
+                  />
+                  <Div className="flex-1 gap-1">
+                    <P className="text-base font-semibold text-slate-900">{viewDetails.name || 'N/A'}</P>
+                    <StatusBadge
+                      status={viewDetails.status === 'blocked' ? 'rejected' : viewDetails.status}
+                      label={viewDetails.status === 'blocked' ? 'Rejected' : viewDetails.status || 'N/A'}
+                    />
                   </Div>
                 </Div>
-
-                {/* Location Details */}
-                {viewDetails.location && (
-                  <Div className="pb-6 border-b border-slate-200">
-                    <H3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <UiIcon as={MapPin} className="w-4 h-4" /> Location Details
-                    </H3>
-                    <Div className="grid grid-cols-2 gap-4">
-                      {viewDetails.location.addressLine1 && (
-                        <Div className="col-span-2">
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Address Line 1</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.location.addressLine1}</P>
-                        </Div>
-                      )}
-                      {viewDetails.location.addressLine2 && (
-                        <Div className="col-span-2">
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Address Line 2</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.location.addressLine2}</P>
-                        </Div>
-                      )}
-                      {viewDetails.location.area && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Area</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.location.area}</P>
-                        </Div>
-                      )}
-                      {viewDetails.location.city && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">City</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.location.city}</P>
-                        </Div>
-                      )}
-                      {viewDetails.location.state && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">State</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.location.state}</P>
-                        </Div>
-                      )}
-                      {viewDetails.location.zipCode && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Zip Code</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.location.zipCode}</P>
-                        </Div>
-                      )}
-                    </Div>
-                  </Div>
-                )}
-
-                {/* Vehicle Details */}
-                {viewDetails.vehicle && (
-                  <Div className="pb-6 border-b border-slate-200">
-                    <H3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <UiIcon as={Bike} className="w-4 h-4" /> Vehicle Details
-                    </H3>
-                    <Div className="grid grid-cols-4 gap-4">
-                      {viewDetails.vehicle.brand && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Brand</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.vehicle.brand}</P>
-                        </Div>
-                      )}
-                      {viewDetails.vehicle.model && (
-                        <Div className="text-right col-span-1">
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Model</Label>
-                          <P className="text-xs text-slate-900 mt-1">{viewDetails.vehicle.model}</P>
-                        </Div>
-                      )}
-                      {viewDetails.vehicle.number && (
-                        <Div className="col-span-2">
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Vehicle Number</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.vehicle.number}</P>
-                        </Div>
-                      )}
-                      {viewDetails.vehicle.type && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Vehicle Type</Label>
-                          <P className="text-sm text-slate-900 mt-1 capitalize">{viewDetails.vehicle.type}</P>
-                        </Div>
-                      )}
-                    </Div>
-                  </Div>
-                )}
-
-                {/* Pocket Details */}
-                <Div className="pb-6 border-b border-slate-200">
-                  <H3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                    <UiIcon as={CreditCard} className="w-4 h-4" /> Pocket Details
-                  </H3>
-                  <Div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Pocket Balance</Label>
-                      <P className="text-sm font-medium text-slate-900 mt-1">
-                        {formatCurrency(viewDetails.pocketBalance || viewDetails.walletSummary?.pocketBalance)}
-                      </P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Cash In Hand</Label>
-                      <P className="text-sm font-medium text-slate-900 mt-1">
-                        {formatCurrency(viewDetails.cashInHand || viewDetails.walletSummary?.cashCollected)}
-                      </P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Remaining Cash Limit</Label>
-                      <P className="text-sm font-medium text-slate-900 mt-1">
-                        {formatCurrency(viewDetails.remainingCashLimit || viewDetails.walletSummary?.remainingCashLimit)}
-                      </P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Total Earning</Label>
-                      <P className="text-sm font-medium text-slate-900 mt-1">
-                        {formatCurrency(viewDetails.totalEarning || viewDetails.walletSummary?.totalEarning)}
-                      </P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Bonus</Label>
-                      <P className="text-sm font-medium text-slate-900 mt-1">{formatCurrency(viewDetails.bonus || viewDetails.walletSummary?.bonus)}</P>
-                    </Div>
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Total Withdrawn</Label>
-                      <P className="text-sm font-medium text-slate-900 mt-1">
-                        {formatCurrency(viewDetails.totalWithdrawn || viewDetails.walletSummary?.totalWithdrawn)}
-                      </P>
-                    </Div>
-                  </Div>
-                </Div>
-
-                {/* Documents */}
-                {viewDetails.documents && (
-                  <Div className="pb-6 border-b border-slate-200">
-                    <H3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <UiIcon as={FileCheck} className="w-4 h-4" /> Documents
-                    </H3>
-                    <Div className="grid grid-cols-2 gap-4">
-                      {/* Aadhar */}
-                      {viewDetails.documents.aadhar && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Aadhar Card</Label>
-                          <Div className="mt-2">
-                            {viewDetails.documents.aadhar.number && (
-                              <P className="text-sm text-slate-700 mb-1">Number: {viewDetails.documents.aadhar.number}</P>
-                            )}
-                            {viewDetails.documents.aadhar.document && (
-                              <A
-                                href={viewDetails.documents.aadhar.document}
-                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-                              >
-                                <UiIcon as={ExternalLink} className="w-3 h-3" /> View Document
-                              </A>
-                            )}
-                          </Div>
-                        </Div>
-                      )}
-
-                      {/* PAN */}
-                      {viewDetails.documents.pan && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">PAN Card</Label>
-                          <Div className="mt-2">
-                            {viewDetails.documents.pan.number && <P className="text-sm text-slate-700 mb-1">Number: {viewDetails.documents.pan.number}</P>}
-                            {viewDetails.documents.pan.document && (
-                              <A href={viewDetails.documents.pan.document} className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700">
-                                <UiIcon as={ExternalLink} className="w-3 h-3" /> View Document
-                              </A>
-                            )}
-                          </Div>
-                        </Div>
-                      )}
-
-                      {/* Driving License */}
-                      {viewDetails.documents.drivingLicense && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Driving License</Label>
-                          <Div className="mt-2">
-                            {viewDetails.documents.drivingLicense.number && (
-                              <P className="text-sm text-slate-700 mb-1">Number: {viewDetails.documents.drivingLicense.number}</P>
-                            )}
-                            {viewDetails.documents.drivingLicense.expiryDate && (
-                              <P className="text-xs text-slate-500 mb-1">
-                                Expiry: {new Date(viewDetails.documents.drivingLicense.expiryDate).toLocaleDateString('en-GB')}
-                              </P>
-                            )}
-                            {viewDetails.documents.drivingLicense.document && (
-                              <A
-                                href={viewDetails.documents.drivingLicense.document}
-                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-                              >
-                                <UiIcon as={ExternalLink} className="w-3 h-3" /> View Document
-                              </A>
-                            )}
-                          </Div>
-                        </Div>
-                      )}
-
-                      {/* Vehicle RC */}
-                      {viewDetails.documents.vehicleRC && (viewDetails.documents.vehicleRC.number || viewDetails.documents.vehicleRC.document) && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Vehicle RC</Label>
-                          <Div className="mt-2">
-                            {viewDetails.documents.vehicleRC.number && (
-                              <P className="text-sm text-slate-700 mb-1">Number: {viewDetails.documents.vehicleRC.number}</P>
-                            )}
-                            {viewDetails.documents.vehicleRC.document && (
-                              <A
-                                href={viewDetails.documents.vehicleRC.document}
-                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-                              >
-                                <UiIcon as={ExternalLink} className="w-3 h-3" /> View Document
-                              </A>
-                            )}
-                          </Div>
-                        </Div>
-                      )}
-                    </Div>
-                  </Div>
-                )}
-
-                {/* Bank Details */}
-                {viewDetails.documents?.bankDetails && (
-                  <Div className="pb-6 border-b border-slate-200">
-                    <H3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <UiIcon as={CreditCard} className="w-4 h-4" /> Bank Details
-                    </H3>
-                    <Div className="grid grid-cols-2 gap-4">
-                      {viewDetails.documents.bankDetails.accountHolderName && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Account Holder Name</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.documents.bankDetails.accountHolderName}</P>
-                        </Div>
-                      )}
-                      {viewDetails.documents.bankDetails.accountNumber && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Account Number</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.documents.bankDetails.accountNumber}</P>
-                        </Div>
-                      )}
-                      {viewDetails.documents.bankDetails.ifscCode && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">IFSC Code</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.documents.bankDetails.ifscCode}</P>
-                        </Div>
-                      )}
-                      {viewDetails.documents.bankDetails.bankName && (
-                        <Div>
-                          <Label className="text-xs font-semibold text-slate-500 uppercase">Bank Name</Label>
-                          <P className="text-sm text-slate-900 mt-1">{viewDetails.documents.bankDetails.bankName}</P>
-                        </Div>
-                      )}
-                    </Div>
-                  </Div>
-                )}
-
-                {/* Additional Info */}
-                <Div className="grid grid-cols-2 gap-4">
-                  {viewDetails.signupMethod && (
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Signup Method</Label>
-                      <P className="text-sm text-slate-900 mt-1 capitalize">{viewDetails.signupMethod}</P>
-                    </Div>
-                  )}
-                  {viewDetails.phoneVerified !== undefined && (
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Phone Verified</Label>
-                      <Span
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${viewDetails.phoneVerified ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-                      >
-                        {viewDetails.phoneVerified ? 'Verified' : 'Not Verified'}
-                      </Span>
-                    </Div>
-                  )}
-                  {viewDetails.createdAt && (
-                    <Div>
-                      <Label className="text-xs font-semibold text-slate-500 uppercase">Joined Date</Label>
-                      <P className="text-sm text-slate-900 mt-1">
-                        {new Date(viewDetails.createdAt).toLocaleDateString('en-GB', {
+                <Div className="flex-row flex-wrap gap-3">
+                  {detailRow('Email', viewDetails.email)}
+                  {detailRow('Phone', viewDetails.phone)}
+                  {detailRow('Delivery ID', viewDetails.deliveryId)}
+                  {detailRow(
+                    'Date of Birth',
+                    viewDetails.dateOfBirth
+                      ? new Date(viewDetails.dateOfBirth).toLocaleDateString('en-GB', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
-                        })}
-                      </P>
-                    </Div>
+                        })
+                      : null,
+                  )}
+                  {detailRow('Gender', viewDetails.gender)}
+                  {detailRow('Signup Method', viewDetails.signupMethod)}
+                </Div>
+                {viewDetails.rejectionReason ? (
+                  <Div className="gap-1">
+                    <P className="text-xs font-semibold uppercase tracking-wide text-red-600">Rejection reason</P>
+                    <P className="text-sm text-slate-700">{viewDetails.rejectionReason}</P>
+                  </Div>
+                ) : null}
+                {viewDetails.phoneVerified !== undefined ? (
+                  <StatusBadge
+                    status={viewDetails.phoneVerified ? 'verified' : 'failed'}
+                    label={viewDetails.phoneVerified ? 'Phone verified' : 'Phone not verified'}
+                  />
+                ) : null}
+              </Card>
+
+              {viewDetails.location ? (
+                <Card>
+                  <SectionTitle>Location details</SectionTitle>
+                  <Div className="flex-row flex-wrap gap-3">
+                    {detailRow('Address line 1', viewDetails.location.addressLine1)}
+                    {detailRow('Address line 2', viewDetails.location.addressLine2)}
+                    {detailRow('Area', viewDetails.location.area)}
+                    {detailRow('City', viewDetails.location.city)}
+                    {detailRow('State', viewDetails.location.state)}
+                    {detailRow('Zip code', viewDetails.location.zipCode)}
+                  </Div>
+                </Card>
+              ) : null}
+
+              {viewDetails.vehicle ? (
+                <Card>
+                  <SectionTitle>Vehicle details</SectionTitle>
+                  <Div className="flex-row flex-wrap gap-3">
+                    {detailRow('Brand', viewDetails.vehicle.brand)}
+                    {detailRow('Model', viewDetails.vehicle.model)}
+                    {detailRow('Vehicle number', viewDetails.vehicle.number)}
+                    {detailRow('Vehicle type', viewDetails.vehicle.type)}
+                  </Div>
+                </Card>
+              ) : null}
+
+              <Card>
+                <SectionTitle>Pocket details</SectionTitle>
+                <Div className="flex-row flex-wrap gap-3">
+                  {detailRow('Pocket balance', formatCurrency(viewDetails.pocketBalance || viewDetails.walletSummary?.pocketBalance))}
+                  {detailRow('Cash in hand', formatCurrency(viewDetails.cashInHand || viewDetails.walletSummary?.cashCollected))}
+                  {detailRow('Remaining cash limit', formatCurrency(viewDetails.remainingCashLimit || viewDetails.walletSummary?.remainingCashLimit))}
+                  {detailRow('Total earning', formatCurrency(viewDetails.totalEarning || viewDetails.walletSummary?.totalEarning))}
+                  {detailRow('Bonus', formatCurrency(viewDetails.bonus || viewDetails.walletSummary?.bonus))}
+                  {detailRow('Total withdrawn', formatCurrency(viewDetails.totalWithdrawn || viewDetails.walletSummary?.totalWithdrawn))}
+                </Div>
+              </Card>
+
+              {viewDetails.documents ? (
+                <Card>
+                  <SectionTitle>Documents</SectionTitle>
+                  <Div className="gap-3">
+                    {viewDetails.documents.aadhar ? (
+                      <Div className="gap-1">
+                        <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">Aadhar card</P>
+                        {viewDetails.documents.aadhar.number ? <P className="text-sm text-slate-700">Number: {viewDetails.documents.aadhar.number}</P> : null}
+                        {viewDetails.documents.aadhar.document ? (
+                          <A href={viewDetails.documents.aadhar.document} className="text-sm text-blue-600">
+                            View document
+                          </A>
+                        ) : null}
+                      </Div>
+                    ) : null}
+                    {viewDetails.documents.pan ? (
+                      <Div className="gap-1">
+                        <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">PAN card</P>
+                        {viewDetails.documents.pan.number ? <P className="text-sm text-slate-700">Number: {viewDetails.documents.pan.number}</P> : null}
+                        {viewDetails.documents.pan.document ? (
+                          <A href={viewDetails.documents.pan.document} className="text-sm text-blue-600">
+                            View document
+                          </A>
+                        ) : null}
+                      </Div>
+                    ) : null}
+                    {viewDetails.documents.drivingLicense ? (
+                      <Div className="gap-1">
+                        <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">Driving license</P>
+                        {viewDetails.documents.drivingLicense.number ? (
+                          <P className="text-sm text-slate-700">Number: {viewDetails.documents.drivingLicense.number}</P>
+                        ) : null}
+                        {viewDetails.documents.drivingLicense.expiryDate ? (
+                          <P className="text-xs text-slate-500">
+                            Expiry: {new Date(viewDetails.documents.drivingLicense.expiryDate).toLocaleDateString('en-GB')}
+                          </P>
+                        ) : null}
+                        {viewDetails.documents.drivingLicense.document ? (
+                          <A href={viewDetails.documents.drivingLicense.document} className="text-sm text-blue-600">
+                            View document
+                          </A>
+                        ) : null}
+                      </Div>
+                    ) : null}
+                    {viewDetails.documents.vehicleRC && (viewDetails.documents.vehicleRC.number || viewDetails.documents.vehicleRC.document) ? (
+                      <Div className="gap-1">
+                        <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">Vehicle RC</P>
+                        {viewDetails.documents.vehicleRC.number ? (
+                          <P className="text-sm text-slate-700">Number: {viewDetails.documents.vehicleRC.number}</P>
+                        ) : null}
+                        {viewDetails.documents.vehicleRC.document ? (
+                          <A href={viewDetails.documents.vehicleRC.document} className="text-sm text-blue-600">
+                            View document
+                          </A>
+                        ) : null}
+                      </Div>
+                    ) : null}
+                  </Div>
+                </Card>
+              ) : null}
+
+              {viewDetails.documents?.bankDetails ? (
+                <Card>
+                  <SectionTitle>Bank details</SectionTitle>
+                  <Div className="flex-row flex-wrap gap-3">
+                    {detailRow('Account holder name', viewDetails.documents.bankDetails.accountHolderName)}
+                    {detailRow('Account number', viewDetails.documents.bankDetails.accountNumber)}
+                    {detailRow('IFSC code', viewDetails.documents.bankDetails.ifscCode)}
+                    {detailRow('Bank name', viewDetails.documents.bankDetails.bankName)}
+                  </Div>
+                </Card>
+              ) : null}
+
+              <Card>
+                <SectionTitle>Timeline</SectionTitle>
+                <Div className="flex-row flex-wrap gap-3">
+                  {detailRow(
+                    'Joined date',
+                    viewDetails.createdAt
+                      ? new Date(viewDetails.createdAt).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : null,
                   )}
                 </Div>
-              </Div>
-            ) : (
-              <Div className="flex items-center justify-center py-8">
-                <UiIcon as={Loader2} className="w-6 h-6 animate-spin text-blue-600" />
-              </Div>
-            )}
-          </Div>
-          <DialogFooter className="px-6 pb-6 border-t border-slate-200">
-            <Button
-              onClick={() => setIsViewOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-            >
-              Close
+              </Card>
+            </Div>
+          ) : (
+            <LoadingState label="Loading details…" />
+          )}
+          <DialogFooter className="flex-row justify-end pt-1">
+            <Button onClick={() => setIsViewOpen(false)} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Close</Span>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1291,51 +941,30 @@ export default function DeliverymanList() {
 
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <UiIcon as={Settings} className="w-5 h-5" />
-              Table Settings
-            </DialogTitle>
+        <DialogContent className="max-w-md bg-white p-5 gap-3">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base font-semibold text-slate-900">Table Settings</DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6 space-y-4">
-            <Div>
-              <H3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                <UiIcon as={Columns} className="w-4 h-4" />
-                Visible Columns
-              </H3>
-              <Div className="space-y-2">
-                {Object.entries(columnsConfig).map(([key, label]) => (
-                  <Label key={key} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
-                    <Input
-                      type="checkbox"
-                      checked={visibleColumns[key]}
-                      onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
-                    />
-                    <Span className="text-sm text-slate-700">{label}</Span>
-                    {visibleColumns[key] && <UiIcon as={Check} className="w-4 h-4 text-emerald-600 ml-auto" />}
-                  </Label>
-                ))}
-              </Div>
-            </Div>
-            <Div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button
-                onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset
-              </Button>
-              <Button
-                onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
-              >
-                Apply
-              </Button>
-            </Div>
-          </Div>
+          <SectionTitle className="mb-1">Visible columns</SectionTitle>
+          <ScrollDiv className="max-h-72" contentClassName="gap-1">
+            {Object.entries(columnsConfig).map(([key, label]) => (
+              <Label key={key} className="flex-row items-center gap-3 h-11 px-2 rounded-lg" onClick={() => toggleColumn(key)}>
+                <CheckBox checked={visibleColumns[key]} onChange={() => toggleColumn(key)} />
+                <Span className="text-sm text-slate-700 flex-1">{label}</Span>
+                {visibleColumns[key] ? <UiIcon as={Check} size={16} className="text-blue-600" /> : null}
+              </Label>
+            ))}
+          </ScrollDiv>
+          <DialogFooter className="flex-row justify-end gap-2 pt-2">
+            <Button onClick={resetColumns} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+            </Button>
+            <Button onClick={() => setIsSettingsOpen(false)} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Apply</Span>
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

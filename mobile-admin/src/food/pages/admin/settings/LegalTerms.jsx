@@ -1,10 +1,12 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/settings/LegalTerms.jsx (tools/port.js first pass). */
 import { useState, useEffect } from 'react';
+import { Scale } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import api from '../../../../api/food';
 import { Textarea } from '../../../../components/shadcn';
 import { legalHtmlToPlainText, plainTextToLegalHtml } from '../../../utils/legalContentFormat';
-import { Button, Div, H1, Input, Label, P, ScrollDiv, Span } from '../../../../components/web';
+import { Button, Div, Input, Span } from '../../../../components/web';
+import { AdminPage, PageHeader, Card, SectionTitle, Toolbar, Field, LoadingState, EmptyState, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../admin/ui';
 import HtmlContent from '../../../../components/HtmlContent';
 export default function TermsAndCondition() {
   const [loading, setLoading] = useState(true);
@@ -94,122 +96,108 @@ export default function TermsAndCondition() {
     }
   };
   const getRoleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
+  const { tablet } = useLayoutWidth();
   return (
-    <ScrollDiv className="h-full bg-slate-50 p-4 lg:p-6">
-      <Div className="max-w-6xl mx-auto">
-        <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <Div>
-            <H1 className="text-2xl font-bold text-slate-900">Terms and Conditions</H1>
-            <P className="text-sm text-slate-600 mt-1">Manage Terms and Conditions content for different roles</P>
-          </Div>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Scale}
+        title="Terms and Conditions"
+        subtitle="Manage the terms and conditions shown in each portal."
+        breadcrumb={[{ label: 'Food' }, { label: 'Settings' }, { label: 'Terms and Conditions' }]}
+      />
 
-          <Div className="inline-flex p-1 bg-white border border-slate-200 rounded-xl shadow-sm">
-            {['user', 'restaurant', 'delivery'].map((role) => (
-              <Button
-                key={role}
-                onClick={() => setActiveRole(role)}
-                className={`px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${activeRole === role ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-              >
-                {getRoleLabel(role)}
-              </Button>
-            ))}
-          </Div>
-        </Div>
-
-        <Div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <Div className="border-b border-slate-100 bg-slate-50/50 p-4 flex items-center justify-between">
-            <Div className="flex-1 flex items-center gap-2">
-              <Span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></Span>
-              <Span className="flex-1 text-sm font-medium text-slate-700">
-                {viewMode === 'preview' ? 'Previewing' : 'Editing'} {getRoleLabel(activeRole)} Portal Terms
-              </Span>
-            </Div>
-
-            <Div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
-              <Button
-                type="button"
-                onClick={() => setViewMode('edit')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'edit' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                Editor
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setViewMode('preview')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'preview' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                Preview
-              </Button>
-            </Div>
-          </Div>
-
-          <Div className="p-6">
-            {loading ? (
-              <Div className="min-h-[150px] flex flex-col items-center justify-center space-y-4">
-                <Div className="w-10 h-10 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin"></Div>
-                <P className="text-sm text-slate-500 font-medium italic">Synchronizing content...</P>
-              </Div>
-            ) : (
-              <>
-                {viewMode === 'edit' && (
-                  <Div className="mb-4">
-                    <Label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Page Title</Label>
-                    <Input
-                      type="text"
-                      value={termsData.title}
-                      onChange={(e) =>
-                        setTermsData((prev) => ({
-                          ...prev,
-                          title: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-medium"
-                    />
-                  </Div>
-                )}
-
-                {viewMode === 'edit' ? (
-                  <Div className="relative group">
-                    <Textarea
-                      value={termsData.content}
-                      onChange={(e) =>
-                        setTermsData((prev) => ({
-                          ...prev,
-                          content: e.target.value,
-                        }))
-                      }
-                      placeholder={`Enter terms and conditions for ${activeRole} here...`}
-                      className="min-h-[150px] w-full text-sm text-slate-700 leading-relaxed resize-y border-slate-200 group-focus-within:border-orange-500 transition-colors bg-slate-50/30"
-                    />
-                  </Div>
-                ) : (
-                  <Div className="min-h-[150px] w-full bg-white">
-                    <Div className="bg-slate-50 rounded-xl border border-slate-100 p-8">
-                      <HtmlContent html={plainTextToLegalHtml(termsData.content)} soraHeadings={false} color="#475569" />
-                    </Div>
-                  </Div>
-                )}
-              </>
-            )}
-          </Div>
-        </Div>
-
-        {viewMode === 'edit' && (
-          <Div className="flex items-center justify-between mt-8 p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
-            <Div className="flex-1 text-sm text-slate-500">
-              <Span className="font-semibold text-slate-700">Tip:</Span> Your changes are only published once you hit save.
-            </Div>
+      <Card className="mb-4">
+        <SectionTitle>Portal</SectionTitle>
+        <Toolbar className="mb-0">
+          {['user', 'restaurant', 'delivery'].map((role) => (
             <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={saving || loading || !hasChanges}
-              className="flex items-center gap-2 px-8 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all duration-200 font-bold shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none group"
+              key={role}
+              onClick={() => setActiveRole(role)}
+              className={activeRole === role ? BTN_PRIMARY : BTN_SECONDARY}
+              accessibilityLabel={`Edit ${getRoleLabel(role)} terms and conditions`}
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              <Span className={activeRole === role ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>{getRoleLabel(role)}</Span>
             </Button>
+          ))}
+        </Toolbar>
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            <Div className="flex-row items-center gap-2">
+              <Button onClick={() => setViewMode('edit')} className={viewMode === 'edit' ? BTN_PRIMARY : BTN_SECONDARY} accessibilityLabel="Edit content">
+                <Span className={viewMode === 'edit' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Editor</Span>
+              </Button>
+              <Button onClick={() => setViewMode('preview')} className={viewMode === 'preview' ? BTN_PRIMARY : BTN_SECONDARY} accessibilityLabel="Preview content">
+                <Span className={viewMode === 'preview' ? BTN_TEXT_PRIMARY : BTN_TEXT_SECONDARY}>Preview</Span>
+              </Button>
+            </Div>
+          }
+        >
+          {viewMode === 'preview' ? 'Previewing' : 'Editing'} {getRoleLabel(activeRole)}
+        </SectionTitle>
+
+        {loading ? (
+          <LoadingState label="Loading content…" />
+        ) : viewMode === 'edit' ? (
+          <Div className={tablet ? 'flex-row items-start gap-3' : 'gap-3'}>
+            <Field label="Page title" className={tablet ? 'flex-1' : null}>
+              <Input
+                type="text"
+                value={termsData.title}
+                onChange={(e) =>
+                  setTermsData((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }))
+                }
+                className={INPUT}
+              />
+            </Field>
+            <Field label="Content" hint="Use # and ## for headings and **text** for bold." className={tablet ? 'flex-1' : null}>
+              <Textarea
+                value={termsData.content}
+                onChange={(e) =>
+                  setTermsData((prev) => ({
+                    ...prev,
+                    content: e.target.value,
+                  }))
+                }
+                placeholder={`Enter terms and conditions for ${activeRole} here...`}
+                rows={12}
+                className="px-3 py-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700"
+                style={{ width: '100%' }}
+              />
+            </Field>
           </Div>
+        ) : termsData.content ? (
+          <HtmlContent html={plainTextToLegalHtml(termsData.content)} soraHeadings={false} color="#475569" />
+        ) : (
+          <EmptyState
+            title="Nothing written yet"
+            message={`The ${getRoleLabel(activeRole)} portal has no terms and conditions saved.`}
+            actionLabel="Write it now"
+            onAction={() => setViewMode('edit')}
+            icon={Scale}
+          />
         )}
-      </Div>
-    </ScrollDiv>
+      </Card>
+
+      {viewMode === 'edit' && (
+        <Card className="flex-row flex-wrap items-center justify-between gap-3">
+          <Span className="text-sm text-slate-500 flex-1">Changes are published only once you save.</Span>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={saving || loading || !hasChanges}
+            className={`${BTN_PRIMARY}${saving || loading || !hasChanges ? ' opacity-50' : ''}`}
+            accessibilityLabel="Save changes"
+          >
+            <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving…' : 'Save changes'}</Span>
+          </Button>
+        </Card>
+      )}
+    </AdminPage>
   );
 }

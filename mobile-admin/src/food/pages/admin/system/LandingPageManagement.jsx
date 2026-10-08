@@ -1,10 +1,9 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/LandingPageManagement.jsx (tools/port.js first pass). */
-import { useState, useEffect, useMemo } from 'react';
+import { Children, useState, useEffect, useMemo } from 'react';
 import {
   Upload,
   Trash2,
   Image as ImageIcon,
-  Loader2,
   AlertCircle,
   CheckCircle2,
   ArrowUp,
@@ -17,24 +16,172 @@ import {
   Search,
   Star,
   Store,
+  X,
 } from 'lucide-react-native';
+import { ActivityIndicator } from 'react-native';
 import api from '../../../../api/food';
 import { adminAPI } from '../../../../api/food';
 import { getModuleToken } from '../../../../admin/session';
-import { Input } from '../../../../components/shadcn';
-import { Label } from '../../../../components/shadcn';
-import { Button } from '../../../../components/shadcn';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../../components/shadcn';
 import { Checkbox } from '../../../../components/shadcn';
 import { prepareUploadFile, prepareUploadFiles } from '../../../../lib/images';
 import { pickImage, objectUrl } from '../../../../lib/files';
-import { LinearGradient } from 'expo-linear-gradient';
 import { resolveAssetUrl } from '../../../../shared/utils/assetUrl';
-import { Button as HtmlButton, Div, H1, H2, H3, HScroll, Img, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  A,
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatusBadge,
+  Field,
+  LoadingState,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
+import { Button, Div, HScroll, Img, Input, Option, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { window } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
+/** A card grid: one column on a phone, two from 560px, `max` when wide. Native drops `grid`, so measure. */
+function Grid({ children, max = 3, className }) {
+  const [width, setWidth] = useState(0);
+  const items = Children.toArray(children).filter(Boolean);
+  let cols = 1;
+  if (width >= 880) cols = max;
+  else if (width >= 560) cols = Math.min(2, max);
+  cols = Math.min(cols, items.length || 1);
+  const itemWidth = cols > 1 ? (width - 12 * (cols - 1)) / cols : '100%';
+  return (
+    <Div
+      className={`flex-row flex-wrap gap-3 ${className || ''}`}
+      onLayout={(e) => {
+        const w = Math.round(e.nativeEvent.layout.width);
+        if (w && Math.abs(w - width) > 1) setWidth(w);
+      }}
+    >
+      {items.map((child, i) => (
+        <Div key={i} style={{ width: itemWidth }}>
+          {child}
+        </Div>
+      ))}
+    </Div>
+  );
+}
+
+/** The tab strip shared by the page and the Explore More sub-tabs. */
+function TabStrip({ tabs, active, onSelect, label }) {
+  return (
+    <Card className="mb-4" padded={false}>
+      <HScroll contentClassName="flex-row items-center gap-2 p-2">
+        {tabs.map((tab) => {
+          const Ico = tab.icon;
+          const isActive = tab.id === active;
+          return (
+            <Button
+              key={tab.id}
+              onClick={() => onSelect(tab.id)}
+              accessibilityLabel={`${label}: ${tab.label}`}
+              className={`flex-row items-center gap-2 h-11 px-4 rounded-lg ${isActive ? 'bg-blue-600' : 'bg-white'}`}
+            >
+              <UiIcon as={Ico} size={16} className={isActive ? 'text-white' : 'text-slate-500'} />
+              <Span className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-700'}`}>{tab.label}</Span>
+            </Button>
+          );
+        })}
+      </HScroll>
+    </Card>
+  );
+}
+
+/** The upload panel above each banner list: one tap target, with progress while uploading. */
+function UploadPanel({ title, uploading, progress, onPick, className }) {
+  const pct = progress?.total ? Math.round((progress.current / progress.total) * 100) : 0;
+  return (
+    <Card className={className}>
+      <SectionTitle>{title}</SectionTitle>
+      {uploading ? (
+        <Div className="items-center gap-3 py-6 px-4 rounded-lg border border-slate-200 bg-slate-50">
+          <ActivityIndicator size="small" color={A.primary} />
+          <Span className="text-sm font-semibold text-slate-700">{`Uploading image ${progress?.current || 0} of ${progress?.total || 0}...`}</Span>
+          {progress?.total > 0 ? (
+            <Div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+              <Div className="h-2 rounded-full bg-blue-600" style={{ width: `${pct}%` }} />
+            </Div>
+          ) : null}
+        </Div>
+      ) : (
+        <Button
+          onClick={onPick}
+          accessibilityLabel={title}
+          className="items-center gap-2 py-6 px-4 rounded-lg border border-dashed border-slate-300 bg-slate-50"
+        >
+          <UiIcon as={Upload} size={22} className="text-blue-600" />
+          <Span className="text-sm font-semibold text-blue-600">Tap to choose images</Span>
+          <Span className="text-xs text-slate-500 text-center">PNG, JPG or WEBP up to 5MB each (max 5 at once)</Span>
+        </Button>
+      )}
+    </Card>
+  );
+}
+
+/** A 44px icon button, the row-action size on every admin screen. */
+function IconButton({ icon, onPress, disabled, label, tone = 'slate', busy }) {
+  const bg = tone === 'danger' ? 'bg-red-50' : 'bg-slate-50';
+  const fg = tone === 'danger' ? 'text-red-600' : 'text-slate-600';
+  return (
+    <Button
+      onClick={onPress}
+      disabled={disabled}
+      accessibilityLabel={label}
+      className={`w-11 h-11 rounded-lg items-center justify-center ${bg} ${disabled ? 'opacity-40' : ''}`}
+    >
+      {busy ? <ActivityIndicator size="small" color={A.textMuted} /> : <UiIcon as={icon} size={18} className={fg} />}
+    </Button>
+  );
+}
+
+/** One banner tile: the image, its order and status, and the row actions beneath. */
+function BannerCard({ imageUrl, alt, order, isActive, onUp, onDown, upDisabled, downDisabled, onToggle, deleting, onDelete, extra }) {
+  const [width, setWidth] = useState(0);
+  return (
+    <Card padded={false} className="overflow-hidden">
+      <Div
+        className="bg-slate-100"
+        onLayout={(e) => {
+          const w = Math.round(e.nativeEvent.layout.width);
+          if (w && Math.abs(w - width) > 1) setWidth(w);
+        }}
+      >
+        <Img src={imageUrl} alt={alt} style={{ width: '100%', height: width ? Math.round(width * 0.5625) : 160 }} contentFit="cover" />
+      </Div>
+      <Div className="p-4 gap-3">
+        <Div className="flex-row items-center gap-2 flex-wrap">
+          <StatusBadge status={isActive ? 'active' : 'inactive'} label={isActive ? 'Active' : 'Inactive'} />
+          <StatusBadge tone="info" label={`Order ${order}`} />
+        </Div>
+        <Div className="flex-row items-center flex-wrap gap-2">
+          <IconButton icon={ArrowUp} onPress={onUp} disabled={upDisabled} label={`Move ${alt} up`} />
+          <IconButton icon={ArrowDown} onPress={onDown} disabled={downDisabled} label={`Move ${alt} down`} />
+          <Div className="flex-1" />
+          <Button onClick={onToggle} accessibilityLabel={isActive ? `Deactivate ${alt}` : `Activate ${alt}`} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>{isActive ? 'Deactivate' : 'Activate'}</Span>
+          </Button>
+          <IconButton icon={Trash2} tone="danger" busy={deleting} disabled={deleting} onPress={onDelete} label={`Delete ${alt}`} />
+        </Div>
+        {extra}
+      </Div>
+    </Card>
+  );
+}
+
 export default function LandingPageManagement() {
   const [activeTab, setActiveTab] = useState('banners');
   const [exploreMoreSubTab, setExploreMoreSubTab] = useState('icons');
@@ -1493,633 +1640,370 @@ export default function LandingPageManagement() {
       setExploreMoreSubTab('icons');
     }
   }, [selectedZoneId, exploreMoreSubTab]);
+  const settingsUnchanged =
+    JSON.stringify({
+      ...settings,
+      recommendedRestaurantIds: [...(settings.recommendedRestaurantIds || [])].sort(),
+    }) ===
+    JSON.stringify({
+      ...originalSettings,
+      recommendedRestaurantIds: [...(originalSettings.recommendedRestaurantIds || [])].sort(),
+    });
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Page Title */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex items-center gap-3">
-            <Div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-              <UiIcon as={Layout} className="w-5 h-5 text-white" />
-            </Div>
-            <Div>
-              <H1 className="text-2xl font-bold text-slate-900">Landing Page Management</H1>
-              <P className="text-sm text-slate-600 mt-1">Manage hero banners</P>
-            </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Layout}
+        title="Landing Page Management"
+        subtitle="Manage hero banners, the 250 and dining strips, and the Explore More row."
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Landing page' }]}
+      />
 
-            <Div className="flex items-center gap-2 mt-4 sm:mt-0 ml-auto">
-              <Label htmlFor="zone-select" className="text-sm font-medium text-slate-700 whitespace-nowrap">
-                Filter by Zone:
-              </Label>
-              <Select
-                nativeID="zone-select"
-                value={selectedZoneId}
-                onChange={(e) => setSelectedZoneId(e.target.value)}
-                className="px-3 py-2 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm w-48"
-                disabled={zonesLoading}
-              >
-                <Option value="">Global / All Zones</Option>
-                {zones.map((zone) => (
-                  <Option key={zone._id || zone.id} value={zone._id || zone.id}>
-                    {zone.name || zone.zoneName || 'Unnamed Zone'}
-                  </Option>
-                ))}
-              </Select>
-            </Div>
-          </Div>
-        </Div>
+      <Card className="mb-4">
+        <Field label="Filter by zone" hint="Global content applies to every zone.">
+          <Select
+            nativeID="zone-select"
+            value={selectedZoneId}
+            onChange={(e) => setSelectedZoneId(e.target.value)}
+            className={INPUT}
+            disabled={zonesLoading}
+          >
+            <Option value="">Global / All Zones</Option>
+            {zones.map((zone) => (
+              <Option key={zone._id || zone.id} value={zone._id || zone.id}>
+                {zone.name || zone.zoneName || 'Unnamed Zone'}
+              </Option>
+            ))}
+          </Select>
+        </Field>
+      </Card>
 
-        {/* Tabs */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-6">
-          <HScroll contentClassName="flex gap-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <HtmlButton
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? 'bg-blue-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-                >
-                  <UiIcon as={Icon} className="w-4 h-4" />
-                  {tab.label}
-                </HtmlButton>
-              );
-            })}
-          </HScroll>
-        </Div>
+      <TabStrip tabs={tabs} active={activeTab} onSelect={setActiveTab} label="Section" />
 
-        {/* Success/Error Messages */}
-        {success && (
-          <Div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2">
-            <UiIcon as={CheckCircle2} className="w-5 h-5" />
-            <Span>{success}</Span>
-          </Div>
-        )}
+      {/* Success/Error Messages */}
+      {success ? (
+        <Card className="mb-4 flex-row items-center gap-2">
+          <UiIcon as={CheckCircle2} size={18} className="text-green-700" />
+          <Span className="text-sm text-slate-700 flex-1">{success}</Span>
+        </Card>
+      ) : null}
 
-        {error && (
-          <Div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2">
-            <UiIcon as={AlertCircle} className="w-5 h-5" />
-            <Span>{error}</Span>
-          </Div>
-        )}
+      {error ? (
+        <Card className="mb-4 flex-row items-center gap-2">
+          <UiIcon as={AlertCircle} size={18} className="text-red-600" />
+          <Span className="text-sm text-slate-700 flex-1">{error}</Span>
+        </Card>
+      ) : null}
 
-        {/* Hero Banners Tab */}
-        {activeTab === 'banners' && (
-          <>
-            {/* Upload Section */}
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <H2 className="text-lg font-bold text-slate-900 mb-4">Upload New Banner(s)</H2>
-              <Div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50/50"
-                onClick={openBannersPicker}
-              >
-                {bannersUploading ? (
-                  <Div className="flex flex-col items-center gap-3">
-                    <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin" />
-                    <P className="text-blue-600 font-medium">
-                      Uploading image {bannersUploadProgress.current} of {bannersUploadProgress.total}...
-                    </P>
-                    {bannersUploadProgress.total > 0 && (
-                      <Div className="w-full max-w-xs">
-                        <Div className="w-full bg-blue-200 rounded-full h-2">
-                          <Div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${(bannersUploadProgress.current / bannersUploadProgress.total) * 100}%`,
-                            }}
-                          />
-                        </Div>
-                      </Div>
-                    )}
-                  </Div>
-                ) : (
-                  <Div className="flex flex-col items-center gap-3">
-                    <UiIcon as={Upload} className="w-8 h-8 text-blue-600" />
-                    <Div>
-                      <HtmlButton
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openBannersPicker();
-                        }}
-                        className="text-blue-600 font-medium hover:text-blue-700 underline"
-                      >
-                        Click to upload
-                      </HtmlButton>
-                      <Span className="text-slate-600"> or drag and drop</Span>
-                    </Div>
-                    <P className="text-xs text-slate-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</P>
-                  </Div>
-                )}
-              </Div>
-            </Div>
+      {/* Hero Banners Tab */}
+      {activeTab === 'banners' && (
+        <>
+          <UploadPanel
+            title="Upload New Banner(s)"
+            className="mb-4"
+            uploading={bannersUploading}
+            progress={bannersUploadProgress}
+            onPick={openBannersPicker}
+          />
 
-            {/* Banners List */}
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <H2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Span>Banner List</Span>
-                {bannersLoading ? <Span className="w-8 h-5 bg-slate-200 animate-pulse rounded inline-block" /> : <Span>({banners.length})</Span>}
-              </H2>
-              {bannersLoading ? (
-                <Div className="flex items-center justify-center py-12">
-                  <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin" />
-                </Div>
-              ) : banners.length === 0 ? (
-                <Div className="text-center py-12 text-slate-500">
-                  <UiIcon as={ImageIcon} className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                  <P>No banners uploaded yet.</P>
-                </Div>
+          <Card>
+            <SectionTitle>{bannersLoading ? 'Banner list' : `Banner list · ${banners.length}`}</SectionTitle>
+            {bannersLoading ? (
+              <TableSkeleton rows={3} className="border-0 p-0 gap-3" />
+            ) : banners.length === 0 ? (
+              error ? (
+                <ErrorState message={error} onRetry={() => fetchBanners()} className="border-0 px-0 py-6" />
               ) : (
-                <Div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {banners.map((banner, index) => (
-                    <Div key={banner._id} className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                      <Div className="relative aspect-video bg-slate-100">
-                        <Img src={resolveAssetUrl(banner.imageUrl)} alt={`Hero Banner ${index + 1}`} className="w-full h-full object-cover" />
-                        <Div className="absolute top-2 right-2">
-                          <Span
-                            className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                          >
-                            {banner.isActive ? 'Active' : 'Inactive'}
-                          </Span>
-                        </Div>
-                        <Div className="absolute top-2 left-2">
-                          <Span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Order: {banner.order}</Span>
-                        </Div>
-                      </Div>
-                      <Div className="p-4 bg-white">
-                        <Div className="flex items-center justify-between gap-2 flex-wrap">
-                          <Div className="flex items-center gap-1">
-                            <HtmlButton
-                              onClick={() => handleBannerOrderChange(banner._id, 'up')}
-                              disabled={index === 0}
-                              className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50"
-                            >
-                              <UiIcon as={ArrowUp} className="w-4 h-4 text-slate-600" />
-                            </HtmlButton>
-                            <HtmlButton
-                              onClick={() => handleBannerOrderChange(banner._id, 'down')}
-                              disabled={index === banners.length - 1}
-                              className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50"
-                            >
-                              <UiIcon as={ArrowDown} className="w-4 h-4 text-slate-600" />
-                            </HtmlButton>
-                          </Div>
-                          <Div className="flex items-center gap-2 flex-wrap">
-                            <HtmlButton
-                              onClick={() => {
-                                setSelectedBannerId(banner._id);
-                                setSelectedRestaurantIds(banner.linkedRestaurants?.map((r) => r._id || r) || []);
-                                if (allRestaurants.length === 0) {
-                                  fetchAllRestaurants();
-                                }
-                                setShowRestaurantModal(true);
-                              }}
-                              className="px-3 py-1.5 rounded text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 flex items-center gap-1"
-                            >
-                              <UiIcon as={Megaphone} className="w-4 h-4" />
-                              Advertise
-                            </HtmlButton>
-                            <HtmlButton
-                              onClick={() => handleToggleBannerStatus(banner._id, banner.isActive)}
-                              className={`px-3 py-1.5 rounded text-sm font-medium ${banner.isActive ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}
-                            >
-                              {banner.isActive ? 'Deactivate' : 'Activate'}
-                            </HtmlButton>
-                            <HtmlButton
-                              onClick={() => handleDeleteBanner(banner._id)}
-                              disabled={bannersDeleting === banner._id}
-                              className="p-1.5 rounded hover:bg-red-100 text-red-600 disabled:opacity-50"
-                            >
-                              {bannersDeleting === banner._id ? (
-                                <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <UiIcon as={Trash2} className="w-4 h-4" />
-                              )}
-                            </HtmlButton>
-                          </Div>
-                        </Div>
-                        {banner.linkedRestaurants && banner.linkedRestaurants.length > 0 && (
-                          <Div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 flex-wrap">
-                            <Span className="text-xs font-semibold text-slate-500">Linked Restaurant:</Span>
-                            <Div className="flex items-center gap-1.5 bg-yellow-100/70 hover:bg-yellow-100 border border-yellow-200 rounded-lg px-3 py-1.5 transition-all shadow-sm">
-                              <UiIcon as={Store} className="w-3.5 h-3.5 text-yellow-700" />
-                              <Span className="text-xs font-bold text-slate-800">
+                <EmptyState
+                  icon={ImageIcon}
+                  title="No banners uploaded yet"
+                  message="Hero banners appear at the top of the user home page."
+                  actionLabel="Upload a banner"
+                  onAction={openBannersPicker}
+                  className="border-0 px-0 py-6"
+                />
+              )
+            ) : (
+              <Grid max={3}>
+                {banners.map((banner, index) => (
+                  <BannerCard
+                    key={banner._id}
+                    imageUrl={resolveAssetUrl(banner.imageUrl)}
+                    alt={`Hero banner ${index + 1}`}
+                    order={banner.order}
+                    isActive={banner.isActive}
+                    onUp={() => handleBannerOrderChange(banner._id, 'up')}
+                    onDown={() => handleBannerOrderChange(banner._id, 'down')}
+                    upDisabled={index === 0}
+                    downDisabled={index === banners.length - 1}
+                    onToggle={() => handleToggleBannerStatus(banner._id, banner.isActive)}
+                    deleting={bannersDeleting === banner._id}
+                    onDelete={() => handleDeleteBanner(banner._id)}
+                    extra={
+                      <>
+                        <Button
+                          onClick={() => {
+                            setSelectedBannerId(banner._id);
+                            setSelectedRestaurantIds(banner.linkedRestaurants?.map((r) => r._id || r) || []);
+                            if (allRestaurants.length === 0) {
+                              fetchAllRestaurants();
+                            }
+                            setShowRestaurantModal(true);
+                          }}
+                          accessibilityLabel={`Link a restaurant to hero banner ${index + 1}`}
+                          className={BTN_SECONDARY}
+                        >
+                          <UiIcon as={Megaphone} size={16} className="text-slate-600" />
+                          <Span className={BTN_TEXT_SECONDARY}>Advertise</Span>
+                        </Button>
+                        {banner.linkedRestaurants && banner.linkedRestaurants.length > 0 ? (
+                          <Div className="pt-3 border-t border-slate-100 gap-1.5">
+                            <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Linked restaurant</Span>
+                            <Div className="flex-row items-center gap-1.5">
+                              <UiIcon as={Store} size={14} className="text-slate-500" />
+                              <Span className="text-sm font-semibold text-slate-900 flex-1">
                                 {banner.linkedRestaurants[0].restaurantName || banner.linkedRestaurants[0].name || 'Restaurant'}
                               </Span>
                             </Div>
                           </Div>
-                        )}
-                      </Div>
-                    </Div>
-                  ))}
-                </Div>
-              )}
-            </Div>
-          </>
-        )}
+                        ) : null}
+                      </>
+                    }
+                  />
+                ))}
+              </Grid>
+            )}
+          </Card>
+        </>
+      )}
 
-        {/* Under 250 Banner Tab */}
-        {activeTab === 'under-250' && (
-          <>
-            {/* Upload Section */}
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <H2 className="text-lg font-bold text-slate-900 mb-4">Upload New Banner(s)</H2>
-              <Div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50/50"
-                onClick={openUnder250BannersPicker}
-              >
-                {under250BannersUploading ? (
-                  <Div className="flex flex-col items-center gap-3">
-                    <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin" />
-                    <P className="text-blue-600 font-medium">
-                      Uploading image {under250BannersUploadProgress.current} of {under250BannersUploadProgress.total}...
-                    </P>
-                    {under250BannersUploadProgress.total > 0 && (
-                      <Div className="w-full max-w-xs">
-                        <Div className="w-full bg-blue-200 rounded-full h-2">
-                          <Div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${(under250BannersUploadProgress.current / under250BannersUploadProgress.total) * 100}%`,
-                            }}
-                          />
-                        </Div>
-                      </Div>
-                    )}
-                  </Div>
-                ) : (
-                  <Div className="flex flex-col items-center gap-3">
-                    <UiIcon as={Upload} className="w-8 h-8 text-blue-600" />
-                    <Div>
-                      <HtmlButton
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openUnder250BannersPicker();
-                        }}
-                        className="text-blue-600 font-medium hover:text-blue-700 underline"
-                      >
-                        Click to upload
-                      </HtmlButton>
-                      <Span className="text-slate-600"> or drag and drop</Span>
-                    </Div>
-                    <P className="text-xs text-slate-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</P>
-                  </Div>
-                )}
-              </Div>
-            </Div>
+      {/* Under 250 Banner Tab */}
+      {activeTab === 'under-250' && (
+        <>
+          <UploadPanel
+            title="Upload New Banner(s)"
+            className="mb-4"
+            uploading={under250BannersUploading}
+            progress={under250BannersUploadProgress}
+            onPick={openUnder250BannersPicker}
+          />
 
-            {/* Banners List */}
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <H2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Span>Banner List</Span>
-                {under250BannersLoading ? (
-                  <Span className="w-8 h-5 bg-slate-200 animate-pulse rounded inline-block" />
-                ) : (
-                  <Span>({under250Banners.length})</Span>
-                )}
-              </H2>
-              {under250BannersLoading ? (
-                <Div className="flex items-center justify-center py-12">
-                  <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin" />
-                </Div>
-              ) : under250Banners.length === 0 ? (
-                <Div className="text-center py-12 text-slate-500">
-                  <UiIcon as={Tag} className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                  <P>No under 250 banners uploaded yet.</P>
-                </Div>
+          <Card>
+            <SectionTitle>{under250BannersLoading ? 'Banner list' : `Banner list · ${under250Banners.length}`}</SectionTitle>
+            {under250BannersLoading ? (
+              <TableSkeleton rows={3} className="border-0 p-0 gap-3" />
+            ) : under250Banners.length === 0 ? (
+              error ? (
+                <ErrorState message={error} onRetry={() => fetchUnder250Banners()} className="border-0 px-0 py-6" />
               ) : (
-                <Div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {under250Banners.map((banner, index) => (
-                    <Div key={banner._id} className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                      <Div className="relative aspect-video bg-slate-100">
-                        <Img src={resolveAssetUrl(banner.imageUrl)} alt={`Under 250 Banner ${index + 1}`} className="w-full h-full object-cover" />
-                        <Div className="absolute top-2 right-2">
-                          <Span
-                            className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                          >
-                            {banner.isActive ? 'Active' : 'Inactive'}
-                          </Span>
-                        </Div>
-                        <Div className="absolute top-2 left-2">
-                          <Span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Order: {banner.order}</Span>
-                        </Div>
-                      </Div>
-                      <Div className="p-4 bg-white">
-                        <Div className="flex items-center justify-between gap-2">
-                          <Div className="flex items-center gap-1">
-                            <HtmlButton
-                              onClick={() => handleUnder250BannerOrderChange(banner._id, 'up')}
-                              disabled={index === 0}
-                              className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50"
-                            >
-                              <UiIcon as={ArrowUp} className="w-4 h-4 text-slate-600" />
-                            </HtmlButton>
-                            <HtmlButton
-                              onClick={() => handleUnder250BannerOrderChange(banner._id, 'down')}
-                              disabled={index === under250Banners.length - 1}
-                              className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50"
-                            >
-                              <UiIcon as={ArrowDown} className="w-4 h-4 text-slate-600" />
-                            </HtmlButton>
-                          </Div>
-                          <HtmlButton
-                            onClick={() => handleToggleUnder250BannerStatus(banner._id, banner.isActive)}
-                            className={`px-3 py-1.5 rounded text-sm font-medium ${banner.isActive ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}
-                          >
-                            {banner.isActive ? 'Deactivate' : 'Activate'}
-                          </HtmlButton>
-                          <HtmlButton
-                            onClick={() => handleDeleteUnder250Banner(banner._id)}
-                            disabled={under250BannersDeleting === banner._id}
-                            className="p-1.5 rounded hover:bg-red-100 text-red-600 disabled:opacity-50"
-                          >
-                            {under250BannersDeleting === banner._id ? (
-                              <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <UiIcon as={Trash2} className="w-4 h-4" />
-                            )}
-                          </HtmlButton>
-                        </Div>
-                      </Div>
-                    </Div>
-                  ))}
-                </Div>
-              )}
-            </Div>
-          </>
-        )}
+                <EmptyState
+                  icon={Tag}
+                  title="No under 250 banners yet"
+                  message="These banners sit above the under-price-limit list."
+                  actionLabel="Upload a banner"
+                  onAction={openUnder250BannersPicker}
+                  className="border-0 px-0 py-6"
+                />
+              )
+            ) : (
+              <Grid max={3}>
+                {under250Banners.map((banner, index) => (
+                  <BannerCard
+                    key={banner._id}
+                    imageUrl={resolveAssetUrl(banner.imageUrl)}
+                    alt={`Under 250 banner ${index + 1}`}
+                    order={banner.order}
+                    isActive={banner.isActive}
+                    onUp={() => handleUnder250BannerOrderChange(banner._id, 'up')}
+                    onDown={() => handleUnder250BannerOrderChange(banner._id, 'down')}
+                    upDisabled={index === 0}
+                    downDisabled={index === under250Banners.length - 1}
+                    onToggle={() => handleToggleUnder250BannerStatus(banner._id, banner.isActive)}
+                    deleting={under250BannersDeleting === banner._id}
+                    onDelete={() => handleDeleteUnder250Banner(banner._id)}
+                  />
+                ))}
+              </Grid>
+            )}
+          </Card>
+        </>
+      )}
 
-        {/* Dining Banner Tab */}
-        {activeTab === 'dining' && (
-          <>
-            {/* Upload Section */}
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <H2 className="text-lg font-bold text-slate-900 mb-4">Upload New Dining Banner(s)</H2>
-              <Div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50/50"
-                onClick={openDiningBannersPicker}
-              >
-                {diningBannersUploading ? (
-                  <Div className="flex flex-col items-center gap-3">
-                    <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin" />
-                    <P className="text-blue-600 font-medium">
-                      Uploading image {diningBannersUploadProgress.current} of {diningBannersUploadProgress.total}...
-                    </P>
-                    {diningBannersUploadProgress.total > 0 && (
-                      <Div className="w-full max-w-xs">
-                        <Div className="w-full bg-blue-200 rounded-full h-2">
-                          <Div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${(diningBannersUploadProgress.current / diningBannersUploadProgress.total) * 100}%`,
-                            }}
-                          />
-                        </Div>
-                      </Div>
-                    )}
-                  </Div>
-                ) : (
-                  <Div className="flex flex-col items-center gap-3">
-                    <UiIcon as={Upload} className="w-8 h-8 text-blue-600" />
-                    <Div>
-                      <HtmlButton
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openDiningBannersPicker();
-                        }}
-                        className="text-blue-600 font-medium hover:text-blue-700 underline"
-                      >
-                        Click to upload
-                      </HtmlButton>
-                      <Span className="text-slate-600"> or drag and drop</Span>
-                    </Div>
-                    <P className="text-xs text-slate-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</P>
-                  </Div>
-                )}
-              </Div>
-            </Div>
+      {/* Dining Banner Tab */}
+      {activeTab === 'dining' && (
+        <>
+          <UploadPanel
+            title="Upload New Dining Banner(s)"
+            className="mb-4"
+            uploading={diningBannersUploading}
+            progress={diningBannersUploadProgress}
+            onPick={openDiningBannersPicker}
+          />
 
-            {/* Banners List */}
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <H2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Span>Banner List</Span>
-                {diningBannersLoading ? <Span className="w-8 h-5 bg-slate-200 animate-pulse rounded inline-block" /> : <Span>({diningBanners.length})</Span>}
-              </H2>
-              {diningBannersLoading ? (
-                <Div className="flex items-center justify-center py-12">
-                  <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin" />
-                </Div>
-              ) : diningBanners.length === 0 ? (
-                <Div className="text-center py-12 text-slate-500">
-                  <UiIcon as={UtensilsCrossed} className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                  <P>No dining banners uploaded yet.</P>
-                </Div>
+          <Card>
+            <SectionTitle>{diningBannersLoading ? 'Banner list' : `Banner list · ${diningBanners.length}`}</SectionTitle>
+            {diningBannersLoading ? (
+              <TableSkeleton rows={3} className="border-0 p-0 gap-3" />
+            ) : diningBanners.length === 0 ? (
+              error ? (
+                <ErrorState message={error} onRetry={() => fetchDiningBanners()} className="border-0 px-0 py-6" />
               ) : (
-                <Div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {diningBanners.map((banner, index) => (
-                    <Div key={banner._id} className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                      <Div className="relative aspect-video bg-slate-100">
-                        <Img src={resolveAssetUrl(banner.imageUrl)} alt={`Dining Banner ${index + 1}`} className="w-full h-full object-cover" />
-                        <Div className="absolute top-2 right-2">
-                          <Span
-                            className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                          >
-                            {banner.isActive ? 'Active' : 'Inactive'}
-                          </Span>
-                        </Div>
-                        <Div className="absolute top-2 left-2">
-                          <Span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Order: {banner.order}</Span>
-                        </Div>
-                      </Div>
-                      <Div className="p-4 bg-white">
-                        <Div className="flex items-center justify-between gap-2">
-                          <Div className="flex items-center gap-1">
-                            <HtmlButton
-                              onClick={() => handleDiningBannerOrderChange(banner._id, 'up')}
-                              disabled={index === 0}
-                              className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50"
-                            >
-                              <UiIcon as={ArrowUp} className="w-4 h-4 text-slate-600" />
-                            </HtmlButton>
-                            <HtmlButton
-                              onClick={() => handleDiningBannerOrderChange(banner._id, 'down')}
-                              disabled={index === diningBanners.length - 1}
-                              className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50"
-                            >
-                              <UiIcon as={ArrowDown} className="w-4 h-4 text-slate-600" />
-                            </HtmlButton>
-                          </Div>
-                          <HtmlButton
-                            onClick={() => handleToggleDiningBannerStatus(banner._id, banner.isActive)}
-                            className={`px-3 py-1.5 rounded text-sm font-medium ${banner.isActive ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}
-                          >
-                            {banner.isActive ? 'Deactivate' : 'Activate'}
-                          </HtmlButton>
-                          <HtmlButton
-                            onClick={() => handleDeleteDiningBanner(banner._id)}
-                            disabled={diningBannersDeleting === banner._id}
-                            className="p-1.5 rounded hover:bg-red-100 text-red-600 disabled:opacity-50"
-                          >
-                            {diningBannersDeleting === banner._id ? (
-                              <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <UiIcon as={Trash2} className="w-4 h-4" />
-                            )}
-                          </HtmlButton>
-                        </Div>
-                      </Div>
-                    </Div>
-                  ))}
-                </Div>
-              )}
-            </Div>
-          </>
-        )}
+                <EmptyState
+                  icon={UtensilsCrossed}
+                  title="No dining banners yet"
+                  message="Dining banners head the dining section of the user app."
+                  actionLabel="Upload a banner"
+                  onAction={openDiningBannersPicker}
+                  className="border-0 px-0 py-6"
+                />
+              )
+            ) : (
+              <Grid max={3}>
+                {diningBanners.map((banner, index) => (
+                  <BannerCard
+                    key={banner._id}
+                    imageUrl={resolveAssetUrl(banner.imageUrl)}
+                    alt={`Dining banner ${index + 1}`}
+                    order={banner.order}
+                    isActive={banner.isActive}
+                    onUp={() => handleDiningBannerOrderChange(banner._id, 'up')}
+                    onDown={() => handleDiningBannerOrderChange(banner._id, 'down')}
+                    upDisabled={index === 0}
+                    downDisabled={index === diningBanners.length - 1}
+                    onToggle={() => handleToggleDiningBannerStatus(banner._id, banner.isActive)}
+                    deleting={diningBannersDeleting === banner._id}
+                    onDelete={() => handleDeleteDiningBanner(banner._id)}
+                  />
+                ))}
+              </Grid>
+            )}
+          </Card>
+        </>
+      )}
 
-        {/* Explore More Tab */}
-        {activeTab === 'explore-more' && (
-          <>
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <Div className="flex items-center justify-between gap-3 mb-4">
-                <H2 className="text-lg font-bold text-slate-900">Landing Settings</H2>
-                <Button
-                  onClick={handleSaveSettings}
-                  disabled={
-                    settingsSaving ||
-                    settingsLoading ||
-                    JSON.stringify({
-                      ...settings,
-                      recommendedRestaurantIds: [...(settings.recommendedRestaurantIds || [])].sort(),
-                    }) ===
-                      JSON.stringify({
-                        ...originalSettings,
-                        recommendedRestaurantIds: [...(originalSettings.recommendedRestaurantIds || [])].sort(),
-                      })
-                  }
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+      {/* Explore More Tab */}
+      {activeTab === 'explore-more' && (
+        <>
+          <Card className="mb-4">
+            <SectionTitle>Landing Settings</SectionTitle>
+
+            {settingsLoading ? (
+              <LoadingState label="Loading settings…" className="border-0 px-0 py-6" />
+            ) : (
+              <Div className="gap-4">
+                <Field label="Explore More Heading">
+                  <Input
+                    nativeID="explore-more-heading"
+                    value={settings.exploreMoreHeading || ''}
+                    onChange={(e) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        exploreMoreHeading: e.target.value,
+                      }))
+                    }
+                    className={INPUT}
+                    placeholder="Explore More"
+                  />
+                </Field>
+
+                <Field
+                  label="Under Price Limit (₹)"
+                  hint={`The button reads "Under ₹${settings.under250PriceLimit || 250}" on the user home page.`}
                 >
-                  {settingsSaving ? <UiIcon as={Loader2} className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Save Settings
-                </Button>
-              </Div>
+                  <Input
+                    nativeID="under-250-price"
+                    type="number"
+                    min="1"
+                    max="10000"
+                    value={settings.under250PriceLimit || 250}
+                    onChange={(e) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        under250PriceLimit: Math.max(1, Number(e.target.value)),
+                      }))
+                    }
+                    className={INPUT}
+                    placeholder="250"
+                  />
+                </Field>
 
-              {settingsLoading ? (
-                <Div className="flex items-center justify-center py-8">
-                  <UiIcon as={Loader2} className="w-6 h-6 text-blue-600 animate-spin" />
-                </Div>
-              ) : (
-                <Div className="space-y-5">
-                  <Div>
-                    <Label htmlFor="explore-more-heading">Explore More Heading</Label>
-                    <Input
-                      id="explore-more-heading"
-                      value={settings.exploreMoreHeading || ''}
-                      onChange={(e) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          exploreMoreHeading: e.target.value,
-                        }))
-                      }
-                      className="mt-2"
-                      placeholder="Explore More"
-                    />
-                  </Div>
-
-                  <Div>
-                    <Label htmlFor="under-250-price">Under Price Limit (₹)</Label>
-                    <Input
-                      id="under-250-price"
-                      type="number"
-                      min="1"
-                      max="10000"
-                      value={settings.under250PriceLimit || 250}
-                      onChange={(e) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          under250PriceLimit: Math.max(1, Number(e.target.value)),
-                        }))
-                      }
-                      className="mt-2"
-                      placeholder="250"
-                    />
-                    <P className="text-xs text-slate-500 mt-1">Button will show {'"'}Under ₹{settings.under250PriceLimit || 250}{'"'} on user home page</P>
-                  </Div>
-
-                  <Div>
-                    <Label>Fest Banner (User Home)</Label>
-                    <P className="text-xs text-slate-500 mt-1 mb-3">Upload a promo image for the home fest banner. If empty, the default design is shown.</P>
-                    <Div className="flex flex-col gap-3">
-                      <Div className="flex flex-wrap items-center gap-3">
-                        <Button
-                          type="button"
-                          onClick={openFestBannerPicker}
-                          disabled={festBannerUploading}
-                          className="bg-slate-900 hover:bg-slate-800 text-white"
-                        >
-                          {festBannerUploading ? <UiIcon as={Loader2} className="w-4 h-4 animate-spin mr-2" /> : null}
-                          {festBannerUploading ? 'Uploading...' : 'Upload Banner'}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setSettings((prev) => ({
-                              ...prev,
-                              festBannerImageUrl: '',
-                              festBannerTopColor: '',
-                            }));
-                            setSelectedFestBannerFile(null);
-                          }}
-                          disabled={festBannerUploading || !settings.festBannerImageUrl}
-                        >
-                          Remove Banner
-                        </Button>
-                      </Div>
-                      {settings.festBannerImageUrl ? (
-                        <Div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 break-all">{settings.festBannerImageUrl}</Div>
-                      ) : (
-                        <P className="text-xs text-slate-500">No banner uploaded.</P>
-                      )}
+                <Field label="Fest Banner (User Home)" hint="Upload a promo image for the home fest banner. If empty, the default design is shown.">
+                  <Div className="gap-3">
+                    <Div className="flex-row flex-wrap items-center gap-2">
+                      <Button
+                        onClick={openFestBannerPicker}
+                        disabled={festBannerUploading}
+                        accessibilityLabel="Upload the fest banner"
+                        className={`${BTN_PRIMARY} ${festBannerUploading ? 'opacity-60' : ''}`}
+                      >
+                        <UiIcon as={Upload} size={16} className="text-white" />
+                        <Span className={BTN_TEXT_PRIMARY}>{festBannerUploading ? 'Uploading…' : 'Upload Banner'}</Span>
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setSettings((prev) => ({
+                            ...prev,
+                            festBannerImageUrl: '',
+                            festBannerTopColor: '',
+                          }));
+                          setSelectedFestBannerFile(null);
+                        }}
+                        disabled={festBannerUploading || !settings.festBannerImageUrl}
+                        accessibilityLabel="Remove the fest banner"
+                        className={`${BTN_SECONDARY} ${festBannerUploading || !settings.festBannerImageUrl ? 'opacity-40' : ''}`}
+                      >
+                        <Span className={BTN_TEXT_SECONDARY}>Remove Banner</Span>
+                      </Button>
                     </Div>
+                    {settings.festBannerImageUrl ? (
+                      <Div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <Span className="text-xs text-slate-700">{settings.festBannerImageUrl}</Span>
+                      </Div>
+                    ) : (
+                      <Span className="text-xs text-slate-500">No banner uploaded.</Span>
+                    )}
                   </Div>
+                </Field>
 
-                  {selectedZoneId !== '' && selectedZoneId != null && (
-                    <Div>
-                      <Label htmlFor="recommended-search">Recommended For You Restaurants</Label>
-                      <P className="text-xs text-slate-500 mt-1 mb-2">Choose multiple restaurants to display below filters on the user home page.</P>
-
-                      <Div className="relative mb-3">
-                        <UiIcon as={Search} className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                {selectedZoneId !== '' && selectedZoneId != null && (
+                  <Field label="Recommended For You Restaurants" hint="Choose multiple restaurants to display below filters on the user home page.">
+                    <Div className="gap-3">
+                      <Div className="flex-row items-center gap-2">
+                        <UiIcon as={Search} size={16} className="text-slate-400" />
                         <Input
-                          id="recommended-search"
+                          nativeID="recommended-search"
                           value={recommendedSearchQuery}
                           onChange={(e) => setRecommendedSearchQuery(e.target.value)}
                           placeholder="Search restaurants..."
-                          className="pl-9"
+                          className={`${INPUT} flex-1`}
                         />
                       </Div>
 
                       {recommendedRestaurantsSelected.length > 0 && (
-                        <Div className="mb-3 flex flex-wrap gap-2">
+                        <Div className="flex-row flex-wrap gap-2">
                           {recommendedRestaurantsSelected.map((restaurant) => (
-                            <HtmlButton
+                            <Button
                               key={restaurant._id}
-                              type="button"
                               onClick={() => toggleRecommendedRestaurant(restaurant._id)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs hover:bg-blue-100"
+                              accessibilityLabel={`Remove ${restaurant.name} from recommended`}
+                              className="flex-row items-center gap-1.5 h-11 px-3 rounded-full bg-blue-100"
                             >
-                              <Span>{restaurant.name}</Span>
-                              <Span className="text-blue-500">x</Span>
-                            </HtmlButton>
+                              <Span className="text-xs font-semibold text-blue-700">{restaurant.name}</Span>
+                              <UiIcon as={X} size={12} className="text-blue-700" />
+                            </Button>
                           ))}
                         </Div>
                       )}
 
-                      <ScrollDiv className="max-h-72 border border-slate-200 rounded-lg" contentClassName="divide-y divide-slate-100">
-                        {filteredRestaurantsForRecommended.length === 0 ? (
-                          <Div className="p-4 text-sm text-slate-500 text-center">No restaurants found</Div>
+                      <ScrollDiv className="rounded-lg border border-slate-200" style={{ maxHeight: 288 }} contentClassName="p-1">
+                        {restaurantsLoading ? (
+                          <LoadingState label="Loading restaurants…" className="border-0" />
+                        ) : filteredRestaurantsForRecommended.length === 0 ? (
+                          <EmptyState
+                            icon={Store}
+                            title="No restaurants found"
+                            message={recommendedSearchQuery ? 'Try a different search term.' : 'No restaurants are available in this zone.'}
+                            className="border-0"
+                          />
                         ) : (
                           filteredRestaurantsForRecommended.map((restaurant) => {
                             const isChecked = (settings.recommendedRestaurantIds || []).some((id) => String(id) === String(restaurant._id));
@@ -2127,49 +2011,43 @@ export default function LandingPageManagement() {
                               <Div
                                 key={restaurant._id}
                                 onClick={() => toggleRecommendedRestaurant(restaurant._id)}
-                                className="flex items-center justify-between gap-3 px-3 py-2 cursor-pointer hover:bg-slate-50"
+                                accessibilityLabel={`${isChecked ? 'Remove' : 'Add'} ${restaurant.name}`}
+                                className="flex-row items-center justify-between gap-3 px-3 min-h-[44px] py-2 rounded-lg"
                               >
-                                <Div className="min-w-0">
-                                  <P className="text-sm font-medium text-slate-800 truncate">{restaurant.name}</P>
-                                </Div>
-                                <Checkbox checked={isChecked} onCheckedChange={() => toggleRecommendedRestaurant(restaurant._id)} />
+                                <Span className="text-sm font-medium text-slate-700 flex-1">{restaurant.name}</Span>
+                                <Checkbox checked={isChecked} onCheckedChange={() => toggleRecommendedRestaurant(restaurant._id)} className="w-5 h-5" />
                               </Div>
                             );
                           })
                         )}
                       </ScrollDiv>
                     </Div>
-                  )}
-                </Div>
-              )}
-            </Div>
+                  </Field>
+                )}
 
-            {/* Sub-tabs for Explore More */}
-            <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-6">
-              <HScroll contentClassName="flex gap-2">
-                {exploreMoreTabs.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === 'explore-more' && (tab.id === 'gourmet' ? gourmetRestaurants.length > 0 : false);
-                  return (
-                    <HtmlButton
-                      key={tab.id}
-                      onClick={() => setExploreMoreSubTab(tab.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${exploreMoreSubTab === tab.id ? 'bg-blue-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-                    >
-                      <UiIcon as={Icon} className="w-4 h-4" />
-                      {tab.label}
-                    </HtmlButton>
-                  );
-                })}
-              </HScroll>
-            </Div>
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={settingsSaving || settingsLoading || settingsUnchanged}
+                  accessibilityLabel="Save landing settings"
+                  className={`${BTN_PRIMARY} ${settingsSaving || settingsLoading || settingsUnchanged ? 'opacity-40' : ''}`}
+                >
+                  <Span className={BTN_TEXT_PRIMARY}>{settingsSaving ? 'Saving…' : 'Save Settings'}</Span>
+                </Button>
+              </Div>
+            )}
+          </Card>
 
-            {/* Icons Tab Content */}
-            {exploreMoreSubTab === 'icons' && (
-              <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <H2 className="text-lg font-bold text-slate-900 mb-6">Manage Explore More Icons</H2>
+          {/* Sub-tabs for Explore More */}
+          <TabStrip tabs={exploreMoreTabs} active={exploreMoreSubTab} onSelect={setExploreMoreSubTab} label="Explore More" />
 
-                <Div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Icons Tab Content */}
+          {exploreMoreSubTab === 'icons' && (
+            <Card>
+              <SectionTitle>Manage Explore More Icons</SectionTitle>
+              {exploreMoreLoading ? (
+                <LoadingState label="Loading icons…" className="border-0 px-0 py-6" />
+              ) : (
+                <Grid max={4}>
                   {[
                     {
                       id: 'offers',
@@ -2199,335 +2077,284 @@ export default function LandingPageManagement() {
                       return dbLabel === itemLabel || dbLabel.replace(/s$/, '') === itemLabel.replace(/s$/, '');
                     });
                     const iconSrc = resolveAssetUrl(dbItem?.imageUrl || dbItem?.iconUrl) || null;
+                    const busy = !!exploreIconsUploading[item.id];
                     return (
-                      <Div key={item.id} className="border border-slate-200 rounded-lg p-4 flex flex-col items-center relative">
-                        <Span className="text-sm font-semibold text-slate-700 mb-3">{item.label}</Span>
-
-                        <Div className="w-24 h-24 mb-4 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden relative group">
-                          {iconSrc ? (
-                            <Img src={iconSrc} alt={item.label} className="w-full h-full object-contain p-2" />
+                      <Card key={item.id} className="items-center gap-3">
+                        <Span className="text-sm font-semibold text-slate-900">{item.label}</Span>
+                        <Div className="w-24 h-24 rounded-lg bg-slate-50 border border-slate-200 items-center justify-center overflow-hidden">
+                          {busy ? (
+                            <ActivityIndicator size="small" color={A.primary} />
+                          ) : iconSrc ? (
+                            <Img src={iconSrc} alt={item.label} style={{ width: '100%', height: '100%' }} contentFit="contain" />
                           ) : (
-                            <UiIcon as={ImageIcon} className="w-8 h-8 text-slate-300" />
-                          )}
-
-                          {exploreIconsUploading[item.id] && (
-                            <Div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
-                              <UiIcon as={Loader2} className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                            </Div>
+                            <UiIcon as={ImageIcon} size={28} className="text-slate-300" />
                           )}
                         </Div>
-
-                        <Div className="w-full mt-auto">
-                          <HtmlButton
-                            type="button"
-                            onClick={() => openExploreIconPicker(item)}
-                            disabled={!!exploreIconsUploading[item.id]}
-                            className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer ${exploreIconsUploading[item.id] ? 'opacity-50 pointer-events-none' : ''}`}
-                          >
-                            <UiIcon as={Upload} className="w-3 h-3" />
-                            {dbItem ? 'Change Icon' : 'Upload Icon'}
-                          </HtmlButton>
-                        </Div>
-                      </Div>
+                        <Button
+                          onClick={() => openExploreIconPicker(item)}
+                          disabled={busy}
+                          accessibilityLabel={`${dbItem ? 'Change' : 'Upload'} the ${item.label} icon`}
+                          className={`${BTN_SECONDARY} w-full ${busy ? 'opacity-40' : ''}`}
+                        >
+                          <UiIcon as={Upload} size={14} className="text-slate-600" />
+                          <Span className={BTN_TEXT_SECONDARY}>{dbItem ? 'Change Icon' : 'Upload Icon'}</Span>
+                        </Button>
+                      </Card>
                     );
                   })}
-                </Div>
-              </Div>
-            )}
+                </Grid>
+              )}
+            </Card>
+          )}
 
-            {/* Gourmet Tab Content */}
-            {exploreMoreSubTab === 'gourmet' && (
-              <>
-                <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-                  <H2 className="text-lg font-bold text-slate-900 mb-4">Add Restaurant to Gourmet</H2>
-                  <Div className="space-y-4">
-                    <Div>
-                      <Label htmlFor="restaurant-gourmet">Select Restaurant</Label>
-                      <Select
-                        nativeID="restaurant-gourmet"
-                        value={selectedRestaurantGourmet}
-                        onChange={(e) => setSelectedRestaurantGourmet(e.target.value)}
-                        className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={restaurantsLoading}
-                      >
-                        {allRestaurants.length === 0 ? (
-                          <Option value="" disabled>
-                            No restaurant found
-                          </Option>
-                        ) : (
-                          <>
-                            <Option value="">Select a restaurant...</Option>
-                            {allRestaurants.map((restaurant) => {
-                              const isAdded = gourmetRestaurants.some((gr) => gr.restaurant?._id === restaurant._id);
-                              return (
-                                <Option key={restaurant._id} value={restaurant._id} disabled={isAdded}>
-                                  {restaurant.name} {isAdded ? '✅ (Already Selected)' : ''}
-                                </Option>
-                              );
-                            })}
-                          </>
-                        )}
-                      </Select>
-                    </Div>
-                    <Button onClick={handleAddGourmetRestaurant} disabled={!selectedRestaurantGourmet} className="bg-blue-500 hover:bg-blue-600 text-white">
-                      Add to Gourmet
-                    </Button>
-                  </Div>
-                </Div>
-
-                <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                  <H2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Span>Gourmet Restaurants</Span>
-                    {gourmetLoading ? <Span className="w-8 h-5 bg-slate-200 animate-pulse rounded inline-block" /> : <Span>({gourmetRestaurants.length})</Span>}
-                  </H2>
-                  {gourmetLoading ? (
-                    <Div className="flex items-center justify-center py-12">
-                      <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin" />
-                    </Div>
-                  ) : gourmetRestaurants.length === 0 ? (
-                    <Div className="text-center py-12 text-slate-500">
-                      <UiIcon as={ChefHat} className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                      <P>No restaurants added to Gourmet yet.</P>
-                    </Div>
-                  ) : (
-                    <Div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {gourmetRestaurants
-                        .sort((a, b) => a.order - b.order)
-                        .map((item, index) => {
-                          // Get restaurant cover image with priority: coverImages > menuImages > profileImage
-                          const coverImages =
-                            item.restaurant?.coverImages && item.restaurant.coverImages.length > 0
-                              ? item.restaurant.coverImages.map((img) => img.url || img).filter(Boolean)
-                              : [];
-                          const menuImages =
-                            item.restaurant?.menuImages && item.restaurant.menuImages.length > 0
-                              ? item.restaurant.menuImages.map((img) => img.url || img).filter(Boolean)
-                              : [];
-                          const restaurantImage =
-                            coverImages.length > 0
-                              ? coverImages[0]
-                              : menuImages.length > 0
-                                ? menuImages[0]
-                                : item.restaurant?.profileImage?.url || 'https://via.placeholder.com/400';
-                          return (
-                            <Div key={item._id} className="border border-slate-200 rounded-lg overflow-hidden">
-                              <Div className="relative h-32 bg-slate-100">
-                                <Img src={restaurantImage} alt={item.restaurant?.name} className="w-full h-full object-cover" />
-                                <Div className="absolute top-1 right-1">
-                                  <Span
-                                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${item.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                                  >
-                                    {item.isActive ? 'Active' : 'Inactive'}
-                                  </Span>
-                                </Div>
-                              </Div>
-                              <Div className="p-2">
-                                <H3 className="font-semibold text-slate-900 mb-0.5 text-sm line-clamp-1">{item.restaurant?.name || 'N/A'}</H3>
-                                <Div className="flex items-center gap-1 text-[10px] text-slate-500 mb-2">
-                                  <UiIcon as={Star} className="w-3 h-3 fill-amber-400 text-amber-400 inline" />
-                                  <Span className="font-semibold text-slate-700">{item.restaurant?.rating || 0}</Span>
-                                </Div>
-                                <Div className="flex items-center justify-between gap-1">
-                                  <Div className="flex items-center gap-0.5">
-                                    <HtmlButton
-                                      onClick={() => handleGourmetOrderChange(item._id, 'up')}
-                                      disabled={index === 0}
-                                      className="p-1 rounded hover:bg-slate-100 disabled:opacity-50"
-                                    >
-                                      <UiIcon as={ArrowUp} className="w-3 h-3 text-slate-600" />
-                                    </HtmlButton>
-                                    <HtmlButton
-                                      onClick={() => handleGourmetOrderChange(item._id, 'down')}
-                                      disabled={index === gourmetRestaurants.length - 1}
-                                      className="p-1 rounded hover:bg-slate-100 disabled:opacity-50"
-                                    >
-                                      <UiIcon as={ArrowDown} className="w-3 h-3 text-slate-600" />
-                                    </HtmlButton>
-                                  </Div>
-                                  <HtmlButton
-                                    onClick={() => handleToggleGourmetStatus(item._id, item.isActive)}
-                                    className={`px-2 py-1 rounded text-[10px] font-medium ${item.isActive ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}
-                                  >
-                                    {item.isActive ? 'Deactivate' : 'Activate'}
-                                  </HtmlButton>
-                                  <HtmlButton
-                                    onClick={() => handleDeleteGourmetRestaurant(item._id)}
-                                    disabled={gourmetDeleting === item._id}
-                                    className="p-1 rounded hover:bg-red-100 text-red-600 disabled:opacity-50"
-                                  >
-                                    {gourmetDeleting === item._id ? (
-                                      <UiIcon as={Loader2} className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <UiIcon as={Trash2} className="w-3 h-3" />
-                                    )}
-                                  </HtmlButton>
-                                </Div>
-                              </Div>
-                            </Div>
-                          );
-                        })}
-                    </Div>
-                  )}
-                </Div>
-              </>
-            )}
-          </>
-        )}
-
-        {/* Restaurant Selection Modal */}
-        <Dialog open={showRestaurantModal} onOpenChange={setShowRestaurantModal}>
-          <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-              <DialogTitle className="text-2xl font-bold text-slate-900">Select Restaurant to Link with Banner</DialogTitle>
-              <DialogDescription className="text-slate-600 mt-2">
-                Select a restaurant that will be linked to this banner. When users click on this banner, they will be redirected to the selected restaurant.
-              </DialogDescription>
-            </DialogHeader>
-
-            <Div className="flex-1 overflow-hidden flex flex-col">
-              {/* Search Bar and Selected Count */}
-              <Div className="px-6 pt-4 pb-3 space-y-3 bg-slate-50 border-b border-slate-200">
-                <Div className="relative">
-                  <UiIcon as={Search} className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    type="text"
-                    placeholder="Search restaurants by name or ID..."
-                    value={restaurantSearchQuery}
-                    onChange={(e) => setRestaurantSearchQuery(e.target.value)}
-                    className="pl-10 h-11 bg-white border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </Div>
-                {selectedRestaurantIds.length > 0 && (
-                  <Div className="flex items-center gap-2">
-                    <Div className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium">Restaurant selected</Div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedRestaurantIds([])}
-                      className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 ml-2"
+          {/* Gourmet Tab Content */}
+          {exploreMoreSubTab === 'gourmet' && (
+            <>
+              <Card className="mb-4">
+                <SectionTitle>Add Restaurant to Gourmet</SectionTitle>
+                <Div className="gap-3">
+                  <Field label="Select Restaurant" hint={restaurantsLoading ? 'Loading restaurants…' : undefined}>
+                    <Select
+                      nativeID="restaurant-gourmet"
+                      value={selectedRestaurantGourmet}
+                      onChange={(e) => setSelectedRestaurantGourmet(e.target.value)}
+                      className={INPUT}
+                      disabled={restaurantsLoading}
                     >
-                      <UiIcon as={Trash2} className="w-3 h-3 mr-1" />
-                      Clear selection
-                    </Button>
-                  </Div>
-                )}
-              </Div>
-
-              {/* Restaurant List */}
-              <ScrollDiv className="flex-1 bg-white">
-                {restaurantsLoading ? (
-                  <Div className="flex flex-col items-center justify-center py-16">
-                    <UiIcon as={Loader2} className="w-10 h-10 text-blue-600 animate-spin mb-3" />
-                    <P className="text-slate-500">Loading restaurants...</P>
-                  </Div>
-                ) : filteredRestaurantsForModal.length === 0 ? (
-                  <Div className="flex flex-col items-center justify-center py-16 text-center px-6">
-                    <UiIcon as={ImageIcon} className="w-16 h-16 text-slate-300 mb-4" />
-                    <P className="text-slate-600 font-medium mb-1">No restaurants found</P>
-                    <P className="text-sm text-slate-500">{restaurantSearchQuery ? 'Try a different search term' : 'No restaurants available'}</P>
-                  </Div>
-                ) : (
-                  <Div className="divide-y divide-slate-100">
-                    {filteredRestaurantsForModal.map((restaurant) => {
-                      const isSelected = selectedRestaurantIds.includes(restaurant._id);
-                      const profileImageUrl = restaurant.profileImage?.url || restaurant.profileImage || null;
-                      return (
-                        <Div
-                          key={restaurant._id}
-                          className={`px-6 py-4 transition-all cursor-pointer ${isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-slate-50'}`}
-                          onClick={() => toggleRestaurantSelection(restaurant._id)}
-                        >
-                          <Div className="flex items-center gap-4">
-                            <Div className="flex-shrink-0">
-                              <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={() => toggleRestaurantSelection(restaurant._id)}
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-5 h-5"
-                              />
-                            </Div>
-
-                            {/* Restaurant Image */}
-                            <Div className="flex-shrink-0">
-                              {profileImageUrl ? (
-                                <Img src={profileImageUrl} alt={restaurant.name} className="w-16 h-16 rounded-xl object-cover border-2 border-slate-200" />
-                              ) : (
-                                <LinearGradient colors={['#60a5fa', '#2563eb']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 64, height: 64, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
-                                  <Span className="text-white font-bold text-lg">{restaurant.name?.charAt(0)?.toUpperCase() || 'R'}</Span>
-                                </LinearGradient>
-                              )}
-                            </Div>
-
-                            {/* Restaurant Info */}
-                            <Div className="flex-1 min-w-0">
-                              <H3 className={`font-semibold text-base mb-1 ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
-                                {restaurant.name || 'Unnamed Restaurant'}
-                              </H3>
-                              <P className="text-sm text-slate-500 truncate">ID: {restaurant.restaurantId || restaurant._id}</P>
-                              {restaurant.rating !== undefined && restaurant.rating !== null && (
-                                <Div className="flex items-center gap-1 mt-1">
-                                  <UiIcon as={Star} className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline" />
-                                  <Span className="text-xs font-semibold text-slate-700">{restaurant.rating}</Span>
-                                </Div>
-                              )}
-                            </Div>
-
-                            {/* Selected Indicator */}
-                            {isSelected && (
-                              <Div className="flex-shrink-0">
-                                <Div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                                  <UiIcon as={CheckCircle2} className="w-5 h-5 text-white" />
-                                </Div>
-                              </Div>
-                            )}
-                          </Div>
-                        </Div>
-                      );
-                    })}
-                  </Div>
-                )}
-              </ScrollDiv>
-
-              {/* Action Buttons */}
-              <Div className="flex items-center justify-between gap-3 px-6 py-4 bg-slate-50 border-t border-slate-200">
-                <Div className="text-sm text-slate-600">
-                  {filteredRestaurantsForModal.length} restaurant{filteredRestaurantsForModal.length !== 1 ? 's' : ''} available
-                </Div>
-                <Div className="flex items-center gap-3">
+                      {allRestaurants.length === 0 ? (
+                        <Option value="" disabled>
+                          No restaurant found
+                        </Option>
+                      ) : (
+                        <>
+                          <Option value="">Select a restaurant...</Option>
+                          {allRestaurants.map((restaurant) => {
+                            const isAdded = gourmetRestaurants.some((gr) => gr.restaurant?._id === restaurant._id);
+                            return (
+                              <Option key={restaurant._id} value={restaurant._id} disabled={isAdded}>
+                                {restaurant.name} {isAdded ? '(Already selected)' : ''}
+                              </Option>
+                            );
+                          })}
+                        </>
+                      )}
+                    </Select>
+                  </Field>
                   <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowRestaurantModal(false);
-                      setSelectedBannerId(null);
-                      setSelectedRestaurantIds([]);
-                      setRestaurantSearchQuery('');
-                    }}
-                    className="px-6"
+                    onClick={handleAddGourmetRestaurant}
+                    disabled={!selectedRestaurantGourmet}
+                    accessibilityLabel="Add the selected restaurant to Gourmet"
+                    className={`${BTN_PRIMARY} ${!selectedRestaurantGourmet ? 'opacity-40' : ''} self-start`}
                   >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleLinkRestaurants} disabled={linkingRestaurants} className="bg-blue-600 hover:bg-blue-700 text-white px-6 min-w-[140px]">
-                    {linkingRestaurants ? (
-                      <>
-                        <UiIcon as={Loader2} className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : selectedRestaurantIds.length === 0 ? (
-                      <>Save Selection</>
-                    ) : (
-                      <>
-                        <UiIcon as={Megaphone} className="w-4 h-4 mr-2" />
-                        Link Restaurant
-                      </>
-                    )}
+                    <Span className={BTN_TEXT_PRIMARY}>Add to Gourmet</Span>
                   </Button>
                 </Div>
-              </Div>
-            </Div>
-          </DialogContent>
-        </Dialog>
+              </Card>
 
-      </Div>
-    </ScrollDiv>
+              <Card>
+                <SectionTitle>{gourmetLoading ? 'Gourmet restaurants' : `Gourmet restaurants · ${gourmetRestaurants.length}`}</SectionTitle>
+                {gourmetLoading ? (
+                  <TableSkeleton rows={3} className="border-0 p-0 gap-3" />
+                ) : gourmetRestaurants.length === 0 ? (
+                  error ? (
+                    <ErrorState message={error} onRetry={() => fetchGourmetRestaurants()} className="border-0 px-0 py-6" />
+                  ) : (
+                    <EmptyState
+                      icon={ChefHat}
+                      title="No restaurants in Gourmet yet"
+                      message="Pick a restaurant above to feature it in the Gourmet row."
+                      className="border-0 px-0 py-6"
+                    />
+                  )
+                ) : (
+                  <Grid max={4}>
+                    {gourmetRestaurants
+                      .sort((a, b) => a.order - b.order)
+                      .map((item, index) => {
+                        // Get restaurant cover image with priority: coverImages > menuImages > profileImage
+                        const coverImages =
+                          item.restaurant?.coverImages && item.restaurant.coverImages.length > 0
+                            ? item.restaurant.coverImages.map((img) => img.url || img).filter(Boolean)
+                            : [];
+                        const menuImages =
+                          item.restaurant?.menuImages && item.restaurant.menuImages.length > 0
+                            ? item.restaurant.menuImages.map((img) => img.url || img).filter(Boolean)
+                            : [];
+                        const restaurantImage =
+                          coverImages.length > 0
+                            ? coverImages[0]
+                            : menuImages.length > 0
+                              ? menuImages[0]
+                              : item.restaurant?.profileImage?.url || 'https://via.placeholder.com/400';
+                        return (
+                          <Card key={item._id} padded={false} className="overflow-hidden">
+                            <Img src={restaurantImage} alt={item.restaurant?.name} style={{ width: '100%', height: 128 }} contentFit="cover" />
+                            <Div className="p-3 gap-2">
+                              <Span className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                                {item.restaurant?.name || 'N/A'}
+                              </Span>
+                              <Div className="flex-row items-center gap-2 flex-wrap">
+                                <Div className="flex-row items-center gap-1">
+                                  <UiIcon as={Star} size={12} className="text-amber-500" />
+                                  <Span className="text-xs font-semibold text-slate-700">{String(item.restaurant?.rating || 0)}</Span>
+                                </Div>
+                                <StatusBadge status={item.isActive ? 'active' : 'inactive'} label={item.isActive ? 'Active' : 'Inactive'} />
+                              </Div>
+                              <Div className="flex-row items-center flex-wrap gap-2">
+                                <IconButton
+                                  icon={ArrowUp}
+                                  onPress={() => handleGourmetOrderChange(item._id, 'up')}
+                                  disabled={index === 0}
+                                  label={`Move ${item.restaurant?.name || 'restaurant'} up`}
+                                />
+                                <IconButton
+                                  icon={ArrowDown}
+                                  onPress={() => handleGourmetOrderChange(item._id, 'down')}
+                                  disabled={index === gourmetRestaurants.length - 1}
+                                  label={`Move ${item.restaurant?.name || 'restaurant'} down`}
+                                />
+                                <Div className="flex-1" />
+                                <IconButton
+                                  icon={Trash2}
+                                  tone="danger"
+                                  busy={gourmetDeleting === item._id}
+                                  disabled={gourmetDeleting === item._id}
+                                  onPress={() => handleDeleteGourmetRestaurant(item._id)}
+                                  label={`Remove ${item.restaurant?.name || 'restaurant'} from Gourmet`}
+                                />
+                              </Div>
+                              <Button
+                                onClick={() => handleToggleGourmetStatus(item._id, item.isActive)}
+                                accessibilityLabel={item.isActive ? `Deactivate ${item.restaurant?.name || 'restaurant'}` : `Activate ${item.restaurant?.name || 'restaurant'}`}
+                                className={BTN_SECONDARY}
+                              >
+                                <Span className={BTN_TEXT_SECONDARY}>{item.isActive ? 'Deactivate' : 'Activate'}</Span>
+                              </Button>
+                            </Div>
+                          </Card>
+                        );
+                      })}
+                  </Grid>
+                )}
+              </Card>
+            </>
+          )}
+        </>
+      )}
+
+      {/* Restaurant Selection Modal */}
+      <Dialog open={showRestaurantModal} onOpenChange={setShowRestaurantModal}>
+        <DialogContent className="max-w-xl p-0">
+          <DialogHeader className="px-4 pt-5 pb-4 border-b border-slate-200">
+            <DialogTitle className="text-lg font-bold text-slate-900">Select Restaurant to Link with Banner</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">
+              The restaurant you pick opens when a user taps this banner.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Div className="p-4 gap-3">
+            <Div className="flex-row items-center gap-2">
+              <UiIcon as={Search} size={16} className="text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Search by name or ID"
+                value={restaurantSearchQuery}
+                onChange={(e) => setRestaurantSearchQuery(e.target.value)}
+                className={`${INPUT} flex-1`}
+              />
+            </Div>
+            {selectedRestaurantIds.length > 0 && (
+              <Div className="flex-row items-center gap-2 flex-wrap">
+                <StatusBadge tone="info" label="Restaurant selected" />
+                <Button onClick={() => setSelectedRestaurantIds([])} accessibilityLabel="Clear the selection" className={BTN_SECONDARY}>
+                  <UiIcon as={Trash2} size={14} className="text-red-600" />
+                  <Span className={BTN_TEXT_SECONDARY}>Clear selection</Span>
+                </Button>
+              </Div>
+            )}
+
+            {restaurantsLoading ? (
+              <LoadingState label="Loading restaurants…" />
+            ) : filteredRestaurantsForModal.length === 0 ? (
+              <EmptyState
+                icon={Store}
+                title="No restaurants found"
+                message={restaurantSearchQuery ? 'Try a different search term.' : 'No restaurants available.'}
+              />
+            ) : (
+              <Div className="rounded-xl border border-slate-200 overflow-hidden">
+                {filteredRestaurantsForModal.map((restaurant, i) => {
+                  const isSelected = selectedRestaurantIds.includes(restaurant._id);
+                  const profileImageUrl = restaurant.profileImage?.url || restaurant.profileImage || null;
+                  return (
+                    <Div
+                      key={restaurant._id}
+                      className={`flex-row items-center gap-3 px-3 py-3 ${i < filteredRestaurantsForModal.length - 1 ? 'border-b border-slate-100' : ''} ${isSelected ? 'bg-blue-50' : 'bg-white'}`}
+                      onClick={() => toggleRestaurantSelection(restaurant._id)}
+                      accessibilityLabel={`${isSelected ? 'Unselect' : 'Select'} ${restaurant.name || 'restaurant'}`}
+                    >
+                      <Checkbox checked={isSelected} onCheckedChange={() => toggleRestaurantSelection(restaurant._id)} className="w-5 h-5" />
+                      {profileImageUrl ? (
+                        <Img src={profileImageUrl} alt={restaurant.name} style={{ width: 44, height: 44 }} className="rounded-lg border border-slate-200" contentFit="cover" />
+                      ) : (
+                        <Div className="w-11 h-11 rounded-lg bg-slate-100 items-center justify-center">
+                          <Span className="text-base font-bold text-slate-500">{restaurant.name?.charAt(0)?.toUpperCase() || 'R'}</Span>
+                        </Div>
+                      )}
+                      <Div className="flex-1">
+                        <Span className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                          {restaurant.name || 'Unnamed Restaurant'}
+                        </Span>
+                        <Span className="text-xs text-slate-500" numberOfLines={1}>
+                          {`ID: ${restaurant.restaurantId || restaurant._id}`}
+                        </Span>
+                        {restaurant.rating !== undefined && restaurant.rating !== null && (
+                          <Div className="flex-row items-center gap-1 mt-0.5">
+                            <UiIcon as={Star} size={12} className="text-amber-500" />
+                            <Span className="text-xs font-semibold text-slate-700">{String(restaurant.rating)}</Span>
+                          </Div>
+                        )}
+                      </Div>
+                      {isSelected ? <UiIcon as={CheckCircle2} size={20} className="text-blue-600" /> : null}
+                    </Div>
+                  );
+                })}
+              </Div>
+            )}
+          </Div>
+
+          <Div className="px-4 py-4 gap-3 border-t border-slate-200">
+            <Span className="text-xs text-slate-500">
+              {`${filteredRestaurantsForModal.length} restaurant${filteredRestaurantsForModal.length !== 1 ? 's' : ''} available`}
+            </Span>
+            <Div className="flex-row flex-wrap items-center gap-2">
+              <Button
+                onClick={() => {
+                  setShowRestaurantModal(false);
+                  setSelectedBannerId(null);
+                  setSelectedRestaurantIds([]);
+                  setRestaurantSearchQuery('');
+                }}
+                accessibilityLabel="Cancel"
+                className={`${BTN_SECONDARY} flex-1`}
+              >
+                <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+              </Button>
+              <Button
+                onClick={handleLinkRestaurants}
+                disabled={linkingRestaurants}
+                accessibilityLabel={selectedRestaurantIds.length === 0 ? 'Save selection' : 'Link restaurant'}
+                className={`${BTN_PRIMARY} flex-1 ${linkingRestaurants ? 'opacity-60' : ''}`}
+              >
+                {linkingRestaurants ? null : <UiIcon as={Megaphone} size={16} className="text-white" />}
+                <Span className={BTN_TEXT_PRIMARY}>
+                  {linkingRestaurants ? 'Saving…' : selectedRestaurantIds.length === 0 ? 'Save Selection' : 'Link Restaurant'}
+                </Span>
+              </Button>
+            </Div>
+          </Div>
+        </DialogContent>
+      </Dialog>
+    </AdminPage>
   );
 }

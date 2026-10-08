@@ -1,59 +1,37 @@
 /* Ported from Frontend/src/modules/Hotel/app/admin/pages/AdminReviews.jsx (tools/port.js first pass). */
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from '../../../../lib/motion';
-import {
-  Star,
-  Search,
-  Filter,
-  MoreVertical,
-  Eye,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  ThumbsUp,
-  ThumbsDown,
-  Flag,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-} from 'lucide-react-native';
+import { Star, MoreVertical, Trash2, CheckCircle, XCircle, ThumbsUp, Flag, Download } from 'lucide-react-native';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import { toast } from '../../../../lib/notify';
-import { Button, Div, H2, H3, H4, Link, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Link, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  Toolbar,
+  StatusBadge,
+  Pagination,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  BTN_SECONDARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 import { saveTextFile } from '../../../../lib/files';
 const StarRating = ({ rating }) => (
-  <Div className="flex gap-0.5">
+  <Div className="flex-row gap-0.5" accessibilityLabel={`${rating} out of 5 stars`}>
     {[1, 2, 3, 4, 5].map((star) => (
-      <UiIcon as={Star} key={star} size={14} className={star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
+      <UiIcon as={Star} key={star} size={14} className={star <= rating ? 'text-amber-600' : 'text-slate-300'} fill={star <= rating ? '#BB4D00' : 'none'} />
     ))}
   </Div>
 );
-const StatusBadge = ({ status }) => {
-  const styles = {
-    approved: 'bg-green-100 text-green-700 border-green-200',
-    pending: 'bg-amber-100 text-amber-700 border-amber-200',
-    flagged: 'bg-red-100 text-red-700 border-red-200',
-    rejected: 'bg-gray-100 text-gray-700 border-gray-200',
-  };
-  const icons = {
-    approved: <UiIcon as={CheckCircle} size={10} />,
-    pending: <UiIcon as={AlertTriangle} size={10} />,
-    flagged: <UiIcon as={Flag} size={10} />,
-    rejected: <UiIcon as={XCircle} size={10} />,
-  };
-  return (
-    <Div className={`flex items-center gap-1 self-start px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase ${styles[status] || styles.pending}`}>
-      {icons[status] || icons.pending}
-      {status}
-    </Div>
-  );
-};
 const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [totalReviews, setTotalReviews] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -74,6 +52,7 @@ const AdminReviews = () => {
     async (page, currentFilters) => {
       try {
         setLoading(true);
+        setLoadError(null);
         const params = {
           page,
           limit,
@@ -89,6 +68,7 @@ const AdminReviews = () => {
       } catch (error) {
         console.error('Error fetching reviews:', error);
         toast.error('Failed to load reviews');
+        setLoadError(error?.response?.data?.message || error?.message || 'Failed to load reviews.');
       } finally {
         setLoading(false);
       }
@@ -184,8 +164,9 @@ const AdminReviews = () => {
     await saveTextFile(`reviews-export-${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv;charset=utf-8;');
     toast.success('CSV exported successfully');
   };
+  const hasFilters = !!(filters.status || filters.rating);
   return (
-    <ScrollDiv className="space-y-6 pb-10 uppercase tracking-tight">
+    <AdminPage maxWidth={900}>
       <ConfirmationModal
         isOpen={modalConfig.isOpen}
         onClose={() =>
@@ -197,57 +178,57 @@ const AdminReviews = () => {
         {...modalConfig}
       />
 
-      <Div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Div>
-          <H2 className="text-2xl font-bold text-gray-900 uppercase">Review Management ({totalReviews})</H2>
-          <P className="text-gray-500 text-[10px] font-bold uppercase tracking-tight">Monitor and moderate user reviews across all hotels.</P>
-        </Div>
-        <Div className="flex gap-2">
-          <Button
-            onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            <UiIcon as={Download} size={14} /> Export CSV
+      <PageHeader
+        icon={Star}
+        title="Review Management"
+        subtitle={`${totalReviews} reviews across all properties — monitor and moderate them here.`}
+        breadcrumb={[{ label: 'Hotel' }, { label: 'Reviews' }]}
+        actions={
+          <Button onClick={handleExportCSV} className={BTN_SECONDARY}>
+            <UiIcon as={Download} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Export CSV</Span>
           </Button>
-        </Div>
-      </Div>
+        }
+      />
 
-      <Div className="bg-white p-4 border border-gray-200 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <Div className="flex gap-2 w-full md:w-auto">
-          <Select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
-          >
-            <Option value="">All Status</Option>
+      <Card className="mb-3">
+        <Toolbar className="mb-0">
+          <Select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} className={`${INPUT} flex-1 min-w-[150px]`}>
+            <Option value="">All statuses</Option>
             <Option value="approved">Approved</Option>
             <Option value="pending">Pending</Option>
             <Option value="flagged">Flagged</Option>
             <Option value="rejected">Rejected</Option>
           </Select>
 
-          <Select
-            value={filters.rating}
-            onChange={(e) => handleFilterChange('rating', e.target.value)}
-            className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
-          >
-            <Option value="">All Ratings</Option>
+          <Select value={filters.rating} onChange={(e) => handleFilterChange('rating', e.target.value)} className={`${INPUT} flex-1 min-w-[150px]`}>
+            <Option value="">All ratings</Option>
             <Option value="5">5 Stars</Option>
             <Option value="4">4 Stars</Option>
             <Option value="3">3 Stars</Option>
             <Option value="2">2 Stars</Option>
             <Option value="1">1 Star</Option>
           </Select>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
-      <Div className="space-y-4 min-h-[400px]">
-        {loading ? (
-          [1, 2, 3].map((i) => <Div key={i} className="h-40 bg-gray-50 animate-pulse rounded-2xl"></Div>)
-        ) : (
-          <AnimatePresence>
-            {reviews.length > 0 ? (
-              reviews.map((review, index) => (
+      {loadError ? (
+        <ErrorState title="Could not load reviews" message={loadError} onRetry={() => fetchReviews(currentPage, filters)} />
+      ) : loading ? (
+        <TableSkeleton rows={4} />
+      ) : reviews.length === 0 ? (
+        <EmptyState
+          icon={Star}
+          title="No reviews found"
+          message={hasFilters ? 'No reviews match the current filters.' : 'Guest reviews appear here once they are submitted.'}
+          actionLabel={hasFilters ? 'Clear filters' : undefined}
+          onAction={hasFilters ? () => setFilters({ status: '', rating: '' }) : undefined}
+        />
+      ) : (
+        <>
+          <Div className="gap-3">
+            <AnimatePresence>
+              {reviews.map((review, index) => (
                 <motion.div
                   key={review._id}
                   layout
@@ -266,130 +247,92 @@ const AdminReviews = () => {
                   transition={{
                     delay: index * 0.05,
                   }}
-                  className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative font-bold"
                   style={{ zIndex: activeDropdown === review._id ? 10 : 0 }}
                 >
-                  <Div className="flex items-start justify-between gap-4">
-                    <Div className="flex-1">
-                      <Div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-                        <Div>
-                          <Div className="flex flex-wrap items-center gap-3 mb-1">
-                            <H4 className="font-bold text-gray-900 uppercase tracking-tight">{review.userId?.name || 'Guest'}</H4>
-                            <StarRating rating={review.rating} />
-                          </Div>
-                          <P className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-                            Reviewed{' '}
-                            <Link to={`/hotel/admin/properties/${review.hotelId?._id}`} className="text-black font-bold hover:underline">
-                              {review.hotelId?.name || 'Deleted Hotel'}
-                            </Link>{' '}
-                            • {new Date(review.createdAt).toLocaleDateString()}
+                  <Card>
+                    <Div className="flex-row items-start justify-between gap-3">
+                      <Div className="flex-1 min-w-0">
+                        <Div className="flex-row flex-wrap items-center gap-2 mb-1">
+                          <P numberOfLines={1} className="text-base font-semibold text-slate-900">
+                            {review.userId?.name || 'Guest'}
                           </P>
+                          <StarRating rating={review.rating} />
+                          <StatusBadge status={review.status} />
                         </Div>
-                        <StatusBadge status={review.status} />
-                      </Div>
+                        <P numberOfLines={2} className="text-xs text-slate-500 mb-2">
+                          Reviewed{' '}
+                          <Link to={`/hotel/admin/properties/${review.hotelId?._id}`} className="text-xs font-semibold text-blue-600">
+                            {review.hotelId?.name || 'Deleted Hotel'}
+                          </Link>{' '}
+                          · {new Date(review.createdAt).toLocaleDateString()}
+                        </P>
 
-                      <P className="text-sm text-gray-700 leading-relaxed mb-4 uppercase tracking-tight">{review.comment}</P>
+                        <P className="text-sm text-slate-700 mb-3">{review.comment}</P>
 
-                      <Div className="flex items-center gap-6 text-[10px] font-bold uppercase text-gray-400">
-                        <Div className="flex items-center gap-1">
-                          <UiIcon as={ThumbsUp} size={14} />
-                          <Span>Helpful: {review.helpful || 0}</Span>
-                        </Div>
-                        {review.reportedCount > 0 && (
-                          <Div className="flex items-center gap-1 text-red-600">
-                            <UiIcon as={Flag} size={14} />
-                            <Span>Reports: {review.reportedCount}</Span>
+                        <Div className="flex-row flex-wrap items-center gap-4">
+                          <Div className="flex-row items-center gap-1">
+                            <UiIcon as={ThumbsUp} size={14} className="text-slate-400" />
+                            <Span className="text-xs text-slate-500">Helpful: {review.helpful || 0}</Span>
                           </Div>
-                        )}
+                          {review.reportedCount > 0 ? (
+                            <Div className="flex-row items-center gap-1">
+                              <UiIcon as={Flag} size={14} className="text-red-600" />
+                              <Span className="text-xs font-semibold text-red-600">Reports: {review.reportedCount}</Span>
+                            </Div>
+                          ) : null}
+                        </Div>
+                      </Div>
+
+                      <Div className="shrink-0">
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdown(activeDropdown === review._id ? null : review._id);
+                          }}
+                          className="w-11 h-11 rounded-lg items-center justify-center"
+                          accessibilityLabel="Review actions"
+                        >
+                          <UiIcon as={MoreVertical} size={18} className="text-slate-500" />
+                        </Button>
+
+                        {activeDropdown === review._id ? (
+                          <Div className="absolute right-0 top-12 w-48 bg-white border border-slate-200 rounded-lg z-20 py-1">
+                            {review.status !== 'approved' ? (
+                              <Button onClick={() => handleApprove(review)} className="w-full flex-row items-center gap-2 px-3 h-11">
+                                <UiIcon as={CheckCircle} size={16} className="text-green-700" />
+                                <Span className="text-sm font-semibold text-slate-700">Approve</Span>
+                              </Button>
+                            ) : null}
+                            {review.status !== 'rejected' ? (
+                              <Button onClick={() => handleReject(review)} className="w-full flex-row items-center gap-2 px-3 h-11">
+                                <UiIcon as={XCircle} size={16} className="text-amber-700" />
+                                <Span className="text-sm font-semibold text-slate-700">Reject</Span>
+                              </Button>
+                            ) : null}
+                            <Button onClick={() => handleDelete(review)} className="w-full flex-row items-center gap-2 px-3 h-11">
+                              <UiIcon as={Trash2} size={16} className="text-red-600" />
+                              <Span className="text-sm font-semibold text-red-600">Delete</Span>
+                            </Button>
+                          </Div>
+                        ) : null}
                       </Div>
                     </Div>
-
-                    <Div className="relative">
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveDropdown(activeDropdown === review._id ? null : review._id);
-                        }}
-                        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-colors"
-                      >
-                        <UiIcon as={MoreVertical} size={16} />
-                      </Button>
-
-                      {activeDropdown === review._id && (
-                        <Div className="absolute right-0 top-10 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-20 py-1">
-                          {review.status !== 'approved' && (
-                            <Button
-                              onClick={() => handleApprove(review)}
-                              className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-green-600"
-                            >
-                              <UiIcon as={CheckCircle} size={14} /> Approve
-                            </Button>
-                          )}
-                          {review.status !== 'rejected' && (
-                            <Button
-                              onClick={() => handleReject(review)}
-                              className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-amber-600"
-                            >
-                              <UiIcon as={XCircle} size={14} /> Reject
-                            </Button>
-                          )}
-                          <Button
-                            onClick={() => handleDelete(review)}
-                            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-[10px] font-bold uppercase text-red-600"
-                          >
-                            <UiIcon as={Trash2} size={14} /> Delete
-                          </Button>
-                        </Div>
-                      )}
-                    </Div>
-                  </Div>
+                  </Card>
                 </motion.div>
-              ))
-            ) : (
-              <Div className="bg-white border border-gray-200 rounded-2xl p-12 text-center">
-                <UiIcon as={Star} size={48} className="self-center text-gray-300 mb-4" />
-                <H3 className="text-[10px] font-bold uppercase text-gray-900 mb-2">No Reviews Found</H3>
-                <P className="text-[10px] font-bold uppercase text-gray-500">No reviews to display matching filters.</P>
-              </Div>
-            )}
-          </AnimatePresence>
-        )}
-      </Div>
-
-      {/* Pagination */}
-      {!loading && reviews.length > 0 && (
-        <Div className="p-4 border border-gray-100 rounded-2xl bg-white flex flex-col gap-3">
-          <P className="text-[10px] font-bold uppercase text-gray-500 tracking-tight">
-            Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalReviews)} of {totalReviews} reviews
-          </P>
-          <Div className="flex flex-wrap items-center gap-1">
-            <Button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-black disabled:opacity-50 transition-colors"
-            >
-              <UiIcon as={ChevronLeft} size={16} />
-            </Button>
-            {[...Array(totalPages)].map((_, i) => (
-              <Button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`w-10 h-10 items-center justify-center rounded-lg text-[10px] font-bold uppercase transition-all ${currentPage === i + 1 ? 'bg-black text-white shadow-md' : 'hover:bg-gray-100 text-gray-600 border border-transparent hover:border-gray-200'}`}
-              >
-                {i + 1}
-              </Button>
-            ))}
-            <Button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-black disabled:opacity-50 transition-colors"
-            >
-              <UiIcon as={ChevronRight} size={16} />
-            </Button>
+              ))}
+            </AnimatePresence>
           </Div>
-        </Div>
+
+          <Pagination
+            page={currentPage}
+            pages={totalPages}
+            total={totalReviews}
+            onPrev={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            onNext={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          />
+        </>
       )}
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default AdminReviews;

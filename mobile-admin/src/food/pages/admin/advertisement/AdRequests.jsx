@@ -1,21 +1,6 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/advertisement/AdRequests.jsx (tools/port.js first pass). */
 import { useState, useMemo } from 'react';
-import {
-  Search,
-  Settings,
-  MoreVertical,
-  Building2,
-  Download,
-  ChevronDown,
-  Filter,
-  FileDown,
-  FileSpreadsheet,
-  FileText,
-  Code,
-  Eye,
-  CheckCircle2,
-  XCircle,
-} from 'lucide-react-native';
+import { Search, Settings, MoreVertical, Building2, Download, ChevronDown, Filter, FileDown, FileSpreadsheet, FileText, Code, Eye, CheckCircle2, XCircle, Inbox } from 'lucide-react-native';
 import { emptyAdRequests } from '../../../utils/adminFallbackData';
 import {
   DropdownMenu,
@@ -24,11 +9,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from '../../../../components/shadcn';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../../components/shadcn';
 import SettingsDialog from '../../../components/admin/orders/SettingsDialog';
 import {
   exportAdvertisementsToCSV,
@@ -37,25 +22,28 @@ import {
   exportAdvertisementsToJSON,
 } from '../../../components/admin/advertisements/advertisementsExportUtils';
 import {
-  Button,
-  Div,
-  H1,
-  H2,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, HScroll, Input, Option, P, Select, Span, Icon as UiIcon } from '../../../../components/web';
+
 export default function AdRequests() {
   const [activeTab, setActiveTab] = useState('new');
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,6 +65,7 @@ export default function AdRequests() {
     duration: true,
     actions: true,
   });
+  const { tablet } = useLayoutWidth();
   const columnsConfig = {
     si: 'Serial Number',
     adsId: 'Ads ID',
@@ -210,228 +199,191 @@ export default function AdRequests() {
       label: 'Denied Requests',
     },
   ];
-  const tableCols = [
-    ['si', 60],
-    ['adsId', 120],
-    ['adsTitle', 180],
-    ['restaurantInfo', 200],
-    ['adsType', 130],
-    ['duration', 190],
-    ['actions', 132],
-  ]
-    .filter(([key]) => visibleColumns[key])
-    .map(([, width]) => width);
+  const columnWidths = {
+    si: 56,
+    adsId: 120,
+    adsTitle: 180,
+    restaurantInfo: 200,
+    adsType: 140,
+    duration: 180,
+    actions: 64,
+  };
+  const columnLabels = {
+    si: 'SI',
+    adsId: 'Ads ID',
+    adsTitle: 'Ads Title',
+    restaurantInfo: 'Restaurant Info',
+    adsType: 'Ads Type',
+    duration: 'Duration',
+    actions: 'Action',
+  };
+  const shownKeys = Object.keys(columnWidths).filter((key) => visibleColumns[key]);
+  const tableCols = shownKeys.map((key) => columnWidths[key]);
+  const tableLabels = shownKeys.map((key) => columnLabels[key]);
+  const widthOf = (key) => columnWidths[key];
+  const activeTabLabel = tabs.find((t) => t.key === activeTab)?.label;
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      {/* Header */}
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-        <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <Div className="flex items-center gap-2">
-            <H1 className="text-2xl font-bold text-slate-900">Advertisement Requests</H1>
-            <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">{filteredRequests.length}</Span>
-          </Div>
-        </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Inbox}
+        title="Advertisement Requests"
+        subtitle={`${filteredRequests.length} ${filteredRequests.length === 1 ? 'request' : 'requests'} in ${activeTabLabel}`}
+        breadcrumb={[{ label: 'Food' }, { label: 'Advertisements' }, { label: 'Requests' }]}
+      />
 
+      <Card className="mb-4">
         {/* Tabs */}
-        <Div className="flex items-center gap-2 border-b border-slate-200 mb-4">
+        <HScroll className="mb-3 border-b border-slate-200" contentClassName="flex-row items-center">
           {tabs.map((tab) => (
             <Button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
+              className={`px-4 h-11 justify-center border-b-2 ${activeTab === tab.key ? 'border-blue-600' : 'border-transparent'}`}
             >
-              {tab.label}
+              <Span className={`text-sm font-semibold ${activeTab === tab.key ? 'text-blue-600' : 'text-slate-600'}`}>{tab.label}</Span>
             </Button>
           ))}
-        </Div>
+        </HScroll>
 
-        <Div className="flex items-center gap-3">
-          <Div className="flex items-center gap-2">
-            <H2 className="text-lg font-semibold text-slate-900">Advertisement</H2>
-            <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">{filteredRequests.length}</Span>
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white flex-1 min-w-[200px]">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Search by ads ID or restaurant"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 text-sm text-slate-900"
+            />
           </Div>
 
-          <Div className="flex items-center gap-3 ml-auto">
-            <Div className="relative flex-1 sm:flex-initial min-w-[250px]">
-              <Input
-                type="text"
-                placeholder="Search by ads ID or restaurant"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-              />
-              <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            </Div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className={BTN_SECONDARY}>
+                <UiIcon as={Download} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-500" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg">
+              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleExport('csv')} className="cursor-pointer">
+                <UiIcon as={FileDown} size={16} className="mr-2 text-slate-500" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')} className="cursor-pointer">
+                <UiIcon as={FileSpreadsheet} size={16} className="mr-2 text-slate-500" />
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer">
+                <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
+                Export as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('json')} className="cursor-pointer">
+                <UiIcon as={Code} size={16} className="mr-2 text-slate-500" />
+                Export as JSON
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
-                  <UiIcon as={Download} className="w-4 h-4" />
-                  <Span className="text-black font-bold">Export</Span>
-                  <UiIcon as={ChevronDown} className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleExport('csv')} className="cursor-pointer">
-                  <UiIcon as={FileDown} className="w-4 h-4 mr-2" />
-                  Export as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('excel')} className="cursor-pointer">
-                  <UiIcon as={FileSpreadsheet} className="w-4 h-4 mr-2" />
-                  Export as Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer">
-                  <UiIcon as={FileText} className="w-4 h-4 mr-2" />
-                  Export as PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('json')} className="cursor-pointer">
-                  <UiIcon as={Code} className="w-4 h-4 mr-2" />
-                  Export as JSON
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <Button onClick={() => setIsFilterOpen(true)} className={BTN_SECONDARY}>
+            <UiIcon as={Filter} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Filters</Span>
+            {activeFiltersCount > 0 ? <StatusBadge tone="info" label={String(activeFiltersCount)} /> : null}
+          </Button>
 
-            <Button
-              onClick={() => setIsFilterOpen(true)}
-              className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all relative ${activeFiltersCount > 0 ? 'border-emerald-500 bg-emerald-50' : ''}`}
-            >
-              <UiIcon as={Filter} className="w-4 h-4" />
-              <Span className="text-black font-bold">Filters</Span>
-              {activeFiltersCount > 0 && (
-                <Span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
-                  {activeFiltersCount}
-                </Span>
-              )}
-            </Button>
+          <Button onClick={() => setIsSettingsOpen(true)} className={`${BTN_SECONDARY} w-11 px-0`} accessibilityLabel="Table settings">
+            <UiIcon as={Settings} size={18} className="text-slate-600" />
+          </Button>
+        </Toolbar>
+      </Card>
 
-            <Button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
-            >
-              <UiIcon as={Settings} className="w-5 h-5" />
-            </Button>
-          </Div>
-        </Div>
-      </Div>
-
-      {/* Table */}
-      <Div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <Div className="overflow-x-hidden">
-          <Table className="w-full" cols={tableCols}>
-            <Thead className="bg-slate-50 border-b border-slate-200">
-              <Tr>
-                {visibleColumns.si && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</Th>}
-                {visibleColumns.adsId && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads ID</Th>}
-                {visibleColumns.adsTitle && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads Title</Th>}
-                {visibleColumns.restaurantInfo && (
-                  <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant Info</Th>
-                )}
-                {visibleColumns.adsType && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads Type</Th>}
-                {visibleColumns.duration && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Duration</Th>}
-                {visibleColumns.actions && <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>}
-              </Tr>
-            </Thead>
-            <Tbody className="bg-white divide-y divide-slate-100">
-              {filteredRequests.length === 0 ? (
-                <Tr>
-                  <Td colSpan={Object.values(visibleColumns).filter((v) => v).length} className="px-6 py-20 text-center">
-                    <P className="text-lg font-semibold text-slate-700 mb-1">No Data Found</P>
-                    <P className="text-sm text-slate-500">No requests match your search</P>
-                  </Td>
-                </Tr>
-              ) : (
-                filteredRequests.map((request) => (
-                  <Tr key={request.sl} className="hover:bg-slate-50 transition-colors">
-                    {visibleColumns.si && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-700">{request.sl}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.adsId && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-900">{request.adsId}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.adsTitle && (
-                      <Td className="px-6 py-4">
-                        <Span className="text-sm font-medium text-slate-900">{request.adsTitle}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.restaurantInfo && (
-                      <Td className="px-6 py-4">
-                        <Div className="flex items-center gap-3">
-                          <Div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                            <UiIcon as={Building2} className="w-5 h-5 text-orange-600" />
-                          </Div>
-                          <Div className="flex flex-col">
-                            <Span className="text-sm font-medium text-slate-900">{request.restaurantName}</Span>
-                            <Span className="text-xs text-slate-500">{request.restaurantEmail}</Span>
-                          </Div>
-                        </Div>
-                      </Td>
-                    )}
-                    {visibleColumns.adsType && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">{request.adsType}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.duration && (
-                      <Td className="px-6 py-4 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">{request.duration}</Span>
-                      </Td>
-                    )}
-                    {visibleColumns.actions && (
-                      <Td className="px-6 py-4 whitespace-nowrap text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button className="p-1.5 rounded text-slate-600 hover:bg-slate-100 transition-colors">
-                              <UiIcon as={MoreVertical} className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                            <DropdownMenuItem onClick={() => handleViewRequest(request)} className="cursor-pointer">
-                              <UiIcon as={Eye} className="w-4 h-4 mr-2" />
-                              View Details
+      {filteredRequests.length === 0 ? (
+        <EmptyState
+          title="No requests here"
+          message={
+            searchQuery || activeFiltersCount > 0
+              ? 'No requests match your search or filters. Clear them to see everything.'
+              : `Nothing in ${activeTabLabel} right now. Requests from restaurants will appear here.`
+          }
+        />
+      ) : (
+        <DataTable cols={tableCols}>
+          <THead cols={tableCols} labels={tableLabels} />
+          <TBody>
+            {filteredRequests.map((request, i, all) => (
+              <Row key={request.sl} last={i === all.length - 1}>
+                {visibleColumns.si ? <Cell width={widthOf('si')}>{String(request.sl)}</Cell> : null}
+                {visibleColumns.adsId ? (
+                  <Cell width={widthOf('adsId')}>
+                    <Span className="text-sm font-semibold text-slate-900">{request.adsId}</Span>
+                  </Cell>
+                ) : null}
+                {visibleColumns.adsTitle ? (
+                  <Cell width={widthOf('adsTitle')}>
+                    <Span className="text-sm font-semibold text-slate-900">{request.adsTitle}</Span>
+                  </Cell>
+                ) : null}
+                {visibleColumns.restaurantInfo ? (
+                  <Cell width={widthOf('restaurantInfo')}>
+                    <Div className="flex-row items-center gap-2">
+                      <Div className="w-9 h-9 rounded-lg bg-slate-100 items-center justify-center shrink-0">
+                        <UiIcon as={Building2} size={16} className="text-slate-500" />
+                      </Div>
+                      <Div className="flex-1 min-w-0">
+                        <Span className="text-sm font-semibold text-slate-900">{request.restaurantName}</Span>
+                        <Span className="text-xs text-slate-500">{request.restaurantEmail}</Span>
+                      </Div>
+                    </Div>
+                  </Cell>
+                ) : null}
+                {visibleColumns.adsType ? <Cell width={widthOf('adsType')}>{request.adsType}</Cell> : null}
+                {visibleColumns.duration ? <Cell width={widthOf('duration')}>{request.duration}</Cell> : null}
+                {visibleColumns.actions ? (
+                  <Cell width={widthOf('actions')} align="center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel={`Actions for ${request.adsId}`}>
+                          <UiIcon as={MoreVertical} size={18} className="text-slate-600" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 rounded-lg">
+                        <DropdownMenuItem onClick={() => handleViewRequest(request)} className="cursor-pointer">
+                          <UiIcon as={Eye} size={16} className="mr-2 text-slate-500" />
+                          View Details
+                        </DropdownMenuItem>
+                        {activeTab === 'new' && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleApprove(request.sl)} className="cursor-pointer text-green-700">
+                              <UiIcon as={CheckCircle2} size={16} className="mr-2 text-green-700" />
+                              Approve
                             </DropdownMenuItem>
-                            {activeTab === 'new' && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleApprove(request.sl)} className="cursor-pointer text-emerald-600">
-                                  <UiIcon as={CheckCircle2} className="w-4 h-4 mr-2" />
-                                  Approve
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDeny(request.sl)} className="cursor-pointer text-red-600">
-                                  <UiIcon as={XCircle} className="w-4 h-4 mr-2" />
-                                  Deny
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </Td>
-                    )}
-                  </Tr>
-                ))
-              )}
-            </Tbody>
-          </Table>
-        </Div>
-      </Div>
+                            <DropdownMenuItem onClick={() => handleDeny(request.sl)} className="cursor-pointer text-red-600">
+                              <UiIcon as={XCircle} size={16} className="mr-2 text-red-600" />
+                              Deny
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </Cell>
+                ) : null}
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
 
       {/* Filter Panel */}
       <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <UiIcon as={Filter} className="w-5 h-5" />
-              Filter Requests
-            </DialogTitle>
+        <DialogContent className="max-w-md bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-2">
+            <DialogTitle>Filter Requests</DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6 space-y-4">
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Ads Type</Label>
+          <Div className="px-4 pb-4 gap-3">
+            <Field label="Ads Type">
               <Select
                 value={filters.adsType}
                 onChange={(e) =>
@@ -440,7 +392,7 @@ export default function AdRequests() {
                     adsType: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className={INPUT}
               >
                 <Option value="">All Types</Option>
                 {adsTypes.map((type) => (
@@ -449,9 +401,8 @@ export default function AdRequests() {
                   </Option>
                 ))}
               </Select>
-            </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Restaurant</Label>
+            </Field>
+            <Field label="Restaurant">
               <Select
                 value={filters.restaurant}
                 onChange={(e) =>
@@ -460,7 +411,7 @@ export default function AdRequests() {
                     restaurant: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className={INPUT}
               >
                 <Option value="">All Restaurants</Option>
                 {restaurants.map((restaurant) => (
@@ -469,19 +420,13 @@ export default function AdRequests() {
                   </Option>
                 ))}
               </Select>
-            </Div>
-            <Div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button
-                onClick={handleResetFilters}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset
+            </Field>
+            <Div className="flex-row items-center gap-2 pt-2 border-t border-slate-200">
+              <Button onClick={handleResetFilters} className={`${BTN_SECONDARY} flex-1`}>
+                <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
               </Button>
-              <Button
-                onClick={handleApplyFilters}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
-              >
-                Apply
+              <Button onClick={handleApplyFilters} className={`${BTN_PRIMARY} flex-1`}>
+                <Span className={BTN_TEXT_PRIMARY}>Apply</Span>
               </Button>
             </Div>
           </Div>
@@ -500,42 +445,32 @@ export default function AdRequests() {
 
       {/* View Request Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-2xl bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <DialogHeader className="px-6 pt-6 pb-4">
+        <DialogContent className="max-w-2xl bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-2">
             <DialogTitle>Advertisement Request Details</DialogTitle>
           </DialogHeader>
           {selectedRequest && (
-            <Div className="px-6 pb-6 space-y-4">
-              <Div className="grid grid-cols-2 gap-4">
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Ads ID</P>
-                  <P className="text-sm text-slate-900">{selectedRequest.adsId}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Ads Title</P>
-                  <P className="text-sm text-slate-900">{selectedRequest.adsTitle}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Restaurant Name</P>
-                  <P className="text-sm text-slate-900">{selectedRequest.restaurantName}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Restaurant Email</P>
-                  <P className="text-sm text-slate-900">{selectedRequest.restaurantEmail}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Ads Type</P>
-                  <P className="text-sm text-slate-900">{selectedRequest.adsType}</P>
-                </Div>
-                <Div>
-                  <P className="text-sm font-semibold text-slate-700">Duration</P>
-                  <P className="text-sm text-slate-900">{selectedRequest.duration}</P>
-                </Div>
+            <Div className="px-4 pb-4">
+              <SectionTitle>{selectedRequest.adsTitle}</SectionTitle>
+              <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+                {[
+                  ['Ads ID', selectedRequest.adsId],
+                  ['Ads Title', selectedRequest.adsTitle],
+                  ['Restaurant Name', selectedRequest.restaurantName],
+                  ['Restaurant Email', selectedRequest.restaurantEmail],
+                  ['Ads Type', selectedRequest.adsType],
+                  ['Duration', selectedRequest.duration],
+                ].map(([label, value]) => (
+                  <Div key={label} className="gap-1">
+                    <P className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</P>
+                    <P className="text-sm text-slate-900">{String(value ?? '')}</P>
+                  </Div>
+                ))}
               </Div>
             </Div>
           )}
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

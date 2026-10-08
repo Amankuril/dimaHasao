@@ -1,9 +1,27 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/wallet/WalletPayment.jsx (tools/port.js first pass). */
 import React, { useEffect, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, ChevronRight, Clock, History, Loader2, Search, Send, Truck, User, Wallet } from 'lucide-react-native';
+import { ActivityIndicator } from 'react-native';
+import { ArrowDownLeft, ArrowUpRight, ChevronRight, History, Search, Send, Truck, User, Wallet } from 'lucide-react-native';
 import { adminService } from '../../services/adminService';
 import { toast } from '../../../../../lib/notify';
-import { Button, Div, Form, H1, H2, H3, H4, Input, Label, Option, P, ScrollDiv, Select, Span, Textarea, Icon as UiIcon } from '../../../../../components/web';
+import { Button, Div, Form, Input, Option, Select, Span, Textarea, Icon as UiIcon } from '../../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  LoadingState,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+
 const roleOptions = [
   {
     id: 'user',
@@ -16,10 +34,8 @@ const roleOptions = [
     icon: Truck,
   },
 ];
-const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors disabled:bg-gray-50 disabled:text-gray-400';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
 const WalletPayment = () => {
+  const { tablet } = useLayoutWidth();
   const [role, setRole] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -96,253 +112,185 @@ const WalletPayment = () => {
       setSubmitting(false);
     }
   };
+  const entityName = selectedEntity ? selectedEntity.name || selectedEntity.owner_name : '';
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-4 lg:p-6">
-      <Div className="mb-4">
-        <Div className="mb-2 flex items-center gap-1.5 text-xs text-gray-400">
-          <Span>Wallet</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700 font-medium">Wallet Payment</Span>
-        </Div>
-        <Div className="flex items-start justify-between gap-4">
-          <Div>
-            <H1 className="text-lg text-gray-900 font-bold">Wallet Payment</H1>
-            <P className="mt-1 text-sm text-gray-500">Manage and adjust balances for Users, Drivers, and Fleet Owners</P>
+    <AdminPage maxWidth={900}>
+      <PageHeader
+        icon={Wallet}
+        title="Wallet Payment"
+        subtitle="Manage and adjust balances for users and drivers"
+        breadcrumb={[{ label: 'Wallet' }, { label: 'Wallet Payment' }]}
+      />
+
+      <Card className="mb-4">
+        <SectionTitle>Select Account</SectionTitle>
+
+        <Field label="Select Role" hint="Pick a role before searching">
+          <Div className="flex-row gap-2">
+            {roleOptions.map((roleOption) => (
+              <Button
+                key={roleOption.id}
+                type="button"
+                onClick={() => {
+                  setRole(roleOption.id);
+                  setSelectedEntity(null);
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setHistory([]);
+                  setBalance(0);
+                }}
+                className={`flex-1 flex-row items-center justify-center gap-2 h-11 px-3 rounded-lg border ${role === roleOption.id ? 'border-blue-600 bg-blue-100' : 'border-slate-300 bg-white'}`}
+              >
+                <UiIcon as={roleOption.icon} size={16} className={role === roleOption.id ? 'text-blue-700' : 'text-slate-500'} />
+                <Span className={`text-sm font-semibold ${role === roleOption.id ? 'text-blue-700' : 'text-slate-700'}`}>{roleOption.label}</Span>
+              </Button>
+            ))}
           </Div>
-        </Div>
-      </Div>
+        </Field>
 
-      <Div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <Div className="space-y-6 lg:col-span-5">
-          <Div className="rounded-xl border border-gray-200 bg-white p-6">
-            <Div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
-              <Div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                <UiIcon as={Search} size={18} />
-              </Div>
-              <Div>
-                <H2 className="text-sm text-gray-900 font-bold">Select Account</H2>
-                <P className="text-xs text-gray-400">Choose role and search account before wallet adjustment</P>
-              </Div>
-            </Div>
-
-            <Div className="space-y-5">
-              <Div>
-                <Label className={labelClass}>Select Role</Label>
-                <Div className="grid grid-cols-3 gap-2">
-                  {roleOptions.map((roleOption) => (
-                    <Button
-                      key={roleOption.id}
-                      type="button"
-                      onClick={() => {
-                        setRole(roleOption.id);
-                        setSelectedEntity(null);
-                        setSearchQuery('');
-                        setSearchResults([]);
-                        setHistory([]);
-                        setBalance(0);
-                      }}
-                      className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${role === roleOption.id ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
-                    >
-                      <UiIcon as={roleOption.icon} size={15} />
-                      <Span>{roleOption.label}</Span>
-                    </Button>
-                  ))}
-                </Div>
-              </Div>
-
-              <Div className="relative">
-                <Label className={labelClass}>Search Account</Label>
-                <Div className="relative">
-                  <Div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    {searching ? <UiIcon as={Loader2} className="animate-spin" size={16} /> : <UiIcon as={Search} size={16} />}
-                  </Div>
-                  <Input
-                    type="text"
-                    disabled={!role}
-                    placeholder={role ? 'Search name, email or mobile...' : 'Select role first'}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`${inputClass} pl-10 pr-20`}
-                  />
-                  {selectedEntity && (
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setSelectedEntity(null);
-                        setSearchQuery('');
-                        setHistory([]);
-                        setBalance(0);
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-500 hover:bg-gray-50"
-                    >
-                      Clear
-                    </Button>
-                  )}
-                </Div>
-
-                {searchResults.length > 0 && (
-                  <ScrollDiv className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
-                    {searchResults.map((item) => (
-                      <Button
-                        key={item._id}
-                        type="button"
-                        onClick={() => handleSelectEntity(item)}
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-gray-50"
-                      >
-                        <Div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-700">
-                          {(item.name || item.owner_name || '?')[0].toUpperCase()}
-                        </Div>
-                        <Div className="min-w-0 flex-1">
-                          <P className="truncate text-sm font-medium text-gray-900">{item.name || item.owner_name}</P>
-                          <P className="truncate text-xs text-gray-500">{item.phone || item.mobile || item.email}</P>
-                        </Div>
-                        <UiIcon as={ChevronRight} size={14} className="text-gray-300" />
-                      </Button>
-                    ))}
-                  </ScrollDiv>
-                )}
-              </Div>
-
-              {selectedEntity && (
-                <Form onSubmit={handleSubmit} className="space-y-4 border-t border-gray-100 pt-5">
-                  <Div className="grid grid-cols-2 gap-4">
-                    <Div>
-                      <Label className={labelClass}>Amount (INR)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        required
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className={inputClass}
-                      />
-                    </Div>
-                    <Div>
-                      <Label className={labelClass}>Operation</Label>
-                      <Select value={operation} onChange={(e) => setOperation(e.target.value)} className={inputClass}>
-                        <Option value="credit">Credit</Option>
-                        <Option value="debit">Debit</Option>
-                      </Select>
-                    </Div>
-                  </Div>
-
-                  <Div>
-                    <Label className={labelClass}>Description</Label>
-                    <Textarea
-                      placeholder="Reason for adjustment..."
-                      rows={2}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className={inputClass}
-                    />
-                  </Div>
-
-                  <Button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {submitting ? <UiIcon as={Loader2} className="animate-spin" size={16} /> : <UiIcon as={Send} size={16} />}
-                    Submit Adjustment
-                  </Button>
-                </Form>
-              )}
-            </Div>
+        <Field label="Search Account" className="mt-3">
+          <Div className={`flex-row items-center gap-2 h-11 px-3 rounded-lg border border-slate-300 bg-white ${role ? '' : 'opacity-50'}`}>
+            {searching ? <ActivityIndicator size="small" color="#155DFC" /> : <UiIcon as={Search} size={16} className="text-slate-400" />}
+            <Input
+              type="text"
+              disabled={!role}
+              placeholder={role ? 'Search name, email or mobile' : 'Select role first'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 text-sm text-slate-900"
+            />
+            {selectedEntity ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  setSelectedEntity(null);
+                  setSearchQuery('');
+                  setHistory([]);
+                  setBalance(0);
+                }}
+                className="px-2 h-9 rounded-md border border-slate-200 bg-white items-center justify-center"
+              >
+                <Span className="text-xs font-semibold text-slate-600">Clear</Span>
+              </Button>
+            ) : null}
           </Div>
-        </Div>
+        </Field>
 
-        <Div className="space-y-6 lg:col-span-7">
-          {selectedEntity && (
-            <Div className="rounded-xl border border-gray-200 bg-white p-6">
-              <Div className="flex items-start justify-between gap-4">
-                <Div>
-                  <P className="text-xs font-semibold uppercase tracking-wide text-gray-500">Current Balance</P>
-                  <H3 className="mt-2 text-3xl text-gray-900 font-bold">
-                    INR{' '}
-                    {Number(balance || 0).toLocaleString('en-IN', {
-                      minimumFractionDigits: 2,
-                    })}
-                  </H3>
+        {searchResults.length > 0 ? (
+          <Div className="mt-2 rounded-lg border border-slate-200 bg-white overflow-hidden">
+            {searchResults.map((item, i) => (
+              <Button
+                key={item._id}
+                type="button"
+                onClick={() => handleSelectEntity(item)}
+                className={`flex-row items-center gap-3 px-3 py-3 ${i === searchResults.length - 1 ? '' : 'border-b border-slate-100'}`}
+              >
+                <Div className="w-8 h-8 rounded-full bg-slate-100 items-center justify-center shrink-0">
+                  <Span className="text-xs font-semibold text-slate-700">{(item.name || item.owner_name || '?')[0].toUpperCase()}</Span>
                 </Div>
-                <Div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                  <UiIcon as={Wallet} size={18} />
+                <Div className="flex-1 min-w-0">
+                  <Span className="text-sm font-medium text-slate-900" numberOfLines={1}>
+                    {item.name || item.owner_name}
+                  </Span>
+                  <Span className="text-xs text-slate-500" numberOfLines={1}>
+                    {item.phone || item.mobile || item.email}
+                  </Span>
                 </Div>
-              </Div>
-              <Div className="mt-4 flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-                <Div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-700">
-                  {(selectedEntity.name || selectedEntity.owner_name || '?')[0].toUpperCase()}
-                </Div>
-                <Div>
-                  <P className="text-sm font-medium text-gray-900">{selectedEntity.name || selectedEntity.owner_name}</P>
-                  <P className="text-xs text-gray-500">{selectedEntity.phone || selectedEntity.mobile}</P>
-                </Div>
-              </Div>
-            </Div>
-          )}
-
-          <Div className="min-h-[420px] rounded-xl border border-gray-200 bg-white p-6">
-            <Div className="mb-5 flex items-center justify-between border-b border-gray-100 pb-4">
-              <H2 className="flex items-center gap-2 text-sm text-gray-900 font-bold">
-                <UiIcon as={Clock} size={16} className="text-gray-400" /> Transaction History
-              </H2>
-              {loadingHistory && <UiIcon as={Loader2} className="animate-spin text-indigo-500" size={16} />}
-            </Div>
-
-            {!selectedEntity ? (
-              <Div className="flex flex-col items-center justify-center py-16 text-center">
-                <Div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-50 text-gray-300">
-                  <UiIcon as={Search} size={26} />
-                </Div>
-                <H3 className="text-sm text-gray-900 font-bold">No Account Selected</H3>
-                <P className="mt-1 max-w-xs text-xs text-gray-500">Select a role and search an account to view wallet transactions.</P>
-              </Div>
-            ) : history.length === 0 && !loadingHistory ? (
-              <Div className="flex flex-col items-center justify-center py-16 text-center">
-                <Div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-50 text-gray-300">
-                  <UiIcon as={History} size={26} />
-                </Div>
-                <H3 className="text-sm text-gray-900 font-bold">No Transactions Found</H3>
-                <P className="mt-1 text-xs text-gray-500">This account has no wallet entries yet.</P>
-              </Div>
-            ) : (
-              <Div className="space-y-4">
-                {history.map((tx) => (
-                  <Div
-                    key={tx._id}
-                    className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3 transition-colors hover:bg-gray-50"
-                  >
-                    <Div className="flex items-center gap-4">
-                      <Div
-                        className={`flex h-10 w-10 items-center justify-center rounded-lg ${tx.type === 'credit' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}
-                      >
-                        {tx.type === 'credit' ? <UiIcon as={ArrowUpRight} size={18} /> : <UiIcon as={ArrowDownLeft} size={18} />}
-                      </Div>
-                      <Div className="min-w-0">
-                        <H4 className="truncate text-sm text-gray-900 font-bold">{tx.description || 'Wallet adjustment'}</H4>
-                        <P className="mt-1 text-xs text-gray-500">
-                          {new Date(tx.createdAt).toLocaleDateString()} {' • '}
-                          {new Date(tx.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </P>
-                      </Div>
-                    </Div>
-                    <Div className="text-right">
-                      <P className={`text-sm font-semibold ${tx.type === 'credit' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {tx.type === 'credit' ? '+' : '-'} INR {Number(tx.amount || 0).toLocaleString('en-IN')}
-                      </P>
-                      <P className="mt-0.5 text-[11px] uppercase text-gray-400">{tx.type}</P>
-                    </Div>
-                  </Div>
-                ))}
-              </Div>
-            )}
+                <UiIcon as={ChevronRight} size={16} className="text-slate-400" />
+              </Button>
+            ))}
           </Div>
+        ) : null}
+
+        {selectedEntity && (
+          <Form onSubmit={handleSubmit} className="gap-3 mt-4 pt-4 border-t border-slate-200">
+            <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+              <Field label="Amount (INR)" required>
+                <Input type="number" min="0" required placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={INPUT} />
+              </Field>
+              <Field label="Operation">
+                <Select value={operation} onChange={(e) => setOperation(e.target.value)} className={INPUT}>
+                  <Option value="credit">Credit</Option>
+                  <Option value="debit">Debit</Option>
+                </Select>
+              </Field>
+            </Div>
+
+            <Field label="Description" hint="Shown in the wallet history">
+              <Textarea
+                placeholder="Reason for adjustment"
+                rows={2}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+              />
+            </Field>
+
+            <Button type="submit" disabled={submitting} className={`${BTN_PRIMARY} ${submitting ? 'opacity-50' : ''}`}>
+              {submitting ? <ActivityIndicator size="small" color="#FFFFFF" /> : <UiIcon as={Send} size={16} className="text-white" />}
+              <Span className={BTN_TEXT_PRIMARY}>Submit Adjustment</Span>
+            </Button>
+          </Form>
+        )}
+      </Card>
+
+      {selectedEntity ? (
+        <Div className="gap-3 mb-4">
+          <StatCard
+            label="Current Balance"
+            value={`INR ${Number(balance || 0).toLocaleString('en-IN', {
+              minimumFractionDigits: 2,
+            })}`}
+            hint={`${entityName} · ${selectedEntity.phone || selectedEntity.mobile || ''}`}
+            icon={Wallet}
+            tone="info"
+          />
         </Div>
-      </Div>
-    </ScrollDiv>
+      ) : null}
+
+      <Card>
+        <SectionTitle>Transaction History</SectionTitle>
+        {!selectedEntity ? (
+          <EmptyState
+            icon={Search}
+            title="No account selected"
+            message="Select a role and search an account to view its wallet transactions."
+            className="border-0"
+          />
+        ) : loadingHistory ? (
+          <LoadingState label="Loading transactions…" className="border-0" />
+        ) : history.length === 0 ? (
+          <EmptyState icon={History} title="No transactions found" message="This account has no wallet entries yet." className="border-0" />
+        ) : (
+          <Div className="gap-2">
+            {history.map((tx) => (
+              <Div key={tx._id} className="flex-row items-center gap-3 rounded-lg border border-slate-200 px-3 py-3">
+                <Div className={`w-10 h-10 rounded-lg items-center justify-center shrink-0 ${tx.type === 'credit' ? 'bg-green-100' : 'bg-red-100'}`}>
+                  <UiIcon as={tx.type === 'credit' ? ArrowUpRight : ArrowDownLeft} size={18} className={tx.type === 'credit' ? 'text-green-700' : 'text-red-700'} />
+                </Div>
+                <Div className="flex-1 min-w-0">
+                  <Span className="text-sm font-medium text-slate-900" numberOfLines={2}>
+                    {tx.description || 'Wallet adjustment'}
+                  </Span>
+                  <Span className="text-xs text-slate-500">
+                    {`${new Date(tx.createdAt).toLocaleDateString()} • ${new Date(tx.createdAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}`}
+                  </Span>
+                </Div>
+                <Div className="items-end shrink-0">
+                  <Span className={`text-sm font-semibold ${tx.type === 'credit' ? 'text-green-700' : 'text-red-600'}`}>
+                    {`${tx.type === 'credit' ? '+' : '-'} INR ${Number(tx.amount || 0).toLocaleString('en-IN')}`}
+                  </Span>
+                  <Span className="text-xs text-slate-500">{tx.type}</Span>
+                </Div>
+              </Div>
+            ))}
+          </Div>
+        )}
+      </Card>
+    </AdminPage>
   );
 };
 export default WalletPayment;

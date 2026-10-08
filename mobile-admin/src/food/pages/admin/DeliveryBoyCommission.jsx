@@ -1,35 +1,40 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/DeliveryBoyCommission.jsx (tools/port.js first pass). */
 import { useState, useMemo, useEffect } from 'react';
-import { Search, Edit, Trash2, IndianRupee, Settings, Check, Columns, MapPin, Loader2 } from 'lucide-react-native';
+import { Search, Edit, Trash2, IndianRupee, Settings, Check, MapPin, Loader2 } from 'lucide-react-native';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/shadcn';
 import { adminAPI } from '../../../api/food';
 import { API_BASE_URL } from '../../../api/config';
 import { toast } from '../../../lib/notify';
 import {
-  Button,
-  Div,
-  H1,
-  H3,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Strong,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  INPUT_ERROR,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_DANGER,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../admin/ui';
+import { Button, Div, Input, Option, Select, Span, Icon as UiIcon } from '../../../components/web';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 export default function DeliveryBoyCommission() {
+  const { tablet } = useLayoutWidth();
   const [searchQuery, setSearchQuery] = useState('');
   const [commissions, setCommissions] = useState([]);
   const [zones, setZones] = useState([]);
@@ -457,211 +462,183 @@ export default function DeliveryBoyCommission() {
       : dialogMinDistance === 0
         ? '0'
         : String(dialogMinDistance);
-  const tableCols = [
-    visibleColumns.si && 70,
-    visibleColumns.name && 190,
-    visibleColumns.distanceSlab && 180,
-    visibleColumns.commissionPerKm && 150,
-    visibleColumns.basePayout && 150,
-    visibleColumns.status && 100,
-    visibleColumns.actions && 96,
-  ].filter(Boolean);
+  const columnDefs = [
+    { key: 'si', label: 'SI', width: 60 },
+    { key: 'name', label: 'Name', width: 190 },
+    { key: 'distanceSlab', label: 'Distance slab (km)', width: 170 },
+    { key: 'commissionPerKm', label: 'Amount per km (₹)', width: 140 },
+    { key: 'basePayout', label: 'Base payout (₹)', width: 140 },
+    { key: 'status', label: 'Status', width: 110 },
+    { key: 'actions', label: 'Action', width: 110 },
+  ].filter((col) => visibleColumns[col.key]);
+  const tableCols = columnDefs.map((col) => col.width);
+  const widthOf = (key) => columnDefs.find((col) => col.key === key)?.width ?? 0;
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-3">
-              <UiIcon as={IndianRupee} className="w-5 h-5 text-slate-600" />
-              <Div className="flex items-center gap-2">
-                <H1 className="text-2xl font-bold text-slate-900">Delivery Boy Payout</H1>
-                <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
-                  {loading ? <Span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" /> : filteredCommissions.length}
-                </Span>
-              </Div>
-            </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={IndianRupee}
+        title="Delivery boy payout"
+        subtitle="Distance slabs that decide what a delivery partner earns per order, per zone."
+        breadcrumb={[{ label: 'Food' }, { label: 'Delivery' }, { label: 'Payout rules' }]}
+        actions={
+          <>
+            <Button onClick={handleAdd} disabled={!selectedZoneId} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Add rule</Span>
+            </Button>
+            <Button onClick={() => setIsSettingsOpen(true)} accessibilityLabel="Table settings" className={BTN_SECONDARY}>
+              <UiIcon as={Settings} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Columns</Span>
+            </Button>
+          </>
+        }
+      />
 
-            <Div className="flex items-center gap-2">
-              <Div className="flex items-center gap-2">
-                <Label className="text-sm font-medium text-slate-700 whitespace-nowrap">Zone:</Label>
-                <Select
-                  nativeID="payout-zone-select"
-                  value={selectedZoneId}
-                  onChange={(e) => setSelectedZoneId(e.target.value)}
-                  className="px-3 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm min-w-[10rem]"
-                  disabled={zonesLoading || zones.length === 0}
-                >
-                  {zones.length === 0 ? (
-                    <Option value="">No zones</Option>
-                  ) : (
-                    zones.map((zone) => (
-                      <Option key={zone._id || zone.id} value={zone._id || zone.id}>
-                        {zone.name || zone.zoneName || 'Unnamed Zone'}
-                      </Option>
-                    ))
-                  )}
-                </Select>
-              </Div>
-              <Button
-                onClick={handleAdd}
-                disabled={!selectedZoneId}
-                className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      <Card className="mb-3 flex-row items-start gap-3">
+        <UiIcon as={MapPin} size={18} className="text-blue-600 mt-0.5" />
+        <Div className="flex-1 gap-1">
+          <Span className="text-sm font-semibold text-slate-900">Fixed + extra distance payout</Span>
+          <Span className="text-sm text-slate-700">
+            Payout is the base payout of the 0-km slab plus, for every slab, the km inside it times that slab&apos;s amount per km. Example: ₹25 base for
+            0-2 km, then ₹5/km after 2 km, so 6 km earns ₹25 + (4 × ₹5) = ₹45.
+          </Span>
+          <Span className="text-sm text-slate-500">
+            Only the slab whose min distance is 0 can carry a base payout. Every other slab keeps base payout at 0 and uses amount per km alone.
+          </Span>
+        </Div>
+      </Card>
+
+      <Card className="mb-3">
+        <SectionTitle>{loading ? 'Payout rules' : `Payout rules · ${filteredCommissions.length}`}</SectionTitle>
+        <Toolbar className="mb-0">
+          <Div className="flex-1 min-w-[160px]">
+            <Field label="Zone">
+              <Select
+                nativeID="payout-zone-select"
+                value={selectedZoneId}
+                onChange={(e) => setSelectedZoneId(e.target.value)}
+                className={INPUT}
+                disabled={zonesLoading || zones.length === 0}
               >
-                Add Rule
-              </Button>
-              <Button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
-              >
-                <UiIcon as={Settings} className="w-5 h-5" />
-              </Button>
-            </Div>
-          </Div>
-
-          {/* Info Card */}
-          <Div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <Div className="flex items-start gap-3">
-              <UiIcon as={MapPin} className="w-5 h-5 text-blue-600 mt-0.5" />
-              <Div className="text-sm text-slate-700">
-                <P className="font-semibold text-blue-900 mb-1">Fixed + Extra Distance Payout</P>
-                <P className="text-slate-600">
-                  Payout is calculated as: <Strong>Base payout (0-2 km slab) + (km in each slab × that slab&apos;s amount per km)</Strong>. Example: base ₹25
-                  for 0-2 km, then ₹5/km after 2 km → 6 km earns ₹25 + (4 × ₹5) = ₹45.
-                </P>
-                <P className="text-slate-600 mt-1">
-                  Only the slab with <Strong>min distance = 0</Strong> can have a base payout. All other slabs should keep base payout set to 0 and use only
-                  amount per km.
-                </P>
-              </Div>
-            </Div>
-          </Div>
-
-          <Div className="mb-4 flex items-center gap-3">
-            <Div className="relative flex-1 sm:flex-initial min-w-[250px]">
-              <Input
-                type="text"
-                placeholder="Ex: Search by name or distance."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-              />
-              <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            </Div>
-          </Div>
-
-          {/* Table */}
-          <Table cols={tableCols} className="w-full">
-              <Thead className="bg-slate-50 border-b border-slate-200">
-                <Tr>
-                  {visibleColumns.si && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</Th>}
-                  {visibleColumns.name && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</Th>}
-                  {visibleColumns.distanceSlab && (
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Distance Slab (km)</Th>
-                  )}
-                  {visibleColumns.commissionPerKm && (
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount Per/Km (₹)</Th>
-                  )}
-                  {visibleColumns.basePayout && (
-                    <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Base Payout (₹)</Th>
-                  )}
-                  {visibleColumns.status && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</Th>}
-                  {visibleColumns.actions && <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>}
-                </Tr>
-              </Thead>
-              <Tbody className="bg-white divide-y divide-slate-100">
-                {loading ? (
-                  <Tr>
-                    <Td colSpan={Object.values(visibleColumns).filter((v) => v).length} className="px-6 py-8 text-center">
-                      <Div className="flex items-center justify-center gap-2 text-slate-500">
-                        <UiIcon as={Loader2} className="w-5 h-5 animate-spin" />
-                        <Span>Loading payout rules...</Span>
-                      </Div>
-                    </Td>
-                  </Tr>
-                ) : filteredCommissions.length === 0 ? (
-                  <Tr>
-                    <Td colSpan={Object.values(visibleColumns).filter((v) => v).length} className="px-6 py-8 text-center text-slate-500">
-                      No payout rules found
-                    </Td>
-                  </Tr>
+                {zones.length === 0 ? (
+                  <Option value="">No zones</Option>
                 ) : (
-                  filteredCommissions.map((commission) => (
-                    <Tr key={commission.sl} className="hover:bg-slate-50 transition-colors">
-                      {visibleColumns.si && (
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Span className="text-sm font-medium text-slate-700">{commission.sl}</Span>
-                        </Td>
-                      )}
-                      {visibleColumns.name && (
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Span className="text-sm font-medium text-slate-900">{commission.name}</Span>
-                        </Td>
-                      )}
-                      {visibleColumns.distanceSlab && (
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Div className="flex flex-col">
-                            <Span className="text-sm font-medium text-slate-900">{getDistanceSlabLabel(commission)}</Span>
-                            <Span className="text-xs text-slate-500">Base payout slab</Span>
-                          </Div>
-                        </Td>
-                      )}
-                      {visibleColumns.commissionPerKm && (
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Span className="text-sm font-semibold text-green-700">
-                            {'\u20B9'}
-                            {commission.commissionPerKm}
-                          </Span>
-                        </Td>
-                      )}
-                      {visibleColumns.basePayout && (
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Span className="text-sm font-semibold text-blue-700">
-                            {'\u20B9'}
-                            {commission.basePayout}
-                          </Span>
-                        </Td>
-                      )}
-                      {visibleColumns.status && (
-                        <Td className="px-6 py-4 whitespace-nowrap">
-                          <Button
-                            onClick={() => handleToggleStatus(commission)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${commission.status ? 'bg-green-600' : 'bg-slate-300'}`}
-                          >
-                            <Span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${commission.status ? 'translate-x-6' : 'translate-x-1'}`}
-                            />
-                          </Button>
-                        </Td>
-                      )}
-                      {visibleColumns.actions && (
-                        <Td className="px-6 py-4 whitespace-nowrap text-center">
-                          <Div className="flex items-center justify-center gap-2">
-                            <Button onClick={() => handleEdit(commission)} className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors">
-                              <UiIcon as={Edit} className="w-4 h-4" />
-                            </Button>
-                            <Button onClick={() => handleDelete(commission)} className="p-1.5 rounded text-red-600 hover:bg-red-50 transition-colors">
-                              <UiIcon as={Trash2} className="w-4 h-4" />
-                            </Button>
-                          </Div>
-                        </Td>
-                      )}
-                    </Tr>
+                  zones.map((zone) => (
+                    <Option key={zone._id || zone.id} value={zone._id || zone.id}>
+                      {zone.name || zone.zoneName || 'Unnamed Zone'}
+                    </Option>
                   ))
                 )}
-              </Tbody>
-          </Table>
-        </Div>
-      </Div>
+              </Select>
+            </Field>
+          </Div>
+          <Div className="flex-1 min-w-[180px]">
+            <Field label="Search">
+              <Div className="flex-row items-center gap-2">
+                <UiIcon as={Search} size={16} className="text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="Name or distance"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`${INPUT} flex-1`}
+                />
+              </Div>
+            </Field>
+          </Div>
+        </Toolbar>
+      </Card>
+
+      {loading ? (
+        <TableSkeleton rows={5} />
+      ) : filteredCommissions.length === 0 ? (
+        <EmptyState
+          title="No payout rules found"
+          message={selectedZoneId ? 'Add a distance slab to start paying delivery partners for this zone.' : 'Pick a zone first, then add a distance slab.'}
+          actionLabel={selectedZoneId ? 'Add rule' : undefined}
+          onAction={selectedZoneId ? handleAdd : undefined}
+        />
+      ) : (
+        <DataTable cols={tableCols}>
+          <THead cols={tableCols} labels={columnDefs.map((col) => col.label)} />
+          <TBody>
+            {filteredCommissions.map((commission, i) => (
+              <Row key={commission.sl} last={i === filteredCommissions.length - 1}>
+                {visibleColumns.si ? <Cell width={widthOf('si')}>{String(commission.sl)}</Cell> : null}
+                {visibleColumns.name ? (
+                  <Cell width={widthOf('name')}>
+                    <Span className="text-sm font-semibold text-slate-900">{commission.name}</Span>
+                  </Cell>
+                ) : null}
+                {visibleColumns.distanceSlab ? (
+                  <Cell width={widthOf('distanceSlab')}>
+                    <Div className="gap-0.5">
+                      <Span className="text-sm font-semibold text-slate-900">{getDistanceSlabLabel(commission)}</Span>
+                      <Span className="text-xs text-slate-500">
+                        {Number(commission.minDistance) === 0 ? 'Base payout slab' : 'Per-km slab'}
+                      </Span>
+                    </Div>
+                  </Cell>
+                ) : null}
+                {visibleColumns.commissionPerKm ? (
+                  <Cell width={widthOf('commissionPerKm')} align="right">
+                    <Span className="text-sm font-semibold text-slate-900">{`₹${commission.commissionPerKm}`}</Span>
+                  </Cell>
+                ) : null}
+                {visibleColumns.basePayout ? (
+                  <Cell width={widthOf('basePayout')} align="right">
+                    <Span className="text-sm font-semibold text-slate-900">{`₹${commission.basePayout}`}</Span>
+                  </Cell>
+                ) : null}
+                {visibleColumns.status ? (
+                  <Cell width={widthOf('status')}>
+                    <Button
+                      onClick={() => handleToggleStatus(commission)}
+                      accessibilityLabel={commission.status ? 'Disable this rule' : 'Enable this rule'}
+                      className="h-11 justify-center"
+                    >
+                      <StatusBadge status={commission.status ? 'active' : 'inactive'} label={commission.status ? 'Active' : 'Inactive'} />
+                    </Button>
+                  </Cell>
+                ) : null}
+                {visibleColumns.actions ? (
+                  <Cell width={widthOf('actions')}>
+                    <Div className="flex-row items-center gap-1">
+                      <Button
+                        onClick={() => handleEdit(commission)}
+                        accessibilityLabel="Edit rule"
+                        className="w-11 h-11 rounded-lg border border-slate-200 bg-white items-center justify-center"
+                      >
+                        <UiIcon as={Edit} size={16} className="text-blue-700" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(commission)}
+                        accessibilityLabel="Delete rule"
+                        className="w-11 h-11 rounded-lg border border-slate-200 bg-white items-center justify-center"
+                      >
+                        <UiIcon as={Trash2} size={16} className="text-red-600" />
+                      </Button>
+                    </Div>
+                  </Cell>
+                ) : null}
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={isAddEditOpen} onOpenChange={setIsAddEditOpen}>
         <DialogContent className="max-w-md bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle>{selectedCommission ? 'Edit Payout Rule' : 'Add Payout Rule'}</DialogTitle>
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="text-base font-semibold text-slate-900">{selectedCommission ? 'Edit payout rule' : 'Add payout rule'}</DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6 space-y-4">
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Rule Name</Label>
+          <Div className="px-4 py-4 gap-3">
+            {formErrors.overlap ? (
+              <Div className="flex-row items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                <Span className="text-xs text-red-700 flex-1">{formErrors.overlap}</Span>
+              </Div>
+            ) : null}
+            <Field label="Rule name" error={formErrors.name} hint={`Leave empty for “Base (${dialogBaseCoverage} km)”`}>
               <Input
                 type="text"
                 value={formData.name}
@@ -671,82 +648,75 @@ export default function DeliveryBoyCommission() {
                     name: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${formErrors.name ? 'border-red-500' : 'border-slate-300'}`}
+                className={formErrors.name ? INPUT_ERROR : INPUT}
                 placeholder={`e.g., Base (${dialogBaseCoverage} km)`}
               />
-              {formErrors.name && <P className="text-xs text-red-500 mt-1">{formErrors.name}</P>}
+            </Field>
+            <Div className={tablet ? 'flex-row gap-3' : 'gap-3'}>
+              <Field label="Minimum distance slab (km)" required error={formErrors.minDistance} className={tablet ? 'flex-1' : null}>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.minDistance}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      minDistance: e.target.value,
+                    })
+                  }
+                  className={formErrors.minDistance ? INPUT_ERROR : INPUT}
+                  placeholder="e.g., 4"
+                />
+              </Field>
+              <Field
+                label="Maximum distance slab (km)"
+                error={formErrors.maxDistance}
+                hint={`Optional — unlimited means ${formData.minDistance || 0}+ km`}
+                className={tablet ? 'flex-1' : null}
+              >
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.maxDistance}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      maxDistanceUnlimited: false,
+                      maxDistance: e.target.value,
+                    })
+                  }
+                  disabled={Boolean(formData.maxDistanceUnlimited)}
+                  className={formErrors.maxDistance ? INPUT_ERROR : INPUT}
+                  placeholder="e.g., 3 (or tick Unlimited)"
+                />
+              </Field>
             </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Minimum Distance Slab (km) <Span className="text-red-500">*</Span>
-              </Label>
+            <Div className="flex-row items-center gap-2">
               <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.minDistance}
+                type="checkbox"
+                checked={Boolean(formData.maxDistanceUnlimited)}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    minDistance: e.target.value,
+                    maxDistanceUnlimited: e.target.checked,
+                    maxDistance: e.target.checked ? '' : formData.maxDistance,
                   })
                 }
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${formErrors.minDistance ? 'border-red-500' : 'border-slate-300'}`}
-                placeholder="e.g., 4"
               />
-              {formErrors.minDistance && <P className="text-xs text-red-500 mt-1">{formErrors.minDistance}</P>}
+              <Span className="text-sm text-slate-700 flex-1">Unlimited maximum distance</Span>
             </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Maximum Distance Slab (km) <Span className="text-slate-400">(optional)</Span>
-              </Label>
-              <Div className="flex items-center justify-between gap-3 mb-2">
-                <Label className="flex items-center gap-2 text-sm text-slate-700 select-none">
-                  <Input
-                    type="checkbox"
-                    checked={Boolean(formData.maxDistanceUnlimited)}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        maxDistanceUnlimited: e.target.checked,
-                        maxDistance: e.target.checked ? '' : formData.maxDistance,
-                      })
-                    }
-                  />
-                  Unlimited
-                </Label>
-                <Span className="text-xs text-slate-500">If unlimited, this rule applies for {formData.minDistance || 0}+ km</Span>
-              </Div>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.maxDistance}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    maxDistanceUnlimited: false,
-                    maxDistance: e.target.value,
-                  })
-                }
-                disabled={Boolean(formData.maxDistanceUnlimited)}
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${formErrors.maxDistance ? 'border-red-500' : 'border-slate-300'}`}
-                placeholder="e.g., 3 (or enable Unlimited)"
-              />
-              {formErrors.maxDistance && <P className="text-xs text-red-500 mt-1">{formErrors.maxDistance}</P>}
+            <Div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <Span className="text-sm text-slate-700">
+                {`Distance slab: ${
+                  formData.maxDistanceUnlimited || !formData.maxDistance
+                    ? `${formData.minDistance || 0}+ km`
+                    : `${formData.minDistance || 0}-${formData.maxDistance} km`
+                }`}
+              </Span>
             </Div>
-            <Div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              Distance slab:{' '}
-              <Strong>
-                {formData.maxDistanceUnlimited || !formData.maxDistance
-                  ? `${formData.minDistance || 0}+ km`
-                  : `${formData.minDistance || 0}-${formData.maxDistance} km`}
-              </Strong>
-            </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Extra Per Kilometer (₹) <Span className="text-red-500">*</Span>
-              </Label>
+            <Field label="Extra per kilometer (₹)" required error={formErrors.commissionPerKm}>
               <Input
                 type="number"
                 step="0.01"
@@ -758,15 +728,20 @@ export default function DeliveryBoyCommission() {
                     commissionPerKm: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${formErrors.commissionPerKm ? 'border-red-500' : 'border-slate-300'}`}
+                className={formErrors.commissionPerKm ? INPUT_ERROR : INPUT}
                 placeholder="e.g., 5"
               />
-              {formErrors.commissionPerKm && <P className="text-xs text-red-500 mt-1">{formErrors.commissionPerKm}</P>}
-            </Div>
-            <Div>
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Fixed Base Payout{dialogMinDistance === 0 ? ` for ${dialogBaseCoverage} km` : ''} (₹) <Span className="text-red-500">*</Span>
-              </Label>
+            </Field>
+            <Field
+              label={`Fixed base payout${dialogMinDistance === 0 ? ` for ${dialogBaseCoverage} km` : ''} (₹)`}
+              required
+              error={formErrors.basePayout}
+              hint={
+                dialogMinDistance === 0
+                  ? 'Base payout is flat for the 0-km slab. Amount per km applies only to km inside each slab.'
+                  : 'Non-base slabs keep base payout at 0; only amount per km is used for km inside this slab.'
+              }
+            >
               <Input
                 type="number"
                 step="0.01"
@@ -778,31 +753,18 @@ export default function DeliveryBoyCommission() {
                     basePayout: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${formErrors.basePayout ? 'border-red-500' : 'border-slate-300'}`}
+                className={formErrors.basePayout ? INPUT_ERROR : INPUT}
                 placeholder="e.g., 25"
               />
-              {formErrors.basePayout && <P className="text-xs text-red-500 mt-1">{formErrors.basePayout}</P>}
-              <P className="text-xs text-slate-500 mt-1">
-                {dialogMinDistance === 0
-                  ? 'Base payout is flat for the 0-km slab. Amount per km applies only to km that fall inside each slab.'
-                  : 'Non-base slabs must keep base payout at 0. Only amount per km is used for km inside this slab.'}
-              </P>
-            </Div>
+            </Field>
           </Div>
-          <DialogFooter className="px-6 pb-6">
-            <Button
-              onClick={() => setIsAddEditOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-            >
-              Cancel
+          <DialogFooter className="px-4 py-3 border-t border-slate-200 gap-2 flex-row">
+            <Button onClick={() => setIsAddEditOpen(false)} className={`${BTN_SECONDARY} flex-1`}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {saving && <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />}
-              {selectedCommission ? 'Update' : 'Add'}
+            <Button onClick={handleSave} disabled={saving} className={`${BTN_PRIMARY} flex-1`}>
+              {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>{selectedCommission ? 'Update' : 'Add'}</Span>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -811,26 +773,19 @@ export default function DeliveryBoyCommission() {
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent className="max-w-md bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle>Delete Payout Rule</DialogTitle>
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="text-base font-semibold text-slate-900">Delete payout rule</DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6">
-            <P className="text-sm text-slate-700">Are you sure you want to delete &quot;{selectedCommission?.name}&quot;? This action cannot be undone.</P>
+          <Div className="px-4 py-4">
+            <Span className="text-sm text-slate-700">{`Delete “${selectedCommission?.name || ''}”? This cannot be undone.`}</Span>
           </Div>
-          <DialogFooter className="px-6 pb-6">
-            <Button
-              onClick={() => setIsDeleteOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-            >
-              Cancel
+          <DialogFooter className="px-4 py-3 border-t border-slate-200 gap-2 flex-row">
+            <Button onClick={() => setIsDeleteOpen(false)} className={`${BTN_SECONDARY} flex-1`}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
             </Button>
-            <Button
-              onClick={confirmDelete}
-              disabled={deleting}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {deleting && <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />}
-              Delete
+            <Button onClick={confirmDelete} disabled={deleting} className={`${BTN_DANGER} flex-1`}>
+              {deleting ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+              <Span className={BTN_TEXT_PRIMARY}>Delete</Span>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -839,50 +794,31 @@ export default function DeliveryBoyCommission() {
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent className="max-w-md bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <UiIcon as={Settings} className="w-5 h-5" />
-              Table Settings
-            </DialogTitle>
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="text-base font-semibold text-slate-900">Table settings</DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6 space-y-4">
-            <Div>
-              <H3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                <UiIcon as={Columns} className="w-4 h-4" />
-                Visible Columns
-              </H3>
-              <Div className="space-y-2">
-                {Object.entries(columnsConfig).map(([key, label]) => (
-                  <Label key={key} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
-                    <Input
-                      type="checkbox"
-                      checked={visibleColumns[key]}
-                      onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
-                    />
-                    <Span className="text-sm text-slate-700">{label}</Span>
-                    {visibleColumns[key] && <UiIcon as={Check} className="w-4 h-4 text-emerald-600 ml-auto" />}
-                  </Label>
-                ))}
-              </Div>
-            </Div>
-            <Div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button
-                onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset
-              </Button>
-              <Button
-                onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
-              >
-                Apply
-              </Button>
+          <Div className="px-4 py-4">
+            <SectionTitle>Visible columns</SectionTitle>
+            <Div className="gap-1">
+              {Object.entries(columnsConfig).map(([key, label]) => (
+                <Div key={key} className="flex-row items-center gap-3 h-11">
+                  <Input type="checkbox" checked={visibleColumns[key]} onChange={() => toggleColumn(key)} />
+                  <Span className="text-sm text-slate-700 flex-1">{label}</Span>
+                  {visibleColumns[key] ? <UiIcon as={Check} size={16} className="text-green-700" /> : null}
+                </Div>
+              ))}
             </Div>
           </Div>
+          <DialogFooter className="px-4 py-3 border-t border-slate-200 gap-2 flex-row">
+            <Button onClick={resetColumns} className={`${BTN_SECONDARY} flex-1`}>
+              <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+            </Button>
+            <Button onClick={() => setIsSettingsOpen(false)} className={`${BTN_PRIMARY} flex-1`}>
+              <Span className={BTN_TEXT_PRIMARY}>Apply</Span>
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

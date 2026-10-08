@@ -183,7 +183,7 @@ export default function AdminForgotPassword() {
       <H2 style={MONTSERRAT} className="mt-3 text-center text-2xl font-black tracking-wide text-[#f4efe2]">
         {heading}
       </H2>
-      <P className="mt-1.5 break-words text-center text-[13px] text-[#9fb3a4]">{subheading}</P>
+      <P className="mt-1.5 text-center text-[13px] text-[#9fb3a4]">{subheading}</P>
 
       {error && <P className="mt-5 rounded-xl border border-red-400/40 bg-red-500/10 px-3.5 py-2.5 text-[12px] leading-relaxed text-red-200">{error}</P>}
 
@@ -238,6 +238,7 @@ export default function AdminForgotPassword() {
                   keyboardType="number-pad"
                   // Only the first box takes a paste, so one paste fills the row.
                   maxLength={index === 0 ? 6 : 2}
+                  accessibilityLabel={`Verification code digit ${index + 1} of 6`}
                   value={digit}
                   onChangeText={(text) => handleOtpChange(index, text)}
                   onKeyPress={(e) => handleOtpKeyDown(index, { key: e.nativeEvent.key })}
@@ -261,12 +262,12 @@ export default function AdminForgotPassword() {
             </Div>
           </Div>
 
-          <Div className="flex items-center justify-between text-[12px]">
-            <Button type="button" onClick={() => setStep(1)} disabled={isLoading} className="flex flex-row items-center gap-1.5">
+          <Div className="flex-row items-center justify-between">
+            <Button type="button" onClick={() => setStep(1)} disabled={isLoading} accessibilityLabel="Change email" className="h-11 flex-row items-center gap-1.5 pr-3">
               <UiIcon as={ArrowLeft} size={13} className="text-[#9fb3a4]" />
               <Span className="text-[12px] font-semibold text-[#9fb3a4]">Change email</Span>
             </Button>
-            <Button type="button" onClick={handleResendOtp} disabled={resendTimer > 0 || isLoading} className="items-center">
+            <Button type="button" onClick={handleResendOtp} disabled={resendTimer > 0 || isLoading} accessibilityLabel="Resend code" className="h-11 items-center justify-center pl-3">
               <Span className={`text-[12px] font-semibold ${resendTimer > 0 || isLoading ? 'text-[#5d7264]' : 'text-[#caa83e]'}`}>
                 {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend code'}
               </Span>
@@ -350,7 +351,7 @@ export default function AdminForgotPassword() {
         </Form>
       )}
 
-      <Button type="button" onClick={() => navigate('/admin/login')} className="mt-7 flex w-full flex-row items-center justify-center gap-1.5">
+      <Button type="button" onClick={() => navigate('/admin/login')} accessibilityLabel="Back to sign in" className="mt-6 h-11 w-full flex-row items-center justify-center gap-1.5">
         <UiIcon as={ArrowLeft} size={13} className="text-[#9fb3a4]" />
         <Span className="text-[12px] font-semibold text-[#9fb3a4]">Back to sign in</Span>
       </Button>

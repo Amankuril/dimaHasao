@@ -1,40 +1,38 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/promotions/SendNotification.jsx (tools/port.js first pass). */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Bell, ChevronRight, Filter, Image as ImageIcon, Loader2, MapPin, Plus, Send, Trash2, Users } from 'lucide-react-native';
-import { motion, AnimatePresence } from '../../../../../lib/motion';
+import { ArrowLeft, Bell, Filter, Image as ImageIcon, Loader2, Plus, Send, Trash2 } from 'lucide-react-native';
 import { useLocation, useNavigate } from '../../../../../lib/webRouter';
 import { adminService } from '../../services/adminService';
 import {
-  Button,
-  Div,
-  H1,
-  H3,
-  Img,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Textarea,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Button, Div, Form, Img, Input, Option, Select, Span, Textarea, Icon as UiIcon } from '../../../../../components/web';
 import { alert, window } from '../../../../../lib/webShim';
 import { objectUrl, pickImage } from '../../../../../lib/files';
 import fileToDataUrl from './fileToDataUrl';
-const Motion = motion;
 const LIST_PATH = '/taxi/admin/promotions/send-notification';
 const CREATE_PATH = '/taxi/admin/promotions/send-notification/create';
-const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-[#FFC400] focus:ring-1 focus:ring-[#FFC400] outline-none transition-colors disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
+const COLS = [170, 220, 160, 110, 80];
 const createInitialFormData = () => ({
   service_location_id: '',
   send_to: '',
@@ -46,47 +44,6 @@ const createInitialFilters = () => ({
   service_location_id: '',
   send_to: '',
 });
-const HeaderBlock = ({ isCreateRoute, onBack }) => (
-  <Div className="mb-6">
-    <Div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-      <Span>Promotions</Span>
-      <UiIcon as={ChevronRight} size={12} />
-      <Span className="text-gray-700">{isCreateRoute ? 'Create Push Notification' : 'Push Notifications'}</Span>
-    </Div>
-    <Div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <H1 className="text-xl text-gray-900 font-bold">{isCreateRoute ? 'Create Push Notification' : 'Push Notifications'}</H1>
-      {isCreateRoute ? (
-        <Button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <UiIcon as={ArrowLeft} size={16} /> Back
-        </Button>
-      ) : null}
-    </Div>
-  </Div>
-);
-const SectionCard = ({ icon: Icon, title, description, children }) => (
-  <Div className="bg-white rounded-xl border border-gray-200 p-6">
-    <Div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-      <Div className="w-9 h-9 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-500">
-        <Icon size={18} />
-      </Div>
-      <Div>
-        <H3 className="text-sm text-gray-900 font-bold">{title}</H3>
-        <P className="text-xs text-gray-400">{description}</P>
-      </Div>
-    </Div>
-    {children}
-  </Div>
-);
-const FieldLabel = ({ children, required = false }) => (
-  <Label className={labelClass}>
-    {children}
-    {required ? ' *' : ''}
-  </Label>
-);
 const buildDeliveryAlertMessage = (responseData) => {
   const delivery = responseData?.data?.delivery || {};
   const deliveredCount = Number(delivery.deliveredCount || 0);
@@ -116,19 +73,23 @@ const SendNotification = () => {
   const [notifications, setNotifications] = useState([]);
   const [serviceLocations, setServiceLocations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState(createInitialFormData);
   const [filters, setFilters] = useState(createInitialFilters);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const { tablet } = useLayoutWidth();
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const bootstrapData = await adminService.getPromotionsBootstrap();
       setNotifications(Array.isArray(bootstrapData?.data?.notifications) ? bootstrapData.data.notifications : []);
       setServiceLocations(Array.isArray(bootstrapData?.data?.service_locations) ? bootstrapData.data.service_locations : []);
     } catch (error) {
       console.error('Error fetching notifications data:', error);
+      setLoadError(error?.message || 'Failed to load notifications');
       setNotifications([]);
       setServiceLocations([]);
     } finally {
@@ -226,60 +187,46 @@ const SendNotification = () => {
     }
   };
   return (
-    <ScrollDiv className="min-h-full bg-gray-50 text-gray-900">
-      <HeaderBlock isCreateRoute={isCreateRoute} onBack={() => navigate(LIST_PATH)} />
+    <AdminPage maxWidth={isCreateRoute ? 720 : 1200}>
+      <PageHeader
+        icon={Bell}
+        title={isCreateRoute ? 'Create push notification' : 'Push notifications'}
+        subtitle={isCreateRoute ? 'Choose the audience, write the message and send it' : 'Pushes sent to riders and drivers'}
+        breadcrumb={[{ label: 'Promotions' }, { label: 'Push notifications' }, ...(isCreateRoute ? [{ label: 'Create' }] : [])]}
+        actions={
+          isCreateRoute ? (
+            <Button type="button" onClick={() => navigate(LIST_PATH)} className={BTN_SECONDARY}>
+              <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+            </Button>
+          ) : (
+            <>
+              <Button type="button" onClick={() => navigate(CREATE_PATH)} className={BTN_PRIMARY}>
+                <UiIcon as={Plus} size={16} className="text-white" />
+                <Span className={BTN_TEXT_PRIMARY}>Create push notification</Span>
+              </Button>
+              <Button type="button" onClick={() => setIsFilterOpen((current) => !current)} className={BTN_SECONDARY}>
+                <UiIcon as={Filter} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>{isFilterOpen ? 'Hide filters' : 'Filters'}</Span>
+              </Button>
+            </>
+          )
+        }
+      />
 
-      <AnimatePresence mode="wait">
-        {!isCreateRoute ? (
-          <Motion.div
-            key="notification-list"
-            initial={{
-              opacity: 0,
-              y: 10,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -10,
-            }}
-            className="space-y-6"
-          >
-            <Div className="bg-white rounded-xl border border-gray-200 p-6">
-              <Div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <Div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                  <Span className="font-medium text-gray-600">Push notifications management</Span>
-                  <Span className="hidden sm:inline text-gray-300">|</Span>
-                  <Span>Total: {rows.length}</Span>
-                </Div>
-                <Div className="flex flex-col gap-3 sm:flex-row">
-                  <Button
-                    type="button"
-                    onClick={() => setIsFilterOpen((current) => !current)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <UiIcon as={Filter} size={16} /> {isFilterOpen ? 'Hide Filters' : 'Filters'}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => navigate(CREATE_PATH)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold !text-[#0B1220] !bg-[#FFC400] border-none rounded-lg hover:brightness-95 transition-colors"
-                  >
-                    <UiIcon as={Plus} size={16} /> Create Push Notification
-                  </Button>
-                </Div>
-              </Div>
+      {!isCreateRoute ? (
+        <>
+          <Card className="mb-4">
+            <SectionTitle className={isFilterOpen ? undefined : 'mb-0'}>Push notifications · {rows.length} total</SectionTitle>
 
-              {isFilterOpen ? (
-                <Div className="mt-5 grid grid-cols-1 gap-4 border-t border-gray-100 pt-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-                  <Div>
-                    <FieldLabel>Service Location</FieldLabel>
+            {isFilterOpen ? (
+              <Div className="gap-3">
+                <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+                  <Field label="Service location" className={tablet ? 'flex-1' : ''}>
                     <Select
                       value={filters.service_location_id}
                       onChange={(event) => handleFilterChange('service_location_id', event.target.value)}
-                      className={inputClass}
+                      className={INPUT}
                     >
                       <Option value="">All service locations</Option>
                       {serviceLocations.map((loc) => (
@@ -288,239 +235,183 @@ const SendNotification = () => {
                         </Option>
                       ))}
                     </Select>
-                  </Div>
+                  </Field>
 
-                  <Div>
-                    <FieldLabel>Send To</FieldLabel>
-                    <Select value={filters.send_to} onChange={(event) => handleFilterChange('send_to', event.target.value)} className={inputClass}>
+                  <Field label="Send to" className={tablet ? 'flex-1' : ''}>
+                    <Select value={filters.send_to} onChange={(event) => handleFilterChange('send_to', event.target.value)} className={INPUT}>
                       <Option value="">All audiences</Option>
                       <Option value="all">All</Option>
                       <Option value="drivers">Drivers</Option>
                       <Option value="users">Users</Option>
                     </Select>
-                  </Div>
-
-                  <Div className="flex items-end">
-                    <Button
-                      type="button"
-                      onClick={clearFilters}
-                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 md:w-auto"
-                    >
-                      Reset
-                    </Button>
-                  </Div>
+                  </Field>
                 </Div>
-              ) : null}
-            </Div>
+                <Toolbar className="mb-0">
+                  <Button type="button" onClick={clearFilters} className={BTN_SECONDARY}>
+                    <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+                  </Button>
+                </Toolbar>
+              </Div>
+            ) : null}
+          </Card>
 
-            <Div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <Table cols={[180, 220, 170, 110, 96]} className="w-full text-left">
-                  <Thead className="bg-gray-50">
-                    <Tr className="text-xs font-semibold text-gray-500">
-                      <Th className="px-6 py-4">Push Title</Th>
-                      <Th className="px-6 py-4">Message</Th>
-                      <Th className="px-6 py-4">Service Location</Th>
-                      <Th className="px-6 py-4">Send To</Th>
-                      <Th className="px-6 py-4 text-right">Action</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody className="divide-y divide-gray-100">
-                    {loading ? (
-                      <Tr>
-                        <Td colSpan="5" className="px-6 py-16 text-center text-sm text-gray-400">
-                          Loading notifications...
-                        </Td>
-                      </Tr>
-                    ) : rows.length === 0 ? (
-                      <Tr>
-                        <Td colSpan="5" className="px-6 py-16 text-center">
-                          <Div className="flex flex-col items-center gap-3 text-gray-400">
-                            <UiIcon as={Bell} size={40} strokeWidth={1.5} />
-                            <P className="text-sm font-medium">No notifications found.</P>
-                          </Div>
-                        </Td>
-                      </Tr>
-                    ) : (
-                      rows.map((item) => (
-                        <Tr key={item._id || item.id} className="hover:bg-gray-50 transition-colors">
-                          <Td className="px-6 py-4">
-                            <Div className="flex items-center gap-3">
-                              <Span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-50 text-yellow-500">
-                                <UiIcon as={Bell} size={16} />
-                              </Span>
-                              <Span className="text-sm font-semibold text-gray-800">{item.push_title}</Span>
-                            </Div>
-                          </Td>
-                          <Td className="px-6 py-4 text-sm text-gray-600 max-w-[340px] truncate">{item.message}</Td>
-                          <Td className="px-6 py-4 text-sm text-gray-600">{item.service_location_name || '-'}</Td>
-                          <Td className="px-6 py-4 text-sm text-gray-600 capitalize">{item.send_to || 'all'}</Td>
-                          <Td className="px-6 py-4">
-                            <Div className="flex items-center justify-end gap-2">
-                              <Button
-                                type="button"
-                                onClick={() => handleDelete(item._id || item.id)}
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-rose-600 transition-colors"
-                              >
-                                <UiIcon as={Trash2} size={16} />
-                              </Button>
-                            </Div>
-                          </Td>
-                        </Tr>
-                      ))
-                    )}
-                  </Tbody>
-              </Table>
-            </Div>
-          </Motion.div>
-        ) : (
-          <Motion.form
-            key="notification-create"
-            onSubmit={handleSend}
-            initial={{
-              opacity: 0,
-              y: 10,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -10,
-            }}
-            className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_280px]"
-          >
-            <Div className="space-y-6">
-              <SectionCard icon={Send} title="Notification Configuration" description="Choose the audience, write the message, and send the push right away.">
-                <Div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <Div>
-                    <FieldLabel required>Service Location</FieldLabel>
-                    <Div className="relative">
-                      <UiIcon as={MapPin} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <Select
-                        value={formData.service_location_id}
-                        onChange={(e) => handleFieldChange('service_location_id', e.target.value)}
-                        className={`${inputClass} pl-10`}
-                        required
+          {loading ? (
+            <TableSkeleton rows={5} />
+          ) : loadError ? (
+            <ErrorState title="Could not load notifications" message={loadError} onRetry={fetchData} />
+          ) : rows.length === 0 ? (
+            <EmptyState
+              icon={Bell}
+              title="No notifications found"
+              message={
+                filters.send_to || filters.service_location_id
+                  ? 'No notification matches the filters you picked.'
+                  : 'Create a push notification and it will be listed here.'
+              }
+              actionLabel="Create push notification"
+              onAction={() => navigate(CREATE_PATH)}
+            />
+          ) : (
+            <DataTable cols={COLS}>
+              <THead cols={COLS} labels={['Push title', 'Message', 'Service location', 'Send to', 'Action']} />
+              <TBody>
+                {rows.map((item, i) => (
+                  <Row key={item._id || item.id} last={i === rows.length - 1}>
+                    <Cell width={COLS[0]}>
+                      <Span className="text-sm font-semibold text-slate-900" numberOfLines={2}>
+                        {item.push_title}
+                      </Span>
+                    </Cell>
+                    <Cell width={COLS[1]}>{item.message}</Cell>
+                    <Cell width={COLS[2]}>{item.service_location_name || '-'}</Cell>
+                    <Cell width={COLS[3]}>
+                      <StatusBadge tone="info" label={item.send_to || 'all'} />
+                    </Cell>
+                    <Cell width={COLS[4]} align="right">
+                      <Button
+                        type="button"
+                        onClick={() => handleDelete(item._id || item.id)}
+                        accessibilityLabel="Delete notification"
+                        className="w-11 h-11 items-center justify-center rounded-lg border border-slate-200 bg-white"
                       >
-                        <Option value="">Select Service Location</Option>
-                        {serviceLocations.map((loc) => (
-                          <Option key={loc._id || loc.id} value={loc._id || loc.id}>
-                            {loc.service_location_name || loc.name}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Div>
-                  </Div>
+                        <UiIcon as={Trash2} size={16} className="text-red-600" />
+                      </Button>
+                    </Cell>
+                  </Row>
+                ))}
+              </TBody>
+            </DataTable>
+          )}
+        </>
+      ) : (
+        <Form onSubmit={handleSend}>
+          <Card className="mb-4 gap-4">
+            <SectionTitle className="mb-0">Notification configuration</SectionTitle>
 
-                  <Div>
-                    <FieldLabel required>Send To</FieldLabel>
-                    <Div className="relative">
-                      <UiIcon as={Users} size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <Select
-                        value={formData.send_to}
-                        onChange={(e) => handleFieldChange('send_to', e.target.value)}
-                        className={`${inputClass} pl-10`}
-                        required
-                      >
-                        <Option value="">Select</Option>
-                        <Option value="all">All</Option>
-                        <Option value="drivers">Drivers</Option>
-                        <Option value="users">Users</Option>
-                      </Select>
-                    </Div>
-                  </Div>
-
-                  <Div className="md:col-span-2">
-                    <FieldLabel required>Push Title</FieldLabel>
-                    <Input
-                      type="text"
-                      value={formData.push_title}
-                      onChange={(e) => handleFieldChange('push_title', e.target.value)}
-                      className={inputClass}
-                      placeholder="Enter Push Title"
-                      required
-                    />
-                  </Div>
-
-                  <Div className="md:col-span-2">
-                    <FieldLabel required>Message</FieldLabel>
-                    <Textarea
-                      value={formData.message}
-                      onChange={(e) => handleFieldChange('message', e.target.value)}
-                      className={`${inputClass} min-h-[120px] resize-none`}
-                      placeholder="Enter Message"
-                      required
-                    />
-                  </Div>
-
-                  <Div className="md:col-span-2">
-                    <FieldLabel>Notification Banner (320px x 320px)</FieldLabel>
-                    <Div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5">
-                      {imagePreview ? (
-                        <Div className="space-y-4">
-                          <Img src={imagePreview} alt="Notification preview" className="h-48 w-48 rounded-lg object-cover border border-gray-200 bg-white" />
-                          <Button
-                            type="button"
-                            onClick={() => {
-                              setImagePreview(null);
-                              setFormData((current) => ({
-                                ...current,
-                                image: null,
-                              }));
-                            }}
-                            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            Remove Image
-                          </Button>
-                        </Div>
-                      ) : (
-                        <Label onClick={handleImageChange} className="flex cursor-pointer flex-col items-center justify-center gap-3 py-8 text-center">
-                          <Span className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white border border-gray-200 text-yellow-500">
-                            <UiIcon as={ImageIcon} size={20} />
-                          </Span>
-                          <Div>
-                            <P className="text-sm font-semibold text-gray-800">Upload Image</P>
-                            <P className="text-xs text-gray-400">Optional banner image for the push notification.</P>
-                          </Div>
-                        </Label>
-                      )}
-                    </Div>
-                  </Div>
-                </Div>
-              </SectionCard>
-            </Div>
-
-            <Div className="space-y-6">
-              <Div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
-                <Button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full py-3 !bg-[#FFC400] !text-[#0B1220] rounded-lg text-sm font-bold hover:brightness-95 border-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+            <Div className={`gap-3 ${tablet ? 'flex-row' : ''}`}>
+              <Field label="Service location" required className={tablet ? 'flex-1' : ''}>
+                <Select
+                  value={formData.service_location_id}
+                  onChange={(e) => handleFieldChange('service_location_id', e.target.value)}
+                  className={INPUT}
+                  required
                 >
-                  {saving ? <UiIcon as={Loader2} className="animate-spin" size={16} /> : <UiIcon as={Send} size={16} />}
-                  Send Notification
-                </Button>
+                  <Option value="">Select Service Location</Option>
+                  {serviceLocations.map((loc) => (
+                    <Option key={loc._id || loc.id} value={loc._id || loc.id}>
+                      {loc.service_location_name || loc.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label="Send to" required className={tablet ? 'flex-1' : ''}>
+                <Select value={formData.send_to} onChange={(e) => handleFieldChange('send_to', e.target.value)} className={INPUT} required>
+                  <Option value="">Select</Option>
+                  <Option value="all">All</Option>
+                  <Option value="drivers">Drivers</Option>
+                  <Option value="users">Users</Option>
+                </Select>
+              </Field>
+            </Div>
+
+            <Field label="Push title" required>
+              <Input
+                type="text"
+                value={formData.push_title}
+                onChange={(e) => handleFieldChange('push_title', e.target.value)}
+                className={INPUT}
+                placeholder="Enter Push Title"
+                required
+              />
+            </Field>
+
+            <Field label="Message" required>
+              <Textarea
+                value={formData.message}
+                onChange={(e) => handleFieldChange('message', e.target.value)}
+                className="min-h-[120px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+                placeholder="Enter Message"
+                required
+              />
+            </Field>
+
+            <Field label="Notification banner" hint="Optional, 320 px × 320 px.">
+              {imagePreview ? (
+                <Div className="gap-3">
+                  <Img
+                    src={imagePreview}
+                    alt="Notification preview"
+                    className="h-40 w-40 rounded-lg border border-slate-200 bg-white"
+                    contentFit="cover"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null);
+                      setFormData((current) => ({
+                        ...current,
+                        image: null,
+                      }));
+                    }}
+                    className={`${BTN_SECONDARY} self-start`}
+                  >
+                    <Span className={BTN_TEXT_SECONDARY}>Remove image</Span>
+                  </Button>
+                </Div>
+              ) : (
                 <Button
                   type="button"
-                  onClick={() => navigate(LIST_PATH)}
-                  className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+                  onClick={handleImageChange}
+                  accessibilityLabel="Upload notification banner"
+                  className="rounded-lg border border-slate-300 bg-white items-center justify-center gap-2 py-8"
                 >
-                  Cancel
+                  <UiIcon as={ImageIcon} size={24} className="text-slate-400" />
+                  <Span className="text-sm font-semibold text-slate-700">Upload image</Span>
                 </Button>
-              </Div>
+              )}
+            </Field>
+          </Card>
 
-              <Div className="bg-white rounded-xl border border-gray-200 p-6">
-                <H3 className="text-sm text-gray-900 mb-2 font-bold">How It Works</H3>
-                <P className="text-xs leading-5 text-gray-500">
-                  Service location, send-to audience, push title, message, aur optional notification banner ke saath admin se direct push fire hota hai.
-                </P>
-              </Div>
-            </Div>
-          </Motion.form>
-        )}
-      </AnimatePresence>
-    </ScrollDiv>
+          <Card className="mb-4 gap-2">
+            <Button type="submit" disabled={saving} className={`${BTN_PRIMARY} ${saving ? 'opacity-60' : ''}`}>
+              {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : <UiIcon as={Send} size={16} className="text-white" />}
+              <Span className={BTN_TEXT_PRIMARY}>Send notification</Span>
+            </Button>
+            <Button type="button" onClick={() => navigate(LIST_PATH)} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+            </Button>
+          </Card>
+
+          <Card>
+            <SectionTitle className="mb-2">How it works</SectionTitle>
+            <Span className="text-sm text-slate-500">
+              The push fires straight from the admin with the service location, audience, title, message and the optional banner image.
+            </Span>
+          </Card>
+        </Form>
+      )}
+    </AdminPage>
   );
 };
 export default SendNotification;

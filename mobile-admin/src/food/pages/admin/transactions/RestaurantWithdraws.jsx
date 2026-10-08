@@ -1,22 +1,6 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/transactions/RestaurantWithdraws.jsx (tools/port.js first pass). */
 import { useState, useEffect } from 'react';
-import {
-  Search,
-  Download,
-  ChevronDown,
-  Eye,
-  Settings,
-  Building,
-  ArrowUpDown,
-  FileText,
-  FileSpreadsheet,
-  Code,
-  Check,
-  Columns,
-  CheckCircle,
-  XCircle,
-  Loader2,
-} from 'lucide-react-native';
+import { Search, Download, ChevronDown, Eye, Settings, Building, FileSpreadsheet, Code, Columns, CheckCircle, XCircle, Loader2 } from 'lucide-react-native';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,31 +15,46 @@ import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
 import {
-  Button,
-  Div,
-  H1,
-  H2,
-  H3,
-  Img,
-  Input,
-  Label,
-  P,
-  ScrollDiv,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Textarea,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_DANGER,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, CheckBox, Div, HScroll, Img, Input, P, Span, Textarea, Icon as UiIcon } from '../../../../components/web';
 import { alert, window } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
+const COL_WIDTH = { si: 60, amount: 120, restaurant: 190, restaurantId: 130, requestTime: 170, status: 120, actions: 150 };
+const COL_LABEL = {
+  si: 'SI',
+  amount: 'Amount',
+  restaurant: 'Restaurant name',
+  restaurantId: 'Restaurant ID',
+  restaurantAddress: 'Address',
+  requestTime: 'Request time',
+  status: 'Status',
+  actions: 'Action',
+};
 export default function RestaurantWithdraws() {
+  const { tablet } = useLayoutWidth();
   const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -125,18 +124,6 @@ export default function RestaurantWithdraws() {
     }
   };
   const filteredWithdraws = withdraws;
-  const getStatusBadge = (status) => {
-    if (status === 'Approved') {
-      return 'bg-green-100 text-green-700';
-    }
-    if (status === 'Pending') {
-      return 'bg-blue-100 text-blue-700';
-    }
-    if (status === 'Rejected') {
-      return 'bg-red-100 text-red-700';
-    }
-    return 'bg-slate-100 text-slate-700';
-  };
   const handleViewWithdraw = (withdraw) => {
     setSelectedWithdraw(withdraw);
     setIsViewOpen(true);
@@ -201,8 +188,8 @@ export default function RestaurantWithdraws() {
     }
   };
   const formatCurrency = (amount) => {
-    if (!amount) return '\u20B90.00';
-    return `\u20B9${parseFloat(amount).toLocaleString('en-IN', {
+    if (!amount) return '₹0.00';
+    return `₹${parseFloat(amount).toLocaleString('en-IN', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -296,211 +283,131 @@ export default function RestaurantWithdraws() {
       actions: true,
     });
   };
-  return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex items-center gap-3">
-            <UiIcon as={Building} className="w-5 h-5 text-blue-600" />
-            <H1 className="text-2xl font-bold text-slate-900">Restaurant Withdraw Transaction</H1>
-          </Div>
-        </Div>
-
-        {/* Tabs */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex gap-2 border-b border-slate-200">
-            {['All', 'Pending', 'Approved', 'Rejected'].map((tab) => (
-              <Button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-600 hover:text-slate-900'}`}
-              >
-                {tab}
-              </Button>
-            ))}
-          </Div>
-        </Div>
-
-        {/* Table Card */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <Div className="flex items-center gap-2">
-              <H2 className="text-xl font-bold text-slate-900">Withdraw Request Table</H2>
-              <Span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
-                {loading ? <Span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" /> : totalItems}
-              </Span>
-            </Div>
-
-            <Div className="flex items-center gap-3">
-              <Div className="relative flex-1 sm:flex-initial min-w-[200px]">
-                <Input
-                  type="text"
-                  placeholder="Ex: search by Restaurant name"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                />
-                <UiIcon as={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </Div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
-                    <UiIcon as={Download} className="w-4 h-4" />
-                    <Span>Export</Span>
-                    <UiIcon as={ChevronDown} className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleExport('excel')} className="cursor-pointer flex items-center gap-2">
-                    <UiIcon as={FileSpreadsheet} className="w-4 h-4" /> Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer flex items-center gap-2">
-                    <UiIcon as={Code} className="w-4 h-4" /> PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all flex items-center justify-center"
-              >
-                <UiIcon as={Settings} className="w-4 h-4" />
-              </Button>
-            </Div>
-          </Div>
-
-          {/* Table */}
-          {loading ? (
-            <Div className="py-20 text-center">
-              <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-              <P className="text-slate-600">Loading withdrawal requests...</P>
-            </Div>
-          ) : (
-            <Table
-              className="w-full"
-              cols={[
-                visibleColumns.si && 70,
-                visibleColumns.amount && 120,
-                visibleColumns.restaurant && 200,
-                visibleColumns.restaurantId && 130,
-                visibleColumns.requestTime && 170,
-                visibleColumns.status && 130,
-                visibleColumns.actions && 120,
-              ].filter(Boolean)}
+  const shownKeys = Object.keys(COL_WIDTH).filter((key) => visibleColumns[key]);
+  const cols = shownKeys.map((key) => COL_WIDTH[key]);
+  const labels = shownKeys.map((key) => COL_LABEL[key]);
+  const bankValue = (withdraw, field) => withdraw.restaurantBankDetails?.[field] || withdraw.restaurantId?.[field] || 'N/A';
+  const renderCell = (withdraw, index, key) => {
+    if (key === 'si') return String(index + 1);
+    if (key === 'amount')
+      return (
+        <Span className="text-sm font-medium text-slate-900" numberOfLines={1}>
+          {formatCurrency(withdraw.amount)}
+        </Span>
+      );
+    if (key === 'restaurant') return withdraw.restaurantName || 'N/A';
+    if (key === 'restaurantId') return withdraw.restaurantIdString || 'N/A';
+    if (key === 'requestTime') return formatDate(withdraw.requestedAt || withdraw.createdAt);
+    if (key === 'status') return <StatusBadge status={withdraw.status} label={withdraw.status} />;
+    return (
+      <Div className="flex-row items-center gap-1">
+        <Button onClick={() => handleViewWithdraw(withdraw)} className="w-11 h-11 rounded-lg items-center justify-center" accessibilityLabel="View withdrawal">
+          <UiIcon as={Eye} size={16} className="text-blue-600" />
+        </Button>
+        {withdraw.status === 'Pending' && (
+          <>
+            <Button
+              onClick={() => handleApprove(withdraw.id)}
+              disabled={processingAction === withdraw.id}
+              className="w-11 h-11 rounded-lg items-center justify-center"
+              accessibilityLabel="Approve withdrawal"
             >
-                <Thead className="bg-slate-50 border-b border-slate-200">
-                  <Tr>
-                    {visibleColumns.si && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        <Div className="flex items-center gap-2">
-                          <Span>SI</Span>
-                          <UiIcon as={ArrowUpDown} className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
-                        </Div>
-                      </Th>
-                    )}
-                    {visibleColumns.amount && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</Th>}
-                    {visibleColumns.restaurant && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant Name</Th>
-                    )}
-                    {visibleColumns.restaurantId && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant ID</Th>
-                    )}
-                    {visibleColumns.requestTime && (
-                      <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Request Time</Th>
-                    )}
-                    {visibleColumns.status && <Th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</Th>}
-                    {visibleColumns.actions && <Th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>}
-                  </Tr>
-                </Thead>
-                <Tbody className="bg-white divide-y divide-slate-100">
-                  {filteredWithdraws.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="px-6 py-20 text-center">
-                        <Div className="flex flex-col items-center justify-center">
-                          <UiIcon as={Building} className="w-16 h-16 text-slate-400 mb-4" />
-                          <P className="text-lg font-semibold text-slate-700">No Data Found</P>
-                          <P className="text-sm text-slate-500">No withdraw requests match your filters.</P>
-                        </Div>
-                      </Td>
-                    </Tr>
-                  ) : (
-                    filteredWithdraws.map((withdraw, index) => (
-                      <Tr key={withdraw.id} className="hover:bg-slate-50 transition-colors">
-                        {visibleColumns.si && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm font-medium text-slate-700">{index + 1}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.amount && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm font-medium text-slate-700">{formatCurrency(withdraw.amount)}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.restaurant && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm font-medium text-slate-700">{withdraw.restaurantName || 'N/A'}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.restaurantId && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm font-medium text-slate-700">{withdraw.restaurantIdString || 'N/A'}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.requestTime && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className="text-sm font-medium text-slate-700">{formatDate(withdraw.requestedAt || withdraw.createdAt)}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.status && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(withdraw.status)}`}>{withdraw.status}</Span>
-                          </Td>
-                        )}
-                        {visibleColumns.actions && (
-                          <Td className="px-6 py-4 whitespace-nowrap">
-                            <Div className="flex items-center justify-center gap-2">
-                              <Button
-                                onClick={() => handleViewWithdraw(withdraw)}
-                                className="p-2 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors"
-                              >
-                                <UiIcon as={Eye} className="w-4 h-4 text-orange-600" />
-                              </Button>
-                              {withdraw.status === 'Pending' && (
-                                <>
-                                  <Button
-                                    onClick={() => handleApprove(withdraw.id)}
-                                    disabled={processingAction === withdraw.id}
-                                    className="p-2 rounded-lg bg-green-50 hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    {processingAction === withdraw.id ? (
-                                      <UiIcon as={Loader2} className="w-4 h-4 text-green-600 animate-spin" />
-                                    ) : (
-                                      <UiIcon as={CheckCircle} className="w-4 h-4 text-green-600" />
-                                    )}
-                                  </Button>
-                                  <Button
-                                    onClick={() => {
-                                      setSelectedWithdraw(withdraw);
-                                      setShowRejectModal(true);
-                                    }}
-                                    disabled={processingAction === withdraw.id}
-                                    className="p-2 rounded-lg bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    <UiIcon as={XCircle} className="w-4 h-4 text-red-600" />
-                                  </Button>
-                                </>
-                              )}
-                            </Div>
-                          </Td>
-                        )}
-                      </Tr>
-                    ))
-                  )}
-                </Tbody>
-            </Table>
-          )}
+              {processingAction === withdraw.id ? (
+                <UiIcon as={Loader2} size={16} className="text-green-700" />
+              ) : (
+                <UiIcon as={CheckCircle} size={16} className="text-green-700" />
+              )}
+            </Button>
+            <Button
+              onClick={() => {
+                setSelectedWithdraw(withdraw);
+                setShowRejectModal(true);
+              }}
+              disabled={processingAction === withdraw.id}
+              className="w-11 h-11 rounded-lg items-center justify-center"
+              accessibilityLabel="Reject withdrawal"
+            >
+              <UiIcon as={XCircle} size={16} className="text-red-600" />
+            </Button>
+          </>
+        )}
+      </Div>
+    );
+  };
+  return (
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Building}
+        title="Restaurant Withdraws"
+        subtitle="Payout requests from restaurant partners"
+        breadcrumb={[{ label: 'Food' }, { label: 'Transactions' }, { label: 'Restaurant withdraws' }]}
+      />
+
+      <Card className="mb-4" padded={false}>
+        <HScroll contentClassName="flex-row items-center gap-1 px-2">
+          {['All', 'Pending', 'Approved', 'Rejected'].map((tab) => (
+            <Button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 h-12 justify-center border-b-2 ${activeTab === tab ? 'border-blue-600' : 'border-transparent'}`}>
+              <Span className={`text-sm font-semibold ${activeTab === tab ? 'text-blue-600' : 'text-slate-600'}`}>{tab}</Span>
+            </Button>
+          ))}
+        </HScroll>
+      </Card>
+
+      <Card className="mb-3">
+        <SectionTitle action={loading ? null : <Span className="text-xs font-semibold text-slate-500">{totalItems} total</Span>}>Withdraw requests</SectionTitle>
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center gap-2 flex-1 min-w-[180px]">
+            <UiIcon as={Search} size={16} className="text-slate-400" />
+            <Input type="text" placeholder="Ex: search by restaurant name" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={`${INPUT} flex-1`} />
+          </Div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className={BTN_SECONDARY}>
+                <UiIcon as={Download} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-600" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg">
+              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <UiIcon as={FileSpreadsheet} size={16} className="mr-2" /> Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <UiIcon as={Code} size={16} className="mr-2" /> PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={() => setIsSettingsOpen(true)} className={BTN_SECONDARY} accessibilityLabel="Table settings">
+            <UiIcon as={Settings} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Columns</Span>
+          </Button>
+        </Toolbar>
+      </Card>
+
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : filteredWithdraws.length === 0 ? (
+        <EmptyState icon={Building} title="No withdraw requests" message="No withdraw requests match your filters." actionLabel="Reload" onAction={fetchWithdrawals} />
+      ) : cols.length === 0 ? (
+        <EmptyState icon={Columns} title="Every column is hidden" message="Turn a column back on to see the requests." actionLabel="Reset columns" onAction={resetColumns} />
+      ) : (
+        <>
+          <DataTable cols={cols}>
+            <THead cols={cols} labels={labels} />
+            <TBody>
+              {filteredWithdraws.map((withdraw, index, arr) => (
+                <Row key={withdraw.id} last={index === arr.length - 1}>
+                  {shownKeys.map((key, ci) => (
+                    <Cell key={key} width={cols[ci]} align={key === 'amount' ? 'right' : key === 'actions' ? 'center' : 'left'}>
+                      {renderCell(withdraw, index, key)}
+                    </Cell>
+                  ))}
+                </Row>
+              ))}
+            </TBody>
+          </DataTable>
 
           <AdminListPagination
             currentPage={currentPage}
@@ -515,191 +422,154 @@ export default function RestaurantWithdraws() {
               setCurrentPage(1);
             }}
             itemLabel="withdrawals"
+            className="mt-3 rounded-xl border border-slate-200"
           />
-        </Div>
+        </>
+      )}
 
-        {/* View Withdraw Dialog */}
-        <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-          <DialogContent className="max-w-md bg-white p-0">
-            <DialogHeader className="px-6 pt-6 pb-4">
-              <DialogTitle>Withdraw Request Details</DialogTitle>
-            </DialogHeader>
-            {selectedWithdraw && (
-              <Div className="px-6 pb-6 space-y-4">
-                <Div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">Amount</Label>
-                  <P className="text-sm font-medium text-slate-900 mt-1">{formatCurrency(selectedWithdraw.amount)}</P>
+      {/* View Withdraw Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-md bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="text-base font-semibold text-slate-900">Withdraw Request Details</DialogTitle>
+          </DialogHeader>
+          {selectedWithdraw && (
+            <Div className="px-4 py-4 gap-3">
+              <Div className={tablet ? 'grid grid-cols-2 gap-3' : 'gap-3'}>
+                <Div className="gap-0.5">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Amount</Span>
+                  <P className="text-sm font-semibold text-slate-900">{formatCurrency(selectedWithdraw.amount)}</P>
                 </Div>
-                <Div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">Restaurant Name</Label>
-                  <P className="text-sm font-medium text-slate-900 mt-1">{selectedWithdraw.restaurantName || 'N/A'}</P>
+                <Div className="gap-0.5">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Restaurant name</Span>
+                  <P className="text-sm font-semibold text-slate-900">{selectedWithdraw.restaurantName || 'N/A'}</P>
                 </Div>
-                <Div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">Restaurant ID</Label>
-                  <P className="text-sm font-medium text-slate-900 mt-1">{selectedWithdraw.restaurantIdString || 'N/A'}</P>
+                <Div className="gap-0.5">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Restaurant ID</Span>
+                  <P className="text-sm font-semibold text-slate-900">{selectedWithdraw.restaurantIdString || 'N/A'}</P>
                 </Div>
-                <Div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">Request Time</Label>
-                  <P className="text-sm font-medium text-slate-900 mt-1">{formatDate(selectedWithdraw.requestedAt || selectedWithdraw.createdAt)}</P>
+                <Div className="gap-0.5">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Request time</Span>
+                  <P className="text-sm font-semibold text-slate-900">{formatDate(selectedWithdraw.requestedAt || selectedWithdraw.createdAt)}</P>
                 </Div>
                 {(selectedWithdraw.status === 'Approved' || selectedWithdraw.status === 'Processed') && selectedWithdraw.processedAt && (
-                  <Div>
-                    <Label className="text-xs font-semibold text-slate-500 uppercase">Approved Time</Label>
-                    <P className="text-sm font-medium text-slate-900 mt-1">{formatDate(selectedWithdraw.processedAt)}</P>
+                  <Div className="gap-0.5">
+                    <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Approved time</Span>
+                    <P className="text-sm font-semibold text-slate-900">{formatDate(selectedWithdraw.processedAt)}</P>
                   </Div>
                 )}
                 {selectedWithdraw.status === 'Rejected' && selectedWithdraw.processedAt && (
-                  <Div>
-                    <Label className="text-xs font-semibold text-slate-500 uppercase">Rejected Time</Label>
-                    <P className="text-sm font-medium text-slate-900 mt-1">{formatDate(selectedWithdraw.processedAt)}</P>
+                  <Div className="gap-0.5">
+                    <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rejected time</Span>
+                    <P className="text-sm font-semibold text-slate-900">{formatDate(selectedWithdraw.processedAt)}</P>
                   </Div>
                 )}
-                <Div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">Status</Label>
-                  <P className="mt-1">
-                    <Span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(selectedWithdraw.status)}`}>{selectedWithdraw.status}</Span>
-                  </P>
+                <Div className="gap-1">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</Span>
+                  <StatusBadge status={selectedWithdraw.status} label={selectedWithdraw.status} />
                 </Div>
-                <Div className="border-t border-slate-200 pt-4">
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">Bank Details</Label>
-                  <Div className="mt-2 space-y-2">
-                    <P className="text-sm text-slate-800">
-                      <Span className="font-semibold">Account Holder:</Span>{' '}
-                      {selectedWithdraw.restaurantBankDetails?.accountHolderName || selectedWithdraw.restaurantId?.accountHolderName || 'N/A'}
-                    </P>
-                    <P className="text-sm text-slate-800">
-                      <Span className="font-semibold">Account Number:</Span>{' '}
-                      {selectedWithdraw.restaurantBankDetails?.accountNumber || selectedWithdraw.restaurantId?.accountNumber || 'N/A'}
-                    </P>
-                    <P className="text-sm text-slate-800">
-                      <Span className="font-semibold">IFSC:</Span>{' '}
-                      {selectedWithdraw.restaurantBankDetails?.ifscCode || selectedWithdraw.restaurantId?.ifscCode || 'N/A'}
-                    </P>
-                    <P className="text-sm text-slate-800">
-                      <Span className="font-semibold">Account Type:</Span>{' '}
-                      {selectedWithdraw.restaurantBankDetails?.accountType || selectedWithdraw.restaurantId?.accountType || 'N/A'}
-                    </P>
-                    <P className="text-sm text-slate-800">
-                      <Span className="font-semibold">UPI ID:</Span>{' '}
-                      {selectedWithdraw.restaurantBankDetails?.upiId || selectedWithdraw.restaurantId?.upiId || 'N/A'}
-                    </P>
-                    {getSafeQrUrl(selectedWithdraw.restaurantBankDetails?.upiQrImage || selectedWithdraw.restaurantId?.upiQrImage) ? (
-                      <Div>
-                        <P className="text-sm text-slate-800 font-semibold mb-2">UPI QR</P>
-                        <Img
-                          src={getSafeQrUrl(selectedWithdraw.restaurantBankDetails?.upiQrImage || selectedWithdraw.restaurantId?.upiQrImage)}
-                          alt="Restaurant UPI QR"
-                          className="w-32 h-32 object-contain border border-slate-200 rounded-md bg-white"
-                        />
-                      </Div>
-                    ) : null}
-                  </Div>
-                </Div>
-                {selectedWithdraw.rejectionReason && (
-                  <Div>
-                    <Label className="text-xs font-semibold text-slate-500 uppercase">Rejection Reason</Label>
-                    <P className="text-sm font-medium text-slate-900 mt-1">{selectedWithdraw.rejectionReason}</P>
-                  </Div>
-                )}
               </Div>
-            )}
-            <DialogFooter className="px-6 pb-6">
-              <Button
-                onClick={() => setIsViewOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
-              >
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
-        {/* Reject Modal */}
-        <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
-          <DialogContent className="max-w-md bg-white p-0">
-            <DialogHeader className="px-6 pt-6 pb-4">
-              <DialogTitle>Reject Withdrawal Request</DialogTitle>
-            </DialogHeader>
-            <Div className="px-6 pb-6 space-y-4">
-              <Div>
-                <Label className="block text-sm font-medium text-slate-700 mb-2">
-                  Rejection Reason <Span className="text-red-500">*</Span>
-                </Label>
-                <Textarea
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Enter reason for rejection..."
-                  rows={4}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </Div>
-            </Div>
-            <DialogFooter className="px-6 pb-6 flex gap-2">
-              <Button
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectionReason('');
-                }}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => selectedWithdraw && handleReject(selectedWithdraw.id)}
-                disabled={!rejectionReason.trim() || processingAction === selectedWithdraw?.id}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {processingAction === selectedWithdraw?.id ? 'Rejecting...' : 'Reject'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Settings Dialog */}
-        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-          <DialogContent className="max-w-md bg-white p-0">
-            <DialogHeader className="px-6 pt-6 pb-4">
-              <DialogTitle className="flex items-center gap-2">
-                <UiIcon as={Settings} className="w-5 h-5" />
-                Table Settings
-              </DialogTitle>
-            </DialogHeader>
-            <Div className="px-6 pb-6 space-y-4">
-              <Div>
-                <H3 className="text-sm font-semibold text-slate-700 mb-2">Toggle Columns</H3>
-                <Div className="grid grid-cols-2 gap-2">
-                  {Object.entries(visibleColumns).map(([key, isVisible]) => (
-                    <Div key={key} className="flex items-center">
-                      <Input
-                        type="checkbox"
-                        nativeID={`toggle-${key}`}
-                        checked={isVisible}
-                        onChange={() => toggleColumn(key)}
-                        className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+              <Card className="gap-2">
+                <SectionTitle className="mb-0">Bank details</SectionTitle>
+                <Div className="gap-1.5">
+                  <P className="text-sm text-slate-700">Account holder: {bankValue(selectedWithdraw, 'accountHolderName')}</P>
+                  <P className="text-sm text-slate-700">Account number: {bankValue(selectedWithdraw, 'accountNumber')}</P>
+                  <P className="text-sm text-slate-700">IFSC: {bankValue(selectedWithdraw, 'ifscCode')}</P>
+                  <P className="text-sm text-slate-700">Account type: {bankValue(selectedWithdraw, 'accountType')}</P>
+                  <P className="text-sm text-slate-700">UPI ID: {bankValue(selectedWithdraw, 'upiId')}</P>
+                  {getSafeQrUrl(selectedWithdraw.restaurantBankDetails?.upiQrImage || selectedWithdraw.restaurantId?.upiQrImage) ? (
+                    <Div className="gap-1.5">
+                      <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">UPI QR</Span>
+                      <Img
+                        src={getSafeQrUrl(selectedWithdraw.restaurantBankDetails?.upiQrImage || selectedWithdraw.restaurantId?.upiQrImage)}
+                        alt="Restaurant UPI QR"
+                        className="w-32 h-32 object-contain border border-slate-200 rounded-lg bg-white"
                       />
-                      <Label className="ml-2 text-sm text-slate-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</Label>
                     </Div>
-                  ))}
+                  ) : null}
                 </Div>
-              </Div>
+              </Card>
+
+              {selectedWithdraw.rejectionReason && (
+                <Div className="gap-0.5">
+                  <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rejection reason</Span>
+                  <P className="text-sm font-semibold text-slate-900">{selectedWithdraw.rejectionReason}</P>
+                </Div>
+              )}
             </Div>
-            <DialogFooter className="px-6 pb-6 flex justify-between">
-              <Button
-                onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
-              >
-                Reset Columns
-              </Button>
-              <Button
-                onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
-              >
-                Apply
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </Div>
-    </ScrollDiv>
+          )}
+          <DialogFooter className="px-4 pb-4">
+            <Button onClick={() => setIsViewOpen(false)} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Close</Span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Modal */}
+      <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
+        <DialogContent className="max-w-md bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="text-base font-semibold text-slate-900">Reject Withdrawal Request</DialogTitle>
+          </DialogHeader>
+          <Div className="px-4 py-4">
+            <Field label="Rejection reason" required hint="The partner sees this reason">
+              <Textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Enter reason for rejection…"
+                rows={4}
+                className="px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-900"
+              />
+            </Field>
+          </Div>
+          <DialogFooter className="px-4 pb-4 flex-row flex-wrap items-center justify-end gap-2">
+            <Button
+              onClick={() => {
+                setShowRejectModal(false);
+                setRejectionReason('');
+              }}
+              className={BTN_SECONDARY}
+            >
+              <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+            </Button>
+            <Button
+              onClick={() => selectedWithdraw && handleReject(selectedWithdraw.id)}
+              disabled={!rejectionReason.trim() || processingAction === selectedWithdraw?.id}
+              className={BTN_DANGER}
+            >
+              <Span className={BTN_TEXT_PRIMARY}>{processingAction === selectedWithdraw?.id ? 'Rejecting…' : 'Reject'}</Span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="max-w-md bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="text-base font-semibold text-slate-900">Table Settings</DialogTitle>
+          </DialogHeader>
+          <Div className="px-4 py-4 gap-2">
+            <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Visible columns</Span>
+            {Object.entries(visibleColumns).map(([key, isVisible]) => (
+              <Div key={key} className="flex-row items-center gap-3 h-11" onClick={() => toggleColumn(key)}>
+                <CheckBox checked={isVisible} onChange={() => toggleColumn(key)} className="w-5 h-5" />
+                <Span className="text-sm text-slate-700 flex-1">{COL_LABEL[key] || key}</Span>
+              </Div>
+            ))}
+          </Div>
+          <DialogFooter className="px-4 pb-4 flex-row flex-wrap items-center justify-end gap-2">
+            <Button onClick={resetColumns} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Reset columns</Span>
+            </Button>
+            <Button onClick={() => setIsSettingsOpen(false)} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Apply</Span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AdminPage>
   );
 }

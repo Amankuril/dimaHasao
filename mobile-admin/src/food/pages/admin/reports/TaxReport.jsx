@@ -15,30 +15,39 @@ import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
 import {
-  Button,
-  Div,
-  H1,
-  H2,
-  Input,
-  Label,
-  Option,
-  P,
-  ScrollDiv,
-  Select,
-  Span,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Icon as UiIcon,
-} from '../../../../components/web';
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Toolbar,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  LoadingState,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
+import { Button, Div, Input, Option, P, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../components/web';
 import { alert } from '../../../../lib/webShim';
+const COLS = [60, 190, 130, 130, 90];
+const LABELS = ['SI', 'Income Source', 'Total Income', 'Total Tax', 'Action'];
+const DETAIL_COLS = [130, 120, 110, 110];
+const DETAIL_LABELS = ['Order ID', 'Date', 'Amount', 'Tax'];
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
 export default function TaxReport() {
+  const { tablet } = useLayoutWidth();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -223,275 +232,219 @@ export default function TaxReport() {
   };
   if (loading && reports.length === 0) {
     return (
-      <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
-        <Div className="flex flex-col items-center gap-4">
-          <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin" />
-          <P className="text-gray-600">Loading tax report...</P>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={FileText}
+          title="Generate Tax Report"
+          subtitle="Income and tax collected across the district"
+          breadcrumb={[{ label: 'Food' }, { label: 'Reports' }, { label: 'Tax report' }]}
+        />
+        <LoadingState label="Loading tax report…" />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen overflow-x-hidden">
-      <Div className="w-full max-w-full">
-        {/* Page Header */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <H1 className="text-2xl font-bold text-slate-900">Generate Tax Report</H1>
-        </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={FileText}
+        title="Generate Tax Report"
+        subtitle="Income and tax collected across the district"
+        breadcrumb={[{ label: 'Food' }, { label: 'Reports' }, { label: 'Tax report' }]}
+      />
 
-        {/* Admin Tax Report Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <H2 className="text-lg font-semibold text-slate-900 mb-2">Admin Tax Report</H2>
-          <P className="text-sm text-slate-600 mb-6">To generate you tax report please select & input following field and submit for the result.</P>
+      <Card className="mb-4">
+        <SectionTitle>Admin tax report</SectionTitle>
+        <P className="text-sm text-slate-500 mb-3">Select the fields below and submit to generate the report.</P>
 
-          <Div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Div className="relative">
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Date Range Type</Label>
-              <Select
-                value={filters.dateRangeType}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    dateRangeType: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <Option value="All Time">All Time</Option>
-                <Option value="Today">Today</Option>
-                <Option value="This Week">This Week</Option>
-                <Option value="This Month">This Month</Option>
-                <Option value="This Year">This Year</Option>
-              </Select>
-              <UiIcon as={ChevronDown} className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
-            </Div>
-
-            <Div className="relative">
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Select How to calculate tax</Label>
-              <Select
-                value={filters.calculateTax}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    calculateTax: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <Option value="Percentage">Percentage</Option>
-                <Option value="Fixed Amount">Fixed Amount</Option>
-                <Option value="Tiered">Tiered</Option>
-              </Select>
-              <UiIcon as={ChevronDown} className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
-            </Div>
-
-            <Div className="relative">
-              <Label className="block text-sm font-semibold text-slate-700 mb-2">Select Tax Rates</Label>
-              <Select
-                value={filters.taxRate}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    taxRate: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <Option value="Select Tax Rate">Select Tax Rate</Option>
-                <Option value="5%">5%</Option>
-                <Option value="10%">10%</Option>
-                <Option value="15%">15%</Option>
-                <Option value="18%">18%</Option>
-                <Option value="20%">20%</Option>
-              </Select>
-              <UiIcon as={ChevronDown} className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
-            </Div>
-          </Div>
-
-          <Div className="flex items-center justify-end gap-3">
-            <Button
-              onClick={handleReset}
-              className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+        <Div className={`grid grid-cols-${tablet ? 2 : 1} gap-3`}>
+          <Field label="Date range type">
+            <Select
+              value={filters.dateRangeType}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  dateRangeType: e.target.value,
+                }))
+              }
+              className={INPUT}
             >
-              Reset
-            </Button>
-            <Button onClick={handleSubmit} className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all">
-              Submit
-            </Button>
-          </Div>
+              <Option value="All Time">All Time</Option>
+              <Option value="Today">Today</Option>
+              <Option value="This Week">This Week</Option>
+              <Option value="This Month">This Month</Option>
+              <Option value="This Year">This Year</Option>
+            </Select>
+          </Field>
+
+          <Field label="How to calculate tax">
+            <Select
+              value={filters.calculateTax}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  calculateTax: e.target.value,
+                }))
+              }
+              className={INPUT}
+            >
+              <Option value="Percentage">Percentage</Option>
+              <Option value="Fixed Amount">Fixed Amount</Option>
+              <Option value="Tiered">Tiered</Option>
+            </Select>
+          </Field>
+
+          <Field label="Tax rate">
+            <Select
+              value={filters.taxRate}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  taxRate: e.target.value,
+                }))
+              }
+              className={INPUT}
+            >
+              <Option value="Select Tax Rate">Select Tax Rate</Option>
+              <Option value="5%">5%</Option>
+              <Option value="10%">10%</Option>
+              <Option value="15%">15%</Option>
+              <Option value="18%">18%</Option>
+              <Option value="20%">20%</Option>
+            </Select>
+          </Field>
         </Div>
 
-        {/* Summary Cards */}
-        <Div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Total Income Card */}
-          <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <Div className="flex items-center justify-between">
-              <Div>
-                <P className="text-sm font-medium text-slate-600 mb-1">Total Income</P>
-                <P className="text-2xl font-bold text-blue-600">{stats.totalIncome}</P>
-              </Div>
-              <Div className="w-14 h-14 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <UiIcon as={DollarSign} className="w-8 h-8 text-yellow-600" />
-              </Div>
-            </Div>
+        <Toolbar className="mt-3 mb-0">
+          <Button onClick={handleSubmit} className={BTN_PRIMARY}>
+            <Span className={BTN_TEXT_PRIMARY}>Submit</Span>
+          </Button>
+          <Button onClick={handleReset} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+          </Button>
+        </Toolbar>
+      </Card>
+
+      <StatGrid className="mb-4">
+        <StatCard label="Total income" value={stats.totalIncome} icon={DollarSign} tone="info" />
+        <StatCard label="Total tax" value={stats.totalTax} icon={FileText} tone="warning" />
+      </StatGrid>
+
+      <Card className="mb-4">
+        <SectionTitle>Tax report list ({totalItems})</SectionTitle>
+        <Toolbar className="mb-0">
+          <Div className="flex-row items-center flex-1 min-w-[200px] gap-2">
+            <Input
+              type="text"
+              placeholder="Search income source…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`${INPUT} flex-1`}
+            />
+            {isRefreshing ? <UiIcon as={Loader2} size={16} className="text-slate-400" /> : <UiIcon as={Search} size={16} className="text-slate-400" />}
           </Div>
 
-          {/* Total Tax Card */}
-          <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <Div className="flex items-center justify-between">
-              <Div>
-                <P className="text-sm font-medium text-slate-600 mb-1">Total Tax</P>
-                <P className="text-2xl font-bold text-red-600">{stats.totalTax}</P>
-              </Div>
-              <Div className="w-14 h-14 rounded-lg bg-pink-100 flex items-center justify-center">
-                <UiIcon as={FileText} className="w-8 h-8 text-purple-600" />
-              </Div>
-            </Div>
-          </Div>
-        </Div>
-
-        {/* Tax Report List Section */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <Div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <H2 className="text-xl font-bold text-slate-900">Tax Report List ({totalItems})</H2>
-
-            <Div className="flex items-center gap-3">
-              <Div className="relative flex-1 sm:flex-initial min-w-[220px]">
-                <Input
-                  type="text"
-                  placeholder="Search income source..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-4 pr-10 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <UiIcon as={Search} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                {isRefreshing && <UiIcon as={Loader2} className="absolute right-9 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />}
-              </Div>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
-                    <UiIcon as={Download} className="w-4 h-4" />
-                    <Span className="text-black font-bold">Export</Span>
-                    <UiIcon as={ChevronDown} className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
-                >
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleExport('csv')} className="cursor-pointer">
-                    <UiIcon as={FileText} className="w-4 h-4 mr-2" />
-                    Export as CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('excel')} className="cursor-pointer">
-                    <UiIcon as={FileSpreadsheet} className="w-4 h-4 mr-2" />
-                    Export as Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer">
-                    <UiIcon as={FileText} className="w-4 h-4 mr-2" />
-                    Export as PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('json')} className="cursor-pointer">
-                    <UiIcon as={Code} className="w-4 h-4 mr-2" />
-                    Export as JSON
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
-              >
-                <UiIcon as={Settings} className="w-5 h-5" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className={BTN_SECONDARY}>
+                <UiIcon as={Download} size={16} className="text-slate-600" />
+                <Span className={BTN_TEXT_SECONDARY}>Export</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-500" />
               </Button>
-            </Div>
-          </Div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg">
+              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <UiIcon as={FileSpreadsheet} size={16} className="mr-2 text-slate-500" />
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <UiIcon as={FileText} size={16} className="mr-2 text-slate-500" />
+                Export as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('json')}>
+                <UiIcon as={Code} size={16} className="mr-2 text-slate-500" />
+                Export as JSON
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            onClick={() => setIsSettingsOpen(true)}
+            accessibilityLabel="Report settings"
+            className="w-11 h-11 rounded-lg border border-slate-300 bg-white items-center justify-center"
+          >
+            <UiIcon as={Settings} size={18} className="text-slate-600" />
+          </Button>
+        </Toolbar>
+      </Card>
 
-          {/* Table */}
-          {reports.length === 0 ? (
-            <Div className="py-20 text-center">
-              <Div className="flex flex-col items-center justify-center">
-                <Div className="w-20 h-20 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
-                  <UiIcon as={FileText} className="w-12 h-12 text-purple-600" />
-                </Div>
-                <P className="text-lg font-semibold text-slate-700 mb-2">No Tax Report Generated</P>
-                <P className="text-sm text-slate-500 max-w-md">To generate your tax report please select & input above field and submit for the result</P>
-              </Div>
-            </Div>
-          ) : (
-              <Table cols={[70, 180, 130, 120, 80]} className="w-full">
-                <Thead className="bg-slate-50 border-b border-slate-200">
-                  <Tr>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Income Source</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Income</Th>
-                    <Th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Tax</Th>
-                    <Th className="px-4 py-3 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</Th>
-                  </Tr>
-                </Thead>
-                <Tbody className="bg-white divide-y divide-slate-100">
-                  {reports.map((report) => (
-                    <Tr key={report.sl} className="hover:bg-slate-50 transition-colors">
-                      <Td className="px-4 py-3 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-700">{report.sl}</Span>
-                      </Td>
-                      <Td className="px-4 py-3 whitespace-nowrap">
-                        <Span className="text-sm text-slate-700">{report.incomeSource}</Span>
-                      </Td>
-                      <Td className="px-4 py-3 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-900">{report.totalIncome}</Span>
-                      </Td>
-                      <Td className="px-4 py-3 whitespace-nowrap">
-                        <Span className="text-sm font-medium text-slate-900">{report.totalTax}</Span>
-                      </Td>
-                      <Td className="px-4 py-3 text-center">
-                        <Button onClick={() => handleViewDetails(report)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                          View
-                        </Button>
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-          )}
+      {reports.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title="No tax report generated"
+          message="Pick a date range and tax basis above, then submit to generate the report."
+          actionLabel="Submit"
+          onAction={handleSubmit}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={LABELS} />
+          <TBody>
+            {reports.map((report, i, all) => (
+              <Row key={report.sl} last={i === all.length - 1}>
+                <Cell width={COLS[0]}>{report.sl}</Cell>
+                <Cell width={COLS[1]}>{report.incomeSource}</Cell>
+                <Cell width={COLS[2]} align="right">
+                  <Span className="text-sm font-medium text-slate-900">{report.totalIncome}</Span>
+                </Cell>
+                <Cell width={COLS[3]} align="right">
+                  <Span className="text-sm font-medium text-slate-900">{report.totalTax}</Span>
+                </Cell>
+                <Cell width={COLS[4]} align="center">
+                  <Button onClick={() => handleViewDetails(report)} accessibilityLabel="View tax details" className="h-11 px-3 rounded-lg items-center justify-center">
+                    <Span className="text-sm font-semibold text-blue-600">View</Span>
+                  </Button>
+                </Cell>
+              </Row>
+            ))}
+          </TBody>
+        </DataTable>
+      )}
 
-          <AdminListPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              try {
-                localStorage.setItem('admin_tax_report_pageSize', String(size));
-              } catch {}
-              setCurrentPage(1);
-            }}
-            itemLabel="sources"
-          />
-        </Div>
-      </Div>
+      <AdminListPagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          try {
+            localStorage.setItem('admin_tax_report_pageSize', String(size));
+          } catch {}
+          setCurrentPage(1);
+        }}
+        itemLabel="sources"
+      />
 
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <UiIcon as={Settings} className="w-5 h-5" />
+        <DialogContent className="max-w-md bg-white p-0">
+          <DialogHeader className="px-4 pt-4 pb-2">
+            <DialogTitle className="flex-row items-center gap-2">
+              <UiIcon as={Settings} size={18} className="text-slate-600" />
               Report Settings
             </DialogTitle>
           </DialogHeader>
-          <Div className="px-6 pb-6">
+          <Div className="px-4 pb-4">
             <P className="text-sm text-slate-700">Tax report settings and preferences will be available here.</P>
           </Div>
-          <Div className="px-6 pb-6 flex items-center justify-end">
-            <Button
-              onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
-            >
-              Close
+          <Div className="px-4 pb-4 flex-row items-center justify-end">
+            <Button onClick={() => setIsSettingsOpen(false)} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Close</Span>
             </Button>
           </Div>
         </DialogContent>
@@ -505,63 +458,50 @@ export default function TaxReport() {
         }}
       >
         <DialogContent className="max-w-2xl bg-white p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100">
-            <DialogTitle className="flex items-center justify-between">
-              <Span className="flex items-center gap-2">
-                <UiIcon as={FileText} className="w-5 h-5 text-blue-600" />
-                Tax Details: {selectedReport?.incomeSource}
-              </Span>
+          <DialogHeader className="px-4 pt-4 pb-3 border-b border-slate-200">
+            <DialogTitle className="flex-row items-center gap-2">
+              <UiIcon as={FileText} size={18} className="text-blue-600" />
+              Tax Details: {selectedReport?.incomeSource}
             </DialogTitle>
           </DialogHeader>
 
-          <ScrollDiv className="p-6 max-h-[70vh]">
+          <ScrollDiv className="p-4 max-h-[70vh]">
             {detailLoading ? (
-              <Div className="flex flex-col items-center justify-center py-12">
-                <UiIcon as={Loader2} className="w-8 h-8 text-blue-600 animate-spin mb-4" />
-                <P className="text-slate-600">Fetching order details...</P>
-              </Div>
+              <LoadingState label="Fetching order details…" />
             ) : reportDetail?.orders?.length > 0 ? (
-              <Table cols={[130, 120, 110, 110]} className="w-full">
-                  <Thead className="bg-slate-50 border-b border-slate-200">
-                    <Tr>
-                      <Th className="px-4 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Order ID</Th>
-                      <Th className="px-4 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</Th>
-                      <Th className="px-4 py-2 text-right text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</Th>
-                      <Th className="px-4 py-2 text-right text-[10px] font-bold text-slate-700 uppercase tracking-wider">Tax</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody className="divide-y divide-slate-100">
-                    {reportDetail.orders.map((order) => (
-                      <Tr key={order.id} className="hover:bg-slate-50 transition-colors">
-                        <Td className="px-4 py-3 text-sm font-medium text-slate-900">{order.orderId}</Td>
-                        <Td className="px-4 py-3 text-sm text-slate-600">{new Date(order.date).toLocaleDateString('en-IN')}</Td>
-                        <Td className="px-4 py-3 text-sm text-right text-slate-700">{order.totalAmount}</Td>
-                        <Td className="px-4 py-3 text-sm text-right font-semibold text-red-600">{order.taxAmount}</Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-              </Table>
+              <DataTable cols={DETAIL_COLS}>
+                <THead cols={DETAIL_COLS} labels={DETAIL_LABELS} />
+                <TBody>
+                  {reportDetail.orders.map((order, i, all) => (
+                    <Row key={order.id} last={i === all.length - 1}>
+                      <Cell width={DETAIL_COLS[0]}>
+                        <Span className="text-sm font-medium text-slate-900">{order.orderId}</Span>
+                      </Cell>
+                      <Cell width={DETAIL_COLS[1]}>{new Date(order.date).toLocaleDateString('en-IN')}</Cell>
+                      <Cell width={DETAIL_COLS[2]} align="right">{order.totalAmount}</Cell>
+                      <Cell width={DETAIL_COLS[3]} align="right">
+                        <Span className="text-sm font-semibold text-red-600">{order.taxAmount}</Span>
+                      </Cell>
+                    </Row>
+                  ))}
+                </TBody>
+              </DataTable>
             ) : (
-              <Div className="text-center py-12">
-                <P className="text-slate-500">No detailed orders found for this period.</P>
-              </Div>
+              <EmptyState title="No detailed orders" message="No orders were found for this income source in this period." />
             )}
           </ScrollDiv>
 
-          <Div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-            <Div className="text-sm">
-              <Span className="text-slate-500">Total Tax: </Span>
-              <Span className="font-bold text-red-600">{selectedReport?.totalTax}</Span>
+          <Div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex-row items-center justify-between gap-3 flex-wrap">
+            <Div className="flex-row items-baseline gap-1">
+              <Span className="text-sm text-slate-500">Total Tax:</Span>
+              <Span className="text-sm font-bold text-red-600">{selectedReport?.totalTax}</Span>
             </Div>
-            <Button
-              onClick={() => setSelectedReport(null)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all"
-            >
-              Close
+            <Button onClick={() => setSelectedReport(null)} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Close</Span>
             </Button>
           </Div>
         </DialogContent>
       </Dialog>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

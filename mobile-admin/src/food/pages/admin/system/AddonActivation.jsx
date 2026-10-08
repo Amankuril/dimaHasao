@@ -1,7 +1,10 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/AddonActivation.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { ChevronDown, Settings } from 'lucide-react-native';
-import { Button, Div, H1, H2, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { ChevronDown, Puzzle, Settings } from 'lucide-react-native';
+import { AdminPage, PageHeader, Card, StatusBadge } from '../../../../admin/ui';
+import { Button, Div, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -28,14 +31,17 @@ const addons = [
     hasSettings: false,
   },
 ];
-function ToggleSwitch({ enabled, onToggle }) {
+function ToggleSwitch({ enabled, onToggle, label }) {
   return (
     <Button
       type="button"
       onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}
+      accessibilityLabel={label}
+      className="w-11 h-11 items-center justify-center shrink-0"
     >
-      <Span className="h-5 w-5 rounded-full bg-white shadow-sm" />
+      <Div className={`flex-row items-center w-11 h-6 rounded-full border px-0.5 ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}>
+        <Span className="h-5 w-5 rounded-full bg-white" />
+      </Div>
     </Button>
   );
 }
@@ -59,51 +65,48 @@ export default function AddonActivation() {
     debugLog('Settings for addon:', id);
   };
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto max-w-5xl">
-        {/* Page Title */}
-        <Div className="mb-4">
-          <H1 className="text-lg font-bold text-slate-900">Add on activation</H1>
-        </Div>
+    <AdminPage>
+      <PageHeader
+        icon={Puzzle}
+        title="Add on activation"
+        subtitle="Turn the companion apps and storefront on or off"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Add-ons' }]}
+      />
 
-        {/* Addon Cards */}
-        <Div className="space-y-3">
-          {addons.map((addon) => (
-            <Div key={addon.id} className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-              <Div className="flex items-start justify-between gap-4">
-                {/* Left: Title and Description */}
-                <Div className="flex-1">
-                  <H2 className="text-sm font-semibold text-slate-900 mb-1">{addon.title}</H2>
-                  <P className="text-xs text-slate-600">{addon.description}</P>
-                </Div>
+      <Div className="gap-3">
+        {addons.map((addon) => (
+          <Card key={addon.id} className="gap-3">
+            <Div className="flex-row items-start gap-3">
+              <Div className="flex-1 min-w-0 gap-1">
+                <Text style={tw`text-base font-semibold text-slate-900`}>{addon.title}</Text>
+                <Text style={tw`text-sm text-slate-500`}>{addon.description}</Text>
+              </Div>
+              <StatusBadge status={addonStates[addon.id] ? 'enabled' : 'disabled'} label={addonStates[addon.id] ? 'Enabled' : 'Disabled'} />
+            </Div>
 
-                {/* Right: Actions */}
-                <Div className="flex items-center gap-3">
-                  {/* View Dropdown */}
-                  <Button type="button" onClick={() => handleView(addon.id)} className="flex items-center gap-1 text-xs text-slate-700 hover:text-slate-900">
-                    <Span>View</Span>
-                    <UiIcon as={ChevronDown} className="w-3 h-3" />
+            <Div className="flex-row flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
+              <Button type="button" onClick={() => handleView(addon.id)} className="flex-row items-center gap-1 h-11 pr-3">
+                <Span className="text-sm font-semibold text-slate-700">View</Span>
+                <UiIcon as={ChevronDown} size={14} className="text-slate-500" />
+              </Button>
+
+              <Div className="flex-row items-center gap-1">
+                <ToggleSwitch enabled={addonStates[addon.id]} onToggle={() => handleToggle(addon.id)} label={`Toggle ${addon.title}`} />
+                {addon.hasSettings ? (
+                  <Button
+                    type="button"
+                    onClick={() => handleSettings(addon.id)}
+                    accessibilityLabel={`${addon.title} settings`}
+                    className="w-11 h-11 rounded-lg items-center justify-center"
+                  >
+                    <UiIcon as={Settings} size={18} className="text-slate-600" />
                   </Button>
-
-                  {/* Toggle Switch */}
-                  <ToggleSwitch enabled={addonStates[addon.id]} onToggle={() => handleToggle(addon.id)} />
-
-                  {/* Settings Icon (only for Restaurant app) */}
-                  {addon.hasSettings && (
-                    <Button
-                      type="button"
-                      onClick={() => handleSettings(addon.id)}
-                      className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
-                    >
-                      <UiIcon as={Settings} className="w-4 h-4" />
-                    </Button>
-                  )}
-                </Div>
+                ) : null}
               </Div>
             </Div>
-          ))}
-        </Div>
+          </Card>
+        ))}
       </Div>
-    </ScrollDiv>
+    </AdminPage>
   );
 }

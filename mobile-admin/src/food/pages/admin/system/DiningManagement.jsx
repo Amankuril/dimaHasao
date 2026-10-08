@@ -7,8 +7,6 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
-  ArrowUp,
-  ArrowDown,
   Layout,
   Tag,
   UtensilsCrossed,
@@ -17,12 +15,26 @@ import {
 } from 'lucide-react-native';
 import api, { adminAPI, uploadAPI } from '../../../../api/food';
 import { getModuleToken } from '../../../../admin/session';
-import { Input } from '../../../../components/shadcn';
-import { Label } from '../../../../components/shadcn';
-import { Button } from '../../../../components/shadcn';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  Field,
+  INPUT,
+  LoadingState,
+  EmptyState,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+  useLayoutWidth,
+} from '../../../../admin/ui';
 import { prepareUploadFile } from '../../../../lib/images';
 import { pickImage, objectUrl } from '../../../../lib/files';
-import { Div, H1, H2, Img, P, ScrollDiv, Icon as UiIcon } from '../../../../components/web';
+import { Button, Div, Img, Input, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { window } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -232,244 +244,242 @@ export default function DiningManagement() {
       icon: ImageIcon,
     },
   ];
+  const { tablet, wide } = useLayoutWidth();
+  const formCol = tablet ? { width: '34%' } : { width: '100%' };
+  const listCol = tablet ? { width: '62%' } : { width: '100%' };
+  const tileCol = wide ? { width: '31.5%' } : tablet ? { width: '48%' } : { width: '100%' };
+  const bannerCol = tablet ? { width: '48%' } : { width: '100%' };
   return (
-    <ScrollDiv className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <Div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <Div className="flex items-center gap-3">
-            <Div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-              <UiIcon as={UtensilsCrossed} className="w-5 h-5 text-white" />
-            </Div>
-            <Div>
-              <H1 className="text-2xl font-bold text-slate-900">Dining Management</H1>
-              <P className="text-sm text-slate-600 mt-1">Manage dining categories, restaurant links, banners, and stories</P>
-            </Div>
-          </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={UtensilsCrossed}
+        title="Dining Management"
+        subtitle="Manage dining categories and the banners on the dining page"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'Dining' }]}
+      />
+
+      <Card className="mb-4" padded={false}>
+        <Div className="flex-row flex-wrap gap-2 p-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const on = activeTab === tab.id;
+            return (
+              <Button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-row items-center gap-2 h-11 px-4 rounded-lg ${on ? 'bg-blue-600' : 'bg-white'}`}>
+                <UiIcon as={Icon} size={16} className={on ? 'text-white' : 'text-slate-600'} />
+                <Span className={on ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>{tab.label}</Span>
+              </Button>
+            );
+          })}
         </Div>
+      </Card>
 
-        {/* Tabs */}
-        <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-6">
-          <Div className="flex gap-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <Button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.id ? 'bg-blue-500 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-                >
-                  <UiIcon as={Icon} className="w-4 h-4" />
-                  {tab.label}
-                </Button>
-              );
-            })}
-          </Div>
-        </Div>
+      {success ? (
+        <Card className="mb-4 bg-green-50 border-green-200 flex-row items-center gap-2">
+          <UiIcon as={CheckCircle2} size={16} className="text-green-700 shrink-0" />
+          <Text style={tw`text-sm text-slate-700 flex-1`}>{success}</Text>
+        </Card>
+      ) : null}
+      {error ? (
+        <Card className="mb-4 bg-red-50 border-red-200 flex-row items-center gap-2">
+          <UiIcon as={AlertCircle} size={16} className="text-red-700 shrink-0" />
+          <Text style={tw`text-sm text-slate-700 flex-1`}>{error}</Text>
+        </Card>
+      ) : null}
 
-        {/* Messages */}
-        {success && (
-          <Div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2 max-w-2xl">
-            <UiIcon as={CheckCircle2} className="w-5 h-5" />
-            {success}
-          </Div>
-        )}
-        {error && (
-          <Div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2 max-w-2xl">
-            <UiIcon as={AlertCircle} className="w-5 h-5" />
-            {error}
-          </Div>
-        )}
-
-        {/* Content */}
-        {activeTab === 'categories' && (
-          <Div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Div className="lg:col-span-1">
-              <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <Div className="flex items-center justify-between gap-3 mb-4">
-                  <H2 className="text-lg font-bold text-slate-900">{editingCategoryId ? 'Edit Category' : 'Add Category'}</H2>
-                  {editingCategoryId && (
-                    <Button type="button" variant="outline" onClick={resetCategoryForm} className="gap-2">
-                      <UiIcon as={X} className="w-4 h-4" />
-                      Cancel
+      {activeTab === 'categories' ? (
+        <Div className="flex-row flex-wrap gap-4">
+          <Div style={formCol}>
+            <Card>
+              <SectionTitle
+                action={
+                  editingCategoryId ? (
+                    <Button type="button" onClick={resetCategoryForm} className={BTN_SECONDARY}>
+                      <UiIcon as={X} size={16} className="text-slate-600" />
+                      <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
                     </Button>
-                  )}
-                </Div>
-                <Div className="space-y-4">
-                  <Div>
-                    <Label>Name</Label>
-                    <Input value={categoryName} onChange={(e) => setCategoryName(e.target.value)} placeholder="Category Name" className="mt-1" />
-                  </Div>
-                  <Div>
-                    <Label>{editingCategoryId ? 'Replace Image' : 'Image'}</Label>
-                    <Div className="mt-1 flex items-center gap-3">
+                  ) : null
+                }
+              >
+                {editingCategoryId ? 'Edit Category' : 'Add Category'}
+              </SectionTitle>
+              <Div className="gap-3">
+                <Field label="Name" required>
+                  <Input value={categoryName} onChange={(e) => setCategoryName(e.target.value)} placeholder="Category Name" className={INPUT} />
+                </Field>
+                <Field label={editingCategoryId ? 'Replace Image' : 'Image'} required={!editingCategoryId}>
+                  <Div className="gap-2">
+                    <Div className="flex-row flex-wrap items-center gap-2">
                       <Button
                         type="button"
-                        variant="outline"
                         onClick={async () => {
                           const picked = await pickImage();
                           if (picked) setCategoryFile(picked);
                         }}
-                        className="gap-2"
+                        className={BTN_SECONDARY}
                       >
-                        <UiIcon as={Upload} className="w-4 h-4" />
-                        Choose Image
+                        <UiIcon as={Upload} size={16} className="text-slate-600" />
+                        <Span className={BTN_TEXT_SECONDARY}>Choose Image</Span>
                       </Button>
-                      {categoryFile && <P className="text-xs text-slate-600 flex-1">{categoryFile.name}</P>}
+                      {categoryFile ? (
+                        <Text style={tw`text-xs text-slate-500 flex-1`} numberOfLines={2}>
+                          {categoryFile.name}
+                        </Text>
+                      ) : null}
                     </Div>
-                    {categoryFile && (
-                      <Img src={objectUrl(categoryFile)} alt={categoryFile.name} className="mt-3 w-24 h-24 rounded-lg object-cover border border-slate-200" />
-                    )}
-                    {editingCategoryId && editingCategoryImageUrl && !categoryFile && (
-                      <Div className="mt-3">
-                        <Img
-                          src={editingCategoryImageUrl}
-                          alt={categoryName || 'Current category'}
-                          className="w-24 h-24 rounded-lg object-cover border border-slate-200"
-                        />
-                        <P className="text-xs text-slate-500 mt-2">Current image will be kept unless you select a new one.</P>
+                    {categoryFile ? (
+                      <Img src={objectUrl(categoryFile)} alt={categoryFile.name} className="w-24 h-24 rounded-lg object-cover border border-slate-200" />
+                    ) : null}
+                    {editingCategoryId && editingCategoryImageUrl && !categoryFile ? (
+                      <Div className="gap-1">
+                        <Img src={editingCategoryImageUrl} alt={categoryName || 'Current category'} className="w-24 h-24 rounded-lg object-cover border border-slate-200" />
+                        <Text style={tw`text-xs text-slate-500`}>Current image will be kept unless you select a new one.</Text>
                       </Div>
-                    )}
+                    ) : null}
                   </Div>
-                  <Button onClick={handleSubmitCategory} disabled={categoriesUploading} className="w-full bg-blue-600 hover:bg-blue-700">
-                    {categoriesUploading ? <UiIcon as={Loader2} className="w-4 h-4 animate-spin" /> : editingCategoryId ? 'Update Category' : 'Create Category'}
-                  </Button>
-                </Div>
+                </Field>
+                <Button onClick={handleSubmitCategory} disabled={categoriesUploading} className={BTN_PRIMARY}>
+                  {categoriesUploading ? (
+                    <UiIcon as={Loader2} size={16} className="text-white" />
+                  ) : (
+                    <Span className={BTN_TEXT_PRIMARY}>{editingCategoryId ? 'Update Category' : 'Create Category'}</Span>
+                  )}
+                </Button>
               </Div>
-            </Div>
-            <Div className="lg:col-span-2">
-              <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <H2 className="text-lg font-bold text-slate-900 mb-4">Categories List</H2>
-                {categoriesLoading ? (
-                  <Div className="flex justify-center p-8">
-                    <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600" />
-                  </Div>
-                ) : (
-                  <Div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {categories.map((cat) => (
-                      <Div key={cat._id} className="border rounded-lg overflow-hidden group relative">
-                        <Img src={cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover" />
-                        <Div className="p-3 bg-white">
-                          <P className="font-medium text-slate-900">{cat.name}</P>
-                        </Div>
-                        <Div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button onClick={() => handleEditCategory(cat)} className="p-1.5 bg-blue-100 text-blue-600 rounded-full">
-                            <UiIcon as={Edit} className="w-4 h-4" />
-                          </Button>
-                          <Button onClick={() => handleDeleteCategory(cat._id)} className="p-1.5 bg-red-100 text-red-600 rounded-full">
-                            {categoriesDeleting === cat._id ? (
-                              <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <UiIcon as={Trash2} className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </Div>
-                      </Div>
-                    ))}
-                    {categories.length === 0 && <P className="text-slate-500 text-center col-span-full py-8">No categories found.</P>}
-                  </Div>
-                )}
-              </Div>
-            </Div>
+            </Card>
           </Div>
-        )}
+          <Div style={listCol}>
+            <Card>
+              <SectionTitle>Categories List</SectionTitle>
+              {categoriesLoading ? (
+                <LoadingState label="Loading categories…" />
+              ) : categories.length === 0 ? (
+                <EmptyState icon={Tag} title="No categories yet" message="Create a dining category with the form beside this list." actionLabel="Refresh" onAction={fetchCategories} />
+              ) : (
+                <Div className="flex-row flex-wrap gap-3">
+                  {categories.map((cat) => (
+                    <Div key={cat._id} style={tileCol} className="border border-slate-200 rounded-xl overflow-hidden">
+                      <Img src={cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover" />
+                      <Div className="p-3 bg-white flex-row items-center gap-2">
+                        <Text style={tw`text-sm font-semibold text-slate-900 flex-1`} numberOfLines={2}>
+                          {cat.name}
+                        </Text>
+                        <Button onClick={() => handleEditCategory(cat)} accessibilityLabel={`Edit ${cat.name}`} className="w-11 h-11 rounded-lg items-center justify-center">
+                          <UiIcon as={Edit} size={16} className="text-blue-600" />
+                        </Button>
+                        <Button onClick={() => handleDeleteCategory(cat._id)} accessibilityLabel={`Delete ${cat.name}`} className="w-11 h-11 rounded-lg items-center justify-center">
+                          <UiIcon as={categoriesDeleting === cat._id ? Loader2 : Trash2} size={16} className="text-red-600" />
+                        </Button>
+                      </Div>
+                    </Div>
+                  ))}
+                </Div>
+              )}
+            </Card>
+          </Div>
+        </Div>
+      ) : null}
 
-        {activeTab === 'banners' && (
-          <Div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Div className="lg:col-span-1">
-              <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <H2 className="text-lg font-bold text-slate-900 mb-2">Add Dining Page Banner</H2>
-                <P className="text-sm text-slate-500 mb-4">This banner shows on the user dining page and is not linked to any restaurant.</P>
-                <Div className="space-y-4">
-                  <Div>
-                    <Label>Image</Label>
-                    <Div className="mt-1 flex items-center gap-3">
+      {activeTab === 'banners' ? (
+        <Div className="flex-row flex-wrap gap-4">
+          <Div style={formCol}>
+            <Card>
+              <SectionTitle>Add Dining Page Banner</SectionTitle>
+              <Text style={tw`text-sm text-slate-500 mb-3`}>This banner shows on the user dining page and is not linked to any restaurant.</Text>
+              <Div className="gap-3">
+                <Field label="Image" required>
+                  <Div className="gap-2">
+                    <Div className="flex-row flex-wrap items-center gap-2">
                       <Button
                         type="button"
-                        variant="outline"
                         onClick={async () => {
                           const picked = await pickImage();
                           setBannerFile(picked || null);
                           setError(null);
                         }}
-                        className="gap-2"
+                        className={BTN_SECONDARY}
                       >
-                        <UiIcon as={Upload} className="w-4 h-4" />
-                        Choose Image
+                        <UiIcon as={Upload} size={16} className="text-slate-600" />
+                        <Span className={BTN_TEXT_SECONDARY}>Choose Image</Span>
                       </Button>
-                      {bannerFile && <P className="text-xs text-slate-600 flex-1">{bannerFile.name}</P>}
+                      {bannerFile ? (
+                        <Text style={tw`text-xs text-slate-500 flex-1`} numberOfLines={2}>
+                          {bannerFile.name}
+                        </Text>
+                      ) : null}
                     </Div>
-                    {bannerFile && (
-                      <Img src={objectUrl(bannerFile)} alt={bannerFile.name} className="mt-3 w-full h-32 rounded-lg object-cover border border-slate-200" />
-                    )}
+                    {bannerFile ? <Img src={objectUrl(bannerFile)} alt={bannerFile.name} className="w-full h-32 rounded-lg object-cover border border-slate-200" /> : null}
                   </Div>
-                  <Div>
-                    <Label>Promo Text</Label>
-                    <Input
-                      value={bannerPercentageOff}
-                      onChange={(e) => {
-                        setBannerPercentageOff(e.target.value);
-                        setError(null);
-                      }}
-                      placeholder="Optional, e.g. 50% OFF"
-                      className="mt-1"
-                    />
-                  </Div>
-                  <Div>
-                    <Label>Tagline</Label>
-                    <Input
-                      value={bannerTagline}
-                      onChange={(e) => {
-                        setBannerTagline(e.target.value);
-                        setError(null);
-                      }}
-                      placeholder="Optional, e.g. Weekend dining specials"
-                      className="mt-1"
-                    />
-                  </Div>
-                  <Button onClick={handleSubmitBanner} disabled={bannersUploading} className="w-full bg-blue-600 hover:bg-blue-700">
-                    {bannersUploading ? <UiIcon as={Loader2} className="w-4 h-4 animate-spin" /> : 'Create Banner'}
-                  </Button>
-                </Div>
+                </Field>
+                <Field label="Promo Text" hint="Optional, e.g. 50% OFF">
+                  <Input
+                    value={bannerPercentageOff}
+                    onChange={(e) => {
+                      setBannerPercentageOff(e.target.value);
+                      setError(null);
+                    }}
+                    placeholder="Optional, e.g. 50% OFF"
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Tagline" hint="Optional, e.g. Weekend dining specials">
+                  <Input
+                    value={bannerTagline}
+                    onChange={(e) => {
+                      setBannerTagline(e.target.value);
+                      setError(null);
+                    }}
+                    placeholder="Optional, e.g. Weekend dining specials"
+                    className={INPUT}
+                  />
+                </Field>
+                <Button onClick={handleSubmitBanner} disabled={bannersUploading} className={BTN_PRIMARY}>
+                  {bannersUploading ? <UiIcon as={Loader2} size={16} className="text-white" /> : <Span className={BTN_TEXT_PRIMARY}>Create Banner</Span>}
+                </Button>
               </Div>
-            </Div>
-            <Div className="lg:col-span-2">
-              <Div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <H2 className="text-lg font-bold text-slate-900 mb-4">Dining Page Banners</H2>
-                {bannersLoading ? (
-                  <Div className="flex justify-center p-8">
-                    <UiIcon as={Loader2} className="w-8 h-8 animate-spin text-blue-600" />
-                  </Div>
-                ) : (
-                  <Div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {banners.map((banner) => (
-                      <Div key={banner._id} className="border rounded-lg overflow-hidden group relative">
-                        <Img src={banner.imageUrl} alt={banner.title || 'Dining banner'} className="w-full h-32 object-cover" />
-                        <Div className="p-3 bg-white">
-                          {banner.ctaText && <P className="font-bold text-slate-900">{banner.ctaText}</P>}
-                          {banner.title && <P className="text-sm text-slate-600">{banner.title}</P>}
-                          <P className="text-xs text-slate-500 mt-1">{banner.isActive === false ? 'Inactive' : 'Active on dining page'}</P>
+            </Card>
+          </Div>
+          <Div style={listCol}>
+            <Card>
+              <SectionTitle>Dining Page Banners</SectionTitle>
+              {bannersLoading ? (
+                <LoadingState label="Loading banners…" />
+              ) : banners.length === 0 ? (
+                <EmptyState icon={ImageIcon} title="No banners yet" message="Add a banner with the form beside this list." actionLabel="Refresh" onAction={fetchBanners} />
+              ) : (
+                <Div className="flex-row flex-wrap gap-3">
+                  {banners.map((banner) => (
+                    <Div key={banner._id} style={bannerCol} className="border border-slate-200 rounded-xl overflow-hidden">
+                      <Img src={banner.imageUrl} alt={banner.title || 'Dining banner'} className="w-full h-32 object-cover" />
+                      <Div className="p-3 bg-white flex-row items-start gap-2">
+                        <Div className="flex-1 min-w-0 gap-1">
+                          {banner.ctaText ? (
+                            <Text style={tw`text-sm font-semibold text-slate-900`} numberOfLines={2}>
+                              {banner.ctaText}
+                            </Text>
+                          ) : null}
+                          {banner.title ? (
+                            <Text style={tw`text-sm text-slate-500`} numberOfLines={2}>
+                              {banner.title}
+                            </Text>
+                          ) : null}
+                          <Text style={tw`text-xs text-slate-500`}>{banner.isActive === false ? 'Inactive' : 'Active on dining page'}</Text>
                         </Div>
                         <Button
                           onClick={() => handleDeleteBanner(banner._id)}
-                          className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          accessibilityLabel="Delete banner"
+                          className="w-11 h-11 rounded-lg items-center justify-center shrink-0"
                         >
-                          {bannersDeleting === banner._id ? (
-                            <UiIcon as={Loader2} className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <UiIcon as={Trash2} className="w-4 h-4" />
-                          )}
+                          <UiIcon as={bannersDeleting === banner._id ? Loader2 : Trash2} size={16} className="text-red-600" />
                         </Button>
                       </Div>
-                    ))}
-                    {banners.length === 0 && <P className="text-slate-500 text-center col-span-full py-8">No banners found.</P>}
-                  </Div>
-                )}
-              </Div>
-            </Div>
+                    </Div>
+                  ))}
+                </Div>
+              )}
+            </Card>
           </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+        </Div>
+      ) : null}
+    </AdminPage>
   );
 }

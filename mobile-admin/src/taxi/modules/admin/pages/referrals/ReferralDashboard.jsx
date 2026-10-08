@@ -1,246 +1,232 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/referrals/ReferralDashboard.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
-import { Users, ArrowUpRight, UserCheck, Zap, IndianRupee, Loader2 } from 'lucide-react-native';
+import { useWindowDimensions } from 'react-native';
+import { Users, UserCheck, Zap, IndianRupee, Share2, BarChart3 } from 'lucide-react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import { adminService } from '../../services/adminService';
 import { toast } from '../../../../../lib/notify';
 import { useSettings } from '../../../../shared/context/SettingsContext';
-import { Div, Footer, H3, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
-const StatCard = ({ title, value, change, icon: Icon }) => (
-  <Div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between h-full group hover:border-yellow-200 hover:shadow-md transition-all">
-    <Div className="flex items-start justify-between">
-      <Div className="flex flex-col">
-        <P className="text-sm font-bold text-gray-500 mb-1">{title}</P>
-        <H3 className="text-2xl font-black text-gray-900 leading-none">{value}</H3>
-      </Div>
-      <Div className={`p-2.5 rounded-xl bg-yellow-50 text-yellow-600 group-hover:bg-yellow-400 group-hover:text-black transition-colors`}>
-        <Icon size={20} />
-      </Div>
-    </Div>
-    {change && (
-      <Div className="mt-4 flex items-center gap-1.5">
-        <Div className="flex items-center gap-0.5 text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-full">
-          <UiIcon as={ArrowUpRight} size={14} />
-          <Span>{change}%</Span>
-        </Div>
-      </Div>
-    )}
-  </Div>
-);
-const ChartContainer = ({ title, children, fullWidth }) => (
-  <Div
-    className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col ${fullWidth ? 'col-span-12' : 'col-span-12 lg:col-span-6'}`}
-  >
-    <Div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-      <H3 className="text-sm font-bold text-gray-900">{title}</H3>
-    </Div>
-    <Div className="p-6 flex-1 min-h-[300px] flex flex-col">{children}</Div>
-  </Div>
-);
-const PieChartMock = ({ color1, color2, label1, label2, val1, val2 }) => {
-  const isZero = val1 === 0 && val2 === 0;
-  if (isZero) {
-    return (
-      <Div className="flex flex-col items-center justify-center h-full flex-1 text-center py-10">
-        <Div className="w-24 h-24 rounded-full border-8 border-gray-100 mb-4 flex items-center justify-center bg-gray-50">
-          <Span className="text-gray-400 font-bold text-sm">No Data</Span>
-        </Div>
-        <P className="text-sm font-medium text-gray-500">No referrals found yet.</P>
-      </Div>
-    );
+import {
+  A,
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  useLayoutWidth,
+} from '../../../../../admin/ui';
+import { Div, Span } from '../../../../../components/web';
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const AXIS = { fontSize: 11, color: A.textMuted };
+
+const DonutBreakdown = ({ color1, color2, label1, label2, val1, val2, radius }) => {
+  if (val1 === 0 && val2 === 0) {
+    return <EmptyState className="border-0" icon={Share2} title="No referrals yet" message="Referral counts appear here once riders start sharing their code." />;
   }
   return (
-    <Div className="flex flex-col items-center justify-center h-full flex-1">
+    <Div className="items-center gap-4">
       <PieChart
         donut
-        radius={96}
-        innerRadius={80}
+        radius={radius}
+        innerRadius={Math.round(radius * 0.8)}
         innerCircleColor="#FFFFFF"
         data={[
           { value: val1, color: color1 },
           { value: val2, color: color2 },
         ]}
         centerLabelComponent={() => (
-          <Div className="text-center flex flex-col items-center justify-center">
-            <P className="text-xs font-bold text-gray-500">{label1}</P>
-            <P className="text-2xl font-black text-gray-900">{val1}</P>
+          <Div className="items-center justify-center">
+            <Span className="text-xs text-slate-500" numberOfLines={1}>
+              {label1}
+            </Span>
+            <Span className="text-xl font-bold text-slate-900">{String(val1)}</Span>
           </Div>
         )}
       />
-      <Div className="mt-8 flex items-center gap-6">
-        <Div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-          <Div
-            className="w-3 h-3 rounded-full"
-            style={{
-              backgroundColor: color1,
-            }}
-          ></Div>
-          <Span className="text-xs font-bold text-gray-700">{label1}</Span>
-        </Div>
-        <Div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-          <Div
-            className="w-3 h-3 rounded-full"
-            style={{
-              backgroundColor: color2,
-            }}
-          ></Div>
-          <Span className="text-xs font-bold text-gray-700">{label2}</Span>
-        </Div>
-      </Div>
-    </Div>
-  );
-};
-const LineChartMock = ({ color, data }) => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const maxVal = Math.max(...data, 2) || 2;
-  const isZero = data.every((val) => val === 0);
-  if (isZero) {
-    return (
-      <Div className="flex flex-col items-center justify-center h-full flex-1 text-center py-10">
-        <Div className="flex items-end gap-2 h-24 mb-4 opacity-50">
-          {[28, 44, 18, 50, 34].map((h, i) => (
-            <Div
-              key={i}
-              className="w-4 bg-gray-100 rounded-t-sm"
-              style={{
-                height: `${h}%`,
-              }}
-            ></Div>
-          ))}
-        </Div>
-        <P className="text-sm font-medium text-gray-500">No monthly data available.</P>
-      </Div>
-    );
-  }
-  return (
-    <Div className="w-full h-full flex flex-col justify-between flex-1">
-      <Div className="flex-1 flex items-end justify-between gap-2 relative pt-6 min-h-[160px]">
-        {/* Grid Lines */}
-        <Div className="absolute inset-x-0 top-0 h-px bg-gray-100"></Div>
-        <Div className="absolute inset-x-0 bottom-0 h-px bg-gray-200"></Div>
-        <Div className="absolute inset-x-0 top-1/2 h-px bg-gray-50 border-t border-dashed border-gray-200"></Div>
-
-        {/* Bars */}
-        {data.map((val, i) => (
-          <Div key={i} className="flex-1 flex flex-col items-center group relative h-full justify-end">
-            <Div
-              className="w-full max-w-[24px] rounded-t-md transition-all duration-700 relative z-10 hover:opacity-80"
-              style={{
-                height: `${(val / maxVal) * 100}%`,
-                backgroundColor: val > 0 ? color : '#F3F4F6',
-                minHeight: val > 0 ? 4 : 2,
-              }}
-            >
-              {val > 0 && (
-                <Div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-bold py-1 px-2 rounded pointer-events-none transition-opacity whitespace-nowrap z-20">
-                  {val} Referrals
-                </Div>
-              )}
-            </Div>
+      <Div className="flex-row flex-wrap items-center justify-center gap-2">
+        {[
+          { label: label1, color: color1, value: val1 },
+          { label: label2, color: color2, value: val2 },
+        ].map((item) => (
+          <Div key={item.label} className="flex-row items-center gap-2 px-3 h-9 rounded-full bg-slate-50 border border-slate-200">
+            <Div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+            <Span className="text-xs font-semibold text-slate-700" numberOfLines={1}>
+              {item.label} · {item.value}
+            </Span>
           </Div>
         ))}
       </Div>
-      <Div className="flex items-center justify-between mt-4 px-1 border-t border-gray-100 pt-3">
-        {months.map((m) => (
-          <Span key={m} className="text-xs font-bold text-gray-400">
-            {m}
-          </Span>
-        ))}
-      </Div>
     </Div>
   );
 };
+
+const MonthlyBars = ({ color, data, slot }) => {
+  const maxVal = Math.max(...data, 2) || 2;
+  if (data.every((val) => val === 0)) {
+    return <EmptyState className="border-0" icon={BarChart3} title="No monthly data" message="Month-by-month referrals appear here once there is activity." />;
+  }
+  return (
+    <Div className="flex-row items-end">
+      {data.map((val, i) => (
+        <Div key={MONTHS[i] || i} style={{ width: slot, height: 200 }} className="items-center justify-end gap-1 px-0.5">
+          <Span className="text-[11px] font-semibold" style={{ color: AXIS.color }} numberOfLines={1}>
+            {val ? String(val) : ''}
+          </Span>
+          <Div
+            className="rounded-t-md"
+            style={{
+              width: '100%',
+              height: Math.max(val > 0 ? 4 : 2, Math.round((val / maxVal) * 150)),
+              backgroundColor: val > 0 ? color : A.surfaceMuted,
+            }}
+          />
+          <Span className="text-[11px] font-semibold" style={{ color: AXIS.color }} numberOfLines={1}>
+            {MONTHS[i]}
+          </Span>
+        </Div>
+      ))}
+    </Div>
+  );
+};
+
 const ReferralDashboard = () => {
   const { settings } = useSettings();
   const appName = settings.general?.app_name || 'App';
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const res = await adminService.getReferralDashboard();
-        if (res.data) {
-          setData(res.data);
-        }
-      } catch (err) {
-        console.error('Dashboard fetch error:', err);
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setIsLoading(false);
+  const [loadError, setLoadError] = useState(null);
+  const { width } = useWindowDimensions();
+  const { tablet } = useLayoutWidth();
+  const chartWidth = Math.max(240, Math.min(tablet ? 560 : width, width) - 64);
+  const slot = Math.max(26, Math.floor(chartWidth / MONTHS.length));
+  const donutRadius = Math.min(96, Math.max(64, Math.floor(chartWidth / 3)));
+
+  const fetchDashboard = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setLoadError(null);
+      const res = await adminService.getReferralDashboard();
+      if (res.data) {
+        setData(res.data);
       }
-    };
-    fetchDashboard();
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
+      setLoadError(err?.message || 'Failed to load dashboard data');
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  const header = (
+    <PageHeader
+      icon={Share2}
+      title="Referral dashboard"
+      subtitle="Rider and driver referrals across the district"
+      breadcrumb={[{ label: 'Taxi' }, { label: 'Referrals' }, { label: 'Dashboard' }]}
+    />
+  );
+
   if (isLoading) {
     return (
-      <ScrollDiv className="min-h-screen flex items-center justify-center bg-gray-50/10">
-        <Div className="flex flex-col items-center gap-4">
-          <UiIcon as={Loader2} className="animate-spin text-yellow-500" size={32} />
-          <Span className="text-sm text-gray-500 font-medium">Loading dashboard...</Span>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        {header}
+        <LoadingState label="Loading dashboard…" />
+      </AdminPage>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <AdminPage maxWidth={1200}>
+        {header}
+        <ErrorState title="Could not load the dashboard" message={loadError} onRetry={fetchDashboard} />
+      </AdminPage>
     );
   }
 
   // Monthly data defaults
   const emptyMonthly = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+  if (!data) {
+    return (
+      <AdminPage maxWidth={1200}>
+        {header}
+        <EmptyState
+          icon={Share2}
+          title="No referral data yet"
+          message="Referral totals appear here once riders and drivers start sharing their codes."
+          actionLabel="Refresh"
+          onAction={fetchDashboard}
+        />
+      </AdminPage>
+    );
+  }
+
   return (
-    <ScrollDiv className="space-y-4 animate-in fade-in duration-500 font-sans text-gray-900 pb-6 max-w-full overflow-x-hidden p-4 bg-[#F8FAFC] min-h-screen">
-      {/* TOP CARDS */}
-      <Div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Drivers" value={data?.total_drivers || '0'} icon={Users} />
-        <StatCard title="Total Users" value={data?.total_users || '0'} icon={UserCheck} />
-        <StatCard title="Active Referrals" value={data?.active_referrals || '0'} icon={Zap} />
-        <StatCard title="Referral Earning" value={data?.referral_earning ? `₹ ${data.referral_earning}` : '₹ 0'} icon={IndianRupee} />
-      </Div>
+    <AdminPage maxWidth={1200}>
+      {header}
 
-      {/* USER REFERRALS SECTION */}
-      <Div className="mt-5">
-        <Div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ChartContainer title="User Referrals Overview">
-            <PieChartMock
-              color1="#FBBF24"
-              /* yellow-400 */ color2="#E5E7EB"
-              /* gray-200 */ label1="Referral User"
-              label2="Normal User"
-              val1={data?.user_referrals?.referral_user || 0}
-              val2={data?.user_referrals?.normal_user || 0}
-            />
-          </ChartContainer>
-          <ChartContainer title="User Monthly Referrals">
-            <LineChartMock color="#FBBF24" /* yellow-400 */ data={data?.user_referrals?.monthly || emptyMonthly} />
-          </ChartContainer>
+      <StatGrid className="mb-4">
+        <StatCard label="Total drivers" value={String(data?.total_drivers || '0')} icon={Users} tone="info" />
+        <StatCard label="Total users" value={String(data?.total_users || '0')} icon={UserCheck} tone="info" />
+        <StatCard label="Active referrals" value={String(data?.active_referrals || '0')} icon={Zap} tone="warning" />
+        <StatCard label="Referral earning" value={data?.referral_earning ? `₹ ${data.referral_earning}` : '₹ 0'} icon={IndianRupee} tone="success" />
+      </StatGrid>
+
+      <Card className="mb-4">
+        <SectionTitle>User referrals overview</SectionTitle>
+        <DonutBreakdown
+          color1="#155DFC"
+          color2={A.surfaceMuted}
+          label1="Referral user"
+          label2="Normal user"
+          radius={donutRadius}
+          val1={data?.user_referrals?.referral_user || 0}
+          val2={data?.user_referrals?.normal_user || 0}
+        />
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle>User monthly referrals</SectionTitle>
+        <MonthlyBars color="#155DFC" data={data?.user_referrals?.monthly || emptyMonthly} slot={slot} />
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle>Driver referrals overview</SectionTitle>
+        <DonutBreakdown
+          color1="#008236"
+          color2={A.surfaceMuted}
+          label1="Referral driver"
+          label2="Normal driver"
+          radius={donutRadius}
+          val1={data?.driver_referrals?.referral_driver || 0}
+          val2={data?.driver_referrals?.normal_driver || 0}
+        />
+      </Card>
+
+      <Card className="mb-4">
+        <SectionTitle>Driver monthly referrals</SectionTitle>
+        <MonthlyBars color="#008236" data={data?.driver_referrals?.monthly || emptyMonthly} slot={slot} />
+      </Card>
+
+      <Div className="flex-row flex-wrap items-center justify-between gap-2 pt-4 border-t border-slate-200">
+        <Span className="text-xs text-slate-500">2026 © {appName}.</Span>
+        <Div className="flex-row flex-wrap items-center gap-4">
+          <Span className="text-xs text-slate-500">Design &amp; develop by {appName}</Span>
+          <Span className="text-xs text-slate-500">App version 2.3</Span>
         </Div>
       </Div>
-
-      {/* DRIVER REFERRALS SECTION */}
-      <Div className="mt-5">
-        <Div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ChartContainer title="Driver Referrals Overview">
-            <PieChartMock
-              color1="#FACC15"
-              /* yellow-400 */ color2="#E5E7EB"
-              /* gray-200 */ label1="Referral Driver"
-              label2="Normal Driver"
-              val1={data?.driver_referrals?.referral_driver || 0}
-              val2={data?.driver_referrals?.normal_driver || 0}
-            />
-          </ChartContainer>
-          <ChartContainer title="Driver Monthly Referrals">
-            <LineChartMock color="#FACC15" /* yellow-400 */ data={data?.driver_referrals?.monthly || emptyMonthly} />
-          </ChartContainer>
-        </Div>
-      </Div>
-
-      {/* FOOTER */}
-      <Footer className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-gray-500 border-t border-gray-200 pt-4">
-        <Div>2026 © {appName}.</Div>
-        <Div className="flex items-center gap-6">
-          <Span>Design & Develop by {appName}</Span>
-          <Span>App version 2.3</Span>
-        </Div>
-      </Footer>
-    </ScrollDiv>
+    </AdminPage>
   );
 };
 export default ReferralDashboard;

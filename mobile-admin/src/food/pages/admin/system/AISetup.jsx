@@ -1,22 +1,24 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/system/AISetup.jsx (tools/port.js first pass). */
 import { useState } from 'react';
-import { Bot, Settings, Info, Store } from 'lucide-react-native';
-import { A, Button, Div, Form, H1, H2, Input, Label, P, ScrollDiv, Span, Icon as UiIcon } from '../../../../components/web';
+import { Bot, Info, Store } from 'lucide-react-native';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY } from '../../../../admin/ui';
+import { A, Button, Div, Form, Input, Span, Icon as UiIcon } from '../../../../components/web';
+import { Text } from '../../../../components/Text';
+import { tw } from '../../../../lib/tw';
 import { alert } from '../../../../lib/webShim';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
-function ToggleSwitch({ enabled, onToggle }) {
+function ToggleSwitch({ enabled, onToggle, label }) {
   return (
-    <Button
-      type="button"
-      onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}
-    >
-      <Span className="h-5 w-5 rounded-full bg-white shadow-sm" />
+    <Button type="button" onClick={onToggle} accessibilityLabel={label} className="w-11 h-11 flex-row items-center justify-end shrink-0">
+      <Div className={`flex-row items-center w-11 h-6 rounded-full border px-0.5 ${enabled ? 'bg-blue-600 border-blue-600 justify-end' : 'bg-slate-200 border-slate-300 justify-start'}`}>
+        <Span className="h-5 w-5 rounded-full bg-white" />
+      </Div>
     </Button>
   );
 }
+const TAB = 'flex-row items-center justify-center h-11 px-4 rounded-lg';
 export default function AISetup() {
   const [activeTab, setActiveTab] = useState('ai-configuration');
   const [isEnabled, setIsEnabled] = useState(true);
@@ -50,155 +52,103 @@ export default function AISetup() {
     alert('AI Settings saved successfully!');
   };
   return (
-    <ScrollDiv className="p-2 lg:p-3 bg-slate-50 min-h-screen">
-      <Div className="w-full mx-auto max-w-5xl">
-        {/* Page Title */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
-          <Div className="flex items-center gap-2">
-            <Div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
-              <UiIcon as={Bot} className="w-3.5 h-3.5 text-white" />
-            </Div>
-            <H1 className="text-lg font-bold text-slate-900">OpenAI Configuration</H1>
-          </Div>
-        </Div>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={Bot}
+        title="OpenAI Configuration"
+        subtitle="Credentials and generation limits for AI features"
+        breadcrumb={[{ label: 'Food' }, { label: 'System' }, { label: 'AI setup' }]}
+      />
 
-        {/* Tabs */}
-        <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3">
-          <Div className="flex gap-2">
-            <Button
-              onClick={() => setActiveTab('ai-configuration')}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === 'ai-configuration' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-            >
-              AI Configuration
-            </Button>
-            <Button
-              onClick={() => setActiveTab('ai-settings')}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === 'ai-settings' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-            >
-              AI Settings
-            </Button>
-          </Div>
+      <Card className="mb-4 flex-row flex-wrap gap-2" padded={false}>
+        <Div className="flex-row flex-wrap gap-2 p-2">
+          <Button onClick={() => setActiveTab('ai-configuration')} className={`${TAB} ${activeTab === 'ai-configuration' ? 'bg-blue-600' : 'bg-white'}`}>
+            <Span className={activeTab === 'ai-configuration' ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>AI Configuration</Span>
+          </Button>
+          <Button onClick={() => setActiveTab('ai-settings')} className={`${TAB} ${activeTab === 'ai-settings' ? 'bg-blue-600' : 'bg-white'}`}>
+            <Span className={activeTab === 'ai-settings' ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-slate-600'}>AI Settings</Span>
+          </Button>
         </Div>
+      </Card>
 
-        {/* AI Configuration Content */}
-        {activeTab === 'ai-configuration' && (
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-            <Div className="flex items-center justify-between mb-4">
-              <Div className="flex items-center gap-2">
-                <UiIcon as={Settings} className="w-4 h-4 text-slate-600" />
-                <H2 className="text-sm font-semibold text-slate-900">OpenAI Configuration</H2>
-              </Div>
-              <A href="#" className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
-                How it Works
-                <UiIcon as={Info} className="w-3 h-3" />
+      {activeTab === 'ai-configuration' ? (
+        <Card>
+          <SectionTitle
+            action={
+              <A href="#" className="flex-row items-center gap-1">
+                <Span className="text-sm font-semibold text-blue-600">How it Works</Span>
+                <UiIcon as={Info} size={14} className="text-blue-600" />
               </A>
+            }
+          >
+            OpenAI Configuration
+          </SectionTitle>
+
+          <Form onSubmit={handleAIConfigSave}>
+            <Div className="flex-row items-center justify-between gap-3 mb-4 p-3 bg-slate-50 rounded-lg">
+              <Div className="flex-1 min-w-0">
+                <Text style={tw`text-sm font-medium text-slate-700`}>OpenAI integration</Text>
+                <Text style={tw`text-xs text-slate-500`}>{isEnabled ? 'On' : 'Off'}</Text>
+              </Div>
+              <ToggleSwitch enabled={isEnabled} onToggle={() => setIsEnabled(!isEnabled)} label="Toggle OpenAI integration" />
             </Div>
 
-            <Form onSubmit={handleAIConfigSave}>
-              {/* Toggle Switch */}
-              <Div className="flex items-center justify-between mb-4 p-3 bg-slate-50 rounded-lg">
-                <Span className="text-xs font-medium text-slate-700">Turn OFF</Span>
-                <ToggleSwitch enabled={isEnabled} onToggle={() => setIsEnabled(!isEnabled)} />
+            <Div className="gap-3 mb-4">
+              <Field label="OpenAI API Key">
+                <Input type="text" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Ex: sk-proj-K0LhsdcbHJ......." className={INPUT} />
+              </Field>
+              <Field label="OpenAI Organization">
+                <Input type="text" value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Ex: org-xxxxxxxxxxxx" className={INPUT} />
+              </Field>
+            </Div>
+
+            <Div className="flex-row flex-wrap justify-end gap-2">
+              <Button type="button" onClick={handleReset} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+              </Button>
+              <Button type="submit" className={BTN_PRIMARY}>
+                <Span className={BTN_TEXT_PRIMARY}>Save</Span>
+              </Button>
+            </Div>
+          </Form>
+        </Card>
+      ) : null}
+
+      {activeTab === 'ai-settings' ? (
+        <Card>
+          <Form onSubmit={handleAISettingsSave}>
+            <Div className="flex-row items-center gap-2 mb-3">
+              <UiIcon as={Store} size={16} className="text-slate-600" />
+              <Text style={tw`text-base font-semibold text-slate-900 flex-1`}>Restaurant Limits On Using AI</Text>
+            </Div>
+
+            <Div className="gap-3 mb-4">
+              <Div className="p-3 bg-slate-50 rounded-lg border border-slate-200 gap-2">
+                <Text style={tw`text-sm text-slate-500`}>Set how many times AI can generate data for each element of the restaurant panel or app.</Text>
+                <Field label="Section Wise Data Generation Limit">
+                  <Input type="number" value={sectionWiseLimit} onChange={(e) => setSectionWiseLimit(e.target.value)} className={INPUT} />
+                </Field>
               </Div>
 
-              {/* API Key Input */}
-              <Div className="mb-4">
-                <Label className="block text-xs font-semibold text-slate-700 mb-1.5">OpenAI API Key</Label>
-                <Input
-                  type="text"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Ex: sk-proj-K0LhsdcbHJ......."
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+              <Div className="p-3 bg-slate-50 rounded-lg border border-slate-200 gap-2">
+                <Text style={tw`text-sm text-slate-500`}>Set how many times AI can generate data from an image upload.</Text>
+                <Field label="Image Upload Generation Limit">
+                  <Input type="number" value={imageUploadLimit} onChange={(e) => setImageUploadLimit(e.target.value)} className={INPUT} />
+                </Field>
               </Div>
+            </Div>
 
-              {/* Organization Input */}
-              <Div className="mb-4">
-                <Label className="block text-xs font-semibold text-slate-700 mb-1.5">OpenAI Organization</Label>
-                <Input
-                  type="text"
-                  value={organization}
-                  onChange={(e) => setOrganization(e.target.value)}
-                  placeholder="Ex: org-xxxxxxxxxxxx"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </Div>
-
-              {/* Action Buttons */}
-              <Div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className="px-4 py-2 text-xs font-medium bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  Reset
-                </Button>
-                <Button type="submit" className="px-4 py-2 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Save
-                </Button>
-              </Div>
-            </Form>
-          </Div>
-        )}
-
-        {/* AI Settings Content */}
-        {activeTab === 'ai-settings' && (
-          <Div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-            <Form onSubmit={handleAISettingsSave}>
-              {/* Restaurant Limits Section */}
-              <Div className="mb-6">
-                <Div className="flex items-center gap-2 mb-4">
-                  <UiIcon as={Store} className="w-4 h-4 text-slate-600" />
-                  <H2 className="text-sm font-semibold text-slate-900">Restaurant Limits On Using AI</H2>
-                </Div>
-
-                {/* Section Wise Data Generation */}
-                <Div className="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <P className="text-xs text-slate-600 mb-3">Set how many times AI can generate data for each element of the restaurant panel or app.</P>
-                  <Div>
-                    <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Section Wise Data Generation Limit</Label>
-                    <Input
-                      type="number"
-                      value={sectionWiseLimit}
-                      onChange={(e) => setSectionWiseLimit(e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-
-                {/* Image Based Data Generation */}
-                <Div className="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <P className="text-xs text-slate-600 mb-3">Set how many times AI can generate data from an image upload.</P>
-                  <Div>
-                    <Label className="block text-xs font-semibold text-slate-700 mb-1.5">Image Upload Generation Limit</Label>
-                    <Input
-                      type="number"
-                      value={imageUploadLimit}
-                      onChange={(e) => setImageUploadLimit(e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </Div>
-                </Div>
-              </Div>
-
-              {/* Action Buttons */}
-              <Div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  onClick={handleAISettingsReset}
-                  className="px-4 py-2 text-xs font-medium bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  Reset
-                </Button>
-                <Button type="submit" className="px-4 py-2 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Save Information
-                </Button>
-              </Div>
-            </Form>
-          </Div>
-        )}
-      </Div>
-    </ScrollDiv>
+            <Div className="flex-row flex-wrap justify-end gap-2">
+              <Button type="button" onClick={handleAISettingsReset} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Reset</Span>
+              </Button>
+              <Button type="submit" className={BTN_PRIMARY}>
+                <Span className={BTN_TEXT_PRIMARY}>Save Information</Span>
+              </Button>
+            </Div>
+          </Form>
+        </Card>
+      ) : null}
+    </AdminPage>
   );
 }

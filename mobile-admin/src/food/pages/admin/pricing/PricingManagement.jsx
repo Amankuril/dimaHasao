@@ -1,12 +1,35 @@
 /* Ported from Frontend/src/modules/Food/pages/admin/pricing/PricingManagement.jsx (tools/port.js first pass). */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IndianRupee, Loader2, Percent, Save, Trash2, RefreshCw, Search, X } from 'lucide-react-native';
-import { Button } from '../../../../components/shadcn';
+import { IndianRupee, Loader2, Percent, Save, Trash2, RefreshCw, Tag } from 'lucide-react-native';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/shadcn';
 import { adminAPI } from '../../../../api/food';
 import { toast } from '../../../../lib/notify';
 import AdminListPagination from '../../../components/admin/AdminListPagination';
-import { Button as HButton, Div, H1, H3, Input, Label, Overlay, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../components/web';
+import { Button as HButton, Div, Input, Overlay, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  Toolbar,
+  DataTable,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  TableSkeleton,
+  EmptyState,
+  Field,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_DANGER,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../admin/ui';
 const RUPEE = '\u20B9';
 const emptyRuleForm = {
   type: 'PERCENTAGE',
@@ -28,35 +51,61 @@ function formatShortDate(value) {
     year: 'numeric',
   });
 }
+/**
+ * The kit's THead only takes plain labels, but these tables need a select-all
+ * checkbox in the first heading, so the header row is built from Cells here.
+ */
+function SelectHeader({ cols, labels, checked, onToggle, disabled, accessibilityLabel }) {
+  return (
+    <Div className="flex-row items-stretch bg-slate-50 border-b border-slate-200">
+      <Cell width={cols[0]} align="center">
+        <Input
+          type="checkbox"
+          checked={checked}
+          onChange={onToggle}
+          disabled={disabled}
+          accessibilityLabel={accessibilityLabel}
+          className="h-5 w-5 rounded border-slate-300"
+        />
+      </Cell>
+      {labels.map((label, i) => (
+        <Cell key={`${label}-${i}`} width={cols[i + 1]}>
+          <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</Span>
+        </Cell>
+      ))}
+    </Div>
+  );
+}
 function PreviewCard({ type, value }) {
   const base = 200;
   const num = Number(value) || 0;
   const other = type === 'FIXED' ? base + num : Math.round((base + (base * num) / 100) * 100) / 100;
   return (
-    <Div className="rounded-xl border border-dashed border-[#DC2626]/40 bg-red-50 px-4 py-3">
-      <P className="text-[11px] font-bold uppercase tracking-wide text-[#DC2626]">Preview</P>
-      <P className="mt-1 text-sm text-gray-700">
-        Base {RUPEE}
-        {base} → Other {RUPEE}
-        {other.toFixed(0)}
-        <Span className="ml-2 text-xs text-gray-500">({type === 'FIXED' ? `+${RUPEE}${num}` : `+${num}%`})</Span>
-      </P>
+    <Div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 gap-1">
+      <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Preview</Span>
+      <Span className="text-sm text-slate-700">
+        {`Base ${RUPEE}${base} \u2192 Other ${RUPEE}${other.toFixed(0)} (${type === 'FIXED' ? `+${RUPEE}${num}` : `+${num}%`})`}
+      </Span>
     </Div>
   );
 }
 function RuleEditor({ title, form, setForm, onSave, saving, onClear, canClear }) {
   return (
-    <Div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <Div className="flex items-center justify-between gap-3">
-        <H3 className="text-sm font-bold text-slate-900">{title}</H3>
-        {canClear ? (
-          <HButton type="button" onClick={onClear} className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:underline">
-            <UiIcon as={Trash2} className="h-3.5 w-3.5" /> Remove override
-          </HButton>
-        ) : null}
-      </Div>
+    <Card className="gap-3">
+      <SectionTitle
+        action={
+          canClear ? (
+            <HButton type="button" onClick={onClear} className="flex-row items-center gap-1 h-11 px-3 rounded-lg" accessibilityLabel="Remove override">
+              <UiIcon as={Trash2} size={14} className="text-red-600" />
+              <Span className="text-xs font-semibold text-red-600">Remove override</Span>
+            </HButton>
+          ) : null
+        }
+      >
+        {title}
+      </SectionTitle>
 
-      <Div className="flex flex-wrap gap-2">
+      <Div className="flex-row flex-wrap gap-2">
         <HButton
           type="button"
           onClick={() =>
@@ -65,9 +114,10 @@ function RuleEditor({ title, form, setForm, onSave, saving, onClear, canClear })
               type: 'PERCENTAGE',
             }))
           }
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${form.type === 'PERCENTAGE' ? 'bg-[#DC2626] text-white' : 'bg-slate-100 text-slate-600'}`}
+          className={`flex-row items-center gap-1.5 rounded-lg h-11 px-4 ${form.type === 'PERCENTAGE' ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
         >
-          <UiIcon as={Percent} className="h-3.5 w-3.5" /> Percentage
+          <UiIcon as={Percent} size={14} className={form.type === 'PERCENTAGE' ? 'text-white' : 'text-slate-600'} />
+          <Span className={`text-sm font-semibold ${form.type === 'PERCENTAGE' ? 'text-white' : 'text-slate-700'}`}>Percentage</Span>
         </HButton>
         <HButton
           type="button"
@@ -77,14 +127,14 @@ function RuleEditor({ title, form, setForm, onSave, saving, onClear, canClear })
               type: 'FIXED',
             }))
           }
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${form.type === 'FIXED' ? 'bg-[#DC2626] text-white' : 'bg-slate-100 text-slate-600'}`}
+          className={`flex-row items-center gap-1.5 rounded-lg h-11 px-4 ${form.type === 'FIXED' ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
         >
-          <UiIcon as={IndianRupee} className="h-3.5 w-3.5" /> Fixed amount
+          <UiIcon as={IndianRupee} size={14} className={form.type === 'FIXED' ? 'text-white' : 'text-slate-600'} />
+          <Span className={`text-sm font-semibold ${form.type === 'FIXED' ? 'text-white' : 'text-slate-700'}`}>Fixed amount</Span>
         </HButton>
       </Div>
 
-      <Div>
-        <Label className="mb-1 block text-xs font-semibold text-slate-500">{form.type === 'FIXED' ? 'Increase by (₹)' : 'Increase by (%)'}</Label>
+      <Field label={form.type === 'FIXED' ? `Increase by (${RUPEE})` : 'Increase by (%)'} required>
         <Input
           type="number"
           min="0"
@@ -97,42 +147,23 @@ function RuleEditor({ title, form, setForm, onSave, saving, onClear, canClear })
               value: e.target.value,
             }))
           }
-          className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#DC2626]"
+          className={INPUT}
         />
-      </Div>
+      </Field>
 
       <PreviewCard type={form.type} value={form.value} />
 
-      <Button type="button" disabled={saving} onClick={onSave} className="h-11 w-full rounded-xl bg-[#DC2626] font-bold text-white hover:bg-[#B91C1C]">
-        {saving ? (
-          <Span className="inline-flex items-center gap-2">
-            <UiIcon as={Loader2} className="h-4 w-4 animate-spin" /> Saving...
-          </Span>
-        ) : (
-          <Span className="inline-flex items-center gap-2">
-            <UiIcon as={Save} className="h-4 w-4" /> Save rule
-          </Span>
-        )}
-      </Button>
-    </Div>
+      <HButton type="button" disabled={saving} onClick={onSave} className={BTN_PRIMARY}>
+        <UiIcon as={saving ? Loader2 : Save} size={16} className="text-white" />
+        <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Saving\u2026' : 'Save rule'}</Span>
+      </HButton>
+    </Card>
   );
 }
 function PricingStatusBadge({ rule, globalRule }) {
-  if (rule) {
-    return (
-      <Span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/15">
-        {formatRuleLabel(rule)}
-      </Span>
-    );
-  }
-  if (globalRule) {
-    return (
-      <Span className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 ring-1 ring-inset ring-sky-600/15">
-        {formatRuleLabel(globalRule)}
-      </Span>
-    );
-  }
-  return <Span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">No Rule</Span>;
+  if (rule) return <StatusBadge tone="success" label={formatRuleLabel(rule)} />;
+  if (globalRule) return <StatusBadge tone="info" label={formatRuleLabel(globalRule)} />;
+  return <StatusBadge tone="neutral" label="No rule" />;
 }
 function ConfirmBulkModal({ open, count, type, value, onCancel, onConfirm, saving, entityLabel = 'restaurant' }) {
   if (!open) return null;
@@ -141,25 +172,17 @@ function ConfirmBulkModal({ open, count, type, value, onCancel, onConfirm, savin
   return (
     <Overlay onClose={saving ? undefined : onCancel} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4">
       <Div className="absolute inset-0" onClick={saving ? undefined : onCancel} />
-      <Div className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-        <H3 className="text-base font-bold text-slate-900">Confirm bulk apply</H3>
-        <P className="mt-2 text-sm text-slate-600">
-          You are about to apply <Span className="font-semibold text-slate-900">{label}</Span> pricing to{' '}
-          <Span className="font-semibold text-slate-900">{count}</Span> {plural}.
-        </P>
-        <Div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={saving} className="rounded-xl">
-            Cancel
-          </Button>
-          <Button type="button" onClick={onConfirm} disabled={saving} className="rounded-xl bg-[#DC2626] font-bold text-white hover:bg-[#B91C1C]">
-            {saving ? (
-              <Span className="inline-flex items-center gap-2">
-                <UiIcon as={Loader2} className="h-4 w-4 animate-spin" /> Applying...
-              </Span>
-            ) : (
-              'Apply'
-            )}
-          </Button>
+      <Div className="relative w-full max-w-md rounded-xl bg-white border border-slate-200 p-4">
+        <Span className="text-base font-semibold text-slate-900">Confirm bulk apply</Span>
+        <Span className="mt-2 text-sm text-slate-700">{`You are about to apply ${label} pricing to ${count} ${plural}.`}</Span>
+        <Div className="mt-4 flex-row flex-wrap justify-end gap-2">
+          <HButton type="button" onClick={onCancel} disabled={saving} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+          </HButton>
+          <HButton type="button" onClick={onConfirm} disabled={saving} className={BTN_PRIMARY}>
+            {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
+            <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Applying\u2026' : 'Apply'}</Span>
+          </HButton>
         </Div>
       </Div>
     </Overlay>
@@ -170,16 +193,16 @@ function ConfirmDeleteModal({ open, label, onCancel, onConfirm, saving }) {
   return (
     <Overlay onClose={saving ? undefined : onCancel} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4">
       <Div className="absolute inset-0" onClick={saving ? undefined : onCancel} />
-      <Div className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-        <H3 className="text-base font-bold text-slate-900">Remove override?</H3>
-        <P className="mt-2 text-sm text-slate-600">{label || 'This restaurant will inherit Global pricing (if configured).'}</P>
-        <Div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={saving} className="rounded-xl">
-            Cancel
-          </Button>
-          <Button type="button" onClick={onConfirm} disabled={saving} className="rounded-xl bg-rose-600 font-bold text-white hover:bg-rose-700">
-            {saving ? 'Removing...' : 'Remove'}
-          </Button>
+      <Div className="relative w-full max-w-md rounded-xl bg-white border border-slate-200 p-4">
+        <Span className="text-base font-semibold text-slate-900">Remove override?</Span>
+        <Span className="mt-2 text-sm text-slate-700">{label || 'This restaurant will inherit Global pricing (if configured).'}</Span>
+        <Div className="mt-4 flex-row flex-wrap justify-end gap-2">
+          <HButton type="button" onClick={onCancel} disabled={saving} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Cancel</Span>
+          </HButton>
+          <HButton type="button" onClick={onConfirm} disabled={saving} className={BTN_DANGER}>
+            <Span className={BTN_TEXT_PRIMARY}>{saving ? 'Removing\u2026' : 'Remove'}</Span>
+          </HButton>
         </Div>
       </Div>
     </Overlay>
@@ -317,179 +340,151 @@ function RestaurantPricingPanel({ restaurants, rules, globalRule, saving, onRemo
       applyLockRef.current = false;
     }
   };
+  const COLS = [48, 190, 140, 130, 140, 130];
   return (
-    <Div className="space-y-4">
-      <Div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Div className="relative max-w-md flex-1">
-          <UiIcon as={Search} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+    <Div className="gap-3">
+      <Card>
+        <Toolbar className="mb-0">
           <Input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, ID, or owner"
-            className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-sm outline-none focus:border-[#DC2626]"
+            placeholder="Search by name, ID or owner"
+            className={`${INPUT} flex-1 min-w-[200px]`}
           />
-          {search ? (
-            <HButton
-              type="button"
-              onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:text-slate-600"
-            >
-              <UiIcon as={X} className="h-4 w-4" />
-            </HButton>
-          ) : null}
-        </Div>
-        <Div className="flex flex-wrap items-center gap-2 text-xs">
-          <HButton type="button" onClick={selectAllRestaurants} className="rounded-lg px-2.5 py-1.5 font-semibold text-slate-600 hover:bg-slate-100">
-            Select all ({restaurants.length})
+          <HButton type="button" onClick={selectAllRestaurants} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>{`Select all (${restaurants.length})`}</Span>
           </HButton>
-          <HButton type="button" onClick={selectVisible} className="rounded-lg px-2.5 py-1.5 font-semibold text-slate-600 hover:bg-slate-100">
-            Select visible ({pagedRestaurants.length})
+          <HButton type="button" onClick={selectVisible} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>{`Select visible (${pagedRestaurants.length})`}</Span>
           </HButton>
-          <HButton type="button" onClick={clearSelection} className="rounded-lg px-2.5 py-1.5 font-semibold text-slate-600 hover:bg-slate-100">
-            Clear selection
+          <HButton type="button" onClick={clearSelection} className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Clear selection</Span>
           </HButton>
-        </Div>
-      </Div>
+        </Toolbar>
+      </Card>
 
-      <Div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <Div>
-          <Table className="min-w-full border-collapse text-left text-sm" cols={[44, 200, 140, 130, 140, 140]}>
-            <Thead className="z-10 bg-slate-50">
-              <Tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <Th className="w-10 px-3 py-3">
-                  <Input
-                    type="checkbox"
-                    checked={allVisibleSelected}
-                    onChange={toggleVisibleHeader}
-                    accessibilityLabel="Select visible restaurants"
-                    className="h-4 w-4 rounded border-slate-300 text-[#DC2626] focus:ring-[#DC2626]"
-                  />
-                </Th>
-                <Th className="px-3 py-3 font-semibold">Restaurant</Th>
-                <Th className="px-3 py-3 font-semibold">Admin Pricing</Th>
-                <Th className="px-3 py-3 font-semibold">Rule Type</Th>
-                <Th className="px-3 py-3 font-semibold">Last Updated</Th>
-                <Th className="px-3 py-3 text-right font-semibold">Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {filteredRestaurants.length === 0 ? (
-                <Tr>
-                  <Td colSpan={6} className="px-4 py-12 text-center text-sm text-slate-500">
-                    No restaurants match your search.
-                  </Td>
-                </Tr>
-              ) : (
-                pagedRestaurants.map((restaurant) => {
-                  const rule = restaurantRuleMap.get(restaurant.id) || null;
-                  const checked = selectedIds.has(restaurant.id);
-                  return (
-                    <Tr key={restaurant.id} className={`border-b border-slate-100 last:border-0 ${checked ? 'bg-rose-50/40' : 'hover:bg-slate-50/80'}`}>
-                      <Td className="px-3 py-3 align-middle">
-                        <Input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleOne(restaurant.id)}
-                          accessibilityLabel={`Select ${restaurant.name}`}
-                          className="h-4 w-4 rounded border-slate-300 text-[#DC2626] focus:ring-[#DC2626]"
-                        />
-                      </Td>
-                      <Td className="px-3 py-3 align-middle">
-                        <Div className="min-w-0">
-                          <P className="truncate font-semibold text-slate-900">{restaurant.name}</P>
-                          {(restaurant.code || restaurant.ownerName) && (
-                            <P className="mt-0.5 truncate text-xs text-slate-400">
-                              {[restaurant.code ? `Code · ${restaurant.code}` : null, restaurant.ownerName ? `Owner · ${restaurant.ownerName}` : null]
-                                .filter(Boolean)
-                                .join(' · ')}
-                            </P>
-                          )}
-                        </Div>
-                      </Td>
-                      <Td className="px-3 py-3 align-middle">
-                        <PricingStatusBadge rule={rule} globalRule={globalRule} />
-                      </Td>
-                      <Td className="px-3 py-3 align-middle text-slate-600">
-                        {rule ? (rule.type === 'FIXED' ? 'Fixed' : 'Percentage') : globalRule ? 'Global' : '—'}
-                      </Td>
-                      <Td className="px-3 py-3 align-middle text-slate-500">{formatShortDate(rule?.updatedAt)}</Td>
-                      <Td className="px-3 py-3 align-middle text-right">
-                        {rule?.id ? (
-                          <HButton
-                            type="button"
-                            disabled={saving}
-                            onClick={() =>
-                              setDeleteTarget({
-                                id: rule.id,
-                                label: `Remove override for "${restaurant.name}"? It will inherit Global pricing if configured.`,
-                              })
-                            }
-                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                          >
-                            <UiIcon as={Trash2} className="h-3.5 w-3.5" />
-                            Remove
-                          </HButton>
-                        ) : (
-                          <Span className="text-xs text-slate-300">—</Span>
-                        )}
-                      </Td>
-                    </Tr>
-                  );
-                })
-              )}
-            </Tbody>
-          </Table>
-        </Div>
-        <Div className="flex items-center justify-end border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
-          <Span>{selectedCount} selected</Span>
-        </Div>
-        <AdminListPagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={filteredRestaurants.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => {
-            try {
-              localStorage.setItem('admin_pricing_restaurants_pageSize', String(size));
-            } catch {
-              // ignore
-            }
-            setPageSize(size);
-            setCurrentPage(1);
-          }}
-          itemLabel="restaurants"
+      {filteredRestaurants.length === 0 ? (
+        <EmptyState
+          icon={Tag}
+          title="No restaurants match your search"
+          message={restaurants.length === 0 ? 'No restaurants in this zone yet.' : 'Clear the search to see every restaurant in this zone.'}
         />
-      </Div>
+      ) : (
+        <>
+          <DataTable cols={COLS}>
+            <SelectHeader
+              cols={COLS}
+              labels={['Restaurant', 'Admin pricing', 'Rule type', 'Last updated', 'Actions']}
+              checked={allVisibleSelected}
+              onToggle={toggleVisibleHeader}
+              accessibilityLabel="Select visible restaurants"
+            />
+            <TBody>
+              {pagedRestaurants.map((restaurant, idx) => {
+                const rule = restaurantRuleMap.get(restaurant.id) || null;
+                const checked = selectedIds.has(restaurant.id);
+                return (
+                  <Row key={restaurant.id} last={idx === pagedRestaurants.length - 1} className={checked ? 'bg-blue-50' : ''}>
+                    <Cell width={COLS[0]} align="center">
+                      <Input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleOne(restaurant.id)}
+                        accessibilityLabel={`Select ${restaurant.name}`}
+                        className="h-5 w-5 rounded border-slate-300"
+                      />
+                    </Cell>
+                    <Cell width={COLS[1]}>
+                      <Div className="gap-0.5">
+                        <Span className="text-sm font-semibold text-slate-900">{restaurant.name}</Span>
+                        {restaurant.code || restaurant.ownerName ? (
+                          <Span className="text-xs text-slate-500">
+                            {[restaurant.code ? `Code \u00B7 ${restaurant.code}` : null, restaurant.ownerName ? `Owner \u00B7 ${restaurant.ownerName}` : null]
+                              .filter(Boolean)
+                              .join(' \u00B7 ')}
+                          </Span>
+                        ) : null}
+                      </Div>
+                    </Cell>
+                    <Cell width={COLS[2]}>
+                      <PricingStatusBadge rule={rule} globalRule={globalRule} />
+                    </Cell>
+                    <Cell width={COLS[3]}>{rule ? (rule.type === 'FIXED' ? 'Fixed' : 'Percentage') : globalRule ? 'Global' : '\u2014'}</Cell>
+                    <Cell width={COLS[4]}>{formatShortDate(rule?.updatedAt)}</Cell>
+                    <Cell width={COLS[5]}>
+                      {rule?.id ? (
+                        <HButton
+                          type="button"
+                          disabled={saving}
+                          onClick={() =>
+                            setDeleteTarget({
+                              id: rule.id,
+                              label: `Remove override for "${restaurant.name}"? It will inherit Global pricing if configured.`,
+                            })
+                          }
+                          className="flex-row items-center gap-1 h-11 px-3 rounded-lg"
+                          accessibilityLabel={`Remove override for ${restaurant.name}`}
+                        >
+                          <UiIcon as={Trash2} size={14} className="text-red-600" />
+                          <Span className="text-xs font-semibold text-red-600">Remove</Span>
+                        </HButton>
+                      ) : (
+                        <Span className="text-sm text-slate-400">{'\u2014'}</Span>
+                      )}
+                    </Cell>
+                  </Row>
+                );
+              })}
+            </TBody>
+          </DataTable>
+
+          <Span className="text-xs text-slate-500 text-right">{`${selectedCount} selected`}</Span>
+
+          <AdminListPagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={filteredRestaurants.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              try {
+                localStorage.setItem('admin_pricing_restaurants_pageSize', String(size));
+              } catch {
+                // ignore
+              }
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+            itemLabel="restaurants"
+          />
+        </>
+      )}
 
       {selectedCount > 0 ? (
-        <Div className="z-20 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg sm:p-4">
-          <Div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <Div>
-              <P className="text-sm font-bold text-slate-900">
-                {selectedCount} restaurant{selectedCount === 1 ? '' : 's'} selected
-              </P>
-              <P className="mt-0.5 text-xs text-slate-500">Apply one rule to every selected restaurant in a single action.</P>
-            </Div>
-            <Div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <Div className="flex gap-1 rounded-xl bg-slate-100 p-1">
-                <HButton
-                  type="button"
-                  onClick={() => setBulkType('PERCENTAGE')}
-                  className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-bold ${bulkType === 'PERCENTAGE' ? 'bg-white text-[#DC2626] shadow-sm' : 'text-slate-500'}`}
-                >
-                  <UiIcon as={Percent} className="h-3.5 w-3.5" />
-                </HButton>
-                <HButton
-                  type="button"
-                  onClick={() => setBulkType('FIXED')}
-                  className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-bold ${bulkType === 'FIXED' ? 'bg-white text-[#DC2626] shadow-sm' : 'text-slate-500'}`}
-                >
-                  <UiIcon as={IndianRupee} className="h-3.5 w-3.5" /> Fixed
-                </HButton>
-              </Div>
-              <Div>
-                <Label className="mb-1 block text-[11px] font-semibold text-slate-400">Value</Label>
+        <Card className="gap-3">
+          <Div className="gap-0.5">
+            <Span className="text-base font-semibold text-slate-900">{`${selectedCount} restaurant${selectedCount === 1 ? '' : 's'} selected`}</Span>
+            <Span className="text-xs text-slate-500">Apply one rule to every selected restaurant in a single action.</Span>
+          </Div>
+          <Div className="flex-row flex-wrap items-end gap-2">
+            <HButton
+              type="button"
+              onClick={() => setBulkType('PERCENTAGE')}
+              className={`flex-row items-center gap-1.5 rounded-lg h-11 px-4 ${bulkType === 'PERCENTAGE' ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
+            >
+              <UiIcon as={Percent} size={14} className={bulkType === 'PERCENTAGE' ? 'text-white' : 'text-slate-600'} />
+              <Span className={`text-sm font-semibold ${bulkType === 'PERCENTAGE' ? 'text-white' : 'text-slate-700'}`}>Percentage</Span>
+            </HButton>
+            <HButton
+              type="button"
+              onClick={() => setBulkType('FIXED')}
+              className={`flex-row items-center gap-1.5 rounded-lg h-11 px-4 ${bulkType === 'FIXED' ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
+            >
+              <UiIcon as={IndianRupee} size={14} className={bulkType === 'FIXED' ? 'text-white' : 'text-slate-600'} />
+              <Span className={`text-sm font-semibold ${bulkType === 'FIXED' ? 'text-white' : 'text-slate-700'}`}>Fixed</Span>
+            </HButton>
+            <Div className="min-w-[140px] flex-1">
+              <Field label="Value">
                 <Input
                   type="number"
                   min="0"
@@ -497,23 +492,18 @@ function RestaurantPricingPanel({ restaurants, rules, globalRule, saving, onRemo
                   step="0.01"
                   value={bulkValue}
                   onChange={(e) => setBulkValue(e.target.value)}
-                  className="h-10 w-28 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#DC2626]"
+                  className={INPUT}
                 />
-              </Div>
-              <Button
-                type="button"
-                disabled={saving}
-                onClick={openConfirm}
-                className="h-10 rounded-xl bg-[#DC2626] px-4 font-bold text-white hover:bg-[#B91C1C]"
-              >
-                Apply to selected
-              </Button>
-              <Button type="button" variant="outline" onClick={clearSelection} className="h-10 rounded-xl">
-                Clear
-              </Button>
+              </Field>
             </Div>
+            <HButton type="button" disabled={saving} onClick={openConfirm} className={BTN_PRIMARY}>
+              <Span className={BTN_TEXT_PRIMARY}>Apply to selected</Span>
+            </HButton>
+            <HButton type="button" onClick={clearSelection} className={BTN_SECONDARY}>
+              <Span className={BTN_TEXT_SECONDARY}>Clear</Span>
+            </HButton>
           </Div>
-        </Div>
+        </Card>
       ) : null}
 
       <ConfirmBulkModal
@@ -753,246 +743,193 @@ function MenuItemPricingPanel({ restaurants, rules, globalRule, saving, onRemove
       applyLockRef.current = false;
     }
   };
+  const COLS = [48, 180, 140, 130, 120, 140, 130];
   return (
-    <Div className="space-y-4">
-      <Div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <Label className="mb-1 block text-xs font-semibold text-slate-500">Restaurant</Label>
-        <Select value={restaurantId || '__none__'} onValueChange={(value) => handleRestaurantChange(value === '__none__' ? '' : value)}>
-          <SelectTrigger className="h-11 w-full rounded-xl border-slate-200 bg-white text-sm font-semibold text-slate-900">
-            <SelectValue placeholder="Select restaurant" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72 border-slate-200 bg-white text-slate-900">
-            <SelectItem
-              value="__none__"
-              className="cursor-pointer focus:bg-slate-100 focus:text-slate-900 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900"
-            >
-              Select restaurant
-            </SelectItem>
-            {restaurants.map((r) => (
-              <SelectItem
-                key={r.id}
-                value={r.id}
-                className="cursor-pointer focus:bg-slate-100 focus:text-slate-900 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900"
-              >
-                <Span className="truncate">{r.name}</Span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Div>
+    <Div className="gap-3">
+      <Card>
+        <Field label="Restaurant" required hint="Menu item overrides are set one restaurant at a time">
+          <Select value={restaurantId || '__none__'} onValueChange={(value) => handleRestaurantChange(value === '__none__' ? '' : value)}>
+            <SelectTrigger className={INPUT}>
+              <SelectValue placeholder="Select restaurant" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72 border-slate-200 bg-white">
+              <SelectItem value="__none__">Select restaurant</SelectItem>
+              {restaurants.map((r) => (
+                <SelectItem key={r.id} value={r.id}>
+                  {r.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </Card>
 
       {!restaurantId ? (
-        <P className="text-sm text-slate-500">Select a restaurant to load menu items and apply overrides in bulk.</P>
+        <EmptyState icon={Tag} title="No restaurant selected" message="Select a restaurant to load menu items and apply overrides in bulk." />
       ) : (
         <>
-          <Div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Div className="relative max-w-md flex-1">
-              <UiIcon as={Search} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Card>
+            <Toolbar className="mb-0">
               <Input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search menu items"
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-sm outline-none focus:border-[#DC2626]"
+                className={`${INPUT} flex-1 min-w-[200px]`}
               />
-              {search ? (
-                <HButton
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:text-slate-600"
-                >
-                  <UiIcon as={X} className="h-4 w-4" />
-                </HButton>
-              ) : null}
-            </Div>
-            <Div className="flex flex-wrap items-center gap-2 text-xs">
-              <HButton
-                type="button"
-                onClick={selectAllItems}
-                disabled={!menuItems.length}
-                className="rounded-lg px-2.5 py-1.5 font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-40"
-              >
-                Select all ({menuItems.length})
+              <HButton type="button" onClick={selectAllItems} disabled={!menuItems.length} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>{`Select all (${menuItems.length})`}</Span>
               </HButton>
-              <HButton
-                type="button"
-                onClick={selectVisible}
-                disabled={!filteredItems.length}
-                className="rounded-lg px-2.5 py-1.5 font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-40"
-              >
-                Select visible ({pagedItems.length})
+              <HButton type="button" onClick={selectVisible} disabled={!filteredItems.length} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>{`Select visible (${pagedItems.length})`}</Span>
               </HButton>
-              <HButton type="button" onClick={clearSelection} className="rounded-lg px-2.5 py-1.5 font-semibold text-slate-600 hover:bg-slate-100">
-                Clear selection
+              <HButton type="button" onClick={clearSelection} className={BTN_SECONDARY}>
+                <Span className={BTN_TEXT_SECONDARY}>Clear selection</Span>
               </HButton>
-            </Div>
-          </Div>
+            </Toolbar>
+          </Card>
 
-          <Div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <Div>
-              {loadingMenu ? (
-                <Div className="flex items-center justify-center gap-2 px-4 py-16 text-sm text-slate-500">
-                  <UiIcon as={Loader2} className="h-4 w-4 animate-spin text-[#DC2626]" />
-                  Loading menu items...
-                </Div>
-              ) : (
-                <Table className="w-full border-collapse text-sm" cols={[44, 190, 150, 140, 130, 140, 120]}>
-                  <Thead className="z-10 bg-slate-50">
-                    <Tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      <Th className="px-2 py-3 text-center">
-                        <Input
-                          type="checkbox"
-                          checked={allVisibleSelected}
-                          onChange={toggleVisibleHeader}
-                          disabled={!visibleIds.length}
-                          accessibilityLabel="Select visible menu items"
-                          className="mx-auto h-4 w-4 rounded border-slate-300 text-[#DC2626] focus:ring-[#DC2626]"
-                        />
-                      </Th>
-                      <Th className="px-2 py-3 text-center font-semibold">Menu Item</Th>
-                      <Th className="px-2 py-3 text-center font-semibold">Restaurant Base Price</Th>
-                      <Th className="px-2 py-3 text-center font-semibold">Admin Pricing</Th>
-                      <Th className="px-2 py-3 text-center font-semibold">Rule Type</Th>
-                      <Th className="px-2 py-3 text-center font-semibold">Last Updated</Th>
-                      <Th className="px-2 py-3 text-center font-semibold">Actions</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {filteredItems.length === 0 ? (
-                      <Tr>
-                        <Td colSpan={7} className="px-4 py-12 text-center text-sm text-slate-500">
-                          {menuError || 'No menu items match your search.'}
-                        </Td>
-                      </Tr>
-                    ) : (
-                      pagedItems.map((item) => {
-                        const rule = menuRuleMap.get(item.id) || null;
-                        const checked = selectedIds.has(item.id);
-                        const ruleTypeLabel = rule
-                          ? rule.type === 'FIXED'
-                            ? 'Fixed'
-                            : 'Percentage'
-                          : restaurantRule
-                            ? 'Restaurant'
-                            : globalRule
-                              ? 'Global'
-                              : '—';
-                        return (
-                          <Tr key={item.id} className={`border-b border-slate-100 last:border-0 ${checked ? 'bg-rose-50/40' : 'hover:bg-slate-50/80'}`}>
-                            <Td className="px-2 py-3 text-center align-middle">
-                              <Input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleOne(item.id)}
-                                accessibilityLabel={`Select ${item.name}`}
-                                className="mx-auto h-4 w-4 rounded border-slate-300 text-[#DC2626] focus:ring-[#DC2626]"
-                              />
-                            </Td>
-                            <Td className="px-2 py-3 text-center align-middle">
-                              <P className="truncate font-semibold text-slate-900">{item.name}</P>
-                              <P className="mt-0.5 truncate text-xs text-slate-400">
-                                {item.categoryName || 'Uncategorized'}
-                                {!item.isAvailable ? ' · Unavailable' : ''}
-                              </P>
-                            </Td>
-                            <Td className="px-2 py-3 text-center align-middle font-semibold text-slate-700">
-                              {RUPEE}
-                              {Math.round(item.price || 0)}
-                            </Td>
-                            <Td className="px-2 py-3 text-center align-middle">
-                              <Div className="flex justify-center">
-                                <PricingStatusBadge rule={rule} globalRule={inheritedRule} />
-                              </Div>
-                            </Td>
-                            <Td className="px-2 py-3 text-center align-middle text-slate-600">{ruleTypeLabel}</Td>
-                            <Td className="px-2 py-3 text-center align-middle text-slate-500">{formatShortDate(rule?.updatedAt)}</Td>
-                            <Td className="px-2 py-3 text-center align-middle">
-                              {rule?.id ? (
-                                <HButton
-                                  type="button"
-                                  disabled={saving}
-                                  onClick={() =>
-                                    setDeleteTarget({
-                                      id: rule.id,
-                                      label: `Remove override for "${item.name}"? It will inherit Restaurant or Global pricing.`,
-                                    })
-                                  }
-                                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                                >
-                                  <UiIcon as={Trash2} className="h-3.5 w-3.5" />
-                                  Remove
-                                </HButton>
-                              ) : (
-                                <Span className="text-xs text-slate-300">—</Span>
-                              )}
-                            </Td>
-                          </Tr>
-                        );
-                      })
-                    )}
-                  </Tbody>
-                </Table>
-              )}
-            </Div>
-            <Div className="flex items-center justify-end border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
-              <Span>{selectedCount} selected</Span>
-            </Div>
-            <AdminListPagination
-              currentPage={currentPage}
-              pageSize={pageSize}
-              totalItems={filteredItems.length}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={(size) => {
-                try {
-                  localStorage.setItem('admin_pricing_menu_items_pageSize', String(size));
-                } catch {
-                  // ignore
-                }
-                setPageSize(size);
-                setCurrentPage(1);
-              }}
-              itemLabel="items"
+          {loadingMenu ? (
+            <TableSkeleton rows={6} />
+          ) : filteredItems.length === 0 ? (
+            <EmptyState
+              icon={Tag}
+              title={menuError ? 'Could not load menu items' : 'No menu items match your search'}
+              message={menuError || 'Clear the search to see every menu item for this restaurant.'}
             />
-          </Div>
+          ) : (
+            <>
+              <DataTable cols={COLS}>
+                <SelectHeader
+                  cols={COLS}
+                  labels={['Menu item', 'Base price', 'Admin pricing', 'Rule type', 'Last updated', 'Actions']}
+                  checked={allVisibleSelected}
+                  onToggle={toggleVisibleHeader}
+                  disabled={!visibleIds.length}
+                  accessibilityLabel="Select visible menu items"
+                />
+                <TBody>
+                  {pagedItems.map((item, idx) => {
+                    const rule = menuRuleMap.get(item.id) || null;
+                    const checked = selectedIds.has(item.id);
+                    const ruleTypeLabel = rule
+                      ? rule.type === 'FIXED'
+                        ? 'Fixed'
+                        : 'Percentage'
+                      : restaurantRule
+                        ? 'Restaurant'
+                        : globalRule
+                          ? 'Global'
+                          : '\u2014';
+                    return (
+                      <Row key={item.id} last={idx === pagedItems.length - 1} className={checked ? 'bg-blue-50' : ''}>
+                        <Cell width={COLS[0]} align="center">
+                          <Input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleOne(item.id)}
+                            accessibilityLabel={`Select ${item.name}`}
+                            className="h-5 w-5 rounded border-slate-300"
+                          />
+                        </Cell>
+                        <Cell width={COLS[1]}>
+                          <Div className="gap-0.5">
+                            <Span className="text-sm font-semibold text-slate-900">{item.name}</Span>
+                            <Span className="text-xs text-slate-500">
+                              {`${item.categoryName || 'Uncategorized'}${!item.isAvailable ? ' \u00B7 Unavailable' : ''}`}
+                            </Span>
+                          </Div>
+                        </Cell>
+                        <Cell width={COLS[2]} numberOfLines={1}>{`${RUPEE}${Math.round(item.price || 0)}`}</Cell>
+                        <Cell width={COLS[3]}>
+                          <PricingStatusBadge rule={rule} globalRule={inheritedRule} />
+                        </Cell>
+                        <Cell width={COLS[4]}>{ruleTypeLabel}</Cell>
+                        <Cell width={COLS[5]}>{formatShortDate(rule?.updatedAt)}</Cell>
+                        <Cell width={COLS[6]}>
+                          {rule?.id ? (
+                            <HButton
+                              type="button"
+                              disabled={saving}
+                              onClick={() =>
+                                setDeleteTarget({
+                                  id: rule.id,
+                                  label: `Remove override for "${item.name}"? It will inherit Restaurant or Global pricing.`,
+                                })
+                              }
+                              className="flex-row items-center gap-1 h-11 px-3 rounded-lg"
+                              accessibilityLabel={`Remove override for ${item.name}`}
+                            >
+                              <UiIcon as={Trash2} size={14} className="text-red-600" />
+                              <Span className="text-xs font-semibold text-red-600">Remove</Span>
+                            </HButton>
+                          ) : (
+                            <Span className="text-sm text-slate-400">{'\u2014'}</Span>
+                          )}
+                        </Cell>
+                      </Row>
+                    );
+                  })}
+                </TBody>
+              </DataTable>
+
+              <Span className="text-xs text-slate-500 text-right">{`${selectedCount} selected`}</Span>
+
+              <AdminListPagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={filteredItems.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => {
+                  try {
+                    localStorage.setItem('admin_pricing_menu_items_pageSize', String(size));
+                  } catch {
+                    // ignore
+                  }
+                  setPageSize(size);
+                  setCurrentPage(1);
+                }}
+                itemLabel="items"
+              />
+            </>
+          )}
 
           {selectedCount > 0 ? (
-            <Div className="z-20 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg sm:p-4">
-              <Div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <Div>
-                  <P className="text-sm font-bold text-slate-900">
-                    {selectedCount} menu item{selectedCount === 1 ? '' : 's'} selected
-                  </P>
-                  <P className="mt-0.5 text-xs text-slate-500">Apply one override to every selected item in this restaurant.</P>
-                </Div>
-                <Div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                  <Div className="flex gap-1 rounded-xl bg-slate-100 p-1">
-                    <HButton
-                      type="button"
-                      onClick={() => setBulkType('PERCENTAGE')}
-                      className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-bold ${bulkType === 'PERCENTAGE' ? 'bg-white text-[#DC2626] shadow-sm' : 'text-slate-500'}`}
-                    >
-                      <UiIcon as={Percent} className="h-3.5 w-3.5" />
-                    </HButton>
-                    <HButton
-                      type="button"
-                      onClick={() => setBulkType('FIXED')}
-                      className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-bold ${bulkType === 'FIXED' ? 'bg-white text-[#DC2626] shadow-sm' : 'text-slate-500'}`}
-                    >
-                      <UiIcon as={IndianRupee} className="h-3.5 w-3.5" /> Fixed
-                    </HButton>
-                  </Div>
-                  <Div>
-                    <Label className="mb-1 block text-[11px] font-semibold text-slate-400">Restaurant Base Price</Label>
+            <Card className="gap-3">
+              <Div className="gap-0.5">
+                <Span className="text-base font-semibold text-slate-900">{`${selectedCount} menu item${selectedCount === 1 ? '' : 's'} selected`}</Span>
+                <Span className="text-xs text-slate-500">Apply one override to every selected item in this restaurant.</Span>
+              </Div>
+              <Div className="flex-row flex-wrap items-end gap-2">
+                <HButton
+                  type="button"
+                  onClick={() => setBulkType('PERCENTAGE')}
+                  className={`flex-row items-center gap-1.5 rounded-lg h-11 px-4 ${bulkType === 'PERCENTAGE' ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
+                >
+                  <UiIcon as={Percent} size={14} className={bulkType === 'PERCENTAGE' ? 'text-white' : 'text-slate-600'} />
+                  <Span className={`text-sm font-semibold ${bulkType === 'PERCENTAGE' ? 'text-white' : 'text-slate-700'}`}>Percentage</Span>
+                </HButton>
+                <HButton
+                  type="button"
+                  onClick={() => setBulkType('FIXED')}
+                  className={`flex-row items-center gap-1.5 rounded-lg h-11 px-4 ${bulkType === 'FIXED' ? 'bg-blue-600' : 'border border-slate-300 bg-white'}`}
+                >
+                  <UiIcon as={IndianRupee} size={14} className={bulkType === 'FIXED' ? 'text-white' : 'text-slate-600'} />
+                  <Span className={`text-sm font-semibold ${bulkType === 'FIXED' ? 'text-white' : 'text-slate-700'}`}>Fixed</Span>
+                </HButton>
+                <Div className="min-w-[140px] flex-1">
+                  <Field label="Restaurant base price">
                     <Input
                       type="text"
-                      value={selectedBasePriceLabel || '—'}
+                      value={selectedBasePriceLabel || '\u2014'}
                       disabled
                       readOnly
-                      className="h-10 w-28 cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500"
+                      className={INPUT}
                     />
-                  </Div>
-                  <Div>
-                    <Label className="mb-1 block text-[11px] font-semibold text-slate-400">Value</Label>
+                  </Field>
+                </Div>
+                <Div className="min-w-[140px] flex-1">
+                  <Field label="Value">
                     <Input
                       type="number"
                       min="0"
@@ -1000,23 +937,18 @@ function MenuItemPricingPanel({ restaurants, rules, globalRule, saving, onRemove
                       step="0.01"
                       value={bulkValue}
                       onChange={(e) => setBulkValue(e.target.value)}
-                      className="h-10 w-28 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-[#DC2626]"
+                      className={INPUT}
                     />
-                  </Div>
-                  <Button
-                    type="button"
-                    disabled={saving}
-                    onClick={openConfirm}
-                    className="h-10 rounded-xl bg-[#DC2626] px-4 font-bold text-white hover:bg-[#B91C1C]"
-                  >
-                    Apply to selected
-                  </Button>
-                  <Button type="button" variant="outline" onClick={clearSelection} className="h-10 rounded-xl">
-                    Clear
-                  </Button>
+                  </Field>
                 </Div>
+                <HButton type="button" disabled={saving} onClick={openConfirm} className={BTN_PRIMARY}>
+                  <Span className={BTN_TEXT_PRIMARY}>Apply to selected</Span>
+                </HButton>
+                <HButton type="button" onClick={clearSelection} className={BTN_SECONDARY}>
+                  <Span className={BTN_TEXT_SECONDARY}>Clear</Span>
+                </HButton>
               </Div>
-            </Div>
+            </Card>
           ) : null}
         </>
       )}
@@ -1308,78 +1240,82 @@ export default function PricingManagement() {
   );
   if (zonesLoading || (selectedZoneId && loading)) {
     return (
-      <ScrollDiv className="flex min-h-[50vh] items-center justify-center">
-        <UiIcon as={Loader2} className="h-6 w-6 animate-spin text-[#DC2626]" />
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={Tag}
+          title="Pricing Management"
+          subtitle="Configure admin markup without editing individual menu prices."
+          breadcrumb={[{ label: 'Food' }, { label: 'Pricing' }]}
+        />
+        <LoadingState label="Loading pricing rules…" />
+      </AdminPage>
     );
   }
   if (!selectedZoneId) {
     return (
-      <ScrollDiv className="mx-auto max-w-6xl p-4 sm:p-6">
-        <H1 className="text-2xl font-black tracking-tight text-slate-950">Pricing Management</H1>
-        <P className="mt-4 text-sm text-slate-500">No zones available. Create a zone first to manage pricing.</P>
-      </ScrollDiv>
+      <AdminPage maxWidth={1200}>
+        <PageHeader
+          icon={Tag}
+          title="Pricing Management"
+          subtitle="Configure admin markup without editing individual menu prices."
+          breadcrumb={[{ label: 'Food' }, { label: 'Pricing' }]}
+        />
+        <EmptyState icon={Tag} title="No zones available" message="Create a zone first to manage pricing." />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
-      <Div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <Div className="min-w-0 flex-1">
-          <H1 className="text-2xl font-black tracking-tight text-slate-950">Pricing Management</H1>
-          <P className="mt-1 whitespace-nowrap text-sm text-slate-500">
-            Configure admin markup without editing individual menu prices. Priority: Menu Item → Restaurant → Global.
-          </P>
-        </Div>
-        <Div className="flex shrink-0 items-center gap-2 self-start">
-          <Label className="text-sm font-medium text-slate-700 whitespace-nowrap">Zone:</Label>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Tag}
+        title="Pricing Management"
+        subtitle="Configure admin markup without editing individual menu prices. Priority: Menu Item → Restaurant → Global."
+        breadcrumb={[{ label: 'Food' }, { label: 'Pricing' }]}
+        actions={
+          <HButton type="button" onClick={() => loadCore()} className={BTN_SECONDARY}>
+            <UiIcon as={RefreshCw} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Refresh</Span>
+          </HButton>
+        }
+      />
+
+      <Card className="mb-4">
+        <Field label="Zone" hint="Pricing rules apply to the selected zone">
           <Select value={selectedZoneId} onValueChange={setSelectedZoneId} disabled={zonesLoading || zones.length === 0}>
-            <SelectTrigger id="pricing-zone-select" className="h-10 min-w-[10rem] rounded-xl border-slate-300 bg-white text-sm text-slate-900 shadow-sm">
+            <SelectTrigger id="pricing-zone-select" className={INPUT}>
               <SelectValue placeholder="Select zone" />
             </SelectTrigger>
-            <SelectContent className="max-h-72 border-slate-200 bg-white text-slate-900">
+            <SelectContent className="max-h-72 border-slate-200 bg-white">
               {zones.map((zone) => (
-                <SelectItem
-                  key={zone._id || zone.id}
-                  value={String(zone._id || zone.id)}
-                  className="cursor-pointer focus:bg-slate-100 focus:text-slate-900 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900"
-                >
+                <SelectItem key={zone._id || zone.id} value={String(zone._id || zone.id)}>
                   {zone.zoneName || zone.name || 'Unnamed Zone'}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button type="button" variant="outline" onClick={() => loadCore()} className="h-10 shrink-0 rounded-xl">
-            <UiIcon as={RefreshCw} className="mr-2 h-4 w-4" /> Refresh
-          </Button>
-        </Div>
-      </Div>
+        </Field>
+      </Card>
 
-      <Div className="grid gap-3 sm:grid-cols-3">
-        <Div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <P className="text-xs font-semibold text-slate-400">Global rule</P>
-          <P className="mt-1 text-lg font-black text-slate-900">
-            {summary?.global ? (summary.global.type === 'FIXED' ? `+${RUPEE}${summary.global.value}` : `+${summary.global.value}%`) : 'Not set'}
-          </P>
-        </Div>
-        <Div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <P className="text-xs font-semibold text-slate-400">Restaurant overrides</P>
-          <P className="mt-1 text-lg font-black text-slate-900">{summary?.activeRestaurantOverrides || 0}</P>
-        </Div>
-        <Div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <P className="text-xs font-semibold text-slate-400">Menu item overrides</P>
-          <P className="mt-1 text-lg font-black text-slate-900">{summary?.activeMenuItemOverrides || 0}</P>
-        </Div>
-      </Div>
+      <StatGrid className="mb-4">
+        <StatCard
+          label="Global rule"
+          value={summary?.global ? (summary.global.type === 'FIXED' ? `+${RUPEE}${summary.global.value}` : `+${summary.global.value}%`) : 'Not set'}
+          icon={Percent}
+          tone="info"
+        />
+        <StatCard label="Restaurant overrides" value={String(summary?.activeRestaurantOverrides || 0)} icon={Tag} tone="warning" />
+        <StatCard label="Menu item overrides" value={String(summary?.activeMenuItemOverrides || 0)} icon={IndianRupee} tone="success" />
+      </StatGrid>
 
-      <Div className="flex gap-2 rounded-xl bg-slate-100 p-1">
+      <Div className="flex-row flex-wrap gap-1 rounded-lg bg-slate-100 border border-slate-200 p-1 mb-4">
         {tabs.map((t) => (
           <HButton
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold transition ${tab === t.id ? 'bg-white text-[#DC2626] shadow-sm' : 'text-slate-500'}`}
+            className={`flex-1 min-w-[110px] h-11 px-3 rounded-lg items-center justify-center ${tab === t.id ? 'bg-blue-600' : 'bg-transparent'}`}
           >
-            {t.label}
+            <Span className={`text-sm font-semibold ${tab === t.id ? 'text-white' : 'text-slate-500'}`}>{t.label}</Span>
           </HButton>
         ))}
       </Div>
@@ -1427,6 +1363,6 @@ export default function PricingManagement() {
         onCancel={() => setDeleteRuleTarget(null)}
         onConfirm={confirmClearRule}
       />
-    </ScrollDiv>
+    </AdminPage>
   );
 }

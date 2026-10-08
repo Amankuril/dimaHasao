@@ -1,14 +1,18 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/users/UserBulkUpload.jsx (tools/port.js first pass). */
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronRight, Download, FileText, Loader2, RefreshCw, UploadCloud, X } from 'lucide-react-native';
+import { ActivityIndicator } from 'react-native';
+import { ArrowLeft, Download, FileText, RefreshCw, UploadCloud, X } from 'lucide-react-native';
 import { useLocation, useNavigate } from '../../../../../lib/webRouter';
 import { toast } from '../../../../../lib/notify';
 import { USER_IMPORT_COLUMNS, validateUserImportFile } from './userImportSchema';
 import * as XLSX from 'xlsx';
 import { adminService } from '../../services/adminService';
-import { Button, Div, H1, H3, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../../components/web';
+import { Button, Div, Span, Icon as UiIcon } from '../../../../../components/web';
 import { File } from 'expo-file-system';
 import { pickSpreadsheet, saveBase64File } from '../../../../../lib/files';
+import { AdminPage, PageHeader, Card, SectionTitle, DataTable, THead, TBody, Row, Cell, EmptyState, ErrorState, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY } from '../../../../../admin/ui';
+
+const COLS = [220, 190];
 const formatFileSize = (size = 0) => `${(size / (1024 * 1024)).toFixed(2)} MB`;
 const parseCsvLine = (line = '') => {
   const cells = [];
@@ -257,132 +261,109 @@ const UserBulkUpload = () => {
       setImportingIndex(null);
     }
   };
+  const busy = importingIndex !== null;
   return (
-    <ScrollDiv className="min-h-screen bg-gray-50 p-4 lg:p-6">
-      <Div className="mb-4">
-        <Div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
-          <Span>Users</Span>
-          <UiIcon as={ChevronRight} size={12} />
-          <Span className="text-gray-700 font-medium">Bulk Upload</Span>
-        </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={UploadCloud}
+        title="Bulk Upload"
+        subtitle={`File columns: ${USER_IMPORT_COLUMNS.join(', ')}`}
+        breadcrumb={[{ label: 'Users' }, { label: 'Bulk Upload' }]}
+        actions={
+          <>
+            <Button type="button" onClick={() => navigate('/user-import/create')} className={BTN_PRIMARY}>
+              <UiIcon as={UploadCloud} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Select Files</Span>
+            </Button>
+            <Button type="button" onClick={() => navigate('/taxi/admin/users')} className={BTN_SECONDARY} accessibilityLabel="Back to users">
+              <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+            </Button>
+          </>
+        }
+      />
 
-        <Div className="flex items-center justify-between gap-4">
-          <H1 className="text-lg text-gray-900 font-bold">Bulk Upload</H1>
-          <Button
-            type="button"
-            onClick={() => navigate('/taxi/admin/users')}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-          >
-            <UiIcon as={ArrowLeft} size={16} /> Back
-          </Button>
-        </Div>
-      </Div>
+      {error ? <ErrorState title="That file cannot be used" message={error} className="mb-4" /> : null}
 
-      <Div>
-        <Div>
-          <Div className="bg-white rounded-xl border border-gray-200 p-6">
-            <Div className="flex flex-col gap-4 mb-6 pb-4 border-b border-gray-100 md:flex-row md:items-center md:justify-between">
-              <Div className="flex items-center gap-3">
-                <Div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-                  <UiIcon as={UploadCloud} size={18} />
-                </Div>
-                <Div>
-                  <H3 className="text-sm text-gray-900 font-bold">Upload Customer File</H3>
-                  <P className="text-xs text-gray-400">File columns: {USER_IMPORT_COLUMNS.join(', ')}</P>
-                </Div>
-              </Div>
-
-              <Button
-                type="button"
-                onClick={() => navigate('/user-import/create')}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-yellow-400 px-4 py-2 text-sm font-semibold text-black shadow-sm transition-colors hover:bg-yellow-500"
-              >
-                <UiIcon as={UploadCloud} size={16} /> Select Files
-              </Button>
-            </Div>
-
-            <Div className="rounded-lg border transition-colors border-gray-200 bg-white">
-              <Div>
-                <Table cols={[260, 168]} className="w-full text-left">
-                  <Thead>
-                    <Tr className="border-b border-gray-100 bg-gray-50">
-                      <Th className="px-4 py-3 text-xs font-semibold text-gray-900">File</Th>
-                      <Th className="px-4 py-3 text-right text-xs font-semibold text-gray-900">Action</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody className="divide-y divide-gray-100">
-                    {files.length === 0 ? (
-                      <Tr>
-                        <Td colSpan="2" className="px-4 py-14 text-center text-sm font-medium text-gray-400">
-                          No files selected. Use Select Files above to create a new upload.
-                        </Td>
-                      </Tr>
-                    ) : (
-                      files.map((selectedFile, index) => (
-                        <Tr key={`${selectedFile.name}-${index}`} className="hover:bg-gray-50/60 transition-colors">
-                          <Td className="px-4 py-3">
-                            <Div className="flex min-w-0 items-center gap-3">
-                              <Div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                                <UiIcon as={FileText} size={18} />
-                              </Div>
-                              <Div className="min-w-0">
-                                <P className="truncate text-sm font-medium text-gray-900">{selectedFile.name}</P>
-                                <P className="mt-0.5 text-xs text-gray-400">{formatFileSize(selectedFile.size)}</P>
-                              </Div>
-                            </Div>
-                          </Td>
-                          <Td className="px-4 py-3 text-right">
-                            <Div className="flex items-center justify-end gap-2">
-                              <Button
-                                type="button"
-                                onClick={() => handleImport(selectedFile, index)}
-                                disabled={importingIndex !== null}
-                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                {importingIndex === index ? <UiIcon as={Loader2} size={16} className="animate-spin" /> : <UiIcon as={UploadCloud} size={16} />}
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={() => handleDownload(selectedFile)}
-                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
-                              >
-                                <UiIcon as={Download} size={16} />
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={() => handleReupload(index)}
-                                disabled={importingIndex !== null}
-                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
-                              >
-                                <UiIcon as={RefreshCw} size={16} />
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={() => removeFile(index)}
-                                disabled={importingIndex !== null}
-                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                              >
-                                <UiIcon as={X} size={16} />
-                              </Button>
-                            </Div>
-                          </Td>
-                        </Tr>
-                      ))
-                    )}
-                  </Tbody>
-                </Table>
-              </Div>
-
-              <Div className="border-t border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-                Existing import files will appear here with download and re-upload actions.
-              </Div>
-
-              {error && <Div className="border-t border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">{error}</Div>}
-            </Div>
+      {files.length === 0 ? (
+        <EmptyState
+          icon={UploadCloud}
+          title="No files selected"
+          message="Pick a CSV or XLSX of passengers to import. Existing import files appear here with download and re-upload actions."
+          actionLabel="Select Files"
+          onAction={() => navigate('/user-import/create')}
+        />
+      ) : (
+        <Card padded={false}>
+          <Div className="px-4 pt-4">
+            <SectionTitle>Upload Customer File</SectionTitle>
           </Div>
-        </Div>
-      </Div>
-    </ScrollDiv>
+          <Div className="px-4 pb-4">
+            <DataTable cols={COLS}>
+              <THead cols={COLS} labels={['File', 'Action']} />
+              <TBody>
+                {files.map((selectedFile, index) => (
+                  <Row key={`${selectedFile.name}-${index}`} last={index === files.length - 1}>
+                    <Cell width={COLS[0]}>
+                      <Div className="flex-row items-center gap-2">
+                        <Div className="w-9 h-9 rounded-lg bg-blue-100 items-center justify-center shrink-0">
+                          <UiIcon as={FileText} size={18} className="text-blue-700" />
+                        </Div>
+                        <Div className="flex-1 min-w-0">
+                          <Span className="text-sm font-medium text-slate-900" numberOfLines={1}>
+                            {selectedFile.name}
+                          </Span>
+                          <Span className="text-xs text-slate-500">{formatFileSize(selectedFile.size)}</Span>
+                        </Div>
+                      </Div>
+                    </Cell>
+                    <Cell width={COLS[1]}>
+                      <Div className="flex-row items-center gap-1">
+                        <Button
+                          type="button"
+                          onClick={() => handleImport(selectedFile, index)}
+                          disabled={busy}
+                          accessibilityLabel={`Import ${selectedFile.name}`}
+                          className={`w-11 h-11 items-center justify-center rounded-lg ${busy ? 'opacity-50' : ''}`}
+                        >
+                          {importingIndex === index ? <ActivityIndicator size="small" color="#155DFC" /> : <UiIcon as={UploadCloud} size={18} className="text-green-700" />}
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handleDownload(selectedFile)}
+                          accessibilityLabel={`Download ${selectedFile.name}`}
+                          className="w-11 h-11 items-center justify-center rounded-lg"
+                        >
+                          <UiIcon as={Download} size={18} className="text-slate-500" />
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handleReupload(index)}
+                          disabled={busy}
+                          accessibilityLabel={`Replace ${selectedFile.name}`}
+                          className={`w-11 h-11 items-center justify-center rounded-lg ${busy ? 'opacity-50' : ''}`}
+                        >
+                          <UiIcon as={RefreshCw} size={18} className="text-slate-500" />
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          disabled={busy}
+                          accessibilityLabel={`Remove ${selectedFile.name}`}
+                          className={`w-11 h-11 items-center justify-center rounded-lg ${busy ? 'opacity-50' : ''}`}
+                        >
+                          <UiIcon as={X} size={18} className="text-red-600" />
+                        </Button>
+                      </Div>
+                    </Cell>
+                  </Row>
+                ))}
+              </TBody>
+            </DataTable>
+          </Div>
+        </Card>
+      )}
+    </AdminPage>
   );
 };
 export default UserBulkUpload;

@@ -22,7 +22,18 @@ import { Loader2, ToggleRight, Wrench } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import globalService from '../../../services/globalService';
 import { adminAPI } from '../../../../api/food';
-import { Button, Div, H2, H3, Input, P, ScrollDiv, Section, Span, Icon as UiIcon } from '../../../../components/web';
+import {
+  AdminPage,
+  Card,
+  EmptyState,
+  ErrorState,
+  INPUT,
+  LoadingState,
+  PageHeader,
+  SectionTitle,
+  StatusBadge,
+} from '../../../../admin/ui';
+import { Button, Div, Input, P, Span, Icon as UiIcon } from '../../../../components/web';
 const FOOD_TOGGLES = [
   {
     key: 'cod_enabled',
@@ -65,15 +76,20 @@ const FOOD_TOGGLES = [
     hint: 'Block cash for customers who owe.',
   },
 ];
-const Switch = ({ checked, onChange, disabled }) => (
+
+/** A 44 px-tall switch row target: the track itself stays 24 px tall. */
+const Switch = ({ checked, onChange, disabled, label }) => (
   <Button
     type="button"
     aria-checked={checked}
     disabled={disabled}
     onClick={() => onChange(!checked)}
-    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${checked ? 'bg-[#0a4d2b]' : 'bg-gray-300'}`}
+    className="h-11 w-14 shrink-0 items-end justify-center disabled:opacity-50"
+    accessibilityLabel={label}
   >
-    <Div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+    <Div className={`h-6 w-11 rounded-full justify-center ${checked ? 'bg-blue-600' : 'bg-slate-300'}`}>
+      <Div className={`h-5 w-5 rounded-full bg-white ${checked ? 'ml-[22px]' : 'ml-0.5'}`} />
+    </Div>
   </Button>
 );
 const ToggleManagement = () => {
@@ -169,63 +185,60 @@ const ToggleManagement = () => {
       setSavingKey(null);
     }
   };
+  const header = <PageHeader title="Toggle Management" subtitle="Every switch that changes what the apps do, in one place." icon={ToggleRight} />;
   if (denied) {
     return (
-      <ScrollDiv className="p-4 pb-20">
-        <Div className="bg-white p-10 rounded-2xl border border-gray-200 items-center text-center">
-          <UiIcon as={ToggleRight} size={28} className="text-amber-500 mx-auto mb-3" />
-          <H3 className="font-bold text-gray-900">Only a platform superadmin can change these</H3>
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={720}>
+        {header}
+        <ErrorState title="Only a platform superadmin can change these" message="Ask a platform superadmin to flip a module or a payment switch." />
+      </AdminPage>
     );
   }
   if (loading) {
     return (
-      <ScrollDiv className="p-4 pb-20">
-        <Div className="p-12 items-center">
-          <UiIcon as={Loader2} size={22} className="animate-spin inline" />
-        </Div>
-      </ScrollDiv>
+      <AdminPage maxWidth={900}>
+        {header}
+        <LoadingState label="Loading the switches…" />
+      </AdminPage>
     );
   }
   return (
-    <ScrollDiv className="p-4 pb-20 space-y-6">
-      <Div>
-        <H2 className="text-xl font-bold text-gray-900">Toggle Management</H2>
-        <P className="text-sm text-gray-500 mt-1">Every switch that changes what the apps do, in one place.</P>
-      </Div>
+    <AdminPage maxWidth={900}>
+      {header}
 
-      <Section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <Div className="px-5 py-4 border-b border-gray-100">
-          <H3 className="font-bold text-gray-900 flex items-center gap-2">
-            <UiIcon as={Wrench} size={16} className="text-amber-500" /> Module availability
-          </H3>
-          <P className="text-xs text-gray-500 mt-1">
-            Switching a module off shows an under-maintenance screen across all of its pages and stops its API. Admin panels stay open.
-          </P>
-        </Div>
+      <Card className="mb-4 gap-3">
+        <SectionTitle action={<UiIcon as={Wrench} size={16} className="text-amber-600" />}>Module availability</SectionTitle>
+        <P className="text-xs text-slate-500">
+          Switching a module off shows an under-maintenance screen across all of its pages and stops its API. Admin panels stay open.
+        </P>
 
-        <Div className="divide-y divide-gray-100">
-          {modules.map((module) => {
+        {modules.length === 0 ? (
+          <EmptyState title="No modules to switch" message="The platform did not report any consumer modules." actionLabel="Reload" onAction={load} />
+        ) : (
+          modules.map((module, i, a) => {
             const entry = toggles[module] || {
               enabled: true,
               message: '',
             };
             return (
-              <Div key={module} className="px-5 py-4">
-                <Div className="flex items-center gap-4">
-                  <Div className="flex-1 min-w-0">
-                    <P className="font-semibold text-gray-900 text-sm">{labels[module] || module}</P>
-                    <P className="text-xs mt-0.5 font-medium">
-                      {entry.enabled ? <Span className="text-emerald-600">Live</Span> : <Span className="text-amber-600">Under maintenance</Span>}
+              <Div key={module} className={`gap-2 pb-3 ${i === a.length - 1 ? '' : 'border-b border-slate-100'}`}>
+                <Div className="flex-row items-center gap-3">
+                  <Div className="flex-1 min-w-0 gap-1">
+                    <P className="text-sm font-semibold text-slate-900" numberOfLines={2}>
+                      {labels[module] || module}
                     </P>
+                    <StatusBadge
+                      status={entry.enabled ? 'active' : 'pending'}
+                      label={entry.enabled ? 'Live' : 'Under maintenance'}
+                    />
                   </Div>
 
-                  {savingKey === module && <UiIcon as={Loader2} size={15} className="animate-spin text-gray-400" />}
+                  {savingKey === module && <UiIcon as={Loader2} size={15} className="text-slate-400" />}
 
                   <Switch
                     checked={entry.enabled}
                     disabled={savingKey === module}
+                    label={`${labels[module] || module} availability`}
                     onChange={(enabled) =>
                       saveModule(module, {
                         enabled,
@@ -235,7 +248,7 @@ const ToggleManagement = () => {
                 </Div>
 
                 {!entry.enabled && (
-                  <Div className="mt-3">
+                  <Div className="gap-1">
                     <Input
                       value={entry.message || ''}
                       placeholder={defaultMessage}
@@ -253,43 +266,48 @@ const ToggleManagement = () => {
                           message: entry.message || '',
                         })
                       }
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#0a4d2b]"
+                      className={INPUT}
                     />
-                    <P className="text-[11px] text-gray-400 mt-1">Shown on the maintenance screen. Leave blank for the default.</P>
+                    <P className="text-xs text-slate-500">Shown on the maintenance screen. Leave blank for the default.</P>
                   </Div>
                 )}
               </Div>
             );
-          })}
-        </Div>
-      </Section>
+          })
+        )}
+      </Card>
 
-      <Section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <Div className="px-5 py-4 border-b border-gray-100">
-          <H3 className="font-bold text-gray-900">Food ordering &amp; payments</H3>
-          <P className="text-xs text-gray-500 mt-1">Moved here from Food&apos;s Customization Settings. These apply to the food module only.</P>
-        </Div>
+      <Card className="mb-4 gap-3">
+        <SectionTitle>Food ordering &amp; payments</SectionTitle>
+        <P className="text-xs text-slate-500">Moved here from Food&apos;s Customization Settings. These apply to the food module only.</P>
 
         {!foodAvailable ? (
-          <P className="px-5 py-6 text-sm text-gray-500">Food settings could not be loaded. They need access to the food admin API.</P>
+          <ErrorState
+            title="Food settings could not be loaded"
+            message="They need access to the food admin API."
+            onRetry={load}
+          />
         ) : (
-          <Div className="divide-y divide-gray-100">
-            {FOOD_TOGGLES.map(({ key, label, hint }) => (
-              <Div key={key} className="px-5 py-3.5 flex items-center gap-4">
-                <Div className="flex-1 min-w-0">
-                  <P className="font-semibold text-gray-900 text-sm">{label}</P>
-                  <P className="text-xs text-gray-500 mt-0.5">{hint}</P>
-                </Div>
-
-                {savingKey === key && <UiIcon as={Loader2} size={15} className="animate-spin text-gray-400" />}
-
-                <Switch checked={foodSettings[key] === true} disabled={savingKey === key} onChange={(checked) => saveFoodToggle(key, checked)} />
+          FOOD_TOGGLES.map(({ key, label, hint }, i, a) => (
+            <Div key={key} className={`flex-row items-center gap-3 pb-3 ${i === a.length - 1 ? '' : 'border-b border-slate-100'}`}>
+              <Div className="flex-1 min-w-0">
+                <P className="text-sm font-semibold text-slate-900" numberOfLines={2}>
+                  {label}
+                </P>
+                <P className="text-xs text-slate-500 mt-0.5" numberOfLines={2}>
+                  {hint}
+                </P>
               </Div>
-            ))}
-          </Div>
+
+              {savingKey === key && <UiIcon as={Loader2} size={15} className="text-slate-400" />}
+
+              <Switch checked={foodSettings[key] === true} disabled={savingKey === key} label={label} onChange={(checked) => saveFoodToggle(key, checked)} />
+            </Div>
+          ))
         )}
-      </Section>
-    </ScrollDiv>
+      </Card>
+      <Span className="text-xs text-slate-500">A switch saves as soon as it is flipped.</Span>
+    </AdminPage>
   );
 };
 export default ToggleManagement;

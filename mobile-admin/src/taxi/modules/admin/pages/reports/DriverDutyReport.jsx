@@ -1,14 +1,18 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/reports/DriverDutyReport.jsx (tools/port.js first pass). */
 import React, { useState, useEffect } from 'react';
-import { Download, ChevronRight, ArrowLeft } from 'lucide-react-native';
-import { motion } from '../../../../../lib/motion';
+import { ActivityIndicator } from 'react-native';
+import { Download, ArrowLeft, ClipboardList } from 'lucide-react-native';
 import { adminService } from '../../services/adminService';
 import { triggerFileDownload } from '../../../../shared/utils/downloadHelper';
-import { Button, Div, H1, Input, Label, Option, ScrollDiv, Select, Span, Icon as UiIcon } from '../../../../../components/web';
+import { Button, Div, Input, Option, Select, Span, Icon as UiIcon } from '../../../../../components/web';
 import { alert } from '../../../../../lib/webShim';
 import { useNavigate } from '../../../../../lib/webRouter';
+import { AdminPage, PageHeader, Card, SectionTitle, Field, INPUT, BTN_PRIMARY, BTN_SECONDARY, BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth } from '../../../../../admin/ui';
+
 const DriverDutyReport = () => {
   const navigate = useNavigate();
+  const { columns } = useLayoutWidth();
+  const cols = Math.min(columns, 2);
   const [filters, setFilters] = useState({
     service_location_id: '',
     driver_id: '',
@@ -66,157 +70,97 @@ const DriverDutyReport = () => {
     filters.date_option &&
     filters.file_format &&
     (filters.date_option !== 'range' || (filters.from_date && filters.to_date));
-  const inputClass =
-    'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors appearance-none shadow-sm';
-  const labelClass = 'block text-[13px] font-bold text-gray-600 mb-2';
+  const disabled = !isFormValid || isDownloading;
   return (
-    <ScrollDiv className="min-h-screen bg-[#F9FAFB] p-6 lg:p-8">
-      {/* Header Block */}
-      <Div className="mb-8">
-        <Div className="flex items-center gap-2 text-xs text-gray-400 mb-3 font-medium">
-          <Span>Driver Duty Report</Span>
-          <UiIcon as={ChevronRight} size={14} className="opacity-50" />
-          <Span className="text-gray-600 font-semibold italic">Driver Duty Report</Span>
+    <AdminPage maxWidth={720}>
+      <PageHeader
+        icon={ClipboardList}
+        title="Driver Duty Report"
+        subtitle="Duty hours and ride outcomes per driver"
+        breadcrumb={[{ label: 'Reports' }, { label: 'Driver Duty Report' }]}
+        actions={
+          <Button onClick={() => navigate(-1)} className={BTN_SECONDARY} accessibilityLabel="Go back">
+            <UiIcon as={ArrowLeft} size={16} className="text-slate-600" />
+            <Span className={BTN_TEXT_SECONDARY}>Back</Span>
+          </Button>
+        }
+      />
+
+      <Card>
+        <SectionTitle>Report filters</SectionTitle>
+        <Div className={`grid grid-cols-${cols} gap-3`}>
+          <Field label="Service Location" required hint={locations.length ? undefined : 'No service locations loaded yet'}>
+            <Select value={filters.service_location_id} onChange={(e) => updateFilter('service_location_id', e.target.value)} className={INPUT} placeholder="Select">
+              <Option value="">Select</Option>
+              {locations.map((loc) => (
+                <Option key={loc._id} value={loc._id}>
+                  {loc.name}
+                </Option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Driver" required hint={drivers.length ? undefined : 'No drivers loaded yet'}>
+            <Select value={filters.driver_id} onChange={(e) => updateFilter('driver_id', e.target.value)} className={INPUT} placeholder="Select">
+              <Option value="">Select</Option>
+              {drivers.map((d) => (
+                <Option key={d._id} value={d._id}>
+                  {d.name} ({d.mobile})
+                </Option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Date Option" required>
+            <Select value={filters.date_option} onChange={(e) => updateFilter('date_option', e.target.value)} className={INPUT} placeholder="Select">
+              <Option value="">Select</Option>
+              <Option value="today">Today</Option>
+              <Option value="yesterday">Yesterday</Option>
+              <Option value="this_week">This Week</Option>
+              <Option value="this_month">This Month</Option>
+              <Option value="this_year">This Year</Option>
+              <Option value="range">Date Range</Option>
+            </Select>
+          </Field>
+
+          {filters.date_option === 'range' && (
+            <>
+              <Field label="From Date" required>
+                <Input type="date" value={filters.from_date || ''} onChange={(e) => updateFilter('from_date', e.target.value)} className={INPUT} />
+              </Field>
+              <Field label="To Date" required>
+                <Input type="date" value={filters.to_date || ''} onChange={(e) => updateFilter('to_date', e.target.value)} className={INPUT} />
+              </Field>
+            </>
+          )}
+
+          <Field label="Ride Status">
+            <Select value={filters.status} onChange={(e) => updateFilter('status', e.target.value)} className={INPUT} placeholder="All">
+              <Option value="">All</Option>
+              <Option value="completed">Completed</Option>
+              <Option value="cancelled">Cancelled</Option>
+              <Option value="accepted">Accepted</Option>
+              <Option value="ongoing">Ongoing</Option>
+            </Select>
+          </Field>
+
+          <Field label="File Format" required>
+            <Select value={filters.file_format} onChange={(e) => updateFilter('file_format', e.target.value)} className={INPUT} placeholder="Select File Format">
+              <Option value="">Select File Format</Option>
+              <Option value="csv">CSV</Option>
+              <Option value="excel">Excel</Option>
+            </Select>
+          </Field>
         </Div>
-        <Div className="flex items-center justify-between border-b border-gray-100 pb-5">
-          <H1 className="text-2xl font-bold text-[#334155] tracking-tight uppercase">Driver Duty Report</H1>
-          <Button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm active:scale-95"
-          >
-            <UiIcon as={ArrowLeft} size={16} strokeWidth={2.5} /> Back
+
+        <Div className="mt-4">
+          <Button onClick={handleDownload} disabled={disabled} className={`${BTN_PRIMARY} ${disabled ? 'opacity-50' : ''}`}>
+            {isDownloading ? <ActivityIndicator size="small" color="#FFFFFF" /> : <UiIcon as={Download} size={16} className="text-white" />}
+            <Span className={BTN_TEXT_PRIMARY}>{isDownloading ? 'Downloading…' : 'Download'}</Span>
           </Button>
         </Div>
-      </Div>
-
-      <Div className="max-w-6xl mx-auto">
-        {/* Filter Card */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          className="bg-white rounded-2xl border border-gray-100 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
-        >
-          <Div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-            {/* Service Location */}
-            <Div className="space-y-1">
-              <Label className={labelClass}>
-                Service Location <Span className="text-rose-500">*</Span>
-              </Label>
-              <Div className="relative">
-                <Select value={filters.service_location_id} onChange={(e) => updateFilter('service_location_id', e.target.value)} className={inputClass}>
-                  <Option value="">Select</Option>
-                  {locations.map((loc) => (
-                    <Option key={loc._id} value={loc._id}>
-                      {loc.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Div>
-            </Div>
-
-            {/* Driver */}
-            <Div className="space-y-1">
-              <Label className={labelClass}>
-                Driver <Span className="text-rose-500">*</Span>
-              </Label>
-              <Div className="relative">
-                <Select value={filters.driver_id} onChange={(e) => updateFilter('driver_id', e.target.value)} className={inputClass}>
-                  <Option value="">Select</Option>
-                  {drivers.map((d) => (
-                    <Option key={d._id} value={d._id}>
-                      {d.name} ({d.mobile})
-                    </Option>
-                  ))}
-                </Select>
-              </Div>
-            </Div>
-
-            {/* Date Option */}
-            <Div className="space-y-1">
-              <Label className={labelClass}>
-                Date Option <Span className="text-rose-500">*</Span>
-              </Label>
-              <Div className="relative">
-                <Select value={filters.date_option} onChange={(e) => updateFilter('date_option', e.target.value)} className={inputClass}>
-                  <Option value="">Select</Option>
-                  <Option value="today">Today</Option>
-                  <Option value="yesterday">Yesterday</Option>
-                  <Option value="this_week">This Week</Option>
-                  <Option value="this_month">This Month</Option>
-                  <Option value="this_year">This Year</Option>
-                  <Option value="range">Date Range</Option>
-                </Select>
-              </Div>
-            </Div>
-
-            {filters.date_option === 'range' && (
-              <>
-                <Div className="space-y-1">
-                  <Label className={labelClass}>
-                    From Date <Span className="text-rose-500">*</Span>
-                  </Label>
-                  <Input type="date" value={filters.from_date || ''} onChange={(e) => updateFilter('from_date', e.target.value)} className={inputClass} />
-                </Div>
-                <Div className="space-y-1">
-                  <Label className={labelClass}>
-                    To Date <Span className="text-rose-500">*</Span>
-                  </Label>
-                  <Input type="date" value={filters.to_date || ''} onChange={(e) => updateFilter('to_date', e.target.value)} className={inputClass} />
-                </Div>
-              </>
-            )}
-
-            <Div className="space-y-1">
-              <Label className={labelClass}>Ride Status</Label>
-              <Div className="relative">
-                <Select value={filters.status} onChange={(e) => updateFilter('status', e.target.value)} className={inputClass}>
-                  <Option value="">All</Option>
-                  <Option value="completed">Completed</Option>
-                  <Option value="cancelled">Cancelled</Option>
-                  <Option value="accepted">Accepted</Option>
-                  <Option value="ongoing">Ongoing</Option>
-                </Select>
-              </Div>
-            </Div>
-
-            {/* File Format */}
-            <Div className="space-y-1">
-              <Label className={labelClass}>
-                File Format <Span className="text-rose-500">*</Span>
-              </Label>
-              <Div className="relative">
-                <Select value={filters.file_format} onChange={(e) => updateFilter('file_format', e.target.value)} className={inputClass}>
-                  <Option value="">Select File Format</Option>
-                  <Option value="csv">CSV</Option>
-                  <Option value="excel">Excel</Option>
-                </Select>
-              </Div>
-            </Div>
-          </Div>
-
-          <Div className="mt-12 flex justify-end">
-            <Button
-              onClick={handleDownload}
-              disabled={!isFormValid || isDownloading}
-              className={`flex items-center gap-3 px-8 py-3.5 rounded-xl text-[15px] font-bold tracking-wide transition-all active:scale-95 shadow-lg ${!isFormValid || isDownloading ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#4338CA] text-white hover:bg-[#3730A3] shadow-indigo-200'}`}
-            >
-              {isDownloading ? (
-                <Div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <UiIcon as={Download} size={18} strokeWidth={2.5} />
-              )}
-              {isDownloading ? 'Downloading...' : 'Download'}
-            </Button>
-          </Div>
-        </motion.div>
-      </Div>
-    </ScrollDiv>
+      </Card>
+    </AdminPage>
   );
 };
 export default DriverDutyReport;

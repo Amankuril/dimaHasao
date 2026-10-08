@@ -1,207 +1,213 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/finance/Finance.jsx (tools/port.js first pass). */
 import React from 'react';
-import { TrendingUp, Download, Clock, BarChart4, Wallet, ShieldCheck } from 'lucide-react-native';
+import { useWindowDimensions } from 'react-native';
+import { TrendingUp, Download, Clock, BarChart4, Wallet, ShieldCheck, Users } from 'lucide-react-native';
 import { adminService } from '../../services/adminService';
-import { Button, Div, H1, H3, P, ScrollDiv, Span, Table, Tbody, Td, Th, Thead, Tr, Icon as UiIcon } from '../../../../../components/web';
+import {
+  A,
+  AdminPage,
+  PageHeader,
+  Card,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+  DataTable,
+  THead,
+  TBody,
+  Row,
+  Cell,
+  StatusBadge,
+  LoadingState,
+  TableSkeleton,
+  EmptyState,
+  ErrorState,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT_PRIMARY,
+  BTN_TEXT_SECONDARY,
+} from '../../../../../admin/ui';
+import { Button, Div, HScroll, Span, Icon as UiIcon } from '../../../../../components/web';
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const TREND = [40, 60, 45, 90, 65, 80, 50, 70, 85, 40, 55, 95];
+const CHANNELS = [
+  { label: 'UPI Instant', value: 82, color: A.primary },
+  { label: 'Bank Transfer', value: 15, color: A.info },
+  { label: 'Cash Remittance', value: 3, color: A.warning },
+];
+const COLS = [150, 170, 110, 120, 140];
+
 const Finance = () => {
   const [settlements, setSettlements] = React.useState([]);
-  const [, setIsLoading] = React.useState(true);
-  React.useEffect(() => {
-    const fetchFinance = async () => {
-      try {
-        const response = await adminService.getWithdrawals();
-        const results = response?.data?.results || [];
-        const mapped = results.map((w) => ({
-          id: w.transactionId || `#WTH${Math.floor(Math.random() * 1000)}`,
-          driver: w.driver_id?.name || 'Unknown Driver',
-          amount: `₹${w.amount || 0}`,
-          method: w.payment_method || 'Bank Transfer',
-          status: w.status ? w.status.charAt(0).toUpperCase() + w.status.slice(1) : 'Pending',
-          date: w.createdAt ? new Date(w.createdAt).toLocaleDateString() : 'N/A',
-        }));
-        setSettlements(mapped);
-      } catch (error) {
-        console.error('Failed to load withdrawals', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchFinance();
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(null);
+  const { width } = useWindowDimensions();
+  const chartWidth = Math.max(240, width - 64);
+  const slot = Math.max(30, Math.floor(chartWidth / MONTHS.length));
+
+  const fetchFinance = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setLoadError(null);
+      const response = await adminService.getWithdrawals();
+      const results = response?.data?.results || [];
+      const mapped = results.map((w) => ({
+        id: w.transactionId || `#WTH${Math.floor(Math.random() * 1000)}`,
+        driver: w.driver_id?.name || 'Unknown Driver',
+        amount: `₹${w.amount || 0}`,
+        method: w.payment_method || 'Bank Transfer',
+        status: w.status ? w.status.charAt(0).toUpperCase() + w.status.slice(1) : 'Pending',
+        date: w.createdAt ? new Date(w.createdAt).toLocaleDateString() : 'N/A',
+      }));
+      setSettlements(mapped);
+    } catch (error) {
+      console.error('Failed to load withdrawals', error);
+      setLoadError(error?.message || 'Failed to load withdrawals');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  React.useEffect(() => {
+    fetchFinance();
+  }, [fetchFinance]);
+
   return (
-    <ScrollDiv className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <Div className="flex items-center justify-between">
-        <Div>
-          <H1 className="text-2xl font-bold tracking-tight text-gray-900">Financial Management</H1>
-          <P className="text-gray-400 font-bold text-[11px] mt-1 uppercase tracking-widest leading-none">Net Revenue, Commissions & Payouts</P>
-        </Div>
-        <Div className="flex items-center gap-3">
-          <Button className="bg-gray-50 border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-[13px] font-bold hover:bg-gray-100 flex items-center gap-2">
-            <UiIcon as={Download} size={16} /> Tax Reports
-          </Button>
-          <Button className="bg-black text-white px-4 py-2 rounded-lg text-[13px] font-bold hover:opacity-80 flex items-center gap-2">
-            <UiIcon as={Wallet} size={16} /> Process Payouts
-          </Button>
-        </Div>
-      </Div>
+    <AdminPage maxWidth={1200}>
+      <PageHeader
+        icon={Wallet}
+        title="Financial Management"
+        subtitle="Net revenue, commissions and payouts"
+        breadcrumb={[{ label: 'Taxi' }, { label: 'Finance' }]}
+        actions={
+          <>
+            <Button className={BTN_PRIMARY}>
+              <UiIcon as={Wallet} size={16} className="text-white" />
+              <Span className={BTN_TEXT_PRIMARY}>Process payouts</Span>
+            </Button>
+            <Button className={BTN_SECONDARY}>
+              <UiIcon as={Download} size={16} className="text-slate-600" />
+              <Span className={BTN_TEXT_SECONDARY}>Tax reports</Span>
+            </Button>
+          </>
+        }
+      />
 
-      {/* Financial Overview Cards */}
-      <Div className="grid grid-cols-4 gap-6">
-        <Div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <P className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Net Revenue</P>
-          <P className="text-3xl font-black text-gray-900 mt-2 tracking-tight">₹12.4L</P>
-          <Div className="flex items-center gap-1 text-green-500 text-[11px] font-bold mt-2">
-            <UiIcon as={TrendingUp} size={14} /> +12.4% <Span className="text-gray-300">vs last month</Span>
-          </Div>
-        </Div>
-        <Div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <P className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Platform Commission</P>
-          <P className="text-3xl font-black text-gray-900 mt-2 tracking-tight">₹2.8L</P>
-          <Div className="flex items-center gap-1 text-green-500 text-[11px] font-bold mt-2">
-            <UiIcon as={TrendingUp} size={14} /> +5.2% <Span className="text-gray-300">avg 15%</Span>
-          </Div>
-        </Div>
-        <Div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <P className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Driver Earnings</P>
-          <P className="text-3xl font-black text-gray-900 mt-2 tracking-tight">₹9.6L</P>
-          <Div className="flex items-center gap-1 text-blue-500 text-[11px] font-bold mt-2 font-black">
-            84.2% <Span className="text-gray-300 font-bold ml-1">of GTV</Span>
-          </Div>
-        </Div>
-        <Div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <P className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pending Payouts</P>
-          <P className="text-3xl font-black text-primary mt-2 tracking-tight">₹42.5k</P>
-          <Div className="flex items-center gap-1 text-orange-500 text-[11px] font-bold mt-2">
-            <UiIcon as={Clock} size={14} /> 12 Requests <Span className="text-gray-300 ml-1">unprocessed</Span>
-          </Div>
-        </Div>
-      </Div>
+      <StatGrid className="mb-4">
+        <StatCard label="Total net revenue" value="₹12.4L" hint="+12.4% vs last month" icon={TrendingUp} tone="success" />
+        <StatCard label="Platform commission" value="₹2.8L" hint="+5.2% · avg 15%" icon={BarChart4} tone="info" />
+        <StatCard label="Driver earnings" value="₹9.6L" hint="84.2% of GTV" icon={Users} tone="info" />
+        <StatCard label="Pending payouts" value="₹42.5k" hint="12 requests unprocessed" icon={Clock} tone="warning" />
+      </StatGrid>
 
-      <Div className="grid grid-cols-3 gap-8">
-        {/* Monthly Trend Chart Placeholder */}
-        <Div className="col-span-2 bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-          <Div className="flex items-center justify-between mb-8">
-            <H3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <UiIcon as={BarChart4} size={20} className="text-primary" /> Revenue Trending
-            </H3>
-            <Div className="flex gap-2">
-              <Button className="bg-gray-50 text-[11px] font-bold px-3 py-1 rounded-lg">30 Days</Button>
-              <Button className="text-[11px] font-bold px-3 py-1 rounded-lg">90 Days</Button>
+      <Card className="mb-4">
+        <SectionTitle
+          action={
+            <Div className="flex-row items-center gap-2">
+              <Button className="px-3 h-9 rounded-lg bg-slate-100 items-center justify-center">
+                <Span className="text-xs font-semibold text-slate-700">30 days</Span>
+              </Button>
+              <Button className="px-3 h-9 rounded-lg items-center justify-center">
+                <Span className="text-xs font-semibold text-slate-500">90 days</Span>
+              </Button>
             </Div>
-          </Div>
-          {/* Visual Placeholder for a Chart */}
-          <Div className="h-64 w-full flex items-end gap-3 px-4">
-            {[40, 60, 45, 90, 65, 80, 50, 70, 85, 40, 55, 95].map((h, i) => (
-              <Div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+          }
+        >
+          Revenue trending
+        </SectionTitle>
+        <HScroll contentClassName="flex-row items-end gap-1">
+          <Div className="flex-row items-end" style={{ width: slot * MONTHS.length }}>
+            {TREND.map((h, i) => (
+              <Div key={MONTHS[i]} style={{ width: slot, height: 200 }} className="items-center justify-end gap-2 px-1">
                 <Div
-                  className={`w-full rounded-t-lg transition-all cursor-pointer ${i === 11 ? 'bg-primary' : 'bg-gray-100 hover:bg-gray-200'}`}
-                  style={{
-                    height: `${h}%`,
-                  }}
-                ></Div>
-                <Span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
-                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]}
+                  className="rounded-t-lg"
+                  style={{ width: '100%', height: Math.round((h / 100) * 170), backgroundColor: i === TREND.length - 1 ? A.primary : A.surfaceMuted }}
+                />
+                <Span className="text-[11px] font-semibold" style={{ color: A.textMuted }} numberOfLines={1}>
+                  {MONTHS[i]}
                 </Span>
               </Div>
             ))}
           </Div>
-        </Div>
+        </HScroll>
+      </Card>
 
-        {/* Payout Channels Breakdown */}
-        <Div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm flex flex-col justify-between">
-          <Div>
-            <H3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <UiIcon as={ShieldCheck} size={20} className="text-green-500" /> Settlement Quality
-            </H3>
-            <Div className="space-y-6">
-              {[
-                {
-                  label: 'UPI Instant',
-                  value: 82,
-                  color: 'bg-primary',
-                },
-                {
-                  label: 'Bank Transfer',
-                  value: 15,
-                  color: 'bg-blue-500',
-                },
-                {
-                  label: 'Cash Remittance',
-                  value: 3,
-                  color: 'bg-orange-500',
-                },
-              ].map((chan, i) => (
-                <Div key={i} className="space-y-2">
-                  <Div className="flex justify-between text-[11px] font-bold">
-                    <Span className="text-gray-500">{chan.label}</Span>
-                    <Span className="text-gray-900">{chan.value}%</Span>
-                  </Div>
-                  <Div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden">
-                    <Div
-                      className={`${chan.color} h-full rounded-full`}
-                      style={{
-                        width: `${chan.value}%`,
-                      }}
-                    ></Div>
-                  </Div>
-                </Div>
-              ))}
+      <Card className="mb-4">
+        <SectionTitle>Settlement quality</SectionTitle>
+        <Div className="gap-4">
+          {CHANNELS.map((chan) => (
+            <Div key={chan.label} className="gap-1.5">
+              <Div className="flex-row items-center justify-between gap-3">
+                <Span className="text-sm text-slate-700 flex-1">{chan.label}</Span>
+                <Span className="text-sm font-semibold text-slate-900">{chan.value}%</Span>
+              </Div>
+              <Div className="h-2 w-full rounded-full overflow-hidden bg-slate-100">
+                <Div className="h-full rounded-full" style={{ width: `${chan.value}%`, backgroundColor: chan.color }} />
+              </Div>
             </Div>
-          </Div>
-          <Div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100 border-dashed">
-            <P className="text-[10px] font-bold text-gray-500 uppercase leading-relaxed">
-              System Health: All financial gateways are operational. Next batch settlement in 4h 22m.
-            </P>
-          </Div>
+          ))}
         </Div>
-      </Div>
+        <Div className="flex-row items-start gap-2 mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <UiIcon as={ShieldCheck} size={16} className="text-green-700" />
+          <Span className="text-xs text-slate-500 flex-1">
+            All financial gateways are operational. Next batch settlement in 4h 22m.
+          </Span>
+        </Div>
+      </Card>
 
-      {/* Recent Settlements Table */}
-      <Div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <Div className="p-6 border-b border-gray-50 flex items-center justify-between">
-          <H3 className="text-lg font-bold text-gray-900">Recent Settlements</H3>
-          <Button className="text-[11px] font-black text-primary uppercase tracking-widest hover:underline">Full Statement</Button>
-        </Div>
-        <Table cols={[150, 180, 110, 120, 140]} className="w-full text-left">
-          <Thead>
-            <Tr className="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase border-b border-gray-50">
-              <Th className="px-6 py-4">Transaction ID</Th>
-              <Th className="px-6 py-4">Driver</Th>
-              <Th className="px-6 py-4">Amount</Th>
-              <Th className="px-6 py-4 text-center">Status</Th>
-              <Th className="px-6 py-4 text-right">Processed On</Th>
-            </Tr>
-          </Thead>
-          <Tbody className="divide-y divide-gray-50">
+      <SectionTitle
+        action={
+          <Button className={BTN_SECONDARY}>
+            <Span className={BTN_TEXT_SECONDARY}>Full statement</Span>
+          </Button>
+        }
+      >
+        Recent settlements
+      </SectionTitle>
+
+      {isLoading ? (
+        <>
+          <LoadingState label="Loading settlements…" className="mb-3" />
+          <TableSkeleton rows={4} />
+        </>
+      ) : loadError ? (
+        <ErrorState title="Could not load settlements" message={loadError} onRetry={fetchFinance} />
+      ) : settlements.length === 0 ? (
+        <EmptyState
+          title="No settlements yet"
+          message="Driver withdrawals appear here once they are requested."
+          actionLabel="Refresh"
+          onAction={fetchFinance}
+        />
+      ) : (
+        <DataTable cols={COLS}>
+          <THead cols={COLS} labels={['Transaction ID', 'Driver', 'Amount', 'Status', 'Processed on']} />
+          <TBody>
             {settlements.map((st, i) => (
-              <Tr key={i} className="hover:bg-gray-50/50 transition-all cursor-pointer">
-                <Td className="px-6 py-4 text-[12px] font-bold text-gray-900">{st.id}</Td>
-                <Td className="px-6 py-4">
-                  <Div className="flex items-center gap-2">
-                    <Div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-black text-gray-500 uppercase">
-                      {st.driver[0]}
-                    </Div>
-                    <Span className="text-[12px] font-bold text-gray-700">{st.driver}</Span>
-                  </Div>
-                </Td>
-                <Td className="px-6 py-4 text-[13px] font-black text-gray-900">{st.amount}</Td>
-                <Td className="px-6 py-4">
-                  <Div className="flex justify-center">
-                    <Span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.status === 'Completed' ? 'bg-green-50 text-green-600 border-green-100' : st.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-red-50 text-red-600 border-red-100'}`}
-                    >
-                      {st.status}
-                    </Span>
-                  </Div>
-                </Td>
-                <Td className="px-6 py-4 text-right text-[11px] font-bold text-gray-400">{st.date}</Td>
-              </Tr>
+              <Row key={`${st.id}-${i}`} last={i === settlements.length - 1}>
+                <Cell width={COLS[0]} numberOfLines={1}>
+                  <Span className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                    {st.id}
+                  </Span>
+                </Cell>
+                <Cell width={COLS[1]}>{st.driver}</Cell>
+                <Cell width={COLS[2]}>
+                  <Span className="text-sm font-semibold text-slate-900" numberOfLines={1}>
+                    {st.amount}
+                  </Span>
+                </Cell>
+                <Cell width={COLS[3]}>
+                  <StatusBadge status={st.status} />
+                </Cell>
+                <Cell width={COLS[4]} align="right" numberOfLines={1}>
+                  {st.date}
+                </Cell>
+              </Row>
             ))}
-          </Tbody>
-        </Table>
-      </Div>
-    </ScrollDiv>
+          </TBody>
+        </DataTable>
+      )}
+    </AdminPage>
   );
 };
 export default Finance;
