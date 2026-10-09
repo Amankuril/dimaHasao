@@ -1,6 +1,6 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/drivers/DriverDetails.jsx (tools/port.js first pass). */
 import React, { useEffect, useMemo, useState } from 'react';
-import { GMap, Marker, toLatLng } from '../../../../../components/maps';
+import { GMap, VehicleMarker, toLatLng } from '../../../../../components/maps';
 import { useWindowDimensions } from 'react-native';
 import { ArrowLeft, CircleUserRound, Eye, PencilLine, Mail, MapPin, Phone, CheckCircle2 } from 'lucide-react-native';
 import { useLocation, useNavigate, useParams } from '../../../../../lib/webRouter';
@@ -1205,7 +1205,7 @@ const DriverDetails = () => {
                   </Div>
                 ) : shouldLoadMap && HAS_VALID_GOOGLE_MAPS_KEY && isLoaded ? (
                   <GMap className="w-full h-full" initialRegion={{ ...toLatLng(mapCenter), latitudeDelta: 0.05, longitudeDelta: 0.05 }} zoomControlEnabled>
-                    <Marker coordinate={toLatLng(mapCenter)} image={vehicleMarkerIcon} anchor={{ x: 0.5, y: 0.5 }} />
+                    <VehicleMarker coordinate={toLatLng(mapCenter)} icon={vehicleMarkerIcon} />
                   </GMap>
                 ) : (
                   <Div className="h-full items-center justify-center bg-slate-50 px-4">

@@ -1,6 +1,6 @@
 /* Ported from Frontend/src/modules/Taxi/modules/admin/pages/geo/GodsEye.jsx (tools/port.js first pass). */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { GMap, Heatmap, Marker } from '../../../../../components/maps';
+import { GMap, Heatmap, VehicleMarker } from '../../../../../components/maps';
 import {
   Search,
   Activity,
@@ -677,15 +677,14 @@ const GodsEye = () => {
 
             {!controls.heatmap &&
               filteredDrivers.map((driver) => (
-                <Marker
+                <VehicleMarker
                   key={driver._id || driver.id}
                   coordinate={{
                     latitude: Number(driver.latitude),
                     longitude: Number(driver.longitude),
                   }}
                   onPress={() => handleMarkerClick(driver)}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                  image={getMapIconForVehicle(driver.vehicle_icon_type || driver.vehicle_type)}
+                  icon={getMapIconForVehicle(driver.vehicle_icon_type || driver.vehicle_type)}
                 />
               ))}
           </GMap>
