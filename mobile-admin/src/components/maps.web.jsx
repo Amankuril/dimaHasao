@@ -54,6 +54,7 @@ export const GMap = forwardRef(function GMap({ className, style, children }, ref
 
 const Nothing = () => null;
 export const Marker = Nothing;
+export const VehicleMarker = Nothing;
 export const Polygon = Nothing;
 export const Polyline = Nothing;
 export const Circle = Nothing;

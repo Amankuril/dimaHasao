@@ -13,8 +13,8 @@
  * them; toLatLng / fromLatLng convert for react-native-maps.
  * Places search / geocoding: api/geocode.js (geocodeAPI).
  */
-import { forwardRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { forwardRef, useState } from 'react';
+import { Image, StyleSheet } from 'react-native';
 import MapView, { Callout, Circle, Heatmap, Marker, Polygon, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { tw } from '../lib/tw';
 
@@ -53,6 +53,24 @@ export const GMap = forwardRef(function GMap({ className, style, children, ...re
     </MapView>
   );
 });
+
+/**
+ * A vehicle icon on the map. Marker's `image` prop draws a PNG at its pixel size
+ * (the 331x701 vehicle icons then cover the whole map), so the icon is a child
+ * Image at a fixed width instead. `icon` is a required asset or a URL string.
+ */
+export function VehicleMarker({ icon, width = 18, ...rest }) {
+  const [tracking, setTracking] = useState(true);
+  if (!icon) return <Marker anchor={{ x: 0.5, y: 0.5 }} {...rest} />;
+  const source = typeof icon === 'string' ? { uri: icon } : icon;
+  const meta = typeof source === 'number' ? Image.resolveAssetSource(source) : null;
+  const ratio = meta?.width && meta?.height ? meta.height / meta.width : 1;
+  return (
+    <Marker anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={tracking} {...rest}>
+      <Image source={source} resizeMode="contain" style={{ width, height: width * ratio }} onLoad={() => setTracking(false)} onError={() => setTracking(false)} />
+    </Marker>
+  );
+}
 
 /**
  * A polygon whose vertices are draggable markers. `points` are { lat, lng };
