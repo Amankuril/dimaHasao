@@ -19,7 +19,11 @@ const walk = (dir, out = []) => {
 const isFile = (p) => fs.existsSync(p) && fs.statSync(p).isFile();
 const missing = {};
 for (const file of walk(path.join(root, 'src'))) {
-  const text = fs.readFileSync(file, 'utf8');
+  // Strip comments first: a usage example inside a docblock is not an import.
+  const text = fs
+    .readFileSync(file, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
   for (const m of text.matchAll(/(?:from\s+|require\(\s*|import\(\s*)['"](\.{1,2}\/[^'"]+)['"]/g)) {
     const target = path.resolve(path.dirname(file), m[1]);
     if (exts.some((e) => isFile(target + e))) continue;
