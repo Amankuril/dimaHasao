@@ -26,6 +26,7 @@ import {
   INPUT,
   BTN_SECONDARY,
   BTN_TEXT_SECONDARY,
+  formatCount,
 } from '../../../../admin/ui';
 
 const COLS = [120, 180, 190, 150, 120, 110, 56];
@@ -196,9 +197,9 @@ const AdminBookings = () => {
       />
 
       <StatGrid className="mb-4">
-        <StatCard label="Total bookings" value={loading ? '—' : (globalStats.total ?? 0).toLocaleString()} hint="All time" icon={CalendarCheck} tone="info" />
-        <StatCard label="Confirmed" value={loading ? '—' : (globalStats.confirmed ?? 0).toLocaleString()} hint="Live stays" icon={CheckCircle} tone="success" />
-        <StatCard label="Pending approval" value={loading ? '—' : (globalStats.pending ?? 0).toLocaleString()} hint="Needs action" icon={Clock} tone="warning" />
+        <StatCard label="Total bookings" value={loading ? '—' : formatCount(globalStats.total)} hint="All time" icon={CalendarCheck} tone="info" />
+        <StatCard label="Confirmed" value={loading ? '—' : formatCount(globalStats.confirmed)} hint="Live stays" icon={CheckCircle} tone="success" />
+        <StatCard label="Pending approval" value={loading ? '—' : formatCount(globalStats.pending)} hint="Needs action" icon={Clock} tone="warning" />
       </StatGrid>
 
       <Card className="mb-4">

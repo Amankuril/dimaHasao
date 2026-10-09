@@ -77,6 +77,12 @@ const STATUS_TONE = {
 };
 
 /** The tone a status word carries, so the same word is never two colours. */
+/** A KPI value: thousands-separated, or an em dash when there is no number. */
+export function formatCount(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toLocaleString() : '—';
+}
+
 export const toneFor = (status) => STATUS_TONE[String(status || '').trim().toLowerCase()] || 'neutral';
 
 /* -------------------------------------------------------------- breakpoints */
@@ -327,7 +333,9 @@ export function Row({ children, onPress, className, last }) {
 export function Cell({ children, width, className, numberOfLines = 2, align = 'left' }) {
   const w = useColumnWidth(width);
   return (
-    <Div style={{ width: w }} className={cn('px-3 py-3 justify-center', align === 'right' && 'items-end', align === 'center' && 'items-center', className)}>
+    // overflow-hidden matters: an unbroken value (a booking id, a long email)
+    // is wider than its column and would otherwise paint over the next cell.
+    <Div style={{ width: w }} className={cn('px-3 py-3 justify-center overflow-hidden', align === 'right' && 'items-end', align === 'center' && 'items-center', className)}>
       {typeof children === 'string' || typeof children === 'number' ? (
         <Text style={tw`text-sm text-slate-700`} numberOfLines={numberOfLines}>
           {children}
@@ -342,7 +350,8 @@ export function Cell({ children, width, className, numberOfLines = 2, align = 'l
 /** A status word, always the same colour for the same word. */
 export function StatusBadge({ status, label, tone, className, icon: IconCmp }) {
   const t = TONES[tone || toneFor(status)] || TONES.neutral;
-  const text = label ?? String(status ?? '');
+  // Statuses arrive as the stored token ("awaiting_payment"); show it as words.
+  const text = label ?? String(status ?? '').replace(/[_-]+/g, ' ').trim();
   return (
     <Div className={cn('flex-row items-center self-start gap-1 px-2 py-1 rounded-full', className)} style={{ backgroundColor: t.bg }}>
       {IconCmp ? <Icon as={IconCmp} size={12} color={t.fg} /> : null}
@@ -475,8 +484,10 @@ export function Field({ label, required, hint, error, children, className }) {
 }
 
 /** The class strings for the standard controls, so inputs match across screens. */
-export const INPUT = 'h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900';
-export const INPUT_ERROR = 'h-11 px-3 rounded-lg border border-red-500 bg-white text-sm text-slate-900';
+// min-w-0: a TextInput keeps an intrinsic width, so `flex-1` alone does not let
+// it shrink and it pushes whatever sits beside it off the screen.
+export const INPUT = 'h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900 min-w-0';
+export const INPUT_ERROR = 'h-11 px-3 rounded-lg border border-red-500 bg-white text-sm text-slate-900 min-w-0';
 export const BTN_PRIMARY = 'flex-row items-center justify-center gap-2 h-11 px-4 rounded-lg bg-blue-600';
 export const BTN_SECONDARY = 'flex-row items-center justify-center gap-2 h-11 px-4 rounded-lg border border-slate-300 bg-white';
 export const BTN_DANGER = 'flex-row items-center justify-center gap-2 h-11 px-4 rounded-lg bg-red-600';

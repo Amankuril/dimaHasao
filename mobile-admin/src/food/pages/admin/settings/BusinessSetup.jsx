@@ -298,7 +298,7 @@ export default function BusinessSetup() {
                     const val = e.target.value.replace(/\D/g, '');
                     handleInputChange('phoneNumber', val);
                   }}
-                  className={`${INPUT} flex-1 min-w-0`}
+                  className={`${INPUT} flex-1`}
                 />
               </Div>
             </Field>

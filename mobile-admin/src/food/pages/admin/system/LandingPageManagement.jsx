@@ -319,7 +319,7 @@ export default function LandingPageManagement() {
     const adminToken = getModuleToken('admin');
 
     // Debug logging in development
-    if (import.meta.env.DEV) {
+    if (__DEV__) {
       debugLog('[LandingPageManagement] Token check:', {
         token: adminToken ? 'exists' : 'missing',
         tokenLength: adminToken?.length || 0,
@@ -443,7 +443,7 @@ export default function LandingPageManagement() {
       const config = getAuthConfig();
 
       // Debug: Log the config to verify Authorization header is set
-      if (import.meta.env.DEV) {
+      if (__DEV__) {
         debugLog('[uploadBanners] Request config:', {
           hasAuthHeader: !!config.headers?.Authorization,
           authHeaderPrefix: config.headers?.Authorization?.substring(0, 20),

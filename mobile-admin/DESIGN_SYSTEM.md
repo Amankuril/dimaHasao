@@ -35,6 +35,7 @@ Never go below `text-xs`. One family app-wide (Poppins) — do not set `fontFami
 import { AdminPage, PageHeader, Card, SectionTitle, StatCard, StatGrid, Toolbar,
          DataTable, THead, TBody, Row, Cell, StatusBadge, Pagination,
          LoadingState, TableSkeleton, EmptyState, ErrorState, Field,
+         useChartWidth, chartSpacing, AXIS_TEXT,
          INPUT, INPUT_ERROR, BTN_PRIMARY, BTN_SECONDARY, BTN_DANGER,
          BTN_TEXT_PRIMARY, BTN_TEXT_SECONDARY, useLayoutWidth, toneFor } from '../../admin/ui';
 ```
@@ -69,8 +70,12 @@ import { AdminPage, PageHeader, Card, SectionTitle, StatCard, StatGrid, Toolbar,
    `useLayoutWidth()`.
 6. Loading / empty / error states use the kit components — never a bare spinner or a blank screen.
 7. Nothing may overflow horizontally except inside a `DataTable` or `HScroll`.
-8. Charts: pass the chart a width from `useWindowDimensions()` minus the page and card padding
-   (32 + 32). Axis/label text must be ≥ 11 px and `color: '#62748E'`.
+8. Charts: width comes from `useChartWidth(axisLabelWidth)` — gifted-charts draws the y-axis
+   labels *outside* the width you give it, so the page gutter, the card padding and that column
+   all have to come off. Spacing comes from `chartSpacing(width, points.length)`; never
+   `adjustToWidth`, which blows a single-point series up to twice the screen. Axis labels use
+   `AXIS_TEXT` (11 px, `#62748E`, Poppins) — gifted-charts uses a bare RN `Text`, so a style
+   that omits `fontFamily` falls back to the OS font.
 9. Delete decoration that carries no meaning: empty coloured circles, duplicated search buttons,
    gradient headers, stacked shadows.
 

@@ -531,20 +531,20 @@ const SupportChatPanel = ({
       <Div
         className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-slate-200/60 bg-white px-4 py-4 sm:px-6 sm:py-5"
       >
-        <Div className="flex min-w-0 items-center gap-4">
+        <Div className="flex flex-1 min-w-0 items-center gap-3">
           <Div
-            className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg ${isAdminPanel ? 'bg-[#FFC400] text-[#0B1220] shadow-[#FFC400]/10' : 'bg-[#405189] text-white shadow-indigo-600/10'}`}
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${isAdminPanel ? 'bg-[#FFC400]' : 'bg-[#405189]'}`}
           >
-            <UiIcon as={MessageCircle} size={20} />
+            <UiIcon as={MessageCircle} size={20} className={isAdminPanel ? 'text-[#0B1220]' : 'text-white'} />
           </Div>
-          <Div className="min-w-0">
+          <Div className="flex-1 min-w-0">
             {isAdminPanel ? (
               <>
-                <H2 className="truncate text-[34px] font-bold tracking-tight text-slate-900">Chats</H2>
-                <Div className="flex flex-wrap items-center gap-2 mt-1">
-                  <Span className="text-[16px] font-medium tracking-[1px] text-[#6B7280]">Admin Support Conversations</Span>
+                <H2 className="text-xl font-bold text-slate-900">Chats</H2>
+                <Div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                  <Span className="text-xs text-slate-500">Admin Support Conversations</Span>
                   <Span className="w-1 h-1 rounded-full bg-slate-300" />
-                  <Span className="text-[16px] font-medium tracking-[1px] text-[#6B7280]">Desk Terminal</Span>
+                  <Span className="text-xs text-slate-500">Desk Terminal</Span>
                 </Div>
               </>
             ) : (

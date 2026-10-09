@@ -17,6 +17,7 @@ import { A, Button, Div, Form, HScroll, Input, Span, Textarea, Icon as UiIcon } 
 import { Text } from '../../../../components/Text';
 import { tw } from '../../../../lib/tw';
 import { alert } from '../../../../lib/webShim';
+import { viteEnv } from '../../../../lib/viteEnv';
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -153,13 +154,13 @@ export default function FirebaseNotification() {
   const [messages, setMessages] = useState(notificationMessages);
   const [firebaseConfig, setFirebaseConfig] = useState({
     serviceFileContent: '',
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-    fcmProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
+    apiKey: viteEnv.VITE_FIREBASE_API_KEY || '',
+    fcmProjectId: viteEnv.VITE_FIREBASE_PROJECT_ID || '',
+    messagingSenderId: viteEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+    authDomain: viteEnv.VITE_FIREBASE_AUTH_DOMAIN || '',
+    appId: viteEnv.VITE_FIREBASE_APP_ID || '',
+    storageBucket: viteEnv.VITE_FIREBASE_STORAGE_BUCKET || '',
+    measurementId: viteEnv.VITE_FIREBASE_MEASUREMENT_ID || '',
   });
   const handleMessageToggle = (id) => {
     setMessages((prev) =>
@@ -204,13 +205,13 @@ export default function FirebaseNotification() {
     setMessages(notificationMessages);
     setFirebaseConfig({
       serviceFileContent: '',
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-      fcmProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-      appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
+      apiKey: viteEnv.VITE_FIREBASE_API_KEY || '',
+      fcmProjectId: viteEnv.VITE_FIREBASE_PROJECT_ID || '',
+      messagingSenderId: viteEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+      authDomain: viteEnv.VITE_FIREBASE_AUTH_DOMAIN || '',
+      appId: viteEnv.VITE_FIREBASE_APP_ID || '',
+      storageBucket: viteEnv.VITE_FIREBASE_STORAGE_BUCKET || '',
+      measurementId: viteEnv.VITE_FIREBASE_MEASUREMENT_ID || '',
     });
   };
   const CONFIG_FIELDS = [
