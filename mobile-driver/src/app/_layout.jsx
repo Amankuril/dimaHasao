@@ -28,6 +28,7 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { useInAppUpdate } from '../lib/inAppUpdate';
 import AnimatedSplash from '../components/AnimatedSplash';
 import OfflineBanner from '../components/OfflineBanner';
 import { ToastContainer } from '../components/Toast';
@@ -42,6 +43,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function Boot() {
   const { booting } = useAuth();
+  useInAppUpdate(!booting);
   // The families and weights the web's index.html loads, plus the icon font.
   const [fontsLoaded, fontError] = useFonts({
     Poppins_400Regular,

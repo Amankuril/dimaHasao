@@ -28,6 +28,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
 import { usePushNotifications } from '../lib/push';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { useInAppUpdate } from '../lib/inAppUpdate';
 import { BookingProvider } from '../context/BookingContext';
 import AnimatedSplash from '../components/AnimatedSplash';
 import OfflineBanner from '../components/OfflineBanner';
@@ -47,6 +48,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function Boot() {
   const { booting, signedIn } = useAuth();
+  useInAppUpdate(!booting);
   usePushNotifications(!booting && signedIn);
   // The families and weights the web's index.html loads, plus the icon font.
   const [fontsLoaded, fontError] = useFonts({

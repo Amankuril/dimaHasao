@@ -13,6 +13,7 @@ import {
 import { Sora_600SemiBold, Sora_700Bold } from '@expo-google-fonts/sora';
 import { Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold, Poppins_800ExtraBold } from '@expo-google-fonts/poppins';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { useInAppUpdate } from '../lib/inAppUpdate';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import AnimatedSplash from '../components/AnimatedSplash';
 import OfflineBanner from '../components/OfflineBanner';
@@ -43,6 +44,7 @@ function RootNavigator() {
 
 function Boot() {
   const { booting } = useAuth();
+  useInAppUpdate(!booting);
   // The weights the web loads: deliveryTheme.css (Nunito Sans, Sora) and
   // index.html (Poppins, the app-wide body font).
   const [fontsLoaded, fontError] = useFonts({

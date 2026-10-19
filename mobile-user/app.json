@@ -3,13 +3,13 @@
     "name": "Dima Hasao Tourism",
     "slug": "dima-hasao-user",
     "scheme": "dimahasao",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.dimahsao.user",
-      "versionCode": 2,
+      "versionCode": 3,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundImage": "./assets/android-icon-background.png",
@@ -58,7 +58,8 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#8E4692"
         }
-      ]
+      ],
+      "./plugins/withReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": false,

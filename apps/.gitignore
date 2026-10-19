@@ -1,0 +1,3 @@
+# Secrets: never commit signing keystores or their password files.
+*.jks
+*INFO.txt

@@ -3,13 +3,13 @@
     "name": "Dima Hasao Tourism - driver",
     "slug": "dima-hasao-taxi-driver",
     "scheme": "dimahasaotaxidriver",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.dimahsao.taxidriver",
-      "versionCode": 2,
+      "versionCode": 3,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundImage": "./assets/android-icon-background.png",
