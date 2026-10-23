@@ -423,7 +423,7 @@ export default function DriverWallet() {
 
       setRazorpayRequest({
         checkout: {
-          key: orderData.keyId || process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID,
+          key: orderData.keyId,
           amount: orderData.amount,
           currency: orderData.currency || 'INR',
           name: appName,

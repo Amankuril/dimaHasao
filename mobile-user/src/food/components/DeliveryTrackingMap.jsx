@@ -5,7 +5,7 @@ import { Navigation } from 'lucide-react-native';
 import { io } from 'socket.io-client';
 import { API_ORIGIN } from '../../api/client';
 import { getSocketOrigin } from '../../shared/utils/socketOrigin';
-import { getGoogleMapsApiKey } from '../utils/googleMapsApiKey';
+import apiClient from '../../api/client';
 import { localStore } from '../../lib/storage';
 import { color, elevation, radii, space, type } from '../../theme';
 
@@ -211,19 +211,19 @@ export default function DeliveryTrackingMap({ orderId, orderTrackingIds = [], re
     let cancelled = false;
     (async () => {
       try {
-        const key = await getGoogleMapsApiKey();
-        if (!key) return;
-        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${normRest.lat},${normRest.lng}&destination=${normCust.lat},${normCust.lng}&mode=driving&key=${key}`;
-        const res = await fetch(url);
-        const json = await res.json();
+        const response = await apiClient.post('/maps/route', {
+          origin: { lat: normRest.lat, lng: normRest.lng },
+          destination: { lat: normCust.lat, lng: normCust.lng },
+        });
+        const route = response?.data?.data;
         if (cancelled) return;
-        if (json.status !== 'OK') {
-          console.warn('[DeliveryTrackingMap] Baseline Directions failed:', json.status);
+        if (route?.status !== 'OK') {
+          console.warn('[DeliveryTrackingMap] Baseline route failed:', route?.status);
           return;
         }
-        const plain = decodePolyline(json.routes?.[0]?.overview_polyline?.points || '');
+        const plain = decodePolyline(route.encodedPolyline || '');
         if (plain.length > 1) setFullRoutePath(plain);
-        const durationText = json.routes?.[0]?.legs?.[0]?.duration?.text;
+        const durationText = route.durationText;
         if (durationText && !etaRef.current) {
           etaRef.current = durationText;
           setCurrentEta(durationText);

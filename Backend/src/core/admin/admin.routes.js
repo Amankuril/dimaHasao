@@ -2,6 +2,7 @@ import express from 'express';
 import { authMiddleware, requireAdmin } from '../auth/auth.middleware.js';
 import { legalAdminRouter } from '../legal/legal.routes.js';
 import { platformAdminRouter } from '../platform/platform.routes.js';
+import credentialsAdminRouter from '../platform/credentials.routes.js';
 import {
   loadAdmin,
   getMyAdminProfile,
@@ -37,6 +38,8 @@ router.use(authMiddleware, requireAdmin, loadAdmin);
 router.use('/legal', legalAdminRouter);
 // Brand name, logo and contact — one copy for every app.
 router.use('/platform-settings', platformAdminRouter);
+// Maps and Razorpay keys, changeable at runtime with no redeploy or app release.
+router.use('/credentials', requirePlatformSuperAdmin, credentialsAdminRouter);
 
 // Any admin may read and edit their own profile.
 router.get('/me', getMyAdminProfile);

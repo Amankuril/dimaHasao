@@ -1,3 +1,4 @@
+import mapsRouter from '../core/maps/maps.routes.js';
 import express from 'express';
 import authRoutes from '../core/auth/auth.routes.js';
 import otpAuthRoutes from '../core/auth/otpAuth/otpAuth.routes.js';
@@ -99,5 +100,6 @@ router.use('/v1', taxiPromotionsRouter);
 router.use('/v1/taxi', taxiRouter);
 router.use('/v1/hotel', hotelRouter);
 router.use('/v1/tours', toursRouter);
+router.use('/v1/maps', mapsRouter);
 
 export default router;

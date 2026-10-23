@@ -17,7 +17,7 @@
  * env-based client here.
  */
 import crypto from 'crypto';
-import { config } from '../../config/env.js';
+import { getCredential } from '../platform/credentials.service.js';
 import { logger } from '../../utils/logger.js';
 
 let Razorpay = null;
@@ -30,16 +30,20 @@ try {
     Razorpay = null;
 }
 
-const KEY_ID = config.razorpayKeyId || process.env.RAZORPAY_KEY_ID || '';
-const KEY_SECRET = config.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET || '';
-
-export const isRazorpayConfigured = () => Boolean(KEY_ID && KEY_SECRET && Razorpay);
-
-export const getRazorpayKeyId = () => KEY_ID;
+/*
+ * Read on every call, not once at import: the admin can change these from the
+ * credentials screen and the next request must use the new pair, with no
+ * restart and no app release (the apps take `keyId` from the order response).
+ */
+export const getRazorpayKeyId = () => getCredential('razorpayKeyId');
 
 /** For server-side callers that sign their own Razorpay requests. Never send
  *  this to a client. */
-export const getRazorpayKeySecret = () => KEY_SECRET;
+export const getRazorpayKeySecret = () => getCredential('razorpayKeySecret');
+
+export const getRazorpayWebhookSecret = () => getCredential('razorpayWebhookSecret');
+
+export const isRazorpayConfigured = () => Boolean(getRazorpayKeyId() && getRazorpayKeySecret() && Razorpay);
 
 /*
  * The SDK builds its axios instance with no timeout, so a gateway that hangs
@@ -52,10 +56,23 @@ const withTimeout = (client) => {
     return client;
 };
 
+// One SDK client per credential pair, rebuilt only when the pair changes.
+let cachedClient = null;
+let cachedClientPair = '';
+
 /** Shared SDK client, or null when unconfigured. */
 export const getRazorpayClient = () => {
     if (!isRazorpayConfigured()) return null;
-    return withTimeout(new Razorpay({ key_id: KEY_ID, key_secret: KEY_SECRET }));
+
+    const keyId = getRazorpayKeyId();
+    const keySecret = getRazorpayKeySecret();
+    const pair = `${keyId}:${keySecret}`;
+
+    if (!cachedClient || cachedClientPair !== pair) {
+        cachedClient = withTimeout(new Razorpay({ key_id: keyId, key_secret: keySecret }));
+        cachedClientPair = pair;
+    }
+    return cachedClient;
 };
 
 /**
@@ -107,7 +124,7 @@ const safeEqual = (a, b) => {
  * @returns {boolean}
  */
 export const verifyPaymentSignature = ({ orderId, paymentId, signature, secret } = {}) => {
-    const keySecret = String(secret || KEY_SECRET || '');
+    const keySecret = String(secret || getRazorpayKeySecret() || '');
 
     if (!keySecret || !orderId || !paymentId || !signature) {
         logger.warn('[Razorpay] Signature verification skipped: missing secret, ids or signature');
@@ -134,7 +151,7 @@ export const verifyPaymentSignature = ({ orderId, paymentId, signature, secret }
  */
 export const computeExpectedSignature = ({ orderId, paymentId, secret } = {}) =>
     crypto
-        .createHmac('sha256', String(secret || KEY_SECRET || ''))
+        .createHmac('sha256', String(secret || getRazorpayKeySecret() || ''))
         .update(`${orderId}|${paymentId}`)
         .digest('hex');
 
@@ -143,7 +160,7 @@ export const computeExpectedSignature = ({ orderId, paymentId, secret } = {}) =>
  * @param {{ body: string|Buffer, signature: string, secret?: string }} params
  */
 export const verifyWebhookSignature = ({ body, signature, secret } = {}) => {
-    const webhookSecret = String(secret || process.env.RAZORPAY_WEBHOOK_SECRET || '');
+    const webhookSecret = String(secret || getRazorpayWebhookSecret() || '');
 
     if (!webhookSecret || !body || !signature) return false;
 
@@ -157,6 +174,7 @@ export const verifyWebhookSignature = ({ body, signature, secret } = {}) => {
 
 export default {
     computeExpectedSignature,
+    getRazorpayWebhookSecret,
     isRazorpayConfigured,
     getRazorpayKeyId,
     getRazorpayClient,

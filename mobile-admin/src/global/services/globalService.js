@@ -48,6 +48,9 @@ const globalService = {
   // Brand, contact and support — one copy for every app.
   getPlatformSettings: () => request(api.get('/platform-settings')),
   savePlatformSettings: (payload) => request(api.put('/platform-settings', payload)),
+  // Maps / Razorpay keys. Reads return masked previews only.
+  getCredentials: () => request(api.get('/credentials')),
+  saveCredentials: (payload) => request(api.put('/credentials', payload)),
   // Legal — privacy, terms and the rest, one copy for every app.
   getLegalDocuments: () => request(api.get('/legal')),
   saveLegalDocument: (payload) => request(api.put('/legal', payload)),

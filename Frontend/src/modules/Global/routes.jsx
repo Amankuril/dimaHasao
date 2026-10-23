@@ -9,6 +9,7 @@ const Profile = L(() => import('./app/admin/pages/Profile'));
 const Administrators = L(() => import('./app/admin/pages/Administrators'));
 const ToggleManagement = lazy(() => import('./app/admin/pages/ToggleManagement'));
 const BrandSettings = L(() => import('./app/admin/pages/BrandSettings'));
+const ApiCredentials = L(() => import('./app/admin/pages/ApiCredentials'));
 const LegalDocuments = L(() => import('./app/admin/pages/LegalDocuments'));
 const Support = L(() => import('./app/admin/pages/Support'));
 const Reports = L(() => import('./app/admin/pages/Reports'));
@@ -30,6 +31,7 @@ export default function GlobalRoutes() {
             <Route path="administrators" element={<Administrators />} />
             <Route path="toggles" element={<ToggleManagement />} />
             <Route path="brand" element={<BrandSettings />} />
+            <Route path="api-keys" element={<ApiCredentials />} />
             <Route path="legal" element={<LegalDocuments />} />
             <Route path="support" element={<Support />} />
             <Route path="reports" element={<Reports />} />

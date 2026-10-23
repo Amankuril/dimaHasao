@@ -13,6 +13,7 @@ import { subscribeOrderTracking } from '@food/realtimeTracking';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation } from 'lucide-react';
 import { getSocketOrigin } from '@/shared/utils/socketOrigin';
+import { getMapsBrowserKey } from '@/shared/utils/runtimeConfig';
 
 const MAP_LIBRARIES = Object.freeze(['geometry', 'places']);
 
@@ -112,7 +113,7 @@ const DeliveryTrackingMap = ({
   const baselineRequestedRef = useRef(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: getMapsBrowserKey(),
     libraries: MAP_LIBRARIES,
   });
 

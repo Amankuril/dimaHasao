@@ -1,6 +1,6 @@
 import { geocodeGooglePlaceId } from './googleGeocoding'
 import { geocodeAPI } from '../../api/restaurant'
-import { getGoogleMapsApiKey } from './googleMapsApiKey'
+import apiClient from '../../api/client'
 
 /*
  * Food/utils/googlePlaces.js. The web mixes three sources (the Maps JS
@@ -145,24 +145,17 @@ async function fetchNewAutocompletePredictions(query, options = {}) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 7000)
   try {
-    const apiKey = await getGoogleMapsApiKey()
-    if (!apiKey) return []
-
-    const body = { input: query, includedRegionCodes: ['in'] }
+    // The Google key stays on the server: autocomplete goes through the backend.
+    const body = { input: query }
     const lat = Number(options.latitude)
     const lng = Number(options.longitude)
     if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      body.locationBias = { circle: { center: { latitude: lat, longitude: lng }, radius: 50000 } }
+      body.latitude = lat
+      body.longitude = lng
     }
 
-    const response = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': apiKey },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    })
-    if (!response.ok) return []
-    const data = await response.json()
+    const response = await apiClient.post('/maps/autocomplete', body, { signal: controller.signal })
+    const data = response?.data?.data
 
     return (data?.suggestions || [])
       .map((item) => item.placePrediction)

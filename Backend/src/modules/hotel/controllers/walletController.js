@@ -19,45 +19,20 @@ import {
   verifyPaymentSignature,
 } from '../../../core/payments/razorpay.service.js';
 
-// Initialize Razorpay
-let razorpay;
-try {
-  console.log("Razorpay Keys Debug:", {
-    keyId: PaymentConfig.razorpayKeyId ? "Present" : "Missing",
-    keySecret: PaymentConfig.razorpayKeySecret ? "Present" : "Missing",
-    accNumber: PaymentConfig.razorpayAccountNumber ? "Present" : "Missing"
-  });
-
-  if (PaymentConfig.razorpayKeyId && PaymentConfig.razorpayKeySecret) {
-    // Shared client — see core/payments/razorpay.service.js
-    razorpay = getRazorpayClient();
-  } else {
-    // For Development without Keys
-    console.warn("⚠️ Razorpay Keys missing. Payment features will fail if used.");
-    razorpay = {
-      orders: {
-        create: () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)")),
-        fetch: () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)"))
-      },
-      payments: {
-        fetch: () => Promise.reject(new Error("Razorpay Not Initialized")),
-        refund: () => Promise.reject(new Error("Razorpay Not Initialized"))
-      },
-      contacts: {
-        create: () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)"))
-      },
-      fundAccount: {
-        create: () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)"))
-      },
-      payouts: {
-        create: () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)"))
-      },
-      isMock: true
-    };
-  }
-} catch (err) {
-  console.error("Razorpay Init Failed:", err.message);
-}
+// Razorpay client, resolved per call so a key changed from the credentials
+// screen takes effect without a restart.
+const notInitialized = () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)"));
+const missingKeysClient = {
+  orders: { create: notInitialized, fetch: notInitialized },
+  payments: { fetch: notInitialized, refund: notInitialized },
+  contacts: { create: notInitialized },
+  fundAccount: { create: notInitialized },
+  payouts: { create: notInitialized },
+  isMock: true,
+};
+const razorpay = new Proxy({}, {
+  get: (_target, prop) => (getRazorpayClient() || missingKeysClient)[prop],
+});
 
 /**
  * @desc    Get wallet balance and details

@@ -10,6 +10,7 @@ import { initializeQueues, closeBullMQConnection } from './src/queues/index.js';
 import { expireExpiredOffers } from './src/modules/food/admin/services/admin.service.js';
 import { syncExpiredFssaiNotifications } from './src/modules/food/restaurant/services/fssaiExpiry.service.js';
 
+import { startCredentialRefresh, stopCredentialRefresh } from './src/core/platform/credentials.service.js';
 import { logger } from './src/utils/logger.js';
 import { initializeFirebaseRealtime } from './src/config/firebase.js';
 
@@ -33,6 +34,7 @@ const gracefulShutdown = async (signal) => {
             await disconnectDB();
             await closeRedis();
             await closeBullMQConnection();
+            stopCredentialRefresh();
             if (expireOffersInterval) clearInterval(expireOffersInterval);
             if (fssaiExpiryInterval) clearInterval(fssaiExpiryInterval);
             logger.info('Graceful shutdown complete');
@@ -55,6 +57,9 @@ const startServer = async () => {
 
         // 1. Connect to Database (MongoDB)
         await connectDB();
+
+        // Admin-editable Maps/Razorpay keys: load now, then keep in sync.
+        await startCredentialRefresh();
 
         // 2. Create HTTP server from Express app
         const httpServer = http.createServer(app);

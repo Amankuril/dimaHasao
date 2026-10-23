@@ -19,6 +19,7 @@ import AnimatedPage from "@food/components/user/AnimatedPage"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { reverseGeocodeWithGoogle, geocodeGooglePlaceId, getFreshGpsCoordinates } from "@food/utils/googleGeocoding"
 import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo";
+import { getMapsBrowserKey } from '@/shared/utils/runtimeConfig';
 
 const MAP_SEARCH_INPUT_CLASS =
   "pl-12 pr-10 h-14 bg-white dark:bg-[#1a1a1a] border-2 border-zinc-200/90 dark:border-zinc-700 rounded-2xl focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-zinc-400 dark:focus:border-zinc-500 text-zinc-900 dark:text-zinc-50 placeholder:!text-neutral-400 dark:placeholder:!text-neutral-500 font-medium text-sm transition-all shadow-sm w-full"
@@ -28,7 +29,7 @@ const debugWarn = (...args) => {}
 const debugError = (...args) => {}
 
 // Enable Maps if API Key is available, otherwise fallback to coordinates-only mode
-const MAPS_ENABLED = !!import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+const MAPS_ENABLED = !!getMapsBrowserKey()
 
 // Calculate distance between two coordinates using Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {

@@ -9,7 +9,7 @@
  * differs per module does not.
  */
 import React from 'react';
-import { ShieldCheck, LifeBuoy, BarChart3, UserCog, ScrollText, Palette, ToggleRight } from 'lucide-react-native';
+import { ShieldCheck, LifeBuoy, BarChart3, UserCog, ScrollText, Palette, ToggleRight, KeyRound } from 'lucide-react-native';
 // The rail is the same markup as the Tours & Festivals panel's on the web.
 import PanelShell from '../../../../tours/app/admin/layouts/PanelShell';
 
@@ -19,6 +19,7 @@ const MENU_ITEMS = [
   { icon: ShieldCheck, label: 'Administrators', path: `${BASE}/administrators` },
   { icon: ToggleRight, label: 'Toggle Management', path: `${BASE}/toggles` },
   { icon: Palette, label: 'Brand & Contact', path: `${BASE}/brand` },
+  { icon: KeyRound, label: 'API Keys', path: `${BASE}/api-keys` },
   { icon: ScrollText, label: 'Legal & Policies', path: `${BASE}/legal` },
   { icon: LifeBuoy, label: 'Support', path: `${BASE}/support` },
   { icon: BarChart3, label: 'Reports', path: `${BASE}/reports` },

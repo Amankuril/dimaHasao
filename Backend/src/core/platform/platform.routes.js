@@ -1,4 +1,5 @@
 import express from 'express';
+import { getCredential } from './credentials.service.js';
 import DistrictSettings from './platformSettings.model.js';
 import LegalDocument from '../legal/legalDocument.model.js';
 import {
@@ -63,6 +64,22 @@ platformPublicRouter.get('/settings', async (req, res) => {
         console.error('Get platform settings error:', error);
         return res.status(500).json({ success: false, message: 'Failed to load settings' });
     }
+});
+
+/**
+ * @route GET /v1/platform/runtime-config.js
+ *
+ * Loaded by the web app's index.html before the bundle, so settings an admin
+ * changes (the browser Maps key) reach the web app without a rebuild. Only
+ * values that are public by design belong here — never a server key or secret.
+ */
+platformPublicRouter.get('/runtime-config.js', (_req, res) => {
+    const config = { googleMapsBrowserKey: getCredential('googleMapsBrowserKey') };
+    res.set({
+        'Content-Type': 'application/javascript; charset=utf-8',
+        'Cache-Control': 'no-cache',
+    });
+    res.send(`window.__RUNTIME_CONFIG__=${JSON.stringify(config).replace(/</g, '\\u003c')};`);
 });
 
 /** @route GET /v1/admin/platform-settings */

@@ -13,21 +13,15 @@
  * everywhere instead of half the app.
  */
 import { logger } from '../../utils/logger.js';
+import { getCredential } from '../platform/credentials.service.js';
 
 const GEOCODE_ENDPOINT = 'https://maps.googleapis.com/maps/api/geocode/json';
-
-/** Strip accidental surrounding quotes picked up from .env values. */
-const sanitize = (value) => (value ? String(value).trim().replace(/^['"]|['"]$/g, '') : '');
 
 /**
  * The Maps key, accepting every spelling in use across the merged projects.
  * @returns {string} empty string when unset
  */
-export const getGoogleMapsApiKey = () =>
-    sanitize(process.env.GOOGLE_MAPS_API_KEY) ||
-    sanitize(process.env.GOOGLE_MAP_API_KEY) ||
-    sanitize(process.env.VITE_GOOGLE_MAPS_API_KEY) ||
-    '';
+export const getGoogleMapsApiKey = () => getCredential('googleMapsApiKey');
 
 export const isMapsConfigured = () => Boolean(getGoogleMapsApiKey());
 

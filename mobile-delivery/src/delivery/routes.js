@@ -1,10 +1,9 @@
-/*
- * Driving routes. The web calls Route.computeRoutes from the Maps JS SDK,
- * which is the Google Routes API; this calls the same API over REST with the
- * same browser key (EXPO_PUBLIC_GOOGLE_MAPS_API_KEY).
- */
+import { api } from '../api/client';
 
-const KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+/*
+ * Driving routes. The Google key lives on the server, so the app asks the
+ * backend (POST /maps/route) instead of calling Google itself.
+ */
 
 /** Google encoded-polyline decoder. */
 export function decodePath(encoded) {
@@ -61,23 +60,11 @@ export function encodePath(path) {
 }
 
 export async function computeDrivingRoute(origin, destination) {
-  if (!KEY) throw new Error('No Google Maps key');
-  const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': KEY,
-      'X-Goog-FieldMask': 'routes.polyline.encodedPolyline,routes.distanceMeters,routes.duration',
-    },
-    body: JSON.stringify({
-      origin: { location: { latLng: { latitude: origin.lat, longitude: origin.lng } } },
-      destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
-      travelMode: 'DRIVE',
-    }),
+  const res = await api.post('/maps/route', {
+    origin: { lat: origin.lat, lng: origin.lng },
+    destination: { lat: destination.lat, lng: destination.lng },
   });
-  if (!res.ok) throw new Error(`Routes API ${res.status}`);
-  const body = await res.json();
-  const encoded = body?.routes?.[0]?.polyline?.encodedPolyline;
+  const encoded = res?.data?.data?.encodedPolyline;
   if (!encoded) throw new Error('No route path returned');
   return decodePath(encoded);
 }

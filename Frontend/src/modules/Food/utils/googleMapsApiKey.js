@@ -1,3 +1,4 @@
+import { getMapsBrowserKey } from '@/shared/utils/runtimeConfig';
 /**
  * Google Maps API Key Utility
  * Uses build-time env only (no backend calls).
@@ -21,7 +22,7 @@ export async function getGoogleMapsApiKey() {
     return cachedApiKey;
   }
 
-  cachedApiKey = sanitizeApiKey(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+  cachedApiKey = sanitizeApiKey(getMapsBrowserKey());
   return cachedApiKey;
 }
 

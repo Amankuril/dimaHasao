@@ -10,6 +10,7 @@ import {
 import { useDeliveryStore } from '@/modules/DeliveryV2/store/useDeliveryStore';
 import { zoneAPI } from '@food/api';
 import { CUSTOMER_PIN_SVG } from '@/modules/DeliveryV2/components/map/map.icons';
+import { getMapsBrowserKey } from '@/shared/utils/runtimeConfig';
 
 const mapContainerStyle = {
   width: '100%',
@@ -101,7 +102,7 @@ export const LiveMap = ({ onMapClick, onMapLoad, onPathReceived, onPolylineRecei
   const tripStatus = useDeliveryStore((state) => state.getFocusedTripStatus());
   
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: getMapsBrowserKey(),
     libraries: LIBRARIES
   });
 

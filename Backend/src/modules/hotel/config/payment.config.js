@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { getRazorpayKeyId, getRazorpayKeySecret } from '../../../core/payments/razorpay.service.js';
 
 export const PaymentConfig = {
   // Commission Settings
@@ -7,8 +8,9 @@ export const PaymentConfig = {
   maxCommission: null, // No max limit
 
   // Razorpay Settings
-  razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-  razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
+  // Getters: the admin can change these at runtime (credentials service).
+  get razorpayKeyId() { return getRazorpayKeyId(); },
+  get razorpayKeySecret() { return getRazorpayKeySecret(); },
   razorpayAccountNumber: process.env.RAZORPAY_ACCOUNT_NUMBER, // Required for Payouts
 
   // Payment methods
@@ -48,6 +50,5 @@ export const PaymentConfig = {
   }
 };
 
-console.log("💳 Payment Config - KeyID:", PaymentConfig.razorpayKeyId ? "OK" : "MISSING", "AccNo:", PaymentConfig.razorpayAccountNumber || "MISSING");
 
 export default PaymentConfig;

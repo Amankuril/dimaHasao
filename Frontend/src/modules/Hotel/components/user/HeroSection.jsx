@@ -5,6 +5,7 @@ import logo from '../../assets/rokologin-removebg-preview.png';
 import MobileMenu from '../../components/ui/MobileMenu';
 import { useNavigate } from 'react-router-dom';
 import walletService from '../../services/walletService';
+import { getMapsBrowserKey } from '@/shared/utils/runtimeConfig';
 
 const HeroSection = ({ theme, selectedType }) => {
     const accentColor = theme?.accent || '#10B981';
@@ -157,7 +158,7 @@ const HeroSection = ({ theme, selectedType }) => {
             }
 
             // Fallback to Google Geocode API
-            const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+            const apiKey = getMapsBrowserKey();
             if (apiKey) {
                 try {
                     const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}&components=country:in`);
@@ -205,7 +206,7 @@ const HeroSection = ({ theme, selectedType }) => {
     // Helper for multi-provider reverse geocoding
     const reverseGeocode = async (latitude, longitude) => {
         // 1. Google Maps Geocoding API if key is available
-        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        const apiKey = getMapsBrowserKey();
         if (apiKey) {
             try {
                 const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`);
@@ -251,7 +252,7 @@ const HeroSection = ({ theme, selectedType }) => {
     // Auto-detect live location as soon as page/app opens without clicking
     useEffect(() => {
         const fetchSilentLocation = async () => {
-            const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+            const apiKey = getMapsBrowserKey();
             
             // If API key is present, try silent IP-based geolocation first
             if (apiKey) {

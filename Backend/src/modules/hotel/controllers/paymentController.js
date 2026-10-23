@@ -14,6 +14,7 @@ import smsService from '../utils/smsService.js';
 import referralService from '../services/referralService.js';
 import {
   getRazorpayClient,
+  getRazorpayWebhookSecret,
   verifyPaymentSignature,
   verifyWebhookSignature,
 } from '../../../core/payments/razorpay.service.js';
@@ -24,29 +25,20 @@ import {
   handleCapturedPayment,
 } from '../services/paymentSettlement.service.js';
 
-// Initialize Razorpay
-let razorpay;
-try {
-  if (PaymentConfig.razorpayKeyId && PaymentConfig.razorpayKeySecret) {
-    // Shared client — see core/payments/razorpay.service.js
-    razorpay = getRazorpayClient();
-  } else {
-    // For Development without Keys
-    console.warn("⚠️ Razorpay Keys missing. Payment features will fail if used.");
-    razorpay = {
-      orders: {
-        create: () => Promise.reject(new Error("Razorpay Not Initialized")),
-        fetch: () => Promise.reject(new Error("Razorpay Not Initialized"))
-      },
-      payments: {
-        fetch: () => Promise.reject(new Error("Razorpay Not Initialized")),
-        refund: () => Promise.reject(new Error("Razorpay Not Initialized"))
-      }
-    };
-  }
-} catch (err) {
-  console.error("Razorpay Init Failed:", err.message);
-}
+// Razorpay client, resolved per call so a key changed from the credentials
+// screen takes effect without a restart.
+const notInitialized = () => Promise.reject(new Error("Razorpay Not Initialized (Keys Missing)"));
+const missingKeysClient = {
+  orders: { create: notInitialized, fetch: notInitialized },
+  payments: { fetch: notInitialized, refund: notInitialized },
+  contacts: { create: notInitialized },
+  fundAccount: { create: notInitialized },
+  payouts: { create: notInitialized },
+  isMock: true,
+};
+const razorpay = new Proxy({}, {
+  get: (_target, prop) => (getRazorpayClient() || missingKeysClient)[prop],
+});
 
 const isAdminCaller = (user) => ['admin', 'superadmin'].includes(String(user?.role || '').toLowerCase());
 
@@ -221,7 +213,7 @@ export const handleWebhook = async (req, res) => {
   if (!verifyWebhookSignature({
     body: req.rawBody,
     signature,
-    secret: process.env.RAZORPAY_WEBHOOK_SECRET,
+    secret: getRazorpayWebhookSecret(),
   })) {
     return res.status(400).json({ message: 'Invalid webhook signature' });
   }
