@@ -104,6 +104,7 @@ export const authService = {
   deleteDoc: (publicId) => body(hotelApi.post('/auth/partner/delete-doc', { publicId })),
   uploadDocsBase64: (images) => body(hotelApi.post('/auth/partner/upload-docs-base64', { images })),
   updateProfile: (data) => body(hotelApi.put('/auth/update-profile', data)),
+  deletePartnerAccount: () => body(hotelApi.delete('/auth/partner/account')),
 
   logout: () => {
     clearPartnerSession();

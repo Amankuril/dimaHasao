@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Camera, CreditCard, Edit, Mail, MapPin, Phone, Save, Store, User } from 'lucide-react-native';
+import { Camera, CreditCard, Edit, Mail, MapPin, Phone, Save, Store, Trash2, User } from 'lucide-react-native';
 import { mediaUrl } from '../../api/client';
 import { Button, Card, IconButton, ListRow, StatusBadge } from '../../components/ds';
 import { useAuth } from '../../context/AuthContext';
@@ -9,12 +9,19 @@ import { openCamera, openGallery } from '../../lib/images';
 import { localStore } from '../../lib/storage';
 import { toast } from '../../lib/notify';
 import { useNavigate } from '../../lib/webRouter';
-import { hasRestaurantProfile, setActiveWorkspace } from '../../restaurant/utils/partnerSession';
+import {
+  RESTAURANT_HOME,
+  WORKSPACE,
+  clearPartnerSessions,
+  hasRestaurantProfile,
+  setActiveWorkspace,
+  setPartnerProfiles,
+} from '../../restaurant/utils/partnerSession';
 import { color, elevation, radii, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
 import { authService, hotelService, userService } from '../services/apiService';
 import usePartnerStore from '../store/partnerStore';
-import { getPartnerUser } from '../utils/partnerAuth';
+import { clearPartnerSession, getPartnerUser } from '../utils/partnerAuth';
 import { Field as InputField } from '../components/dashboard/partnerUi';
 
 /*
@@ -222,6 +229,44 @@ const PartnerProfile = () => {
     navigate('/food/restaurant/onboarding');
   };
 
+  /*
+   * Deletes only the hotel partner account. A partner who also runs a
+   * restaurant keeps that session and lands on the restaurant workspace;
+   * the restaurant has its own delete in Explore More.
+   */
+  const [deleting, setDeleting] = useState(false);
+  const deleteAccount = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await authService.deletePartnerAccount();
+      toast.success('Your hotel partner account has been deleted');
+      if (hasRestaurantProfile()) {
+        await clearPartnerSession();
+        setPartnerProfiles([WORKSPACE.RESTAURANT]);
+        setActiveWorkspace(WORKSPACE.RESTAURANT);
+        navigate(RESTAURANT_HOME, { replace: true });
+      } else {
+        await clearPartnerSessions();
+        navigate('/food/restaurant/login', { replace: true });
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Could not delete the account');
+    } finally {
+      setDeleting(false);
+    }
+  };
+  const confirmDelete = () => {
+    Alert.alert(
+      'Delete hotel partner account?',
+      'Your properties will be taken off the app and you will be signed out. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: deleteAccount },
+      ],
+    );
+  };
+
   const photo = mediaUrl(profile.profileImage);
 
   return (
@@ -296,6 +341,16 @@ const PartnerProfile = () => {
               <Field label="PAN number" value={profile.panNumber} icon={CreditCard} isEditing={false} onChange={() => {}} />
 
               {isEditing ? <Button title="Save changes" icon={Save} onPress={handleToggleEdit} /> : null}
+            </Card>
+
+            <Card padded={false}>
+              <ListRow
+                icon={Trash2}
+                tone="danger"
+                title={deleting ? 'Deleting account…' : 'Delete hotel partner account'}
+                subtitle="Permanently remove your partner account"
+                onPress={confirmDelete}
+              />
             </Card>
 
             <Text style={styles.member}>

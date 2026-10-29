@@ -7,7 +7,9 @@ import {
     updateAdminProfileController,
     changeAdminPasswordController,
     requestAdminForgotPasswordOtpController,
-    resetAdminPasswordWithOtpController
+    resetAdminPasswordWithOtpController,
+    checkDeletionBalanceController,
+    deleteAccountController
 } from './auth.controller.js';
 import { authMiddleware, requireAdmin } from './auth.middleware.js';
 import { authRateLimiter } from '../../middleware/rateLimit.js';
@@ -34,6 +36,10 @@ router.post('/logout', logoutController);
 
 // Authenticated user profile (requires Bearer token)
 router.get('/me', authMiddleware, getMeController);
+
+// Self-service account deletion (user, restaurant and delivery apps).
+router.get('/delete-account/check-balance', authMiddleware, checkDeletionBalanceController);
+router.delete('/delete-account', authMiddleware, deleteAccountController);
 
 // Admin-only: profile update & change password (Bearer + ADMIN role)
 router.patch('/admin/profile', authMiddleware, requireAdmin, updateAdminProfileController);

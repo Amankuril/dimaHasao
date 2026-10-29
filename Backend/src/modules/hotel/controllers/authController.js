@@ -5,6 +5,9 @@ import notificationService from '../services/notificationService.js';
 import Admin, { findPlatformAdmins } from '../models/Admin.js';
 import User from '../models/User.js';
 import Partner from '../models/Partner.js';
+import Property from '../models/Property.js';
+import Booking from '../models/Booking.js';
+import Wallet from '../models/Wallet.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 // Aliased: this module exports its own `verifyOtp` HTTP controller.
@@ -843,5 +846,64 @@ export const uploadDocsBase64 = async (req, res) => {
   } catch (error) {
     console.error('Upload Docs Base64 Error:', error);
     res.status(error.statusCode || 500).json({ message: error.message || 'Upload failed' });
+  }
+};
+
+/**
+ * DELETE /hotel/auth/partner/account — a partner deletes their own account
+ * (required by Google Play). Soft delete: bookings, payouts and reports still
+ * point at the row. The account is blocked (protect refuses it), its
+ * properties go off-air, contact data is cleared and the phone is moved aside
+ * so the number can register again as a new partner.
+ */
+export const deletePartnerAccount = async (req, res) => {
+  try {
+    // Only a Partner row qualifies; a consumer or admin token finds nothing here.
+    const partner = await Partner.findById(req.user?._id);
+    if (!partner || partner.deletedAt) {
+      return res.status(404).json({ message: 'Partner account not found' });
+    }
+
+    const propertyIds = await Property.find({ partnerId: partner._id }).distinct('_id');
+    const activeBooking = propertyIds.length
+      ? await Booking.exists({
+          propertyId: { $in: propertyIds },
+          bookingStatus: { $in: ['pending', 'awaiting_payment', 'confirmed', 'checked_in'] },
+        })
+      : null;
+    if (activeBooking) {
+      return res.status(400).json({
+        message: 'You have upcoming or ongoing bookings. Complete or cancel them before deleting your account.',
+      });
+    }
+
+    const wallet = await Wallet.findOne({ partnerId: partner._id, role: 'partner' }).select('balance').lean();
+    const balance = Math.max(0, Number(wallet?.balance) || 0);
+    if (balance > 0) {
+      return res.status(400).json({
+        message: `Withdraw your wallet balance of ₹${balance} before deleting your account.`,
+        balance,
+      });
+    }
+
+    await Property.updateMany({ partnerId: partner._id }, { $set: { isLive: false } });
+    await Partner.updateOne(
+      { _id: partner._id },
+      {
+        $set: {
+          isBlocked: true,
+          deletedAt: new Date(),
+          phone: `${partner.phone}_deleted_${Date.now()}`,
+          'fcmTokens.app': null,
+          'fcmTokens.web': null,
+        },
+        $unset: { email: '' },
+      },
+    );
+
+    return res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Delete partner account error:', error);
+    return res.status(500).json({ message: 'Could not delete the account. Please try again.' });
   }
 };
