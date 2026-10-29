@@ -29,6 +29,8 @@ const partnerSchema = new mongoose.Schema({
   },
   isPartner: { type: Boolean, default: true },
   isBlocked: { type: Boolean, default: false },
+  // Set when the partner deletes their own account from the app.
+  deletedAt: { type: Date, default: null },
   partnerApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   // Set once the owner-details + KYC step is submitted. Only partners with
   // this true are gated on partnerApprovalStatus for dashboard access —

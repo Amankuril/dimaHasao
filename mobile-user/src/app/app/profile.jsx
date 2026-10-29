@@ -211,7 +211,20 @@ export default function ProfileScreen() {
         </View>
 
         {user.isLoggedIn ? (
-          <Button title="Log out" variant="dangerSoft" icon={fa('fa-solid fa-right-from-bracket')} onPress={handleLogout} accessibilityLabel="Log Out" />
+          <>
+            <Button title="Log out" variant="dangerSoft" icon={fa('fa-solid fa-right-from-bracket')} onPress={handleLogout} accessibilityLabel="Log Out" />
+            {/* One account covers every service; its delete lives in Settings. */}
+            <Card padded={false}>
+              <ListRow
+                chevronIcon={FA_CHEVRON}
+                icon={fa('fa-solid fa-trash-can')}
+                tone="danger"
+                title="Delete account"
+                subtitle="Permanently remove your account and data"
+                onPress={() => router.navigate('/food/user/profile/settings')}
+              />
+            </Card>
+          </>
         ) : (
           <Button title="Sign in / Register" icon={fa('fa-solid fa-right-to-bracket')} onPress={() => router.replace('/app/login')} />
         )}

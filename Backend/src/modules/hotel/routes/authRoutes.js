@@ -1,5 +1,5 @@
 import express from 'express';
-import { adminLogin, getMe, updateProfile, updateAdminProfile, registerPartner, updateFcmToken, uploadDocs, deleteDoc, uploadDocsBase64 } from '../controllers/authController.js';
+import { adminLogin, getMe, updateProfile, updateAdminProfile, registerPartner, updateFcmToken, uploadDocs, deleteDoc, uploadDocsBase64, deletePartnerAccount } from '../controllers/authController.js';
 import { protect, optionalProtect } from '../middlewares/authMiddleware.js';
 import { uploadDocuments } from '../utils/multer.js';
 
@@ -22,5 +22,6 @@ router.get('/me', protect, getMe);
 router.put('/update-profile', protect, updateProfile);
 router.put('/admin/update-profile', protect, updateAdminProfile);
 router.put('/update-fcm', protect, updateFcmToken); // New Route
+router.delete('/partner/account', protect, deletePartnerAccount);
 
 export default router;

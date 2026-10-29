@@ -28,6 +28,7 @@ import { validateAdminChangePasswordDto } from "../../dtos/auth/adminChangePassw
 import { validateAdminForgotPasswordRequestDto } from "../../dtos/auth/adminForgotPasswordRequest.dto.js";
 import { validateAdminForgotPasswordResetDto } from "../../dtos/auth/adminForgotPasswordReset.dto.js";
 import { sendResponse } from "../../utils/response.js";
+import { deleteOwnAccount, getDeletionBalance } from "./accountDeletion.service.js";
 
 export const requestUserOtpController = async (req, res, next) => {
   try {
@@ -219,6 +220,26 @@ export const resetAdminPasswordWithOtpController = async (req, res, next) => {
     return sendResponse(res, 200, "Password reset successfully", {
       success: true,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const checkDeletionBalanceController = async (req, res, next) => {
+  try {
+    const { userId, role } = req.user;
+    const result = await getDeletionBalance(userId, role);
+    return sendResponse(res, 200, "Balance retrieved successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAccountController = async (req, res, next) => {
+  try {
+    const { userId, role } = req.user;
+    const result = await deleteOwnAccount(userId, role);
+    return sendResponse(res, 200, "Account deleted successfully", result);
   } catch (error) {
     next(error);
   }
