@@ -1,0 +1,18 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "claude/stoic-maxwell-1bcg76",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "claude/stoic-maxwell-1bcg76": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "claude/stoic-maxwell-1bcg76",
+    "origin"
+  ]
+}
