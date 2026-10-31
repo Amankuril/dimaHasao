@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.dimahsao.taxidriver",
-      "versionCode": 3,
+      "versionCode": 2,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundImage": "./assets/android-icon-background.png",
@@ -59,9 +59,12 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#6366F1",
           "defaultChannel": "default",
-          "sounds": ["./assets/audio/ride_request_alert.mp3"]
+          "sounds": [
+            "./assets/audio/ride_request_alert.mp3"
+          ]
         }
-      ]
+      ],
+      "./plugins/withReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": false,

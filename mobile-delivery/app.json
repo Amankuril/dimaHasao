@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "com.dimahsao.delivery",
-      "versionCode": 3,
+      "versionCode": 2,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundImage": "./assets/android-icon-background.png",
@@ -70,9 +70,12 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#0A4D2B",
           "defaultChannel": "default",
-          "sounds": ["./assets/media/restaurant_alert.mp3"]
+          "sounds": [
+            "./assets/media/restaurant_alert.mp3"
+          ]
         }
-      ]
+      ],
+      "./plugins/withReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": false,
