@@ -1,3 +1,7 @@
 # Secrets: never commit signing keystores or their password files.
 *.jks
 *INFO.txt
+
+# Play release bundles: too large for git, shared with the deployment team directly.
+*.aab
+_old/
