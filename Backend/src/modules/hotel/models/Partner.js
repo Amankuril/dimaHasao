@@ -18,9 +18,12 @@ const partnerSchema = new mongoose.Schema({
     trim: true,
     unique: true
   },
+  // Partners sign in by OTP; this is a random hash nobody reads. select:false keeps
+  // it out of every query (the admin partner list was serialising it).
   password: {
     type: String,
-    required: true
+    required: true,
+    select: false
   },
   role: {
     type: String,

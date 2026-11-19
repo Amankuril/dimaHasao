@@ -55,7 +55,27 @@ function getModuleFromUrl(url = "") {
     }
     return "restaurant";
   }
-  
+
+  // Shared endpoints (image uploads) belong to no module, so the URL says nothing
+  // about who is calling. They used to fall through to "user" and send the
+  // customer token, which an admin does not have: creating a category with an
+  // image failed with "Authentication token missing". Use the panel the page is in.
+  if (normalized.startsWith("/uploads") || normalized.includes("/v1/uploads")) {
+    return getModuleFromPage();
+  }
+
+  return "user";
+}
+
+function getModuleFromPage() {
+  try {
+    const path = String(window.location?.pathname || "").toLowerCase();
+    if (path.startsWith("/admin")) return "admin";
+    if (path.startsWith("/food/restaurant")) return "restaurant";
+    if (path.startsWith("/food/delivery")) return "delivery";
+  } catch {
+    /* no window (tests/SSR) */
+  }
   return "user";
 }
 

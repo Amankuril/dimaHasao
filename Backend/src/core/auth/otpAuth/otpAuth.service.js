@@ -25,7 +25,9 @@ import jwt from 'jsonwebtoken';
  * to prove the phone was verified, or anyone could create an account for any
  * number. A short-lived signed ticket does that without a new collection.
  */
-const SIGNUP_TICKET_TTL = '10m';
+// Long enough to finish an onboarding form and photograph documents: the hotel
+// partner wizard spends this only on its final submit, and 10m expired mid-form.
+const SIGNUP_TICKET_TTL = '30m';
 
 const issueSignupTicket = (phone, audienceKey) =>
     jwt.sign({ phone, audience: audienceKey, purpose: 'signup' }, config.jwtAccessSecret, {
