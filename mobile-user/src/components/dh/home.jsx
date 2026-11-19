@@ -10,6 +10,7 @@ import { StripeBorder } from './Header';
 import { useBooking } from '../../context/BookingContext';
 import { PLACES_DATA, WHY_VISIT_DATA } from '../../data/dh/tourismData';
 import { openExternal } from '../../lib/links';
+import { telHref, useContactSettings } from '../../lib/contacts';
 import { Button, IconButton, SectionHeader, fa } from '../ds';
 import { color, elevation, radii, space, type } from '../../theme';
 
@@ -137,14 +138,12 @@ const MODAL_DETAILS = {
     desc: 'Connect with registered Dimasa eco-guides who know the secret trails, waterfalls, and folklore.',
     items: ['Government Certified Guides', 'Trekking & Forest Expeditions', 'Dimasa & English speaking', 'Nominal daily rates from ₹800/day'],
     actionText: 'Contact Tourism Desk',
-    actionLink: 'tel:+919435012345',
+    // actionLink comes from the admin's tourism desk number (QuickLinksGrid).
   },
   emergency: {
     title: 'Emergency Help & SOS',
     desc: 'Direct emergency hotlines for visitors in Dima Hasao district.',
-    items: ['Police Control Room: 112 / 03673-236224', 'Haflong Civil Hospital: 03673-236222', 'Tourist Police Helpline: +91 94350 99999', 'Disaster Management: 1077'],
-    actionText: 'Call Emergency: 112',
-    actionLink: 'tel:112',
+    // items, actionText and actionLink come from Global admin → Brand & Contact (QuickLinksGrid).
     isEmergency: true,
   },
 };
@@ -152,7 +151,20 @@ const MODAL_DETAILS = {
 /** components/home/QuickLinksGrid.jsx: one row of 44 px icon tiles with readable labels. */
 export function QuickLinksGrid() {
   const [activeModal, setActiveModal] = useState(null);
-  const detail = activeModal ? MODAL_DETAILS[activeModal] : null;
+  const { sosNumber, emergencyContacts, tourismDeskPhone } = useContactSettings();
+  const base = activeModal ? MODAL_DETAILS[activeModal] : null;
+  const detail = !base
+    ? null
+    : activeModal === 'emergency'
+      ? {
+          ...base,
+          items: emergencyContacts.map((row) => `${row.label}: ${row.number}`),
+          actionText: `Call Emergency: ${sosNumber}`,
+          actionLink: telHref(sosNumber),
+        }
+      : activeModal === 'guide'
+        ? { ...base, actionLink: tourismDeskPhone ? telHref(tourismDeskPhone) : null }
+        : base;
 
   const onLink = (id) => {
     if (id === 'events') router.navigate('/app/festivals');
@@ -194,7 +206,9 @@ export function QuickLinksGrid() {
                 </View>
               ))}
             </View>
-            <Button title={detail.actionText} icon={fa('fa-solid fa-phone')} variant={detail.isEmergency ? 'danger' : 'primary'} onPress={() => openExternal(detail.actionLink)} />
+            {detail.actionLink ? (
+              <Button title={detail.actionText} icon={fa('fa-solid fa-phone')} variant={detail.isEmergency ? 'danger' : 'primary'} onPress={() => openExternal(detail.actionLink)} />
+            ) : null}
           </>
         ) : null}
       </Dialog>

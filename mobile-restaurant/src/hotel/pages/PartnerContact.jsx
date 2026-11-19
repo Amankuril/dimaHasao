@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, Mail, Phone, Send } from 'lucide-react-nativ
 import { Button, Card, ListRow, SectionHeader } from '../../components/ds';
 import { color, radii, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
+import { useContactSettings } from '../../lib/contacts';
 import { legalService } from '../services/apiService';
 import { Field } from '../components/dashboard/partnerUi';
 
@@ -19,6 +20,8 @@ function Input({ label, multiline, ...props }) {
 
 const PartnerContact = () => {
   const insets = useSafeAreaInsets();
+  // Global admin → Brand & Contact. These were a previous product's (HOOMZO) contacts.
+  const { partnerSupportPhone, partnerSupportEmail } = useContactSettings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -66,10 +69,12 @@ const PartnerContact = () => {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={{ paddingBottom: space.xxxl + insets.bottom }} keyboardShouldPersistTaps="handled">
           <View style={{ maxWidth: 768, width: '100%', alignSelf: 'center', padding: space.lg, gap: space.lg }}>
-            <Card padded={false}>
-              <ListRow icon={Mail} title="Email" subtitle="hoomzohub@gmail.com" divider />
-              <ListRow icon={Phone} title="Phone" subtitle="6232314147" />
-            </Card>
+            {partnerSupportEmail || partnerSupportPhone ? (
+              <Card padded={false}>
+                {partnerSupportEmail ? <ListRow icon={Mail} title="Email" subtitle={partnerSupportEmail} divider={Boolean(partnerSupportPhone)} /> : null}
+                {partnerSupportPhone ? <ListRow icon={Phone} title="Phone" subtitle={partnerSupportPhone} /> : null}
+              </Card>
+            ) : null}
 
             {error ? (
               <View style={[styles.banner, { backgroundColor: color.dangerSoft }]} accessibilityRole="alert">

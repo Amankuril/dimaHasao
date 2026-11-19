@@ -10,16 +10,10 @@ import { Field, FormScroll, GreenButton, Panel, PanelTitle, dhs } from '../../co
 import { useBooking } from '../../context/BookingContext';
 import { fetchMySupportTickets, raiseSupportTicket } from '../../api/dh/supportApi';
 import { openExternal } from '../../lib/links';
+import { telHref, useContactSettings } from '../../lib/contacts';
 import { color, radii, space, type } from '../../theme';
 
 // Web: DimaHasao/pages/HelpSupportScreen.jsx (/app/support)
-
-const HELPLINES = [
-  { title: 'Police Control Room', number: '112', icon: 'fa-solid fa-shield' },
-  { title: 'Haflong Civil Hospital', number: '03673-236222', icon: 'fa-solid fa-hospital' },
-  { title: 'Tourist Police Helpline', number: '+91 94350 99999', icon: 'fa-solid fa-person-military-pointing' },
-  { title: 'Disaster Emergency (DDMA)', number: '1077', icon: 'fa-solid fa-triangle-exclamation' },
-];
 
 const CATEGORIES = [
   { value: 'Taxi', label: 'Taxi / Ride Booking Issue' },
@@ -50,6 +44,8 @@ const FAQS = [
 
 export default function HelpSupportScreen() {
   const { user, showToast } = useBooking();
+  // Set in Global admin → Brand & Contact.
+  const { emergencyContacts } = useContactSettings();
   const [activeFaq, setActiveFaq] = useState(null);
   const [ticketCategory, setTicketCategory] = useState('Taxi');
   const [complaintText, setComplaintText] = useState('');
@@ -106,14 +102,14 @@ export default function HelpSupportScreen() {
           </View>
           <Text style={styles.emergencyHint}>Tap a number to call.</Text>
           <View style={{ gap: space.sm }}>
-            {HELPLINES.map((item) => (
-              <Press key={item.title} scale={0.98} onPress={() => openExternal(`tel:${item.number.replace(/\s+/g, '')}`)} style={styles.helpline} accessibilityRole="link" accessibilityLabel={`Call ${item.title}, ${item.number}`}>
+            {emergencyContacts.map((item) => (
+              <Press key={`${item.label}-${item.number}`} scale={0.98} onPress={() => openExternal(telHref(item.number))} style={styles.helpline} accessibilityRole="link" accessibilityLabel={`Call ${item.label}, ${item.number}`}>
                 <View style={styles.helplineIcon}>
-                  <Fa name={item.icon} size={16} color={color.danger} />
+                  <Fa name={item.icon || 'fa-solid fa-phone'} size={16} color={color.danger} />
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={styles.helplineTitle} numberOfLines={2}>
-                    {item.title}
+                    {item.label}
                   </Text>
                   <Text style={styles.helplineNumber}>{item.number}</Text>
                 </View>

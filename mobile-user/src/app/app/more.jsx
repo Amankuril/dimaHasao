@@ -13,6 +13,7 @@ import { dhs } from '../../components/dh/ui';
 import { useBooking } from '../../context/BookingContext';
 import { MODULE_SECTIONS } from '../../data/moduleSections';
 import { openExternal } from '../../lib/links';
+import { telHref, useContactSettings } from '../../lib/contacts';
 import { color, elevation, radii, space, type } from '../../theme';
 
 const FA_CHEVRON = fa('fa-solid fa-chevron-right');
@@ -36,9 +37,12 @@ const SERVICES = [
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
   const { user, logout, showToast } = useBooking();
+  // Set in Global admin → Brand & Contact.
+  const { sosNumber, emergencyContacts, tourismDeskPhone } = useContactSettings();
+  const helplines = emergencyContacts.filter((row) => telHref(row.number) !== telHref(sosNumber));
 
   const cultural = [
-    { title: 'Local Certified Guides', desc: 'Expert local Dimasa eco-guides & trekking experts', icon: 'fa-solid fa-user-tie', action: () => showToast('Connecting to Certified Dimasa Guides Desk (+91 94350 12345)') },
+    { title: 'Local Certified Guides', desc: 'Expert local Dimasa eco-guides & trekking experts', icon: 'fa-solid fa-user-tie', action: () => (tourismDeskPhone ? openExternal(telHref(tourismDeskPhone)) : showToast('The guides desk number is not available right now')) },
     { title: 'Events & Falcon Festival', desc: 'Annual wildlife festival & cultural passes', icon: 'fa-solid fa-calendar-days', action: () => router.navigate('/app/festivals') },
     { title: 'Curated Tour Packages', desc: 'All-inclusive 2-Day & 3-Day scenic nature treks', icon: 'fa-solid fa-suitcase-rolling', action: () => router.navigate('/app/packages') },
     { title: 'Authentic Dimasa Cuisine', desc: 'Judima rice brew, smoked meat & organic herbs', icon: 'fa-solid fa-utensils', action: () => router.navigate('/food/user') },
@@ -123,17 +127,19 @@ export default function MoreScreen() {
             </View>
             <StatusBadge label="24x7 assistance" tone="danger" />
           </View>
-          <View style={{ flexDirection: 'row', gap: space.sm }}>
-            <Press scale={0.97} onPress={() => openExternal('tel:112')} style={styles.sos} accessibilityRole="link" accessibilityLabel="Call Police SOS 112">
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+            <Press scale={0.97} onPress={() => openExternal(telHref(sosNumber))} style={styles.sos} accessibilityRole="link" accessibilityLabel={`Call SOS ${sosNumber}`}>
               <Fa name="fa-solid fa-phone" size={14} color={color.danger} />
               <Text style={styles.sosLabel}>Police SOS</Text>
-              <Text style={styles.sosNumber}>112</Text>
+              <Text style={styles.sosNumber}>{sosNumber}</Text>
             </Press>
-            <Press scale={0.97} onPress={() => openExternal('tel:03673236222')} style={styles.sos} accessibilityRole="link" accessibilityLabel="Call Civil Hospital 03673-236222">
-              <Fa name="fa-solid fa-phone" size={14} color={color.danger} />
-              <Text style={styles.sosLabel}>Civil Hospital</Text>
-              <Text style={styles.sosNumber}>03673-236222</Text>
-            </Press>
+            {helplines.map((row) => (
+              <Press key={`${row.label}-${row.number}`} scale={0.97} onPress={() => openExternal(telHref(row.number))} style={styles.sos} accessibilityRole="link" accessibilityLabel={`Call ${row.label} ${row.number}`}>
+                <Fa name={row.icon || 'fa-solid fa-phone'} size={14} color={color.danger} />
+                <Text style={styles.sosLabel} numberOfLines={1}>{row.label}</Text>
+                <Text style={styles.sosNumber}>{row.number}</Text>
+              </Press>
+            ))}
           </View>
         </View>
 
@@ -161,7 +167,7 @@ const styles = StyleSheet.create({
   hint: { ...type.caption, color: color.textMuted },
   emergency: { backgroundColor: color.dangerSoft, borderRadius: radii.lg, padding: space.lg },
   emergencyTitle: { ...type.subheading, color: color.danger },
-  sos: { flex: 1, minHeight: 72, padding: space.md, borderRadius: radii.md, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  sos: { flexGrow: 1, flexBasis: '45%', minHeight: 72, padding: space.md, borderRadius: radii.md, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', gap: 2 },
   sosLabel: { ...type.caption, color: color.textSecondary },
   sosNumber: { ...type.bodyStrong, color: color.danger },
   version: { textAlign: 'center', ...type.caption, color: color.textMuted },

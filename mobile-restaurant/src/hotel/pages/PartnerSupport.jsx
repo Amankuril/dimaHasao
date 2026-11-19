@@ -6,6 +6,7 @@ import { Press } from '../../components/ui';
 import { Button, Card, EmptyState, SectionHeader } from '../../components/ds';
 import { color, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
+import { telHref, useContactSettings } from '../../lib/contacts';
 import { faqService } from '../services/apiService';
 
 /*
@@ -34,6 +35,10 @@ const FaqItem = ({ question, answer }) => {
 
 const PartnerSupport = () => {
   const insets = useSafeAreaInsets();
+  // Global admin → Brand & Contact. These were a previous product's (Rokkooin) contacts.
+  const { partnerSupportPhone: phone, partnerSupportEmail: email } = useContactSettings();
+  const waDigits = phone.replace(/\D/g, '').replace(/^0+/, '');
+  const waNumber = waDigits.length === 10 ? `91${waDigits}` : waDigits;
   const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,10 +63,12 @@ const PartnerSupport = () => {
       <ScrollView contentContainerStyle={{ paddingBottom: space.xxxl + insets.bottom }}>
         <View style={{ maxWidth: 768, width: '100%', alignSelf: 'center', padding: space.lg, gap: space.md }}>
           {/* Contact Options */}
-          <View style={{ flexDirection: 'row', gap: space.md }}>
-            <Button title="WhatsApp chat" icon={MessageSquare} onPress={() => open('https://wa.me/919111384535')} style={{ flex: 1 }} />
-            <Button title="Call support" icon={Phone} variant="outline" onPress={() => open('tel:9111384535')} style={{ flex: 1 }} />
-          </View>
+          {phone ? (
+            <View style={{ flexDirection: 'row', gap: space.md }}>
+              <Button title="WhatsApp chat" icon={MessageSquare} onPress={() => open(`https://wa.me/${waNumber}`)} style={{ flex: 1 }} />
+              <Button title="Call support" icon={Phone} variant="outline" onPress={() => open(telHref(phone))} style={{ flex: 1 }} />
+            </View>
+          ) : null}
 
           <SectionHeader title="Frequently asked questions" style={{ marginTop: space.lg, marginBottom: 0 }} />
 
@@ -75,13 +82,15 @@ const PartnerSupport = () => {
             faqs.map((faq, i) => <FaqItem key={faq._id || i} question={faq.question} answer={faq.answer} />)
           )}
 
-          <View style={{ marginTop: space.xl, alignItems: 'center' }}>
-            <Text style={styles.still}>Still have questions?</Text>
-            <Press onPress={() => open('mailto:partners@rokkooin.com')} scale={1} accessibilityLabel="Email partners@rokkooin.com" style={styles.mail}>
-              <Mail size={16} color={color.primary} />
-              <Text style={styles.mailText}>Email us at partners@rokkooin.com</Text>
-            </Press>
-          </View>
+          {email ? (
+            <View style={{ marginTop: space.xl, alignItems: 'center' }}>
+              <Text style={styles.still}>Still have questions?</Text>
+              <Press onPress={() => open(`mailto:${email}`)} scale={1} accessibilityLabel={`Email ${email}`} style={styles.mail}>
+                <Mail size={16} color={color.primary} />
+                <Text style={styles.mailText}>Email us at {email}</Text>
+              </Press>
+            </View>
+          ) : null}
         </View>
       </ScrollView>
     </View>

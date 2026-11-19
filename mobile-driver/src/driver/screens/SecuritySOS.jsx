@@ -13,6 +13,7 @@ import { addDriverEmergencyContact, deleteDriverEmergencyContact, getDriverEmerg
 import { triggerDriverSosAlert } from '../services/driverSafetyAlertService';
 import { DT } from '../ui/dt';
 import ScreenHeader from '../ui/ScreenHeader';
+import { telHref, useContactSettings } from '../../lib/contacts';
 import { Card, CtaButton, SectionLabel } from '../ui/Surface';
 
 const MAX_CONTACTS = 5;
@@ -42,6 +43,8 @@ function PulseIcon({ children }) {
 /** Port of Taxi/modules/driver/pages/settings/SecuritySOS.jsx (/taxi/driver/security). */
 export default function SecuritySOS() {
   const insets = useSafeAreaInsets();
+  // What SOS dials is set in Global admin → Brand & Contact.
+  const { sosNumber } = useContactSettings();
   const keyboard = useKeyboardHeight();
   const navigate = useNavigate();
   const routePrefix = '/taxi/driver';
@@ -188,7 +191,7 @@ export default function SecuritySOS() {
       })
       .finally(() => {
         setTimeout(() => {
-          openExternal('tel:112');
+          openExternal(telHref(sosNumber));
         }, 250);
       });
   };

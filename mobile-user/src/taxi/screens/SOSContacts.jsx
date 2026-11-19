@@ -10,15 +10,12 @@ import { Button, Card, EmptyState, IconButton, ListRow, SectionHeader } from '..
 import { color, elevation, radii, space, type } from '../../theme';
 import { Field, PageTitle, useNavPad } from '../account/ui';
 import { triggerUserSosAlert } from '../services/safetyAlertService';
+import { telHref, useContactSettings } from '../../lib/contacts';
 
 const MAX_CONTACTS = 5;
 const PHONE_REGEX = /^[6-9]\d{9}$/;
-const EMERGENCY_SERVICES = [
-  { id: 'police', label: 'Police', phone: '100', tone: 'info' },
-  { id: 'ambulance', label: 'Ambulance', phone: '108', tone: 'success' },
-  { id: 'fire', label: 'Fire Brigade', phone: '101', tone: 'warning' },
-];
-const call = (number) => Linking.openURL(`tel:${number}`).catch(() => {});
+const SERVICE_TONES = ['info', 'success', 'warning'];
+const call = (number) => Linking.openURL(telHref(number)).catch(() => {});
 
 /**
  * Port of Taxi/modules/user/pages/safety/SOSContacts.jsx. As on the web, the
@@ -30,6 +27,14 @@ export default function SOSContacts() {
   const insets = useSafeAreaInsets();
   const bottomPad = useNavPad(space.xxl);
   const navigate = useNavigate();
+  // Global admin → Brand & Contact: the SOS number first, then the district helplines.
+  const { sosNumber, emergencyContacts } = useContactSettings();
+  const EMERGENCY_SERVICES = [
+    { id: 'sos', label: 'Emergency SOS', phone: sosNumber, tone: 'danger' },
+    ...emergencyContacts
+      .filter((row) => telHref(row.number) !== telHref(sosNumber))
+      .map((row, i) => ({ id: `${row.label}-${row.number}`, label: row.label, phone: row.number, tone: SERVICE_TONES[i % SERVICE_TONES.length] })),
+  ];
   const [contacts, setContacts] = useState([]);
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [name, setName] = useState('');

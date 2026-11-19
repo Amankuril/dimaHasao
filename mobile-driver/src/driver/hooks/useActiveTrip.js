@@ -1,3 +1,4 @@
+import { telHref, useContactSettings } from '../../lib/contacts';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking } from 'react-native';
 import * as Location from 'expo-location';
@@ -37,6 +38,8 @@ const getCurrentCoords = async () => {
 };
 
 export function useActiveTrip() {
+  // What SOS dials is set in Global admin → Brand & Contact.
+  const { sosNumber } = useContactSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const routeState = useMemo(() => location.state || {}, [location.state]);
@@ -752,7 +755,7 @@ export function useActiveTrip() {
   };
 
   const triggerEmergencySos = () => {
-      Linking.openURL('tel:112').catch(() => {});
+      Linking.openURL(telHref(sosNumber)).catch(() => {});
   };
 
   const publishRideStatus = (nextStatus, paymentMode = '') => {
