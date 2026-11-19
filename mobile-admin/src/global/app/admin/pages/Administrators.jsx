@@ -11,7 +11,7 @@
  * existing platform superadmin, not by whoever finds the signup page.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Loader2, Plus, ShieldCheck, X } from 'lucide-react-native';
+import { Loader2, Pencil, Plus, ShieldCheck, Trash2, X } from 'lucide-react-native';
 import { toast } from '../../../../lib/notify';
 import globalService from '../../../services/globalService';
 import FeaturePermissionMatrix from '../components/FeaturePermissionMatrix';
@@ -70,10 +70,13 @@ const Administrators = () => {
   const [form, setForm] = useState(BLANK);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
+  // Set when the form above is editing an existing administrator rather than creating one.
+  const [editAdminId, setEditAdminId] = useState(null);
+  const [meId, setMeId] = useState(null);
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const [list, vocabulary] = await Promise.all([
+      const [list, vocabulary, me] = await Promise.all([
         globalService.getAdministrators(),
         globalService.getMeta().catch(() => ({
           levels: [],
@@ -81,7 +84,9 @@ const Administrators = () => {
           features: [],
           featureActions: [],
         })),
+        globalService.getMyProfile().catch(() => null),
       ]);
+      setMeId(me?.admin?._id ? String(me.admin._id) : null);
       setAdministrators(list.administrators || []);
       setMeta({
         levels: vocabulary.levels || [],
@@ -135,8 +140,73 @@ const Administrators = () => {
       setBusyId(null);
     }
   };
+  const closeForm = () => {
+    setForm(BLANK);
+    setEditAdminId(null);
+    setShowForm(false);
+  };
+  const startEdit = (admin) => {
+    setEditing(null);
+    setEditAdminId(admin._id);
+    setForm({
+      name: admin.name || '',
+      email: admin.email || '',
+      phone: admin.phone || '',
+      password: '',
+      adminLevel: admin.adminLevel || 'subadmin',
+      module: admin.module || '',
+      servicesAccess: Array.isArray(admin.servicesAccess) ? admin.servicesAccess : [],
+      featurePermissions: admin.featurePermissions || {},
+    });
+    setShowForm(true);
+  };
+  const saveEdit = async () => {
+    if (!form.email.trim()) return toast.error('Email is required');
+    if (form.password && form.password.length < 8) return toast.error('A new password must be at least 8 characters');
+    if (form.adminLevel === 'subadmin' && form.servicesAccess.length === 0) {
+      return toast.error('A subadmin needs at least one module');
+    }
+    try {
+      setSaving(true);
+      const payload = {
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
+        adminLevel: form.adminLevel,
+        module: form.module || '',
+        servicesAccess: form.servicesAccess,
+        featurePermissions: form.adminLevel === 'subadmin' ? form.featurePermissions : {},
+      };
+      // Left blank, the password stays as it is.
+      if (form.password) payload.password = form.password;
+      const result = await globalService.updateAdministrator(editAdminId, payload);
+      toast.success(result.message || 'Administrator updated');
+      closeForm();
+      await load();
+    } catch (error) {
+      toast.error(error.message || 'Could not update this administrator');
+    } finally {
+      setSaving(false);
+    }
+  };
+  const remove = async (admin) => {
+    const label = admin.name || admin.email;
+    if (!(await window.confirmAsync(`Delete ${label}? They will be signed out and lose all access. This cannot be undone.`))) return;
+    try {
+      setBusyId(admin._id);
+      const result = await globalService.deleteAdministrator(admin._id);
+      toast.success(result.message || 'Administrator deleted');
+      if (editAdminId === admin._id) closeForm();
+      await load();
+    } catch (error) {
+      toast.error(error.message || 'Could not delete this administrator');
+    } finally {
+      setBusyId(null);
+    }
+  };
   const submit = async (event) => {
-    event.preventDefault();
+    event?.preventDefault?.();
+    if (editAdminId) return saveEdit();
     if (!form.email.trim()) return toast.error('Email is required');
     if (form.password.length < 8) return toast.error('Password must be at least 8 characters');
     if (form.adminLevel === 'subadmin' && form.servicesAccess.length === 0) {
@@ -153,8 +223,7 @@ const Administrators = () => {
         featurePermissions: form.adminLevel === 'subadmin' ? form.featurePermissions : {},
       });
       toast.success(result.message || 'Administrator created');
-      setForm(BLANK);
-      setShowForm(false);
+      closeForm();
       await load();
     } catch (error) {
       toast.error(error.message || 'Could not create this administrator');
@@ -194,7 +263,7 @@ const Administrators = () => {
         subtitle="An access level decides which module tabs an admin sees."
         icon={ShieldCheck}
         actions={
-          <Button type="button" onClick={() => setShowForm((s) => !s)} className={showForm ? BTN_SECONDARY : BTN_PRIMARY}>
+          <Button type="button" onClick={() => (showForm ? closeForm() : setShowForm(true))} className={showForm ? BTN_SECONDARY : BTN_PRIMARY}>
             <UiIcon as={showForm ? X : Plus} size={16} className={showForm ? 'text-slate-600' : 'text-white'} />
             <Span className={showForm ? BTN_TEXT_SECONDARY : BTN_TEXT_PRIMARY}>{showForm ? 'Cancel' : 'Add an administrator'}</Span>
           </Button>
@@ -204,7 +273,7 @@ const Administrators = () => {
       {showForm && (
         <Form onSubmit={submit}>
           <Card className="mb-4 gap-4">
-            <SectionTitle>New administrator</SectionTitle>
+            <SectionTitle>{editAdminId ? 'Edit administrator' : 'New administrator'}</SectionTitle>
 
             <Div className={`grid grid-cols-${cols} gap-3`}>
               <Field label="Name">
@@ -216,7 +285,7 @@ const Administrators = () => {
               <Field label="Phone">
                 <Input className={INPUT} value={form.phone} onChange={set('phone')} />
               </Field>
-              <Field label="Password" required hint="At least 8 characters.">
+              <Field label={editAdminId ? 'New password' : 'Password'} required={!editAdminId} hint={editAdminId ? 'Leave blank to keep the current password.' : 'At least 8 characters.'}>
                 <Input className={INPUT} type="password" value={form.password} onChange={set('password')} />
               </Field>
             </Div>
@@ -277,7 +346,7 @@ const Administrators = () => {
 
             <Button type="submit" disabled={saving} className={BTN_PRIMARY}>
               {saving ? <UiIcon as={Loader2} size={16} className="text-white" /> : null}
-              <Span className={BTN_TEXT_PRIMARY}>Create administrator</Span>
+              <Span className={BTN_TEXT_PRIMARY}>{editAdminId ? 'Save changes' : 'Create administrator'}</Span>
             </Button>
           </Card>
         </Form>
@@ -326,8 +395,18 @@ const Administrators = () => {
                 {admin.isActive === false && <StatusBadge status="deactivated" label="deactivated" />}
               </Div>
 
-              {admin.adminLevel === 'subadmin' && (
-                <Div className="flex-row flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+              <Div className="flex-row flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+                <Button type="button" disabled={busyId === admin._id} onClick={() => startEdit(admin)} className={BTN_SECONDARY}>
+                  <UiIcon as={Pencil} size={15} className="text-slate-600" />
+                  <Span className={BTN_TEXT_SECONDARY}>Edit</Span>
+                </Button>
+                {String(admin._id) !== meId && (
+                  <Button type="button" disabled={busyId === admin._id} onClick={() => remove(admin)} className={BTN_SECONDARY}>
+                    <UiIcon as={Trash2} size={15} className="text-red-600" />
+                    <Span className="text-sm font-semibold text-red-600">Delete</Span>
+                  </Button>
+                )}
+                {admin.adminLevel === 'subadmin' && (
                   <Button
                     type="button"
                     onClick={() => {
@@ -338,8 +417,8 @@ const Administrators = () => {
                   >
                     <Span className={BTN_TEXT_SECONDARY}>{editing === admin._id ? 'Close' : 'Permissions'}</Span>
                   </Button>
-                </Div>
-              )}
+                )}
+              </Div>
 
               {editing === admin._id && (
                 <Div className="pt-3 border-t border-slate-100 gap-3">

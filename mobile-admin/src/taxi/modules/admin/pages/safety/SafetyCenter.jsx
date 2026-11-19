@@ -28,6 +28,7 @@ import { HAS_VALID_GOOGLE_MAPS_KEY, DISTRICT_CENTER, useBaseGoogleMapsLoader } f
 import { getChatSession } from '../../../shared/chat/chatIdentity';
 import { Button, Div, Input, ScrollDiv, Span, Icon as UiIcon } from '../../../../../components/web';
 import { window } from '../../../../../lib/webShim';
+import { telHref, useContactSettings } from '../../../../../lib/contacts';
 import {
   AdminPage,
   PageHeader,
@@ -221,6 +222,8 @@ const AdminSosChat = ({ alert }) => {
 // -------------- MAIN COMPONENT -------------- //
 
 const SafetyCenter = () => {
+  // What "Emergency" dials is set in Global admin → Brand & Contact.
+  const { sosNumber } = useContactSettings();
   const { isLoaded, loadError } = useBaseGoogleMapsLoader();
   const { tablet } = useLayoutWidth();
   const [alerts, setAlerts] = useState([]);
@@ -398,7 +401,7 @@ const SafetyCenter = () => {
             </Div>
 
             <Toolbar className="mb-0">
-              <Button onClick={() => window.open('tel:100', '_self')} className={`${BTN_DANGER} flex-1 min-w-[150px]`}>
+              <Button onClick={() => window.open(telHref(sosNumber), '_self')} className={`${BTN_DANGER} flex-1 min-w-[150px]`}>
                 <UiIcon as={PhoneCall} size={16} className="text-white" />
                 <Span className={BTN_TEXT_PRIMARY}>Emergency</Span>
               </Button>

@@ -33,6 +33,39 @@ const platformSettingsSchema = new mongoose.Schema(
         /** Where "Support" on a sign-in screen sends people. */
         supportUrl: { type: String, default: '', trim: true },
 
+        /*
+         * Emergency and contact numbers the apps used to hardcode (three copies of
+         * the helpline list in the customer app alone). Defaults are the values the
+         * apps shipped with, so nothing changes until an admin edits them.
+         */
+        /** What every SOS button dials. */
+        sosNumber: { type: String, default: '112', trim: true },
+        /** Helplines listed on the customer app's Home, More and Help screens, in this order. */
+        emergencyContacts: {
+            type: [
+                new mongoose.Schema(
+                    {
+                        label: { type: String, required: true, trim: true },
+                        number: { type: String, required: true, trim: true },
+                        /** Font Awesome class the customer app shows beside it. */
+                        icon: { type: String, default: 'fa-solid fa-phone', trim: true },
+                    },
+                    { _id: false },
+                ),
+            ],
+            default: () => [
+                { label: 'Police Control Room', number: '112', icon: 'fa-solid fa-shield' },
+                { label: 'Haflong Civil Hospital', number: '03673-236222', icon: 'fa-solid fa-hospital' },
+                { label: 'Tourist Police Helpline', number: '+91 94350 99999', icon: 'fa-solid fa-person-military-pointing' },
+                { label: 'Disaster Emergency (DDMA)', number: '1077', icon: 'fa-solid fa-triangle-exclamation' },
+            ],
+        },
+        /** "Contact Tourism Desk" for local guides on the customer home screen. */
+        tourismDeskPhone: { type: String, default: '+91 94350 12345', trim: true },
+        /** Hotel/restaurant partner support. Blank falls back to supportPhone / supportEmail. */
+        partnerSupportPhone: { type: String, default: '', trim: true },
+        partnerSupportEmail: { type: String, default: '', trim: true },
+
         address: { type: String, default: '', trim: true },
         state: { type: String, default: 'Assam', trim: true },
         pincode: { type: String, default: '', trim: true },

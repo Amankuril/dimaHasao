@@ -11,6 +11,7 @@ import {
   listAdministrators,
   createAdministrator,
   updateAdministrator,
+  deleteAdministrator,
   requirePlatformSuperAdmin,
 } from './admin.controller.js';
 import {
@@ -67,5 +68,6 @@ router.get('/reports/:module', getModuleReport);
 router.get('/administrators', requirePlatformSuperAdmin, listAdministrators);
 router.post('/administrators', requirePlatformSuperAdmin, createAdministrator);
 router.patch('/administrators/:id', requirePlatformSuperAdmin, updateAdministrator);
+router.delete('/administrators/:id', requirePlatformSuperAdmin, deleteAdministrator);
 
 export default router;

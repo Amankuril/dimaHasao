@@ -37,6 +37,7 @@ const globalService = {
   getAdministrators: () => request(api.get('/administrators')),
   createAdministrator: (payload) => request(api.post('/administrators', payload)),
   updateAdministrator: (id, payload) => request(api.patch(`/administrators/${id}`, payload)),
+  deleteAdministrator: (id) => request(api.delete(`/administrators/${id}`)),
   // Which consumer modules are open, and the notice shown when one is not.
   getModuleToggles: () => request(api.get('/platform-settings/module-toggles')),
   saveModuleToggles: (updates) =>

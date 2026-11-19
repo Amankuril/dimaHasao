@@ -8,6 +8,7 @@
  * administrator is not a food thing.
  */
 import { FoodAdmin } from './admin.model.js';
+import { FoodRefreshToken } from '../refreshTokens/refreshToken.model.js';
 import { verifyAccessToken } from '../auth/token.util.js';
 import { isIssuedBeforePasswordChange } from '../auth/tokenRevocation.js';
 
@@ -224,6 +225,17 @@ export const updateAdministrator = async (req, res) => {
     }
 
     if (req.body.name !== undefined) admin.name = String(req.body.name).trim();
+    // Email is the login identity: unique-checked, never blank.
+    if (req.body.email !== undefined) {
+      const email = String(req.body.email || '').trim().toLowerCase();
+      if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
+      if (email !== admin.email) {
+        if (await FoodAdmin.exists({ _id: { $ne: admin._id }, email })) {
+          return res.status(409).json({ success: false, message: 'An admin with that email already exists' });
+        }
+        admin.email = email;
+      }
+    }
     if (req.body.phone !== undefined) {
       const phone = String(req.body.phone).trim();
       if (phone) admin.phone = phone; else admin.set('phone', undefined);
@@ -266,6 +278,37 @@ export const updateAdministrator = async (req, res) => {
   } catch (error) {
     console.error('Update administrator error:', error);
     res.status(500).json({ success: false, message: 'Failed to update this administrator' });
+  }
+};
+
+/** @route DELETE /v1/admin/administrators/:id */
+export const deleteAdministrator = async (req, res) => {
+  try {
+    const admin = await FoodAdmin.findById(req.params.id);
+    if (!admin) return res.status(404).json({ success: false, message: 'Administrator not found' });
+
+    if (String(admin._id) === String(req.admin._id)) {
+      return res.status(400).json({ success: false, message: 'You cannot delete your own account' });
+    }
+
+    // Removing the last platform superadmin would leave nobody able to manage admins.
+    if (isPlatformSuperAdmin(admin)) {
+      const others = await FoodAdmin.find({ _id: { $ne: admin._id }, isActive: { $ne: false } })
+        .select('role adminLevel admin_type module servicesAccess')
+        .lean();
+      if (!others.some((other) => isPlatformSuperAdmin(other))) {
+        return res.status(400).json({ success: false, message: 'This is the last active platform superadmin and cannot be deleted' });
+      }
+    }
+
+    await FoodAdmin.deleteOne({ _id: admin._id });
+    // Sign them out everywhere: no refresh token survives the account.
+    await FoodRefreshToken.deleteMany({ userId: admin._id });
+
+    res.json({ success: true, message: 'Administrator deleted', id: String(admin._id) });
+  } catch (error) {
+    console.error('Delete administrator error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete this administrator' });
   }
 };
 
@@ -315,5 +358,6 @@ export default {
   listAdministrators,
   createAdministrator,
   updateAdministrator,
+  deleteAdministrator,
   requirePlatformSuperAdmin,
 };
