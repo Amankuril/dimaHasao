@@ -5885,6 +5885,17 @@ export async function updateZone(id, body) {
 }
 
 export async function deleteZone(id) {
+    // Restaurants are listed to customers and dispatched to riders by zone. Deleting
+    // one out from under them leaves a dangling zoneId and they silently vanish.
+    const assigned = await FoodRestaurant.countDocuments({ zoneId: id });
+    if (assigned > 0) {
+        const err = new ValidationError(
+            `${assigned} restaurant${assigned === 1 ? ' is' : 's are'} assigned to this zone. ` +
+            'Move them to another zone first, or deactivate the zone instead of deleting it.'
+        );
+        err.statusCode = 409;
+        throw err;
+    }
     const zone = await FoodZone.findByIdAndDelete(id);
     return zone ? { id } : null;
 }

@@ -314,9 +314,12 @@ const ZoneManagement = ({ mode: initialMode = 'list' }) => {
       const res = await adminService.deleteZone(zoneId);
       if (res.success) {
         setZones((prev) => prev.filter((z) => z._id !== zoneId && z.id !== zoneId));
+      } else {
+        alert(res.message || 'Could not delete this zone.');
       }
     } catch (err) {
       console.error('Delete error:', err);
+      alert(err?.response?.data?.message || err?.message || 'Could not delete this zone.');
     }
   };
   const handleEdit = (zone) => {

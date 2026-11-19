@@ -246,7 +246,10 @@ const ServiceLocation = ({ mode }) => {
     try {
       const res = await adminService.deleteServiceLocation(itemId);
       if (res?.success) fetchData();
-    } catch (err) {}
+      else alert(res?.message || 'Could not delete this service location.');
+    } catch (err) {
+      alert(err?.response?.data?.message || err?.message || 'Could not delete this service location.');
+    }
   };
   if (isJurisdictions) {
     return (

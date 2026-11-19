@@ -1131,7 +1131,8 @@ const serializeUserListItem = (user) => ({
   updatedAt: user.updatedAt,
 });
 
-const DEFAULT_SERVICE_LOCATION_CENTER = { lat: 22.7196, lng: 75.8577 };
+// Haflong, Dima Hasao. The admin form sends no coordinates, so this is where every new service location lands.
+const DEFAULT_SERVICE_LOCATION_CENTER = { lat: 25.1668, lng: 93.0159 };
 
 const normalizeServiceLocationPayload = (payload = {}, fallback = {}) => {
   const latitude = Number(payload.latitude ?? fallback.latitude ?? DEFAULT_SERVICE_LOCATION_CENTER.lat);
@@ -3558,7 +3559,6 @@ export const createServiceLocation = async (payload, currentAdmin = null) => {
     throw new ApiError(400, 'Service location name is required');
   }
 
-  await ensureServiceLocationsSeeded();
   const persistedLocation = await ServiceLocation.create(normalizeServiceLocationPayload(payload));
   return persistedLocation.toObject();
 
@@ -3573,8 +3573,8 @@ export const createServiceLocation = async (payload, currentAdmin = null) => {
     currency_code: payload.currency_code || 'INR',
     timezone: payload.timezone || 'Asia/Kolkata',
     unit: payload.unit || 'km',
-    latitude: Number(payload.latitude || 22.7196),
-    longitude: Number(payload.longitude || 75.8577),
+    latitude: Number(payload.latitude || DEFAULT_SERVICE_LOCATION_CENTER.lat),
+    longitude: Number(payload.longitude || DEFAULT_SERVICE_LOCATION_CENTER.lng),
     status: payload.status || 'active',
     active: payload.status ? payload.status === 'active' : true,
     createdAt: new Date(),
@@ -3586,7 +3586,6 @@ export const createServiceLocation = async (payload, currentAdmin = null) => {
 };
 
 export const updateServiceLocation = async (id, payload, currentAdmin = null) => {
-  await ensureServiceLocationsSeeded();
   const persistedLocation = await ServiceLocation.findById(id);
   if (!persistedLocation) {
     throw new ApiError(404, 'Service location not found');
@@ -3620,10 +3619,19 @@ export const updateServiceLocation = async (id, payload, currentAdmin = null) =>
 };
 
 export const deleteServiceLocation = async (id, currentAdmin = null) => {
-  await ensureServiceLocationsSeeded();
   if (currentAdmin) {
     assertAdminPermission(currentAdmin, 'service_locations.view', 'service locations');
     assertServiceLocationAccess(currentAdmin, id);
+  }
+  // Zones, drivers and fares all hang off a service location. Deleting it under
+  // them strands drivers (dispatch matches on service_location_id) and their zones.
+  const [zones, drivers] = await Promise.all([
+    Zone.countDocuments({ service_location_id: id }),
+    Driver.countDocuments({ service_location_id: id }),
+  ]);
+  if (zones > 0 || drivers > 0) {
+    const parts = [zones && `${zones} zone${zones === 1 ? "" : "s"}`, drivers && `${drivers} driver${drivers === 1 ? "" : "s"}`].filter(Boolean);
+    throw new ApiError(409, `This service location still has ${parts.join(" and ")}. Move or remove them first, or set the location inactive instead.`);
   }
   const deleted = await ServiceLocation.findByIdAndDelete(id);
   if (!deleted) {
@@ -5480,8 +5488,18 @@ export const deleteZone = async (id, currentAdmin = null) => {
     assertAdminPermission(currentAdmin, 'zones.view', 'zones');
     await assertZoneAccess(currentAdmin, id);
   }
+  const airports = await Airport.countDocuments({ zone_id: id });
+  if (airports > 0) {
+    throw new ApiError(409, `${airports} airport${airports === 1 ? ' is' : 's are'} inside this zone. Remove or move ${airports === 1 ? 'it' : 'them'} first, or deactivate the zone instead.`);
+  }
   const deleted = await Zone.findByIdAndDelete(id);
   if (!deleted) throw new ApiError(404, 'Zone not found');
+  // Zone-specific fares are meaningless without the zone. Drivers re-resolve their
+  // zone from GPS on the next location ping, so clearing the stale link is enough.
+  await Promise.all([
+    SetPrice.deleteMany({ zone_id: id }),
+    Driver.updateMany({ zoneId: id }, { $set: { zoneId: null } }),
+  ]);
   return true;
 };
 

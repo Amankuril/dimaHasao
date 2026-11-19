@@ -3,8 +3,7 @@ import mongoose from 'mongoose';
 const objectId = () => new mongoose.Types.ObjectId().toString();
 
 export const createDefaultAdminState = () => {
-  const indoreId = objectId();
-  const delhiId = objectId();
+  const haflongId = objectId();
   const sedanId = objectId();
   const suvId = objectId();
   const bikeId = objectId();
@@ -171,36 +170,22 @@ export const createDefaultAdminState = () => {
         active: true,
       },
     ],
+    // Seeded only when the collection is empty. This was Indore + New Delhi (the
+    // previous product), which put two foreign cities in every driver signup list.
     serviceLocations: [
       {
-        _id: indoreId,
-        name: 'Indore',
-        service_location_name: 'Indore',
-        address: 'Indore, Madhya Pradesh, India',
+        _id: haflongId,
+        name: 'Haflong',
+        service_location_name: 'Haflong',
+        address: 'Haflong, Dima Hasao, Assam, India',
         country: 'India',
         currency_name: 'Indian Rupee',
         currency_symbol: '₹',
         currency_code: 'INR',
         timezone: 'Asia/Kolkata',
         unit: 'km',
-        latitude: 22.7196,
-        longitude: 75.8577,
-        status: 'active',
-        active: true,
-      },
-      {
-        _id: delhiId,
-        name: 'New Delhi',
-        service_location_name: 'New Delhi',
-        address: 'New Delhi, Delhi, India',
-        country: 'India',
-        currency_name: 'Indian Rupee',
-        currency_symbol: '₹',
-        currency_code: 'INR',
-        timezone: 'Asia/Kolkata',
-        unit: 'km',
-        latitude: 28.6139,
-        longitude: 77.209,
+        latitude: 25.1668,
+        longitude: 93.0159,
         status: 'active',
         active: true,
       },

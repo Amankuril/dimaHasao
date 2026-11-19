@@ -70,11 +70,11 @@ const serviceLocationSchema = new mongoose.Schema(
     },
     latitude: {
       type: Number,
-      default: 22.7196,
+      default: 25.1668,
     },
     longitude: {
       type: Number,
-      default: 75.8577,
+      default: 93.0159,
     },
     location: {
       type: {
@@ -84,7 +84,7 @@ const serviceLocationSchema = new mongoose.Schema(
       },
       coordinates: {
         type: [Number],
-        default: [75.8577, 22.7196],
+        default: [93.0159, 25.1668],
       },
     },
     status: {
