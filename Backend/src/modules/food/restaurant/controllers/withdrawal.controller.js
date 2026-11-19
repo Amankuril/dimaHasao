@@ -1,31 +1,12 @@
+import { runExclusive } from '../../../../utils/runExclusive.js';
 import { sendResponse, sendError } from '../../../../utils/response.js';
 import { FoodRestaurantWithdrawal } from '../models/foodRestaurantWithdrawal.model.js';
 import { FoodRestaurant } from '../models/restaurant.model.js';
 import { getRestaurantFinance } from '../services/restaurantFinance.service.js';
 
-/*
- * The balance check and the insert are not atomic: the available balance is
- * derived from transactions minus pending/approved withdrawals, so two requests
- * fired together both saw the full balance and both got created — withdrawing
- * it twice. Requests for the same restaurant are run one at a time here.
- *
- * This is an in-process lock. It is sufficient because the API runs as a single
- * fork-mode process (ecosystem.config.cjs — Socket.IO rooms already depend on
- * that); if it is ever clustered this needs a database-side guard instead.
- */
-const withdrawalQueues = new Map();
-
-const runExclusiveForRestaurant = (restaurantId, task) => {
-    const key = String(restaurantId);
-    const previous = withdrawalQueues.get(key) || Promise.resolve();
-    const current = previous.catch(() => {}).then(task);
-    const tail = current.catch(() => {});
-    withdrawalQueues.set(key, tail);
-    tail.then(() => {
-        if (withdrawalQueues.get(key) === tail) withdrawalQueues.delete(key);
-    });
-    return current;
-};
+// The balance check and the insert are not atomic; two requests fired together
+// both saw the full balance and withdrew it twice. See utils/runExclusive.js.
+const runExclusiveForRestaurant = (restaurantId, task) => runExclusive('restaurant-withdrawal', restaurantId, task);
 
 export const createWithdrawalRequestController = async (req, res, next) => {
     try {

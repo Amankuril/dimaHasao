@@ -1,3 +1,4 @@
+import { computePlatformNetProfit } from './platformProfit.js';
 import mongoose from 'mongoose';
 import { FoodOrder, FoodSettings } from '../models/order.model.js';
 // import { paymentSnapshotFromOrder } from './foodOrderPayment.service.js';
@@ -729,14 +730,11 @@ export async function createOrder(userId, dto) {
 
   normalizedPricing.restaurantCommission = restaurantCommission || 0;
 
-  const platformProfit = Math.max(
-    0,
-    (Number.isFinite(normalizedPricing.deliveryFee) ? normalizedPricing.deliveryFee : 0) +
-      (Number.isFinite(normalizedPricing.platformFee) ? normalizedPricing.platformFee : 0) +
-      (Number.isFinite(normalizedPricing.markupTotal) ? normalizedPricing.markupTotal : 0) +
-      restaurantCommission -
-      riderEarning,
-  );
+  const platformProfit = computePlatformNetProfit({
+    pricing: normalizedPricing,
+    riderShare: riderEarning,
+    restaurantCommission,
+  });
 
   const [restaurantLng, restaurantLat] =
     restaurant?.location?.coordinates?.length === 2

@@ -5,6 +5,7 @@ import {
   toGeoJsonPoint,
 } from '../utils/googleMaps.js';
 import { resolveCommissionRulesForZone } from '../../admin/services/zoneScopedSettings.service.js';
+import { computePlatformNetProfit } from './platformProfit.js';
 
 const COMMISSION_CACHE_MS = 10 * 1000;
 /** @type {Map<string, { rules: any[], loadedAt: number }>} */
@@ -180,14 +181,11 @@ export async function ensureRiderEarningOnOrder(order) {
   }
 
   // Keep platformProfit roughly consistent if pricing exists
-  const deliveryFee = Number(order.pricing?.deliveryFee || 0);
-  const platformFee = Number(order.pricing?.platformFee || 0);
-  const restaurantCommission = Number(order.pricing?.restaurantCommission || 0);
-  if (Number.isFinite(deliveryFee) || Number.isFinite(platformFee)) {
-    order.platformProfit = Math.max(
-      0,
-      deliveryFee + platformFee + restaurantCommission - earningResolved.riderEarning,
-    );
+  if (order.pricing) {
+    order.platformProfit = computePlatformNetProfit({
+      pricing: order.pricing,
+      riderShare: earningResolved.riderEarning,
+    });
     order.markModified?.('platformProfit');
   }
 

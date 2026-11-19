@@ -1,6 +1,7 @@
 import { FoodTransaction } from '../models/foodTransaction.model.js';
 import { FoodRestaurantCommission } from '../../admin/models/restaurantCommission.model.js';
 import mongoose from 'mongoose';
+import { computePlatformNetProfit } from './platformProfit.js';
 
 const RESTAURANT_COMMISSION_CACHE_MS = 60 * 1000;
 
@@ -117,14 +118,7 @@ export async function createInitialTransaction(order) {
         Number(order.pricing?.baseSubtotal ?? order.pricing?.subtotal ?? 0) || 0;
     const markupTotal = Math.max(0, Number(order.pricing?.markupTotal ?? 0) || 0);
     const restaurantNet = baseSubtotal + (order.pricing?.packagingFee || 0) - restaurantCommission;
-    const platformNetProfit = Math.max(
-        0,
-        (order.pricing?.platformFee || 0) +
-            (order.pricing?.deliveryFee || 0) +
-            restaurantCommission +
-            markupTotal -
-            riderShare,
-    );
+    const platformNetProfit = computePlatformNetProfit({ pricing: order.pricing || {}, riderShare, restaurantCommission });
 
     const transaction = new FoodTransaction({
         orderId: order._id,

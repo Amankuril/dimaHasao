@@ -1,3 +1,4 @@
+import { retryTransient } from '../../../../utils/retryTransient.js';
 import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import { ApiError } from '../../../../utils/ApiError.js';
@@ -2698,7 +2699,11 @@ export const getDriverWithdrawalContextByRequestId = async ({ requestId, page = 
   });
 };
 
-export const approveDriverWithdrawalRequest = async (requestId, adminId = null) => {
+// Retried on write conflicts: two approvals for one driver used to 500 (utils/retryTransient.js).
+export const approveDriverWithdrawalRequest = (requestId, adminId = null) =>
+  retryTransient(() => approveDriverWithdrawalRequestOnce(requestId, adminId));
+
+const approveDriverWithdrawalRequestOnce = async (requestId, adminId = null) => {
   const session = await mongoose.startSession();
 
   try {

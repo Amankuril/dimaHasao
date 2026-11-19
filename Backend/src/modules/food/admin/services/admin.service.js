@@ -1,3 +1,4 @@
+import { computePlatformNetProfit } from '../../orders/services/platformProfit.js';
 import mongoose from 'mongoose';
 import { ValidationError, NotFoundError } from '../../../../core/auth/errors.js';
 import { logger } from '../../../../utils/logger.js';
@@ -2909,7 +2910,11 @@ function posDeliveredOrderMoneyBreakdown(order) {
     const rider = toNum(order?.riderEarning);
     const riderShare = order?.dispatch?.deliveryPartnerId ? rider : 0;
     const restaurantShare = Math.max(0, baseSubtotal + packagingFee - commission);
-    const platformNetProfit = Math.max(0, platformFee + deliveryFee + commission + markupTotal - riderShare);
+    const platformNetProfit = computePlatformNetProfit({
+        pricing: { platformFee, deliveryFee, markupTotal, discount },
+        riderShare,
+        restaurantCommission: commission,
+    });
 
     return {
         subtotal,

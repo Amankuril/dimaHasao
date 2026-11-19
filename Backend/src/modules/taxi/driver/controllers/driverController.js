@@ -1,3 +1,4 @@
+import { runExclusive } from '../../../../utils/runExclusive.js';
 import QRCode from "qrcode";
 import { Env, StandardCheckoutClient, StandardCheckoutPayRequest, PrefillUserLoginDetails } from "@phonepe-pg/pg-sdk-node";
 import { env } from "../../../../config/env.js";
@@ -1711,29 +1712,34 @@ export const createDriverWithdrawalRequest = async (req, res) => {
     throw new ApiError(400, `amount must be at least ${minimumTransferAmount}`);
   }
 
-  if (amount > Number(wallet.balance || 0)) {
-    throw new ApiError(400, "Withdrawal amount cannot exceed current balance");
+  // Pending requests are not deducted until approval, so they have to count
+  // here: otherwise ₹400 and ₹300 against a ₹494 balance were both accepted, and
+  // simultaneous requests all passed. Approval still re-checks the live balance.
+  // One request per driver at a time (see utils/runExclusive.js).
+  const created = await runExclusive('taxi-driver-withdrawal', req.auth.sub, async () => {
+  const [pending] = await WithdrawalRequest.aggregate([
+    { $match: { driver_id: driver._id, status: 'pending' } },
+    { $group: { _id: null, total: { $sum: '$amount' } } },
+  ]);
+  const available = Math.round((Number(wallet.balance || 0) - Number(pending?.total || 0)) * 100) / 100;
+
+  if (amount > available) {
+    throw new ApiError(
+      400,
+      pending?.total
+        ? `Withdrawal amount cannot exceed your available balance of ₹${Math.max(0, available)} (₹${pending.total} is already pending)`
+        : "Withdrawal amount cannot exceed current balance",
+    );
   }
 
-  const pendingRequest = await WithdrawalRequest.findOne({
-    driver_id: req.auth.sub,
-    amount,
-    status: 'pending',
-  })
-    .sort({ createdAt: -1 })
-    .lean();
-
-  if (pendingRequest && (Date.now() - new Date(pendingRequest.createdAt).getTime()) < 60 * 1000) {
-    throw new ApiError(409, "A similar withdrawal request was just submitted");
-  }
-
-  const created = await WithdrawalRequest.create({
+  return WithdrawalRequest.create({
     transactionId: `wdr_${Date.now().toString(36)}`,
     driver_id: req.auth.sub,
     amount: Math.round(amount * 100) / 100,
     payment_method: paymentMethod,
     bank_details_snapshot: serializeDriverBankDetails(driver.bankDetails || {}),
     status: 'pending',
+  });
   });
 
   res.status(201).json({

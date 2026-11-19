@@ -1,3 +1,4 @@
+import { runExclusive } from '../../../../utils/runExclusive.js';
 import mongoose from 'mongoose';
 import { FoodOrder } from '../../orders/models/order.model.js';
 import { FoodTransaction } from '../../orders/models/foodTransaction.model.js';
@@ -189,6 +190,10 @@ export const requestDeliveryWithdrawal = async (deliveryPartnerId, payload) => {
 
     if (!amount || amount < 1) throw new ValidationError('Invalid amount');
 
+    // The balance check below and the insert are not atomic: three requests fired
+    // together all saw the full pocket balance and were all accepted, so a rider
+    // with ₹125 had ₹375 pending. One request per rider at a time.
+    return runExclusive('delivery-withdrawal', deliveryPartnerId, async () => {
     const wallet = await getDeliveryPartnerWalletEnhanced(deliveryPartnerId);
     if (amount < wallet.deliveryWithdrawalLimit) {
         throw new ValidationError(`Minimum withdrawal amount is ₹${wallet.deliveryWithdrawalLimit}`);
@@ -216,6 +221,7 @@ export const requestDeliveryWithdrawal = async (deliveryPartnerId, payload) => {
     });
 
     return withdrawal;
+    });
 };
 
 export const createDeliveryCashDepositOrder = async (deliveryPartnerId, amountInr) => {

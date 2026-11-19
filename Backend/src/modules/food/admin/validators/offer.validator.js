@@ -2,6 +2,15 @@ import { z } from 'zod';
 import mongoose from 'mongoose';
 import { ValidationError } from '../../../../core/auth/errors.js';
 
+const parseIstDay = (value, bound) => {
+    if (!value) return undefined;
+    const raw = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        return new Date(`${raw}T${bound === 'end' ? '23:59:59.999' : '00:00:00.000'}+05:30`);
+    }
+    return new Date(raw);
+};
+
 const createOfferSchema = z.object({
     couponCode: z.string().min(1, 'Coupon code is required'),
     discountType: z.enum(['percentage', 'flat-price']).default('percentage'),
@@ -55,11 +64,14 @@ export const validateCreateOfferDto = (body) => {
         }
     }
 
-    const endDate = result.data.endDate ? new Date(`${result.data.endDate}T00:00:00.000Z`) : undefined;
+    // The admin picks calendar days. Both bounds are IST days: a coupon "ending 30 Nov"
+    // must work all of 30 Nov. This was 00:00 UTC, so it died at 05:30 IST on its last
+    // day, and one ending today was already expired when saved.
+    const endDate = parseIstDay(result.data.endDate, 'end');
     if (endDate && Number.isNaN(endDate.getTime())) {
         throw new ValidationError('Invalid endDate');
     }
-    const startDate = result.data.startDate ? new Date(`${result.data.startDate}T00:00:00.000Z`) : undefined;
+    const startDate = parseIstDay(result.data.startDate, 'start');
     if (startDate && Number.isNaN(startDate.getTime())) {
         throw new ValidationError('Invalid startDate');
     }

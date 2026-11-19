@@ -1,3 +1,4 @@
+import { retryTransient } from '../../../../utils/retryTransient.js';
 import mongoose from 'mongoose';
 import { env } from '../../../../config/env.js';
 import { ApiError } from '../../../../utils/ApiError.js';
@@ -295,7 +296,9 @@ export const topUpDriverWallet = async ({ driverId, amount, metadata = {} }) => 
   }
 };
 
-export const settleCompletedRideWallet = async ({ rideId }) => {
+export const settleCompletedRideWallet = (args) => retryTransient(() => settleCompletedRideWalletOnce(args));
+
+const settleCompletedRideWalletOnce = async ({ rideId }) => {
   const session = await mongoose.startSession();
 
   try {
