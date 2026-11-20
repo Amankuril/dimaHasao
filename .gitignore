@@ -5,8 +5,6 @@ node_modules/
 .
 # ─── Environment / secrets ───────────────────────────────────────────────────
 # Applies at every depth (Backend/.env, Frontend/.env, ...). Keep examples.
-.env
-.env.*
 !.env.example
 !.env.*.example
 
@@ -59,7 +57,6 @@ v1-ui/
 _port-sources/
 
 # ─── Editor / OS ─────────────────────────────────────────────────────────────
-.vscode/*
 !.vscode/extensions.json
 .idea/
 .DS_Store
@@ -81,3 +78,4 @@ backups/
 # Signing keystores
 *.jks
 *.keystore
+config.bat
