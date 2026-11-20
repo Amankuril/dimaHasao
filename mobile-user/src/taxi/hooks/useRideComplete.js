@@ -10,7 +10,8 @@ import { clearCurrentRide, getCurrentRide } from '../services/currentRideService
 import { useSettings } from '../context/SettingsContext'
 import { getTaxiUserRoutePrefix } from '../utils/routePrefix'
 import { localStore } from '../../lib/storage'
-import { window, document, navigator } from '../../lib/webShim'
+import { navigator } from '../../lib/webShim'
+import { initRazorpayPayment } from '../../lib/razorpay'
 
 const carIcon = require('../../../assets/taxi/icons/car.webp')
 const bikeIcon = require('../../../assets/taxi/icons/bike.webp')
@@ -64,21 +65,6 @@ const getVehicleIcon = (serviceType = 'ride', driver = {}) => {
   if (iconType.includes('auto')) return autoIcon;
   return carIcon;
 }
-
-const loadRazorpayScript = () =>
-  new Promise((resolve) => {
-    if (window.Razorpay) {
-      resolve(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
 
 export function useRideComplete() {
   const { settings } = useSettings();
@@ -354,11 +340,6 @@ export function useRideComplete() {
       let response;
 
       if (Number(payableNow || 0) > 0 && selectedPaymentMethod === 'online') {
-        const scriptLoaded = await loadRazorpayScript();
-        if (!scriptLoaded) {
-          throw new Error('Razorpay SDK failed to load');
-        }
-
         const orderResponse = await api.post(`/rides/${rideId}/complete-payment/razorpay/order`, {
           rating,
           comment,
@@ -377,8 +358,10 @@ export function useRideComplete() {
           userInfo = {};
         }
 
+        // Native checkout: RazorpayHost (root layout) runs Razorpay's checkout in a WebView.
+        // This used to inject checkout.js into `document`, which does not exist in the app.
         response = await new Promise((resolve, reject) => {
-          const rzp = new window.Razorpay({
+          initRazorpayPayment({
             key: order.keyId,
             amount: order.amount,
             currency: order.currency || 'INR',
@@ -390,9 +373,8 @@ export function useRideComplete() {
               email: userInfo?.email || '',
               contact: userInfo?.phone ? `+91${userInfo.phone}` : '',
             },
-            modal: {
-              ondismiss: () => reject(new Error('Ride payment was cancelled')),
-            },
+            onClose: () => reject(new Error('Ride payment was cancelled')),
+            onError: (paymentError) => reject(new Error(paymentError?.description || paymentError?.reason || 'Ride payment failed')),
             handler: async (paymentResponse) => {
               try {
                 const verifyResponse = await api.post(`/rides/${rideId}/complete-payment/razorpay/verify`, {
@@ -406,16 +388,8 @@ export function useRideComplete() {
                 reject(new Error(verifyError?.message || 'Ride payment verification failed'));
               }
             },
-            theme: {
-              color: '#0f172a',
-            },
-          });
-
-          rzp.on('payment.failed', (event) => {
-            reject(new Error(event?.error?.description || event?.error?.reason || 'Ride payment failed'));
-          });
-
-          rzp.open();
+            themeColor: '#0f172a',
+          }).catch(reject);
         });
       } else if (Number(payableNow || 0) > 0 && selectedPaymentMethod === 'wallet') {
         response = await api.post(`/rides/${rideId}/complete-payment/wallet`, {
@@ -424,10 +398,12 @@ export function useRideComplete() {
           tipAmount: selectedTip || 0,
         });
       } else {
+        // Cash: the rider hands the tip to the driver, so it is recorded here (no wallet credit).
+        // It was always sent as 0, so a cash tip the rider picked silently disappeared.
         response = await api.patch(`/rides/${rideId}/feedback`, {
           rating,
           comment,
-          tipAmount: 0,
+          tipAmount: selectedPaymentMethod === 'cash' ? Number(selectedTip || 0) : 0,
         });
       }
 
@@ -522,6 +498,5 @@ export function useRideComplete() {
     isLikelyVehiclePhoto,
     isCollectionPaid,
     getVehicleIcon,
-    loadRazorpayScript,
   }
 }

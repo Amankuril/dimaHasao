@@ -282,6 +282,8 @@ export function useActiveTrip() {
   const [driverHeading, setDriverHeading] = useState(null);
   const [routePath, setRoutePath] = useState([]);
   const [routeError, setRouteError] = useState('');
+  // Average speed of the last Google route (m/s). Hill roads default to ~22 km/h until a route answers.
+  const routeSpeedRef = useRef(6);
   const [isSimulationEnabled, setIsSimulationEnabled] = useState(false);
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
   const [simulationStep, setSimulationStep] = useState(0);
@@ -699,6 +701,15 @@ export function useActiveTrip() {
   const routeAccentSoft = hexToRgba(routeStrokeColor, 0.08);
   const routeAccentMuted = hexToRgba(routeStrokeColor, 0.18);
   const routeAccentBorder = hexToRgba(routeStrokeColor, 0.18);
+  // ETA from what is left of the drawn route, so it counts down as the driver moves.
+  const etaMinutes = useMemo(() => {
+      if (!Array.isArray(routePath) || routePath.length < 2) return null;
+      let meters = 0;
+      for (let i = 1; i < routePath.length; i += 1) meters += getDistanceMeters(routePath[i - 1], routePath[i]);
+      if (!Number.isFinite(meters) || meters <= 0) return null;
+      return Math.max(1, Math.ceil(meters / routeSpeedRef.current / 60));
+  }, [routePath]);
+
   const simulationTotalSteps = Math.max(0, simulationPathRef.current.length - 1);
   const simulationProgress = simulationTotalSteps > 0
       ? Math.min(100, Math.round((simulationStep / simulationTotalSteps) * 100))
@@ -1303,6 +1314,11 @@ export function useActiveTrip() {
 
           if (result.status === 'OK' && result.path.length) {
               const nextPath = simplifyRoutePath(result.path);
+              const routeMeters = Number(result.route?.distanceMeters) || 0;
+              const routeSeconds = Number(result.route?.durationSeconds) || 0;
+              if (routeMeters > 0 && routeSeconds > 0) {
+                  routeSpeedRef.current = Math.min(25, Math.max(2, routeMeters / routeSeconds));
+              }
               routeCacheRef.current.set(routeCacheKey, {
                   routePath: nextPath,
                   routeError: '',
@@ -1466,6 +1482,7 @@ export function useActiveTrip() {
       isHydratingTrip,
       routePath,
       routeError,
+      etaMinutes,
       driverPosition,
       displayDriverHeading,
       vehicleIconUrl,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +10,7 @@ import { alpha, outfit, shadow, tw } from '../../theme';
 import { DT } from '../ui/dt';
 import { HAS_VALID_GOOGLE_MAPS_KEY } from '../shared/utils/googleMaps';
 import { CircleLocationMarker, toSrc, useTrackViews } from '../shared/live/parts';
-import { normalizeHeading } from '../utils/activeTripHelpers';
+import { carIcon, normalizeHeading } from '../utils/activeTripHelpers';
 import Text from './UpperText';
 
 // Web: the map layer and its floating cards of Taxi/modules/driver/pages/ActiveTrip.jsx
@@ -28,16 +28,29 @@ const mapStyles = [
 ];
 
 const fo = outfit;
+
+// The simulation panel moves the driver along the route and broadcasts that fake position to the rider.
+// It is a developer test tool: never in a release build unless explicitly switched on.
+const SHOW_SIMULATION = __DEV__ || process.env.EXPO_PUBLIC_ENABLE_TRIP_SIMULATION === 'true';
+
+// Remote vehicle icons from admin can 404 or be slow; fall back to the bundled car so the slot is never empty.
+function useVehicleSource(iconUrl) {
+  const [failedUrl, setFailedUrl] = useState(null);
+  const failed = !iconUrl || failedUrl === iconUrl;
+  const source = failed ? carIcon : toSrc(iconUrl);
+  return [source, () => setFailedUrl(iconUrl), failed];
+}
 const toCoordinate = (point) => (point && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)) ? { latitude: Number(point.lat), longitude: Number(point.lng) } : null);
 
 function RotatingVehicleMarker({ position, iconUrl, heading = 0, title = 'Driver' }) {
-  const track = useTrackViews(String(iconUrl), 2500);
+  const [source, onError, failed] = useVehicleSource(iconUrl);
+  const track = useTrackViews(`${iconUrl}|${failed}`, 2500);
   const coordinate = toCoordinate(position);
   if (!coordinate) return null;
   return (
     <Marker coordinate={coordinate} title={title} anchor={{ x: 0.5, y: 0.5 }} flat rotation={normalizeHeading(heading)} tracksViewChanges={track} tracksInfoWindowChanges={false}>
       <View style={{ width: 56, height: 56, alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
-        <Image source={toSrc(iconUrl)} style={{ width: 48, height: 48, boxShadow: '0 8px 10px rgba(15,23,42,0.35)' }} resizeMode="contain" />
+        <Image source={source} onError={onError} style={{ width: 48, height: 48, boxShadow: '0 8px 10px rgba(15,23,42,0.35)' }} resizeMode="contain" />
       </View>
     </Marker>
   );
@@ -63,7 +76,7 @@ function StatusDot({ pulsing, color }) {
 
 const StageCard = ({ label, children, style }) => (
   <View style={[st.card, style]}>
-    <Text style={[st.cardLabel, fo(900)]}>{label}</Text>
+    <Text numberOfLines={1} maxFontSizeMultiplier={1.2} style={[st.cardLabel, fo(900)]}>{label}</Text>
     {children}
   </View>
 );
@@ -71,7 +84,7 @@ const StageCard = ({ label, children, style }) => (
 export default function TripMap({ t }) {
   const insets = useSafeAreaInsets();
   const {
-    navigate, phase, routePath, routeError, driverPosition, displayDriverHeading, vehicleIconUrl, activeDestination, pickupPosition, tripData,
+    navigate, phase, routePath, routeError, etaMinutes, driverPosition, displayDriverHeading, vehicleIconUrl, activeDestination, pickupPosition, tripData,
     isSimulationEnabled, isSimulationRunning, simulationProgress, pauseSimulation, resumeSimulation, startSimulation, resetSimulation,
     isLoaded, mapViewRef, handleMapReady, handleMapUnmount,
   } = t;
@@ -79,6 +92,8 @@ export default function TripMap({ t }) {
   const path = useMemo(() => routePath.map(toCoordinate).filter(Boolean), [routePath]);
   useEffect(() => () => handleMapUnmount(), []); // eslint-disable-line react-hooks/exhaustive-deps
   const top8 = 32 + insets.top;
+  const [vehSource, onVehError] = useVehicleSource(vehicleIconUrl);
+  const etaText = etaMinutes ? `${etaMinutes} min${etaMinutes === 1 ? '' : 's'}` : '--';
 
   return (
     <View style={StyleSheet.absoluteFill}>
@@ -123,7 +138,7 @@ export default function TripMap({ t }) {
 
         <View style={[st.topBar, { top: top8 }]}>
           <View style={st.vehBox}>
-            <Image source={toSrc(vehicleIconUrl)} style={{ width: 28, height: 28 }} resizeMode="contain" accessibilityLabel="Vehicle" />
+            <Image source={vehSource} onError={onVehError} style={{ width: 28, height: 28 }} resizeMode="contain" accessibilityLabel="Vehicle" />
           </View>
           <View style={{ flex: 1, gap: 2, overflow: 'hidden' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -136,7 +151,9 @@ export default function TripMap({ t }) {
           </View>
         </View>
 
-        <View style={[st.statRow, { top: 112 + insets.top }]}>
+        {/* One stacked column: each card sits below the previous one whatever its height (font scale, wrapping). */}
+        <View pointerEvents="box-none" style={[st.stack, { top: 104 + insets.top }]}>
+        <View style={st.statRow}>
           <StageCard label="Trip Stage" style={{ flex: 1.25 }}>
             <Text numberOfLines={1} style={[st.cardValue, fo(900)]}>
               {phase === 'to_pickup' ? 'Heading To Pickup' : phase === 'otp_verification' ? 'Verify OTP' : phase === 'in_trip' ? 'On Trip' : phase === 'payment_confirm' ? 'Collect Payment' : 'Complete'}
@@ -145,7 +162,7 @@ export default function TripMap({ t }) {
           <StageCard label="ETA" style={{ flex: 0.75, minWidth: 72 }}>
             <View style={st.cardRow}>
               <Clock3 size={13} color={DT.brand} />
-              <Text numberOfLines={1} style={[st.cardValue, fo(900), { marginTop: 0, flexShrink: 1 }]}>{phase === 'to_pickup' ? '2 mins' : '12 mins'}</Text>
+              <Text numberOfLines={1} style={[st.cardValue, fo(900), { marginTop: 0, flexShrink: 1 }]}>{etaText}</Text>
             </View>
           </StageCard>
           <StageCard label="Route" style={{ flex: 1, minWidth: 104 }}>
@@ -157,13 +174,16 @@ export default function TripMap({ t }) {
         </View>
 
         {routeError ? (
-          <View style={[st.routeErr, { top: 176 + insets.top }]}>
-            <Text style={[{ fontSize: 10, lineHeight: 14, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 40, color: DT.warnInk }, fo(800)]}>Route</Text>
-            <Text style={[{ marginTop: 2, fontSize: 11, color: DT.inkSoft }, fo(600)]}>Using fallback path while directions load.</Text>
+          <View style={st.routeErr}>
+            <Text numberOfLines={2} style={[{ fontSize: 11, color: DT.inkSoft }, fo(600)]}>
+              <Text style={[{ color: DT.warnInk }, fo(800)]}>Approximate route. </Text>
+              Road directions are still loading.
+            </Text>
           </View>
         ) : null}
 
-        <View style={[st.sim, { top: 176 + insets.top }]}>
+        {SHOW_SIMULATION ? (
+        <View style={st.sim}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
             <View style={{ minWidth: 0, flexShrink: 1 }}>
               <Text style={[st.cardLabel, fo(900)]}>Simulation</Text>
@@ -186,6 +206,8 @@ export default function TripMap({ t }) {
           </View>
           <Text style={[{ marginTop: 8, fontSize: 10, lineHeight: 14, color: DT.muted }, fo(600)]}>Test mode emits live location events along this polyline.</Text>
         </View>
+        ) : null}
+        </View>
       </View>
     </View>
   );
@@ -197,13 +219,14 @@ const st = StyleSheet.create({
   back: { position: 'absolute', left: 16, zIndex: 50, width: 48, height: 48, borderRadius: 24, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
   topBar: { position: 'absolute', left: 72, right: 16, zIndex: 50, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: DT.card, paddingVertical: 8, paddingLeft: 8, paddingRight: 16, minHeight: 48, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('md') },
   vehBox: { width: 40, height: 40, borderRadius: 20, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
-  statRow: { position: 'absolute', left: 16, right: 16, zIndex: 40, flexDirection: 'row', gap: 8 },
+  stack: { position: 'absolute', left: 16, right: 16, zIndex: 40, gap: 8, alignItems: 'stretch' },
+  statRow: { flexDirection: 'row', gap: 8 },
   card: { minWidth: 0, borderRadius: DT.radius.lg, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 12, paddingVertical: 8, ...shadow('md') },
   cardLabel: { fontSize: 10, lineHeight: 14, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 28, color: DT.muted },
   cardValue: { fontSize: 12, color: DT.ink, marginTop: 2 },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  routeErr: { position: 'absolute', right: 16, zIndex: 40, minWidth: 148, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.warnSoft, backgroundColor: DT.card, paddingHorizontal: 12, paddingVertical: 8, ...shadow('md') },
-  sim: { position: 'absolute', left: 16, zIndex: 40, width: 190, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 12, paddingVertical: 12, ...shadow('md') },
+  routeErr: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.warnSoft, backgroundColor: DT.card, paddingHorizontal: 12, paddingVertical: 8, ...shadow('md') },
+  sim: { alignSelf: 'flex-start', width: 190, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 12, paddingVertical: 12, ...shadow('md') },
   simBtn: { minHeight: 44, borderRadius: DT.radius.md, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center' },
   simBtnText: { fontSize: 11, lineHeight: 15, textTransform: 'uppercase', letterSpacing: 0.3, minWidth: 40, textAlign: 'center' },
 });
