@@ -5,3 +5,7 @@
 # Play release bundles: too large for git, shared with the deployment team directly.
 *.aab
 _old/
+
+# Release APKs are 100+ MB (GitHub limit) and are shared directly, like the AABs.
+*.apk
+*.zip
