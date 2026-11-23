@@ -42,6 +42,13 @@ const METHODS = [
 ];
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MOBILE = /^[6-9]\d{9}$/;
+// The server refuses longer stays (MAX_STAY_NIGHTS).
+const MAX_NIGHTS = 30;
+const clampInt = (value, min, max, fallback) => {
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+};
 
 export default function HotelBookingScreen() {
   const params = useLocalSearchParams();
@@ -56,9 +63,10 @@ export default function HotelBookingScreen() {
   const [selectedRoom, setSelectedRoom] = useState(null);
 
   const [checkInDate, setCheckInDate] = useState(isoDate(1));
-  const [nights, setNights] = useState(parseInt(params.nights || '1', 10) || 1);
+  // Nights and guests carry over from the stays list and the hotel page.
+  const [nights, setNights] = useState(() => clampInt(params.nights, 1, MAX_NIGHTS, 1));
   const [roomCount, setRoomCount] = useState(1);
-  const [adults, setAdults] = useState(2);
+  const [adults, setAdults] = useState(() => clampInt(params.guests, 1, 50, 2));
   const children = 0;
 
   const [guestName, setGuestName] = useState('');
@@ -79,6 +87,27 @@ export default function HotelBookingScreen() {
   const [createdBookingData, setCreatedBookingData] = useState(null);
 
   const checkOutDate = addNights(checkInDate, nights);
+
+  // A room type's inventory bounds the rooms; its capacity bounds the adults
+  // (the server rejects anything over maxAdults x rooms).
+  const maxRooms = Math.max(1, Number(selectedRoom?.availableRooms) || 10);
+  const adultsPerRoom = Number(selectedRoom?.maxAdults) || 0;
+  const maxAdults = adultsPerRoom > 0 ? adultsPerRoom * roomCount : 50;
+  // When the room loads, book enough rooms for the party carried over from
+  // the list (e.g. 4 guests in 2-adult rooms -> 2 rooms), within inventory.
+  useEffect(() => {
+    if (!selectedRoom) return;
+    const rooms = adultsPerRoom > 0 ? Math.min(maxRooms, Math.max(1, Math.ceil(adults / adultsPerRoom))) : 1;
+    setRoomCount(rooms);
+    if (adultsPerRoom > 0) setAdults((n) => Math.min(n, adultsPerRoom * rooms));
+    // Only when a room type is picked, not on every adult change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRoom?.id]);
+  // Fewer rooms must not leave more adults than they fit.
+  const changeRooms = (n) => {
+    setRoomCount(n);
+    if (adultsPerRoom > 0) setAdults((a) => Math.min(a, adultsPerRoom * n));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -170,7 +199,7 @@ export default function HotelBookingScreen() {
         roomName: selectedRoom.name,
         checkIn: fmt(booking.checkInDate, dateOpts),
         checkOut: fmt(booking.checkOutDate, dateOpts),
-        guests: `${adults} Adults${children > 0 ? `, ${children} Children` : ''}`,
+        guests: `${adults} ${adults === 1 ? 'Adult' : 'Adults'}${children > 0 ? `, ${children} ${children === 1 ? 'Child' : 'Children'}` : ''}`,
         totalAmount: booking.totalAmount,
         paymentStatus: booking.paymentStatus === 'paid' ? 'Paid Online' : 'Pay at Property',
       });
@@ -188,6 +217,10 @@ export default function HotelBookingScreen() {
     // The web form's `required` fields.
     if (!guestName.trim()) return showToast('Please enter the guest name');
     if (!guestPhone.trim()) return showToast('Please enter a phone number');
+    // "+91 98765 43210" and "9876543210" are both fine; the last 10 digits count.
+    if (!MOBILE.test(guestPhone.replace(/\D/g, '').slice(-10))) {
+      return showToast('Please enter a valid 10-digit mobile number');
+    }
     if (!EMAIL.test(guestEmail.trim())) return showToast('Please enter a valid email address');
     if (!quote) return showToast(quoteError || 'Please wait for the price to load');
 
@@ -330,16 +363,16 @@ export default function HotelBookingScreen() {
 
           <View style={{ gap: space.sm }}>
             {[
-              ['Nights', nights, setNights, 'fa-regular fa-moon'],
-              ['Rooms', roomCount, setRoomCount, 'fa-solid fa-door-closed'],
-              ['Adults', adults, setAdults, 'fa-solid fa-user'],
-            ].map(([label, value, set, icon]) => (
+              ['Nights', nights, setNights, 'fa-regular fa-moon', MAX_NIGHTS],
+              ['Rooms', roomCount, changeRooms, 'fa-solid fa-door-closed', maxRooms],
+              ['Adults', adults, setAdults, 'fa-solid fa-user', maxAdults],
+            ].map(([label, value, set, icon, max]) => (
               <View key={label} style={styles.counter}>
                 <View style={[dhs.row, { gap: space.sm, flexShrink: 1 }]}>
                   <Fa name={icon} size={16} color={color.primary} />
                   <Text style={styles.counterLabel}>{label}</Text>
                 </View>
-                <Stepper value={value} onChange={set} label={label} />
+                <Stepper value={value} onChange={set} label={label} max={max} />
               </View>
             ))}
           </View>

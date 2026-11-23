@@ -12,6 +12,7 @@ import { GreenButton, Panel, StateBlock, dhs } from '../../components/dh/ui';
 import { useBooking } from '../../context/BookingContext';
 import { groupPasses } from '../../api/dh/festivalApi';
 import { openExternal } from '../../lib/links';
+import { shareHotelInvoice } from '../../lib/hotelInvoice';
 import { color, elevation, radii, space, type } from '../../theme';
 
 // Web: DimaHasao/pages/MyBookingsScreen.jsx (/app/bookings?tab=)
@@ -57,6 +58,9 @@ function Total({ label, amount }) {
   );
 }
 
+// A stay that never happened has nothing to invoice.
+const NO_INVOICE = ['Cancelled', 'Rejected', 'No Show'];
+
 function SmallButton({ icon, title, onPress, disabled }) {
   return <GreenButton size="sm" variant="secondary" fullWidth={false} icon={icon} title={title} onPress={onPress} disabled={disabled} style={styles.smallBtn} />;
 }
@@ -72,6 +76,19 @@ export default function MyBookingsScreen() {
   const [activeTab, setActiveTab] = useState(() => (TAB_IDS.includes(params.tab) ? params.tab : 'rides'));
   const tabsRef = useRef(null);
   const tabX = useRef({});
+  const [invoiceFor, setInvoiceFor] = useState('');
+
+  const openInvoice = async (hb) => {
+    if (invoiceFor) return;
+    setInvoiceFor(hb.bookingRef);
+    try {
+      await shareHotelInvoice(hb.bookingRef);
+    } catch (error) {
+      showToast(error?.response?.data?.message || error?.message || 'Could not open the invoice. Please try again.');
+    } finally {
+      setInvoiceFor('');
+    }
+  };
 
   // Profile links straight at a module's bookings via ?tab=.
   useEffect(() => {
@@ -176,7 +193,9 @@ export default function MyBookingsScreen() {
       />
       <View style={styles.cardFoot}>
         <Total label="Total amount" amount={hb.totalAmount} />
-        <SmallButton icon="fa-solid fa-file-invoice" title="Invoice" onPress={() => showToast(`Digital Invoice for ${hb.id} sent to SMS/WhatsApp 📄`)} />
+        {hb.bookingRef && !NO_INVOICE.includes(hb.status) ? (
+          <SmallButton icon="fa-solid fa-file-invoice" title={invoiceFor === hb.bookingRef ? 'Opening…' : 'Invoice'} onPress={() => openInvoice(hb)} disabled={Boolean(invoiceFor)} />
+        ) : null}
       </View>
     </Panel>
   );

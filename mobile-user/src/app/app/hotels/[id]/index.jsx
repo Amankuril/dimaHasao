@@ -15,7 +15,8 @@ import { color, elevation, radii, space, type } from '../../../../theme';
 // Web: DimaHasao/pages/HotelDetailScreen.jsx (/app/hotels/:id)
 
 export default function HotelDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { id } = params;
   const insets = useSafeAreaInsets();
   const { favoriteHotels, toggleFavoriteHotel, showToast } = useBooking();
 
@@ -23,7 +24,9 @@ export default function HotelDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const nights = 1;
+  // Carried over from the stays list (1 night when opened from anywhere else).
+  const nights = Math.min(30, Math.max(1, parseInt(params.nights, 10) || 1));
+  const guests = Math.min(20, Math.max(1, parseInt(params.guests, 10) || 2));
   const [activeTab, setActiveTab] = useState('rooms'); // 'rooms' | 'about' | 'reviews'
 
   useEffect(() => {
@@ -96,7 +99,7 @@ export default function HotelDetailScreen() {
       showToast('Please select a room first');
       return;
     }
-    router.push({ pathname: '/app/hotels/[id]/book', params: { id: hotel.id, roomId: selectedRoom.id, nights: String(nights) } });
+    router.push({ pathname: '/app/hotels/[id]/book', params: { id: hotel.id, roomId: selectedRoom.id, nights: String(nights), guests: String(guests) } });
   };
 
   const tabs = [
@@ -148,14 +151,15 @@ export default function HotelDetailScreen() {
                 </View>
                 <Text style={styles.metricLabel}>{hotel.reviewCount} reviews</Text>
               </View>
-              {/* Distance only exists after a geo search, so check-out fills the box otherwise. */}
+              {/* Distance only exists after a geo search; otherwise the two boxes read
+                  check-in then check-out, in the order a stay happens. */}
               <View style={styles.metric}>
-                <Text style={styles.metricValue}>{hotel.distanceFromStation || hotel.checkOutTime}</Text>
-                <Text style={styles.metricLabel}>{hotel.distanceFromStation ? 'From station' : 'Check-out'}</Text>
+                <Text style={styles.metricValue}>{hotel.distanceFromStation || hotel.checkInTime}</Text>
+                <Text style={styles.metricLabel}>{hotel.distanceFromStation ? 'From station' : 'Check-in'}</Text>
               </View>
               <View style={styles.metric}>
-                <Text style={styles.metricValue}>{hotel.checkInTime}</Text>
-                <Text style={styles.metricLabel}>Check-in</Text>
+                <Text style={styles.metricValue}>{hotel.distanceFromStation ? hotel.checkInTime : hotel.checkOutTime}</Text>
+                <Text style={styles.metricLabel}>{hotel.distanceFromStation ? 'Check-in' : 'Check-out'}</Text>
               </View>
             </View>
           </Panel>

@@ -203,10 +203,11 @@ export default function SelectVehicle() {
               const noDrivers = isUnavailable && rideMode !== 'schedule';
               return (
                 <View key={v.id} style={[styles.vehicle, isSelected ? styles.vehicleOn : null]}>
-                  <Press scale={0.99} onPress={() => setSelected(v.id)} accessibilityRole="radio" accessibilityState={{ checked: isSelected }} accessibilityLabel={`${v.name}, ${isFarePending ? 'calculating fare' : formatVehicleFare(v)}, ${compactEta} minutes away`} style={styles.vehicleRow}>
+                  <Press scale={0.99} onPress={() => setSelected(v.id)} accessibilityRole="radio" accessibilityState={{ checked: isSelected }} accessibilityLabel={`${v.name}, ${isFarePending ? 'calculating fare' : formatVehicleFare(v)}, ${noDrivers ? 'no drivers nearby' : `${compactEta} minutes away`}`} style={styles.vehicleRow}>
                     <View style={styles.vehicleIconCol}>
                       <VehicleIcon uri={v.icon} style={{ width: 52, height: 36 }} />
-                      <Text style={styles.eta}>{compactEta} min</Text>
+                      {/* With no driver nearby there is no pickup ETA (the fallback is the trip time). */}
+                      <Text style={styles.eta}>{noDrivers ? '—' : `${compactEta} min`}</Text>
                     </View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <View style={styles.vehicleTop}>

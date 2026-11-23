@@ -143,7 +143,8 @@ export default function AppBottomNav() {
                     </View>
                   ) : null}
                 </View>
-                <Text style={[styles.label, isActive && styles.labelActive]} numberOfLines={1}>
+                {/* Five tabs share the width; capped so a large system font cannot cut "Bookings" to "Booki…". */}
+                <Text style={[styles.label, isActive && styles.labelActive]} numberOfLines={1} maxFontSizeMultiplier={1.15}>
                   {item.label}
                 </Text>
                 <View style={styles.lineSlot}>{isActive ? <View style={styles.line} /> : null}</View>

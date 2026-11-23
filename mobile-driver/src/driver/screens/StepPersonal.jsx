@@ -58,13 +58,16 @@ export default function StepPersonal() {
 
   const nameValid = NAME_REGEX.test(fullName.trim());
   const emailValid = EMAIL_REGEX.test(email.trim());
-  const ready = nameValid && emailValid && Boolean(gender);
 
   const handleContinue = async () => {
     const normalizedName = fullName.trim();
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedReferral = referral.trim().toUpperCase();
 
+    if (!normalizedName) {
+      setError('Enter your full name as printed on your licence.');
+      return;
+    }
     if (!nameValid) {
       setError('Your name should contain letters only.');
       return;
@@ -127,7 +130,8 @@ export default function StepPersonal() {
       subtitle="Riders see your name when you accept a trip."
       error={error}
       onBack={() => navigate('/taxi/driver/login')}
-      primaryDisabled={!ready}
+      // Enabled so a tap explains what is missing instead of doing nothing.
+      primaryDisabled={loading}
       primaryLoading={loading}
       onPrimary={handleContinue}
     >

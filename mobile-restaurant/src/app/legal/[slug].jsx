@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { platformApi } from '../../api/platform';
@@ -45,6 +46,17 @@ export default function LegalDocumentPage() {
     <ScrollView style={styles.page} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 40 + insets.top, paddingBottom: 40 + insets.bottom }}>
       {/* cream page: the app-wide light status bar icons would be invisible here */}
       <StatusBar style="dark" />
+      {/* Opened from the sign-in screen; gesture-navigation phones have no visible back key. */}
+      <Pressable
+        onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        hitSlop={8}
+        style={styles.back}
+      >
+        <ArrowLeft size={20} color="#111827" />
+        <Text style={styles.backText}>Back</Text>
+      </Pressable>
       <View style={styles.card}>
         <View style={styles.header}>
           <Text style={styles.kicker}>Dima Hasao Tourism</Text>
@@ -80,6 +92,8 @@ export default function LegalDocumentPage() {
 }
 
 const styles = StyleSheet.create({
+  back: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', minHeight: 44, marginBottom: 8 },
+  backText: { ...poppins(600), fontSize: 15, color: '#111827' },
   page: { flex: 1, backgroundColor: '#FAF6ED' },
   card: { width: '100%', borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3', backgroundColor: '#fff', padding: 24, ...shadow('sm') },
   header: { marginBottom: 24, borderBottomWidth: 1, borderBottomColor: '#E5DDC3', paddingBottom: 20 },

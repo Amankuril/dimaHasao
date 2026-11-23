@@ -16,7 +16,9 @@ import { color, elevation, playfair, radii, space, type } from '../../theme';
 
 // Web: DimaHasao/pages/LoginScreen.jsx (/app/login). 'phone' -> 'otp' -> 'name'.
 
-const readApiError = (err, fallback) => err?.response?.data?.message || err?.message || fallback;
+const RESEND_SECONDS = 30;
+// Validation errors come back as { error }, others as { message }.
+const readApiError = (err, fallback) => err?.response?.data?.message || err?.response?.data?.error || err?.message || fallback;
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -31,7 +33,15 @@ export default function LoginScreen() {
   const [signupToken, setSignupToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [focused, setFocused] = useState(null);
+  const [resendIn, setResendIn] = useState(0);
   const done = useRef(false);
+
+  // Resend unlocks after a short wait, like every OTP screen people know.
+  useEffect(() => {
+    if (resendIn <= 0) return undefined;
+    const timer = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
 
   useEffect(() => {
     if (step !== 'otp') return undefined;
@@ -88,8 +98,8 @@ export default function LoginScreen() {
   const handleSendOtp = async () => {
     if (isLoading) return;
     const digits = String(phone).replace(/\D/g, '');
-    if (digits.length !== 10) {
-      showToast('Enter a valid 10-digit phone number');
+    if (!/^[6-9]\d{9}$/.test(digits)) {
+      showToast('Enter a valid 10-digit mobile number');
       return;
     }
     setIsLoading(true);
@@ -99,6 +109,7 @@ export default function LoginScreen() {
       setNeedsName(data.nextStepIfVerified === 'collect_name');
       setOtp(['', '', '', '']);
       setStep('otp');
+      setResendIn(RESEND_SECONDS);
       showToast('OTP sent to your phone 📱');
     } catch (err) {
       showToast(readApiError(err, 'Could not send OTP. Please try again.'));
@@ -297,9 +308,15 @@ export default function LoginScreen() {
                   </View>
                   <View style={styles.otpFoot}>
                     <Text style={styles.sentTo}>Sent to +91 {phone}</Text>
-                    <Press onPress={handleSendOtp} scale={0.96} accessibilityLabel="Resend OTP" style={styles.resendBtn}>
-                      <Text style={styles.resend}>Resend OTP</Text>
-                    </Press>
+                    {resendIn > 0 ? (
+                      <Text style={[styles.sentTo, styles.resendBtn, { textAlignVertical: 'center' }]} accessibilityLiveRegion="polite">
+                        Resend in {resendIn}s
+                      </Text>
+                    ) : (
+                      <Press onPress={handleSendOtp} scale={0.96} accessibilityLabel="Resend OTP" style={styles.resendBtn}>
+                        <Text style={styles.resend}>Resend OTP</Text>
+                      </Press>
+                    )}
                   </View>
                 </View>
               ) : null}

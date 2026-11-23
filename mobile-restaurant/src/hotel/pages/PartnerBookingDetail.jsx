@@ -336,7 +336,14 @@ const PartnerBookingDetail = () => {
   }
   if (!booking) return null;
 
-  const user = booking.userId || {};
+  // The person staying (when booked for someone else) over the account holder.
+  const account = booking.userId || {};
+  const contact = booking.guestContact || {};
+  const user = {
+    name: contact.name || account.name,
+    phone: contact.phone || account.phone,
+    email: contact.email || account.email,
+  };
   const property = booking.propertyId || {};
   const room = booking.roomTypeId || {};
 
@@ -441,6 +448,12 @@ const PartnerBookingDetail = () => {
             label="Total guests"
             value={`${adults} adult${adults !== 1 ? 's' : ''}${children ? `, ${children} child${children !== 1 ? 'ren' : ''}` : ''}`}
           />
+          {booking.specialRequest ? (
+            <View style={{ gap: space.xs }}>
+              <Text style={[type.label, { color: color.textSecondary }]}>Special request</Text>
+              <Text style={[type.body, { color: color.text }]}>{booking.specialRequest}</Text>
+            </View>
+          ) : null}
         </Card>
 
         {/* Stay Info */}

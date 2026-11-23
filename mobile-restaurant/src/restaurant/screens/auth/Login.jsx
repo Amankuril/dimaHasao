@@ -363,7 +363,7 @@ export default function RestaurantLogin() {
                 keyboardType="phone-pad"
                 maxLength={10}
                 autoFocus
-                placeholder="10-digit number"
+                placeholder="98765 43210"
                 placeholderTextColor={AUTH.muted}
                 accessibilityLabel="Mobile number"
                 style={[authStyles.input, { paddingHorizontal: space.lg }]}

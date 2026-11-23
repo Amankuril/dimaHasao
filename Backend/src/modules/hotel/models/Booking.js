@@ -58,6 +58,15 @@ const bookingSchema = new mongoose.Schema({
 
   guests: guestSchema,
 
+  // Who is staying, when it is not the account holder (booking for family or a
+  // friend), and anything they asked the property for.
+  guestContact: {
+    name: { type: String, trim: true, maxlength: 100 },
+    phone: { type: String, trim: true, maxlength: 20 },
+    email: { type: String, trim: true, lowercase: true, maxlength: 254 }
+  },
+  specialRequest: { type: String, trim: true, maxlength: 500 },
+
   // PRICING (PER NIGHT LOGIC)
   pricePerNight: { type: Number }, // average nightly rate actually charged
   baseAmount: { type: Number }, // sum of the nightly breakdown

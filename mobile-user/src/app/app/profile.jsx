@@ -6,13 +6,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Fa from '../../components/Fa';
 import { Press } from '../../components/ui';
 import { Dialog } from '../../components/kit';
-import { Button, Card, IconButton, ListRow, SectionHeader, SegmentedControl, StatusBadge, fa } from '../../components/ds';
+import { Button, Card, IconButton, ListRow, SectionHeader, SegmentedControl, fa } from '../../components/ds';
 
 import { Header, PatternDivider } from '../../components/dh/Header';
 import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { ModuleAccordion } from '../../components/dh/ModuleAccordion';
 import { Field, dhs } from '../../components/dh/ui';
 import { useBooking } from '../../context/BookingContext';
+import { useAuth } from '../../context/AuthContext';
+import { userAPI } from '../../api/food';
 import { PLACES_DATA } from '../../data/dh/tourismData';
 import { MODULE_SECTIONS, PLATFORM_ACCOUNT, VEG_MODE_KEY, VEG_MODE_OPTION_KEY } from '../../data/moduleSections';
 import { localStore } from '../../lib/storage';
@@ -39,11 +41,11 @@ const readVegChoice = () => {
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { user, logout, favorites, bookings, showToast, saveLocalProfile } = useBooking();
-  const [selectedLang, setSelectedLang] = useState('English');
+  const { user, logout, favorites, bookings, hotelBookings, showToast } = useBooking();
+  const { updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user.name);
-  const [editPhone, setEditPhone] = useState(user.phone || '+91 98765 43210');
+  const [isSaving, setIsSaving] = useState(false);
   const [vegChoice, setVegChoice] = useState(readVegChoice);
 
   // Veg Mode is Food's setting; Food reads the same stored keys.
@@ -75,10 +77,31 @@ export default function ProfileScreen() {
 
   const favoritePlaces = PLACES_DATA.filter((p) => favorites.includes(p.id));
 
-  const handleSaveProfile = () => {
-    saveLocalProfile({ name: editName.trim() || user.name, phone: editPhone.trim() || user.phone });
-    setIsEditing(false);
-    showToast('Profile updated successfully! ✨');
+  // Saved on the server (the same profile Food edits), not just on this screen.
+  // The phone is the sign-in identity, so it is shown but not edited here.
+  const handleSaveProfile = async () => {
+    if (isSaving) return;
+    const name = editName.trim().replace(/\s+/g, ' ');
+    if (name.length < 2) {
+      showToast('Please enter your full name');
+      return;
+    }
+    if (name === user.name) {
+      setIsEditing(false);
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const response = await userAPI.updateProfile({ name });
+      const saved = response?.data?.data?.user || response?.data?.user;
+      updateUser({ name: saved?.name || name });
+      setIsEditing(false);
+      showToast('Profile updated');
+    } catch (error) {
+      showToast(error?.response?.data?.message || 'Could not update your profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -102,10 +125,11 @@ export default function ProfileScreen() {
                 <Text style={styles.userName} numberOfLines={1}>
                   {user.name}
                 </Text>
-                <Text style={styles.userPhone} numberOfLines={1}>
-                  {user.phone || '+91 98765 43210'}
-                </Text>
-                <StatusBadge label="Verified tourist explorer" tone="gold" icon={fa('fa-solid fa-certificate')} style={{ marginTop: space.xs }} />
+                {user.phone ? (
+                  <Text style={styles.userPhone} numberOfLines={1}>
+                    +91 {user.phone}
+                  </Text>
+                ) : null}
               </View>
             </View>
             <IconButton
@@ -115,7 +139,6 @@ export default function ProfileScreen() {
               iconSize={18}
               onPress={() => {
                 setEditName(user.name);
-                setEditPhone(user.phone || '+91 98765 43210');
                 setIsEditing(true);
               }}
             />
@@ -131,8 +154,8 @@ export default function ProfileScreen() {
               <Text style={styles.metricLabel}>Saved wishlist</Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricValue}>Gold</Text>
-              <Text style={styles.metricLabel}>Member tier</Text>
+              <Text style={styles.metricValue}>{hotelBookings.length}</Text>
+              <Text style={styles.metricLabel}>Hotel stays</Text>
             </View>
           </View>
         </View>
@@ -198,17 +221,6 @@ export default function ProfileScreen() {
           </Card>
         </View>
 
-        <View>
-          <SectionHeader title="Language preference" />
-          <SegmentedControl
-            options={LANGS.map((lang) => ({ value: lang, label: lang }))}
-            value={selectedLang}
-            onChange={(lang) => {
-              setSelectedLang(lang);
-              showToast(`Language switched to ${lang}`);
-            }}
-          />
-        </View>
 
         {user.isLoggedIn ? (
           <>
@@ -240,8 +252,8 @@ export default function ProfileScreen() {
           </View>
           <View style={{ gap: space.md }}>
             <Field label="Full name" value={editName} onChangeText={setEditName} autoCapitalize="words" autoComplete="name" accessibilityLabel="Full Name" />
-            <Field label="Phone number" value={editPhone} onChangeText={setEditPhone} keyboardType="phone-pad" autoComplete="tel" accessibilityLabel="Phone Number" />
-            <Button title="Save changes" onPress={handleSaveProfile} style={{ marginTop: space.xs }} />
+            <Field label="Phone number" value={user.phone ? `+91 ${user.phone}` : ''} editable={false} accessibilityLabel="Phone Number, used to sign in" inputStyle={{ color: color.textMuted }} />
+            <Button title="Save changes" onPress={handleSaveProfile} loading={isSaving} style={{ marginTop: space.xs }} />
           </View>
         </KeyboardAvoidingView>
       </Dialog>
@@ -249,7 +261,6 @@ export default function ProfileScreen() {
   );
 }
 
-const LANGS = ['English', 'Dimasa', 'Assamese'];
 
 const styles = StyleSheet.create({
   userCard: { borderRadius: radii.lg, padding: space.xl, backgroundColor: color.primaryDeep, borderWidth: 1, borderColor: 'rgba(202,168,62,0.45)', ...elevation.card },

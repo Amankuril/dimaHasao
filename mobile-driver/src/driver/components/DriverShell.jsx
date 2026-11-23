@@ -68,6 +68,10 @@ export default function DriverShell() {
   useEffect(() => {
     if (booting) return undefined;
     const currentPath = pathname.replace(/\/+$/, '') || '/';
+    // This shell stays mounted under screens pushed on top of it (the legal
+    // pages at /legal/*), and usePathname() reports theirs. Guarding those
+    // bounced a signed-out driver from Privacy/Terms straight back to login.
+    if (currentPath !== '/taxi/driver' && !currentPath.startsWith('/taxi/driver/')) return undefined;
     // The bare /taxi/driver entry (DriverEntryRedirect): signed in -> home, else login.
     if (currentPath === '/taxi/driver') {
       navigateTo(getLocalDriverToken() ? HOME : LOGIN, { replace: true });

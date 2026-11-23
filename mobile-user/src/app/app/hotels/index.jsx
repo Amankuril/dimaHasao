@@ -72,14 +72,14 @@ export default function HotelListScreen() {
             <Fa name="fa-regular fa-moon" size={16} color={color.primary} />
             <Text style={styles.prefLabel}>Nights</Text>
           </View>
-          <Stepper value={nights} onChange={setNights} label="nights" />
+          <Stepper value={nights} onChange={setNights} label="nights" max={30} />
         </View>
         <View style={styles.pref}>
           <View style={[dhs.row, { gap: space.sm, flexShrink: 1 }]}>
             <Fa name="fa-solid fa-users" size={16} color={color.primary} />
             <Text style={styles.prefLabel}>Guests</Text>
           </View>
-          <Stepper value={guestCount} onChange={setGuestCount} label="guests" />
+          <Stepper value={guestCount} onChange={setGuestCount} label="guests" max={20} />
         </View>
       </Panel>
 
@@ -91,7 +91,8 @@ export default function HotelListScreen() {
 
       <View style={[dhs.row, { justifyContent: 'space-between', gap: space.sm }]}>
         <Text style={styles.count}>
-          {filteredHotels.length} {filteredHotels.length === 1 ? 'stay' : 'stays'} available
+          {/* While loading or failed, a count of 0 would contradict the message below. */}
+          {loading || (loadError && !hotels.length) ? 'Stays' : `${filteredHotels.length} ${filteredHotels.length === 1 ? 'stay' : 'stays'} available`}
         </Text>
         <View style={[dhs.row, { gap: space.sm }]}>
           <Text style={styles.sortLabel}>Sort</Text>
@@ -140,7 +141,7 @@ export default function HotelListScreen() {
       <FlatList
         data={loading || loadError ? [] : filteredHotels}
         keyExtractor={(hotel) => hotel.id}
-        renderItem={({ item }) => <HotelCard hotel={item} />}
+        renderItem={({ item }) => <HotelCard hotel={item} stay={{ nights, guests: guestCount }} />}
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
         ItemSeparatorComponent={Separator}

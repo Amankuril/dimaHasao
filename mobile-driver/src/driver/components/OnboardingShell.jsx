@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -82,9 +82,17 @@ export default function OnboardingShell({
     return { index: position < 0 ? 0 : position, total: ONBOARDING_STEPS.length };
   }, [step]);
 
+  // The message sits below the form, so bring it into view when it appears.
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    if (!error) return undefined;
+    const timer = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+    return () => clearTimeout(timer);
+  }, [error]);
+
   return (
     <View style={{ flex: 1, backgroundColor: DT.bg }}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 170 }}>
+      <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 170 }}>
         <BrandHero top={insets.top}>
           <View style={styles.maxW}>
             <View style={styles.headRow}>

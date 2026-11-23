@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Image from '../Img';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,10 +11,16 @@ import { Button, IconButton, StatusBadge, fa } from '../ds';
 import { color, elevation, radii, space, type } from '../../theme';
 
 /** components/hotel/HotelCard.jsx */
-export function HotelCard({ hotel }) {
+export function HotelCard({ hotel, stay }) {
   const { favoriteHotels, toggleFavoriteHotel } = useBooking();
   const isFavorite = favoriteHotels?.includes(hotel.id);
-  const open = () => router.push(`/app/hotels/${hotel.id}`);
+  // `stay` ({ nights, guests }) carries the list's choices on to the booking form.
+  const open = () =>
+    router.push(
+      stay
+        ? { pathname: '/app/hotels/[id]', params: { id: hotel.id, nights: String(stay.nights), guests: String(stay.guests) } }
+        : `/app/hotels/${hotel.id}`,
+    );
   const label = `${hotel.name}, ${hotel.location}. Rated ${hotel.rating}. From ₹${hotel.startingPrice.toLocaleString('en-IN')} per night. View rooms`;
 
   // The photo and the body are sibling buttons so the heart is never nested inside one.
@@ -100,6 +106,7 @@ export function HotelCard({ hotel }) {
 /** components/hotel/HotelGallery.jsx */
 export function HotelGallery({ images = [], hotelName = 'Hotel' }) {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   if (!images || images.length === 0) return null;
@@ -109,7 +116,9 @@ export function HotelGallery({ images = [], hotelName = 'Hotel' }) {
 
   return (
     <View>
-      <View style={styles.galleryMain}>
+      {/* Full width, 4:3 up to 300 tall. aspectRatio + maxHeight shrank the
+          width instead and left a blank strip on screens wider than 400. */}
+      <View style={[styles.galleryMain, { height: Math.min(300, screenWidth * 0.75) }]}>
         <Press scale={1} onPress={() => setIsFullscreen(true)} style={StyleSheet.absoluteFill} accessibilityLabel={`${hotelName} photo ${activeIndex + 1}. View fullscreen`}>
           <Image source={{ uri: images[activeIndex] }} style={StyleSheet.absoluteFill} resizeMode="cover" />
           <LinearGradient colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.6)']} style={StyleSheet.absoluteFill} />
@@ -265,7 +274,7 @@ const styles = StyleSheet.create({
   viewRooms: { flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.primary, paddingHorizontal: space.lg, height: 44, borderRadius: radii.md },
   viewRoomsText: { ...type.buttonSm, color: color.onPrimary },
 
-  galleryMain: { aspectRatio: 4 / 3, maxHeight: 300, backgroundColor: color.primaryDeep },
+  galleryMain: { width: '100%', backgroundColor: color.primaryDeep },
   counter: { position: 'absolute', bottom: space.md, right: space.md, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: space.sm + 2, height: 28, borderRadius: radii.pill },
   counterText: { ...type.caption, color: color.textInverse },
   expand: { position: 'absolute', top: space.sm, right: space.sm, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },

@@ -234,6 +234,32 @@ export const quoteStay = async ({
 
   // Whole rooms only: this count is claimed from inventory and multiplies the price.
   const requiredUnits = Math.max(1, Math.floor(Number(guests.rooms) || 1));
+
+  /*
+   * The party has to fit the rooms being booked. Nothing compared the guest
+   * count with the room's capacity, so twenty adults priced the same as two in
+   * a two-adult room. maxChildren defaults to 0 for rooms that never set it,
+   * so children are only capped when the property gave a figure.
+   */
+  const adultCount = Math.max(0, Math.floor(Number(guests.adults) || 0));
+  const childCount = Math.max(0, Math.floor(Number(guests.children) || 0));
+  const adultsPerUnit = Number(roomType.maxAdults) || 0;
+  const childrenPerUnit = Number(roomType.maxChildren) || 0;
+  if (adultsPerUnit > 0 && adultCount > adultsPerUnit * requiredUnits) {
+    const error = new Error(
+      `${roomType.name || 'This room'} fits ${adultsPerUnit} adult${adultsPerUnit === 1 ? '' : 's'} per room. Add a room or reduce the guests.`,
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+  if (childrenPerUnit > 0 && childCount > childrenPerUnit * requiredUnits) {
+    const error = new Error(
+      `${roomType.name || 'This room'} fits ${childrenPerUnit} child${childrenPerUnit === 1 ? '' : 'ren'} per room. Add a room or reduce the guests.`,
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
   const availability = await getAvailability({
     propertyId: property._id,
     roomTypeId: roomType._id,

@@ -138,21 +138,29 @@ export default function StepVehicle() {
   const plateValid = plate.length > 0 && PLATE_PATTERNS.some((pattern) => pattern.test(plate));
   const yearValid = /^\d{4}$/.test(String(form.year)) && Number(form.year) >= 1980 && Number(form.year) <= currentYear;
 
-  const ready =
-    Boolean(form.locationId) &&
-    Boolean(form.vehicleTypeId) &&
-    form.serviceCategories.length > 0 &&
-    Boolean(String(form.rcNumber).trim()) &&
-    (!requiredFor('make') || Boolean(form.make.trim())) &&
-    (!requiredFor('model') || Boolean(form.model.trim())) &&
-    (!requiredFor('color') || Boolean(form.color.trim())) &&
-    (!requiredFor('year') || yearValid) &&
-    (!requiredFor('number') || plateValid) &&
-    customFieldConfigs.every(
-      (config) => config.is_required === false || String(form.customFields?.[config.field_key] || '').trim(),
-    );
-
   const handleContinue = async () => {
+    // Say what is missing; the button used to stay greyed out with no reason.
+    const missing = [
+      [!form.locationId, 'Choose the city you will drive in.'],
+      [form.serviceCategories.length === 0, 'Choose at least one service category.'],
+      [!form.vehicleTypeId, 'Choose your vehicle type.'],
+      [!String(form.rcNumber).trim(), 'Enter the RC (registration certificate) number.'],
+      [requiredFor('make') && !form.make.trim(), `Enter the ${labelFor('make', 'brand / make').toLowerCase()}.`],
+      [requiredFor('model') && !form.model.trim(), `Enter the ${labelFor('model', 'model').toLowerCase()}.`],
+      [requiredFor('color') && !form.color.trim(), `Enter the ${labelFor('color', 'exterior color').toLowerCase()}.`],
+    ].find(([isMissing]) => isMissing);
+    if (missing) {
+      setError(missing[1]);
+      return;
+    }
+    const missingCustom = customFieldConfigs.find(
+      (config) => config.is_required !== false && !String(form.customFields?.[config.field_key] || '').trim(),
+    );
+    if (missingCustom) {
+      setError(`Fill in ${missingCustom.name || missingCustom.field_label || 'all required fields'}.`);
+      return;
+    }
+
     if (requiredFor('number') && !plateValid) {
       setError('Enter the plate number as it appears on the vehicle, for example AS01AB1234.');
       return;
@@ -204,7 +212,7 @@ export default function StepVehicle() {
       subtitle="An admin checks these against your papers before you go live."
       error={error}
       onBack={() => navigate('/taxi/driver/step-personal')}
-      primaryDisabled={!ready}
+      primaryDisabled={loading}
       primaryLoading={loading}
       onPrimary={handleContinue}
     >

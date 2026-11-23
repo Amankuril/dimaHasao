@@ -306,7 +306,9 @@ export const RestaurantCard = memo(function RestaurantCard({
   }, [enter, index]);
 
   const rated = Number(restaurant.rating) > 0;
-  const meta = [restaurant.deliveryTime, restaurant.distance].filter(Boolean).join('  ·  ');
+  // Some restaurants store the delivery time as a bare number of minutes.
+  const deliveryTime = /^\d+(\s*-\s*\d+)?$/.test(String(restaurant.deliveryTime ?? '').trim()) ? `${String(restaurant.deliveryTime).trim()} min` : restaurant.deliveryTime;
+  const meta = [deliveryTime, restaurant.distance].filter(Boolean).join('  ·  ');
   const open = () => openRestaurant(restaurant, { from: backFrom });
 
   // The card is a View (not a button) so the photo slides and the bookmark are

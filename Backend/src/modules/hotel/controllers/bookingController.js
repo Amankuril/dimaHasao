@@ -173,8 +173,19 @@ export const createBooking = async (req, res) => {
       bookingUnit,
       couponCode,
       useWallet,
-      walletDeduction
+      walletDeduction,
+      guestContact,
+      specialRequest
     } = req.body;
+
+    // Optional; only plain strings are kept so nothing else rides along.
+    const text = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
+    const contact = guestContact && typeof guestContact === 'object' ? guestContact : {};
+    const savedGuestContact = {
+      name: text(contact.name, 100),
+      phone: text(contact.phone, 20),
+      email: text(contact.email, 254).toLowerCase(),
+    };
 
     // Whitelisted so an unrecognised method cannot slip past the settlement
     // branches below and leave a booking in an undefined payment state.
@@ -281,6 +292,8 @@ export const createBooking = async (req, res) => {
         adults: guests.adults || 1,
         children: guests.children || 0
       },
+      guestContact: savedGuestContact,
+      specialRequest: text(specialRequest, 500),
       pricePerNight,
       baseAmount,
       nightlyBreakdown,

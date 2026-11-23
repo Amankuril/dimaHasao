@@ -500,7 +500,7 @@ export default function DeliverySignIn({ isOtpStep }) {
                 Delivery Partner
               </Text>
               {!isOtpStep ? (
-                <Text style={styles.subtitle}>Enter your registered mobile number to start earning</Text>
+                <Text style={styles.subtitle}>Enter your mobile number to sign in or join as a delivery partner</Text>
               ) : (
                 <View style={styles.sentBlock}>
                   <Text style={styles.sentText}>We&apos;ve sent a 4-digit code to</Text>

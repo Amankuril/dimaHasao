@@ -100,6 +100,8 @@ const adaptRoom = (room = {}, fallbackPrice = 0) => ({
   // v1 renders a short spec line under the room name.
   bedType: titleCase(room.roomCategory || room.inventoryType || ''),
   maxGuests: Number(room.maxAdults || 0) + Number(room.maxChildren || 0) || 2,
+  // Adults one unit sleeps; the booking form caps adults at this x rooms.
+  maxAdults: Number(room.maxAdults || 0),
   price: Number(room.pricePerNight ?? fallbackPrice) || 0,
   originalPrice: null,
   size: room.size || '',
@@ -260,6 +262,7 @@ export const verifyHotelPayment = async (payload) => {
 
 const STAY_STATUS = {
   pending: 'Awaiting Payment',
+  awaiting_payment: 'Awaiting Payment',
   confirmed: 'Confirmed',
   checked_in: 'Checked In',
   checked_out: 'Checked Out',
@@ -267,6 +270,12 @@ const STAY_STATUS = {
   cancelled: 'Cancelled',
   no_show: 'No Show',
   rejected: 'Rejected',
+};
+
+const guestLabel = (guests = {}) => {
+  const adults = Number(guests.adults) || 1;
+  const children = Number(guests.children) || 0;
+  return `${adults} ${adults === 1 ? 'Adult' : 'Adults'}${children ? `, ${children} ${children === 1 ? 'Child' : 'Children'}` : ''}`;
 };
 
 const stayDate = (value) =>
@@ -291,7 +300,7 @@ export const adaptBooking = (booking = {}) => {
     checkOut: stayDate(booking.checkOutDate),
     nights: Number(booking.totalNights) || 0,
     roomCount: Number(booking.guests?.rooms) || 1,
-    guests: `${booking.guests?.adults || 1} Adults${booking.guests?.children ? `, ${booking.guests.children} Children` : ''}`,
+    guests: guestLabel(booking.guests),
     totalAmount: Number(booking.totalAmount) || 0,
     paymentMethod: booking.paymentMethod === 'pay_at_hotel' ? 'Pay at Property' : 'Online',
     paymentStatus: booking.paymentStatus === 'paid' ? 'Paid' : 'Unpaid',

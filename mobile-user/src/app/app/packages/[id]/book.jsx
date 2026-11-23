@@ -289,6 +289,12 @@ export default function TourBookingScreen() {
 
   const payableNow = quote ? quote.advanceAmount : 0;
   const canSubmit = Boolean(quote) && !quoting;
+  // The server counts adults + children against the package's group size.
+  const groupMin = Math.max(1, pkg.groupSizeMin || 1);
+  const groupMax = pkg.groupSizeMax > 0 ? pkg.groupSizeMax : 50;
+  const minAdults = Math.max(1, groupMin - children);
+  const maxAdults = Math.max(minAdults, groupMax - children);
+  const maxChildren = Math.max(0, groupMax - adults);
   const dateShown = travelDate ? fromIso(travelDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
 
   const ctaFull = quote ? `Confirm & Pay (${rupees(payableNow)})` : 'Loading price…';
@@ -332,14 +338,14 @@ export default function TourBookingScreen() {
                 <Fa name="fa-solid fa-user" size={16} color={color.primary} />
                 <Text style={styles.counterLabel}>Adults</Text>
               </View>
-              <Stepper value={adults} onChange={setAdults} min={1} label="adults" />
+              <Stepper value={adults} onChange={setAdults} min={minAdults} max={maxAdults} label="adults" />
             </View>
             <View style={styles.counter}>
               <View style={[dhs.row, { gap: space.sm, flexShrink: 1 }]}>
                 <Fa name="fa-solid fa-child" size={16} color={color.primary} />
                 <Text style={styles.counterLabel}>Children</Text>
               </View>
-              <Stepper value={children} onChange={setChildren} min={0} label="children" />
+              <Stepper value={children} onChange={setChildren} min={0} max={maxChildren} label="children" />
             </View>
           </View>
 
@@ -486,9 +492,17 @@ export default function TourBookingScreen() {
           <Text style={styles.barLabel} numberOfLines={1}>
             {quote && quote.balanceDue > 0 ? 'Advance payable now' : 'Total payable'}
           </Text>
-          {quote ? <Text style={[styles.barPrice, quoting && { opacity: 0.5 }]}>{rupees(payableNow)}</Text> : <Pulse style={{ height: 20, width: 88, marginTop: 4 }} />}
+          {quote ? (
+            <Text style={[styles.barPrice, quoting && { opacity: 0.5 }]}>{rupees(payableNow)}</Text>
+          ) : quoteError && !quoting ? (
+            <Text style={styles.barError} numberOfLines={2}>
+              {quoteError}
+            </Text>
+          ) : (
+            <Pulse style={{ height: 20, width: 88, marginTop: 4 }} />
+          )}
         </View>
-        <GreenButton size="lg" fullWidth={false} icon="fa-solid fa-lock" title={quote ? 'Confirm & pay' : 'Loading…'} accessibilityLabel={ctaFull} onPress={handleConfirmTour} disabled={!canSubmit} loading={submitting} />
+        <GreenButton size="lg" fullWidth={false} icon="fa-solid fa-lock" title={quote ? 'Confirm & pay' : quoteError && !quoting ? 'Unavailable' : 'Loading…'} accessibilityLabel={ctaFull} onPress={handleConfirmTour} disabled={!canSubmit} loading={submitting} />
       </View>
 
       {createdTourData ? (
@@ -541,6 +555,7 @@ const styles = StyleSheet.create({
   splitStrong: { ...type.bodyStrong, color: color.text, flexShrink: 1 },
   splitText: { ...type.small, color: color.textSecondary, flexShrink: 1 },
   bar: { backgroundColor: color.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border, paddingHorizontal: space.lg, paddingTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md, ...elevation.sheet },
+  barError: { ...type.small, color: color.danger, marginTop: 2 },
   barLabel: { ...type.caption, color: color.textMuted },
   barPrice: { ...type.price, color: color.text },
 });

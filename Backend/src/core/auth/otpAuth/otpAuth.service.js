@@ -43,6 +43,8 @@ const readSignupTicket = (ticket) => {
     }
 };
 
+const INDIAN_MOBILE = /^[6-9]\d{9}$/;
+
 const assertValidPhone = (phone) => {
     const normalized = normalizeOtpPhone(phone);
 
@@ -79,6 +81,13 @@ export const requestOtpForAudience = async (audienceKey, phone, meta = {}) => {
         throw new ValidationError(
             audience.notFoundMessage || `No ${audience.label} account found for this number.`,
         );
+    }
+
+    // Indian mobile numbers start with 6-9; anything else cannot receive the SMS
+    // and only spends the SMS budget. Checked for new numbers only, so an account
+    // that already exists on such a number can still sign in.
+    if (!account && !INDIAN_MOBILE.test(normalizedPhone)) {
+        throw new ValidationError('Enter a valid 10-digit mobile number');
     }
 
     const otp = await createOrUpdateOtp(normalizedPhone, audience.otpScope, {

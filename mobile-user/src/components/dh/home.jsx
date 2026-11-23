@@ -114,7 +114,7 @@ export function CategoryCard({ title, subtitle, icon, image, buttonText, onPress
           {subtitle}
         </Text>
         <View style={styles.catAction}>
-          <Text style={styles.catActionText} numberOfLines={1}>
+          <Text style={styles.catActionText} numberOfLines={1} maxFontSizeMultiplier={1.2}>
             {buttonText}
           </Text>
           <Fa name="fa-solid fa-arrow-right" size={12} color={color.goldOnDark} />

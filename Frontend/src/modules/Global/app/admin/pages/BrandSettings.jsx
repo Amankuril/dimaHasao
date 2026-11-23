@@ -10,7 +10,7 @@
  * Support links published on the Legal & Policies page next door.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Loader2, Save } from 'lucide-react';
+import { ArrowDown, ArrowUp, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import globalService from '../../../services/globalService';
@@ -19,6 +19,18 @@ const field =
   'w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors focus:border-[#0a4d2b]';
 const label = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500';
 const hint = 'mt-1 text-[11px] text-gray-400';
+
+/** Icons the customer app can show beside a helpline (same list as the admin phone app). */
+const HELPLINE_ICONS = [
+  { value: 'fa-solid fa-shield', label: 'Police' },
+  { value: 'fa-solid fa-hospital', label: 'Hospital' },
+  { value: 'fa-solid fa-truck-medical', label: 'Ambulance' },
+  { value: 'fa-solid fa-fire-extinguisher', label: 'Fire' },
+  { value: 'fa-solid fa-person-military-pointing', label: 'Tourist police' },
+  { value: 'fa-solid fa-triangle-exclamation', label: 'Disaster' },
+  { value: 'fa-solid fa-person-dress', label: 'Women helpline' },
+  { value: 'fa-solid fa-phone', label: 'Other' },
+];
 
 const BrandSettings = () => {
   const [settings, setSettings] = useState(null);
@@ -42,9 +54,26 @@ const BrandSettings = () => {
   const set = (key) => (event) =>
     setSettings((current) => ({ ...current, [key]: event.target.value }));
 
+  const contacts = Array.isArray(settings?.emergencyContacts) ? settings.emergencyContacts : [];
+  const setContacts = (next) => setSettings((current) => ({ ...current, emergencyContacts: next }));
+  const setContact = (index, key) => (event) =>
+    setContacts(contacts.map((row, i) => (i === index ? { ...row, [key]: event.target.value } : row)));
+  const addContact = () => setContacts([...contacts, { label: '', number: '', icon: 'fa-solid fa-phone' }]);
+  const removeContact = (index) => setContacts(contacts.filter((_, i) => i !== index));
+  const moveContact = (index, delta) => {
+    const target = index + delta;
+    if (target < 0 || target >= contacts.length) return;
+    const next = [...contacts];
+    [next[index], next[target]] = [next[target], next[index]];
+    setContacts(next);
+  };
+
   const save = async (event) => {
     event.preventDefault();
     if (!String(settings?.brandName || '').trim()) return toast.error('The brand name is required');
+    if (!String(settings?.sosNumber || '').trim()) return toast.error('The SOS number is required');
+    const incomplete = contacts.find((row) => (row.label || row.number) && !(String(row.label).trim() && String(row.number).trim()));
+    if (incomplete) return toast.error('Each emergency contact needs both a name and a number');
 
     try {
       setSaving(true);
@@ -124,6 +153,84 @@ const BrandSettings = () => {
             <label className={label}>Support email</label>
             <input value={settings?.supportEmail || ''} onChange={set('supportEmail')} className={field}
                    placeholder="support@…" />
+          </div>
+        </section>
+
+        <section className="space-y-4 border-t border-gray-100 pt-5">
+          <h2 className="text-sm font-bold text-gray-900">Emergency &amp; SOS</h2>
+          <p className="-mt-2 text-[11px] text-gray-400">
+            The SOS number is what every SOS button dials (driver app, rides, admin safety centre). The helplines are
+            listed on the customer app&apos;s Home, More and Help &amp; Support screens, in this order.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={label}>SOS number *</label>
+              <input type="tel" value={settings?.sosNumber || ''} onChange={set('sosNumber')} className={field} placeholder="112" />
+            </div>
+            <div>
+              <label className={label}>Tourism desk phone</label>
+              <input type="tel" value={settings?.tourismDeskPhone || ''} onChange={set('tourismDeskPhone')} className={field} placeholder="+91 …" />
+              <p className={hint}>&quot;Contact Tourism Desk&quot; for local guides.</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {contacts.map((row, index) => (
+              <div key={index} className="grid gap-2 rounded-xl border border-gray-200 p-3 sm:grid-cols-[1fr_1fr_150px_auto] sm:items-end">
+                <div>
+                  <label className={label}>Name</label>
+                  <input value={row.label || ''} onChange={setContact(index, 'label')} className={field} placeholder="Police Control Room" />
+                </div>
+                <div>
+                  <label className={label}>Number</label>
+                  <input type="tel" value={row.number || ''} onChange={setContact(index, 'number')} className={field} placeholder="112" />
+                </div>
+                <div>
+                  <label className={label}>Icon</label>
+                  <select value={row.icon || 'fa-solid fa-phone'} onChange={setContact(index, 'icon')} className={field}>
+                    {HELPLINE_ICONS.map((icon) => (
+                      <option key={icon.value} value={icon.value}>{icon.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-1">
+                  <button type="button" onClick={() => moveContact(index, -1)} disabled={index === 0}
+                          className="rounded-lg border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 disabled:opacity-40" aria-label="Move up">
+                    <ArrowUp className="h-4 w-4" />
+                  </button>
+                  <button type="button" onClick={() => moveContact(index, 1)} disabled={index === contacts.length - 1}
+                          className="rounded-lg border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 disabled:opacity-40" aria-label="Move down">
+                    <ArrowDown className="h-4 w-4" />
+                  </button>
+                  <button type="button" onClick={() => removeContact(index)}
+                          className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50" aria-label="Remove this helpline">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button type="button" onClick={addContact}
+                    className="inline-flex items-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+              <Plus className="h-4 w-4" /> Add a helpline
+            </button>
+          </div>
+        </section>
+
+        <section className="space-y-4 border-t border-gray-100 pt-5">
+          <h2 className="text-sm font-bold text-gray-900">Partner support</h2>
+          <p className="-mt-2 text-[11px] text-gray-400">
+            Shown to hotel and restaurant partners in the partner app. Left blank, the support phone and email above are used.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={label}>Partner support phone</label>
+              <input type="tel" value={settings?.partnerSupportPhone || ''} onChange={set('partnerSupportPhone')} className={field} />
+            </div>
+            <div>
+              <label className={label}>Partner support email</label>
+              <input value={settings?.partnerSupportEmail || ''} onChange={set('partnerSupportEmail')} className={field} placeholder="partners@…" />
+            </div>
           </div>
         </section>
 

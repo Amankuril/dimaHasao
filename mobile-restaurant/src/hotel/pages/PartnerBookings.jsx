@@ -37,7 +37,9 @@ const BookingCard = ({ booking }) => {
 
   const rawStatus = (booking.bookingStatus || booking.status || 'pending').toLowerCase().trim();
 
-  const guestName = booking.userId?.name || 'Guest User';
+  // The person staying (when booked for someone else), else the account holder.
+  const guestName = booking.guestContact?.name || booking.userId?.name || 'Guest User';
+  const guestPhone = booking.guestContact?.phone || booking.userId?.phone || '';
   const checkInDate = formatDate(booking.checkInDate || booking.checkIn);
   const checkOutDate = formatDate(booking.checkOutDate || booking.checkOut);
   const nights = calculateNights(booking.checkInDate || booking.checkIn, booking.checkOutDate || booking.checkOut);
@@ -104,8 +106,8 @@ const BookingCard = ({ booking }) => {
 
       <View style={styles.cardFoot}>
         {booking.totalAmount != null ? <Money value={formatINR(booking.totalAmount)} style={{ flex: 1 }} /> : <View style={{ flex: 1 }} />}
-        {booking.userId?.phone ? (
-          <IconButton icon={Phone} label={`Call ${guestName}`} variant="primary" onPress={() => Linking.openURL(`tel:${booking.userId.phone}`)} />
+        {guestPhone ? (
+          <IconButton icon={Phone} label={`Call ${guestName}`} variant="primary" onPress={() => Linking.openURL(`tel:${guestPhone}`)} />
         ) : null}
         <Press scale={1} onPress={openDetail} accessibilityLabel={`View details of booking ${bookingId}`} style={styles.viewLink}>
           <Text style={[type.label, { color: color.primary }]}>Details</Text>

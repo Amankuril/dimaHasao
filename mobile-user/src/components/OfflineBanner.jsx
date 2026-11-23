@@ -12,7 +12,7 @@ export default function OfflineBanner() {
   return (
     <View pointerEvents="none" style={[styles.bar, { paddingTop: insets.top + 6 }]} accessibilityRole="alert">
       <WifiOff size={14} color="#fff" />
-      <Text style={styles.text}>You are offline. Showing saved data.</Text>
+      <Text style={styles.text}>You are offline. Some content may not load until you reconnect.</Text>
     </View>
   );
 }

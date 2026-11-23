@@ -76,7 +76,9 @@ function Hero() {
         <Press scale={0.97} onPress={() => router.navigate('/app/places')} accessibilityLabel="Dima Hasao Tourism">
           <Image source={require('../../../assets/images/user-logo.webp')} style={styles.brandLogo} resizeMode="contain" />
         </Press>
-        <View>
+        {/* Takes the rest of the row: shrink-wrapped, Android under-measured the
+            italic tagline and letter-spaced "Welcome to" and clipped their last word. */}
+        <View style={styles.brandText}>
           <View style={{ flexDirection: 'row' }}>
             {JUTHAI.map(([ch, hue]) => (
               <Text key={ch} style={[styles.juthai, { color: hue }]}>{ch}</Text>
@@ -84,7 +86,10 @@ function Hero() {
           </View>
           <View style={styles.welcomeRow}>
             <View style={styles.welcomeLine} />
-            <Text style={styles.welcome}>Welcome to</Text>
+            {/* Android's default line breaking under-measures letter-spaced Cinzel and cut "to". */}
+            <Text style={styles.welcome} textBreakStrategy="simple" numberOfLines={1}>
+              Welcome to
+            </Text>
             <View style={styles.welcomeLine} />
           </View>
           <Text style={styles.district}>DIMA HASAO</Text>
@@ -238,10 +243,11 @@ const styles = StyleSheet.create({
   bellDot: { position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: color.danger, borderWidth: 2, borderColor: color.surface },
   brand: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md },
   brandLogo: { width: 88, height: 88 },
+  brandText: { flex: 1, minWidth: 0 },
   juthai: { fontSize: 24, lineHeight: 28, letterSpacing: 0.6, ...poppins(900), ...textShadow },
   welcomeRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginVertical: 2 },
-  welcomeLine: { height: 1.5, width: 16, backgroundColor: color.goldBright },
-  welcome: { ...cinzel(), fontSize: 12, lineHeight: 16, letterSpacing: 1, color: color.goldOnDark, ...textShadow },
+  welcomeLine: { height: 1.5, width: 16, flexShrink: 0, backgroundColor: color.goldBright },
+  welcome: { ...cinzel(), fontSize: 12, lineHeight: 16, letterSpacing: 1, paddingRight: 2, flexShrink: 0, color: color.goldOnDark, ...textShadow },
   district: { ...type.heroSerif, color: color.textInverse, ...textShadow },
   tagline: { ...playfair(600, true), fontSize: 13, lineHeight: 18, marginTop: 2, color: color.textOnDarkMuted, ...textShadow },
   sections: { gap: space.xxl, paddingTop: space.xl },

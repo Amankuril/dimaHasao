@@ -146,8 +146,13 @@ export function FoodBottomNavigation({ state, navigation }) {
     };
   }, []);
 
+  // Taps pass through while the bar is hidden.
+  const [shown, setShown] = useState(true);
   useEffect(() => {
-    const apply = (visible) => Animated.timing(y, { toValue: visible ? 0 : 120, duration: 200, useNativeDriver: true }).start();
+    const apply = (visible) => {
+      setShown(visible);
+      Animated.timing(y, { toValue: visible ? 0 : 120, duration: 200, useNativeDriver: true }).start();
+    };
     navSubs.add(apply);
     const unsub = subscribeBottomNavShow(() => setFoodNavVisible(true));
     return () => {
@@ -166,7 +171,12 @@ export function FoodBottomNavigation({ state, navigation }) {
   if (activeRoute === 'profile') return null;
 
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.navWrap, { bottom: 80 + insets.bottom, transform: [{ translateY: y }] }]}>
+    // It sits above the app's own bottom nav, so sliding down alone left it
+    // half-visible behind that nav; it fades out as it slides.
+    <Animated.View
+      pointerEvents={shown ? 'box-none' : 'none'}
+      style={[styles.navWrap, { bottom: 80 + insets.bottom, opacity: y.interpolate({ inputRange: [0, 60], outputRange: [1, 0], extrapolate: 'clamp' }), transform: [{ translateY: y }] }]}
+    >
       <View style={[styles.nav, { width: Math.min(width - 48, 448) }]}>
         {TABS.filter((tab) => state.routes.some((r) => r.name === tab.route)).map((tab) => {
           const active = activeRoute === tab.route;

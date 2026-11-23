@@ -95,6 +95,10 @@ export default function PhoneRegistration() {
       setError('Enter all 10 digits of your mobile number.');
       return;
     }
+    if (!/^[6-9]/.test(phone)) {
+      setError('Mobile numbers start with 6, 7, 8 or 9.');
+      return;
+    }
 
     setLoading(true);
     setError('');
