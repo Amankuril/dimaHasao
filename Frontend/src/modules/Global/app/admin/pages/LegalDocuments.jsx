@@ -35,8 +35,8 @@ const MODULE_LABEL = {
 };
 
 const field =
-  'w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors focus:border-[#0a4d2b]';
-const label = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500';
+  'w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition-colors focus:border-[#0a4d2b]';
+const label = 'mb-1.5 block text-[13px] font-medium text-neutral-700';
 
 const blank = { module: 'platform', audience: 'customer', slug: 'privacy', title: '', content: '', isActive: true };
 
@@ -124,8 +124,8 @@ const LegalDocuments = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Legal &amp; Policies</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-medium text-neutral-900">Legal &amp; policies</h1>
+        <p className="mt-1 text-sm text-neutral-500">
           One copy of each document for every app. A module with nothing of its own shows the
           “All apps” version.
         </p>
@@ -133,13 +133,13 @@ const LegalDocuments = () => {
 
       <div className="grid gap-5 lg:grid-cols-[22rem_1fr]">
         {/* What exists today, so gaps are visible at a glance. */}
-        <section className="rounded-2xl border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-bold text-gray-900">Published</h2>
+        <section className="rounded-2xl border border-neutral-200 bg-white p-4">
+          <h2 className="mb-3 text-sm font-medium text-neutral-900">Published</h2>
 
           {loading ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-gray-400" /></div>
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-neutral-500" /></div>
           ) : documents.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-400">Nothing published yet.</p>
+            <p className="py-8 text-center text-sm text-neutral-500">Nothing published yet.</p>
           ) : (
             <ul className="space-y-1.5">
               {documents.map((doc) => {
@@ -151,13 +151,13 @@ const LegalDocuments = () => {
                       type="button"
                       onClick={() => setDraft({ ...doc })}
                       className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${
-                        active ? 'border-[#0a4d2b] bg-[#0a4d2b]/5' : 'border-gray-100 hover:bg-gray-50'
+                        active ? 'border-[#0a4d2b] bg-[#0a4d2b]/5' : 'border-neutral-100 hover:bg-neutral-50'
                       }`}
                     >
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-medium text-neutral-900">
                         {SLUG_LABEL[doc.slug] || doc.slug}
                       </p>
-                      <p className="text-[11px] text-gray-500">
+                      <p className="text-xs text-neutral-500">
                         {MODULE_LABEL[doc.module] || doc.module} · {doc.audience}
                         {doc.isActive ? '' : ' · draft'}
                       </p>
@@ -169,7 +169,7 @@ const LegalDocuments = () => {
           )}
         </section>
 
-        <form onSubmit={save} className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
+        <form onSubmit={save} className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-5">
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <label className={label}>Applies to</label>
@@ -180,7 +180,7 @@ const LegalDocuments = () => {
             <div>
               <label className={label}>Audience</label>
               <select value={draft.audience} onChange={set('audience')} className={field}>
-                {audiences.map((a) => <option key={a} value={a}>{a}</option>)}
+                {audiences.map((a) => <option key={a} value={a}>{String(a).replace(/[_-]+/g, ' ').replace(/^./, (c) => c.toUpperCase())}</option>)}
               </select>
             </div>
             <div>
@@ -193,7 +193,7 @@ const LegalDocuments = () => {
 
           <div>
             <label className={label}>Title</label>
-            <input value={draft.title} onChange={set('title')} className={field} placeholder="Privacy Policy" />
+            <input value={draft.title} onChange={set('title')} className={field} placeholder="Privacy policy" />
           </div>
 
           <div>
@@ -205,22 +205,22 @@ const LegalDocuments = () => {
               className={`${field} font-mono text-xs leading-relaxed`}
               placeholder="Plain text or HTML — whatever the apps should render."
             />
-            <p className="mt-1 text-[11px] text-gray-400">
+            <p className="mt-1 text-xs text-neutral-500">
               {String(draft.content || '').length.toLocaleString('en-IN')} characters
               {existing ? '' : ' · not published yet'}
             </p>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm text-neutral-700">
             <input type="checkbox" checked={draft.isActive} onChange={set('isActive')} />
             Published — uncheck to keep it as a draft the apps will not show
           </label>
 
-          <div className="flex items-center gap-3 border-t border-gray-100 pt-4">
+          <div className="flex items-center gap-3 border-t border-neutral-100 pt-4">
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#06381e] disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#06381e] disabled:opacity-60"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save
@@ -231,14 +231,14 @@ const LegalDocuments = () => {
                 type="button"
                 onClick={remove}
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60"
               >
                 <Trash2 className="h-4 w-4" />
                 Remove
               </button>
             )}
 
-            <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] text-gray-400">
+            <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-neutral-500">
               <FileText className="h-3.5 w-3.5" />
               /v1/legal/{draft.slug}?module={draft.module}
             </span>

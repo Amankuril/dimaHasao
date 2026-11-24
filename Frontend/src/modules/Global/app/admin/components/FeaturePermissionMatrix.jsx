@@ -22,7 +22,7 @@ const Box = ({ checked, onChange, title }) => (
     className={`h-6 w-6 rounded-md border flex items-center justify-center transition ${
       checked
         ? 'bg-[#0a4d2b] border-[#0a4d2b] text-white'
-        : 'bg-white border-gray-300 text-transparent hover:border-[#0a4d2b]'
+        : 'bg-white border-neutral-300 text-transparent hover:border-[#0a4d2b]'
     }`}
   >
     <Check size={13} strokeWidth={3} />
@@ -79,7 +79,7 @@ export default function FeaturePermissionMatrix({
 
   if (!visible.length) {
     return (
-      <p className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-xl p-4">
+      <p className="text-sm text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-xl p-4">
         Choose at least one module above, then pick what this admin may do inside it.
       </p>
     );
@@ -93,25 +93,25 @@ export default function FeaturePermissionMatrix({
         );
 
         return (
-          <div key={module} className="border border-gray-200 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between bg-gray-50 px-4 py-2.5 border-b border-gray-200">
-              <span className="text-[13px] font-bold text-gray-800 capitalize">{module}</span>
+          <div key={module} className="border border-neutral-200 rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between bg-neutral-50 px-4 py-2.5 border-b border-neutral-200">
+              <span className="text-[13px] font-medium text-neutral-800 capitalize">{module}</span>
               <button
                 type="button"
                 onClick={() => setModule(features, !allOn)}
-                className="text-[11px] font-bold uppercase tracking-wide text-[#0a4d2b] hover:underline"
+                className="text-xs text-[#0a4d2b] hover:underline"
               >
                 {allOn ? 'Clear all' : 'Select all'}
               </button>
             </div>
 
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-neutral-100">
               <div className="hidden sm:flex items-center px-4 py-1.5 bg-white">
                 <span className="flex-1" />
                 {actions.map((action) => (
                   <span
                     key={action}
-                    className="w-16 text-center text-[10px] font-bold uppercase tracking-wide text-gray-400"
+                    className="w-16 text-center text-xs text-neutral-500"
                   >
                     {ACTION_LABELS[action] || action}
                   </span>
@@ -122,11 +122,11 @@ export default function FeaturePermissionMatrix({
                 const rowOn = actions.every((action) => granted(permission, action));
 
                 return (
-                  <div key={key} className="flex items-center px-4 py-2 hover:bg-gray-50/70">
+                  <div key={key} className="flex items-center px-4 py-2 hover:bg-neutral-50/70">
                     <button
                       type="button"
                       onClick={() => setRow(permission, !rowOn)}
-                      className="flex-1 text-left text-[13px] text-gray-700"
+                      className="flex-1 text-left text-[13px] text-neutral-700"
                     >
                       {label}
                     </button>

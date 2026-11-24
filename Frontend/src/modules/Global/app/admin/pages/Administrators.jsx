@@ -17,8 +17,8 @@ import globalService from '../../../services/globalService';
 import FeaturePermissionMatrix from '../components/FeaturePermissionMatrix';
 
 const field =
-  'w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] focus:ring-4 focus:ring-[#0a4d2b]/10 transition';
-const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
+  'w-full px-3 py-2.5 bg-white border border-neutral-200 rounded-lg text-sm outline-none focus:border-[#0a4d2b] focus:ring-2 focus:ring-[#0a4d2b]/20 transition-colors';
+const label = 'block text-[13px] font-medium text-neutral-700 mb-1.5';
 
 const LEVEL_LABELS = {
   platform_superadmin: 'Platform superadmin',
@@ -148,10 +148,10 @@ const Administrators = () => {
 
   if (denied) {
     return (
-      <div className="bg-white p-10 rounded-2xl border border-gray-200 text-center max-w-lg mx-auto">
+      <div className="bg-white p-10 rounded-2xl border border-neutral-200 text-center max-w-lg mx-auto">
         <ShieldCheck size={28} className="text-amber-500 mx-auto mb-3" />
-        <h3 className="font-bold text-gray-900">Only a platform superadmin can manage administrators</h3>
-        <p className="text-sm text-gray-500 mt-1.5">
+        <h3 className="font-medium text-neutral-900">Only a platform superadmin can manage administrators</h3>
+        <p className="text-sm text-neutral-500 mt-1.5">
           Your account administers its own modules. Ask a platform superadmin for changes here.
         </p>
       </div>
@@ -162,20 +162,20 @@ const Administrators = () => {
     <div className="space-y-5">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Administrators</h2>
-          <p className="text-gray-500 text-sm mt-0.5">
+          <h2 className="text-2xl font-medium text-neutral-900">Administrators</h2>
+          <p className="text-neutral-500 text-sm mt-0.5">
             An access level decides which module tabs an admin sees.
           </p>
         </div>
         <button type="button" onClick={() => setShowForm((s) => !s)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]">
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e]">
           {showForm ? <X size={16} /> : <Plus size={16} />}
           {showForm ? 'Cancel' : 'Add an administrator'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+        <form onSubmit={submit} className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label className={label}>Name</label>
               <input className={field} value={form.name} onChange={set('name')} /></div>
@@ -185,7 +185,7 @@ const Administrators = () => {
               <input className={field} value={form.phone} onChange={set('phone')} /></div>
             <div><label className={label}>Password <span className="text-red-500">*</span></label>
               <input className={field} type="password" value={form.password} onChange={set('password')} />
-              <p className="text-xs text-gray-400 mt-1.5">At least 8 characters.</p></div>
+              <p className="text-xs text-neutral-500 mt-1.5">At least 8 characters.</p></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -200,7 +200,7 @@ const Administrators = () => {
               </label>
               <select className={field} value={form.module} onChange={set('module')}>
                 <option value="">Not scoped to one module</option>
-                {meta.modules.map((m) => <option key={m} value={m}>{m}</option>)}
+                {meta.modules.map((m) => <option key={m} value={m}>{String(m).replace(/[_-]+/g, ' ').replace(/^./, (c) => c.toUpperCase())}</option>)}
               </select></div>
           </div>
 
@@ -209,16 +209,16 @@ const Administrators = () => {
             <div className="flex flex-wrap gap-2">
               {meta.modules.map((m) => (
                 <button key={m} type="button" onClick={() => toggleService(m)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                     form.servicesAccess.includes(m)
                       ? 'bg-[#0a4d2b] text-white'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                      : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
                   }`}>
                   {m}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-gray-400 mt-1.5">
+            <p className="text-xs text-neutral-500 mt-1.5">
               Leave every module unselected only for a platform superadmin.
             </p>
           </div>
@@ -226,7 +226,7 @@ const Administrators = () => {
           {form.adminLevel === 'subadmin' && (
             <div>
               <label className={label}>What they may do</label>
-              <p className="text-xs text-gray-400 mb-3">
+              <p className="text-xs text-neutral-500 mb-3">
                 Ticking anything grants View too — a row they can change but never open is no use.
               </p>
               <FeaturePermissionMatrix
@@ -240,33 +240,34 @@ const Administrators = () => {
           )}
 
           <button type="submit" disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60">
+            className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e] disabled:opacity-60">
             {saving && <Loader2 size={16} className="animate-spin" />} Create administrator
           </button>
         </form>
       )}
 
       {loading ? (
-        <div className="p-12 text-center text-gray-400"><Loader2 size={22} className="animate-spin inline" /></div>
+        <div className="p-12 text-center text-neutral-500"><Loader2 size={22} className="animate-spin inline" /></div>
       ) : (
         <div className="space-y-3">
           {administrators.map((admin) => (
-            <div key={admin._id} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-center gap-4">
+            <div key={admin._id} className="bg-white p-4 rounded-xl border border-neutral-900/[0.08] flex flex-wrap items-center gap-4">
               <div className="flex-1 basis-56 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-bold text-gray-900">{admin.name || admin.email}</p>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#0a4d2b]/10 text-[#0a4d2b]">
+                  <p className="font-medium text-neutral-900">{admin.name || admin.email}</p>
+                  <span className="rounded-md bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700">
                     {LEVEL_LABELS[admin.adminLevel] || admin.adminLevel}
                   </span>
                   {admin.isActive === false && (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">
-                      deactivated
+                    <span className="inline-flex items-center gap-1.5 text-xs text-red-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                      Deactivated
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{admin.email}</p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {admin.servicesAccess?.length ? admin.servicesAccess.join(' · ') : 'every module'}
+                <p className="text-xs text-neutral-500 mt-1">{admin.email}</p>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  {admin.servicesAccess?.length ? admin.servicesAccess.map((m) => m.charAt(0).toUpperCase() + m.slice(1)).join(' · ') : 'Every module'}
                   {admin.module ? ` · scoped to ${admin.module}` : ''}
                 </p>
               </div>
@@ -278,13 +279,13 @@ const Administrators = () => {
                     setEditing(editing === admin._id ? null : admin._id);
                     setEditGrants(admin.featurePermissions || {});
                   }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 shrink-0"
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 text-neutral-700 hover:bg-neutral-50 shrink-0"
                 >
                   {editing === admin._id ? 'Close' : 'Permissions'}
                 </button>
               )}
 
-              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 shrink-0">
+              <label className="flex items-center gap-2 text-xs font-medium text-neutral-600 shrink-0">
                 <input
                   type="checkbox"
                   checked={admin.isActive !== false}
@@ -295,7 +296,7 @@ const Administrators = () => {
               </label>
 
               {editing === admin._id && (
-                <div className="w-full pt-4 mt-1 border-t border-gray-100 space-y-4">
+                <div className="w-full pt-4 mt-1 border-t border-neutral-100 space-y-4">
                   <FeaturePermissionMatrix
                     catalogue={meta.features}
                     actions={meta.featureActions}
@@ -307,7 +308,7 @@ const Administrators = () => {
                     type="button"
                     disabled={busyId === admin._id}
                     onClick={() => saveGrants(admin)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm disabled:opacity-60"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm disabled:opacity-60"
                   >
                     {busyId === admin._id && <Loader2 size={15} className="animate-spin" />}
                     Save permissions

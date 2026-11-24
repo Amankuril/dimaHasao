@@ -42,11 +42,11 @@ const Switch = ({ checked, onChange, disabled }) => (
     disabled={disabled}
     onClick={() => onChange(!checked)}
     className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-      checked ? 'bg-[#0a4d2b]' : 'bg-gray-300'
+      checked ? 'bg-[#0a4d2b]' : 'bg-neutral-300'
     }`}
   >
     <span
-      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-colors ${
         checked ? 'left-[22px]' : 'left-0.5'
       }`}
     />
@@ -123,7 +123,7 @@ const ToggleManagement = () => {
 
     try {
       await adminAPI.updateCustomizationSettings({ [key]: checked });
-      toast.success(`${FOOD_TOGGLES.find((t) => t.key === key)?.label || key} ${checked ? 'ON' : 'OFF'}`);
+      toast.success(`${FOOD_TOGGLES.find((t) => t.key === key)?.label || key} ${checked ? 'on' : 'off'}`);
     } catch (error) {
       setFoodSettings((current) => ({ ...current, [key]: previous }));
       toast.error(error.message || 'Could not save that toggle');
@@ -134,38 +134,38 @@ const ToggleManagement = () => {
 
   if (denied) {
     return (
-      <div className="bg-white p-10 rounded-2xl border border-gray-200 text-center max-w-lg mx-auto">
+      <div className="bg-white p-10 rounded-2xl border border-neutral-200 text-center max-w-lg mx-auto">
         <ToggleRight size={28} className="text-amber-500 mx-auto mb-3" />
-        <h3 className="font-bold text-gray-900">Only a platform superadmin can change these</h3>
+        <h3 className="font-medium text-neutral-900">Only a platform superadmin can change these</h3>
       </div>
     );
   }
 
   if (loading) {
-    return <div className="p-12 text-center text-gray-400"><Loader2 size={22} className="animate-spin inline" /></div>;
+    return <div className="p-12 text-center text-neutral-500"><Loader2 size={22} className="animate-spin inline" /></div>;
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Toggle Management</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 className="text-xl font-medium text-neutral-900">Toggle management</h2>
+        <p className="text-sm text-neutral-500 mt-1">
           Every switch that changes what the apps do, in one place.
         </p>
       </div>
 
-      <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="font-bold text-gray-900 flex items-center gap-2">
+      <section className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
+        <div className="px-5 py-4 border-b border-neutral-100">
+          <h3 className="font-medium text-neutral-900 flex items-center gap-2">
             <Wrench size={16} className="text-amber-500" /> Module availability
           </h3>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-neutral-500 mt-1">
             Switching a module off shows an under-maintenance screen across all of its pages and
             stops its API. Admin panels stay open.
           </p>
         </div>
 
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-neutral-100">
           {modules.map((module) => {
             const entry = toggles[module] || { enabled: true, message: '' };
 
@@ -173,7 +173,7 @@ const ToggleManagement = () => {
               <div key={module} className="px-5 py-4">
                 <div className="flex items-center gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm">{labels[module] || module}</p>
+                    <p className="font-medium text-neutral-900 text-sm">{labels[module] || module}</p>
                     <p className="text-xs mt-0.5 font-medium">
                       {entry.enabled ? (
                         <span className="text-emerald-600">Live</span>
@@ -183,7 +183,7 @@ const ToggleManagement = () => {
                     </p>
                   </div>
 
-                  {savingKey === module && <Loader2 size={15} className="animate-spin text-gray-400" />}
+                  {savingKey === module && <Loader2 size={15} className="animate-spin text-neutral-500" />}
 
                   <Switch
                     checked={entry.enabled}
@@ -204,9 +204,9 @@ const ToggleManagement = () => {
                         }))
                       }
                       onBlur={() => saveModule(module, { message: entry.message || '' })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#0a4d2b]"
+                      className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-[#0a4d2b]"
                     />
-                    <p className="text-[11px] text-gray-400 mt-1">
+                    <p className="text-xs text-neutral-500 mt-1">
                       Shown on the maintenance screen. Leave blank for the default.
                     </p>
                   </div>
@@ -217,28 +217,28 @@ const ToggleManagement = () => {
         </div>
       </section>
 
-      <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="font-bold text-gray-900">Food ordering &amp; payments</h3>
-          <p className="text-xs text-gray-500 mt-1">
+      <section className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
+        <div className="px-5 py-4 border-b border-neutral-100">
+          <h3 className="font-medium text-neutral-900">Food ordering &amp; payments</h3>
+          <p className="text-xs text-neutral-500 mt-1">
             Moved here from Food&apos;s Customization Settings. These apply to the food module only.
           </p>
         </div>
 
         {!foodAvailable ? (
-          <p className="px-5 py-6 text-sm text-gray-500">
+          <p className="px-5 py-6 text-sm text-neutral-500">
             Food settings could not be loaded. They need access to the food admin API.
           </p>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-neutral-100">
             {FOOD_TOGGLES.map(({ key, label, hint }) => (
               <div key={key} className="px-5 py-3.5 flex items-center gap-4">
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 text-sm">{label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{hint}</p>
+                  <p className="font-medium text-neutral-900 text-sm">{label}</p>
+                  <p className="text-xs text-neutral-500 mt-0.5">{hint}</p>
                 </div>
 
-                {savingKey === key && <Loader2 size={15} className="animate-spin text-gray-400" />}
+                {savingKey === key && <Loader2 size={15} className="animate-spin text-neutral-500" />}
 
                 <Switch
                   checked={foodSettings[key] === true}

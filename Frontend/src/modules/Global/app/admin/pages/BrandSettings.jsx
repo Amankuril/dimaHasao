@@ -16,9 +16,9 @@ import toast from 'react-hot-toast';
 import globalService from '../../../services/globalService';
 
 const field =
-  'w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors focus:border-[#0a4d2b]';
-const label = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500';
-const hint = 'mt-1 text-[11px] text-gray-400';
+  'w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition-colors focus:border-[#0a4d2b]';
+const label = 'mb-1.5 block text-[13px] font-medium text-neutral-700';
+const hint = 'mt-1 text-xs text-neutral-500';
 
 /** Icons the customer app can show beside a helpline (same list as the admin phone app). */
 const HELPLINE_ICONS = [
@@ -90,7 +90,7 @@ const BrandSettings = () => {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-neutral-500" />
       </div>
     );
   }
@@ -98,15 +98,15 @@ const BrandSettings = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Brand &amp; Contact</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-medium text-neutral-900">Brand &amp; contact</h1>
+        <p className="mt-1 text-sm text-neutral-500">
           Used by every app — the customer app, food, taxi, hotels, tours and festivals.
         </p>
       </div>
 
-      <form onSubmit={save} className="max-w-2xl space-y-5 rounded-2xl border border-gray-200 bg-white p-5">
+      <form onSubmit={save} className="max-w-2xl space-y-5 rounded-2xl border border-neutral-200 bg-white p-5">
         <section className="space-y-4">
-          <h2 className="text-sm font-bold text-gray-900">Identity</h2>
+          <h2 className="text-sm font-medium text-neutral-900">Identity</h2>
 
           <div>
             <label className={label}>Brand name</label>
@@ -129,9 +129,9 @@ const BrandSettings = () => {
           </div>
         </section>
 
-        <section className="space-y-4 border-t border-gray-100 pt-5">
-          <h2 className="text-sm font-bold text-gray-900">Support</h2>
-          <p className="-mt-2 text-[11px] text-gray-400">
+        <section className="space-y-4 border-t border-neutral-100 pt-5">
+          <h2 className="text-sm font-medium text-neutral-900">Support</h2>
+          <p className="-mt-2 text-xs text-neutral-500">
             The “Support” link on every sign-in screen uses these, in this order: link, then
             phone, then email. With none of them set, the link is hidden rather than broken.
           </p>
@@ -140,7 +140,7 @@ const BrandSettings = () => {
             <div>
               <label className={label}>Support link</label>
               <input value={settings?.supportUrl || ''} onChange={set('supportUrl')} className={field}
-                     placeholder="https://…" />
+                     placeholder="https://example.com" />
             </div>
             <div>
               <label className={label}>Support phone</label>
@@ -152,13 +152,13 @@ const BrandSettings = () => {
           <div>
             <label className={label}>Support email</label>
             <input value={settings?.supportEmail || ''} onChange={set('supportEmail')} className={field}
-                   placeholder="support@…" />
+                   placeholder="support@example.com" />
           </div>
         </section>
 
-        <section className="space-y-4 border-t border-gray-100 pt-5">
-          <h2 className="text-sm font-bold text-gray-900">Emergency &amp; SOS</h2>
-          <p className="-mt-2 text-[11px] text-gray-400">
+        <section className="space-y-4 border-t border-neutral-100 pt-5">
+          <h2 className="text-sm font-medium text-neutral-900">Emergency &amp; SOS</h2>
+          <p className="-mt-2 text-xs text-neutral-500">
             The SOS number is what every SOS button dials (driver app, rides, admin safety centre). The helplines are
             listed on the customer app&apos;s Home, More and Help &amp; Support screens, in this order.
           </p>
@@ -170,17 +170,17 @@ const BrandSettings = () => {
             </div>
             <div>
               <label className={label}>Tourism desk phone</label>
-              <input type="tel" value={settings?.tourismDeskPhone || ''} onChange={set('tourismDeskPhone')} className={field} placeholder="+91 …" />
+              <input type="tel" value={settings?.tourismDeskPhone || ''} onChange={set('tourismDeskPhone')} className={field} placeholder="+91" />
               <p className={hint}>&quot;Contact Tourism Desk&quot; for local guides.</p>
             </div>
           </div>
 
           <div className="space-y-3">
             {contacts.map((row, index) => (
-              <div key={index} className="grid gap-2 rounded-xl border border-gray-200 p-3 sm:grid-cols-[1fr_1fr_150px_auto] sm:items-end">
+              <div key={index} className="grid gap-2 rounded-xl border border-neutral-200 p-3 sm:grid-cols-[1fr_1fr_150px_auto] sm:items-end">
                 <div>
                   <label className={label}>Name</label>
-                  <input value={row.label || ''} onChange={setContact(index, 'label')} className={field} placeholder="Police Control Room" />
+                  <input value={row.label || ''} onChange={setContact(index, 'label')} className={field} placeholder="Police control room" />
                 </div>
                 <div>
                   <label className={label}>Number</label>
@@ -196,11 +196,11 @@ const BrandSettings = () => {
                 </div>
                 <div className="flex gap-1">
                   <button type="button" onClick={() => moveContact(index, -1)} disabled={index === 0}
-                          className="rounded-lg border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 disabled:opacity-40" aria-label="Move up">
+                          className="rounded-lg border border-neutral-200 p-2 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40" aria-label="Move up">
                     <ArrowUp className="h-4 w-4" />
                   </button>
                   <button type="button" onClick={() => moveContact(index, 1)} disabled={index === contacts.length - 1}
-                          className="rounded-lg border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 disabled:opacity-40" aria-label="Move down">
+                          className="rounded-lg border border-neutral-200 p-2 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40" aria-label="Move down">
                     <ArrowDown className="h-4 w-4" />
                   </button>
                   <button type="button" onClick={() => removeContact(index)}
@@ -211,15 +211,15 @@ const BrandSettings = () => {
               </div>
             ))}
             <button type="button" onClick={addContact}
-                    className="inline-flex items-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                    className="inline-flex items-center gap-2 rounded-xl border border-dashed border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
               <Plus className="h-4 w-4" /> Add a helpline
             </button>
           </div>
         </section>
 
-        <section className="space-y-4 border-t border-gray-100 pt-5">
-          <h2 className="text-sm font-bold text-gray-900">Partner support</h2>
-          <p className="-mt-2 text-[11px] text-gray-400">
+        <section className="space-y-4 border-t border-neutral-100 pt-5">
+          <h2 className="text-sm font-medium text-neutral-900">Partner support</h2>
+          <p className="-mt-2 text-xs text-neutral-500">
             Shown to hotel and restaurant partners in the partner app. Left blank, the support phone and email above are used.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -229,13 +229,13 @@ const BrandSettings = () => {
             </div>
             <div>
               <label className={label}>Partner support email</label>
-              <input value={settings?.partnerSupportEmail || ''} onChange={set('partnerSupportEmail')} className={field} placeholder="partners@…" />
+              <input value={settings?.partnerSupportEmail || ''} onChange={set('partnerSupportEmail')} className={field} placeholder="partners@" />
             </div>
           </div>
         </section>
 
-        <section className="space-y-4 border-t border-gray-100 pt-5">
-          <h2 className="text-sm font-bold text-gray-900">Address</h2>
+        <section className="space-y-4 border-t border-neutral-100 pt-5">
+          <h2 className="text-sm font-medium text-neutral-900">Address</h2>
 
           <div>
             <label className={label}>Address</label>
@@ -254,11 +254,11 @@ const BrandSettings = () => {
           </div>
         </section>
 
-        <div className="border-t border-gray-100 pt-4">
+        <div className="border-t border-neutral-100 pt-4">
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#06381e] disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#06381e] disabled:opacity-60"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save

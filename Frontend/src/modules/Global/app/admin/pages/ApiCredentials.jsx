@@ -15,9 +15,9 @@ import toast from 'react-hot-toast';
 import globalService from '../../../services/globalService';
 
 const field =
-  'w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors focus:border-[#0a4d2b]';
-const label = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500';
-const hint = 'mt-1 text-[11px] text-gray-400';
+  'w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition-colors focus:border-[#0a4d2b]';
+const label = 'mb-1.5 block text-[13px] font-medium text-neutral-700';
+const hint = 'mt-1 text-xs text-neutral-500';
 
 const SOURCE_LABEL = { database: 'saved here', env: 'from server setting', none: 'not set' };
 
@@ -83,7 +83,7 @@ const ApiCredentials = () => {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-neutral-500" />
       </div>
     );
   }
@@ -91,9 +91,9 @@ const ApiCredentials = () => {
   if (!info) {
     return (
       <div className="space-y-2">
-        <h1 className="text-xl font-bold text-gray-900">API Keys</h1>
-        <p className="text-sm text-gray-500">Keys could not be loaded. Only a platform superadmin can open this page.</p>
-        <button type="button" onClick={load} className="text-sm font-bold text-[#0a4d2b]">Try again</button>
+        <h1 className="text-2xl font-medium text-neutral-900">API keys</h1>
+        <p className="text-sm text-neutral-500">Keys could not be loaded. Only a platform superadmin can open this page.</p>
+        <button type="button" onClick={load} className="text-sm font-medium text-[#0a4d2b]">Try again</button>
       </div>
     );
   }
@@ -101,8 +101,8 @@ const ApiCredentials = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">API Keys</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-medium text-neutral-900">API keys</h1>
+        <p className="mt-1 text-sm text-neutral-500">
           Google Maps and Razorpay. Changes apply immediately — no app update needed.
         </p>
       </div>
@@ -114,10 +114,10 @@ const ApiCredentials = () => {
         </div>
       )}
 
-      <form onSubmit={save} className="max-w-2xl space-y-5 rounded-2xl border border-gray-200 bg-white p-5">
+      <form onSubmit={save} className="max-w-2xl space-y-5 rounded-2xl border border-neutral-200 bg-white p-5">
         {GROUPS.map((group, index) => (
-          <section key={group.title} className={`space-y-4 ${index ? 'border-t border-gray-100 pt-5' : ''}`}>
-            <h2 className="text-sm font-bold text-gray-900">{group.title}</h2>
+          <section key={group.title} className={`space-y-4 ${index ? 'border-t border-neutral-100 pt-5' : ''}`}>
+            <h2 className="text-sm font-medium text-neutral-900">{group.title}</h2>
             {group.fields.map(({ name, secret }) => {
               const current = info.fields?.[name] || {};
               return (
@@ -140,14 +140,14 @@ const ApiCredentials = () => {
           </section>
         ))}
 
-        <p className="border-t border-gray-100 pt-4 text-[11px] text-gray-400">
+        <p className="border-t border-neutral-100 pt-4 text-xs text-neutral-500">
           The server key serves the mobile apps and the web panel's lookups; the web key draws maps in the browser (restrict it by website address). The map drawn inside the mobile apps uses a separate key built into the app, which cannot be changed from here.
         </p>
 
         <button
           type="submit"
           disabled={saving || !info.encryptionConfigured}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#06381e] disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#06381e] disabled:opacity-60"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Save

@@ -17,19 +17,46 @@ import {
 import toast from 'react-hot-toast';
 
 import globalService from '../../../services/globalService';
+import { MODULE_COLOURS } from '../moduleColours';
 
 const MODULES = [
-  { key: 'food', label: 'Food', colour: '#f97316' },
-  { key: 'taxi', label: 'Taxi', colour: '#eab308' },
-  { key: 'hotel', label: 'Hotels', colour: '#0ea5e9' },
-  { key: 'tours', label: 'Tours', colour: '#0a4d2b' },
-  { key: 'festivals', label: 'Festivals', colour: '#8b5cf6' },
+  { key: 'food', label: 'Food', colour: MODULE_COLOURS.food },
+  { key: 'taxi', label: 'Taxi', colour: MODULE_COLOURS.taxi },
+  { key: 'hotel', label: 'Hotels', colour: MODULE_COLOURS.hotel },
+  { key: 'tours', label: 'Tours', colour: MODULE_COLOURS.tours },
+  { key: 'festivals', label: 'Festivals', colour: MODULE_COLOURS.festivals },
 ];
+
+const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+
+const ChartTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const total = payload.reduce((sum, p) => sum + (Number(p.value) || 0), 0);
+  return (
+    <div className="min-w-44 rounded-lg border border-neutral-900/[0.08] bg-white px-3 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+      <p className="mb-1 text-xs text-neutral-500">{label}</p>
+      {[...payload].reverse().map((p) => (
+        <p key={p.dataKey} className="flex items-center justify-between gap-4 text-[13px] text-neutral-700">
+          <span className="inline-flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: p.color }} />
+            {p.name}
+          </span>
+          <span className="font-mono tabular-nums text-neutral-900">{rupees(p.value)}</span>
+        </p>
+      ))}
+      {payload.length > 1 && (
+        <p className="mt-1 flex justify-between border-t border-neutral-900/[0.06] pt-1 text-[13px] text-neutral-500">
+          Total <span className="font-mono tabular-nums text-neutral-900">{rupees(total)}</span>
+        </p>
+      )}
+    </div>
+  );
+};
 
 const COLOUR = Object.fromEntries(MODULES.map((m) => [m.key, m.colour]));
 
 const rupees = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
-const field = 'px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] focus:ring-4 focus:ring-[#0a4d2b]/10 transition';
+const field = 'px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm outline-none focus:border-[#0a4d2b] focus:ring-2 focus:ring-[#0a4d2b]/20 transition-colors';
 
 /** yyyy-mm-dd, `daysAgo` days back — the format a date input wants. */
 const isoDaysAgo = (daysAgo) => {
@@ -106,9 +133,9 @@ const Reports = () => {
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Reports</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Every service, one date range. Settled transactions only.
+          <h1 className="text-2xl font-medium text-neutral-900">Reports</h1>
+          <p className="text-sm text-neutral-500 mt-0.5">
+            Every service over one date range, settled transactions only
           </p>
         </div>
 
@@ -116,7 +143,7 @@ const Reports = () => {
           type="button"
           onClick={() => download('overview')}
           disabled={downloading === 'overview'}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e] disabled:opacity-60"
         >
           {downloading === 'overview' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
           Export CSV
@@ -126,7 +153,7 @@ const Reports = () => {
       {/* Range */}
       <div className="flex flex-wrap items-center gap-2">
         <input type="date" className={field} value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
-        <span className="text-sm text-gray-400">to</span>
+        <span className="text-sm text-neutral-500">to</span>
         <input type="date" className={field} value={to} min={from} onChange={(e) => setTo(e.target.value)} />
 
         {PRESETS.map((preset) => (
@@ -134,7 +161,7 @@ const Reports = () => {
             key={preset.days}
             type="button"
             onClick={() => applyPreset(preset.days)}
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-600 hover:bg-gray-50"
+            className="px-3 py-2 rounded-xl border border-neutral-200 bg-white text-xs font-medium text-neutral-600 hover:bg-neutral-50"
           >
             {preset.label}
           </button>
@@ -142,28 +169,28 @@ const Reports = () => {
       </div>
 
       {loading ? (
-        <div className="py-20 grid place-items-center"><Loader2 className="animate-spin text-gray-400" /></div>
+        <div className="py-20 grid place-items-center"><Loader2 className="animate-spin text-neutral-500" /></div>
       ) : (
         <>
           {/* Platform totals */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Gross value', value: rupees(overview?.total?.gross), tone: 'text-gray-900' },
+              { label: 'Gross value', value: rupees(overview?.total?.gross), tone: 'text-neutral-900' },
               { label: 'Platform commission', value: rupees(overview?.total?.commission), tone: 'text-[#0a4d2b]' },
-              { label: 'Taxes collected', value: rupees(overview?.total?.taxes), tone: 'text-gray-900' },
-              { label: 'Owed to vendors', value: rupees(overview?.total?.vendorPayout), tone: 'text-gray-900' },
+              { label: 'Taxes collected', value: rupees(overview?.total?.taxes), tone: 'text-neutral-900' },
+              { label: 'Owed to vendors', value: rupees(overview?.total?.vendorPayout), tone: 'text-neutral-900' },
             ].map((card) => (
-              <div key={card.label} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                <p className="text-xs font-semibold text-gray-500">{card.label}</p>
-                <p className={`text-xl font-black mt-1 ${card.tone}`}>{card.value}</p>
+              <div key={card.label} className="bg-white p-4 rounded-xl border border-neutral-900/[0.08]">
+                <p className="text-xs text-neutral-500">{card.label}</p>
+                <p className={`mt-2 font-mono text-[28px] font-medium leading-9 tabular-nums ${card.tone}`}>{card.value}</p>
               </div>
             ))}
           </div>
 
           {/* Trend */}
-          <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+          <div className="bg-white p-4 rounded-xl border border-neutral-900/[0.08] space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-bold text-gray-900 text-sm">Gross value over time</h3>
+              <h3 className="font-medium text-neutral-900 text-sm">Gross value over time</h3>
               <div className="flex items-center gap-2">
                 <select className={`${field} text-xs`} value={interval} onChange={(e) => setInterval(e.target.value)}>
                   <option value="day">By day</option>
@@ -174,34 +201,37 @@ const Reports = () => {
                   type="button"
                   onClick={() => download('timeseries', { interval })}
                   disabled={downloading === 'timeseries'}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
                 >
                   <Download size={14} /> CSV
                 </button>
               </div>
             </div>
 
+            {activeModules.length > 0 && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {activeModules.map((m) => (
+                  <span key={m.key} className="inline-flex items-center gap-2 text-xs text-neutral-600">
+                    <span className="h-2 w-2 rounded-sm" style={{ background: m.colour }} />
+                    {m.label}
+                  </span>
+                ))}
+              </div>
+            )}
+
             {points.length === 0 ? (
-              <p className="py-12 text-center text-sm text-gray-400">
-                Nothing settled in this period.
+              <p className="py-12 text-center text-sm text-neutral-500">
+                Nothing settled in this period
               </p>
             ) : (
-              <div className="h-64">
+              <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                    <defs>
-                      {activeModules.map((m) => (
-                        <linearGradient key={m.key} id={`fill-${m.key}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={m.colour} stopOpacity={0.35} />
-                          <stop offset="95%" stopColor={m.colour} stopOpacity={0} />
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="bucket" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-                    <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" width={64}
+                    <CartesianGrid vertical={false} stroke="rgba(23,23,23,0.06)" />
+                    <XAxis dataKey="bucket" axisLine={false} tickLine={false} dy={8} tick={{ fontSize: 12, fill: '#737373', fontFamily: MONO }} />
+                    <YAxis axisLine={false} tickLine={false} width={64} tick={{ fontSize: 12, fill: '#737373', fontFamily: MONO }}
                       tickFormatter={(v) => (v === 0 ? '₹0' : `₹${(v / 1000).toFixed(v >= 1000 ? 0 : 1)}k`)} />
-                    <Tooltip formatter={(value, name) => [rupees(value), name]} />
+                    <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(23,23,23,0.12)' }} />
                     {activeModules.map((m) => (
                       <Area
                         key={m.key}
@@ -210,7 +240,10 @@ const Reports = () => {
                         name={m.label}
                         stackId="1"
                         stroke={m.colour}
-                        fill={`url(#fill-${m.key})`}
+                        strokeWidth={1.5}
+                        fill={m.colour}
+                        fillOpacity={0.14}
+                        isAnimationActive={false}
                       />
                     ))}
                   </AreaChart>
@@ -220,48 +253,48 @@ const Reports = () => {
           </div>
 
           {/* Per module */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <h3 className="font-bold text-gray-900 text-sm p-4 pb-3 border-b border-gray-100">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
+            <h3 className="font-medium text-neutral-900 text-sm p-4 pb-3 border-b border-neutral-100">
               By service
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[720px]">
-                <thead className="bg-gray-50 text-gray-500">
+                <thead className="bg-neutral-50 text-neutral-500">
                   <tr>
                     {['Service', 'Settled', 'Pending', 'Gross', 'Commission', 'Taxes', 'To vendors', 'Average'].map((h, i) => (
-                      <th key={h} className={`px-4 py-2.5 text-xs font-bold ${i === 0 ? 'text-left' : 'text-right'}`}>
+                      <th key={h} className={`px-4 py-2.5 text-xs font-medium ${i === 0 ? 'text-left' : 'text-right'}`}>
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-neutral-100">
                   {(overview?.rows || []).map((row) => (
-                    <tr key={row.module} className="hover:bg-gray-50/60">
+                    <tr key={row.module} className="hover:bg-neutral-50">
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-2 font-semibold text-gray-800">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLOUR[row.module] }} />
+                        <span className="inline-flex items-center gap-2 font-medium text-neutral-800">
+                          <span className="h-2 w-2 rounded-sm" style={{ background: COLOUR[row.module] }} />
                           {row.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-700">{row.count} {row.unit}</td>
-                      <td className="px-4 py-3 text-right text-gray-400">{row.pending}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-gray-900">{rupees(row.gross)}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-[#0a4d2b]">{rupees(row.commission)}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">{rupees(row.taxes)}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">{rupees(row.vendorPayout)}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">{rupees(row.averageOrderValue)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-neutral-700">{row.count} {row.unit}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-neutral-500">{row.pending}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums font-medium text-neutral-900">{rupees(row.gross)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums font-medium text-[#0a4d2b]">{rupees(row.commission)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-neutral-600">{rupees(row.taxes)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-neutral-600">{rupees(row.vendorPayout)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-neutral-600">{rupees(row.averageOrderValue)}</td>
                     </tr>
                   ))}
                   {overview?.total && (
-                    <tr className="bg-gray-50 font-bold text-gray-900">
+                    <tr className="bg-neutral-50 font-medium text-neutral-900">
                       <td className="px-4 py-3">Total</td>
-                      <td className="px-4 py-3 text-right">{overview.total.count}</td>
-                      <td className="px-4 py-3 text-right text-gray-500">{overview.total.pending}</td>
-                      <td className="px-4 py-3 text-right">{rupees(overview.total.gross)}</td>
-                      <td className="px-4 py-3 text-right text-[#0a4d2b]">{rupees(overview.total.commission)}</td>
-                      <td className="px-4 py-3 text-right">{rupees(overview.total.taxes)}</td>
-                      <td className="px-4 py-3 text-right">{rupees(overview.total.vendorPayout)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{overview.total.count}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-neutral-500">{overview.total.pending}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{rupees(overview.total.gross)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums text-[#0a4d2b]">{rupees(overview.total.commission)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{rupees(overview.total.taxes)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{rupees(overview.total.vendorPayout)}</td>
                       <td className="px-4 py-3" />
                     </tr>
                   )}
@@ -271,9 +304,9 @@ const Reports = () => {
           </div>
 
           {/* Top earners */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-2 p-4 pb-3 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-sm">Top earners</h3>
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-4 pb-3 border-b border-neutral-100">
+              <h3 className="font-medium text-neutral-900 text-sm">Top earners</h3>
               <div className="flex items-center gap-2">
                 <select className={`${field} text-xs`} value={topModule} onChange={(e) => setTopModule(e.target.value)}>
                   {MODULES.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
@@ -282,7 +315,7 @@ const Reports = () => {
                   type="button"
                   onClick={() => download('top', { module: topModule })}
                   disabled={downloading === 'top'}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
                 >
                   <Download size={14} /> CSV
                 </button>
@@ -290,22 +323,36 @@ const Reports = () => {
             </div>
 
             {vendors.length === 0 ? (
-              <p className="py-10 text-center text-sm text-gray-400">
-                No settled transactions for this service in this period.
+              <p className="py-10 text-center text-sm text-neutral-500">
+                No settled transactions for this service in this period
               </p>
             ) : (
-              <div className="divide-y divide-gray-100">
-                {vendors.map((vendor, index) => (
-                  <div key={vendor.id} className="px-4 py-3 flex items-center gap-3">
-                    <span className="w-6 text-xs font-bold text-gray-400">{index + 1}</span>
-                    <span className="flex-1 font-semibold text-gray-800 truncate">{vendor.name}</span>
-                    <span className="text-xs text-gray-500">{vendor.count}</span>
-                    <span className="w-28 text-right font-semibold text-gray-900">{rupees(vendor.gross)}</span>
-                    <span className="w-24 text-right text-xs font-semibold text-[#0a4d2b]">
-                      {rupees(vendor.commission)}
-                    </span>
-                  </div>
-                ))}
+              <div className="divide-y divide-neutral-100">
+                {vendors.map((vendor, index) => {
+                  const top = Math.max(...vendors.map((v) => Number(v.gross) || 0), 1);
+                  return (
+                    <div key={vendor.id} className="flex items-center gap-4 px-5 py-3">
+                      <span className="w-5 font-mono text-xs text-neutral-500 tabular-nums">{index + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="truncate text-sm text-neutral-900">{vendor.name}</span>
+                          <span className="font-mono text-sm text-neutral-900 tabular-nums">{rupees(vendor.gross)}</span>
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-3">
+                          <div className="h-1 flex-1 overflow-hidden rounded-full bg-neutral-100">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ width: `${((Number(vendor.gross) || 0) / top) * 100}%`, background: COLOUR[topModule] }}
+                            />
+                          </div>
+                          <span className="w-40 text-right text-xs text-neutral-500 tabular-nums">
+                            {vendor.count} {(overview?.rows || []).find((r) => r.module === topModule)?.unit || 'sales'} · <span className="font-mono text-[#0a4d2b]">{rupees(vendor.commission)}</span> commission
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
