@@ -126,7 +126,7 @@ export default function FestivalListScreen() {
 
   return (
     <View style={dhs.page}>
-      <Header title="FESTIVALS & EVENTS" subtitle="Government tourism galas, harvest carnivals & music fests" showBack rightAction="none" />
+      <Header title="FESTIVALS & EVENTS" subtitle="Official galas, harvest carnivals and music" showBack rightAction="none" />
       <PatternDivider variant="green-gold" />
       <FlatList
         data={festivals}
@@ -137,30 +137,34 @@ export default function FestivalListScreen() {
         refreshing={isRefetching}
         onRefresh={refetch}
         renderItem={({ item: fest }) => (
-          <Press scale={0.99} onPress={() => router.push(`/app/festivals/${fest.id}`)} style={styles.row} accessibilityLabel={`${fest.name}, ${fest.dates}. From ₹${cheapestPrice(fest).toLocaleString('en-IN')}. Book passes`}>
-            <Image source={{ uri: fest.heroImage }} style={styles.rowImg} resizeMode="cover" />
-            <View style={{ flex: 1, minWidth: 0, gap: space.sm }}>
-              <View style={{ gap: 2 }}>
-                <View style={[dhs.row, { gap: space.xs + 2 }]}>
-                  <Fa name="fa-regular fa-calendar" size={12} color={color.goldText} />
-                  <Text style={styles.rowDates} numberOfLines={1}>
-                    {fest.dates}
-                  </Text>
-                </View>
-                <Text style={styles.rowName} numberOfLines={2}>
-                  {fest.name}
+          <Press scale={0.99} onPress={() => router.push(`/app/festivals/${fest.id}`)} style={styles.card} accessibilityLabel={`${fest.name}, ${fest.dates}. From ₹${cheapestPrice(fest).toLocaleString('en-IN')}. Book passes`}>
+            <Image source={{ uri: fest.heroImage }} style={styles.cardImg} resizeMode="cover" />
+            <View style={styles.cardBody}>
+              <View style={[dhs.row, { gap: space.sm }]}>
+                <Fa name="fa-regular fa-calendar" size={13} color={color.goldText} />
+                <Text style={styles.cardDates} numberOfLines={1}>
+                  {fest.dates}
                 </Text>
-                <View style={[dhs.row, { gap: space.xs + 2 }]}>
-                  <Fa name="fa-solid fa-location-dot" size={12} color={color.primary} />
-                  <Text style={styles.rowVenue} numberOfLines={1}>
-                    {(fest.venue || '').split(',')[0]}
+              </View>
+              <Text style={styles.cardName} numberOfLines={2}>
+                {fest.name}
+              </Text>
+              {fest.venue ? (
+                <View style={[dhs.row, { gap: space.sm, alignItems: 'flex-start' }]}>
+                  <Fa name="fa-solid fa-location-dot" size={13} color={color.textMuted} style={{ marginTop: 3 }} />
+                  <Text style={styles.cardVenue} numberOfLines={2}>
+                    {fest.venue}
                   </Text>
                 </View>
-              </View>
-              <View style={styles.rowFoot}>
-                <Text style={styles.rowPrice}>From ₹{cheapestPrice(fest).toLocaleString('en-IN')}</Text>
-                <View style={styles.rowBtn}>
-                  <Text style={styles.rowBtnText}>Book passes</Text>
+              ) : null}
+              <View style={styles.cardFoot}>
+                <View style={{ flexShrink: 1 }}>
+                  <Text style={styles.cardFrom}>From</Text>
+                  <Text style={styles.cardPrice}>₹{cheapestPrice(fest).toLocaleString('en-IN')}</Text>
+                </View>
+                <View style={styles.cardBtn}>
+                  <Text style={styles.cardBtnText}>Book passes</Text>
+                  <Fa name="fa-solid fa-arrow-right" size={12} color={color.onPrimary} />
                 </View>
               </View>
             </View>
@@ -171,7 +175,7 @@ export default function FestivalListScreen() {
   );
 }
 
-const Separator = () => <View style={{ height: space.md }} />;
+const Separator = () => <View style={{ height: space.lg }} />;
 
 const styles = StyleSheet.create({
   featured: { aspectRatio: 4 / 3, maxHeight: 300, borderRadius: radii.xl, overflow: 'hidden', backgroundColor: color.primaryDeep, ...elevation.card },
@@ -185,13 +189,17 @@ const styles = StyleSheet.create({
   featuredPrice: { ...type.bodyStrong, color: color.goldOnDark, flexShrink: 1 },
   bookNow: { height: 40, paddingHorizontal: space.lg, borderRadius: radii.md, backgroundColor: color.goldBright, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
   bookNowText: { ...type.buttonSm, color: color.onGold },
-  row: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.md, borderWidth: 1, borderColor: color.border, flexDirection: 'row', gap: space.md, ...elevation.card },
-  rowImg: { width: 96, height: 112, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
-  rowDates: { flex: 1, ...type.caption, color: color.goldText },
-  rowName: { ...type.subheading, color: color.text },
-  rowVenue: { flex: 1, ...type.caption, color: color.textMuted },
-  rowFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, paddingTop: space.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
-  rowPrice: { ...type.bodyStrong, color: color.text, flexShrink: 1 },
-  rowBtn: { backgroundColor: color.primarySoft, paddingHorizontal: space.md, height: 32, justifyContent: 'center', borderRadius: radii.sm },
-  rowBtnText: { ...type.buttonSm, color: color.primary },
+  // One card per festival: photo on top, details below, so every card lines up the same way
+  // however long the name or venue is.
+  card: { backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, overflow: 'hidden', ...elevation.card },
+  cardImg: { width: '100%', aspectRatio: 16 / 9, backgroundColor: color.surfaceMuted },
+  cardBody: { padding: space.lg, gap: space.sm },
+  cardDates: { flex: 1, ...type.label, color: color.goldText },
+  cardName: { ...type.subheading, fontSize: 17, lineHeight: 24, color: color.text },
+  cardVenue: { flex: 1, ...type.small, color: color.textSecondary },
+  cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, marginTop: space.xs, paddingTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
+  cardFrom: { ...type.caption, color: color.textMuted },
+  cardPrice: { ...type.price, color: color.text },
+  cardBtn: { height: 40, paddingHorizontal: space.lg, borderRadius: radii.md, backgroundColor: color.primary, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  cardBtnText: { ...type.buttonSm, color: color.onPrimary },
 });

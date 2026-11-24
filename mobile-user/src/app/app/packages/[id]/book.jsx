@@ -10,6 +10,7 @@ import { SelectField } from '../../../../components/kit';
 import { StatusBadge } from '../../../../components/ds';
 import { Header, PatternDivider } from '../../../../components/dh/Header';
 import { ConfirmedDialog, FareLine, FareTotal, InvoiceTotalRow, QuoteError } from '../../../../components/dh/booking';
+import { CouponCard, CouponsScreen } from '../../../../components/dh/coupons';
 import { Field, FormScroll, GreenButton, Panel, PanelTitle, Pulse, StateBlock, Stepper, dhs, fromIso, rupees, toIso } from '../../../../components/dh/ui';
 import { useBooking } from '../../../../context/BookingContext';
 import { createBooking, createPaymentOrder, fetchPackageById, fetchTourOffers, quoteBooking, settleWithoutGateway, verifyPayment } from '../../../../api/dh/toursApi';
@@ -53,6 +54,7 @@ export default function TourBookingScreen() {
   const [promoInput, setPromoInput] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [offers, setOffers] = useState([]);
+  const [couponsOpen, setCouponsOpen] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -275,6 +277,12 @@ export default function TourBookingScreen() {
     setCouponCode('');
   };
 
+  // Same as typing the code and pressing Apply: the server re-quotes with it.
+  const applyOffer = (offer) => {
+    setPromoInput(offer.code);
+    setCouponCode(offer.code);
+  };
+
   const openDate = () => {
     if (Platform.OS !== 'android') return;
     DateTimePickerAndroid.open({
@@ -428,25 +436,22 @@ export default function TourBookingScreen() {
 
           {offers.length > 0 && !appliedCoupon ? (
             <View style={{ gap: space.sm }}>
-              {offers.map((offer) => (
-                <Press
-                  key={offer._id}
-                  scale={0.98}
-                  onPress={() => {
-                    setPromoInput(offer.code);
-                    setCouponCode(offer.code);
-                  }}
-                  style={styles.offer}
-                  accessibilityLabel={`Apply ${offer.code}: ${offer.title}`}
-                >
-                  <Fa name="fa-solid fa-ticket" size={16} color={color.goldText} />
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.offerCode}>{offer.code}</Text>
-                    <Text style={styles.offerTitle}>{offer.title}</Text>
-                  </View>
-                  <Text style={styles.offerApply}>Apply</Text>
-                </Press>
+              {/* Two inline; the rest live on the coupons screen so the form stays short. */}
+              {offers.slice(0, VISIBLE_OFFERS).map((offer) => (
+                <CouponCard key={offer._id || offer.code} offer={offer} onApply={applyOffer} />
               ))}
+              {offers.length > VISIBLE_OFFERS ? (
+                <Press
+                  scale={0.98}
+                  onPress={() => setCouponsOpen(true)}
+                  style={styles.moreOffers}
+                  accessibilityRole="button"
+                  accessibilityLabel={`See all ${offers.length} coupons`}
+                >
+                  <Text style={styles.moreOffersText}>See all {offers.length} coupons</Text>
+                  <Fa name="fa-solid fa-chevron-right" size={12} color={color.primary} />
+                </Press>
+              ) : null}
             </View>
           ) : null}
         </Panel>
@@ -505,6 +510,8 @@ export default function TourBookingScreen() {
         <GreenButton size="lg" fullWidth={false} icon="fa-solid fa-lock" title={quote ? 'Confirm & pay' : quoteError && !quoting ? 'Unavailable' : 'Loading…'} accessibilityLabel={ctaFull} onPress={handleConfirmTour} disabled={!canSubmit} loading={submitting} />
       </View>
 
+      <CouponsScreen visible={couponsOpen} offers={offers} onClose={() => setCouponsOpen(false)} onApply={applyOffer} />
+
       {createdTourData ? (
         <ConfirmedDialog
           visible={isSuccessModalOpen}
@@ -533,6 +540,8 @@ export default function TourBookingScreen() {
   );
 }
 
+const VISIBLE_OFFERS = 2;
+
 const styles = StyleSheet.create({
   thumb: { width: 84, height: 84, borderRadius: radii.md, backgroundColor: color.surfaceMuted },
   dest: { flex: 1, ...type.caption, color: color.textMuted },
@@ -550,6 +559,8 @@ const styles = StyleSheet.create({
   offerCode: { ...type.bodyStrong, letterSpacing: 0.3, color: color.text },
   offerTitle: { ...type.caption, color: color.textSecondary },
   offerApply: { ...type.label, color: color.primary },
+  moreOffers: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  moreOffersText: { ...type.label, color: color.primary },
   split: { marginTop: space.sm, backgroundColor: color.surfaceMuted, borderRadius: radii.md, padding: space.md, gap: space.xs },
   splitRow: { flexDirection: 'row', justifyContent: 'space-between', gap: space.sm },
   splitStrong: { ...type.bodyStrong, color: color.text, flexShrink: 1 },

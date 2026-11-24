@@ -34,11 +34,12 @@ const addNights = (checkIn, nights) => {
 
 const fmt = (value, opts) => new Date(value).toLocaleDateString('en-IN', opts);
 
+// Two choices only. Online opens Razorpay, which offers UPI, cards and net banking
+// in its own checkout, so listing those here as separate rows was the same path
+// three times. Anything other than 'cash' is the Razorpay path in handleConfirm.
 const METHODS = [
-  { id: 'upi', label: 'UPI / QR (Google Pay, PhonePe, Paytm)', icon: 'fa-solid fa-qrcode', badge: 'Instant & Fast' },
-  { id: 'card', label: 'Credit / Debit Cards', icon: 'fa-solid fa-credit-card', badge: 'Visa, MC, RuPay' },
-  { id: 'netbanking', label: 'Net Banking (All Indian Banks)', icon: 'fa-solid fa-building-columns', badge: null },
-  { id: 'cash', label: 'Pay at Hotel (Cash / Card on Arrival)', icon: 'fa-solid fa-hand-holding-dollar', badge: 'No Prepayment' },
+  { id: 'online', label: 'Online payment', icon: 'fa-solid fa-credit-card', badge: 'UPI, cards or net banking via Razorpay' },
+  { id: 'cash', label: 'Cash on arrival', icon: 'fa-solid fa-hand-holding-dollar', badge: 'Pay at the property, no prepayment' },
 ];
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,7 +75,7 @@ export default function HotelBookingScreen() {
   const [guestEmail, setGuestEmail] = useState('');
   const [specialRequest, setSpecialRequest] = useState('');
 
-  const [paymentMethod, setPaymentMethod] = useState('upi'); // upi | card | netbanking | cash
+  const [paymentMethod, setPaymentMethod] = useState('online'); // online | cash
   const [promoCode, setPromoCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
 

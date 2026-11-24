@@ -231,6 +231,8 @@ export default function LoginScreen() {
                       onChangeText={setFullName}
                       autoFocus
                       placeholder="Your full name"
+                      numberOfLines={1}
+                      maxFontSizeMultiplier={1.2}
                       placeholderTextColor={PLACEHOLDER}
                       autoCapitalize="words"
                       autoComplete="name"
@@ -249,7 +251,7 @@ export default function LoginScreen() {
                   <Text style={styles.fieldLabel}>Mobile number</Text>
                   <View style={[styles.inputWrap, focused === 'phone' && styles.inputFocused, step === 'otp' && styles.inputLocked]}>
                     <Fa name="fa-solid fa-phone" size={16} color={color.gold} />
-                    <Text style={styles.prefix}>+91</Text>
+                    <Text style={styles.prefix} maxFontSizeMultiplier={1.2}>+91</Text>
                     <TextInput
                       value={phone}
                       editable={step !== 'otp'}
@@ -258,7 +260,9 @@ export default function LoginScreen() {
                       autoComplete="tel"
                       textContentType="telephoneNumber"
                       maxLength={10}
-                      placeholder="10-digit mobile number"
+                      placeholder="10-digit number"
+                      numberOfLines={1}
+                      maxFontSizeMultiplier={1.2}
                       placeholderTextColor={PLACEHOLDER}
                       returnKeyType="done"
                       onSubmitEditing={handleSubmit}

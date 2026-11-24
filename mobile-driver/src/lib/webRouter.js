@@ -45,8 +45,13 @@ export function navigateTo(to, options = {}) {
   const href = toAppPath(typeof to === 'object' && to ? `${to.pathname || ''}${to.search || ''}` : to);
   const path = pathOnly(href);
   if (options.state !== undefined) stashRouteState(path, options.state);
-  // A main tab is already mounted under the stack: return to it, don't stack a copy.
-  if (MAIN_TABS.has(path)) router.navigate(href);
+  // A main tab is already mounted under the stack: return to it, don't stack a copy. With `replace`, dismissTo also
+  // drops the current screen when the tab is not in the stack yet. navigate() would push the tab over it instead, and
+  // the screen left underneath (registration-status, polling "approved -> home") kept pulling the driver off every tab.
+  if (MAIN_TABS.has(path)) {
+    if (options.replace) router.dismissTo(href);
+    else router.navigate(href);
+  }
   else if (options.replace) router.replace(href);
   else router.push(href);
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from 'expo-router';
 import { AlertTriangle, CheckCircle2, ChevronRight, Clock, Search } from 'lucide-react-native';
 import { useLocation, useNavigate } from '../../lib/webRouter';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
@@ -89,6 +90,9 @@ export default function RegistrationStatus() {
   const timeoutRef = useRef(null);
   const requestInFlightRef = useRef(false);
   const mountedRef = useRef(false);
+  // A stack screen stays mounted under whatever is pushed on top of it. Polling only while this screen is on show
+  // keeps a leftover copy from firing "approved -> home" every 2.5 s and yanking the driver off History / Wallet.
+  const isFocused = useIsFocused();
 
   const pulse = useAnimatedValue(1);
   useEffect(() => {
@@ -106,6 +110,8 @@ export default function RegistrationStatus() {
   const isVehicleReapproval = location.state?.statusReason === 'vehicle-update' || driver?.approve === false;
 
   useEffect(() => {
+    if (!isFocused) return undefined;
+
     if (location.state?.role) {
       persistDriverAuthSession({ role: 'driver' });
     }
@@ -159,6 +165,9 @@ export default function RegistrationStatus() {
         }
 
         if (isApproved) {
+          // Approved: stop polling, or the next tick sends the driver home again.
+          mountedRef.current = false;
+          clearInterval(timeoutRef.current);
           clearDriverRegistrationSession();
           navigate('/taxi/driver/home', { replace: true });
           requestInFlightRef.current = false;
@@ -192,7 +201,7 @@ export default function RegistrationStatus() {
       requestInFlightRef.current = false;
       clearInterval(timeoutRef.current);
     };
-  }, [location.state, navigate]);
+  }, [isFocused, location.state, navigate]);
 
   const getDocumentDetails = () => {
     const submittedDocumentSummary = Array.isArray(location.state?.submittedDocumentSummary)
