@@ -3,6 +3,12 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { prefetchFoodAdmin } from '@/shared/utils/activeModule.js';
 import { canSeeAdminModule } from '@/shared/utils/adminHome.js';
 import AdminModuleSwitcher from '@/shared/components/admin/AdminModuleSwitcher';
+import AdminSidebarBrand, { RailCollapseButton } from '@/shared/components/admin/AdminSidebarBrand.jsx';
+import {
+  railClass, railHeaderClass, railNavClass, navRowClass, navIconClass, navSubRowClass,
+  navSectionLabelClass, navCountClass, navDotClass, railSearchInputClass, railSearchIconClass,
+  railSearchClearClass, railEmptyState, RAIL_SCROLLBAR_CSS,
+} from '@/shared/components/admin/adminShell.js';
 import { socketService } from '../../../shared/api/socket';
 import { useSettings } from '../../../shared/context/SettingsContext';
 import { getSupportConversations, markSupportMessagesRead } from '../../shared/chat/chatApi';
@@ -22,7 +28,6 @@ import {
   Car,
   Bus,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   Clock,
   FileText,
@@ -54,7 +59,6 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { DEFAULT_BRAND_LOGO } from '@/shared/constants/brandLogo';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -291,39 +295,28 @@ const getSidebarItemCount = (item, unreadCountsByPath = {}) => {
   return 0;
 };
 
-const SidebarBadge = ({ count, isActive = false }) => {
+const SidebarBadge = ({ count }) => {
   if (count <= 0) {
     return null;
   }
 
-  return (
-    <span
-      className={`ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-black ${
-        isActive ? 'bg-white/20 text-white' : 'bg-orange-500 text-white'
-      }`}
-    >
-      {count > 99 ? '99+' : count}
-    </span>
-  );
+  return <span className={navCountClass}>{count > 99 ? '99+' : count}</span>;
 };
 
-const SidebarItem = ({ icon, label, path, isCollapsed, sidebarTextColor, unreadCount = 0 }) => (
+const SidebarItem = ({ icon, label, path, isCollapsed, unreadCount = 0 }) => (
   <NavLink
     to={path}
     end
-    className={({ isActive }) =>
-      cn(
-        "group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 relative",
-        isActive
-          ? "bg-white/10 text-white shadow-[0_4px_20px_rgba(255,255,255,0.05)] border border-white/15"
-          : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-      )
-    }
+    title={isCollapsed ? label : undefined}
+    className={({ isActive }) => navRowClass(isActive, isCollapsed)}
   >
-    {React.createElement(icon, { size: 18, className: 'shrink-0' })}
-    {!isCollapsed && <span className="min-w-0 flex-1 text-[14px] font-bold tracking-tight">{label}</span>}
-    {!isCollapsed && (
-      <SidebarBadge count={unreadCount} />
+    {({ isActive }) => (
+      <>
+        {React.createElement(icon, { strokeWidth: 1.5, className: navIconClass(isActive) })}
+        {!isCollapsed && <span className="min-w-0 flex-1 truncate">{label}</span>}
+        {!isCollapsed && <SidebarBadge count={unreadCount} />}
+        {isCollapsed && unreadCount > 0 && <span className={navDotClass} />}
+      </>
     )}
   </NavLink>
 );
@@ -354,34 +347,25 @@ const SidebarGroup = ({
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       <button
         type="button"
         onClick={toggleGroup}
-        className={cn(
-          "group w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-300",
-          isActive || isExpanded
-            ? "bg-white/10 text-white shadow-[0_4px_20px_rgba(255,255,255,0.05)] border border-white/15"
-            : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-        )}
+        title={isCollapsed ? label : undefined}
+        aria-expanded={isExpanded}
+        className={navRowClass(isActive && !isExpanded, isCollapsed)}
       >
-        <div className="flex min-w-0 items-center gap-3">
-          {React.createElement(icon, {
-            size: 18,
-            className: 'shrink-0',
-          })}
-          {!isCollapsed && <span className="truncate text-[14px] font-bold tracking-tight">{label}</span>}
-        </div>
+        {React.createElement(icon, { strokeWidth: 1.5, className: navIconClass(isActive) })}
+        {!isCollapsed && <span className="min-w-0 flex-1 truncate">{label}</span>}
+        {!isCollapsed && <SidebarBadge count={unreadCount} />}
         {!isCollapsed && (
-          <div className="ml-3 flex items-center gap-2">
-            <SidebarBadge count={unreadCount} isActive={isActive || isExpanded} />
-            <ChevronRight size={14} className={cn("transition-transform duration-300", isExpanded && "rotate-90")} />
-          </div>
+          <ChevronRight size={14} strokeWidth={1.5} className={cn("shrink-0 text-neutral-500 transition-transform duration-150", isExpanded && "rotate-90")} />
         )}
+        {isCollapsed && unreadCount > 0 && <span className={navDotClass} />}
       </button>
 
       {!isCollapsed && isExpanded && (
-        <div className="pl-6 pr-2 space-y-1">
+        <div className="space-y-0.5">
           {subItems.map((item) =>
             item.subItems ? (
               <NestedGroup
@@ -401,17 +385,9 @@ const SidebarGroup = ({
                 key={item.path}
                 to={item.path}
                 end
-                className={({ isActive: childActive }) =>
-                  cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-300",
-                    childActive
-                      ? "bg-white/5 text-white"
-                      : "text-neutral-500 hover:text-neutral-200 hover:bg-white/5"
-                  )
-                }
+                className={({ isActive: childActive }) => navSubRowClass(childActive)}
               >
-                <div className={cn("h-1 w-1 shrink-0 rounded-full", "bg-neutral-600")} />
-                <span className="min-w-0 flex-1">{item.label}</span>
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
                 <SidebarBadge count={getSidebarItemCount(item, unreadCountsByPath)} />
               </NavLink>
             )
@@ -446,45 +422,30 @@ const NestedGroup = ({
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       <button
         type="button"
         onClick={toggleGroup}
-        className={cn(
-          "group w-full flex items-center justify-between px-3 py-1.5 rounded-xl transition-all duration-300",
-          isActive || isExpanded
-            ? "bg-white/10 text-white shadow-[0_4px_20px_rgba(255,255,255,0.05)] border border-white/15"
-            : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
-        )}
+        aria-expanded={isExpanded}
+        className={cn(navSubRowClass(false), "w-full text-left", (isActive || isExpanded) && "text-neutral-100")}
       >
-        <span className="flex min-w-0 items-center gap-3 text-[12px] font-medium">
-          <div className={cn("h-1 w-1 shrink-0 rounded-full", isActive || isExpanded ? "bg-white" : "bg-neutral-600")} />
-          <span className="truncate">{label}</span>
-        </span>
-        <span className="ml-3 flex items-center gap-2">
-          <SidebarBadge count={unreadCount} isActive={isActive || isExpanded} />
-          <ChevronRight size={12} className={cn("transition-transform duration-300", isExpanded && "rotate-90")} />
-        </span>
+        <span className="min-w-0 flex-1 truncate">{label}</span>
+        <SidebarBadge count={unreadCount} />
+        <ChevronRight size={12} strokeWidth={1.5} className={cn("shrink-0 text-neutral-500 transition-transform duration-150", isExpanded && "rotate-90")} />
       </button>
 
       {isExpanded && (
-        <div className="pl-4 space-y-1">
+        <div className="space-y-0.5">
           {subItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               end
               className={({ isActive: childActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-1.5 rounded-xl text-[12px] font-medium transition-all duration-300",
-                  childActive
-                    ? "bg-white/5 text-white"
-                    : "text-neutral-500 hover:text-neutral-200 hover:bg-white/5"
-                )
+                cn(navSubRowClass(childActive), "pl-12")
               }
             >
-              <div className="h-0.5 w-0.5 shrink-0 rounded-full bg-neutral-700" />
-              <span className="min-w-0 flex-1">{item.label}</span>
+              <span className="min-w-0 flex-1 truncate">{item.label}</span>
               <SidebarBadge count={getSidebarItemCount(item, unreadCountsByPath)} />
             </NavLink>
           ))}
@@ -497,7 +458,7 @@ const NestedGroup = ({
 const AdminContentSkeleton = () => (
   <div className="w-full flex-1 min-h-[500px] space-y-6 animate-in fade-in duration-300">
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200/60 relative">
-      <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-orange-400 via-indigo-500 to-emerald-400 animate-pulse" />
+      <div className="h-full w-2/5 rounded-full bg-neutral-300 animate-pulse" />
     </div>
     <div className="flex items-center justify-between rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
       <div className="space-y-2">
@@ -518,7 +479,7 @@ const AdminContentSkeleton = () => (
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
         <Loader2 size={24} className="animate-spin text-indigo-600" />
       </div>
-      <p className="text-xs font-black uppercase tracking-widest text-slate-400">Loading Section...</p>
+      <p className="text-xs text-slate-400">Loading</p>
     </div>
   </div>
 );
@@ -668,49 +629,49 @@ const AdminLayout = () => {
         items: [
           {
             icon: UserCog,
-            label: 'Admin Management',
+            label: 'Admin management',
             subItems: [
               { label: 'Admins', path: '/taxi/admin/management/admins', permission: 'subadmins.manage' },
             ],
           },
           { icon: Home, label: 'Dashboard', path: '/taxi/admin/dashboard', permission: 'dashboard.view' },
-          { icon: IndianRupee, label: 'Admin Earnings', path: '/taxi/admin/earnings', permission: 'earnings.view' },
+          { icon: IndianRupee, label: 'Admin earnings', path: '/taxi/admin/earnings', permission: 'earnings.view' },
           { icon: MessageCircle, label: 'Chat', path: '/taxi/admin/chat', permission: 'chat.view' },
           {
             icon: TrendingUp,
-            label: 'Promotions Management',
+            label: 'Promotions management',
             subItems: [
-              { label: 'Promo Code', path: '/taxi/admin/promotions/promo-codes', permission: 'promotions.view' },
-              { label: 'Push Notifications', path: '/taxi/admin/promotions/send-notification', permission: 'promotions.view' },
-              //{ label: 'Banner Image', path: '/taxi/admin/promotions/banner-image', permission: 'promotions.view' },
+              { label: 'Promo code', path: '/taxi/admin/promotions/promo-codes', permission: 'promotions.view' },
+              { label: 'Push notifications', path: '/taxi/admin/promotions/send-notification', permission: 'promotions.view' },
+              //{ label: 'Banner image', path: '/taxi/admin/promotions/banner-image', permission: 'promotions.view' },
             ],
           },
           {
             icon: IndianRupee,
-            label: 'Price Management',
+            label: 'Price management',
             subItems: [
-              { label: 'Service Location', path: '/taxi/admin/pricing/service-location', permission: 'service_locations.view' },
+              { label: 'Service location', path: '/taxi/admin/pricing/service-location', permission: 'service_locations.view' },
               { label: 'Zone', path: '/taxi/admin/pricing/zone', permission: 'zones.view' },
               { label: 'Airport', path: '/taxi/admin/pricing/airport', permission: 'airports.view' },
-              { label: 'App Modules', path: '/taxi/admin/pricing/app-modules', permission: 'settings.view' },
-              { label: 'Vehicle Type', path: '/taxi/admin/pricing/vehicle-type', permission: 'vehicle_types.view' },
-              { label: 'Rental Package Types', path: '/taxi/admin/pricing/rental-packages', permission: 'rental.view' },
-              { label: 'Package Pricing', path: '/taxi/admin/pricing/package-pricing', permission: 'rental.view' },
-              { label: 'Set Price', path: '/taxi/admin/pricing/set-price', permission: 'set_prices.view' },
+              { label: 'App modules', path: '/taxi/admin/pricing/app-modules', permission: 'settings.view' },
+              { label: 'Vehicle type', path: '/taxi/admin/pricing/vehicle-type', permission: 'vehicle_types.view' },
+              { label: 'Rental package types', path: '/taxi/admin/pricing/rental-packages', permission: 'rental.view' },
+              { label: 'Package pricing', path: '/taxi/admin/pricing/package-pricing', permission: 'rental.view' },
+              { label: 'Set price', path: '/taxi/admin/pricing/set-price', permission: 'set_prices.view' },
             ],
           },
           {
             icon: MapPin,
             label: 'Geofencing',
             subItems: [
-              { label: 'Heat Map', path: '/taxi/admin/geo/heatmap', permission: 'geofencing.view' },
+              { label: 'Heat map', path: '/taxi/admin/geo/heatmap', permission: 'geofencing.view' },
               { label: "God's Eye", path: '/taxi/admin/geo/gods-eye', permission: 'geofencing.view' },
-              { label: 'Peak Zone', path: '/taxi/admin/geo/peak-zone', permission: 'geofencing.view' },
+              { label: 'Peak zone', path: '/taxi/admin/geo/peak-zone', permission: 'geofencing.view' },
             ],
           },
-          { icon: Car, label: 'Trip Requests', path: '/taxi/admin/trips', permission: 'trips.view' },
-          { icon: Ban, label: 'Cancellation Analytics', path: '/taxi/admin/cancellation-analytics', permission: 'dashboard.view' },
-          { icon: Clock, label: 'Ongoing Requests', path: '/taxi/admin/ongoing', permission: 'ongoing.view' },
+          { icon: Car, label: 'Trip requests', path: '/taxi/admin/trips', permission: 'trips.view' },
+          { icon: Ban, label: 'Cancellation analytics', path: '/taxi/admin/cancellation-analytics', permission: 'dashboard.view' },
+          { icon: Clock, label: 'Ongoing requests', path: '/taxi/admin/ongoing', permission: 'ongoing.view' },
         ],
       },
       {
@@ -718,60 +679,60 @@ const AdminLayout = () => {
         items: [
           {
             icon: Users,
-            label: 'Customer Management',
+            label: 'Customer management',
             subItems: [
-              { label: 'User List', path: '/taxi/admin/users', permission: 'users.view' },
-              { label: 'Delete Request Users', path: '/taxi/admin/users/delete-requests', permission: 'users.view' },
-              { label: 'User Bulk Upload', path: '/taxi/admin/users/bulk-upload', permission: 'users.view' },
+              { label: 'User list', path: '/taxi/admin/users', permission: 'users.view' },
+              { label: 'Delete request users', path: '/taxi/admin/users/delete-requests', permission: 'users.view' },
+              { label: 'User bulk upload', path: '/taxi/admin/users/bulk-upload', permission: 'users.view' },
             ],
           },
-          { icon: Wallet, label: 'Wallet Payment', path: '/taxi/admin/wallet/payment', permission: 'wallet.view' },
+          { icon: Wallet, label: 'Wallet payment', path: '/taxi/admin/wallet/payment', permission: 'wallet.view' },
           {
             icon: Car,
-            label: 'Driver Management',
+            label: 'Driver management',
             subItems: [
-              { label: 'Pending Drivers', path: '/taxi/admin/drivers/pending', permission: 'drivers.view' },
-              { label: 'Approved Drivers', path: '/taxi/admin/drivers', permission: 'drivers.view' },
-              { label: 'Active Drivers', path: '/taxi/admin/drivers/active', permission: 'drivers.view' },
-              { label: 'Drivers Ratings', path: '/taxi/admin/drivers/ratings', permission: 'drivers.view' },
+              { label: 'Pending drivers', path: '/taxi/admin/drivers/pending', permission: 'drivers.view' },
+              { label: 'Approved drivers', path: '/taxi/admin/drivers', permission: 'drivers.view' },
+              { label: 'Active drivers', path: '/taxi/admin/drivers/active', permission: 'drivers.view' },
+              { label: 'Drivers ratings', path: '/taxi/admin/drivers/ratings', permission: 'drivers.view' },
               {
-                label: 'Driver Wallet',
+                label: 'Driver wallet',
                 subItems: [
-                  { label: 'Withdrawal Requests', path: '/taxi/admin/drivers/wallet/withdrawals', permission: 'wallet.view' },
-                  { label: 'Negative Balance Drivers', path: '/taxi/admin/drivers/wallet/negative', permission: 'wallet.view' },
+                  { label: 'Withdrawal requests', path: '/taxi/admin/drivers/wallet/withdrawals', permission: 'wallet.view' },
+                  { label: 'Negative balance drivers', path: '/taxi/admin/drivers/wallet/negative', permission: 'wallet.view' },
                 ],
               },
-              { label: 'Delete Request Drivers', path: '/taxi/admin/drivers/delete-requests', permission: 'drivers.view' },
-              { label: 'Driver Needed Documents', path: '/taxi/admin/drivers/documents', permission: 'drivers.view' },
-              { label: 'Driver Bulk Upload', path: '/taxi/admin/drivers/bulk-upload', permission: 'drivers.view' },
-              { label: 'Payment Methods', path: '/taxi/admin/drivers/payment-methods', permission: 'wallet.view' },
+              { label: 'Delete request drivers', path: '/taxi/admin/drivers/delete-requests', permission: 'drivers.view' },
+              { label: 'Driver needed documents', path: '/taxi/admin/drivers/documents', permission: 'drivers.view' },
+              { label: 'Driver bulk upload', path: '/taxi/admin/drivers/bulk-upload', permission: 'drivers.view' },
+              { label: 'Payment methods', path: '/taxi/admin/drivers/payment-methods', permission: 'wallet.view' },
             ],
           },
           {
             icon: Share2,
-            label: 'Referral Management',
+            label: 'Referral management',
             subItems: [
-              { label: 'Referral Dashboard', path: '/taxi/admin/referrals/dashboard', permission: 'referrals.view' },
-              { label: 'User Referral Settings', path: '/taxi/admin/referrals/user-settings', permission: 'referrals.view' },
-              { label: 'Driver Referral Settings', path: '/taxi/admin/referrals/driver-settings', permission: 'referrals.view' },
+              { label: 'Referral dashboard', path: '/taxi/admin/referrals/dashboard', permission: 'referrals.view' },
+              { label: 'User referral settings', path: '/taxi/admin/referrals/user-settings', permission: 'referrals.view' },
+              { label: 'Driver referral settings', path: '/taxi/admin/referrals/driver-settings', permission: 'referrals.view' },
             ],
           },
           {
             icon: FileText,
             label: 'Report',
             subItems: [
-              { label: 'User Report', path: '/taxi/admin/reports/user', permission: 'reports.view' },
-              { label: 'Driver Report', path: '/taxi/admin/reports/driver', permission: 'reports.view' },
-              { label: 'Driver Duty Report', path: '/taxi/admin/reports/driver-duty', permission: 'reports.view' },
-              { label: 'Finance Report', path: '/taxi/admin/reports/finance', permission: 'reports.view' },
+              { label: 'User report', path: '/taxi/admin/reports/user', permission: 'reports.view' },
+              { label: 'Driver report', path: '/taxi/admin/reports/driver', permission: 'reports.view' },
+              { label: 'Driver duty report', path: '/taxi/admin/reports/driver-duty', permission: 'reports.view' },
+              { label: 'Finance report', path: '/taxi/admin/reports/finance', permission: 'reports.view' },
             ],
           },
           {
             icon: ShieldCheck,
-            label: 'Support Management',
+            label: 'Support management',
             subItems: [
-              { label: 'Ticket Title', path: '/taxi/admin/support/ticket-title', permission: 'support.view' },
-              { label: 'Support Tickets', path: '/taxi/admin/support/tickets', permission: 'support.view' },
+              { label: 'Ticket title', path: '/taxi/admin/support/ticket-title', permission: 'support.view' },
+              { label: 'Support tickets', path: '/taxi/admin/support/tickets', permission: 'support.view' },
             ],
           },
         ],
@@ -781,40 +742,40 @@ const AdminLayout = () => {
         items: [
           {
             icon: Settings,
-            label: 'Business Settings',
+            label: 'Business settings',
             permission: 'settings.view',
             subItems: [
-              { label: 'General Settings', path: '/taxi/admin/settings/business/general', permission: 'settings.view' },
-              { label: 'Transport Ride Settings', path: '/taxi/admin/settings/business/transport-ride', permission: 'settings.view' },
+              { label: 'General settings', path: '/taxi/admin/settings/business/general', permission: 'settings.view' },
+              { label: 'Transport ride settings', path: '/taxi/admin/settings/business/transport-ride', permission: 'settings.view' },
             ],
           },
           {
             icon: Smartphone,
-            label: 'App Settings',
+            label: 'App settings',
             permission: 'settings.view',
             subItems: [
-              { label: 'Wallet Settings', path: '/taxi/admin/settings/app/wallet', permission: 'settings.view' },
-              { label: 'Tip Settings', path: '/taxi/admin/settings/app/tip', permission: 'settings.view' },
-              { label: 'Mobile App Landing/Onboard Screens Settings', path: '/taxi/admin/settings/app/onboard', permission: 'settings.view' },
+              { label: 'Wallet settings', path: '/taxi/admin/settings/app/wallet', permission: 'settings.view' },
+              { label: 'Tip settings', path: '/taxi/admin/settings/app/tip', permission: 'settings.view' },
+              { label: 'Mobile app landing/onboard screens settings', path: '/taxi/admin/settings/app/onboard', permission: 'settings.view' },
             ],
           },
           {
             icon: Settings2,
-            label: 'Third-party Settings',
+            label: 'Third-party settings',
             permission: 'settings.view',
             subItems: [
-              { label: 'Payment Gateway Settings', path: '/taxi/admin/settings/third-party/payment', permission: 'settings.view' },
-              { label: 'SMS Gateway Settings', path: '/taxi/admin/settings/third-party/sms', permission: 'settings.view' },
-              { label: 'Firebase Settings', path: '/taxi/admin/settings/third-party/firebase', permission: 'settings.view' },
-              { label: 'Map and Map APIs Settings', path: '/taxi/admin/settings/third-party/map-apis', permission: 'settings.view' },
-              { label: 'Mail Configuration', path: '/taxi/admin/settings/third-party/mail', permission: 'settings.view' },
-              // { label: 'Notification Channel', path: '/taxi/admin/settings/third-party/notification-channel' },
+              { label: 'Payment gateway settings', path: '/taxi/admin/settings/third-party/payment', permission: 'settings.view' },
+              { label: 'SMS gateway settings', path: '/taxi/admin/settings/third-party/sms', permission: 'settings.view' },
+              { label: 'Firebase settings', path: '/taxi/admin/settings/third-party/firebase', permission: 'settings.view' },
+              { label: 'Map and map APIs settings', path: '/taxi/admin/settings/third-party/map-apis', permission: 'settings.view' },
+              { label: 'Mail configuration', path: '/taxi/admin/settings/third-party/mail', permission: 'settings.view' },
+              // { label: 'Notification channel', path: '/taxi/admin/settings/third-party/notification-channel' },
             ],
           },
           // {
           //   icon: PlusCircle,
           //   label: 'Addons',
-          //   subItems: [{ label: 'Dispatcher Addons', path: '/taxi/admin/settings/addons/dispatcher' }],
+          //   subItems: [{ label: 'Dispatcher addons', path: '/taxi/admin/settings/addons/dispatcher' }],
           // },
         ],
       },
@@ -1174,128 +1135,53 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-200 font-sans text-gray-900">
-      <style>{`
-        .admin-sidebar-scroll::-webkit-scrollbar {
-          width: 2px;
-        }
-        .admin-sidebar-scroll::-webkit-scrollbar-track {
-          background: rgba(17, 24, 39, 0.4);
-        }
-        .admin-sidebar-scroll::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 10px;
-        }
-        .admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.35);
-        }
-        .admin-sidebar-scroll:hover::-webkit-scrollbar {
-          width: 6px;
-        }
-        .admin-sidebar-scroll {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255, 255, 255, 0.25) rgba(17, 24, 39, 0.4);
-        }
-      `}</style>
+    <div className="flex h-screen overflow-hidden bg-neutral-50 font-sans text-neutral-900">
+      <style>{RAIL_SCROLLBAR_CSS}</style>
       <aside
         className={cn(
-          "relative z-50 flex h-screen flex-col overflow-hidden transition-all duration-500 bg-neutral-950 border-r border-neutral-800/60",
-          isCollapsed ? 'w-20' : 'w-80',
+          railClass(isCollapsed),
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="shrink-0 px-3 py-3 border-b border-neutral-800/60 bg-neutral-900">
-            <div className="relative flex items-center mb-3 min-h-[80px]">
-              <img
-                src={DEFAULT_BRAND_LOGO}
-                alt="Dima Hasao"
-                className={isCollapsed ? "h-14 w-14 object-contain" : "h-20 w-20 object-contain"}
-              />
-              {!isCollapsed && (
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                  <h3 className="text-[15px] font-extrabold leading-tight text-white tracking-tight">
-                    Dima Hasao
-                  </h3>
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                      Taxi Admin
-                    </span>
-                  </div>
-                </div>
-              )}
-            <button
-              type="button"
-              onClick={() => setCollapsed((current) => !current)}
-                className="absolute -right-3 top-1/2 z-[60] hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-800 bg-neutral-900 text-neutral-300 shadow-lg ring-4 ring-neutral-950 transition-all hover:bg-white hover:text-black hover:scale-110 active:scale-90 lg:flex group/collapse"
-            >
-              {isCollapsed ? (
-                <ChevronRight size={12} strokeWidth={3.5} className="transition-transform group-hover/collapse:translate-x-0.5" />
-              ) : (
-                <ChevronLeft size={12} strokeWidth={3.5} className="transition-transform group-hover/collapse:-translate-x-0.5" />
-              )}
-            </button>
-          </div>
+          <div className={railHeaderClass}>
+            <AdminSidebarBrand moduleLabel="Taxi admin" isCollapsed={isCollapsed}>
+              <RailCollapseButton isCollapsed={isCollapsed} onClick={() => setCollapsed((current) => !current)} />
+            </AdminSidebarBrand>
 
-          {!isCollapsed && (
-            <div className="mb-3">
-              <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider text-left">
-                Admin Panel
-              </h2>
-            </div>
-          )}
-
-          {/* Taxi kept its own copy of this strip: it had no Global tab, its
-              Food/Taxi tabs were hardcoded active/inactive regardless of the
-              route, Hotel and Tours only rendered when Food or Taxi was
-              visible, and its gating dropped the legacy "no adminLevel"
-              fallback, so an older admin account saw no tabs at all. */}
-          <AdminModuleSwitcher isCollapsed={isCollapsed} />
+            <AdminModuleSwitcher isCollapsed={isCollapsed} />
 
             {!isCollapsed && (
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 z-10" />
+                <Search className={railSearchIconClass} strokeWidth={1.5} />
                 <input
                   type="text"
-                  placeholder="Search Menu..."
+                  placeholder="Search menu"
+                  aria-label="Search menu"
                   value={sidebarSearchQuery}
                   onChange={(event) => setSidebarSearchQuery(event.target.value)}
-                  className={cn(
-                    "w-full pl-9 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-white/40 transition-all duration-200 text-left",
-                    sidebarSearchQuery ? "pr-9" : "pr-3"
-                  )}
+                  className={railSearchInputClass(Boolean(sidebarSearchQuery))}
                 />
                 {sidebarSearchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSidebarSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-all z-10"
-                    aria-label="Clear search"
-                  >
-                    <X className="w-4 h-4" />
+                  <button type="button" onClick={() => setSidebarSearchQuery('')} className={railSearchClearClass} aria-label="Clear search">
+                    <X size={14} strokeWidth={1.5} />
                   </button>
                 )}
               </div>
             )}
           </div>
 
-          <nav className="admin-sidebar-scroll mt-0 flex-1 min-h-0 space-y-8 overflow-y-auto overscroll-y-contain px-3 py-3 scroll-smooth">
+          <nav className={cn(railNavClass, "space-y-6")}>
             {visibleSidebarSections.length === 0 && sidebarSearchQuery.trim() ? (
-              <div className="px-3 py-12 text-left">
-                <p className="text-neutral-300 text-sm font-medium">No menu items found</p>
-                <p className="text-neutral-500 text-sm mt-2">Try a different search term</p>
+              <div className="px-3 py-8">
+                <p className="text-sm text-neutral-300">{railEmptyState.title}</p>
+                <p className="mt-1 text-xs text-neutral-500">{railEmptyState.hint}</p>
               </div>
             ) : (
               visibleSidebarSections.map((section) => (
-              <div key={section.title} className="space-y-1">
+              <div key={section.title} className="space-y-0.5">
                 {!isCollapsed && (
-                  <div className="px-4 mb-4 flex items-center gap-2">
-                    <div className="h-3 w-1 rounded-full bg-white" />
-                    <span className="text-[12px] font-black uppercase tracking-widest text-white/90">
-                      {section.title}
-                    </span>
-                  </div>
+                  <p className={navSectionLabelClass}>{section.title}</p>
                 )}
                 {section.items.map((item) =>
                   item.subItems ? (
@@ -1328,11 +1214,10 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-neutral-100">
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-neutral-200 bg-white px-6 shadow-sm">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-neutral-50">
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-neutral-900/[0.08] bg-white px-6">
           <div className="flex items-center gap-3">
-            <div className="h-6 w-1 rounded-full bg-amber-600" />
-            <h2 className="text-[15px] font-bold tracking-tight text-neutral-800">{pageTitle}</h2>
+            <h2 className="text-[15px] font-medium text-neutral-900">{pageTitle}</h2>
           </div>
 
           <div className="flex items-center gap-3">
@@ -1341,7 +1226,7 @@ const AdminLayout = () => {
               <button
                 type="button"
                 onClick={() => setIsSearchOpen((current) => !current)}
-                className="rounded-lg p-2 text-neutral-400 transition-all hover:bg-neutral-50 hover:text-amber-600"
+                className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
               >
                 <Search size={18} />
               </button>
@@ -1350,7 +1235,7 @@ const AdminLayout = () => {
                 <button
                   type="button"
                   onClick={() => setIsNotificationsOpen((current) => !current)}
-                  className="relative rounded-lg p-2 text-neutral-400 transition-all hover:bg-neutral-50 hover:text-amber-600"
+                  className="relative rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
                 >
                   <Bell size={18} />
                   {totalNotificationItems > 0 ? (
@@ -1359,15 +1244,15 @@ const AdminLayout = () => {
                 </button>
 
                 <div
-                  className={`absolute right-0 top-full z-50 mt-2 w-[360px] overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-2xl transition-all ${
-                    isNotificationsOpen ? 'pointer-events-auto scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'
+                  className={`absolute right-0 top-full z-50 mt-2 w-[360px] overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-colors ${
+                    isNotificationsOpen ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none -translate-y-1 opacity-0'
                   }`}
                 >
                   <div className="border-b border-slate-100 px-4 py-4">
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-extrabold text-slate-900">Notifications</p>
-                        <p className="mt-1 text-[11px] font-semibold text-slate-500">
+                        <p className="mt-1 text-xs font-medium text-slate-500">
                           Latest bookings, ride requests, and support chats
                         </p>
                       </div>
@@ -1376,12 +1261,12 @@ const AdminLayout = () => {
                           <button
                             type="button"
                             onClick={dismissCurrentNotifications}
-                            className="rounded-full border border-slate-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                            className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
                           >
                             Clear
                           </button>
                         ) : null}
-                        <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
+                        <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
                           {totalNotificationItems}
                         </span>
                       </div>
@@ -1394,7 +1279,7 @@ const AdminLayout = () => {
                           setNotificationTab('ride_requests');
                           setRideRequestPage(1);
                         }}
-                        className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                        className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
                           notificationTab === 'ride_requests'
                             ? 'bg-white text-slate-900 shadow-sm'
                             : 'text-slate-500 hover:text-slate-900'
@@ -1407,7 +1292,7 @@ const AdminLayout = () => {
                         onClick={() => {
                           setNotificationTab('chats');
                         }}
-                        className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                        className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
                           notificationTab === 'chats'
                             ? 'bg-white text-slate-900 shadow-sm'
                             : 'text-slate-500 hover:text-slate-900'
@@ -1420,14 +1305,14 @@ const AdminLayout = () => {
 
                   <div className="max-h-[420px] overflow-y-auto p-3">
                     {notificationsLoading ? (
-                      <div className="flex items-center justify-center px-4 py-12 text-sm font-semibold text-slate-500">
+                      <div className="flex items-center justify-center px-4 py-12 text-sm font-medium text-slate-500">
                         Loading notifications...
                       </div>
                     ) : notificationTab === 'ride_requests' ? (
                       visibleRideRequestResults.length === 0 ? (
                         <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-8 text-center">
-                          <p className="text-sm font-bold text-slate-900">No ride requests found</p>
-                          <p className="mt-1 text-xs font-semibold text-slate-500">New ride requests will show up here.</p>
+                          <p className="text-sm font-medium text-slate-900">No ride requests found</p>
+                          <p className="mt-1 text-xs font-medium text-slate-500">New ride requests will show up here.</p>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -1439,22 +1324,22 @@ const AdminLayout = () => {
                                 navigate('/taxi/admin/trips');
                                 setIsNotificationsOpen(false);
                               }}
-                              className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-all hover:border-indigo-200 hover:bg-indigo-50/40"
+                              className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-colors hover:border-indigo-200 hover:bg-indigo-50/40"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-bold text-slate-900">
+                                  <p className="truncate text-sm font-medium text-slate-900">
                                     {item.requestId} · {item.userName}
                                   </p>
-                                  <p className="mt-1 truncate text-xs font-semibold text-slate-500">
+                                  <p className="mt-1 truncate text-xs font-medium text-slate-500">
                                     Pickup: {formatAdminNotificationLocation(item.pickupLabel, 'Pickup location set')}
                                   </p>
                                 </div>
-                                <span className="shrink-0 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                                <span className="shrink-0 rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
                                   {item.tripStatus || 'Upcoming'}
                                 </span>
                               </div>
-                            <div className="mt-2 flex items-center justify-between gap-3 text-[11px] font-semibold text-slate-400">
+                            <div className="mt-2 flex items-center justify-between gap-3 text-xs font-medium text-slate-400">
                               <span>
                                 Destination: {formatAdminNotificationLocation(item.dropLabel, 'Destination set')}
                               </span>
@@ -1475,7 +1360,7 @@ const AdminLayout = () => {
                                   dismissNotification('ride_requests', item);
                                 }
                               }}
-                              className="absolute right-3 top-3 inline-flex rounded-lg p-1.5 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                              className="absolute right-3 top-3 inline-flex rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
                               aria-label="Delete notification"
                             >
                               <Trash2 size={14} />
@@ -1486,8 +1371,8 @@ const AdminLayout = () => {
                       )
                     ) : notificationTab === 'bookings' ? pagedBookings.results.length === 0 ? (
                       <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-8 text-center">
-                        <p className="text-sm font-bold text-slate-900">No bookings found</p>
-                        <p className="mt-1 text-xs font-semibold text-slate-500">Recent bookings will show up here.</p>
+                        <p className="text-sm font-medium text-slate-900">No bookings found</p>
+                        <p className="mt-1 text-xs font-medium text-slate-500">Recent bookings will show up here.</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -1496,22 +1381,22 @@ const AdminLayout = () => {
                             key={item._id || item.id || item.booking_reference}
                             type="button"
                             onClick={() => setIsNotificationsOpen(false)}
-                            className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-all hover:border-indigo-200 hover:bg-indigo-50/40"
+                            className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-colors hover:border-indigo-200 hover:bg-indigo-50/40"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-bold text-slate-900">
+                                <p className="truncate text-sm font-medium text-slate-900">
                                   {item.booking_reference || 'Booking'} · {item.customer_name || 'Customer'}
                                 </p>
-                                <p className="mt-1 truncate text-xs font-semibold text-slate-500">
+                                <p className="mt-1 truncate text-xs font-medium text-slate-500">
                                   {item.pickup_location || 'Pickup'} to {item.dropoff_location || 'Drop'}
                                 </p>
                               </div>
-                              <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                              <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
                                 {item.booking_status || 'Pending'}
                               </span>
                             </div>
-                            <div className="mt-2 flex items-center justify-between gap-3 text-[11px] font-semibold text-slate-400">
+                            <div className="mt-2 flex items-center justify-between gap-3 text-xs font-medium text-slate-400">
                               <span>{item.owner_id?.name || item.owner_id?.company_name || 'Owner booking'}</span>
                               <span>{formatRelativeAdminTime(item.trip_date || item.createdAt)}</span>
                             </div>
@@ -1530,7 +1415,7 @@ const AdminLayout = () => {
                                   dismissNotification('bookings', item);
                                 }
                               }}
-                              className="absolute right-3 top-3 inline-flex rounded-lg p-1.5 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                              className="absolute right-3 top-3 inline-flex rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
                               aria-label="Delete notification"
                             >
                               <Trash2 size={14} />
@@ -1540,8 +1425,8 @@ const AdminLayout = () => {
                       </div>
                     ) : visibleChatNotifications.length === 0 ? (
                       <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-8 text-center">
-                        <p className="text-sm font-bold text-slate-900">No new chats found</p>
-                        <p className="mt-1 text-xs font-semibold text-slate-500">New user and driver support messages will show up here.</p>
+                        <p className="text-sm font-medium text-slate-900">No new chats found</p>
+                        <p className="mt-1 text-xs font-medium text-slate-500">New user and driver support messages will show up here.</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -1554,18 +1439,18 @@ const AdminLayout = () => {
                               setChatNotifications([]);
                               setIsNotificationsOpen(false);
                             }}
-                            className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-all hover:border-indigo-200 hover:bg-indigo-50/40"
+                            className="relative w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-colors hover:border-indigo-200 hover:bg-indigo-50/40"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-bold text-slate-900">{item.title}</p>
-                                <p className="mt-1 truncate text-xs font-semibold text-slate-500">{item.body}</p>
+                                <p className="truncate text-sm font-medium text-slate-900">{item.title}</p>
+                                <p className="mt-1 truncate text-xs font-medium text-slate-500">{item.body}</p>
                               </div>
-                              <span className="shrink-0 rounded-full bg-sky-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-sky-700">
+                              <span className="shrink-0 rounded-full bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700">
                                 {item.senderRole}
                               </span>
                             </div>
-                            <div className="mt-2 flex items-center justify-end text-[11px] font-semibold text-slate-400">
+                            <div className="mt-2 flex items-center justify-end text-xs font-medium text-slate-400">
                               <span>{formatRelativeAdminTime(item.createdAt)}</span>
                             </div>
                             <span
@@ -1583,7 +1468,7 @@ const AdminLayout = () => {
                                   dismissNotification('chats', item);
                                 }
                               }}
-                              className="absolute right-3 top-3 inline-flex rounded-lg p-1.5 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                              className="absolute right-3 top-3 inline-flex rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
                               aria-label="Delete notification"
                             >
                               <Trash2 size={14} />
@@ -1605,12 +1490,12 @@ const AdminLayout = () => {
                           setBookingPage((current) => Math.max(1, current - 1));
                         }
                       }}
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Previous
                     </button>
 
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                    <span className="text-xs font-medium text-slate-400">
                       Page {activeNotificationMeta?.current_page || 1} of {activeNotificationMeta?.last_page || 1}
                     </span>
 
@@ -1624,7 +1509,7 @@ const AdminLayout = () => {
                           setBookingPage((current) => current + 1);
                         }
                       }}
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Next
                     </button>
@@ -1636,17 +1521,17 @@ const AdminLayout = () => {
             <div ref={userMenuRef} className="relative">
               <button
                 type="button"
-                className="group flex cursor-pointer items-center gap-3 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 transition-all hover:bg-gray-100"
+                className="group flex cursor-pointer items-center gap-3 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 transition-colors hover:bg-gray-100"
                 onClick={() => setIsUserMenuOpen((current) => !current)}
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-slate-500 transition-all group-hover:bg-primary group-hover:text-white">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-slate-500 transition-colors ">
                   <Users size={14} />
                 </div>
                 <div className="text-left leading-tight">
-                  <span className="block text-[11px] font-black text-gray-950">
+                  <span className="block text-xs font-medium text-gray-950">
                     {adminProfile?.name || 'Admin'}
                   </span>
-                  <span className="block text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                  <span className="block text-xs font-medium text-slate-400">
                     {adminProfile?.admin_type === 'subadmin' ? adminProfile?.role || 'Subadmin' : 'Superadmin'}
                   </span>
                 </div>
@@ -1654,8 +1539,8 @@ const AdminLayout = () => {
               </button>
 
               <div
-                className={`absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl border border-gray-100 bg-white p-2 shadow-xl transition-all ${
-                  isUserMenuOpen ? 'pointer-events-auto scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'
+                className={`absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl border border-gray-100 bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-colors ${
+                  isUserMenuOpen ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none -translate-y-1 opacity-0'
                 }`}
               >
                 <button
@@ -1664,10 +1549,10 @@ const AdminLayout = () => {
                     event.stopPropagation();
                     handleLogout();
                   }}
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-600 transition-all hover:bg-red-50"
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-600 transition-colors hover:bg-red-50"
                 >
                   <LogOut size={16} />
-                  <span className="text-[12px] font-bold">Logout Session</span>
+                  <span className="text-[12px] font-medium">Log out</span>
                 </button>
               </div>
             </div>
@@ -1681,7 +1566,7 @@ const AdminLayout = () => {
           >
             <div className="mx-auto mt-20 w-full max-w-2xl px-4">
               <div
-                className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl"
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
                 onClick={(event) => event.stopPropagation()}
               >
                 <div className="border-b border-slate-100 px-5 py-4">
@@ -1692,13 +1577,13 @@ const AdminLayout = () => {
                       type="text"
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Search sidebar options..."
-                      className="w-full bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400"
+                      placeholder="Search menu"
+                      className="w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
                     />
                     <button
                       type="button"
                       onClick={() => setIsSearchOpen(false)}
-                      className="rounded-lg px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:bg-slate-200/70"
+                      className="rounded-lg px-2 py-1 text-xs font-medium text-slate-400 hover:bg-slate-200/70"
                     >
                       Close
                     </button>
@@ -1708,8 +1593,8 @@ const AdminLayout = () => {
                 <div className="max-h-[420px] overflow-y-auto p-3">
                   {filteredSearchEntries.length === 0 ? (
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-8 text-center">
-                      <p className="text-sm font-bold text-slate-900">No sidebar option found</p>
-                      <p className="mt-1 text-xs font-semibold text-slate-500">Try searching for drivers, trips, pricing, reports, or settings.</p>
+                      <p className="text-sm font-medium text-slate-900">No sidebar option found</p>
+                      <p className="mt-1 text-xs font-medium text-slate-500">Try searching for drivers, trips, pricing, reports, or settings.</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -1722,11 +1607,11 @@ const AdminLayout = () => {
                             setIsSearchOpen(false);
                             setSearchTerm('');
                           }}
-                          className="flex w-full items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-all hover:border-indigo-200 hover:bg-indigo-50/50"
+                          className="flex w-full items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-colors hover:border-neutral-200 hover:bg-neutral-50"
                         >
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-bold text-slate-900">{entry.label}</p>
-                            <p className="mt-1 truncate text-[11px] font-semibold text-slate-500">
+                            <p className="truncate text-sm font-medium text-slate-900">{entry.label}</p>
+                            <p className="mt-1 truncate text-xs font-medium text-slate-500">
                               {[...entry.trail, entry.path].join(' • ')}
                             </p>
                           </div>

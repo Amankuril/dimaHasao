@@ -20,8 +20,6 @@ import {
   Utensils,
   Megaphone,
   ChevronDown,
-  ChevronRight,
-  ChevronLeft,
   X,
   LayoutDashboard,
   Gift,
@@ -54,13 +52,17 @@ import {
   FileX,
 } from "lucide-react"
 import { cn } from "@food/utils/utils"
-import { Input } from "@food/components/ui/input"
 import { adminSidebarMenu } from "@food/utils/adminSidebarMenu"
 import { filterSidebarMenuByPermissions } from "@food/utils/subAdminPermissions"
 import { getCurrentUser } from "@food/utils/auth"
 import { adminAPI } from "@food/api"
 import { dispatchAdminNotificationsUpdated } from "@food/hooks/useAdminNotifications"
-import { DEFAULT_BRAND_LOGO } from "@/shared/constants/brandLogo"
+import AdminSidebarBrand, { RailCollapseButton } from "@/shared/components/admin/AdminSidebarBrand.jsx"
+import {
+  railClass, railHeaderClass, railNavClass, navRowClass, navIconClass, navSubRowClass,
+  navSectionLabelClass, navCountClass, navDotClass, railSearchInputClass, railSearchIconClass,
+  railSearchClearClass, railEmptyState, RAIL_SCROLLBAR_CSS,
+} from "@/shared/components/admin/adminShell.js"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -701,37 +703,17 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
               onClose()
             }
           }}
-          className={cn(
-            "flex items-center gap-2.5 px-3 py-2 rounded-lg menu-item-animate text-left outline-none focus:outline-none",
-            isInSection ? "text-sm font-semibold" : "text-sm",
-            isActive(item.path)
-              ? "bg-white/10 text-white border border-white/15 font-semibold"
-              : "text-neutral-300 hover:bg-white/5 hover:text-white transition-colors duration-200",
-            isCollapsed && "justify-center px-2"
-          )}
-          style={{ animationDelay: `${index * 0.01}s` }}
+          className={navRowClass(isActive(item.path), isCollapsed)}
           title={isCollapsed ? item.label : undefined}
         >
-          <Icon className={cn(
-            "shrink-0 text-left",
-            isInSection ? "w-4 h-4" : "w-4 h-4",
-            isActive(item.path) ? "text-white scale-110" : "text-neutral-300"
-          )} />
-          {!isCollapsed && (
-            <div className="flex-1 flex items-center justify-between overflow-hidden">
-              <span className={cn("text-left truncate", isInSection ? "font-semibold" : "font-medium")}>
-                {item.label}
-              </span>
-              {getBadgeCount(item.label, item.path) > 0 && (
-                <span className="shrink-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1 min-w-[18px] text-center">
-                  {getBadgeCount(item.label, item.path) > 99 ? "99+" : getBadgeCount(item.label, item.path)}
-                </span>
-              )}
-            </div>
+          <Icon strokeWidth={1.5} className={navIconClass(isActive(item.path))} />
+          {!isCollapsed && <span className="min-w-0 flex-1 truncate">{item.label}</span>}
+          {!isCollapsed && getBadgeCount(item.label, item.path) > 0 && (
+            <span className={navCountClass}>
+              {getBadgeCount(item.label, item.path) > 99 ? "99+" : getBadgeCount(item.label, item.path)}
+            </span>
           )}
-          {isCollapsed && getBadgeCount(item.label, item.path) > 0 && (
-            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-neutral-950 animate-pulse" />
-          )}
+          {isCollapsed && getBadgeCount(item.label, item.path) > 0 && <span className={navDotClass} />}
         </Link>
       )
     }
@@ -743,56 +725,43 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
 
       if (isCollapsed) {
         return (
-          <div key={index} className="menu-item-animate" style={{ animationDelay: `${index * 0.01}s` }}>
+          <div key={index}>
             <button
               onClick={(e) => {
                 toggleSection(sectionKey)
                 scrollToElement(e.currentTarget, "smooth")
               }}
-              className={cn(
-                "w-full flex items-center justify-center px-2 py-2 rounded-lg transition-all duration-300 ease-out text-sm font-medium outline-none focus:outline-none",
-                "text-white hover:bg-white/5"
-              )}
+              className={navRowClass(false, true)}
               title={item.label}
             >
-              <div className="relative">
-                <Icon className="w-4 h-4 shrink-0 text-neutral-300 transition-transform duration-300" />
-                {getBadgeCount(item.label, item.path) > 0 && (
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-neutral-950 animate-pulse" />
-                )}
-              </div>
+              <Icon strokeWidth={1.5} className={navIconClass(false)} />
+              {getBadgeCount(item.label, item.path) > 0 && <span className={navDotClass} />}
             </button>
           </div>
         )
       }
 
       return (
-        <div key={index} className="menu-item-animate" style={{ animationDelay: `${index * 0.01}s` }}>
+        <div key={index} className="space-y-0.5">
           <button
             onClick={(e) => {
               toggleSection(sectionKey)
               scrollToElement(e.currentTarget, "smooth")
             }}
-            className={cn(
-              "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition-all duration-300 ease-out text-sm font-medium text-left outline-none focus:outline-none",
-              "text-white hover:bg-white/5"
-            )}
+            aria-expanded={isExpanded}
+            className={navRowClass(false)}
           >
-            <div className="flex items-center gap-2.5 text-left flex-1 min-w-0">
-              <Icon className="w-4 h-4 shrink-0 text-neutral-300 transition-transform duration-300" />
-              <span className="font-medium text-left truncate">{item.label}</span>
-              {getBadgeCount(item.label, item.path) > 0 && (
-                <span className="shrink-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1 min-w-[18px] text-center">
-                  {getBadgeCount(item.label, item.path) > 99 ? "99+" : getBadgeCount(item.label, item.path)}
-                </span>
-              )}
-            </div>
-            <div className="transition-transform duration-300 shrink-0" style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
-              <ChevronDown className="w-4 h-4 shrink-0 text-neutral-300" />
-            </div>
+            <Icon strokeWidth={1.5} className={navIconClass(false)} />
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {getBadgeCount(item.label, item.path) > 0 && (
+              <span className={navCountClass}>
+                {getBadgeCount(item.label, item.path) > 99 ? "99+" : getBadgeCount(item.label, item.path)}
+              </span>
+            )}
+            <ChevronDown strokeWidth={1.5} className={cn("h-3.5 w-3.5 shrink-0 text-neutral-500 transition-transform duration-150", !isExpanded && "-rotate-90")} />
           </button>
           {isExpanded && item.subItems && item.subItems.length > 0 && (
-            <div className="ml-5 mt-1 space-y-1 border-neutral-800/60 pl-3 submenu-animate">
+            <div className="space-y-0.5 submenu-animate">
               {item.subItems.map((subItem) => {
                 const allSubPaths = item.subItems.map(si => si.path)
                 return (
@@ -808,20 +777,11 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                         onClose()
                       }
                     }}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-normal text-left outline-none focus:outline-none",
-                      isActive(subItem.path, allSubPaths)
-                        ? "bg-white/10 text-white font-semibold"
-                        : "text-neutral-300 hover:bg-white/5 hover:text-white transition-colors duration-200"
-                    )}
+                    className={navSubRowClass(isActive(subItem.path, allSubPaths))}
                   >
-                    <span className={cn(
-                      "w-1.5 h-1.5 rounded-full shrink-0",
-                      isActive(subItem.path, allSubPaths) ? "bg-white scale-125" : "bg-neutral-400"
-                    )}></span>
-                    <span className="text-left flex-1 truncate">{subItem.label}</span>
+                    <span className="min-w-0 flex-1 truncate">{subItem.label}</span>
                     {getBadgeCount(subItem.label, subItem.path) > 0 && (
-                      <span className="shrink-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1 min-w-[18px] text-center">
+                      <span className={navCountClass}>
                         {getBadgeCount(subItem.label, subItem.path) > 99 ? "99+" : getBadgeCount(subItem.label, subItem.path)}
                       </span>
                     )}
@@ -840,163 +800,51 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
   return (
     <>
       <style>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateX(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        
         @keyframes expandDown {
-          from {
-            opacity: 0;
-            transform: translateY(-4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        
-        .menu-item-animate {
-          animation: slideIn 0.25s ease-out forwards;
-        }
-        
-        .submenu-animate {
-          animation: expandDown 0.2s ease-out forwards;
-        }
-        
-        .admin-sidebar-scroll {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-        }
-        
-        .admin-sidebar-scroll::-webkit-scrollbar {
-          width: 2px;
-        }
-        .admin-sidebar-scroll::-webkit-scrollbar-track {
-          background: rgba(17, 24, 39, 0.4);
-        }
-        .admin-sidebar-scroll::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 10px;
-          transition: background 0.2s ease;
-        }
-        .admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.35);
-        }
-        .admin-sidebar-scroll:hover::-webkit-scrollbar {
-          width: 6px;
-        }
-        .admin-sidebar-scroll {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255, 255, 255, 0.25) rgba(17, 24, 39, 0.4);
-        }
-      `}</style>
+        .submenu-animate { animation: expandDown 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        @media (prefers-reduced-motion: reduce) { .submenu-animate { animation: none; } }
+      `}{RAIL_SCROLLBAR_CSS}</style>
       <div
         className={cn(
-          "bg-neutral-950 border-r border-neutral-800/60 h-screen fixed left-0 top-0 z-50 flex flex-col overflow-hidden",
-          "transform transition-all duration-300 ease-in-out",
+          railClass(isCollapsed),
+          "fixed left-0 top-0 transition-[width,transform]",
           "lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "w-20" : "w-80"
+          isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Header with Logo */}
-        <div className="shrink-0 px-3 py-3 border-b border-neutral-800/60 bg-neutral-900 animate-[fadeIn_0.4s_ease-out]">
-          <div className="relative flex items-center mb-3 min-h-[80px]">
-            <img
-              src={DEFAULT_BRAND_LOGO}
-              alt="Dima Hasao"
-              className={isCollapsed ? "h-14 w-14 object-contain" : "h-20 w-20 object-contain"}
-            />
-            {!isCollapsed && (
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <h3 className="text-[15px] font-extrabold leading-tight text-white tracking-tight">
-                  Dima Hasao
-                </h3>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                    Food Admin
-                  </span>
-                </div>
-              </div>
-            )}
-            <div className={cn(
-              "flex items-center gap-2 shrink-0",
-              isCollapsed
-                ? "absolute -right-3 top-1/2 -translate-y-1/2 z-[60]"
-                : "absolute right-0 top-1/2 -translate-y-1/2 z-[60]"
-            )}>
-              <button
-                onClick={toggleCollapse}
-                className="text-neutral-300 hover:text-white transition-all duration-200 hover:scale-110 p-1.5 rounded-lg hover:bg-white/5"
-                title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                {isCollapsed ? (
-                  <ChevronRight className="w-4 h-4" />
-                ) : (
-                  <ChevronLeft className="w-4 h-4" />
-                )}
-              </button>
-              <button
-                onClick={onClose}
-                className="lg:hidden text-neutral-300 hover:text-white transition-all duration-200 hover:scale-110"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+        <div className={railHeaderClass}>
+          <AdminSidebarBrand moduleLabel="Food admin" isCollapsed={isCollapsed}>
+            <RailCollapseButton isCollapsed={isCollapsed} onClick={toggleCollapse} />
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close menu"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 lg:hidden"
+            >
+              <X size={16} strokeWidth={1.5} />
+            </button>
+          </AdminSidebarBrand>
 
-          {/* Admin Panel Label */}
-          {!isCollapsed && (
-            <div className="mb-3 animate-[slideIn_0.4s_ease-out_0.1s_both]">
-              <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider text-left">
-                Admin Panel
-              </h2>
-            </div>
-          )}
-
-          {/* The four-module strip plus Global. Food kept its own copy of
-              this markup, which is why Global never appeared here even
-              though the section existed — the shared component is the only
-              one that knows about it. */}
+          {/* The shared module strip is the only one that knows about Global. */}
           <AdminModuleSwitcher isCollapsed={isCollapsed} />
 
-          {/* Search Bar */}
           {!isCollapsed && (
-            <div className="relative animate-[slideIn_0.4s_ease-out_0.2s_both]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4 z-10 transition-colors duration-200" />
-              <Input
+            <div className="relative">
+              <Search className={railSearchIconClass} strokeWidth={1.5} />
+              <input
                 type="text"
-                placeholder="Search Menu..."
+                placeholder="Search menu"
+                aria-label="Search menu"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn(
-                  "w-full pl-9 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-white/40 transition-all duration-200 text-left",
-                  searchQuery ? "pr-9" : "pr-3"
-                )}
+                className={railSearchInputClass(Boolean(searchQuery))}
               />
               {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-white transition-all duration-200 hover:scale-110 z-10"
-                  aria-label="Clear search"
-                >
-                  <X className="w-4 h-4" />
+                <button type="button" onClick={() => setSearchQuery("")} className={railSearchClearClass} aria-label="Clear search">
+                  <X size={14} strokeWidth={1.5} />
                 </button>
               )}
             </div>
@@ -1004,13 +852,13 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
         </div>
 
         {/* Navigation Menu */}
-        <nav ref={sidebarNavRef} className="admin-sidebar-scroll flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-3 py-3 space-y-2">
+        <nav ref={sidebarNavRef} className={cn(railNavClass, "space-y-0.5")}>
           {isLoading ? (
             <SidebarSkeleton isCollapsed={isCollapsed} />
           ) : filteredMenuData.length === 0 && searchQuery.trim() ? (
-            <div className="px-3 py-12 text-left animate-[fadeIn_0.4s_ease-out]">
-              <p className="text-neutral-300 text-sm font-medium text-left">No menu items found</p>
-              <p className="text-neutral-500 text-sm mt-2 text-left">Try a different search term</p>
+            <div className="px-3 py-8">
+              <p className="text-sm text-neutral-300">{railEmptyState.title}</p>
+              <p className="mt-1 text-xs text-neutral-500">{railEmptyState.hint}</p>
             </div>
           ) : (
             filteredMenuData.map((item, index) => {
@@ -1022,14 +870,10 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                 return (
                   <div
                     key={item.label || index}
-                    className={cn(
-                      index > 0 ? "mt-4 pt-4 border-t border-neutral-800/60" : "",
-                      "animate-[fadeIn_0.4s_ease-out]"
-                    )}
-                    style={{ animationDelay: `${index * 0.02}s` }}
+                    className={index > 0 ? "pt-6" : "pt-1"}
                   >
-                      <div className="px-3 py-2 mb-2 flex items-center justify-between">
-                        <span className="text-neutral-400 font-bold text-sm uppercase tracking-wider text-left">
+                      <div className="flex items-center justify-between pr-3">
+                        <span className={navSectionLabelClass}>
                           {item.label}
                         </span>
                         {item.items.some(subItem => {
@@ -1040,10 +884,10 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
                           }
                           return false;
                         }) && (
-                          <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.5)]" />
+                          <span className="mb-2 h-1.5 w-1.5 rounded-full bg-red-400" />
                         )}
                       </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       {item.items.map((subItem, subIndex) =>
                         renderMenuItem(
                           subItem,

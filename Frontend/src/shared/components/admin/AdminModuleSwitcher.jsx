@@ -6,8 +6,8 @@
  * Extracting it here lets a module adopt the strip with one line and without
  * importing a sibling module — shared/ only ever depends on shared/.
  *
- * Markup and classes are kept byte-for-byte in step with the Food sidebar so
- * the strip looks identical no matter which module rendered it.
+ * Every shell renders this one copy, so the strip looks identical no matter
+ * which module rendered it. The rail's other pieces live in adminShell.js.
  */
 import { startTransition } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -82,19 +82,19 @@ export default function AdminModuleSwitcher({ isCollapsed = false, className }) 
 
   const tabClass = (isActive) =>
     cn(
-      'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all duration-300',
+      'flex h-8 flex-1 items-center justify-center gap-2 rounded-md text-[13px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-white/25',
       isActive
-        ? 'bg-white text-black shadow-[0_4px_12px_rgba(255,255,255,0.15)] scale-[1.02]'
-        : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5',
+        ? 'bg-white/[0.1] text-neutral-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+        : 'text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-100',
     )
 
   const iconClass = (isActive) =>
-    cn('w-3.5 h-3.5', isActive ? 'text-black' : 'text-neutral-500')
+    cn('h-4 w-4 shrink-0', isActive ? 'text-neutral-200' : 'text-neutral-500')
 
   return (
     <div
       className={cn(
-        'grid grid-cols-2 gap-1 p-1 bg-neutral-800/40 backdrop-blur-sm rounded-xl mb-4 border border-white/5 shadow-inner',
+        'grid grid-cols-2 gap-1 rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-1',
         className,
       )}
     >
@@ -119,7 +119,7 @@ export default function AdminModuleSwitcher({ isCollapsed = false, className }) 
       {showToursTab && (
         <button type="button" onClick={() => switchAdminModule(TOURS_ADMIN_HOME)} onMouseEnter={prefetchToursAdmin} onFocus={prefetchToursAdmin} className={tabClass(isToursActive)}>
           <Compass className={iconClass(isToursActive)} />
-          Tours &amp; Festivals
+          Tours
         </button>
       )}
       {showGlobalTab && (
