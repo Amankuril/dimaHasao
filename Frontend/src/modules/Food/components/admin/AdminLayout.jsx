@@ -67,15 +67,6 @@ export default function AdminLayout() {
     }
   }, [location.pathname]);
 
-  // Block SUB_ADMIN from routes they don't have permission for
-  const latestUser = getCurrentUser("admin") || user
-  if (isSubAdmin(latestUser) && !canAccessPath(latestUser, location.pathname)) {
-    const fallback = getFirstAllowedPath(latestUser);
-    if (fallback !== location.pathname) {
-      return <Navigate to={fallback} replace />;
-    }
-  }
-
   const normalizedPath = location.pathname.replace(/\/+$/, "") || "/"
   const showBackButton =
     normalizedPath !== "/admin/food" &&
@@ -114,7 +105,7 @@ export default function AdminLayout() {
 
   // Offset dialogs toward the main content area (sidebar is fixed; viewport center sits too far left).
   useEffect(() => {
-    const offset = isSidebarCollapsed ? "2.5rem" : "10rem"
+    const offset = isSidebarCollapsed ? "2rem" : "8rem" // half the rail width (64px / 256px)
     document.documentElement.style.setProperty("--admin-sidebar-offset", offset)
     return () => {
       document.documentElement.style.removeProperty("--admin-sidebar-offset")
@@ -190,7 +181,7 @@ export default function AdminLayout() {
 
         // Create the vanilla button element
         const btn = document.createElement("button");
-        btn.className = "global-back-btn group order-first flex items-center justify-center p-2 rounded-lg bg-white/60 backdrop-blur-md border border-slate-200 hover:bg-white text-slate-700 hover:text-slate-900 transition-all duration-200 shadow-sm active:scale-95 cursor-pointer mr-3 shrink-0";
+        btn.className = "global-back-btn group order-first flex items-center justify-center p-2 rounded-lg bg-white/60 backdrop-blur-md border border-neutral-200 hover:bg-white text-neutral-700 hover:text-neutral-900 transition-colors duration-200 shadow-sm  cursor-pointer mr-3 shrink-0";
         btn.title = "Go Back";
         btn.onclick = handleBackClick;
         btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
@@ -241,12 +232,23 @@ export default function AdminLayout() {
     };
   }, [location.pathname, showBackButton]);
 
+  // Block SUB_ADMIN from routes they don't have permission for. This must sit
+  // after every hook: returning early above them changed the hook count between
+  // renders, which React treats as a crash rather than a redirect.
+  const latestUser = getCurrentUser("admin") || user
+  if (isSubAdmin(latestUser) && !canAccessPath(latestUser, location.pathname)) {
+    const fallback = getFirstAllowedPath(latestUser);
+    if (fallback !== location.pathname) {
+      return <Navigate to={fallback} replace />;
+    }
+  }
+
   return (
-    <div className="h-screen bg-neutral-200 flex overflow-hidden admin-module-container">
+    <div className="h-screen bg-neutral-50 flex overflow-hidden admin-module-container">
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-gray-900/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-neutral-900/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -260,7 +262,7 @@ export default function AdminLayout() {
 
       <div className={`
         flex-1 flex min-h-0 flex-col transition-[margin-left] duration-300 ease-in-out min-w-0
-        ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-80'}
+        ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}
       `}>
         {/* Top Navbar */}
         <AdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
