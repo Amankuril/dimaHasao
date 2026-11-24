@@ -14,7 +14,7 @@ const FILTERS = ['all', 'approved', 'pending', 'rejected'];
 const Stars = ({ rating }) => (
   <span className="inline-flex items-center gap-0.5" aria-label={`${rating} out of 5`}>
     {[1, 2, 3, 4, 5].map((star) => (
-      <span key={star} className={star <= rating ? 'text-amber-400' : 'text-gray-300'}>★</span>
+      <span key={star} className={star <= rating ? 'text-amber-400' : 'text-neutral-300'}>★</span>
     ))}
   </span>
 );
@@ -77,7 +77,7 @@ const Reviews = () => {
     <div className="space-y-5">
       <PageHeader
         title="Reviews"
-        subtitle="Rejecting a review also removes it from the package's rating."
+        subtitle="Rejecting a review also removes it from the package's rating"
       />
 
       {!loading && reviews.length > 0 && (
@@ -86,7 +86,7 @@ const Reviews = () => {
           <StatCard
             label="Pending moderation"
             value={reviews.filter((r) => r.status === 'pending').length}
-            tone={reviews.some((r) => r.status === 'pending') ? 'text-amber-600' : 'text-gray-900'}
+            tone={reviews.some((r) => r.status === 'pending') ? 'text-amber-600' : 'text-neutral-900'}
           />
           <StatCard
             label="Average rating"
@@ -102,13 +102,13 @@ const Reviews = () => {
             key={value}
             type="button"
             onClick={() => setStatus(value)}
-            className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition-colors ${
+            className={`h-8 px-3 rounded-lg text-[13px] transition-colors ${
               status === value
                 ? 'bg-[#0a4d2b] text-white'
-                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
             }`}
           >
-            {value}
+            {value.charAt(0).toUpperCase() + value.slice(1)}
           </button>
         ))}
       </div>
@@ -116,17 +116,17 @@ const Reviews = () => {
       {loading ? (
         <Spinner />
       ) : reviews.length === 0 ? (
-        <EmptyState message="No reviews here yet — travellers can review a trip once it is completed." />
+        <EmptyState message="No reviews here yet — travellers can review a trip once it is completed" />
       ) : (
         <div className="space-y-3">
           {reviews.map((review) => (
-            <div key={review._id} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-2">
+            <div key={review._id} className="bg-white p-4 rounded-xl border border-neutral-900/[0.08] space-y-2">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-bold text-gray-900 text-sm">
+                  <p className="font-medium text-neutral-900 text-sm">
                     {review.packageId?.title || 'Package'}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-neutral-500">
                     {review.packageId?.title || 'Package'}
                     {' · '}
                     {review.userId?.name || 'Traveller'}
@@ -141,21 +141,21 @@ const Reviews = () => {
               </div>
 
               {review.comment && (
-                <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
+                <p className="text-sm text-neutral-700 leading-relaxed">{review.comment}</p>
               )}
 
               {review.reply && (
                 <p className="text-xs text-emerald-900 bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
-                  <span className="font-bold">Replied: </span>{review.reply}
+                  <span className="font-medium">Replied: </span>{review.reply}
                 </p>
               )}
 
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-100">
                 <button
                   type="button"
                   disabled={busyId === review._id}
                   onClick={() => reply(review)}
-                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
                 >
                   {review.reply ? 'Edit reply' : 'Reply'}
                 </button>
@@ -164,7 +164,7 @@ const Reviews = () => {
                     type="button"
                     disabled={busyId === review._id}
                     onClick={() => moderate(review, 'approved')}
-                    className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#0a4d2b] text-white hover:bg-[#06381e] disabled:opacity-50"
                   >
                     Approve
                   </button>
@@ -174,7 +174,7 @@ const Reviews = () => {
                     type="button"
                     disabled={busyId === review._id}
                     onClick={() => moderate(review, 'rejected')}
-                    className="px-3 py-1.5 rounded-lg text-[11px] font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
                   >
                     Hide
                   </button>

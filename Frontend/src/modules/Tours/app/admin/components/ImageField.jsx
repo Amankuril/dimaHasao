@@ -40,39 +40,39 @@ const ImageField = ({ label, value, onChange, folder = 'tours/destinations', hin
 
   return (
     <div className={className}>
-      {label && <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">{label}</label>}
+      {label && <label className="block text-[13px] font-medium text-neutral-700 mb-1.5">{label}</label>}
 
       <div className="flex items-start gap-3">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          className="relative w-28 h-24 shrink-0 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-[#0a4d2b]/40 hover:bg-gray-100 transition-colors flex items-center justify-center overflow-hidden disabled:opacity-60"
+          className="relative w-28 h-24 shrink-0 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 hover:border-[#0a4d2b]/40 hover:bg-neutral-100 transition-colors flex items-center justify-center overflow-hidden disabled:opacity-60"
         >
           {busy ? (
-            <Loader2 size={20} className="animate-spin text-gray-400" />
+            <Loader2 size={20} className="animate-spin text-neutral-500" />
           ) : value ? (
             <img src={value} alt="" className="w-full h-full object-cover" />
           ) : (
-            <span className="flex flex-col items-center gap-1 text-gray-400">
+            <span className="flex flex-col items-center gap-1 text-neutral-500">
               <ImagePlus size={20} />
-              <span className="text-[10px] font-bold">Upload</span>
+              <span className="text-xs font-medium">Upload</span>
             </span>
           )}
         </button>
 
         <div className="flex-1 min-w-0 pt-1">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-neutral-500">
             {hint || 'JPG, PNG, HEIC or WebP. Stored as compressed WebP.'}
           </p>
           {value && (
             <div className="flex items-center gap-2 mt-2">
               <button type="button" onClick={() => inputRef.current?.click()} disabled={busy}
-                className="px-2.5 py-1 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                className="px-2.5 py-1 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
                 Replace
               </button>
               <button type="button" onClick={clear} disabled={busy}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-50">
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">
                 <X size={12} /> Remove
               </button>
             </div>
@@ -120,14 +120,14 @@ export const ImageListField = ({ label, value = [], onChange, folder, max = 8 })
 
   return (
     <div>
-      {label && <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">{label}</label>}
+      {label && <label className="block text-[13px] font-medium text-neutral-700 mb-1.5">{label}</label>}
 
       <div className="flex flex-wrap gap-2">
         {value.map((url, index) => (
-          <div key={`${url}-${index}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group">
+          <div key={`${url}-${index}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-neutral-200 group">
             <img src={url} alt="" className="w-full h-full object-cover" />
             <button type="button" onClick={() => removeAt(index)}
-              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-neutral-900/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               aria-label="Remove image">
               <X size={11} />
             </button>
@@ -136,13 +136,13 @@ export const ImageListField = ({ label, value = [], onChange, folder, max = 8 })
 
         {value.length < max && (
           <button type="button" onClick={() => inputRef.current?.click()} disabled={busy}
-            className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-[#0a4d2b]/40 flex items-center justify-center text-gray-400 disabled:opacity-60">
+            className="w-20 h-20 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 hover:border-[#0a4d2b]/40 flex items-center justify-center text-neutral-500 disabled:opacity-60">
             {busy ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
           </button>
         )}
       </div>
 
-      <p className="text-xs text-gray-400 mt-1.5">{value.length} of {max}</p>
+      <p className="text-xs text-neutral-500 mt-1.5">{value.length} of {max}</p>
       <input ref={inputRef} type="file" accept="image/*" multiple onChange={add} className="hidden" />
     </div>
   );

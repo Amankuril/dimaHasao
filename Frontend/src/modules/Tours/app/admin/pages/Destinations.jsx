@@ -26,8 +26,8 @@ import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator } from '../com
 const CATEGORIES = ['viewpoint', 'town', 'trek', 'temple', 'lake', 'wildlife'];
 const CATEGORY_ICON = { viewpoint: Mountain, town: Building2, trek: Footprints, temple: Landmark, lake: Waves, wildlife: PawPrint };
 
-const field = 'w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] focus:ring-4 focus:ring-[#0a4d2b]/10 transition';
-const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
+const field = 'w-full px-3 py-2.5 bg-white border border-neutral-200 rounded-lg text-sm outline-none focus:border-[#0a4d2b] focus:ring-2 focus:ring-[#0a4d2b]/20 transition-colors';
+const label = 'block text-[13px] font-medium text-neutral-700 mb-1.5';
 
 const toLines = (v) => String(v || '').split('\n').map((s) => s.trim()).filter(Boolean);
 
@@ -63,7 +63,7 @@ const fromDestination = (d) => (!d ? BLANK : {
 const CategoryBadge = ({ category }) => {
   const Icon = CATEGORY_ICON[category] || MapPin;
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-600">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
       <Icon size={11} /> {category}
     </span>
   );
@@ -186,16 +186,16 @@ const Destinations = () => {
       <form onSubmit={submit} className="space-y-6 max-w-4xl">
         <PageHeader
           title={editing._id ? `Edit ${editing.name}` : 'Add a destination'}
-          subtitle="This is what travellers see under Tourist Places in the app."
+          subtitle="This is what travellers see under tourist places in the app"
         />
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-white p-5 rounded-xl border border-neutral-900/[0.08]">
           <StepIndicator steps={STEPS} current={step} />
         </div>
 
         {step === 0 && (
-          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+          <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-5">
+            <h3 className="font-medium text-neutral-900 text-sm pb-3 border-b border-neutral-100 flex items-center gap-2">
               <MapPin size={15} className="text-[#0a4d2b]" /> The place
             </h3>
 
@@ -215,8 +215,8 @@ const Destinations = () => {
                       <button
                         key={c} type="button"
                         onClick={() => setForm((cur) => ({ ...cur, category: c }))}
-                        className={`flex flex-col items-center gap-1 py-2 rounded-xl border text-[10px] font-bold uppercase transition-colors ${
-                          active ? 'border-[#0a4d2b] bg-[#0a4d2b]/5 text-[#0a4d2b]' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                        className={`flex flex-col items-center gap-1 py-2 rounded-xl border text-xs font-medium  transition-colors ${
+                          active ? 'border-[#0a4d2b] bg-[#0a4d2b]/5 text-[#0a4d2b]' : 'border-neutral-200 text-neutral-500 hover:bg-neutral-50'
                         }`}
                       >
                         <Icon size={16} /> {c}
@@ -239,14 +239,14 @@ const Destinations = () => {
         )}
 
         {step === 1 && (
-          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+          <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-5">
+            <h3 className="font-medium text-neutral-900 text-sm pb-3 border-b border-neutral-100 flex items-center gap-2">
               <Route size={15} className="text-[#0a4d2b]" /> Getting there
             </h3>
 
             <div>
               <label className={label}>Pin it on the map</label>
-              <p className="text-xs text-gray-400 mb-2">Click anywhere on the map, or drag the pin once it's placed. This is exactly what visitors see on the place's page.</p>
+              <p className="text-xs text-neutral-500 mb-2">Click anywhere on the map, or drag the pin once it's placed. This is exactly what visitors see on the place's page.</p>
               <LocationPicker lat={latNum} lng={lngNum} onChange={setCoords} className="h-64" />
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div><label className={label}>Latitude</label>
@@ -256,7 +256,7 @@ const Destinations = () => {
               </div>
               {!latNum && (
                 <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mt-2 flex items-center gap-1.5">
-                  <MapPinOff size={13} /> Not pinned yet — the app will show "location not pinned" instead of a map until this is set.
+                  <MapPinOff size={13} /> Not pinned yet — the app will show "location not pinned" instead of a map until this is set
                 </p>
               )}
             </div>
@@ -265,11 +265,11 @@ const Destinations = () => {
               <div><label className={label}>Distance from station</label>
                 <input className={field} value={form.distanceFromStation} onChange={set('distanceFromStation')} placeholder="2.0 km" /></div>
               <div><label className={label}>Travel time</label>
-                <input className={field} value={form.travelTime} onChange={set('travelTime')} placeholder="15 min (Approx.)" /></div>
+                <input className={field} value={form.travelTime} onChange={set('travelTime')} placeholder="15 min (approx.)" /></div>
               <div><label className={label}>Best time to visit</label>
-                <input className={field} value={form.bestTime} onChange={set('bestTime')} placeholder="October to March" /></div>
+                <input className={field} value={form.bestTime} onChange={set('bestTime')} placeholder="October to march" /></div>
               <div><label className={label}>Ideal for</label>
-                <input className={field} value={form.idealFor} onChange={set('idealFor')} placeholder="Photography, Sightseeing" /></div>
+                <input className={field} value={form.idealFor} onChange={set('idealFor')} placeholder="Photography, sightseeing" /></div>
             </div>
             <div><label className={label}>Travel tips — one per line</label>
               <textarea className={field} rows={3} value={form.guideTips} onChange={set('guideTips')} /></div>
@@ -277,8 +277,8 @@ const Destinations = () => {
         )}
 
         {step === 2 && (
-          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+          <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-5">
+            <h3 className="font-medium text-neutral-900 text-sm pb-3 border-b border-neutral-100 flex items-center gap-2">
               <ImageIcon size={15} className="text-[#0a4d2b]" /> Photos
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -299,24 +299,24 @@ const Destinations = () => {
 
         {step === 3 && (
           <>
-            <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+            <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+                <h3 className="font-medium text-neutral-900 text-sm flex items-center gap-2">
                   <Sparkles size={15} className="text-[#0a4d2b]" /> Highlight tags
                 </h3>
                 <button type="button"
                   onClick={() => setTags((c) => [...c, { icon: 'fa-solid fa-camera', text: '', color: 'text-emerald-600' }])}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[11px] font-bold text-gray-600">
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-medium text-neutral-600">
                   <Plus size={12} /> Add
                 </button>
               </div>
-              {tags.length === 0 && <p className="text-xs text-gray-400">Small badges like "Scenic View" or "Family friendly" shown on the place's card.</p>}
+              {tags.length === 0 && <p className="text-xs text-neutral-500">Small badges like "Scenic View" or "Family friendly" shown on the place's card</p>}
               {tags.map((tag, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <span className={`w-9 h-9 shrink-0 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center ${tag.color || 'text-gray-500'}`}>
+                  <span className={`w-9 h-9 shrink-0 rounded-lg bg-neutral-50 border border-neutral-200 flex items-center justify-center ${tag.color || 'text-neutral-500'}`}>
                     <i className={tag.icon || 'fa-solid fa-tag'}></i>
                   </span>
-                  <input className={field} value={tag.text} placeholder="Scenic View"
+                  <input className={field} value={tag.text} placeholder="Scenic view"
                     onChange={(e) => setTags((c) => c.map((t, i) => (i === index ? { ...t, text: e.target.value } : t)))} />
                   <input className={`${field} max-w-[190px]`} value={tag.icon} placeholder="fa-solid fa-camera"
                     onChange={(e) => setTags((c) => c.map((t, i) => (i === index ? { ...t, icon: e.target.value } : t)))} />
@@ -328,16 +328,16 @@ const Destinations = () => {
               ))}
             </section>
 
-            <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div><label className={label}>Sort order</label>
                   <input className={field} type="number" value={form.sortOrder} onChange={set('sortOrder')} />
-                  <p className="text-xs text-gray-400 mt-1.5">Lower shows first.</p></div>
-                <label className="flex items-center gap-2 text-sm text-gray-700 pb-2">
+                  <p className="text-xs text-neutral-500 mt-1.5">Lower shows first</p></div>
+                <label className="flex items-center gap-2 text-sm text-neutral-700 pb-2">
                   <input type="checkbox" checked={form.isActive} onChange={set('isActive')} />
                   <span><strong>Visible</strong> in the app</span>
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700 pb-2">
+                <label className="flex items-center gap-2 text-sm text-neutral-700 pb-2">
                   <input type="checkbox" checked={form.isFeatured} onChange={set('isFeatured')} />
                   <span><strong>Featured</strong></span>
                 </label>
@@ -346,7 +346,7 @@ const Destinations = () => {
 
             {!form.mainImage && (
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
-                A main image is required — go back to the Photos step to add one before saving.
+                A main image is required — go back to the Photos step to add one before saving
               </p>
             )}
           </>
@@ -355,24 +355,24 @@ const Destinations = () => {
         <div className="flex items-center gap-3 pb-8">
           {step > 0 && (
             <button type="button" onClick={goBack}
-              className="flex items-center gap-1.5 px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">
+              className="flex items-center gap-1.5 px-5 py-3 rounded-xl border border-neutral-200 text-neutral-700 font-medium text-sm hover:bg-neutral-50">
               <ChevronLeft size={16} /> Back
             </button>
           )}
           {!isLastStep ? (
             <button type="button" onClick={goNext}
-              className="flex items-center gap-1.5 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]">
+              className="flex items-center gap-1.5 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e]">
               Next <ChevronRight size={16} />
             </button>
           ) : (
             <button type="submit" disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60">
+              className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e] disabled:opacity-60">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               {editing._id ? 'Save changes' : 'Add destination'}
             </button>
           )}
           <button type="button" onClick={closeForm}
-            className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 ml-auto">
+            className="px-5 py-3 rounded-xl border border-neutral-200 text-neutral-700 font-medium text-sm hover:bg-neutral-50 ml-auto">
             Cancel
           </button>
         </div>
@@ -388,11 +388,11 @@ const Destinations = () => {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Tourist Places"
-        subtitle="The destination directory travellers browse in the app."
+        title="Tourist places"
+        subtitle="The destination directory travellers browse in the app"
         action={
           <button type="button" onClick={openNew}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]">
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e]">
             <Plus size={16} /> Add a place
           </button>
         }
@@ -403,55 +403,55 @@ const Destinations = () => {
           <StatCard label="Total places" value={destinations.length} />
           <StatCard label="Visible" value={activeCount} tone="text-[#0a4d2b]" />
           <StatCard label="Featured" value={featuredCount} />
-          <StatCard label="Not pinned" value={unpinnedCount} tone={unpinnedCount > 0 ? 'text-amber-600' : 'text-gray-900'} />
+          <StatCard label="Not pinned" value={unpinnedCount} tone={unpinnedCount > 0 ? 'text-amber-600' : 'text-neutral-900'} />
         </div>
       )}
 
       {loading ? (
         <Spinner />
       ) : destinations.length === 0 ? (
-        <EmptyState message="No destinations yet — add the first one." />
+        <EmptyState message="No destinations yet — add the first one" />
       ) : (
         <div className="space-y-3">
           {destinations.map((d) => (
-            <div key={d._id} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-start gap-4">
-              <img src={d.mainImage} alt="" className="w-24 h-20 rounded-xl object-cover bg-gray-100 shrink-0"
+            <div key={d._id} className="bg-white p-4 rounded-xl border border-neutral-900/[0.08] flex flex-wrap items-start gap-4">
+              <img src={d.mainImage} alt="" className="w-24 h-20 rounded-xl object-cover bg-neutral-100 shrink-0"
                 onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
 
               <div className="flex-1 basis-48 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-bold text-gray-900">{d.name}</p>
+                  <p className="font-medium text-neutral-900">{d.name}</p>
                   <CategoryBadge category={d.category} />
                   {d.isFeatured && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">
                       <Sparkles size={11} /> Featured
                     </span>
                   )}
                   {!d.isActive && (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700">hidden</span>
+                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">hidden</span>
                   )}
                   {!Number.isFinite(d.coordinates?.lat) && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-500">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-neutral-100 text-neutral-500">
                       <MapPinOff size={11} /> not pinned
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{d.location}</p>
-                <p className="text-xs text-gray-400 mt-1 line-clamp-2">{d.description}</p>
+                <p className="text-xs text-neutral-500 mt-1">{d.location}</p>
+                <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{d.description}</p>
               </div>
 
               <div className="flex flex-row-reverse sm:flex-col items-center sm:items-end justify-end gap-3 sm:gap-2 w-full sm:w-auto shrink-0">
-                <label className="flex items-center gap-2 text-xs font-bold text-gray-600">
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-600">
                   <input type="checkbox" checked={d.isActive} disabled={busyId === d._id} onChange={() => toggle(d)} />
                   Visible
                 </label>
                 <div className="flex items-center gap-2">
                   <button type="button" onClick={() => openEdit(d)}
-                    className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-700 hover:bg-gray-50">
+                    className="px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
                     Edit
                   </button>
                   <button type="button" disabled={busyId === d._id} onClick={() => remove(d)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold disabled:opacity-50 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 ${
                       confirmingId === d._id
                         ? 'bg-red-600 text-white hover:bg-red-700'
                         : 'text-red-600 hover:bg-red-50'

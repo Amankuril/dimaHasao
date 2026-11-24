@@ -15,8 +15,8 @@ import toast from 'react-hot-toast';
 import adminService from '../../../services/adminService';
 import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator } from '../components/ui';
 
-const field = 'w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] focus:ring-4 focus:ring-[#0a4d2b]/10 transition';
-const label = 'block text-[13px] font-semibold text-gray-700 mb-1.5';
+const field = 'w-full px-3 py-2.5 bg-white border border-neutral-200 rounded-lg text-sm outline-none focus:border-[#0a4d2b] focus:ring-2 focus:ring-[#0a4d2b]/20 transition-colors';
+const label = 'block text-[13px] font-medium text-neutral-700 mb-1.5';
 
 const STEPS = [
   { key: 'code', label: 'The code', icon: Tag },
@@ -186,22 +186,22 @@ const Offers = () => {
       <form onSubmit={submit} className="space-y-6 max-w-4xl">
         <PageHeader
           title={editing._id ? `Edit ${editing.code}` : 'Create an offer'}
-          subtitle="Travellers enter this code on the tour booking screen."
+          subtitle="Travellers enter this code on the tour booking screen"
         />
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-white p-5 rounded-xl border border-neutral-900/[0.08]">
           <StepIndicator steps={STEPS} current={step} />
         </div>
 
         {step === 0 && (
-          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+          <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-5">
+            <h3 className="font-medium text-neutral-900 text-sm pb-3 border-b border-neutral-100 flex items-center gap-2">
               <Tag size={15} className="text-[#0a4d2b]" /> The code
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><label className={label}>Code <span className="text-red-500">*</span></label>
-                <input className={`${field} uppercase tracking-wide font-bold`} value={form.code}
+                <input className={`${field}   font-medium`} value={form.code}
                   onChange={(e) => setForm((c) => ({ ...c, code: e.target.value.toUpperCase() }))}
                   placeholder="MONSOON20" /></div>
               <div><label className={label}>Title <span className="text-red-500">*</span></label>
@@ -216,8 +216,8 @@ const Offers = () => {
         )}
 
         {step === 1 && (
-          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+          <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-5">
+            <h3 className="font-medium text-neutral-900 text-sm pb-3 border-b border-neutral-100 flex items-center gap-2">
               <IndianRupee size={15} className="text-[#0a4d2b]" /> What it is worth
             </h3>
 
@@ -240,15 +240,15 @@ const Offers = () => {
               <div><label className={label}>Minimum fare (₹)</label>
                 <input className={field} type="number" min="0" value={form.minBookingAmount}
                   onChange={set('minBookingAmount')} />
-                <p className="text-xs text-gray-400 mt-1.5">Below this the code is refused.</p></div>
+                <p className="text-xs text-neutral-500 mt-1.5">Below this the code is refused</p></div>
             </div>
 
             {preview && (
-              <p className="text-sm font-semibold text-[#0a4d2b] bg-[#0a4d2b]/5 rounded-xl px-3 py-2.5">
+              <p className="text-sm font-medium text-[#0a4d2b] bg-[#0a4d2b]/5 rounded-xl px-3 py-2.5">
                 Travellers will see: <strong>{preview}</strong>
               </p>
             )}
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-neutral-500">
               The discount comes off the fare. Tax and the platform commission are still
               charged on the undiscounted fare.
             </p>
@@ -256,26 +256,26 @@ const Offers = () => {
         )}
 
         {step === 2 && (
-          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+          <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-5">
+            <h3 className="font-medium text-neutral-900 text-sm pb-3 border-b border-neutral-100 flex items-center gap-2">
               <Clock size={15} className="text-[#0a4d2b]" /> When and how often
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><label className={label}>Starts</label>
                 <input className={field} type="date" value={form.startDate} onChange={set('startDate')} />
-                <p className="text-xs text-gray-400 mt-1.5">Blank means immediately.</p></div>
+                <p className="text-xs text-neutral-500 mt-1.5">Blank means immediately</p></div>
               <div><label className={label}>Ends</label>
                 <input className={field} type="date" value={form.endDate} onChange={set('endDate')} />
-                <p className="text-xs text-gray-400 mt-1.5">Blank means it never expires.</p></div>
+                <p className="text-xs text-neutral-500 mt-1.5">Blank means it never expires</p></div>
               <div><label className={label}>Total redemptions</label>
                 <input className={field} type="number" min="0" value={form.usageLimit} onChange={set('usageLimit')} />
-                <p className="text-xs text-gray-400 mt-1.5">0 means unlimited.</p></div>
+                <p className="text-xs text-neutral-500 mt-1.5">0 means unlimited.</p></div>
               <div><label className={label}>Per traveller</label>
                 <input className={field} type="number" min="1" value={form.userLimit} onChange={set('userLimit')} /></div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <label className="flex items-center gap-2 text-sm text-neutral-700">
               <input type="checkbox" checked={form.isActive} onChange={set('isActive')} />
               <span><strong>Live</strong> — travellers can use it</span>
             </label>
@@ -283,20 +283,20 @@ const Offers = () => {
         )}
 
         {step === 3 && (
-          <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
-            <h3 className="font-bold text-gray-900 text-sm pb-3 border-b border-gray-100 flex items-center gap-2">
+          <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08] space-y-5">
+            <h3 className="font-medium text-neutral-900 text-sm pb-3 border-b border-neutral-100 flex items-center gap-2">
               <Package size={15} className="text-[#0a4d2b]" /> Where it applies
             </h3>
-            <p className="text-xs text-gray-500">Select nothing to let the code work on every tour.</p>
+            <p className="text-xs text-neutral-500">Select nothing to let the code work on every tour</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={label}>Packages</label>
-                <div className="border border-gray-200 rounded-xl max-h-52 overflow-y-auto divide-y divide-gray-100">
+                <div className="border border-neutral-200 rounded-xl max-h-52 overflow-y-auto divide-y divide-neutral-100">
                   {packages.length === 0 ? (
-                    <p className="text-xs text-gray-400 p-3">No approved packages.</p>
+                    <p className="text-xs text-neutral-500 p-3">No approved packages</p>
                   ) : packages.map((p) => (
-                    <label key={p._id} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50">
+                    <label key={p._id} className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-700 cursor-pointer hover:bg-neutral-50">
                       <input type="checkbox" checked={form.packageIds.includes(String(p._id))}
                         onChange={() => toggleScope('packageIds', String(p._id))} />
                       <span className="truncate">{p.title}</span>
@@ -311,24 +311,24 @@ const Offers = () => {
         <div className="flex items-center gap-3 pb-8">
           {step > 0 && (
             <button type="button" onClick={goBack}
-              className="flex items-center gap-1.5 px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">
+              className="flex items-center gap-1.5 px-5 py-3 rounded-xl border border-neutral-200 text-neutral-700 font-medium text-sm hover:bg-neutral-50">
               <ChevronLeft size={16} /> Back
             </button>
           )}
           {!isLastStep ? (
             <button type="button" onClick={goNext}
-              className="flex items-center gap-1.5 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]">
+              className="flex items-center gap-1.5 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e]">
               Next <ChevronRight size={16} />
             </button>
           ) : (
             <button type="submit" disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e] disabled:opacity-60">
+              className="flex items-center gap-2 px-6 py-3 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e] disabled:opacity-60">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               {editing._id ? 'Save changes' : 'Create offer'}
             </button>
           )}
           <button type="button" onClick={closeForm}
-            className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 ml-auto">
+            className="px-5 py-3 rounded-xl border border-neutral-200 text-neutral-700 font-medium text-sm hover:bg-neutral-50 ml-auto">
             Cancel
           </button>
         </div>
@@ -341,10 +341,10 @@ const Offers = () => {
     <div className="space-y-5">
       <PageHeader
         title="Offers"
-        subtitle="Promo codes travellers can use on tour bookings."
+        subtitle="Promo codes travellers can use on tour bookings"
         action={
           <button type="button" onClick={openNew}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-bold text-sm hover:bg-[#06381e]">
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#0a4d2b] text-white rounded-xl font-medium text-sm hover:bg-[#06381e]">
             <Plus size={16} /> Create an offer
           </button>
         }
@@ -361,36 +361,36 @@ const Offers = () => {
       {loading ? (
         <Spinner />
       ) : offers.length === 0 ? (
-        <EmptyState message="No offers yet — create the first one." />
+        <EmptyState message="No offers yet — create the first one" />
       ) : (
         <div className="space-y-3">
           {offers.map((o) => {
             const expired = o.endDate && new Date(o.endDate) < new Date();
             const exhausted = o.usageLimit > 0 && o.usageCount >= o.usageLimit;
             return (
-              <div key={o._id} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-start gap-4">
+              <div key={o._id} className="bg-white p-4 rounded-xl border border-neutral-900/[0.08] flex flex-wrap items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-[#0a4d2b]/10 text-[#0a4d2b] grid place-items-center shrink-0">
                   <Tag size={20} />
                 </div>
 
                 <div className="flex-1 basis-48 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-black tracking-wide text-gray-900">{o.code}</p>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-600">
+                    <p className="font-medium text-neutral-900">{o.code}</p>
+                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
                       {worthOf(o)}
                     </span>
                     {!o.isActive && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700">paused</span>
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">paused</span>
                     )}
                     {expired && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">expired</span>
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">expired</span>
                     )}
                     {exhausted && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">used up</span>
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">used up</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{o.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-neutral-500 mt-1">{o.title}</p>
+                  <p className="text-xs text-neutral-500 mt-1">
                     Used {o.usageCount}{o.usageLimit > 0 ? ` of ${o.usageLimit}` : ''}
                     {o.minBookingAmount > 0 ? ` · min ${rupees(o.minBookingAmount)}` : ''}
                     {o.packageIds?.length ? ` · ${o.packageIds.length} package(s)` : ''}
@@ -399,17 +399,17 @@ const Offers = () => {
                 </div>
 
                 <div className="flex flex-row-reverse sm:flex-col items-center sm:items-end justify-end gap-3 sm:gap-2 w-full sm:w-auto shrink-0">
-                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600">
+                  <label className="flex items-center gap-2 text-xs font-medium text-neutral-600">
                     <input type="checkbox" checked={o.isActive} disabled={busyId === o._id} onChange={() => toggle(o)} />
                     Live
                   </label>
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => openEdit(o)}
-                      className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-700 hover:bg-gray-50">
+                      className="px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
                       Edit
                     </button>
                     <button type="button" disabled={busyId === o._id} onClick={() => remove(o)}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold disabled:opacity-50 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 ${
                         confirmingId === o._id
                           ? 'bg-red-600 text-white hover:bg-red-700'
                           : 'text-red-600 hover:bg-red-50'

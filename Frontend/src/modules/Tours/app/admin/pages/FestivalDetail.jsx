@@ -27,15 +27,15 @@ const when = (value) => (value
 const STATUS_TONE = {
   confirmed: 'bg-emerald-100 text-emerald-700',
   pending: 'bg-amber-100 text-amber-700',
-  used: 'bg-sky-100 text-sky-700',
-  cancelled: 'bg-gray-200 text-gray-600',
+  used: 'bg-neutral-100 text-[#0a4d2b]',
+  cancelled: 'bg-neutral-200 text-neutral-600',
 };
 
 const LIFECYCLE_TONE = {
   live: 'bg-emerald-100 text-emerald-700',
-  upcoming: 'bg-sky-100 text-sky-700',
-  ended: 'bg-gray-200 text-gray-600',
-  scheduled: 'bg-gray-100 text-gray-500',
+  upcoming: 'bg-neutral-100 text-[#0a4d2b]',
+  ended: 'bg-neutral-200 text-neutral-600',
+  scheduled: 'bg-neutral-100 text-neutral-500',
 };
 
 const FILTERS = [
@@ -99,7 +99,7 @@ const FestivalDetail = ({ festivalId, onBack }) => {
   });
 
   if (loading && !data) {
-    return <div className="py-20 grid place-items-center"><Loader2 className="animate-spin text-gray-400" /></div>;
+    return <div className="py-20 grid place-items-center"><Loader2 className="animate-spin text-neutral-500" /></div>;
   }
   if (!data) return null;
 
@@ -110,33 +110,33 @@ const FestivalDetail = ({ festivalId, onBack }) => {
       <button
         type="button"
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800"
+        className="flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800"
       >
         <ArrowLeft size={15} /> All festivals
       </button>
 
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-wrap items-start gap-5">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-5 flex flex-wrap items-start gap-5">
         <img
           src={festival.heroImage}
           alt=""
-          className="w-28 h-24 rounded-xl object-cover bg-gray-100 shrink-0"
+          className="w-28 h-24 rounded-xl object-cover bg-neutral-100 shrink-0"
           onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
         />
 
         <div className="flex-1 basis-64 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-lg font-bold text-gray-900">{festival.name}</h1>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${LIFECYCLE_TONE[festival.status] || ''}`}>
+            <h1 className="text-lg font-medium text-neutral-900">{festival.name}</h1>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium  ${LIFECYCLE_TONE[festival.status] || ''}`}>
               {festival.status}
             </span>
             {!festival.isActive && (
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700">hidden</span>
+              <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">hidden</span>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-1">{festival.dates}{festival.venue ? ` · ${festival.venue}` : ''}</p>
+          <p className="text-sm text-neutral-500 mt-1">{festival.dates}{festival.venue ? ` · ${festival.venue}` : ''}</p>
 
-          <p className={`mt-2.5 inline-block text-xs font-semibold rounded-lg px-2.5 py-1.5 ${
+          <p className={`mt-2.5 inline-block text-xs font-medium rounded-lg px-2.5 py-1.5 ${
             festival.bookingOpen ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'
           }`}>
             {festival.bookingOpen
@@ -155,45 +155,45 @@ const FestivalDetail = ({ festivalId, onBack }) => {
           { label: 'Held (unpaid)', value: totals.heldSeats },
           { label: 'Revenue', value: currency(totals.revenue) },
         ].map((card) => (
-          <div key={card.label} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-            <p className="text-xs font-semibold text-gray-500">{card.label}</p>
-            <p className="text-xl font-black text-gray-900 mt-1">{card.value}</p>
+          <div key={card.label} className="bg-white p-4 rounded-xl border border-neutral-900/[0.08]">
+            <p className="text-xs text-neutral-500">{card.label}</p>
+            <p className="text-xl font-medium text-neutral-900 mt-1">{card.value}</p>
           </div>
         ))}
       </div>
 
       {/* Per category */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <h3 className="font-bold text-gray-900 text-sm p-4 pb-3 border-b border-gray-100">Seats by category</h3>
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
+        <h3 className="font-medium text-neutral-900 text-sm p-4 pb-3 border-b border-neutral-100">Seats by category</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[680px]">
-            <thead className="bg-gray-50 text-gray-500">
+            <thead className="bg-neutral-50 text-neutral-500">
               <tr>
                 {['Category', 'Price', 'Seats', 'Booked', 'Paid', 'Held', 'Available', 'Revenue'].map((h, i) => (
-                  <th key={h} className={`px-4 py-2.5 text-xs font-bold ${i === 0 ? 'text-left' : 'text-right'}`}>{h}</th>
+                  <th key={h} className={`px-4 py-2.5 text-xs font-medium ${i === 0 ? 'text-left' : 'text-right'}`}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-neutral-100">
               {categories.map((c) => {
                 const soldOut = c.availableSeats === 0;
                 return (
-                  <tr key={c._id} className="hover:bg-gray-50/60">
+                  <tr key={c._id} className="hover:bg-neutral-50">
                     <td className="px-4 py-3">
-                      <span className="font-semibold text-gray-800">{c.name}</span>
+                      <span className="font-medium text-neutral-800">{c.name}</span>
                       {!c.isActive && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-gray-200 text-gray-600">closed</span>
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-xs font-medium bg-neutral-200 text-neutral-600">closed</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-700">{currency(c.price)}</td>
-                    <td className="px-4 py-3 text-right text-gray-700">{c.configuredSeats}</td>
-                    <td className="px-4 py-3 text-right text-gray-700">{c.bookedSeats}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-emerald-700">{c.paidSeats}</td>
+                    <td className="px-4 py-3 text-right text-neutral-700">{currency(c.price)}</td>
+                    <td className="px-4 py-3 text-right text-neutral-700">{c.configuredSeats}</td>
+                    <td className="px-4 py-3 text-right text-neutral-700">{c.bookedSeats}</td>
+                    <td className="px-4 py-3 text-right font-medium text-emerald-700">{c.paidSeats}</td>
                     <td className="px-4 py-3 text-right text-amber-700">{c.heldSeats || '—'}</td>
-                    <td className={`px-4 py-3 text-right font-bold ${soldOut ? 'text-red-600' : 'text-gray-900'}`}>
+                    <td className={`px-4 py-3 text-right font-medium ${soldOut ? 'text-red-600' : 'text-neutral-900'}`}>
                       {soldOut ? 'Sold out' : c.availableSeats}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-700">{currency(c.revenue)}</td>
+                    <td className="px-4 py-3 text-right text-neutral-700">{currency(c.revenue)}</td>
                   </tr>
                 );
               })}
@@ -203,26 +203,26 @@ const FestivalDetail = ({ festivalId, onBack }) => {
       </div>
 
       {/* Bookings */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-2 p-4 pb-3 border-b border-gray-100">
-          <h3 className="font-bold text-gray-900 text-sm">
-            Bookings <span className="text-gray-400 font-semibold">({totals.bookings})</span>
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 p-4 pb-3 border-b border-neutral-100">
+          <h3 className="font-medium text-neutral-900 text-sm">
+            Bookings <span className="text-neutral-500">({totals.bookings})</span>
           </h3>
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Booking ID, name or phone"
-                className="pl-8 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b] focus:ring-4 focus:ring-[#0a4d2b]/10 w-56"
+                className="pl-8 pr-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm outline-none focus:border-[#0a4d2b] focus:ring-4 focus:ring-[#0a4d2b]/10 w-56"
               />
             </div>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d2b]"
+              className="px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm outline-none focus:border-[#0a4d2b]"
             >
               {FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
             </select>
@@ -230,64 +230,64 @@ const FestivalDetail = ({ festivalId, onBack }) => {
         </div>
 
         {bookings.length === 0 ? (
-          <p className="py-12 text-center text-sm text-gray-400">
+          <p className="py-12 text-center text-sm text-neutral-500">
             {query || status !== 'all' ? 'No bookings match this filter.' : 'Nobody has booked yet.'}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[880px]">
-              <thead className="bg-gray-50 text-gray-500">
+              <thead className="bg-neutral-50 text-neutral-500">
                 <tr>
                   {['Booking ID', 'Attendee', 'Category', 'Seats', 'Amount', 'Status', 'Pass', 'Booked on', ''].map((h, i) => (
-                    <th key={h} className={`px-4 py-2.5 text-xs font-bold ${
+                    <th key={h} className={`px-4 py-2.5 text-xs font-medium ${
                       ['Seats', 'Amount'].includes(h) ? 'text-right' : 'text-left'
                     }`}>{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-neutral-100">
                 {bookings.map((b) => {
                   // The account that booked; the attendee named on the pass may
                   // differ when someone books for a friend.
                   const user = b.userId || {};
                   return (
-                    <tr key={b._id} className="hover:bg-gray-50/60">
-                      <td className="px-4 py-3 font-mono text-xs font-bold text-gray-800">{b.bookingId}</td>
+                    <tr key={b._id} className="hover:bg-neutral-50">
+                      <td className="px-4 py-3 font-mono text-xs font-medium text-neutral-800">{b.bookingId}</td>
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-gray-800">
+                        <p className="font-medium text-neutral-800">
                           {b.attendee?.name || user.name || 'Unknown'}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-neutral-500">
                           {b.attendee?.phone || user.phone || ''}
                           {user.name && b.attendee?.name && user.name !== b.attendee.name
                             ? ` · booked by ${user.name}`
                             : ''}
                         </p>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{b.ticketCategoryName}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-gray-900">{b.ticketCount}</td>
-                      <td className="px-4 py-3 text-right text-gray-700">{currency(b.totalAmount)}</td>
+                      <td className="px-4 py-3 text-neutral-700">{b.ticketCategoryName}</td>
+                      <td className="px-4 py-3 text-right font-medium text-neutral-900">{b.ticketCount}</td>
+                      <td className="px-4 py-3 text-right text-neutral-700">{currency(b.totalAmount)}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${STATUS_TONE[b.bookingStatus] || ''}`}>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium  ${STATUS_TONE[b.bookingStatus] || ''}`}>
                           {b.bookingStatus}
                         </span>
                         {b.paymentStatus !== 'paid' && b.bookingStatus !== 'cancelled' && (
-                          <span className="ml-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">
+                          <span className="ml-1.5 px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
                             unpaid
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-mono text-[11px] text-gray-500">{b.qrCode || '—'}</td>
-                      <td className="px-4 py-3 text-xs text-gray-500">{when(b.createdAt)}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-neutral-500">{b.qrCode || '—'}</td>
+                      <td className="px-4 py-3 text-xs text-neutral-500">{when(b.createdAt)}</td>
                       <td className="px-4 py-3 text-right">
                         {b.bookingStatus === 'cancelled' ? (
-                          <span className="text-[11px] text-gray-300">—</span>
+                          <span className="text-xs text-neutral-300">—</span>
                         ) : (
                           <button
                             type="button"
                             disabled={cancellingId === b._id}
                             onClick={() => cancelBooking(b)}
-                            className="rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
+                            className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
                           >
                             Cancel
                           </button>

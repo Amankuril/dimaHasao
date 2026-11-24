@@ -46,7 +46,7 @@ const LocationPicker = ({ lat, lng, onChange, className = '' }) => {
   const center = position || HAFLONG_CENTER;
 
   return (
-    <div className={`rounded-xl overflow-hidden border border-gray-200 relative z-0 ${className}`}>
+    <div className={`rounded-xl overflow-hidden border border-neutral-200 relative z-0 ${className}`}>
       <MapContainer center={[center.lat, center.lng]} zoom={position ? 14 : 12} style={{ height: '100%', width: '100%' }}>
         <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <ClickToPlace onPick={onChange} />

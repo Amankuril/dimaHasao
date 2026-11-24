@@ -44,11 +44,11 @@ const PackageCreate = () => {
     >
       <PageHeader
         title="Create a package"
-        subtitle="Published to the travellers' app as soon as you save, unless you keep it as a draft."
+        subtitle="Published to the travellers' app as soon as you save, unless you keep it as a draft"
       />
 
-      <section className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-        <label className="flex items-start gap-2.5 text-sm text-gray-700">
+      <section className="bg-white p-6 rounded-xl border border-neutral-900/[0.08]">
+        <label className="flex items-start gap-2.5 text-sm text-neutral-700">
           <input
             type="checkbox"
             checked={publishImmediately}
@@ -57,8 +57,8 @@ const PackageCreate = () => {
           />
           <span>
             <strong>Publish immediately</strong>
-            <span className="block text-xs text-gray-400">
-              Turn this off to save it as a draft that travellers cannot see yet.
+            <span className="block text-xs text-neutral-500">
+              Turn this off to save it as a draft that travellers cannot see yet
             </span>
           </span>
         </label>
