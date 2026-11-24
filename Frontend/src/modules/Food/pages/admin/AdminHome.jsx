@@ -102,23 +102,23 @@ export default function AdminHome() {
   const getOrderStats = () => {
     if (!dashboardData?.orders?.byStatus) {
       return [
-        { label: "Delivered", value: 0, color: "#0ea5e9" },
-        { label: "Cancelled", value: 0, color: "#ef4444" },
-        { label: "Refunded", value: 0, color: "#f59e0b" },
-        { label: "Pending", value: 0, color: "#10b981" },
-        { label: "Processing", value: 0, color: "#f97316" },
-        { label: "In Transit", value: 0, color: "#8b5cf6" },
+        { label: "Delivered", value: 0, color: "#16a34a" },
+        { label: "Cancelled", value: 0, color: "#dc2626" },
+        { label: "Refunded", value: 0, color: "#a3a3a3" },
+        { label: "Pending", value: 0, color: "#f59e0b" },
+        { label: "Processing", value: 0, color: "#525252" },
+        { label: "In transit", value: 0, color: "#3f6f8f" },
       ]
     }
 
     const byStatus = dashboardData.orders.byStatus
     return [
-      { label: "Delivered", value: byStatus.delivered || 0, color: "#0ea5e9" },
-      { label: "Cancelled", value: byStatus.cancelled || 0, color: "#ef4444" },
-      { label: "Refunded", value: byStatus.refunded || 0, color: "#f59e0b" },
-      { label: "Pending", value: byStatus.pending || 0, color: "#10b981" },
-      { label: "Processing", value: byStatus.processing || 0, color: "#f97316" },
-      { label: "In Transit", value: byStatus.inTransit || 0, color: "#8b5cf6" },
+      { label: "Delivered", value: byStatus.delivered || 0, color: "#16a34a" },
+      { label: "Cancelled", value: byStatus.cancelled || 0, color: "#dc2626" },
+      { label: "Refunded", value: byStatus.refunded || 0, color: "#a3a3a3" },
+      { label: "Pending", value: byStatus.pending || 0, color: "#f59e0b" },
+      { label: "Processing", value: byStatus.processing || 0, color: "#525252" },
+      { label: "In transit", value: byStatus.inTransit || 0, color: "#3f6f8f" },
     ]
   }
 
@@ -194,13 +194,13 @@ export default function AdminHome() {
 
   return (
     <div className="px-4 pb-10 lg:px-6 pt-4">
-      <div className="relative overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_30px_120px_-60px_rgba(0,0,0,0.28)]">
+      <div>
 
-        <div className="flex flex-col gap-4 border-b border-neutral-200 bg-linear-to-br from-white via-neutral-50 to-neutral-100 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 pb-6 pt-2 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-neutral-500">Admin Overview</p>
-              <h1 className="text-2xl font-semibold text-neutral-900">Operations Command</h1>
+              <h1 className="text-2xl font-medium text-neutral-900">Food overview</h1>
+              <p className="mt-1 text-sm text-neutral-500">Orders, money and partners across every zone</p>
             </div>
 
           </div>
@@ -233,7 +233,7 @@ export default function AdminHome() {
           </div>
         </div>
 
-        <div className="space-y-6 px-6 py-6">
+        <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               title="Gross revenue"
@@ -248,8 +248,8 @@ export default function AdminHome() {
               title="Commission earned"
               value={formatCurrency(commissionTotal)}
               helper={`${periodLabel} restaurant cut`}
-              icon={<ArrowUpRight className="h-5 w-5 text-indigo-600" />}
-              accent="bg-indigo-200/40"
+              icon={<ArrowUpRight className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/transaction-report?focus=platform-total"
               loading={isLoading}
             />
@@ -266,8 +266,8 @@ export default function AdminHome() {
               title="Platform fee"
               value={formatCurrency(platformFeeTotal)}
               helper={`Platform service fees: ${periodLabel}`}
-              icon={<CreditCard className="h-5 w-5 text-purple-600" />}
-              accent="bg-purple-200/40"
+              icon={<CreditCard className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/fee-settings"
               loading={isLoading}
             />
@@ -275,8 +275,8 @@ export default function AdminHome() {
               title="Delivery fee"
               value={formatCurrency(deliveryFeeTotal)}
               helper={`Total delivery fees: ${periodLabel}`}
-              icon={<Truck className="h-5 w-5 text-blue-600" />}
-              accent="bg-blue-200/40"
+              icon={<Truck className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/transaction-report"
               loading={isLoading}
             />
@@ -290,7 +290,7 @@ export default function AdminHome() {
               loading={isLoading}
             />
             <MetricCard
-              title="Platform Total"
+              title="Platform total"
               value={formatCurrency(totalAdminEarnings, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               helper={totalRevenueHelper}
               icon={<DollarSign className="h-5 w-5 text-green-600" />}
@@ -302,8 +302,8 @@ export default function AdminHome() {
               title="Total restaurants"
               value={totalRestaurants.toLocaleString("en-IN")}
               helper="Approved restaurants"
-              icon={<Store className="h-5 w-5 text-blue-600" />}
-              accent="bg-blue-200/40"
+              icon={<Store className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/restaurants"
             />
             <MetricCard
@@ -318,8 +318,8 @@ export default function AdminHome() {
               title="Total delivery boy"
               value={totalDeliveryBoys.toLocaleString("en-IN")}
               helper="Approved delivery partners"
-              icon={<Truck className="h-5 w-5 text-indigo-600" />}
-              accent="bg-indigo-200/40"
+              icon={<Truck className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/delivery-partners"
             />
             <MetricCard
@@ -334,32 +334,32 @@ export default function AdminHome() {
               title="Total foods"
               value={totalFoods.toLocaleString("en-IN")}
               helper="Approved menu items"
-              icon={<Package className="h-5 w-5 text-purple-600" />}
-              accent="bg-purple-200/40"
+              icon={<Package className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/foods"
             />
             <MetricCard
               title="Total addons"
               value={totalAddons.toLocaleString("en-IN")}
               helper="Approved addon items"
-              icon={<Plus className="h-5 w-5 text-pink-600" />}
-              accent="bg-pink-200/40"
+              icon={<Plus className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/addons"
             />
             <MetricCard
               title="Total customers"
               value={totalCustomers.toLocaleString("en-IN")}
               helper="Registered users"
-              icon={<UserCircle className="h-5 w-5 text-cyan-600" />}
-              accent="bg-cyan-200/40"
+              icon={<UserCircle className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/customers"
             />
             <MetricCard
               title="Total orders"
               value={ordersTotal.toLocaleString("en-IN")}
               helper={`${periodLabel} all orders`}
-              icon={<Package className="h-5 w-5 text-slate-600" />}
-              accent="bg-slate-200/40"
+              icon={<Package className="h-5 w-5 text-neutral-600" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/orders/all"
               loading={isLoading}
             />
@@ -382,7 +382,7 @@ export default function AdminHome() {
               loading={isLoading}
             />
             <MetricCard
-              title="Total Cash Orders"
+              title="Total cash orders"
               value={cashOrdersTotal.toLocaleString("en-IN")}
               helper={`${periodLabel} cash / COD orders`}
               icon={<IndianRupee className="h-5 w-5 text-teal-600" />}
@@ -391,16 +391,16 @@ export default function AdminHome() {
               loading={isLoading}
             />
             <MetricCard
-              title="Total Online Orders"
+              title="Total online orders"
               value={onlineOrdersTotal.toLocaleString("en-IN")}
               helper={`${periodLabel} online payment orders`}
-              icon={<CreditCard className="h-5 w-5 text-sky-600" />}
-              accent="bg-sky-200/40"
+              icon={<CreditCard className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/orders/all"
               loading={isLoading}
             />
             <MetricCard
-              title="Total Cancelled Orders"
+              title="Total cancelled orders"
               value={cancelledOrdersTotal.toLocaleString("en-IN")}
               helper={`${periodLabel} cancelled orders`}
               icon={<XCircle className="h-5 w-5 text-rose-600" />}
@@ -409,16 +409,16 @@ export default function AdminHome() {
               loading={isLoading}
             />
             <MetricCard
-              title="Delivery Boy Earning"
+              title="Delivery boy earning"
               value={formatCurrency(deliveryBoyEarningTotal)}
               helper={`${periodLabel} rider payout on delivered orders`}
-              icon={<Truck className="h-5 w-5 text-violet-600" />}
-              accent="bg-violet-200/40"
+              icon={<Truck className="h-5 w-5 text-[#0a4d2b]" />}
+              accent="bg-neutral-200/40"
               path="/admin/food/delivery-partners/earnings"
               loading={isLoading}
             />
             <MetricCard
-              title="Restaurants Earning"
+              title="Restaurants earning"
               value={formatCurrency(restaurantEarningTotal)}
               helper={`${periodLabel} restaurant share (subtotal + packaging − commission)`}
               icon={<Store className="h-5 w-5 text-lime-600" />}
@@ -440,21 +440,11 @@ export default function AdminHome() {
                 <div className="h-80 w-full min-w-0">
                   <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <AreaChart data={monthlyData}>
-                      <defs>
-                        <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.25} />
-                          <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="comFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#a855f7" stopOpacity={0.25} />
-                          <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="month" stroke="#6b7280" />
-                      <YAxis stroke="#6b7280" />
+                      <CartesianGrid vertical={false} stroke="rgba(23,23,23,0.06)" />
+                      <XAxis dataKey="month" axisLine={false} tickLine={false} dy={8} tick={{ fontSize: 12, fill: "#737373", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }} />
+                      <YAxis axisLine={false} tickLine={false} width={56} tick={{ fontSize: 12, fill: "#737373", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }} />
                       <Tooltip
-                        contentStyle={{ background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: 12 }}
+                        contentStyle={{ background: "#ffffff", border: "1px solid rgba(23,23,23,0.08)", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.06)" }}
                         labelStyle={{ color: "#111827" }}
                         itemStyle={{ color: "#111827" }}
                       />
@@ -462,23 +452,24 @@ export default function AdminHome() {
                       <Area
                         type="monotone"
                         dataKey="revenue"
-                        stroke="#0ea5e9"
-                        fillOpacity={1}
-                        fill="url(#revFill)"
+                        stroke="#0a4d2b"
+                        strokeWidth={2}
+                        fill="#0a4d2b"
+                        fillOpacity={0.06}
                         name="Gross revenue"
                       />
                       <Area
                         type="monotone"
                         dataKey="commission"
-                        stroke="#a855f7"
-                        fillOpacity={1}
-                        fill="url(#comFill)"
+                        stroke="#a3a3a3"
+                        strokeWidth={1.5}
+                        fill="none"
                         name="Commission"
                       />
                       <Bar
                         dataKey="orders"
-                        fill="#ef4444"
-                        radius={[6, 6, 0, 0]}
+                        fill="#e5e5e5"
+                        radius={[3, 3, 0, 0]}
                         name="Orders"
                         barSize={10}
                       />
@@ -515,7 +506,7 @@ export default function AdminHome() {
                         ))}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: 12 }}
+                        contentStyle={{ background: "#ffffff", border: "1px solid rgba(23,23,23,0.08)", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.06)" }}
                         labelStyle={{ color: "#111827" }}
                         itemStyle={{ color: "#111827" }}
                       />
@@ -540,13 +531,13 @@ export default function AdminHome() {
                         }
                         navigate(routes[item.label] || '/admin/food/orders/all')
                       }}
-                      className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2 cursor-pointer hover:bg-neutral-50 hover:border-neutral-300 transition-all group"
+                      className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2 cursor-pointer hover:bg-neutral-50 hover:border-neutral-300 transition-colors group"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="h-2.5 w-2.5 rounded-full transition-transform group-hover:scale-125" style={{ background: item.color }} />
+                        <span className="h-2.5 w-2.5 rounded-full transition-transform" style={{ background: item.color }} />
                         <p className="text-sm text-neutral-800 group-hover:text-neutral-900">{item.label}</p>
                       </div>
-                      <p className="text-sm font-semibold text-neutral-900">{item.value}</p>
+                      <p className="text-sm font-medium text-neutral-900">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -564,17 +555,17 @@ export default function AdminHome() {
                 <div className="h-64 w-full min-w-0">
                   <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <BarChart data={monthlyData.slice(-6)}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="month" stroke="#6b7280" />
-                      <YAxis stroke="#6b7280" />
+                      <CartesianGrid vertical={false} stroke="rgba(23,23,23,0.06)" />
+                      <XAxis dataKey="month" axisLine={false} tickLine={false} dy={8} tick={{ fontSize: 12, fill: "#737373", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }} />
+                      <YAxis axisLine={false} tickLine={false} width={56} tick={{ fontSize: 12, fill: "#737373", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }} />
                       <Tooltip
-                        contentStyle={{ background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: 12 }}
+                        contentStyle={{ background: "#ffffff", border: "1px solid rgba(23,23,23,0.08)", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.06)" }}
                         labelStyle={{ color: "#111827" }}
                         itemStyle={{ color: "#111827" }}
                       />
                       <Legend />
-                      <Bar dataKey="orders" fill="#0ea5e9" radius={[8, 8, 0, 0]} name="Orders" />
-                      <Bar dataKey="commission" fill="#a855f7" radius={[8, 8, 0, 0]} name="Commission" />
+                      <Bar dataKey="orders" fill="#d4d4d4" radius={[3, 3, 0, 0]} name="Orders" />
+                      <Bar dataKey="commission" fill="#0a4d2b" radius={[3, 3, 0, 0]} name="Commission" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -603,11 +594,11 @@ export default function AdminHome() {
                         case "order_cancelled":
                           return <XCircle className="h-4 w-4 text-red-600" />
                         case "restaurant":
-                          return <Store className="h-4 w-4 text-blue-600" />
+                          return <Store className="h-4 w-4 text-[#0a4d2b]" />
                         case "delivery":
-                          return <Truck className="h-4 w-4 text-purple-600" />
+                          return <Truck className="h-4 w-4 text-[#0a4d2b]" />
                         case "customer":
-                          return <UserCircle className="h-4 w-4 text-pink-600" />
+                          return <UserCircle className="h-4 w-4 text-[#0a4d2b]" />
                         default:
                           return <Activity className="h-4 w-4 text-neutral-600" />
                       }
@@ -616,17 +607,17 @@ export default function AdminHome() {
                     const getBg = (type) => {
                       switch (type) {
                         case "order_pending":
-                          return "bg-amber-50"
+                          return "bg-white"
                         case "order_delivered":
-                          return "bg-emerald-50"
+                          return "bg-white"
                         case "order_cancelled":
-                          return "bg-red-50"
+                          return "bg-white"
                         case "restaurant":
-                          return "bg-blue-50"
+                          return "bg-neutral-50"
                         case "delivery":
-                          return "bg-purple-50"
+                          return "bg-neutral-50"
                         case "customer":
-                          return "bg-pink-50"
+                          return "bg-neutral-50"
                         default:
                           return "bg-neutral-50"
                       }
@@ -635,13 +626,13 @@ export default function AdminHome() {
                     return (
                       <div
                         key={idx}
-                        className={`flex items-start gap-3 rounded-xl border border-neutral-200 ${getBg(item.type)} px-3 py-3 hover:border-neutral-300 transition-all`}
+                        className={`flex items-start gap-3 rounded-xl border border-neutral-200 ${getBg(item.type)} px-3 py-3 hover:border-neutral-300 transition-colors`}
                       >
                         <div className="mt-0.5">{getIcon(item.type)}</div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-neutral-900 truncate">{item.title}</p>
-                            <span className="text-[10px] text-neutral-400 whitespace-nowrap">{item.time}</span>
+                            <p className="text-sm font-medium text-neutral-900 truncate">{item.title}</p>
+                            <span className="text-xs text-neutral-400 whitespace-nowrap">{item.time}</span>
                           </div>
                           <p className="text-xs text-neutral-600 line-clamp-1">{item.detail}</p>
                         </div>
@@ -676,7 +667,7 @@ export default function AdminHome() {
                   >
                     <div className="flex items-center gap-3">
                       <span
-                        className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold text-neutral-900 transition-transform group-hover:scale-110"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium text-neutral-900 transition-transform"
                         style={{ background: `${item.color}1A`, color: item.color }}
                       >
                         {item.label.slice(0, 2).toUpperCase()}
@@ -686,7 +677,7 @@ export default function AdminHome() {
                         <p className="text-xs text-neutral-500">Tracked in {selectedPeriod}</p>
                       </div>
                     </div>
-                    <p className="text-sm font-semibold text-neutral-900">{item.value}</p>
+                    <p className="text-sm font-medium text-neutral-900">{item.value}</p>
                   </div>
                 ))}
               </CardContent>
@@ -698,51 +689,35 @@ export default function AdminHome() {
   )
 }
 
+// Number card: label, figure, one line of context. `icon` and `accent` are still
+// passed by callers but no longer drawn: eighteen tinted cards with icon tiles
+// made every figure compete with every other.
+// eslint-disable-next-line no-unused-vars
 function MetricCard({ title, value, helper, icon, accent, path, loading = false }) {
   const navigate = useNavigate()
   return (
-    <Card
-      className="group relative overflow-hidden border-neutral-200 bg-white p-0 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]"
+    <button
+      type="button"
       onClick={() => path && navigate(path)}
+      className="flex h-full flex-col rounded-xl border border-neutral-900/[0.08] bg-white p-4 text-left outline-none transition-colors duration-150 hover:border-neutral-900/[0.16] focus-visible:ring-2 focus-visible:ring-[#0a4d2b]/30"
     >
-      <CardContent className="relative flex flex-col gap-2 px-4 pb-4 pt-4 h-full">
-        <div className={`absolute inset-0 opacity-40 transition-opacity duration-300 group-hover:opacity-60 ${accent}`} />
-        <div className="relative flex items-center justify-between z-10">
-          <div className="flex-1 min-w-0 mr-2">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-neutral-500 font-bold mb-1 truncate">{title}</p>
-            <div className="text-xl font-bold text-neutral-900 leading-tight mb-1 min-h-[1.75rem] flex items-center">
-              {loading ? (
-                <span className="inline-block h-6 w-24 rounded-md bg-neutral-200 animate-pulse" />
-              ) : (
-                value
-              )}
-            </div>
-            <p className="text-[10px] text-neutral-500 font-medium line-clamp-2 leading-snug break-words">
-              {loading ? (
-                <span className="inline-block h-3 w-32 rounded bg-neutral-100 animate-pulse" />
-              ) : (
-                helper
-              )}
-            </p>
-          </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/90 ring-1 ring-neutral-200 shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md">
-            {icon}
-          </div>
-        </div>
-        <div className="absolute bottom-2 right-2 opacity-0 transform translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-          <ArrowUpRight className="h-3 w-3 text-neutral-400" />
-        </div>
-      </CardContent>
-    </Card>
+      <span className="truncate text-[13px] text-neutral-500">{title}</span>
+      <span className="mt-2 min-h-8 font-mono text-2xl font-medium leading-8 text-neutral-900 tabular-nums">
+        {loading ? <span className="inline-block h-6 w-24 animate-pulse rounded-md bg-neutral-100" /> : value}
+      </span>
+      <span className="mt-1 line-clamp-2 text-xs leading-4 text-neutral-500">
+        {loading ? <span className="inline-block h-3 w-32 animate-pulse rounded bg-neutral-100" /> : helper}
+      </span>
+    </button>
   )
 }
 
 function DashboardSkeleton() {
   return (
     <div className="px-4 pb-10 lg:px-6 pt-4 w-full">
-      <div className="relative overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_30px_120px_-60px_rgba(0,0,0,0.28)]">
+      <div>
         {/* Header Skeleton */}
-        <div className="flex flex-col gap-4 border-b border-neutral-200 bg-gradient-to-br from-white via-neutral-50 to-neutral-100 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 border-b border-neutral-200 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <div>
               <div className="h-3 w-32 rounded bg-neutral-200 animate-pulse mb-2" />
@@ -756,7 +731,7 @@ function DashboardSkeleton() {
         </div>
 
         {/* Cards Skeleton */}
-        <div className="space-y-6 px-6 py-6">
+        <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 16 }).map((_, i) => (
               <div key={i} className="border border-neutral-200 rounded-xl bg-white p-4 h-[100px] flex items-center justify-between">
